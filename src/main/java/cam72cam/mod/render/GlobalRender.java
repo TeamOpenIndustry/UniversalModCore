@@ -40,7 +40,6 @@ public class GlobalRender {
         grhList.add(grh);
     }
 
-    @SubscribeEvent
     public static void registerGlobalRenderer() {
         ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
             @Override
