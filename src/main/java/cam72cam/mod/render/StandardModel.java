@@ -40,7 +40,7 @@ public class StandardModel {
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        IBlockState state = Blocks.HARDENED_CLAY.getDefaultState();
+        IBlockState state = Blocks.WOOL.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));

@@ -131,7 +131,7 @@ public class ModCore {
     }
 
     public static class Internal extends Mod {
-        public int skipN = 1;
+        public int skipN = 2;
 
         @Override
         public String modID() {
