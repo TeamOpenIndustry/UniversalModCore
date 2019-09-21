@@ -377,7 +377,7 @@ public class World {
     }
 
     public float getTemperature(Vec3i pos) {
-        float mctemp = internal.getBiome(pos.internal).getTemperature(pos.internal);
+        float mctemp = internal.getBiome(pos.internal).getTemperature();
         //https://www.reddit.com/r/Minecraft/comments/3eh7yu/the_rl_temperature_of_minecraft_biomes_revealed/ctex050/
         return (13.6484805403f * mctemp) + 7.0879687222f;
     }

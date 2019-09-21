@@ -8,10 +8,7 @@ import cam72cam.mod.block.tile.TileEntity;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemOverrideList;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -162,6 +159,8 @@ public class BlockRender {
                 public ItemOverrideList getOverrides() {
                     return null;
                 }
+
+                public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
             });
         });
     }

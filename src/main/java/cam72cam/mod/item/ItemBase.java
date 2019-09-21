@@ -9,7 +9,6 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -24,7 +23,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -97,15 +95,15 @@ public class ItemBase {
     @Optional.Interface(iface = "mezz.jei.api.ingredients.ISlowRenderItem", modid = "jei")
     private class ItemInternal extends Item {
         @Override
-        public final void getSubItems(CreativeTabs tab, NonNullList<net.minecraft.item.ItemStack> items) {
+        public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<net.minecraft.item.ItemStack> items) {
             CreativeTab myTab = tab != CreativeTabs.SEARCH ? new CreativeTab(tab) : null;
             items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
 
         @Override
         @SideOnly(Side.CLIENT)
-        public final void addInformation(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-            super.addInformation(stack, worldIn, tooltip, flagIn);
+        public final void addInformation(net.minecraft.item.ItemStack stack, EntityPlayer entityPlayer, List<String> tooltip, boolean flagIn) {
+            super.addInformation(stack, entityPlayer, tooltip, flagIn);
             applyCustomName(new ItemStack(stack));
             ItemBase.this.addInformation(new ItemStack(stack), tooltip);
         }

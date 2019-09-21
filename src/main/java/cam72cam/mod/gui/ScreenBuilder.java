@@ -120,7 +120,7 @@ class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             GuiButton guibutton = super.buttonList.get(i);
 
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
-                this.selectedButton = guibutton;
+                //TODO 1.11.2 will this break anything? this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
                 buttonMap.get(guibutton).onClick(mouseButton == 0 ? Hand.PRIMARY : Hand.SECONDARY);
             }

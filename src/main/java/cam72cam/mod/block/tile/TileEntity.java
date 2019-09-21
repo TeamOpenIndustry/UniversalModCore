@@ -26,6 +26,8 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.registry.GameData;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
@@ -70,7 +72,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             // TODO log a warning here?
             return;
         }
-        net.minecraft.tileentity.TileEntity.register(this.getName().internal.toString(), this.getClass());
+        GameData.getTileEntityRegistry().putObject(this.getName().internal, this.getClass());
     }
 
     public Identifier getName() {

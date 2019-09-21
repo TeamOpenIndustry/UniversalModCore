@@ -9,7 +9,6 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -178,16 +177,13 @@ public abstract class BlockType {
 
         @Deprecated
         @Override
-        public BlockFaceShape getBlockFaceShape(IBlockAccess p_193383_1_, IBlockState p_193383_2_, BlockPos p_193383_3_, EnumFacing p_193383_4_) {
+        public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side) {
             if (settings.connectable) {
-                return super.getBlockFaceShape(p_193383_1_, p_193383_2_, p_193383_3_, p_193383_4_);
+                return super.isSideSolid(base_state, world, pos, side);
             }
 
-            if (p_193383_4_ == EnumFacing.UP) {
-                // SNOW ONLY?
-                return BlockFaceShape.SOLID;
-            }
-            return BlockFaceShape.UNDEFINED;
+            // SNOW ONLY?
+            return side == EnumFacing.UP;
         }
 
         public boolean tryBreak(net.minecraft.world.World world, BlockPos pos, EntityPlayer player) {

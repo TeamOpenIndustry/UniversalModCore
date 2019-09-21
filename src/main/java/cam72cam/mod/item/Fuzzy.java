@@ -35,7 +35,7 @@ public class Fuzzy {
     public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel");
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock");
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
-    public static final Fuzzy CONCRETE = new Fuzzy("concrete").add(new ItemStack(Blocks.CONCRETE, 1, OreDictionary.WILDCARD_VALUE));
+    public static final Fuzzy CONCRETE = new Fuzzy("concrete");
     public static final Fuzzy DIRT = new Fuzzy("dirt");
     public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.HARDENED_CLAY, 1, OreDictionary.WILDCARD_VALUE));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
@@ -64,7 +64,7 @@ public class Fuzzy {
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
             if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
                 NonNullList<net.minecraft.item.ItemStack> temp = NonNullList.create();
-                stack.getItem().getSubItems(stack.getItem().getCreativeTab(), temp);
+                stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
                 results.addAll(temp.stream().map(ItemStack::new).collect(Collectors.toList()));
             } else {
                 results.add(new ItemStack(stack));

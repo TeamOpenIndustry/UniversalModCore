@@ -18,7 +18,7 @@ public class ItemButton extends GuiButton {
     }
 
     @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         Gui.drawRect(x, y, x + 32, y + 32, 0xFFFFFFFF);
         RenderHelper.enableStandardItemLighting();
 

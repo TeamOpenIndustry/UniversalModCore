@@ -1,27 +1,15 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.oredict.OreIngredient;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
 public class Recipes {
     private static List<Runnable> registrations = new ArrayList<>();
 
-    @SubscribeEvent
-    public static void registerRecipes(RegistryEvent.Register<IRecipe> event) {
+    public static void registerRecipes() {
         registrations.forEach(Runnable::run);
     }
 
@@ -30,21 +18,17 @@ public class Recipes {
     }
 
     public static void register(ItemStack result, int width, Fuzzy... ingredients) {
+        String offsets = "123456789";
         registrations.add(() -> {
-            CraftingHelper.ShapedPrimer primer = new CraftingHelper.ShapedPrimer();
-            primer.width = width;
-            primer.height = ingredients.length / width;
-            primer.mirrored = false;
-            primer.input = NonNullList.withSize(primer.width * primer.height, Ingredient.EMPTY);
-
-            for (int i = 0; i < ingredients.length; i++) {
-                if (ingredients[i] != null) {
-                    primer.input.set(i, new OreIngredient(ingredients[i].toString()));
-                }
+            Object[] data = new Object[ingredients.length * 2];
+            for (int i = 0; i < ingredients.length/width; i++) {
+                data[i] = offsets.substring(i * width,  i * width + width);
             }
-            ShapedOreRecipe sor = new ShapedOreRecipe(new ResourceLocation(ModCore.MODID, "recipes"), result.internal, primer);
-            sor.setRegistryName(result.internal.getItem().getRegistryName());
-            ForgeRegistries.RECIPES.register(sor);
+            for (int i = 0; i < ingredients.length; i++) {
+                data[ingredients.length/width + i * 2] = offsets.charAt(i);
+                data[ingredients.length/width + i * 2 + 1] = ingredients[i];
+            }
+            GameRegistry.addRecipe(new ShapedOreRecipe(result.internal, data));
         });
     }
 }

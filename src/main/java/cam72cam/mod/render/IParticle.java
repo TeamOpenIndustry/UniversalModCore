@@ -1,12 +1,12 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.util.TriConsumer;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.entity.Entity;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public abstract class IParticle {
                 }
 
                 @Override
-                public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                public void renderParticle(VertexBuffer buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
                     ip.ticks = particleAge;
                     ip.pos = new Vec3d(posX, posY, posZ);
                     ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);

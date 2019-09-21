@@ -8,7 +8,7 @@ import net.minecraft.block.BlockLog;
 import net.minecraft.block.BlockSnow;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -40,7 +40,7 @@ public class StandardModel {
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        IBlockState state = Blocks.CONCRETE.getDefaultState();
+        IBlockState state = Blocks.HARDENED_CLAY.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
@@ -118,7 +118,7 @@ public class StandardModel {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
+        VertexBuffer worldRenderer = new VertexBuffer(2048);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
         worldRenderer.finishDrawing();

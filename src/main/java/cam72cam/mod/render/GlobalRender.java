@@ -47,7 +47,7 @@ public class GlobalRender {
     public static void registerGlobalRenderer(RegistryEvent.Register<EntityEntry> event) {
         ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
             @Override
-            public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+            public void renderTileEntityAt(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
                 renderFuncs.forEach(r -> r.accept(partialTicks));
             }
         });

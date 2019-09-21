@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -30,10 +29,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.util.vector.Vector3f;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +127,7 @@ public class ItemRender {
         private final World world;
         private final BiFunction<ItemStack, World, StandardModel> model;
         private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
-        private final boolean isGUI;
+        private boolean isGUI;
 
         BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
             this.world = null;
@@ -207,28 +205,26 @@ public class ItemRender {
             return new ItemOverrideListHack();
         }
 
-        @Override
-        public Pair<? extends IBakedModel, Matrix4f> handlePerspective(ItemCameraTransforms.TransformType cameraTransformType) {
-            Pair<? extends IBakedModel, Matrix4f> def = ForgeHooksClient.handlePerspective(this, cameraTransformType);
-            // TODO more efficient
-            if (cacheRender != null && (cameraTransformType == ItemCameraTransforms.TransformType.GUI)) {
-                return Pair.of(new BakedItemModel(stack, world, model, cacheRender, true), def.getRight());
-            }
-            // TODO Expose as part of the renderItem API
-            if (cameraTransformType == ItemCameraTransforms.TransformType.FIXED) {
-                Matrix4f mat = new Matrix4f();
-                mat.setIdentity();
-                mat.rotY((float) Math.toRadians(90));
-                return Pair.of(def.getLeft(), mat);
-            }
-            if (cameraTransformType == ItemCameraTransforms.TransformType.HEAD) {
-                Matrix4f mat = new Matrix4f();
-                mat.setIdentity();
-                mat.setScale(2);
-                mat.setTranslation(new Vector3f(0, 1, 0));
-                return Pair.of(def.getLeft(), mat);
-            }
-            return def;
+        public ItemCameraTransforms getItemCameraTransforms() {
+            return new ItemCameraTransforms(ItemCameraTransforms.DEFAULT) {
+                public ItemTransformVec3f getTransform(ItemCameraTransforms.TransformType type) {
+                    if (cacheRender != null && (type == ItemCameraTransforms.TransformType.GUI)) {
+                        isGUI = true;
+                        return super.getTransform(type);
+                    } else {
+                        isGUI = false;
+                    }
+
+                    if (type == ItemCameraTransforms.TransformType.FIXED) {
+                        return new ItemTransformVec3f(new Vector3f(0, 90, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));
+                    }
+                    if (type == ItemCameraTransforms.TransformType.HEAD) {
+                        return new ItemTransformVec3f(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(2, 2, 2));
+                    }
+                    return super.getTransform(type);
+
+                }
+            };
         }
 
         class ItemOverrideListHack extends ItemOverrideList {

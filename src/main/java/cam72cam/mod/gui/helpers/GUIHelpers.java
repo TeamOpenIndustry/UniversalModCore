@@ -4,7 +4,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -28,7 +28,7 @@ public class GUIHelpers {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        VertexBuffer bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
         bufferbuilder.pos(x + 0, y + height, zLevel).endVertex();
         bufferbuilder.pos(x + width, y + height, zLevel).endVertex();
@@ -44,7 +44,7 @@ public class GUIHelpers {
     public static void texturedRect(double x, double y, double width, double height) {
         double zLevel = 0;
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        VertexBuffer bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         bufferbuilder.pos(x + 0, y + height, zLevel).tex(0, 1).endVertex();
         bufferbuilder.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
@@ -73,7 +73,7 @@ public class GUIHelpers {
         float minV = sprite.getMinV();
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
+        VertexBuffer buffer = tessellator.getBuffer();
         buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);

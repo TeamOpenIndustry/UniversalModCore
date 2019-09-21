@@ -4,6 +4,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.MousePressPacket;
+import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
@@ -27,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
+@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.11,1.12)")
 public class ModCore {
     public static final String MODID = "modcore";
     public static final String NAME = "ModCore";
@@ -178,10 +179,14 @@ public class ModCore {
         }
     }
 
-    public static abstract class Proxy {
-        public abstract void init();
+    public static class Proxy {
+        public void init() {
 
-        public abstract void setup();
+        }
+
+        public void setup() {
+            Recipes.registerRecipes();
+        }
     }
 
     public static class ClientProxy extends Proxy {
@@ -189,11 +194,13 @@ public class ModCore {
 
         @Override
         public void init() {
+            super.init();
             instance.mods.forEach(Mod::initClient);
         }
 
         @Override
         public void setup() {
+            super.setup();
             instance.mods.forEach(Mod::setupClient);
 
             ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
@@ -210,11 +217,13 @@ public class ModCore {
     public static class ServerProxy extends Proxy {
         @Override
         public void init() {
+            super.init();
             instance.mods.forEach(Mod::initServer);
         }
 
         @Override
         public void setup() {
+            super.setup();
             instance.mods.forEach(Mod::setupServer);
         }
     }
