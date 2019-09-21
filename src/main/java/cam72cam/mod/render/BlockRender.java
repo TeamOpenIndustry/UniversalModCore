@@ -64,7 +64,8 @@ public class BlockRender {
         colors.forEach(Runnable::run);
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntitySpecialRenderer<TileEntity>() {
-            public void render(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+            @Override
+            public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
                 BlockEntity instance = te.instance();
                 if (instance == null) {
                     return;
