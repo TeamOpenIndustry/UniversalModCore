@@ -39,13 +39,17 @@ public abstract class IParticle {
                 }
 
                 @Override
+                public boolean isTransparent() {
+                    return !ip.depthTestEnabled();
+                }
+
+                @Override
                 public void renderParticle(VertexBuffer buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
                     ip.ticks = particleAge;
                     ip.pos = new Vec3d(posX, posY, posZ);
                     ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);
                     ip.renderPos = ip.renderPos.add(this.motionX * partialTicks, this.motionY * partialTicks, this.motionZ * partialTicks);
 
-                    GLBoolTracker depth = new GLBoolTracker(GL11.GL_DEPTH_TEST, ip.depthTestEnabled());
                     if (renderer == null) {
                         GL11.glPushMatrix();
                         {
@@ -63,7 +67,6 @@ public abstract class IParticle {
                             ip.canRender = false;
                         }
                     }
-                    depth.restore();
                 }
             };
 

@@ -67,8 +67,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     public final void register() {
         try {
             TileEntity.addMapping(this.getClass(), this.getName().internal.toString());
-        } catch (Exception ex) {
-            throw new RuntimeException("Duplicate TileEntity registration with different name: " + getName());
+        } catch (IllegalArgumentException ex) {
+            //pass
         }
     }
 

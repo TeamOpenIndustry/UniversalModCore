@@ -56,8 +56,9 @@ public class GlobalRender {
         if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK) {
             Vec3i pos = new Vec3i(event.getTarget().getBlockPos());
             for (ItemBase item : itemMouseovers.keySet()) {
-                if (item.internal == player.getHeldItem(Hand.PRIMARY).internal.getItem()) {
-                    itemMouseovers.get(item).render(player, player.getHeldItem(Hand.PRIMARY), pos, new Vec3d(event.getTarget().hitVec), event.getPartialTicks());
+                ItemStack held = player.getHeldItem(Hand.PRIMARY);
+                if (!held.isEmpty() && item.internal == held.internal.getItem()) {
+                    itemMouseovers.get(item).render(player, held, pos, new Vec3d(event.getTarget().hitVec), event.getPartialTicks());
                 }
             }
         }

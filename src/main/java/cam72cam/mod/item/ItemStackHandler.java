@@ -67,7 +67,11 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public void set(int slot, ItemStack stack) {
-        internal.setStackInSlot(slot, stack.internal);
+        if (stack.internal != null) {
+            internal.setStackInSlot(slot, stack.internal);
+        } else if (internal.getStackInSlot(slot) != null){
+            internal.extractItem(slot, internal.getStackInSlot(slot).stackSize, false);
+        }
     }
 
     @Override

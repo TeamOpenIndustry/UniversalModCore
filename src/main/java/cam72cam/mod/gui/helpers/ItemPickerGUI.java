@@ -58,7 +58,13 @@ public class ItemPickerGUI {
                     button.yPosition = buttonCoordList.get(button.id).getY() - (int) Math.floor(scrollBar.getValue() * 32);
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                    this.renderToolTip(((ItemButton) button).stack.internal, mouseX, mouseY);
+                    if (((ItemButton) button).stack.internal != null) {
+                        this.renderToolTip(((ItemButton) button).stack.internal, mouseX, mouseY);
+                    } else {
+                        List<String> text = new ArrayList<>();
+                        text.add(((ItemButton) button).stack.getDisplayName());
+                        this.drawHoveringText(text, mouseX, mouseY, fontRendererObj);
+                    }
                 }
             }
         }

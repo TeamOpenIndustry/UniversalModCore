@@ -22,10 +22,7 @@ public class ItemButton extends GuiButton {
         Gui.drawRect(xPosition, yPosition, xPosition + 32, yPosition + 32, 0xFFFFFFFF);
         RenderHelper.enableStandardItemLighting();
 
-        FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
-        if (font == null) {
-            font = mc.fontRendererObj;
-        }
+        FontRenderer font = mc.fontRendererObj;
         //mc.getRenderItem().renderItemIntoGUI(stack, x, y);
         GL11.glPushMatrix();
         {

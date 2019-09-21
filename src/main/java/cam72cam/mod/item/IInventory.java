@@ -32,7 +32,7 @@ public interface IInventory {
 
             @Override
             public int getLimit(int slot) {
-                return get(slot).isEmpty() ? 64 : get(slot).internal.getMaxStackSize();
+                return get(slot).getLimit();
             }
 
         };
@@ -68,7 +68,7 @@ public interface IInventory {
                     return ItemStack.EMPTY;
                 }
 
-                if (!itemStack.internal.isItemEqual(current)) {
+                if (!itemStack.equals(new ItemStack(current))) {
                     return itemStack;
                 }
                 if (!net.minecraft.item.ItemStack.areItemStackTagsEqual(itemStack.internal, current)) {

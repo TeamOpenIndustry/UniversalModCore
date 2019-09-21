@@ -20,7 +20,7 @@ public class ItemStack {
     }
     public ItemStack(net.minecraft.item.ItemStack internal) {
         this.internal = internal;
-        this.item = this.internal == null ? null : internal.getItem();
+        this.item = this.internal != null ? internal.getItem() : null;
     }
 
     public ItemStack(Item item, int count) {
@@ -56,6 +56,10 @@ public class ItemStack {
     }
 
     public TagCompound getTagCompound() {
+        if (internal == null) {
+            return new TagCompound();
+        }
+
         if (internal.getTagCompound() == null) {
             internal.setTagCompound(new TagCompound().internal);
         }
@@ -63,27 +67,31 @@ public class ItemStack {
     }
 
     public void setTagCompound(TagCompound data) {
-        internal.setTagCompound(data.internal);
+        if (internal != null) {
+            internal.setTagCompound(data.internal);
+        }
     }
 
     public ItemStack copy() {
-        return new ItemStack(internal.copy());
+        return internal != null ? new ItemStack(internal.copy()) : EMPTY;
     }
 
     public TagCompound toTag() {
-        return new TagCompound(internal.serializeNBT());
+        return internal != null ? new TagCompound(internal.serializeNBT()) : new TagCompound();
     }
 
     public int getCount() {
-        return internal.stackSize;
+        return internal != null ? internal.stackSize : 0;
     }
 
     public void setCount(int count) {
-        internal.stackSize = count;
+        if (internal != null) {
+            internal.stackSize = count;
+        }
     }
 
     public String getDisplayName() {
-        return internal.getDisplayName();
+        return internal != null ? internal.getDisplayName() : "Empty";
     }
 
     public boolean isEmpty() {
@@ -91,11 +99,13 @@ public class ItemStack {
     }
 
     public void shrink(int i) {
-        internal.stackSize -= i;
+        if (internal != null) {
+            internal.stackSize -= i;
+        }
     }
 
     public boolean equals(ItemStack other) {
-        return internal.isItemEqual(other.internal);
+        return (other.internal == null && internal == null) ||  internal != null && internal.isItemEqual(other.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
@@ -103,7 +113,7 @@ public class ItemStack {
     }
 
     public boolean is(ItemBase item) {
-        return item.internal == this.item;
+        return item != null && item.internal == this.item;
     }
 
     public boolean isFluidContainer() {
@@ -119,19 +129,21 @@ public class ItemStack {
     }
 
     public int getLimit() {
-        return internal.getMaxStackSize();
+        return internal != null ? internal.getMaxStackSize() : 64;
     }
 
     public boolean isValidTool(ToolType tool) {
-        return item.getToolClasses(internal).contains(tool.toString());
+        return item != null && item.getToolClasses(internal).contains(tool.toString());
     }
 
     @Override
     public String toString() {
-        return internal.toString();
+        return internal != null ? internal.toString() : "Empty";
     }
 
     public void damageItem(int i, Player player) {
-        internal.damageItem(i, player.internal);
+        if (internal != null) {
+            internal.damageItem(i, player.internal);
+        }
     }
 }
