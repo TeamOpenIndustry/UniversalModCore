@@ -3,8 +3,8 @@ package cam72cam.mod.item;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Recipes {
     private static List<Runnable> registrations = new ArrayList<>();
@@ -18,15 +18,25 @@ public class Recipes {
     }
 
     public static void register(ItemStack result, int width, Fuzzy... ingredients) {
-        String offsets = "123456789";
         registrations.add(() -> {
-            Object[] data = new Object[ingredients.length * 2];
-            for (int i = 0; i < ingredients.length/width; i++) {
-                data[i] = offsets.substring(i * width,  i * width + width);
+            int rows = ingredients.length/width;
+            List<Fuzzy> ingredientSet = new ArrayList(Arrays.stream(ingredients).filter(Objects::nonNull).collect(Collectors.toSet()));
+
+            Object[] data = new Object[rows + ingredientSet.size() * 2];
+            for (int i = 0; i < rows; i++) {
+                data[i] = "";
+                for (int j = 0; j < width; j++) {
+                    int idx = i * width + j;
+                    if (ingredients[idx] != null) {
+                        data[i] += "" + ingredientSet.indexOf(ingredients[idx]);
+                    } else {
+                        data[i] += " ";
+                    }
+                }
             }
-            for (int i = 0; i < ingredients.length; i++) {
-                data[ingredients.length/width + i * 2] = offsets.charAt(i);
-                data[ingredients.length/width + i * 2 + 1] = ingredients[i];
+            for (int i = 0; i < ingredientSet.size(); i++) {
+                data[rows + i * 2] = (""+i).charAt(0);
+                data[rows + i * 2 + 1] = ingredientSet.get(i).toString();
             }
             GameRegistry.addRecipe(new ShapedOreRecipe(result.internal, data));
         });
