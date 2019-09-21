@@ -22,22 +22,22 @@ public interface IBoundingBox {
 
             @Override
             public IBoundingBox expand(Vec3d centered) {
-                return from(internal.expand(centered.x, centered.y, centered.z));
+                return from(internal.addCoord(centered.x, centered.y, centered.z));
             }
 
             @Override
             public IBoundingBox contract(Vec3d centered) {
-                return from(internal.contract(centered.x, centered.y, centered.z));
+                return from(internal.addCoord(-centered.x, -centered.y, -centered.z));
             }
 
             @Override
             public IBoundingBox grow(Vec3d val) {
-                return from(internal.grow(val.x, val.y, val.z));
+                return from(internal.expand(val.x, val.y, val.z));
             }
 
             @Override
             public IBoundingBox offset(Vec3d vec3d) {
-                return from(internal.offset(vec3d.internal));
+                return from(internal.offset(vec3d.x, vec3d.y, vec3d.z));
             }
 
             @Override
@@ -62,7 +62,7 @@ public interface IBoundingBox {
 
             @Override
             public boolean contains(Vec3d vec) {
-                return internal.contains(vec.internal);
+                return internal.isVecInside(vec.internal);
             }
         };
     }

@@ -39,7 +39,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final List<Consumer<ModelBakeEvent>> bakers = new ArrayList<>();

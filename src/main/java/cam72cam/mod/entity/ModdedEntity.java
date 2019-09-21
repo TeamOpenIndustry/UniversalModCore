@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
@@ -24,6 +25,7 @@ import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -144,7 +146,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Player Interact */
 
     @Override
-    public final boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
+    public final boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack Stack, EnumHand hand) {
         return iClickable.onClick(new Player(player), Hand.from(hand)) == ClickResult.ACCEPTED;
     }
 
@@ -152,11 +154,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final boolean attackEntityFrom(DamageSource damagesource, float amount) {
-        cam72cam.mod.entity.Entity wrapEnt = new cam72cam.mod.entity.Entity(damagesource.getTrueSource());
+        cam72cam.mod.entity.Entity wrapEnt = new cam72cam.mod.entity.Entity(damagesource.getSourceOfDamage());
         DamageType type;
-        if (damagesource.isExplosion() && !(damagesource.getTrueSource() instanceof EntityMob)) {
+        if (damagesource.isExplosion() && !(damagesource.getSourceOfDamage() instanceof EntityMob)) {
             type = DamageType.EXPLOSION;
-        } else if (damagesource.getTrueSource() instanceof EntityPlayer) {
+        } else if (damagesource.getSourceOfDamage() instanceof EntityPlayer) {
             type = damagesource.isProjectile() ? DamageType.PROJECTILE : DamageType.PLAYER;
         } else {
             type = DamageType.OTHER;
@@ -217,8 +219,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Optional<StaticPassenger> found = staticPassengers.stream().filter(filter).findFirst();
         if (found.isPresent()) {
             staticPassengers.remove(found.get());
-            Entity ent = found.get().reconstitute(world);
-            world.spawnEntity(ent);
+            Entity ent = found.get().reconstitute(worldObj);
+            worldObj.spawnEntityInWorld(ent);
 
             Vec3d dismountPos = iRidable.getDismountPosition(new cam72cam.mod.entity.Entity(ent));
             iRidable.onDismountPassenger(new cam72cam.mod.entity.Entity(ent));
@@ -363,7 +365,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         private Vec3i startPos;
 
         public StaticPassenger(cam72cam.mod.entity.Entity entityliving) {
-            ident = new Identifier(EntityList.getKey(entityliving.internal));
+            ident = new Identifier(EntityList.getEntityString(entityliving.internal));
             data = new TagCompound(entityliving.internal.writeToNBT(new NBTTagCompound()));
             uuid = entityliving.getUUID();
             startPos = new Vec3i(entityliving.getPosition());
@@ -392,7 +394,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         public Entity reconstitute(World world) {
-            Entity ent = EntityList.createEntityByIDFromName(ident.internal, world);
+            Entity ent = EntityList.createEntityByIDFromName(ident.internal.toString(), world);
             ent.readFromNBT(data.internal);
             return ent;
         }

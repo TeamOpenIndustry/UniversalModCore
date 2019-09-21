@@ -30,6 +30,7 @@ import net.minecraftforge.fml.common.registry.GameData;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -64,15 +65,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     public final void register() {
-        ResourceLocation currentName = TileEntity.getKey(this.getClass());
-        if (currentName != null) {
-            if (!currentName.toString().equals(getName().toString())) {
-                throw new RuntimeException("Duplicate TileEntity registration with different name: " + currentName + " : " + getName());
-            }
-            // TODO log a warning here?
-            return;
+        try {
+            TileEntity.addMapping(this.getClass(), this.getName().internal.toString());
+        } catch (Exception ex) {
+            throw new RuntimeException("Duplicate TileEntity registration with different name: " + getName());
         }
-        GameData.getTileEntityRegistry().putObject(this.getName().internal, this.getClass());
     }
 
     public Identifier getName() {
@@ -85,14 +82,14 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     @Override
-    public void setWorld(net.minecraft.world.World world) {
-        super.setWorld(world);
+    public void setWorldObj(net.minecraft.world.World world) {
+        super.setWorldObj(world);
         this.world = World.get(world);
     }
 
     @Override
     protected void setWorldCreate(net.minecraft.world.World worldIn) {
-        super.setWorld(worldIn);
+        super.setWorldObj(worldIn);
         this.world = World.get(worldIn);
     }
 
@@ -162,7 +159,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         super.markDirty();
         if (world.isServer) {
             world.internal.notifyBlockUpdate(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
-            world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType(), true);
+            world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType());
         }
     }
 
@@ -262,7 +259,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             if (target == null) {
                 return null;
             }
-            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(new IItemHandlerModifiable() {
+            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(new ItemStackHandler(target.getSlotCount()) {
                 @Override
                 public int getSlots() {
                     return target.getSlotCount();
@@ -292,9 +289,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 }
 
                 @Override
-                public int getSlotLimit(int slot) {
+                protected int getStackLimit(int slot, ItemStack stack)
+                {
                     return target.getLimit(slot);
                 }
+
             });
         }
         if (capability == CapabilityEnergy.ENERGY) {
@@ -339,7 +338,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     public void setWorld(World world) {
-        super.setWorld(world.internal);
+        super.setWorldObj(world.internal);
     }
 
     public void setPos(Vec3i pos) {
@@ -390,7 +389,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     public boolean isLoaded() {
-        return this.hasWorld() && (world.isServer || hasTileData);
+        return this.hasWorldObj() && (world.isServer || hasTileData);
     }
 
     // TODO render system?

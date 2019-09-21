@@ -5,7 +5,6 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class Fuzzy {
         List<ItemStack> results = new ArrayList<>();
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
             if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
-                NonNullList<net.minecraft.item.ItemStack> temp = NonNullList.create();
+                List<net.minecraft.item.ItemStack> temp = new ArrayList<>();
                 stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
                 results.addAll(temp.stream().map(ItemStack::new).collect(Collectors.toList()));
             } else {

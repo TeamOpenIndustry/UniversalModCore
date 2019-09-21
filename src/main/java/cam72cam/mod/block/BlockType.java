@@ -25,11 +25,12 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
+@Mod.EventBusSubscriber
 public abstract class BlockType {
     private static List<Consumer<RegistryEvent.Register<Block>>> registrations = new ArrayList<>();
     public final net.minecraft.block.Block internal;
@@ -102,7 +103,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public final boolean onBlockActivated(net.minecraft.world.World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        public final boolean onBlockActivated(net.minecraft.world.World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable net.minecraft.item.ItemStack heldItem, EnumFacing facing, float hitX, float hitY, float hitZ) {
             return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ));
         }
 
@@ -112,8 +113,9 @@ public abstract class BlockType {
         }
 
         @Override
-        public void neighborChanged(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos, net.minecraft.block.Block blockIn, BlockPos fromPos) {
-            this.onNeighborChange(worldIn, pos, fromPos);
+        public void neighborChanged(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos, Block blockIn) {
+            // TODO 1.10 this might have some interesting side effects
+            this.onNeighborChange(worldIn, pos, pos);
         }
 
         @Override
@@ -148,7 +150,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, net.minecraft.world.World source, BlockPos pos) {
             return new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1);
         }
 
@@ -170,10 +172,6 @@ public abstract class BlockType {
         /*
          * Fence, glass override
          */
-        @Override
-        public boolean canBeConnectedTo(IBlockAccess internal, BlockPos pos, EnumFacing facing) {
-            return settings.connectable;
-        }
 
         @Deprecated
         @Override

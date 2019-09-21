@@ -6,11 +6,22 @@ import javax.annotation.Nonnull;
 import java.util.function.BiPredicate;
 
 public class ItemStackHandler implements IInventory {
-    public final net.minecraftforge.items.ItemStackHandler internal;
+    public final ExposedItemStackHandler internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
 
+    private class ExposedItemStackHandler extends net.minecraftforge.items.ItemStackHandler {
+        public ExposedItemStackHandler(int size) {
+            super(size);
+        }
+
+        @Override
+        public int getStackLimit(int slot, net.minecraft.item.ItemStack stack) {
+            return super.getStackLimit(slot, stack);
+        }
+    }
+
     public ItemStackHandler(int size) {
-        this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
+        this.internal = new ExposedItemStackHandler(size) {
             @Override
             public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
                 if (checkSlot.test(slot, new ItemStack(stack))) {
@@ -71,7 +82,7 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public int getLimit(int slot) {
-        return internal.getSlotLimit(slot);
+        return internal.getStackLimit(slot, internal.getStackInSlot(slot));
     }
 
     public TagCompound save() {

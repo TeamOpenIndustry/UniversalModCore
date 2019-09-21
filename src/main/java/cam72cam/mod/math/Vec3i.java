@@ -115,7 +115,18 @@ public class Vec3i {
     }
 
     public Vec3i rotate(Rotation rotation) {
-        return new Vec3i(internal.rotate(rotation.internal));
+        switch (rotation)
+        {
+            case NONE:
+            default:
+                return this;
+            case CLOCKWISE_90:
+                return new Vec3i(-internal.getZ(), internal.getY(), internal.getX());
+            case CLOCKWISE_180:
+                return new Vec3i(-internal.getX(), internal.getY(), -internal.getZ());
+            case COUNTERCLOCKWISE_90:
+                return new Vec3i(internal.getZ(), internal.getY(), -internal.getX());
+        }
     }
 
     @Override

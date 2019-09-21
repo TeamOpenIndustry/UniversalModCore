@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class BlockRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final List<Consumer<ModelBakeEvent>> bakers = new ArrayList<>();
@@ -49,10 +49,10 @@ public class BlockRender {
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent tick) {
-        if (Minecraft.getMinecraft().world == null) {
+        if (Minecraft.getMinecraft().theWorld == null) {
             return;
         }
-        List<net.minecraft.tileentity.TileEntity> tes = Minecraft.getMinecraft().world.loadedTileEntityList.stream()
+        List<net.minecraft.tileentity.TileEntity> tes = Minecraft.getMinecraft().theWorld.loadedTileEntityList.stream()
                 .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                 .collect(Collectors.toList());
         Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);

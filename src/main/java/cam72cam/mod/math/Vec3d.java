@@ -9,9 +9,9 @@ public class Vec3d {
 
     public Vec3d(net.minecraft.util.math.Vec3d internal) {
         this.internal = internal;
-        this.x = internal.x;
-        this.y = internal.y;
-        this.z = internal.z;
+        this.x = internal.xCoord;
+        this.y = internal.yCoord;
+        this.z = internal.zCoord;
     }
 
     public Vec3d(double x, double y, double z) {

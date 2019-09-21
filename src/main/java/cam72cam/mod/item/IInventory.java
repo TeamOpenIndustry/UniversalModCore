@@ -32,7 +32,7 @@ public interface IInventory {
 
             @Override
             public int getLimit(int slot) {
-                return inv.getSlotLimit(slot);
+                return get(slot).isEmpty() ? 64 : get(slot).internal.getMaxStackSize();
             }
 
         };
@@ -59,7 +59,7 @@ public interface IInventory {
             public ItemStack insert(int slot, ItemStack itemStack, boolean simulate) {
                 net.minecraft.item.ItemStack current = inventory.getStackInSlot(slot);
 
-                if (current.isEmpty()) {
+                if (current == null || current.stackSize == 0) {
                     set(slot, itemStack);
                     return ItemStack.EMPTY;
                 }
@@ -75,7 +75,7 @@ public interface IInventory {
                     return itemStack;
                 }
 
-                int space = current.getMaxStackSize() - current.getCount();
+                int space = current.getMaxStackSize() - current.stackSize;
                 if (space >= 0) {
                     return itemStack;
                 }

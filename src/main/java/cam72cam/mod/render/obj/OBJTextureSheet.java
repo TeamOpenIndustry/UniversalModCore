@@ -307,10 +307,10 @@ public class OBJTextureSheet {
             vminV -= offset.y;
             vmaxV -= offset.y;
 
-            minU = MathHelper.floor(Math.min(minU, vminU));
-            maxU = MathHelper.ceil(Math.max(maxU, vmaxU));
-            minV = MathHelper.floor(Math.min(minV, vminV));
-            maxV = MathHelper.ceil(Math.max(maxV, vmaxV));
+            minU = (int) Math.floor(Math.min(minU, vminU));
+            maxU = (int) Math.ceil(Math.max(maxU, vmaxU));
+            minV = (int) Math.floor(Math.min(minV, vminV));
+            maxV = (int) Math.ceil(Math.max(maxV, vmaxV));
 
             return offset;
         }

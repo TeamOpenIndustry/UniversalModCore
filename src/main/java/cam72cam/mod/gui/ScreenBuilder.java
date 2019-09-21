@@ -65,7 +65,7 @@ class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawCenteredString(String str, int x, int y, int color) {
-        super.drawCenteredString(this.fontRenderer, str, this.width / 2 + x, this.height / 4 + y, color);
+        super.drawCenteredString(this.fontRendererObj, str, this.width / 2 + x, this.height / 4 + y, color);
     }
 
     @Override

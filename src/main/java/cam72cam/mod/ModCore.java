@@ -9,6 +9,8 @@ import cam72cam.mod.input.MousePressPacket;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.render.EntityRenderer;
+import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.text.Command;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
@@ -29,7 +31,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.11,1.12)")
+@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
 public class ModCore {
     public static final String MODID = "modcore";
     public static final String NAME = "ModCore";
@@ -163,6 +165,10 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case INITIALIZE:
+                    EntityRenderer.registerEntities();
+                    GlobalRender.registerGlobalRenderer();
+                    break;
                 case SETUP:
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
                         if (skipN > 0) {

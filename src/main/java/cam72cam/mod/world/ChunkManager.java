@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
+@Mod.EventBusSubscriber
 class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
     /*
      * This takes a similar approach to FTBUtilities
@@ -108,7 +108,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
             boolean shouldChunkLoad = false;
 
             for (ChunkPos pos : loaded) {
-                if (chunk.x == pos.chunkX && chunk.z == pos.chunkZ) {
+                if (chunk.chunkXPos == pos.chunkX && chunk.chunkZPos == pos.chunkZ) {
                     shouldChunkLoad = true;
                     loaded.remove(pos);
                     break;
@@ -119,7 +119,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
                 // Leave chunk loaded
                 //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
             } else {
-                ModCore.debug("UNLOADED CHUNK %s %s", chunk.x, chunk.z);
+                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                 try {
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                 } catch (Exception ex) {

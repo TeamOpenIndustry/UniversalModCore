@@ -110,7 +110,7 @@ public class GUIHelpers {
     }
 
     public static void drawCenteredString(String text, int x, int y, int color) {
-        Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), (float) y, color);
     }
 
     public static void bindTexture(Identifier tex) {

@@ -1,6 +1,5 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
@@ -29,7 +28,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
+@Mod.EventBusSubscriber
 public class ItemBase {
     private static List<Consumer<RegistryEvent.Register<Item>>> registrations = new ArrayList<>();
     public final Item internal;
@@ -95,7 +94,7 @@ public class ItemBase {
     @Optional.Interface(iface = "mezz.jei.api.ingredients.ISlowRenderItem", modid = "jei")
     private class ItemInternal extends Item {
         @Override
-        public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<net.minecraft.item.ItemStack> items) {
+        public void getSubItems(Item itemIn, CreativeTabs tab, List<net.minecraft.item.ItemStack> items) {
             CreativeTab myTab = tab != CreativeTabs.SEARCH ? new CreativeTab(tab) : null;
             items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
@@ -109,14 +108,14 @@ public class ItemBase {
         }
 
         @Override
-        public final EnumActionResult onItemUse(EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        public final EnumActionResult onItemUse(net.minecraft.item.ItemStack stack, EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
             return ItemBase.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
         }
 
         @Override
-        public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
+        public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
             onClickAir(new Player(player), World.get(world), Hand.from(hand));
-            return super.onItemRightClick(world, player, hand);
+            return super.onItemRightClick(stack, world, player, hand);
         }
 
         @Override

@@ -50,7 +50,7 @@ public class Audio {
         }
     }
 
-    @Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+    @Mod.EventBusSubscriber(value = Side.CLIENT)
     public static class ClientProxy implements IAudioProxy {
         private static ModSoundManager soundManager;
 

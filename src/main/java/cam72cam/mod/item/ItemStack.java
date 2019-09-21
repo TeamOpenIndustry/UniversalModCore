@@ -8,14 +8,19 @@ import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.fluids.FluidUtil;
 
 public class ItemStack {
-    public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
+    public static final ItemStack EMPTY = new ItemStack();
 
     public final net.minecraft.item.ItemStack internal;
     private final Item item;
 
+    private ItemStack() {
+        // Empty
+        internal = null;
+        item = null;
+    }
     public ItemStack(net.minecraft.item.ItemStack internal) {
         this.internal = internal;
-        this.item = internal.getItem();
+        this.item = this.internal == null ? null : internal.getItem();
     }
 
     public ItemStack(Item item, int count) {
@@ -23,7 +28,7 @@ public class ItemStack {
     }
 
     public ItemStack(TagCompound bedItem) {
-        this(new net.minecraft.item.ItemStack(bedItem.internal));
+        this(net.minecraft.item.ItemStack.loadItemStackFromNBT(bedItem.internal));
     }
 
     public ItemStack(Item item, int count, int meta) {
@@ -70,11 +75,11 @@ public class ItemStack {
     }
 
     public int getCount() {
-        return internal.getCount();
+        return internal.stackSize;
     }
 
     public void setCount(int count) {
-        internal.setCount(count);
+        internal.stackSize = count;
     }
 
     public String getDisplayName() {
@@ -82,11 +87,11 @@ public class ItemStack {
     }
 
     public boolean isEmpty() {
-        return internal.isEmpty();
+        return internal == null || internal.stackSize == 0;
     }
 
     public void shrink(int i) {
-        internal.shrink(i);
+        internal.stackSize -= i;
     }
 
     public boolean equals(ItemStack other) {

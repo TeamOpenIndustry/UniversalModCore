@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-@EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+@EventBusSubscriber(value = Side.CLIENT)
 public class Mouse {
     @SubscribeEvent
     public static void onClick(MouseEvent event) {

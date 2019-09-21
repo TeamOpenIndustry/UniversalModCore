@@ -41,7 +41,7 @@ public class EntityRegistry {
 
             // This has back-compat for older entity names
             // TODO expose updateFreq and vecUpdates
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(id.internal, ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
+            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
 
             identifiers.put(type, id.toString());
             constructors.put(id.toString(), ctr);
@@ -73,7 +73,7 @@ public class EntityRegistry {
         return ent.getSelf();
     }
 
-    @EventBusSubscriber(modid = ModCore.MODID)
+    @EventBusSubscriber
     public static class EntityEvents {
         @SubscribeEvent
         public static void onEntityJoin(EntityJoinWorldEvent event) {
@@ -92,7 +92,7 @@ public class EntityRegistry {
         }
     }
 
-    @EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+    @EventBusSubscriber(value = Side.CLIENT)
     public static class EntityClientEvents {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {

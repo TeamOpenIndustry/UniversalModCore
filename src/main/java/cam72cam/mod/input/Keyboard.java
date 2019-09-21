@@ -36,13 +36,13 @@ public class Keyboard {
 
     /* Key Bindings */
 
-    @Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+    @Mod.EventBusSubscriber(value = Side.CLIENT)
     public static class KeyboardListener {
         static List<KeyBinding> keys = new ArrayList<>();
 
         @SubscribeEvent
         public static void onKeyInput(TickEvent.ClientTickEvent event) {
-            EntityPlayerSP player = Minecraft.getMinecraft().player;
+            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
             if (player == null) {
                 return;
             }

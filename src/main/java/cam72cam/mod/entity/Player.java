@@ -23,7 +23,7 @@ public class Player extends Entity {
     }
 
     public void sendMessage(PlayerMessage o) {
-        internal.sendMessage(o.internal);
+        internal.addChatComponentMessage(o.internal);
     }
 
     public boolean isCrouching() {

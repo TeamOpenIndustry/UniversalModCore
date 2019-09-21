@@ -31,12 +31,6 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public BoundingBox intersect(AxisAlignedBB p_191500_1_) {
-        // Used by piston
-        return this;
-    }
-
-    @Override
     public BoundingBox union(AxisAlignedBB other) {
         // Used by piston
         // Used by entityliving for BB stuff
@@ -46,19 +40,16 @@ public class BoundingBox extends AxisAlignedBB {
     /* Modifiers */
 
     @Override
-    public BoundingBox expand(double x, double y, double z) {
+    public AxisAlignedBB addCoord(double x, double y, double z) {
         return new BoundingBox(internal.expand(new Vec3d(x, y, z)));
     }
 
     @Override
-    public BoundingBox contract(double x, double y, double z) {
-        return new BoundingBox(internal.contract(new Vec3d(x, y, z)));
-    }
-
-    public BoundingBox grow(double x, double y, double z) {
+    public BoundingBox expand(double x, double y, double z) {
         return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
     }
 
+    @Override
     public BoundingBox offset(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
@@ -86,21 +77,21 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public boolean contains(net.minecraft.util.math.Vec3d vec) {
+    public boolean isVecInside(net.minecraft.util.math.Vec3d vec) {
         return internal.contains(new Vec3d(vec));
     }
 
     @Override
     public RayTraceResult calculateIntercept(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
         int steps = 10;
-        double xDist = vecB.x - vecA.x;
-        double yDist = vecB.y - vecA.y;
-        double zDist = vecB.z - vecA.z;
+        double xDist = vecB.xCoord - vecA.xCoord;
+        double yDist = vecB.yCoord - vecA.yCoord;
+        double zDist = vecB.zCoord - vecA.zCoord;
         double xDelta = xDist / steps;
         double yDelta = yDist / steps;
         double zDelta = zDist / steps;
         for (int step = 0; step < steps; step++) {
-            Vec3d stepPos = new Vec3d(vecA.x + xDelta * step, vecA.y + yDelta * step, vecA.z + zDelta * step);
+            Vec3d stepPos = new Vec3d(vecA.xCoord + xDelta * step, vecA.yCoord + yDelta * step, vecA.zCoord + zDelta * step);
             if (internal.contains(stepPos)) {
                 return new RayTraceResult(stepPos.internal, EnumFacing.UP);
             }

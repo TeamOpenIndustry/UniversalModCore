@@ -147,7 +147,7 @@ public class TagCompound {
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
         NBTTagCompound data = new NBTTagCompound();
         data.setUniqueId("id", entity.internal.getUniqueID());
-        data.setInteger("world", entity.internal.world.provider.getDimension());
+        data.setInteger("world", entity.internal.worldObj.provider.getDimension());
         internal.setTag(key, data);
     }
 

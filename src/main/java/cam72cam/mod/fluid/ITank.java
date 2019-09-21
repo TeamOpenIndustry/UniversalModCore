@@ -3,13 +3,12 @@ package cam72cam.mod.fluid;
 import cam72cam.mod.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 import java.util.function.Consumer;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        IFluidHandlerItem internal = FluidUtil.getFluidHandler(inputCopy.internal);
+        IFluidHandler internal = FluidUtil.getFluidHandler(inputCopy.internal);
         if (internal == null) {
             return null;
         }
@@ -32,18 +31,18 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
+                IFluidHandler temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
                 temp.fill(fluidStack.internal, true);
-                onUpdate.accept(new ItemStack(temp.getContainer()));
+                onUpdate.accept(inputCopy); // TODO 1.10.2
 
                 return internal.fill(fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
+                IFluidHandler temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
                 temp.drain(fluidStack.internal, true);
-                onUpdate.accept(new ItemStack(temp.getContainer()));
+                onUpdate.accept(inputCopy); // TODO 1.10.2
 
                 return new FluidStack(internal.drain(fluidStack.internal, !simulate));
             }

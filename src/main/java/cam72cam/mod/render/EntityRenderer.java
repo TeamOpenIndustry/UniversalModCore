@@ -1,7 +1,6 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
-import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.math.Vec3d;
@@ -13,12 +12,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -26,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
 public class EntityRenderer extends Render<ModdedEntity> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
@@ -38,9 +31,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         super(factory);
     }
 
-    //TODO client only
-    @SubscribeEvent
-    public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
+    public static void registerEntities() {
         RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, manager -> new EntityRenderer(manager));
     }
 
@@ -84,7 +75,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
 
             for (ModdedEntity.StaticPassenger pass : stock.getStaticPassengers()) {
                 if (pass.cache == null) {
-                    pass.cache = pass.reconstitute(stock.world);
+                    pass.cache = pass.reconstitute(stock.worldObj);
                 }
                 Vec3d pos = stock.getRidingOffset(pass.uuid);
                 if (pos == null) {

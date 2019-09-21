@@ -7,10 +7,10 @@ import net.minecraft.client.renderer.OpenGlHelper;
 
 public class MinecraftClient {
     public static Player getPlayer() {
-        if (Minecraft.getMinecraft().player == null) {
+        if (Minecraft.getMinecraft().thePlayer == null) {
             return null;
         }
-        return new Player(Minecraft.getMinecraft().player);
+        return new Player(Minecraft.getMinecraft().thePlayer);
     }
 
     public static void startProfiler(String section) {

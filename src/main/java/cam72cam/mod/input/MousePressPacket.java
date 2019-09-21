@@ -25,7 +25,7 @@ public class MousePressPacket extends Packet {
         if (target != null) {
             switch (hand) {
                 case PRIMARY:
-                    getPlayer().internal.interactOn(target.internal, hand.internal);
+                    getPlayer().internal.interact(target.internal, getPlayer().getHeldItem(hand).internal, hand.internal);
                     break;
                 case SECONDARY:
                     getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);

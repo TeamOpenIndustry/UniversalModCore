@@ -43,7 +43,7 @@ public class Entity {
     }
 
     public World getWorld() {
-        return World.get(internal.world);
+        return World.get(internal.worldObj);
     }
 
     public UUID getUUID() {
@@ -138,7 +138,7 @@ public class Entity {
     }
 
     public void kill() {
-        internal.world.removeEntity(internal);
+        internal.worldObj.removeEntity(internal);
     }
 
     public final boolean isDead() {
@@ -151,7 +151,7 @@ public class Entity {
     public void sendToObserving(Packet packet) {
         boolean found = false;
         int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
-        for (EntityPlayer player : internal.world.playerEntities) {
+        for (EntityPlayer player : internal.worldObj.playerEntities) {
             if (player.getPositionVector().distanceTo(internal.getPositionVector()) < syncDist) {
                 found = true;
                 break;

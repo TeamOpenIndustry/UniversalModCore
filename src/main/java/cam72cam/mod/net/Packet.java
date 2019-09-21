@@ -43,7 +43,7 @@ public abstract class Packet {
     }
 
     protected final Player getPlayer() {
-        return ctx.side == Side.CLIENT ? MinecraftClient.getPlayer() : new Player(ctx.getServerHandler().player);
+        return ctx.side == Side.CLIENT ? MinecraftClient.getPlayer() : new Player(ctx.getServerHandler().playerEntity);
     }
 
     public void sendToAllAround(World world, Vec3d pos, double distance) {

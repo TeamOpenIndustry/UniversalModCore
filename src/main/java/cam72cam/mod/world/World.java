@@ -24,6 +24,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
@@ -42,7 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
+@Mod.EventBusSubscriber
 public class World {
 
     /* Static access to loaded worlds */
@@ -188,7 +189,7 @@ public class World {
     }
 
     public boolean spawnEntity(Entity ent) {
-        return internal.spawnEntity(ent.internal);
+        return internal.spawnEntityInWorld(ent.internal);
     }
 
 
@@ -336,7 +337,7 @@ public class World {
     }
 
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.spawnEntity(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
+        internal.spawnEntityInWorld(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
     }
 
     public void setBlock(Vec3i pos, BlockType block) {
@@ -349,7 +350,7 @@ public class World {
     }
 
     public boolean isTopSolid(Vec3i pos) {
-        return internal.getBlockState(pos.internal).isTopSolid();
+        return internal.getBlockState(pos.internal).isSideSolid(internal, pos.internal, EnumFacing.UP);
     }
 
     public int getRedstone(Vec3i pos) {
@@ -444,7 +445,7 @@ public class World {
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
         List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, new BoundingBox(bb));
-        return items.stream().map((EntityItem::getItem)).map(ItemStack::new).collect(Collectors.toList());
+        return items.stream().map((EntityItem::getEntityItem)).map(ItemStack::new).collect(Collectors.toList());
     }
 
     public BlockInfo getBlock(Vec3i pos) {

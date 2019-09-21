@@ -1,7 +1,6 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
-import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
@@ -17,12 +16,10 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.ArrayList;
@@ -31,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class GlobalRender {
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
     private static List<Consumer<Float>> overlayFuncs = new ArrayList<>();
@@ -44,7 +41,7 @@ public class GlobalRender {
     }
 
     @SubscribeEvent
-    public static void registerGlobalRenderer(RegistryEvent.Register<EntityEntry> event) {
+    public static void registerGlobalRenderer() {
         ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
             @Override
             public void renderTileEntityAt(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
