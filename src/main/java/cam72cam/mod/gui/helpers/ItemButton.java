@@ -1,11 +1,13 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.ItemRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderItem;
 import org.lwjgl.opengl.GL11;
 
 public class ItemButton extends GuiButton {
@@ -22,14 +24,14 @@ public class ItemButton extends GuiButton {
         Gui.drawRect(xPosition, yPosition, xPosition + 32, yPosition + 32, 0xFFFFFFFF);
         RenderHelper.enableStandardItemLighting();
 
-        FontRenderer font = mc.fontRendererObj;
+        FontRenderer font = mc.fontRenderer;
         //mc.getRenderItem().renderItemIntoGUI(stack, x, y);
         GL11.glPushMatrix();
         {
             GL11.glTranslated(xPosition, yPosition, 0);
             GL11.glScaled(2, 2, 1);
-            mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
-            mc.getRenderItem().renderItemOverlays(font, stack.internal, 0, 0);
+            RenderItem.getInstance().renderItemAndEffectIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
+            RenderItem.getInstance().renderItemOverlayIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
         }
         GL11.glPopMatrix();
     }

@@ -9,8 +9,7 @@ import invtweaks.api.container.ContainerSectionCallback;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.items.SlotItemHandler;
+import cpw.mods.fml.common.Optional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,8 +74,8 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
         x += paddingLeft;
         if (handler != null && handler.getSlotCount() > slotID) {
-            this.addSlotToContainer(new SlotItemHandler(handler.internal, slotID, x, y));
-            slotRefs.get(ContainerSection.CHEST).add(inventorySlots.get(inventorySlots.size() - 1));
+            this.addSlotToContainer(new Slot(handler.internal, slotID, x, y));
+            slotRefs.get(ContainerSection.CHEST).add((Slot) inventorySlots.get(inventorySlots.size() - 1));
         }
     }
 
@@ -181,7 +180,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     @Override
     public final net.minecraft.item.ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
         net.minecraft.item.ItemStack itemstack = null;
-        Slot slot = this.inventorySlots.get(index);
+        Slot slot = (Slot) this.inventorySlots.get(index);
         int numSlots = slotRefs.get(ContainerSection.CHEST).size();
 
         if (slot != null && slot.getHasStack()) {

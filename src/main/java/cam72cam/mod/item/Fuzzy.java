@@ -15,33 +15,33 @@ public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood");
     public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood");
     public static final Fuzzy REDSTONE_DUST = new Fuzzy("dustRedstone");
-    public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW_LAYER);
-    public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW);
-    public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
+    public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.snow_layer);
+    public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.snow);
+    public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.lead);
 
-    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Blocks.STONE_SLAB);
-    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone").add(Blocks.STONEBRICK);
+    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Blocks.stone_slab);
+    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone").add(Blocks.stonebrick);
     public static final Fuzzy SAND = new Fuzzy("sand");
-    public static final Fuzzy PISTON = new Fuzzy("piston").add(Blocks.PISTON);
+    public static final Fuzzy PISTON = new Fuzzy("piston").add(Blocks.piston);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy("ingotGold");
     public static final Fuzzy STEEL_INGOT = new Fuzzy("ingotSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy("ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy("blockIron");
-    public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
+    public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.iron_bars);
 
-    public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.NETHER_BRICK);
+    public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.nether_brick);
     public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel");
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock");
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
     public static final Fuzzy CONCRETE = new Fuzzy("concrete");
     public static final Fuzzy DIRT = new Fuzzy("dirt");
-    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.HARDENED_CLAY, 1, OreDictionary.WILDCARD_VALUE));
+    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.hardened_clay, 1, OreDictionary.WILDCARD_VALUE));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
     public static final Fuzzy PAPER = new Fuzzy("paper");
-    public static final Fuzzy BOOK = new Fuzzy("book").add(Items.BOOK);
-    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(Blocks.WOOL, 1, OreDictionary.WILDCARD_VALUE));
-    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(Items.BUCKET, 1));
+    public static final Fuzzy BOOK = new Fuzzy("book").add(Items.book);
+    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE));
+    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(Items.bucket, 1));
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald");
 
     static {

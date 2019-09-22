@@ -4,12 +4,9 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
@@ -27,14 +24,13 @@ public class GUIHelpers {
 
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
-        Tessellator tessellator = Tessellator.getInstance();
-        VertexBuffer bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        bufferbuilder.pos(x + 0, y + height, zLevel).endVertex();
-        bufferbuilder.pos(x + width, y + height, zLevel).endVertex();
-        bufferbuilder.pos(x + width, y + 0, zLevel).endVertex();
-        bufferbuilder.pos(x + 0, y + 0, zLevel).endVertex();
-        tessellator.draw();
+        Tessellator bufferbuilder = Tessellator.instance;
+        bufferbuilder.startDrawing(GL11.GL_QUADS);
+        bufferbuilder.addVertex(x + 0, y + height, zLevel);
+        bufferbuilder.addVertex(x + width, y + height, zLevel);
+        bufferbuilder.addVertex(x + width, y + 0, zLevel);
+        bufferbuilder.addVertex(x + 0, y + 0, zLevel);
+        bufferbuilder.draw();
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
 
@@ -43,18 +39,17 @@ public class GUIHelpers {
 
     public static void texturedRect(double x, double y, double width, double height) {
         double zLevel = 0;
-        Tessellator tessellator = Tessellator.getInstance();
-        VertexBuffer bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(x + 0, y + height, zLevel).tex(0, 1).endVertex();
-        bufferbuilder.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
-        bufferbuilder.pos(x + width, y + 0, zLevel).tex(1, 0).endVertex();
-        bufferbuilder.pos(x + 0, y + 0, zLevel).tex(0, 0).endVertex();
-        tessellator.draw();
+        Tessellator bufferbuilder = Tessellator.instance;
+        bufferbuilder.startDrawing(GL11.GL_QUADS);
+        bufferbuilder.addVertexWithUV(x + 0, y + height, zLevel, 0, 1);
+        bufferbuilder.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
+        bufferbuilder.addVertexWithUV(x + width, y + 0, zLevel, 1, 0);
+        bufferbuilder.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
+        bufferbuilder.draw();
     }
 
     public static void drawFluid(Fluid fluid, double x, double d, double width, int height, int scale) {
-        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.internal.getStill().toString());
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.internal.getStillIcon().toString());
         if (sprite != null) {
             drawSprite(sprite, fluid.internal.getColor(), x, d, width, height, scale);
         }
@@ -63,31 +58,30 @@ public class GUIHelpers {
     public static void drawSprite(TextureAtlasSprite sprite, int col, double x, double y, double width, double height, int scale) {
         double zLevel = 0;
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
 
-        GlStateManager.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+        GL11.glColor4f((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
         int iW = sprite.getIconWidth() * scale;
         int iH = sprite.getIconHeight() * scale;
 
         float minU = sprite.getMinU();
         float minV = sprite.getMinV();
 
-        Tessellator tessellator = Tessellator.getInstance();
-        VertexBuffer buffer = tessellator.getBuffer();
-        buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        Tessellator buffer = Tessellator.instance;
+        buffer.startDrawing(GL11.GL_QUADS);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);
             float maxVScaled = sprite.getInterpolatedV(16.0 * curHeight / iH);
             for (int offX = 0; offX < width; offX += iW) {
                 double curWidth = Math.min(iW, width - offX);
                 float maxUScaled = sprite.getInterpolatedU(16.0 * curWidth / iW);
-                buffer.pos(x + offX, y + offY, zLevel).tex(minU, minV).endVertex();
-                buffer.pos(x + offX, y + offY + curHeight, zLevel).tex(minU, maxVScaled).endVertex();
-                buffer.pos(x + offX + curWidth, y + offY + curHeight, zLevel).tex(maxUScaled, maxVScaled).endVertex();
-                buffer.pos(x + offX + curWidth, y + offY, zLevel).tex(maxUScaled, minV).endVertex();
+                buffer.addVertexWithUV(x + offX, y + offY, zLevel, minU, minV);
+                buffer.addVertexWithUV(x + offX, y + offY + curHeight, zLevel, minU, maxVScaled);
+                buffer.addVertexWithUV(x + offX + curWidth, y + offY + curHeight, zLevel, maxUScaled, maxVScaled);
+                buffer.addVertexWithUV(x + offX + curWidth, y + offY, zLevel, maxUScaled, minV);
             }
         }
-        tessellator.draw();
+        buffer.draw();
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
     }
@@ -106,11 +100,11 @@ public class GUIHelpers {
             drawFluid(fluid, x, y + height - fullHeight, width, fullHeight, 2);
             drawRect(x, y + height - fullHeight, width, fullHeight, color);
         }
-        GlStateManager.color(1, 1, 1, 1);
+        GL11.glColor4f(1, 1, 1, 1);
     }
 
     public static void drawCenteredString(String text, int x, int y, int color) {
-        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), (float) y, color);
+        Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), y, color);
     }
 
     public static void bindTexture(Identifier tex) {
@@ -118,10 +112,12 @@ public class GUIHelpers {
     }
 
     public static int getScreenWidth() {
-        return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+        Minecraft mc = Minecraft.getMinecraft();
+        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaledWidth();
     }
 
     public static int getScreenHeight() {
-        return new ScaledResolution(Minecraft.getMinecraft()).getScaledHeight();
+        Minecraft mc = Minecraft.getMinecraft();
+        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaledHeight();
     }
 }

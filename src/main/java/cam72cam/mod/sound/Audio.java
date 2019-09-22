@@ -9,11 +9,11 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.relauncher.Side;
 
 public class Audio {
 
@@ -50,7 +50,6 @@ public class Audio {
         }
     }
 
-    @Mod.EventBusSubscriber(value = Side.CLIENT)
     public static class ClientProxy implements IAudioProxy {
         private static ModSoundManager soundManager;
 
@@ -75,7 +74,7 @@ public class Audio {
         @SubscribeEvent
         public static void onSoundLoad(SoundLoadEvent event) {
             if (soundManager == null) {
-                soundManager = new ModSoundManager(event.getManager());
+                soundManager = new ModSoundManager(event.manager);
             } else {
                 soundManager.handleReload(false);
             }
@@ -97,7 +96,7 @@ public class Audio {
 
         @Override
         public void playSound(Vec3d pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
-            MinecraftClient.getPlayer().getWorld().internal.playSound(pos.x, pos.y, pos.z, sound.event, category.category, volume, pitch, false);
+            MinecraftClient.getPlayer().getWorld().internal.playSound(pos.x, pos.y, pos.z, sound.event, volume, pitch, false);
         }
     }
 }

@@ -1,8 +1,7 @@
 package cam72cam.mod.item;
 
-import net.minecraftforge.items.IItemHandlerModifiable;
-
 public interface IInventory {
+    /* TODO 1.7.10
     static IInventory from(IItemHandlerModifiable inv) {
         return new IInventory() {
             @Override
@@ -37,6 +36,7 @@ public interface IInventory {
 
         };
     }
+    */
 
     static IInventory from(net.minecraft.inventory.IInventory inventory) {
         return new IInventory() {

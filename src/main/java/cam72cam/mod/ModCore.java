@@ -1,27 +1,32 @@
 package cam72cam.mod;
 
+import cam72cam.mod.block.BlockType;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.input.Mouse;
 import cam72cam.mod.input.MousePressPacket;
+import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
-import cam72cam.mod.render.BlockRender;
-import cam72cam.mod.render.EntityRenderer;
-import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.*;
+import cam72cam.mod.sound.Audio;
 import cam72cam.mod.text.Command;
+import cam72cam.mod.world.ChunkManager;
+import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
@@ -31,7 +36,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
+@cpw.mods.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
 public class ModCore {
     public static final String MODID = "modcore";
     public static final String NAME = "ModCore";
@@ -132,6 +137,11 @@ public class ModCore {
         ModCore.register(Internal::new);
     }
 
+    private static void addHandler(Object handler) {
+        MinecraftForge.EVENT_BUS.register(handler);
+        FMLCommonHandler.instance().bus().register(handler);
+    }
+
     public static class Internal extends Mod {
         public int skipN = 2;
 
@@ -144,12 +154,22 @@ public class ModCore {
         public void commonEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
+                    addHandler(new Mouse());
+                    addHandler(new ChunkManager());
+                    addHandler(new cam72cam.mod.world.World.EventBus());
+                    addHandler(new BlockType.EventBus());
+                    addHandler(new EntityRegistry.EntityEvents());
+
+
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Keyboard.MovementPacket::new, PacketDirection.ClientToServer);
                     Packet.register(Keyboard.KeyPacket::new, PacketDirection.ClientToServer);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(MousePressPacket::new, PacketDirection.ClientToServer);
                     break;
+                case INITIALIZE:
+                    BlockType.registerBlocks();
+                    ItemBase.registerItems();
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
@@ -165,8 +185,16 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    addHandler(Audio.proxy);
+                    addHandler(new EntityRegistry.EntityClientEvents());
+                    addHandler(new GLTexture.EventBus());
+                    addHandler(new GlobalRender.EventBus());
+                    addHandler(new Keyboard.KeyboardListener());
+                    addHandler(new ItemRender.EventBus());
                 case INITIALIZE:
                     EntityRenderer.registerEntities();
+                    ItemRender.registerItems();
                     GlobalRender.registerGlobalRenderer();
                     break;
                 case SETUP:

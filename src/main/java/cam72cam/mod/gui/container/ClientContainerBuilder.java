@@ -6,7 +6,6 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -35,7 +34,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
         this.centerX = (this.width - this.xSize) / 2;
         this.centerY = (this.height - this.ySize) / 2;
@@ -165,13 +164,13 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        this.mc.getRenderItem().renderItemIntoGUI(stack.internal, x, y);
+        itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
 
-        GlStateManager.enableAlpha();
-        GlStateManager.disableDepth();
+        GL11.glEnable(GL11.GL_ALPHA);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
-        GlStateManager.enableDepth();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         GL11.glColor4f(1, 1, 1, 1);
     }

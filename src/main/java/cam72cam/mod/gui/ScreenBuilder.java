@@ -100,7 +100,7 @@ class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == 1) {
             close();
         }
@@ -113,15 +113,15 @@ class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         this.textFields.forEach(x -> x.textboxKeyTyped(typedChar, keyCode));
     }
 
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         // Copy pasta to support right / left button click
 
         for (int i = 0; i < this.buttonList.size(); ++i) {
-            GuiButton guibutton = super.buttonList.get(i);
+            GuiButton guibutton = (GuiButton) super.buttonList.get(i);
 
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 //TODO 1.11.2 will this break anything? this.selectedButton = guibutton;
-                guibutton.playPressSound(this.mc.getSoundHandler());
+                guibutton.func_146113_a(this.mc.getSoundHandler());
                 buttonMap.get(guibutton).onClick(mouseButton == 0 ? Hand.PRIMARY : Hand.SECONDARY);
             }
         }

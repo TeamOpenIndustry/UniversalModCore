@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 public class TextField {
     private final GuiTextField textfield;
+    private Predicate<String> validator;
 
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         this.textfield = create(builder, x, y, width, height);
@@ -13,7 +14,15 @@ public class TextField {
     }
 
     GuiTextField create(IScreenBuilder builder, int x, int y, int width, int height) {
-        return new GuiTextField(-1, Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height);
+        validator = str -> true;
+        return new GuiTextField(Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height) {
+            @Override
+            public void setText(String text) {
+                if (validator.apply(text)) {
+                    super.setText(text);
+                }
+            }
+        };
     }
 
     GuiTextField internal() {
@@ -21,7 +30,7 @@ public class TextField {
     }
 
     public void setValidator(Predicate<String> filter) {
-        textfield.setValidator(filter);
+        this.validator = filter;
     }
 
     public void setFocused(boolean b) {

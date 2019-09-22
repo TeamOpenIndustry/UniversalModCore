@@ -2,11 +2,11 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.ModCore;
 import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.relauncher.Side;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class GLTexture {
     private static LinkedBlockingQueue queue = new LinkedBlockingQueue<>(1);
     private static ExecutorService saveImage = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, queue);
@@ -77,18 +76,20 @@ public class GLTexture {
         textures.add(this);
     }
 
-    @SubscribeEvent
-    public static void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) {
-            return;
-        }
-
-        for (GLTexture texture : textures) {
-            if (texture.glTexID == -1) {
-                continue;
+    public static class EventBus {
+        @SubscribeEvent
+        public static void onTick(TickEvent.ClientTickEvent event) {
+            if (event.phase != TickEvent.Phase.START) {
+                return;
             }
-            if (System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000) {
-                texture.dealloc();
+
+            for (GLTexture texture : textures) {
+                if (texture.glTexID == -1) {
+                    continue;
+                }
+                if (System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000) {
+                    texture.dealloc();
+                }
             }
         }
     }

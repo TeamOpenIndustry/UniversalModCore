@@ -41,7 +41,7 @@ public class FluidTank implements ITank {
 
     @Override
     public boolean allows(Fluid fluid) {
-        return internal.canFill();
+        return true; // TODO 1.7.10
     }
 
     @Override
@@ -57,7 +57,7 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return null;
         }
-        return new FluidStack(internal.drain(fluidStack.internal, !simulate));
+        return new FluidStack(internal.drain(fluidStack.internal.amount, !simulate));
     }
 
     public TagCompound write(TagCompound tag) {

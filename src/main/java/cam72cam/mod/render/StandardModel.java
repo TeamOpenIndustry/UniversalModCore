@@ -3,21 +3,11 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockColored;
-import net.minecraft.block.BlockLog;
-import net.minecraft.block.BlockSnow;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.block.BlockRotatedPillar;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.model.pipeline.LightUtil;
+import net.minecraftforge.client.IItemRenderer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -26,39 +16,53 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class StandardModel {
-    private List<Pair<IBlockState, IBakedModel>> models = new ArrayList<>();
+    private List<Runnable> models = new ArrayList<>();
     private List<Consumer<Float>> custom = new ArrayList<>();
 
-    public static IBlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
+    private RenderBlocks renderBlocks = new RenderBlocks();
+
+    public static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
-        @SuppressWarnings("deprecation")
-        IBlockState gravelState = block.getStateFromMeta(stack.internal.getMetadata());
-        if (block instanceof BlockLog) {
-            gravelState = gravelState.withProperty(BlockLog.LOG_AXIS, BlockLog.EnumAxis.Z);
+        int meta = stack.internal.getItemDamage();
+        if (block instanceof BlockRotatedPillar) {
+            meta = 2;
         }
-        return gravelState;
+        return Pair.of(block, meta);
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        IBlockState state = Blocks.WOOL.getDefaultState();
-        state = state.withProperty(BlockColored.COLOR, color.internal);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+        Block state = Blocks.wool;
+        int meta = color.internal;
+
+        models.add(() -> {
+            renderBlocks.setOverrideBlockTexture(state.getIcon(0, meta));
+            renderBlocks.renderBlockAllFaces(state, 0, 0, 0);
+        });
+
         return this;
     }
 
     public StandardModel addSnow(int layers, Vec3d translate) {
-        layers = Math.min(layers, 8);
-        IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
+        models.add(() -> {
+            GL11.glPushMatrix();
+            GL11.glScaled(1, Math.min(layers, 8)/8f, 1);
+            GL11.glTranslated(0, (-1 + Math.min(layers, 8)/8f)/2, 0);
+            renderBlocks.renderBlockAllFaces(Blocks.snow, 0, 0, 0);
+            GL11.glPopMatrix();
+        });
         return this;
     }
 
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
-        IBlockState state = itemToBlockState(bed);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+        Pair<Block, Integer> info = itemToBlockState(bed);
+        models.add(() -> {
+            GL11.glPushMatrix();
+            GL11.glScaled(scale.x, scale.y, scale.z);
+            GL11.glTranslated(translate.x, (-1 + scale.y)/2 + translate.y, translate.z);
+            // TODO meta
+            renderBlocks.renderBlockAllFaces(info.getKey(), 0, 0, 0);
+            GL11.glPopMatrix();
+        });
         return this;
     }
 
@@ -68,7 +72,7 @@ public class StandardModel {
             {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
+                RenderManager.instance.itemRenderer.renderItem(null, stack.internal, 0, IItemRenderer.ItemRenderType.ENTITY);
             }
             GL11.glPopMatrix();
         });
@@ -85,15 +89,6 @@ public class StandardModel {
         return this;
     }
 
-    public List<BakedQuad> getQuads(EnumFacing side, long rand) {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
-            quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
-        }
-
-        return quads;
-    }
-
     public void render() {
         render(0);
     }
@@ -104,25 +99,7 @@ public class StandardModel {
     }
 
     public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
-            quads.addAll(model.getRight().getQuads(null, null, 0));
-            for (EnumFacing facing : EnumFacing.values()) {
-                quads.addAll(model.getRight().getQuads(null, facing, 0));
-            }
-
-        }
-        if (quads.isEmpty()) {
-            return;
-        }
-
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-
-        VertexBuffer worldRenderer = new VertexBuffer(2048);
-        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
-        worldRenderer.finishDrawing();
-        new WorldVertexBufferUploader().draw(worldRenderer);
+        models.forEach(Runnable::run);
     }
 
     public void renderCustom() {

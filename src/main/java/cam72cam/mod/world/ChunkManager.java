@@ -2,18 +2,17 @@ package cam72cam.mod.world;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3i;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 
-@Mod.EventBusSubscriber
-class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
+public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
     /*
      * This takes a similar approach to FTBUtilities
      * One massive ticket for each dim
@@ -30,16 +29,13 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
 
     private static ChunkManager instance;
 
-    @SubscribeEvent
-    public static void onWorldLoad(WorldEvent.Load event) {
-        if (instance == null) {
-            instance = new ChunkManager();
-            instance.init();
-        }
+    public ChunkManager() {
+        instance = this;
+        init();
     }
 
     private static Ticket ticketForWorld(World world) {
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         if (!TICKETS.containsKey(dim)) {
             TICKETS.put(dim, ForgeChunkManager.requestTicket(ModCore.instance, world, ForgeChunkManager.Type.NORMAL));
         }
@@ -51,7 +47,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
             return;
         }
 
-        ChunkPos pos = new ChunkPos(world.internal, inPos.internal);
+        ChunkPos pos = new ChunkPos(world.internal, inPos);
 
         int currTicks = 0;
 
@@ -65,7 +61,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
     }
 
     @SubscribeEvent
-    public static void onWorldTick(TickEvent.WorldTickEvent event) {
+    public void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event.phase != TickEvent.Phase.START) {
             return;
         }
@@ -79,7 +75,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
             return;
         }
 
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         Set<ChunkPos> keys = CHUNK_MAP.keySet();
 
         Set<ChunkPos> loaded = new HashSet<ChunkPos>();
@@ -104,7 +100,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
             CHUNK_MAP.remove(pos);
         }
 
-        for (net.minecraft.util.math.ChunkPos chunk : ticket.getChunkList()) {
+        for (ChunkCoordIntPair chunk : ticket.getChunkList()) {
             boolean shouldChunkLoad = false;
 
             for (ChunkPos pos : loaded) {
@@ -131,7 +127,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
         for (ChunkPos pos : loaded) {
             ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
             try {
-                ForgeChunkManager.forceChunk(ticket, new net.minecraft.util.math.ChunkPos(pos.chunkX, pos.chunkZ));
+                ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(pos.chunkX, pos.chunkZ));
             } catch (Exception ex) {
                 ModCore.catching(ex);
             }
@@ -154,7 +150,7 @@ class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManag
 
     @Override
     public void ticketsLoaded(List<Ticket> tickets, World world) {
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         if (TICKETS.containsKey(dim)) {
             TICKETS.remove(dim);
         }

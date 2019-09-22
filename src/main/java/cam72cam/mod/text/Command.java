@@ -2,8 +2,7 @@ package cam72cam.mod.text;
 
 import cam72cam.mod.world.World;
 import net.minecraft.command.*;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.FMLCommonHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,7 @@ public abstract class Command {
             }
 
             @Override
-            public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+            public void processCommand(ICommandSender sender, String[] args) throws CommandException {
                 if (!Command.this.execute(World.get(sender.getEntityWorld()), m -> sender.addChatMessage(m.internal), args)) {
                     throw new CommandException(getCommandUsage(sender));
                 }

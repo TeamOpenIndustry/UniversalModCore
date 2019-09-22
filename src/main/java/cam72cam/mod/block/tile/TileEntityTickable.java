@@ -3,9 +3,8 @@ package cam72cam.mod.block.tile;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntityTickable;
 import cam72cam.mod.resource.Identifier;
-import net.minecraft.util.ITickable;
 
-public class TileEntityTickable extends TileEntity implements ITickable {
+public class TileEntityTickable extends TileEntity {
     public TileEntityTickable() {
         super();
     }
@@ -15,7 +14,7 @@ public class TileEntityTickable extends TileEntity implements ITickable {
     }
 
     @Override
-    public void update() {
+    public void updateEntity() {
         BlockEntityTickable tickable = (BlockEntityTickable) instance();
         if (tickable == null) {
             System.out.println("uhhhhh, null tickable?");

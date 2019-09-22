@@ -14,23 +14,13 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.common.registry.GameData;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -87,18 +77,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.world = World.get(world);
     }
 
-    @Override
-    protected void setWorldCreate(net.minecraft.world.World worldIn) {
-        super.setWorldObj(worldIn);
-        this.world = World.get(worldIn);
-    }
-
-    @Override
-    public void setPos(BlockPos pos) {
-        super.setPos(pos);
-        this.pos = new Vec3i(pos);
-    }
-
 
     @Override
     public final void readFromNBT(NBTTagCompound compound) {
@@ -107,65 +85,42 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     @Override
-    public final NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    public final void writeToNBT(NBTTagCompound compound) {
         save(new TagCompound(compound));
-        return compound;
     }
 
     @Override
-    public final SPacketUpdateTileEntity getUpdatePacket() {
+    public Packet getDescriptionPacket() {
         TagCompound nbt = new TagCompound();
         this.writeToNBT(nbt.internal);
         this.writeUpdate(nbt);
 
-        return new SPacketUpdateTileEntity(this.getPos(), 1, nbt.internal);
+        return new S35PacketUpdateTileEntity(pos.x, pos.y, pos.z, 6, nbt.internal);
     }
 
     @Override
-    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+    public final void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
         hasTileData = true;
-        this.readFromNBT(pkt.getNbtCompound());
-        this.readUpdate(new TagCompound(pkt.getNbtCompound()));
+        this.readFromNBT(pkt.func_148857_g());
+        this.readUpdate(new TagCompound(pkt.func_148857_g()));
         super.onDataPacket(net, pkt);
         if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
+            world.internal.markBlockRangeForRenderUpdate(pos.x, pos.y, pos.z, pos.x, pos.y, pos.z);
         }
     }
-
-    @Override
-    public final NBTTagCompound getUpdateTag() {
-        NBTTagCompound tag = super.getUpdateTag();
-        if (this.isLoaded()) {
-            this.writeToNBT(tag);
-            this.writeUpdate(new TagCompound(tag));
-        }
-        return tag;
-    }
-
-    @Override
-    public final void handleUpdateTag(NBTTagCompound tag) {
-        hasTileData = true;
-        this.readFromNBT(tag);
-        this.readUpdate(new TagCompound(tag));
-        super.handleUpdateTag(tag);
-        if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
-        }
-    }
-
 
     @Override
     public void markDirty() {
         super.markDirty();
         if (world.isServer) {
-            world.internal.notifyBlockUpdate(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
-            world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType());
+            world.internal.notifyBlocksOfNeighborChange(pos.x, pos.y, pos.z, blockType, 1 + 2 + 8);
+            //TODO 1.7.10? world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType());
         }
     }
 
     /* Forge Overrides */
 
-    public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+    public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
         if (instance() != null) {
             IBoundingBox bb = instance().getBoundingBox();
             if (bb != null) {
@@ -179,6 +134,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
     }
 
+    /* TODO 1.7.10 CAPABILITIES
     @Override
     public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing) {
         //TODO more efficient
@@ -332,6 +288,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         }
         return null;
     }
+    */
 
     /*
     Wrapped functionality
@@ -341,13 +298,9 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         super.setWorldObj(world.internal);
     }
 
-    public void setPos(Vec3i pos) {
-        super.setPos(pos.internal);
-    }
-
     public void load(TagCompound data) {
         super.readFromNBT(data.internal);
-        pos = new Vec3i(super.pos);
+        pos = new Vec3i(xCoord, yCoord, zCoord);
 
         if (instanceId == null) {
             // If this fails something is really wrong

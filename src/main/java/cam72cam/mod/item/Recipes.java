@@ -1,6 +1,6 @@
 package cam72cam.mod.item;
 
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import java.util.*;

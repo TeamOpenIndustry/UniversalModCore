@@ -3,8 +3,8 @@ package cam72cam.mod.resource;
 import cam72cam.mod.ModCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResource;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.SidedProxy;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.SidedProxy;
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -81,7 +81,7 @@ class Data {
         public List<InputStream> getResourceStreamAll(Identifier identifier) throws IOException {
             List<InputStream> res = new ArrayList<>();
             try {
-                for (IResource resource : Minecraft.getMinecraft().getResourceManager().getAllResources(identifier.internal)) {
+                for (IResource resource : ((List<IResource>)Minecraft.getMinecraft().getResourceManager().getAllResources(identifier.internal))) {
                     res.add(resource.getInputStream());
                 }
             } catch (java.io.FileNotFoundException ex) {

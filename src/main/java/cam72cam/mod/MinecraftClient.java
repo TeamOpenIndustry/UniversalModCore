@@ -22,7 +22,7 @@ public class MinecraftClient {
     }
 
     public static boolean useVBO() {
-        return OpenGlHelper.useVbo();
+        return OpenGlHelper.isFramebufferEnabled();
     }
 
     public static Entity getEntityMouseOver() {

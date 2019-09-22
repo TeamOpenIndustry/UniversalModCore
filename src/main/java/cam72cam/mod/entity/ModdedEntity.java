@@ -16,14 +16,13 @@ import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -141,13 +140,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void onUpdate() {
         iTickable.onTick();
         self.sync.send();
+
+        //TODO 1.7.10
+        super.boundingBox.setBB(new BoundingBox(iCollision.getCollision()));
     }
 
     /* Player Interact */
 
     @Override
-    public final boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack Stack, EnumHand hand) {
-        return iClickable.onClick(new Player(player), Hand.from(hand)) == ClickResult.ACCEPTED;
+    public final boolean interactFirst(EntityPlayer player) {
+        return iClickable.onClick(new Player(player), Hand.PRIMARY) == ClickResult.ACCEPTED;
     }
 
     /* Death */
@@ -178,33 +180,37 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* Ridable */
 
+    /* TODO 1.7.10
     @Override
     public boolean canFitPassenger(Entity passenger) {
         return iRidable.canFitPassenger(new cam72cam.mod.entity.Entity(passenger));
     }
+    */
 
     @Override
-    public final void addPassenger(Entity entityIn) {
-        cam72cam.mod.entity.Entity entity = new cam72cam.mod.entity.Entity(entityIn);
-        passengerPositions.put(entity.getUUID(), iRidable.getMountPosition(entity));
-        if (entity.isPlayer()) {
-            super.addPassenger(entityIn);
+    public void mountEntity(Entity entityIn) {
+        if (entityIn == null) {
+            removePassenger(super.riddenByEntity);
         } else {
-            StaticPassenger sp = new StaticPassenger(entity);
-            staticPassengers.add(sp);
-            entity.kill();
+            cam72cam.mod.entity.Entity entity = new cam72cam.mod.entity.Entity(entityIn);
+            passengerPositions.put(entity.getUUID(), iRidable.getMountPosition(entity));
+            if (entity.isPlayer()) {
+                self.addPassenger(entity);
+            } else {
+                StaticPassenger sp = new StaticPassenger(entity);
+                staticPassengers.add(sp);
+                entity.kill();
+            }
+            self.sendToObserving(new PassengerPositionsPacket(this));
         }
-        self.sendToObserving(new PassengerPositionsPacket(this));
     }
 
     @Override
-    public final void updatePassenger(net.minecraft.entity.Entity passenger) {
-        iRidable.updatePassenger(new cam72cam.mod.entity.Entity(passenger));
+    public final void updateRidden() {
+        iRidable.updatePassenger(self.getPassengers().get(0));
     }
 
-    @Override
     public final void removePassenger(net.minecraft.entity.Entity ent) {
-        super.removePassenger(ent);
         iRidable.onDismountPassenger(new cam72cam.mod.entity.Entity(ent));
         Vec3d dismountPos = iRidable.getDismountPosition(new cam72cam.mod.entity.Entity(ent));
         ent.setPosition(dismountPos.x, dismountPos.y, dismountPos.z);
@@ -269,7 +275,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public int getPassengerCount() {
-        return this.staticPassengers.size() + this.getPassengers().size();
+        return this.staticPassengers.size() + self.getPassengerCount();
     }
 
     public List<StaticPassenger> getStaticPassengers() {
@@ -293,20 +299,22 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ICollision */
     @Override
-    public AxisAlignedBB getCollisionBoundingBox() {
+    public AxisAlignedBB getCollisionBox(Entity collider) {
         return new BoundingBox(iCollision.getCollision());
     }
 
     @Override
-    public AxisAlignedBB getEntityBoundingBox() {
+    public AxisAlignedBB getBoundingBox() {
         return new BoundingBox(iCollision.getCollision());
     }
 
+    /* TODO 1.7.10
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         AxisAlignedBB bb = this.getEntityBoundingBox();
         return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     }
+    */
 
     /* Hacks */
     @Override
@@ -320,6 +328,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return settings.canBePushed;
     }
 
+    /* TODO 1.7.10
     @Override
     public <T extends Entity> Collection<T> getRecursivePassengersByType(Class<T> entityClass) {
         if (!settings.attachedToPlayer) {
@@ -335,12 +344,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
         return super.getRecursivePassengersByType(entityClass);
     }
+    */
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void setPositionAndRotation2(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
         if (settings.defaultMovement) {
-            super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.setPositionAndRotation2(x, y, z, yaw, pitch, posRotationIncrements);
         }
     }
 
@@ -366,7 +376,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
         public StaticPassenger(cam72cam.mod.entity.Entity entityliving) {
             ident = new Identifier(EntityList.getEntityString(entityliving.internal));
-            data = new TagCompound(entityliving.internal.writeToNBT(new NBTTagCompound()));
+            data = new TagCompound();
+            entityliving.internal.writeToNBT(data.internal);
             uuid = entityliving.getUUID();
             startPos = new Vec3i(entityliving.getPosition());
             isVillager = entityliving.isVillager();
@@ -394,7 +405,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         public Entity reconstitute(World world) {
-            Entity ent = EntityList.createEntityByIDFromName(ident.internal.toString(), world);
+            Entity ent = EntityList.createEntityByName(ident.internal.toString(), world);
             ent.readFromNBT(data.internal);
             return ent;
         }

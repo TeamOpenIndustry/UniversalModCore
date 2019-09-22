@@ -9,6 +9,7 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.WorldSettings;
 
 public class Player extends Entity {
     public final EntityPlayer internal;
@@ -19,7 +20,7 @@ public class Player extends Entity {
     }
 
     public ItemStack getHeldItem(Hand hand) {
-        return new ItemStack(internal.getHeldItem(hand.internal));
+        return new ItemStack(internal.getHeldItem());
     }
 
     public void sendMessage(PlayerMessage o) {
@@ -31,7 +32,7 @@ public class Player extends Entity {
     }
 
     public boolean isCreative() {
-        return internal.isCreative();
+        return internal.capabilities.isCreativeMode;
     }
 
     public float getYawHead() {
@@ -39,7 +40,7 @@ public class Player extends Entity {
     }
 
     public void setHeldItem(Hand hand, ItemStack stack) {
-        internal.setHeldItem(hand.internal, stack.internal);
+        internal.setCurrentItemOrArmor(0, stack.internal);
     }
 
     public int getFoodLevel() {
@@ -55,6 +56,8 @@ public class Player extends Entity {
     }
 
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.onItemUse(internal, getWorld().internal, pos.internal, hand.internal, Facing.DOWN.internal, (float) hit.x, (float) hit.y, (float) hit.z));
+        net.minecraft.item.ItemStack stack = getHeldItem(hand).internal;
+        return ClickResult.from(stack.getItem()
+                .onItemUse(stack, internal, getWorld().internal, pos.x, pos.y, pos.z, Facing.DOWN.internal.ordinal(), (float) hit.x, (float) hit.y, (float) hit.z));
     }
 }

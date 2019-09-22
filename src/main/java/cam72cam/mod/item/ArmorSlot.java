@@ -1,36 +1,24 @@
 package cam72cam.mod.item;
 
-import net.minecraft.inventory.EntityEquipmentSlot;
-
 public enum ArmorSlot {
-    MAINHAND(EntityEquipmentSlot.MAINHAND),
-    OFFHAND(EntityEquipmentSlot.OFFHAND),
-    FEET(EntityEquipmentSlot.FEET),
-    LEGS(EntityEquipmentSlot.LEGS),
-    CHEST(EntityEquipmentSlot.CHEST),
-    HEAD(EntityEquipmentSlot.HEAD);
-    public final EntityEquipmentSlot internal;
+    MAINHAND(-2),
+    OFFHAND(-1),
+    FEET(3),
+    LEGS(2),
+    CHEST(1),
+    HEAD(0);
+    public final int internal;
 
-    ArmorSlot(EntityEquipmentSlot slot) {
+    ArmorSlot(int slot) {
         this.internal = slot;
     }
 
-    public static ArmorSlot from(EntityEquipmentSlot armorType) {
-        switch (armorType) {
-            case MAINHAND:
-                return MAINHAND;
-            case OFFHAND:
-                return OFFHAND;
-            case FEET:
-                return FEET;
-            case LEGS:
-                return LEGS;
-            case CHEST:
-                return CHEST;
-            case HEAD:
-                return HEAD;
-            default:
-                return null;
+    public static ArmorSlot from(int i) {
+        for (ArmorSlot value : values()) {
+            if (value.internal == i) {
+                return value;
+            }
         }
+        return null;
     }
 }

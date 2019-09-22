@@ -1,29 +1,27 @@
 package cam72cam.mod.render;
 
-import net.minecraft.item.EnumDyeColor;
-
 public enum Color {
-    WHITE(EnumDyeColor.WHITE),
-    ORANGE(EnumDyeColor.ORANGE),
-    MAGENTA(EnumDyeColor.MAGENTA),
-    LIGHT_BLUE(EnumDyeColor.LIGHT_BLUE),
-    YELLOW(EnumDyeColor.YELLOW),
-    LIME(EnumDyeColor.LIME),
-    PINK(EnumDyeColor.PINK),
-    GRAY(EnumDyeColor.GRAY),
-    SILVER(EnumDyeColor.SILVER),
-    CYAN(EnumDyeColor.CYAN),
-    PURPLE(EnumDyeColor.PURPLE),
-    BLUE(EnumDyeColor.BLUE),
-    BROWN(EnumDyeColor.BROWN),
-    GREEN(EnumDyeColor.GREEN),
-    RED(EnumDyeColor.RED),
-    BLACK(EnumDyeColor.BLACK),
+    WHITE(15),
+    ORANGE(14),
+    MAGENTA(13),
+    LIGHT_BLUE(12),
+    YELLOW(11),
+    LIME(10),
+    PINK(9),
+    GRAY(8),
+    SILVER(7),
+    CYAN(6),
+    PURPLE(5),
+    BLUE(4),
+    BROWN(3),
+    GREEN(2),
+    RED(1),
+    BLACK(0),
     ;
 
-    public final EnumDyeColor internal;
+    public final int internal;
 
-    Color(EnumDyeColor internal) {
+    Color(int internal) {
         this.internal = internal;
     }
 }

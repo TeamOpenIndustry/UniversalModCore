@@ -1,9 +1,10 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 
 public class BoundingBox extends AxisAlignedBB {
     private final IBoundingBox internal;
@@ -24,14 +25,16 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     /* NOP */
+    /* Removed 1.7.10
     @Override
     public BoundingBox setMaxY(double y) {
         // Used by blockwall
         return this;
     }
+    */
 
     @Override
-    public BoundingBox union(AxisAlignedBB other) {
+    public BoundingBox func_111270_a(AxisAlignedBB other) {
         // Used by piston
         // Used by entityliving for BB stuff
         return this;
@@ -72,17 +75,17 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
+    public boolean intersectsWith(AxisAlignedBB other) {
+        return internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ));
     }
 
     @Override
-    public boolean isVecInside(net.minecraft.util.math.Vec3d vec) {
+    public boolean isVecInside(Vec3 vec) {
         return internal.contains(new Vec3d(vec));
     }
 
     @Override
-    public RayTraceResult calculateIntercept(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
+    public MovingObjectPosition calculateIntercept(Vec3 vecA, Vec3 vecB) {
         int steps = 10;
         double xDist = vecB.xCoord - vecA.xCoord;
         double yDist = vecB.yCoord - vecA.yCoord;
@@ -93,7 +96,7 @@ public class BoundingBox extends AxisAlignedBB {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.xCoord + xDelta * step, vecA.yCoord + yDelta * step, vecA.zCoord + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new RayTraceResult(stepPos.internal, EnumFacing.UP);
+                return new MovingObjectPosition(0, 0, 0, EnumFacing.UP.ordinal(), stepPos.internal);
             }
         }
         return null;

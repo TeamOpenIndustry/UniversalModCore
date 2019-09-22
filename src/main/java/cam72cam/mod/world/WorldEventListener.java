@@ -1,17 +1,10 @@
 package cam72cam.mod.world;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldEventListener;
-import net.minecraft.world.World;
+import net.minecraft.world.IWorldAccess;
 
-import javax.annotation.Nullable;
-
-public class WorldEventListener implements IWorldEventListener {
+public class WorldEventListener implements IWorldAccess {
     private final cam72cam.mod.world.World world;
 
     public WorldEventListener(cam72cam.mod.world.World worldWrap) {
@@ -19,57 +12,67 @@ public class WorldEventListener implements IWorldEventListener {
     }
 
     @Override
-    public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
+    public void markBlockForUpdate(int p_147586_1_, int p_147586_2_, int p_147586_3_) {
 
     }
 
     @Override
-    public void notifyLightSet(BlockPos pos) {
+    public void markBlockForRenderUpdate(int p_147588_1_, int p_147588_2_, int p_147588_3_) {
 
     }
 
     @Override
-    public void markBlockRangeForRenderUpdate(int x1, int y1, int z1, int x2, int y2, int z2) {
+    public void markBlockRangeForRenderUpdate(int p_147585_1_, int p_147585_2_, int p_147585_3_, int p_147585_4_, int p_147585_5_, int p_147585_6_) {
 
     }
 
     @Override
-    public void playSoundToAllNearExcept(@Nullable EntityPlayer player, SoundEvent soundIn, SoundCategory category, double x, double y, double z, float volume, float pitch) {
+    public void playSound(String p_72704_1_, double p_72704_2_, double p_72704_4_, double p_72704_6_, float p_72704_8_, float p_72704_9_) {
 
     }
 
     @Override
-    public void playRecord(SoundEvent soundIn, BlockPos pos) {
+    public void playSoundToNearExcept(EntityPlayer p_85102_1_, String p_85102_2_, double p_85102_3_, double p_85102_5_, double p_85102_7_, float p_85102_9_, float p_85102_10_) {
 
     }
 
     @Override
-    public void spawnParticle(int particleID, boolean ignoreRange, double xCoord, double yCoord, double zCoord, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
+    public void spawnParticle(String p_72708_1_, double p_72708_2_, double p_72708_4_, double p_72708_6_, double p_72708_8_, double p_72708_10_, double p_72708_12_) {
 
     }
 
     @Override
-    public void onEntityAdded(Entity entityIn) {
+    public void onEntityCreate(Entity entityIn) {
         world.onEntityAdded(entityIn);
     }
 
     @Override
-    public void onEntityRemoved(Entity entityIn) {
+    public void onEntityDestroy(Entity entityIn) {
         world.onEntityRemoved(entityIn);
     }
 
     @Override
-    public void broadcastSound(int soundID, BlockPos pos, int data) {
+    public void playRecord(String p_72702_1_, int p_72702_2_, int p_72702_3_, int p_72702_4_) {
 
     }
 
     @Override
-    public void playEvent(EntityPlayer player, int type, BlockPos blockPosIn, int data) {
+    public void broadcastSound(int p_82746_1_, int p_82746_2_, int p_82746_3_, int p_82746_4_, int p_82746_5_) {
 
     }
 
     @Override
-    public void sendBlockBreakProgress(int breakerId, BlockPos pos, int progress) {
+    public void playAuxSFX(EntityPlayer p_72706_1_, int p_72706_2_, int p_72706_3_, int p_72706_4_, int p_72706_5_, int p_72706_6_) {
+
+    }
+
+    @Override
+    public void destroyBlockPartially(int p_147587_1_, int p_147587_2_, int p_147587_3_, int p_147587_4_, int p_147587_5_) {
+
+    }
+
+    @Override
+    public void onStaticEntitiesChanged() {
 
     }
 }

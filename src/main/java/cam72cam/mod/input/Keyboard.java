@@ -4,15 +4,13 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -36,7 +34,6 @@ public class Keyboard {
 
     /* Key Bindings */
 
-    @Mod.EventBusSubscriber(value = Side.CLIENT)
     public static class KeyboardListener {
         static List<KeyBinding> keys = new ArrayList<>();
 
@@ -52,7 +49,7 @@ public class Keyboard {
             ).sendToServer();
 
             for (KeyBinding key : keys) {
-                if (key.isKeyDown()) {
+                if (key.isPressed()) {
                     new KeyPacket(key.getKeyDescription()).sendToServer();
                 }
             }

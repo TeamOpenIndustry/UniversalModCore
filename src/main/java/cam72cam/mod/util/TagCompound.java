@@ -2,6 +2,7 @@ package cam72cam.mod.util;
 
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.tile.TileEntity;
+import cam72cam.mod.entity.Entity;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -135,7 +136,7 @@ public class TagCompound {
 
     public <T extends cam72cam.mod.entity.Entity> T getEntity(String key, World world, Class<T> cls) {
         NBTTagCompound data = internal.getCompoundTag(key);
-        UUID id = data.getUniqueId("id");
+        UUID id = UUID.fromString(data.getString("id"));
         int dim = data.getInteger("world");
         world = World.get(dim, world.isClient);
         if (world == null) {
@@ -146,8 +147,8 @@ public class TagCompound {
 
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
         NBTTagCompound data = new NBTTagCompound();
-        data.setUniqueId("id", entity.internal.getUniqueID());
-        data.setInteger("world", entity.internal.worldObj.provider.getDimension());
+        data.setString("id", entity.internal.getUniqueID().toString());
+        data.setInteger("world", entity.internal.worldObj.provider.dimensionId);
         internal.setTag(key, data);
     }
 
@@ -200,7 +201,7 @@ public class TagCompound {
     public <K, V> Map<K, V> getMap(String key, Function<String, K> keyFn, Function<TagCompound, V> valFn) {
         Map<K, V> map = new HashMap<>();
         NBTTagCompound data = internal.getCompoundTag(key);
-        for (String item : data.getKeySet()) {
+        for (String item : (Set<String>)data.func_150296_c()) {
             map.put(keyFn.apply(item), valFn.apply(new TagCompound(data.getCompoundTag(item))));
         }
         return map;
@@ -229,7 +230,7 @@ public class TagCompound {
     }
 
     public void setWorld(String key, World world) {
-        setInteger(key, world.internal.provider.getDimension());
+        setInteger(key, world.internal.provider.dimensionId);
     }
 
     public World getWorld(String key, boolean isClient) {
@@ -252,7 +253,7 @@ public class TagCompound {
         World world = ted.getWorld("world", isClient);
 
         //TODO pull logic in here to avoid crash
-        net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(world.internal, ted.get("data").internal);
+        net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.createAndLoadEntity(ted.get("data").internal);
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();
     }

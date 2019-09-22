@@ -1,76 +1,56 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
-import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
-import net.minecraft.block.state.IBlockState;
+import cpw.mods.fml.common.eventhandler.EventPriority;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.TextureStitchEvent;
-import net.minecraftforge.client.model.ItemLayerModel;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.model.TRSRTransformation;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-import org.lwjgl.util.vector.Vector3f;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class ItemRender {
-    private static final List<BakedQuad> EMPTY = new ArrayList<>();
-    private static final List<Consumer<ModelBakeEvent>> bakers = new ArrayList<>();
-    private static final List<Runnable> mappers = new ArrayList<>();
+    private static final List<Runnable> registers = new ArrayList<>();
     private static final List<Consumer<TextureStitchEvent.Pre>> textures = new ArrayList<>();
     private static final SpriteSheet iconSheet = new SpriteSheet(128);
+    private static Map<ItemBase, IIcon> icons = new HashMap<>();
 
-    @SubscribeEvent
-    public static void onModelBakeEvent(ModelBakeEvent event) {
-        bakers.forEach(baker -> baker.accept(event));
+    public static void registerItems() {
+        registers.forEach(Runnable::run);
     }
 
-    @SubscribeEvent
-    public static void registerModels(ModelRegistryEvent event) {
-        mappers.forEach(Runnable::run);
+    public static IIcon getIcon(ItemBase itemBase) {
+        return icons.get(itemBase);
     }
 
-    @SubscribeEvent(priority = EventPriority.LOW)
-    public static void onTextureStich(TextureStitchEvent.Pre event) {
-        textures.forEach(texture -> texture.accept(event));
+
+    public static class EventBus {
+        @SubscribeEvent(priority = EventPriority.LOW)
+        public void onTextureStich(TextureStitchEvent.Pre event) {
+            textures.forEach(texture -> texture.accept(event));
+        }
     }
 
     public static void register(ItemBase item, Identifier tex) {
-        bakers.add(event -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                tex.internal
-        )).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter())));
-
-        textures.add(event -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
-
-        mappers.add(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
-                new ModelResourceLocation(item.getRegistryName().internal, "")));
+        textures.add(event -> icons.put(item, Minecraft.getMinecraft().getTextureMapBlocks().registerIcon(tex.internal.toString())));
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model) {
@@ -78,11 +58,9 @@ public class ItemRender {
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-        mappers.add(() ->
-                ModelLoader.setCustomModelResourceLocation(item.internal, 0, new ModelResourceLocation(item.getRegistryName().internal, ""))
+        registers.add(() ->
+                MinecraftForgeClient.registerItemRenderer(item.internal, new BakedItemModel(model, cacheRender))
         );
-
-        bakers.add((ModelBakeEvent event) -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model, cacheRender)));
 
         if (cacheRender != null) {
             textures.add((event) -> {
@@ -122,120 +100,52 @@ public class ItemRender {
         iconSheet.setSprite(id, buff);
     }
 
-    static class BakedItemModel implements IBakedModel {
-        private final ItemStack stack;
-        private final World world;
+    static class BakedItemModel implements IItemRenderer {
         private final BiFunction<ItemStack, World, StandardModel> model;
         private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
-        private boolean isGUI;
 
         BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-            this.world = null;
-            this.stack = null;
             this.model = model;
             this.cacheRender = cacheRender;
-            isGUI = false;
         }
 
-        BakedItemModel(ItemStack stack, World world, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, boolean isGUI) {
-            this.stack = stack;
-            this.world = world;
-            this.model = model;
-            this.cacheRender = cacheRender;
-            this.isGUI = isGUI;
-        }
 
         @Override
-        public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
-            if (stack == null || world == null) {
-                return EMPTY;
+        public void renderItem(ItemRenderType type, net.minecraft.item.ItemStack itemstack, Object... data) {
+            /* TODO 1.7.10
+            if (type == ItemCameraTransforms.TransformType.FIXED) {
+                return new ItemTransformVec3f(new Vector3f(0, 90, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));
             }
-
-            if (isGUI) {
-                iconSheet.renderSprite(cacheRender.apply(stack).getKey());
-                return EMPTY;
+            if (type == ItemCameraTransforms.TransformType.HEAD) {
+                return new ItemTransformVec3f(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(2, 2, 2));
             }
-
-            StandardModel std = model.apply(stack, world);
-            if (std == null) {
-                return EMPTY;
-            }
-
-
-            /*
-             * I am an evil wizard!
-             *
-             * So it turns out that I can stick a draw call in here to
-             * render my own stuff. This subverts forge's entire baked model
-             * system with a single line of code and injects my own OpenGL
-             * payload. Fuck you modeling restrictions.
-             *
-             * This is probably really fragile if someone calls getQuads
-             * before actually setting up the correct GL context.
              */
-            if (side == null) {
-                std.renderCustom();
+
+
+            ItemStack stack = new ItemStack(itemstack);
+            switch (type) {
+                case INVENTORY:
+                    iconSheet.renderSprite(cacheRender.apply(stack).getKey());
+                    return;
+                case ENTITY:
+                case EQUIPPED:
+                case EQUIPPED_FIRST_PERSON:
+                    StandardModel std = model.apply(stack, MinecraftClient.getPlayer().getWorld());
+                    std.renderCustom();
+                    break;
+                case FIRST_PERSON_MAP:
+                    break;
             }
-
-            return std.getQuads(side, rand);
         }
 
         @Override
-        public boolean isAmbientOcclusion() {
+        public boolean handleRenderType(net.minecraft.item.ItemStack item, ItemRenderType type) {
             return true;
         }
 
         @Override
-        public boolean isGui3d() {
-            return true;
-        }
-
-        @Override
-        public boolean isBuiltInRenderer() {
+        public boolean shouldUseRenderHelper(ItemRenderType type, net.minecraft.item.ItemStack item, ItemRendererHelper helper) {
             return false;
-        }
-
-        @Override
-        public TextureAtlasSprite getParticleTexture() {
-            return null;
-        }
-
-        @Override
-        public ItemOverrideList getOverrides() {
-            return new ItemOverrideListHack();
-        }
-
-        public ItemCameraTransforms getItemCameraTransforms() {
-            return new ItemCameraTransforms(ItemCameraTransforms.DEFAULT) {
-                public ItemTransformVec3f getTransform(ItemCameraTransforms.TransformType type) {
-                    if (cacheRender != null && (type == ItemCameraTransforms.TransformType.GUI)) {
-                        isGUI = true;
-                        return super.getTransform(type);
-                    } else {
-                        isGUI = false;
-                    }
-
-                    if (type == ItemCameraTransforms.TransformType.FIXED) {
-                        return new ItemTransformVec3f(new Vector3f(0, 90, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));
-                    }
-                    if (type == ItemCameraTransforms.TransformType.HEAD) {
-                        return new ItemTransformVec3f(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(2, 2, 2));
-                    }
-                    return super.getTransform(type);
-
-                }
-            };
-        }
-
-        class ItemOverrideListHack extends ItemOverrideList {
-            ItemOverrideListHack() {
-                super(new ArrayList<>());
-            }
-
-            @Override
-            public IBakedModel handleItemState(IBakedModel originalModel, net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World world, @Nullable EntityLivingBase entity) {
-                return new BakedItemModel(new ItemStack(stack), MinecraftClient.getPlayer().getWorld(), model, cacheRender, isGUI);
-            }
         }
     }
 }

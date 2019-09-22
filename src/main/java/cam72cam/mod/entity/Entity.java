@@ -11,8 +11,9 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.Explosion;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.common.registry.EntityRegistry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -53,11 +54,11 @@ public class Entity {
     /* Position / Rotation */
 
     public Vec3i getBlockPosition() {
-        return new Vec3i(internal.getPosition());
+        return new Vec3i((int)Math.floor(internal.posX), (int)Math.floor(internal.posY), (int)Math.floor(internal.posZ));
     }
 
     public Vec3d getPosition() {
-        return new Vec3d(internal.getPositionVector());
+        return new Vec3d(internal.posX, internal.posY, internal.posZ);
     }
 
     public void setPosition(Vec3d pos) {
@@ -101,7 +102,7 @@ public class Entity {
     }
 
     public Vec3d getPositionEyes(float partialTicks) {
-        return new Vec3d(internal.getPositionEyes(partialTicks));
+        return getPosition().add(0, internal.getEyeHeight(), 0);
     }
 
 
@@ -151,8 +152,8 @@ public class Entity {
     public void sendToObserving(Packet packet) {
         boolean found = false;
         int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
-        for (EntityPlayer player : internal.worldObj.playerEntities) {
-            if (player.getPositionVector().distanceTo(internal.getPositionVector()) < syncDist) {
+        for (EntityPlayer player : (List<EntityPlayer>)internal.worldObj.playerEntities) {
+            if (new Entity(player).getPosition().distanceTo(getPosition()) < syncDist) {
                 found = true;
                 break;
             }
@@ -166,20 +167,22 @@ public class Entity {
         return internal.ticksExisted;
     }
 
+    //TODO 1.7.10 custom passenger system!
+
     public int getPassengerCount() {
         if (modded != null) {
             return modded.getPassengerCount();
         } else {
-            return internal.getPassengers().size();
+            return internal.riddenByEntity != null ? 1 : 0;
         }
     }
 
     public final void addPassenger(cam72cam.mod.entity.Entity entity) {
-        entity.internal.startRiding(internal);
+        internal.mountEntity(entity.internal);
     }
 
     public final boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
-        return internal.isPassenger(passenger.internal);
+        return internal.ridingEntity.getPersistentID().equals(passenger.getUUID());
     }
 
     public final Vec3d getRidingOffset(Entity source) {
@@ -195,7 +198,12 @@ public class Entity {
     }
 
     protected List<Entity> getPassengers() {
-        return internal.getPassengers().stream().map(Entity::new).collect(Collectors.toList());
+        List<Entity> passengers = new ArrayList<>();
+        if (internal.riddenByEntity != null) {
+            passengers.add(getRiding());
+        }
+
+        return passengers;
     }
 
     public boolean isPlayer() {
@@ -203,14 +211,14 @@ public class Entity {
     }
 
     public Entity getRiding() {
-        if (internal.getRidingEntity() != null) {
-            return getWorld().getEntity(internal.getRidingEntity().getUniqueID(), Entity.class);
+        if (internal.ridingEntity != null) {
+            return getWorld().getEntity(internal.ridingEntity.getUniqueID(), Entity.class);
         }
         return null;
     }
 
     public IBoundingBox getBounds() {
-        return IBoundingBox.from(internal.getEntityBoundingBox());
+        return IBoundingBox.from(internal.getBoundingBox());
     }
 
     public float getRotationYawHead() {
@@ -226,7 +234,7 @@ public class Entity {
     }
 
     public void startRiding(Entity entity) {
-        internal.startRiding(entity.internal);
+        entity.addPassenger(this);
     }
 
     public float getRidingSoundModifier() {
@@ -238,7 +246,8 @@ public class Entity {
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain);
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size);
+        explosion.isFlaming = false;
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.doExplosionA();
         explosion.doExplosionB(true);

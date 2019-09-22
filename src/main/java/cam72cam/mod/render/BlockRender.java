@@ -1,28 +1,22 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
+import cpw.mods.fml.client.registry.RenderingRegistry;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.color.BlockColors;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.ColorizerGrass;
-import net.minecraft.world.biome.BiomeColorHelper;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.common.property.IExtendedBlockState;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.world.IBlockAccess;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -30,23 +24,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(value = Side.CLIENT)
 public class BlockRender {
-    private static final List<BakedQuad> EMPTY = new ArrayList<>();
-    private static final List<Consumer<ModelBakeEvent>> bakers = new ArrayList<>();
     private static final List<Runnable> colors = new ArrayList<>();
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
-    @SubscribeEvent
-    public static void onModelBakeEvent(ModelBakeEvent event) {
-        bakers.forEach(baker -> baker.accept(event));
+    private static Map<BlockType, Integer> blocks = new HashMap<>();
+
+
+    public static int getRenderType(BlockType blockType) {
+        return blocks.get(blockType);
     }
 
+    /* TODO 1.7.10
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent tick) {
         if (Minecraft.getMinecraft().theWorld == null) {
@@ -58,14 +50,16 @@ public class BlockRender {
         Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
         prev = tes;
     }
+    */
 
     public static void onPostColorSetup() {
         // TODO call from non mod context (subscribe event)
         colors.forEach(Runnable::run);
 
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntitySpecialRenderer<TileEntity>() {
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntitySpecialRenderer() {
             @Override
-            public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+            public void renderTileEntityAt(net.minecraft.tileentity.TileEntity teuncast, double x, double y, double z, float partialTicks) {
+                TileEntity te = (TileEntity) teuncast;
                 BlockEntity instance = te.instance();
                 if (instance == null) {
                     return;
@@ -92,77 +86,50 @@ public class BlockRender {
                 }
                 GL11.glPopMatrix();
             }
-
-            public boolean isGlobalRenderer(TileEntity te) {
-                return true;
-            }
         });
     }
 
     // TODO version for non TE blocks
 
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
+
+        int renderID = RenderingRegistry.getNextAvailableRenderId();
+
+        RenderingRegistry.registerBlockHandler(renderID, new ISimpleBlockRenderingHandler() {
+            @Override
+            public void renderInventoryBlock(Block block, int metadata, int modelId, RenderBlocks renderer) {
+                // NOP
+            }
+
+            @Override
+            public boolean renderWorldBlock(IBlockAccess world, int x, int y, int z, Block blockIn, int modelId, RenderBlocks renderer) {
+                if (block instanceof BlockTypeEntity) {
+                    net.minecraft.tileentity.TileEntity tile = world.getTileEntity(x, y, z);
+                    if (cls.isInstance(tile)) {
+                        StandardModel render = model.apply(cls.cast(tile));
+                        if (render != null) {
+                            render.renderQuads();
+                        }
+                    }
+                } else {
+                    // TODO
+                }
+                return false;
+            }
+
+            @Override
+            public boolean shouldRender3DInInventory(int modelId) {
+                return false;
+            }
+
+            @Override
+            public int getRenderId() {
+                return renderID;
+            }
+        });
+
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));
 
-        colors.add(() -> {
-            BlockColors blockColors = Minecraft.getMinecraft().getBlockColors();
-            blockColors.registerBlockColorHandler((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColorHelper.getGrassColorAtPos(worldIn, pos) : ColorizerGrass.getGrassColor(0.5D, 1.0D), block.internal);
-        });
-
-        bakers.add(event -> {
-            event.getModelRegistry().putObject(new ModelResourceLocation(block.internal.getRegistryName(), ""), new IBakedModel() {
-                @Override
-                public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
-                    if (block instanceof BlockTypeEntity) {
-                        if (!(state instanceof IExtendedBlockState)) {
-                            return EMPTY;
-                        }
-                        IExtendedBlockState extState = (IExtendedBlockState) state;
-                        Object data = extState.getValue(BlockTypeEntity.BLOCK_DATA);
-                        if (!cls.isInstance(data)) {
-                            return EMPTY;
-                        }
-                        StandardModel out = model.apply(cls.cast(data));
-                        if (out == null) {
-                            return EMPTY;
-                        }
-                        return out.getQuads(side, rand);
-                    } else {
-                        // TODO
-                        return EMPTY;
-                    }
-                }
-
-                @Override
-                public boolean isAmbientOcclusion() {
-                    return true;
-                }
-
-                @Override
-                public boolean isGui3d() {
-                    return true;
-                }
-
-                @Override
-                public boolean isBuiltInRenderer() {
-                    return false;
-                }
-
-                @Override
-                public TextureAtlasSprite getParticleTexture() {
-                    if (block.internal.getMaterial(null) == Material.IRON) {
-                        return Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(Blocks.IRON_BLOCK.getDefaultState()).getParticleTexture();
-                    }
-                    return Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(Blocks.STONE.getDefaultState()).getParticleTexture();
-                }
-
-                @Override
-                public ItemOverrideList getOverrides() {
-                    return null;
-                }
-
-                public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
-            });
-        });
+        // TODO 1.7.10 block colors
     }
 }

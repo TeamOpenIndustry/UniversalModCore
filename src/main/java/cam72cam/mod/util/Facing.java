@@ -2,6 +2,7 @@ package cam72cam.mod.util;
 
 import cam72cam.mod.math.Rotation;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 
 public enum Facing {
     DOWN(EnumFacing.DOWN),
@@ -48,8 +49,19 @@ public enum Facing {
         return from(net.minecraft.util.EnumFacing.getFront(facing));
     }
 
-    public static Facing fromAngle(float v) {
-        return from(EnumFacing.fromAngle(v));
+    public static Facing fromAngle(float angle) {
+        switch (MathHelper.floor_double(angle / 90.0D + 0.5D) & 3) {
+            case 0:
+                return SOUTH;
+            case 1:
+                return WEST;
+            case 2:
+                return NORTH;
+            case 3:
+                return EAST;
+            default:
+                return NORTH;
+        }
     }
 
     public Facing getOpposite() {
@@ -67,19 +79,65 @@ public enum Facing {
             case EAST:
                 return WEST;
             default:
-                return null;
+                return this;
         }
     }
 
     public Facing rotate(Rotation rot) {
-        return Facing.from(rot.internal.rotate(this.internal));
+        switch (rot) {
+            case NONE:
+                return this;
+            case CLOCKWISE_90:
+                switch (this) {
+                    case NORTH:
+                        return EAST;
+                    case SOUTH:
+                        return WEST;
+                    case WEST:
+                        return NORTH;
+                    case EAST:
+                        return SOUTH;
+                }
+                break;
+            case CLOCKWISE_180:
+                return getOpposite();
+            case COUNTERCLOCKWISE_90:
+                return getOpposite().rotate(Rotation.CLOCKWISE_90);
+        }
+        return this;
     }
 
     public float getHorizontalAngle() {
-        return internal.getHorizontalAngle();
+        int horizontalIndex = -1;
+        switch (this) {
+            case NORTH:
+                horizontalIndex = 2;
+                break;
+            case SOUTH:
+                horizontalIndex = 0;
+                break;
+            case WEST:
+                horizontalIndex = 1;
+                break;
+            case EAST:
+                horizontalIndex = 3;
+                break;
+        }
+        return (float)((horizontalIndex & 3) * 90);
     }
 
     public Axis getAxis() {
-        return Axis.from(internal.getAxis());
+        switch (this) {
+            case DOWN:
+            case UP:
+                return Axis.Y;
+            case NORTH:
+            case SOUTH:
+                return Axis.X;
+            case WEST:
+            case EAST:
+                return Axis.Z;
+        }
+        return Axis.Y;
     }
 }

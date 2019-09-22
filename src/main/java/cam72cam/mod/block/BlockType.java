@@ -1,38 +1,30 @@
 package cam72cam.mod.block;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
-@Mod.EventBusSubscriber
 public abstract class BlockType {
-    private static List<Consumer<RegistryEvent.Register<Block>>> registrations = new ArrayList<>();
+    private static List<Runnable> registrations = new ArrayList<>();
     public final net.minecraft.block.Block internal;
     protected final BlockSettings settings;
 
@@ -41,22 +33,23 @@ public abstract class BlockType {
 
         internal = getBlock();
 
-        registrations.add(reg -> reg.getRegistry().register(internal));
+
+        registrations.add(() -> GameRegistry.registerBlock(internal, getName()));
     }
 
-    @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        registrations.forEach(reg -> reg.accept(event));
+    public static void registerBlocks() {
+        registrations.forEach(Runnable::run);
     }
 
-    @SubscribeEvent
-    public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
-        Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
-        if (block instanceof BlockInternal) {
-            BlockInternal internal = (BlockInternal) block;
-            if (!internal.tryBreak(event.getWorld(), event.getPos(), event.getPlayer())) {
-                event.setCanceled(true);
-                //TODO updateListeners?
+    public static class EventBus {
+        @SubscribeEvent
+        public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
+            if (event.block instanceof BlockInternal) {
+                BlockInternal internal = (BlockInternal) event.block;
+                if (!internal.tryBreak(event.world, event.x, event.y, event.z, event.getPlayer())) {
+                    event.setCanceled(true);
+                    //TODO updateListeners?
+                }
             }
         }
     }
@@ -91,36 +84,41 @@ public abstract class BlockType {
         public BlockInternal() {
             super(settings.material.internal);
             setHardness(settings.hardness);
-            setSoundType(settings.material.soundType);
-            setUnlocalizedName(settings.modID + ":" + settings.name);
-            setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            setStepSound(settings.material.soundType);
+            setBlockName(settings.modID + ":" + settings.name);
+            // REMOVED 1.7.10 setRegistryName(new ResourceLocation(settings.modID, settings.name));
         }
 
         @Override
-        public final void breakBlock(net.minecraft.world.World world, BlockPos pos, IBlockState state) {
-            BlockType.this.onBreak(World.get(world), new Vec3i(pos));
-            super.breakBlock(world, pos, state);
+        public int getRenderType() {
+            return BlockRender.getRenderType(BlockType.this);
         }
 
         @Override
-        public final boolean onBlockActivated(net.minecraft.world.World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable net.minecraft.item.ItemStack heldItem, EnumFacing facing, float hitX, float hitY, float hitZ) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ));
+        public final void breakBlock(net.minecraft.world.World world, int posX, int posY, int posZ, Block block, int meta) {
+            BlockType.this.onBreak(World.get(world), new Vec3i(posX, posY, posZ));
+            super.breakBlock(world, posX, posY, posZ, block, meta);
         }
 
         @Override
-        public final net.minecraft.item.ItemStack getPickBlock(IBlockState state, RayTraceResult target, net.minecraft.world.World world, BlockPos pos, EntityPlayer player) {
-            return BlockType.this.onPick(World.get(world), new Vec3i(pos)).internal;
+        public final boolean onBlockActivated(net.minecraft.world.World world, int posX, int posY, int posZ, EntityPlayer player, int facing, float hitX, float hitY, float hitZ) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(posX, posY, posZ), new Player(player), Hand.PRIMARY, Facing.from(EnumFacing.getFront(facing)), new Vec3d(hitX, hitY, hitZ));
         }
 
         @Override
-        public void neighborChanged(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos, Block blockIn) {
+        public final net.minecraft.item.ItemStack getPickBlock(MovingObjectPosition target, net.minecraft.world.World world, int posX, int posY, int posZ, EntityPlayer player) {
+            return BlockType.this.onPick(World.get(world), new Vec3i(posX, posY, posZ)).internal;
+        }
+
+        @Override
+        public void onNeighborBlockChange(net.minecraft.world.World worldIn, int posX, int posY, int posZ, Block blockIn) {
             // TODO 1.10 this might have some interesting side effects
-            this.onNeighborChange(worldIn, pos, pos);
+            this.onNeighborChange(worldIn, posX, posY, posZ, posX, posY, posZ);
         }
 
         @Override
-        public void onNeighborChange(IBlockAccess world, BlockPos pos, BlockPos neighbor) {
-            BlockType.this.onNeighborChange(World.get((net.minecraft.world.World) world), new Vec3i(pos), new Vec3i(neighbor));
+        public void onNeighborChange(IBlockAccess world, int posX, int posY, int posZ, int neighborX, int neighborY, int neighborZ) {
+            BlockType.this.onNeighborChange(World.get((net.minecraft.world.World) world), new Vec3i(posX, posY, posZ), new Vec3i(neighborX, neighborY, neighborZ));
         }
 
         /*
@@ -131,43 +129,50 @@ public abstract class BlockType {
             return settings.resistance;
         }
 
-
+        /* TODO 1.7.10
         @Override
-        public final EnumBlockRenderType getRenderType(IBlockState state) {
+        public final EnumBlockRenderType getRenderType(Block block, int meta) {
             // TESR Renderer TODO OPTIONAL!@!!!!
             return EnumBlockRenderType.MODEL;
         }
+        */
 
 
         @Override
-        public final boolean isOpaqueCube(IBlockState state) {
+        public final boolean isOpaqueCube() {
             return false;
         }
 
         @Override
-        public final boolean isFullCube(IBlockState state) {
+        public final boolean isNormalCube() {
             return false;
         }
 
         @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, net.minecraft.world.World source, BlockPos pos) {
-            return new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+        public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
+            return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, BlockType.this.getHeight(), 1);
         }
 
+        /* Removed 1.7.10
         @Override
-        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            return new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+        public AxisAlignedBB getBoundingBox(Block block, int meta, IBlockAccess source, int posX, int posY, int posZ) {
+            return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, BlockType.this.getHeight(), 1);
         }
+        */
 
         @Override
-        public AxisAlignedBB getSelectedBoundingBox(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos) {
-            return getCollisionBoundingBox(state, worldIn, pos).expand(0, 0.1, 0).offset(pos);
+        public AxisAlignedBB getSelectedBoundingBoxFromPool(net.minecraft.world.World worldIn, int posX, int posY, int posZ) {
+            return getCollisionBoundingBoxFromPool(worldIn, posX, posY, posZ)
+                    .expand(0, 0.1, 0)
+                    .offset(posX, posY, posZ);
         }
 
+        /* Removed 1.7.10
         @Override
-        public int getMetaFromState(IBlockState state) {
+        public int getMetaFromState(Block block, int meta) {
             return 0;
         }
+        */
 
         /*
          * Fence, glass override
@@ -175,30 +180,30 @@ public abstract class BlockType {
 
         @Deprecated
         @Override
-        public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        public boolean isSideSolid(IBlockAccess world, int posX, int posY, int posZ, ForgeDirection side) {
             if (settings.connectable) {
-                return super.isSideSolid(base_state, world, pos, side);
+                return super.isSideSolid(world, posX, posY, posZ, side);
             }
 
             // SNOW ONLY?
-            return side == EnumFacing.UP;
+            return side == ForgeDirection.UP;
         }
 
-        public boolean tryBreak(net.minecraft.world.World world, BlockPos pos, EntityPlayer player) {
-            return BlockType.this.tryBreak(World.get(world), new Vec3i(pos), new Player(player));
+        public boolean tryBreak(net.minecraft.world.World world, int posX, int posY, int posZ, EntityPlayer player) {
+            return BlockType.this.tryBreak(World.get(world), new Vec3i(posX, posY, posZ), new Player(player));
         }
 
         /* Redstone */
         /* TODO REDSTONE!!!
 
         @Override
-        public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
+        public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, int posX, int posY, int posZ, EnumFacing side)
         {
             if (settings.entity == null) {
                 return 0;
             }
             World world = World.get((net.minecraft.world.World) blockAccess);
-            net.minecraft.tileentity.TileEntity ent =  world.getTileEntity(new Vec3i(pos), net.minecraft.tileentity.TileEntity.class);
+            net.minecraft.tileentity.TileEntity ent =  world.getTileEntity(new Vec3i(posX, posY, posZ), net.minecraft.tileentity.TileEntity.class);
             if (ent instanceof IRedstoneProvider) {
                 IRedstoneProvider provider = (IRedstoneProvider) ent;
                 return provider.getRedstoneLevel();
@@ -207,13 +212,13 @@ public abstract class BlockType {
         }
 
         @Override
-        public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
+        public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, int posX, int posY, int posZ, EnumFacing side)
         {
             return this.getWeakPower(blockState, blockAccess, pos, side);
         }
 
         @Override
-        public boolean canProvidePower(IBlockState state)
+        public boolean canProvidePower(Block block, int meta)
         {
             return true;
         }

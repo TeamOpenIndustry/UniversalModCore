@@ -3,6 +3,7 @@ package cam72cam.mod.util;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
+import net.minecraft.util.Vec3;
 import trackapi.lib.Util;
 
 public interface ITrack {
@@ -22,7 +23,7 @@ public interface ITrack {
 
             @Override
             public Vec3d getNextPosition(Vec3d pos, Vec3d vel) {
-                net.minecraft.util.math.Vec3d next = track.getNextPosition(pos.internal, vel.internal);
+                Vec3 next = track.getNextPosition(pos.internal, vel.internal);
                 return next != null ? new Vec3d(next) : null;
             }
         };
@@ -44,7 +45,7 @@ public interface ITrack {
             }
 
             @Override
-            public net.minecraft.util.math.Vec3d getNextPosition(net.minecraft.util.math.Vec3d pos, net.minecraft.util.math.Vec3d vel) {
+            public Vec3 getNextPosition(Vec3 pos, Vec3 vel) {
                 Vec3d next = ITrack.this.getNextPosition(new Vec3d(pos), new Vec3d(vel));
                 return next != null ? next.internal : null;
             }

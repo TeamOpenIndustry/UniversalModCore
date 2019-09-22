@@ -1,13 +1,15 @@
 package cam72cam.mod.math;
 
+import net.minecraft.util.Vec3;
+
 public class Vec3d {
-    public static final Vec3d ZERO = new Vec3d(net.minecraft.util.math.Vec3d.ZERO);
-    public final net.minecraft.util.math.Vec3d internal;
+    public static final Vec3d ZERO = new Vec3d(0,0,0);
+    public final Vec3 internal;
     public final double x;
     public final double y;
     public final double z;
 
-    public Vec3d(net.minecraft.util.math.Vec3d internal) {
+    public Vec3d(Vec3 internal) {
         this.internal = internal;
         this.x = internal.xCoord;
         this.y = internal.yCoord;
@@ -15,7 +17,7 @@ public class Vec3d {
     }
 
     public Vec3d(double x, double y, double z) {
-        this(new net.minecraft.util.math.Vec3d(x, y, z));
+        this(Vec3.createVectorHelper(x, y, z));
     }
 
     public Vec3d(Vec3i pos) {
@@ -31,7 +33,7 @@ public class Vec3d {
     }
 
     public Vec3d add(Vec3d other) {
-        return new Vec3d(internal.add(other.internal));
+        return new Vec3d(internal.addVector(other.x, other.y, other.z));
     }
 
     public Vec3d subtract(Vec3d other) {
@@ -39,11 +41,11 @@ public class Vec3d {
     }
 
     public Vec3d subtract(Vec3i offset) {
-        return new Vec3d(internal.subtract(offset.x, offset.y, offset.z));
+        return subtract(offset.x, offset.y, offset.z);
     }
 
     public Vec3d subtract(double x, double y, double z) {
-        return new Vec3d(internal.subtract(x, y, z));
+        return new Vec3d(internal.subtract(Vec3.createVectorHelper(x, y, z)));
     }
 
     public double length() {
@@ -55,7 +57,7 @@ public class Vec3d {
     }
 
     public Vec3d scale(double scale) {
-        return new Vec3d(internal.scale(scale));
+        return new Vec3d(x * scale, y * scale, z * scale);
     }
 
     public Vec3d normalize() {

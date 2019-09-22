@@ -9,16 +9,13 @@ import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class EntityRegistry {
@@ -41,7 +38,7 @@ public class EntityRegistry {
 
             // This has back-compat for older entity names
             // TODO expose updateFreq and vecUpdates
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
+            cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
 
             identifiers.put(type, id.toString());
             constructors.put(id.toString(), ctr);
@@ -73,17 +70,16 @@ public class EntityRegistry {
         return ent.getSelf();
     }
 
-    @EventBusSubscriber
     public static class EntityEvents {
         @SubscribeEvent
         public static void onEntityJoin(EntityJoinWorldEvent event) {
-            if (World.get(event.getWorld()) == null) {
+            if (World.get(event.world) == null) {
                 return;
             }
 
 
-            if (event.getEntity() instanceof ModdedEntity) {
-                String msg = ((ModdedEntity) event.getEntity()).getSelf().tryJoinWorld();
+            if (event.entity instanceof ModdedEntity) {
+                String msg = ((ModdedEntity) event.entity).getSelf().tryJoinWorld();
                 if (msg != null) {
                     event.setCanceled(true);
                     missingResources = msg;
@@ -92,13 +88,12 @@ public class EntityRegistry {
         }
     }
 
-    @EventBusSubscriber(value = Side.CLIENT)
     public static class EntityClientEvents {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getConnection() != null) {
+            if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getNetHandler() != null) {
                 System.out.println(missingResources);
-                Minecraft.getMinecraft().getConnection().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
+                Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
                 Minecraft.getMinecraft().loadWorld(null);
                 Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;

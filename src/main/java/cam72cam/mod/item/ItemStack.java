@@ -5,7 +5,7 @@ import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.IFluidContainerItem;
 
 public class ItemStack {
     public static final ItemStack EMPTY = new ItemStack();
@@ -52,7 +52,7 @@ public class ItemStack {
     }
 
     public ItemStack(String item, int i, int meta) {
-        this(Item.getByNameOrId(item), i, meta);
+        this((Item) Item.itemRegistry.getObject(item), i, meta);
     }
 
     public TagCompound getTagCompound() {
@@ -77,7 +77,11 @@ public class ItemStack {
     }
 
     public TagCompound toTag() {
-        return internal != null ? new TagCompound(internal.serializeNBT()) : new TagCompound();
+        TagCompound data = new TagCompound();
+        if (internal != null) {
+            internal.writeToNBT(data.internal);
+        }
+        return data;
     }
 
     public int getCount() {
@@ -117,7 +121,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return FluidUtil.getFluidHandler(internal) != null;
+        return internal != null && internal.getItem() instanceof IFluidContainerItem;
     }
 
     public boolean isFlammable() {

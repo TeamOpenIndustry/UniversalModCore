@@ -4,6 +4,9 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+
+import java.util.Set;
 
 public class EntitySync extends TagCompound {
     private final Entity entity;
@@ -25,7 +28,7 @@ public class EntitySync extends TagCompound {
         }
 
         TagCompound sync = new TagCompound();
-        for (String key : internal.getKeySet()) {
+        for (String key : (Set<String>)internal.func_150296_c()) {
             NBTBase newVal = internal.getTag(key);
             if (old.internal.hasKey(key)) {
                 NBTBase oldVal = old.internal.getTag(key);
@@ -37,8 +40,8 @@ public class EntitySync extends TagCompound {
         }
         //TODO removed keys!
 
-        if (sync.internal.getKeySet().size() != 0) {
-            old = new TagCompound(this.internal.copy());
+        if (sync.internal.func_150296_c().size() != 0) {
+            old = new TagCompound((NBTTagCompound) this.internal.copy());
             oldString = old.toString();
 
             entity.sendToObserving(new EntitySyncPacket(entity, sync));
@@ -46,7 +49,7 @@ public class EntitySync extends TagCompound {
     }
 
     public void receive(TagCompound sync) {
-        for (String key : sync.internal.getKeySet()) {
+        for (String key : ((Set<String>)sync.internal.func_150296_c())) {
             internal.setTag(key, sync.internal.getTag(key));
         }
         old = this;

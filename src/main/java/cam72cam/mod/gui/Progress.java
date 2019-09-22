@@ -1,7 +1,7 @@
 package cam72cam.mod.gui;
 
-import net.minecraftforge.fml.common.ProgressManager;
-import net.minecraftforge.fml.common.ProgressManager.ProgressBar;
+import cpw.mods.fml.common.ProgressManager;
+import cpw.mods.fml.common.ProgressManager.ProgressBar;
 
 import java.util.Iterator;
 

@@ -1,7 +1,7 @@
 package cam72cam.mod.gui;
 
 import cam72cam.mod.util.Hand;
-import net.minecraftforge.fml.client.config.GuiSlider;
+import cpw.mods.fml.client.config.GuiSlider;
 
 public abstract class Slider extends Button {
 

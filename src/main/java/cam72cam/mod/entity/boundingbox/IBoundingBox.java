@@ -2,7 +2,7 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.AxisAlignedBB;
 
 public interface IBoundingBox {
     static IBoundingBox from(AxisAlignedBB internal) {
@@ -40,24 +40,28 @@ public interface IBoundingBox {
                 return from(internal.offset(vec3d.x, vec3d.y, vec3d.z));
             }
 
+            private AxisAlignedBB AABBCtr(Vec3d min, Vec3d max) {
+                return AxisAlignedBB.getBoundingBox(min.x, min.y, min.z, max.x, max.y, max.z);
+            }
+
             @Override
             public double calculateXOffset(IBoundingBox other, double offsetX) {
-                return internal.calculateXOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetX);
+                return internal.calculateXOffset(AABBCtr(other.min(), other.max()), offsetX);
             }
 
             @Override
             public double calculateYOffset(IBoundingBox other, double offsetY) {
-                return internal.calculateYOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetY);
+                return internal.calculateYOffset(AABBCtr(other.min(), other.max()), offsetY);
             }
 
             @Override
             public double calculateZOffset(IBoundingBox other, double offsetZ) {
-                return internal.calculateZOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetZ);
+                return internal.calculateZOffset(AABBCtr(other.min(), other.max()), offsetZ);
             }
 
             @Override
             public boolean intersects(Vec3d min, Vec3d max) {
-                return internal.intersects(min.x, min.y, min.z, max.x, max.y, max.z);
+                return internal.intersectsWith(AABBCtr(min, max));
             }
 
             @Override
@@ -68,7 +72,7 @@ public interface IBoundingBox {
     }
 
     static IBoundingBox from(Vec3i pos) {
-        return from(new AxisAlignedBB(pos.internal));
+        return from(AxisAlignedBB.getBoundingBox(pos.x, pos.y, pos.z, pos.x, pos.y, pos.z));
     }
 
     Vec3d min();

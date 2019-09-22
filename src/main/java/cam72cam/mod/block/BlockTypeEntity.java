@@ -12,21 +12,11 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.ITrack;
 import cam72cam.mod.world.World;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.property.ExtendedBlockState;
-import net.minecraftforge.common.property.IExtendedBlockState;
-import net.minecraftforge.common.property.IUnlistedProperty;
+import net.minecraft.util.AxisAlignedBB;
 
-import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
-    public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
     protected final Identifier id;
     private final Supplier<BlockEntity> constructData;
 
@@ -35,11 +25,11 @@ public abstract class BlockTypeEntity extends BlockType {
         id = new Identifier(settings.modID, settings.name);
         this.constructData = constructData;
         TileEntity.register(constructData, id);
-        ((TileEntity) internal.createTileEntity(null, null)).register();
+        ((TileEntity) internal.createTileEntity(null, 0)).register();
     }
 
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
+        TileEntity te = ((TileEntity) internal.createTileEntity(null, 0));
         te.hasTileData = true;
         te.world = world;
         te.pos = pos;
@@ -123,12 +113,12 @@ public abstract class BlockTypeEntity extends BlockType {
 
     protected class BlockTypeInternal extends BlockInternal {
         @Override
-        public final boolean hasTileEntity(IBlockState state) {
+        public final boolean hasTileEntity() {
             return true;
         }
 
         @Override
-        public final net.minecraft.tileentity.TileEntity createTileEntity(net.minecraft.world.World world, IBlockState state) {
+        public final net.minecraft.tileentity.TileEntity createTileEntity(net.minecraft.world.World world, int meta) {
             if (constructData.get() instanceof BlockEntityTickable) {
                 if (constructData.get() instanceof ITrack) {
                     return new TileEntityTickableTrack(id);
@@ -139,43 +129,12 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         @Override
-        @Nonnull
-        protected BlockStateContainer createBlockState() {
-            return new ExtendedBlockState(this, new IProperty[0], new IUnlistedProperty<?>[]{BLOCK_DATA});
-        }
-
-        @Override
-        public IBlockState getExtendedState(IBlockState origState, IBlockAccess access, BlockPos pos) {
-            // Try to get the "real" world object
-            net.minecraft.tileentity.TileEntity teorig = access.getTileEntity(pos);
-            if (teorig != null && teorig.hasWorldObj()) {
-
-                Object te = World.get(teorig.getWorld()).getBlockEntity(new Vec3i(pos), cam72cam.mod.block.BlockEntity.class);
-                if (te != null) {
-                    IExtendedBlockState state = (IExtendedBlockState) origState;
-                    state = state.withProperty(BLOCK_DATA, te);
-                    return state;
-                }
-            }
-            return super.getExtendedState(origState, access, pos);
-        }
-
-        @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, net.minecraft.world.World source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
+        public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
+            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(posX, posY, posZ);
             if (entity == null) {
-                return super.getCollisionBoundingBox(state, source, pos);
+                return super.getCollisionBoundingBoxFromPool(source, posX, posY, posZ);
             }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
-        }
-
-        @Override
-        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
-            if (entity == null) {
-                return super.getBoundingBox(state, source, pos);
-            }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
+            return AxisAlignedBB.getBoundingBox(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(source), new Vec3i(posX, posY, posZ)), 1.0F);
         }
     }
 
