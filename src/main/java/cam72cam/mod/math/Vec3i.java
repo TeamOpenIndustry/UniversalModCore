@@ -1,8 +1,19 @@
 package cam72cam.mod.math;
 
 import cam72cam.mod.util.Facing;
+import net.minecraft.util.MathHelper;
 
 public class Vec3i {
+    private static final int NUM_X_BITS = 1 + MathHelper.calculateLogBaseTwo(MathHelper.roundUpToPowerOfTwo(30000000));
+    private static final int NUM_Z_BITS = NUM_X_BITS;
+    private static final int NUM_Y_BITS = 64 - NUM_X_BITS - NUM_Z_BITS;
+    private static final int Y_SHIFT = 0 + NUM_Z_BITS;
+    private static final int X_SHIFT = Y_SHIFT + NUM_Y_BITS;
+    private static final long X_MASK = (1L << NUM_X_BITS) - 1L;
+    private static final long Y_MASK = (1L << NUM_Y_BITS) - 1L;
+    private static final long Z_MASK = (1L << NUM_Z_BITS) - 1L;
+
+
     public static final Vec3i ZERO = new Vec3i(0,0,0);
     public final int x;
     public final int y;
@@ -16,6 +27,13 @@ public class Vec3i {
 
     public Vec3i(Vec3d pos) {
         this((int)Math.floor(pos.x), (int)Math.floor(pos.y), (int)Math.floor(pos.z));
+    }
+
+
+    public Vec3i(long serialized) {
+        x = (int)(serialized << 64 - X_SHIFT - NUM_X_BITS >> 64 - NUM_X_BITS);
+        y = (int)(serialized << 64 - Y_SHIFT - NUM_Y_BITS >> 64 - NUM_Y_BITS);
+        z = (int)(serialized << 64 - NUM_Z_BITS >> 64 - NUM_Z_BITS);
     }
 
     @Override
@@ -130,5 +148,9 @@ public class Vec3i {
 
     public Vec3d toChunkMax() {
         return new Vec3d((x >> 4 << 4) + 16, Double.POSITIVE_INFINITY, (z >> 4 << 4) + 16);
+    }
+
+    public long toLong() {
+        return ((long)x & X_MASK) << X_SHIFT | ((long)y & Y_MASK) << Y_SHIFT | ((long)z & Z_MASK) << 0;
     }
 }
