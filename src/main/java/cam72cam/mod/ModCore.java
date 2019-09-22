@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@cpw.mods.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
+@cpw.mods.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.7.10,1.8)")
 public class ModCore {
     public static final String MODID = "modcore";
     public static final String NAME = "ModCore";
@@ -155,7 +155,7 @@ public class ModCore {
             switch (event) {
                 case CONSTRUCT:
                     addHandler(new Mouse());
-                    addHandler(new ChunkManager());
+                    addHandler(new ChunkManager.EventBus());
                     addHandler(new cam72cam.mod.world.World.EventBus());
                     addHandler(new BlockType.EventBus());
                     addHandler(new EntityRegistry.EntityEvents());

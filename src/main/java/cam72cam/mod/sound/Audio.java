@@ -54,7 +54,7 @@ public class Audio {
         private static ModSoundManager soundManager;
 
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
+        public void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.START) {
                 return;
             }
@@ -72,7 +72,7 @@ public class Audio {
         }
 
         @SubscribeEvent
-        public static void onSoundLoad(SoundLoadEvent event) {
+        public void onSoundLoad(SoundLoadEvent event) {
             if (soundManager == null) {
                 soundManager = new ModSoundManager(event.manager);
             } else {
@@ -81,12 +81,12 @@ public class Audio {
         }
 
         @SubscribeEvent
-        public static void onWorldLoad(WorldEvent.Load event) {
+        public void onWorldLoad(WorldEvent.Load event) {
             soundManager.handleReload(true);
         }
 
         @SubscribeEvent
-        public static void onWorldUnload(WorldEvent.Unload event) {
+        public void onWorldUnload(WorldEvent.Unload event) {
             soundManager.stop();
         }
 

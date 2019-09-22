@@ -78,7 +78,7 @@ public class GLTexture {
 
     public static class EventBus {
         @SubscribeEvent
-        public static void onTick(TickEvent.ClientTickEvent event) {
+        public void onTick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.START) {
                 return;
             }

@@ -72,7 +72,7 @@ public class EntityRegistry {
 
     public static class EntityEvents {
         @SubscribeEvent
-        public static void onEntityJoin(EntityJoinWorldEvent event) {
+        public void onEntityJoin(EntityJoinWorldEvent event) {
             if (World.get(event.world) == null) {
                 return;
             }
@@ -90,7 +90,7 @@ public class EntityRegistry {
 
     public static class EntityClientEvents {
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
+        public void onClientTick(TickEvent.ClientTickEvent event) {
             if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getNetHandler() != null) {
                 System.out.println(missingResources);
                 Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);

@@ -44,7 +44,6 @@ public class ItemBase {
         registrations.add(() -> GameRegistry.registerItem(internal, name, modID));
     }
 
-    @SubscribeEvent
     public static void registerItems() {
         registrations.forEach(Runnable::run);
     }

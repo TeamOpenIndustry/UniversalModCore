@@ -70,6 +70,20 @@ public class GlobalRender {
                 overlayFuncs.forEach(x -> x.accept(event.partialTicks));
             }
         }
+
+        @SubscribeEvent
+        public void onDebugRender(RenderGameOverlayEvent.Text event) {
+            if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
+                int i;
+                for (i = 0; i < event.right.size(); i++) {
+                    if (event.right.get(i).startsWith("Display: ")) {
+                        i++;
+                        break;
+                    }
+                }
+                event.right.add(i, GPUInfo.debug());
+            }
+        }
     }
 
     public static void registerRender(Consumer<Float> func) {
@@ -112,20 +126,6 @@ public class GlobalRender {
         Vec3d cameraPos = getCameraPos(partialTicks);
         camera.setPosition(cameraPos.x, cameraPos.y, cameraPos.z);
         return camera;
-    }
-
-    @SubscribeEvent
-    public static void onDebugRender(RenderGameOverlayEvent.Text event) {
-        if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
-            int i;
-            for (i = 0; i < event.right.size(); i++) {
-                if (event.right.get(i).startsWith("Display: ")) {
-                    i++;
-                    break;
-                }
-            }
-            event.right.add(i, GPUInfo.debug());
-        }
     }
 
     public static boolean isInRenderDistance(Vec3d pos) {

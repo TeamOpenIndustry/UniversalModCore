@@ -38,7 +38,7 @@ public class Keyboard {
         static List<KeyBinding> keys = new ArrayList<>();
 
         @SubscribeEvent
-        public static void onKeyInput(TickEvent.ClientTickEvent event) {
+        public void onKeyInput(TickEvent.ClientTickEvent event) {
             EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
             if (player == null) {
                 return;

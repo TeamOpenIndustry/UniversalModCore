@@ -43,7 +43,7 @@ public abstract class BlockType {
 
     public static class EventBus {
         @SubscribeEvent
-        public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
+        public void onBlockBreakEvent(BlockEvent.BreakEvent event) {
             if (event.block instanceof BlockInternal) {
                 BlockInternal internal = (BlockInternal) event.block;
                 if (!internal.tryBreak(event.world, event.x, event.y, event.z, event.getPlayer())) {

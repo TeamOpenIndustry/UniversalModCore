@@ -29,11 +29,6 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
 
     private static ChunkManager instance;
 
-    public ChunkManager() {
-        instance = this;
-        init();
-    }
-
     private static Ticket ticketForWorld(World world) {
         int dim = world.provider.dimensionId;
         if (!TICKETS.containsKey(dim)) {
@@ -60,76 +55,84 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         CHUNK_MAP.put(pos, Math.max(100, Math.min(10, currTicks)));
     }
 
-    @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) {
-            return;
-        }
-        World world = event.world;
-
-        Ticket ticket;
-        try {
-            ticket = ticketForWorld(world);
-        } catch (Exception ex) {
-            ModCore.error("Something broke inside ticketForWorld!");
-            return;
-        }
-
-        int dim = world.provider.dimensionId;
-        Set<ChunkPos> keys = CHUNK_MAP.keySet();
-
-        Set<ChunkPos> loaded = new HashSet<ChunkPos>();
-        Set<ChunkPos> unload = new HashSet<ChunkPos>();
-
-        for (ChunkPos pos : keys) {
-            if (pos.dim != dim) {
-                continue;
+    public static class EventBus {
+        @SubscribeEvent
+        public void onWorldTick(TickEvent.WorldTickEvent event) {
+            if (event.phase != TickEvent.Phase.START) {
+                return;
+            }
+            if (instance == null) {
+                instance = new ChunkManager();
+                instance.init();
             }
 
-            int ticks = CHUNK_MAP.get(pos);
 
-            if (ticks > 0) {
-                loaded.add(pos);
-                CHUNK_MAP.put(pos, ticks - 1);
-            } else {
-                unload.add(pos);
+            World world = event.world;
+
+            Ticket ticket;
+            try {
+                ticket = ticketForWorld(world);
+            } catch (Exception ex) {
+                ModCore.error("Something broke inside ticketForWorld!");
+                return;
             }
-        }
 
-        for (ChunkPos pos : unload) {
-            CHUNK_MAP.remove(pos);
-        }
+            int dim = world.provider.dimensionId;
+            Set<ChunkPos> keys = CHUNK_MAP.keySet();
 
-        for (ChunkCoordIntPair chunk : ticket.getChunkList()) {
-            boolean shouldChunkLoad = false;
+            Set<ChunkPos> loaded = new HashSet<ChunkPos>();
+            Set<ChunkPos> unload = new HashSet<ChunkPos>();
 
-            for (ChunkPos pos : loaded) {
-                if (chunk.chunkXPos == pos.chunkX && chunk.chunkZPos == pos.chunkZ) {
-                    shouldChunkLoad = true;
-                    loaded.remove(pos);
-                    break;
+            for (ChunkPos pos : keys) {
+                if (pos.dim != dim) {
+                    continue;
+                }
+
+                int ticks = CHUNK_MAP.get(pos);
+
+                if (ticks > 0) {
+                    loaded.add(pos);
+                    CHUNK_MAP.put(pos, ticks - 1);
+                } else {
+                    unload.add(pos);
                 }
             }
 
-            if (shouldChunkLoad) {
-                // Leave chunk loaded
-                //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
-            } else {
-                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+            for (ChunkPos pos : unload) {
+                CHUNK_MAP.remove(pos);
+            }
+
+            for (ChunkCoordIntPair chunk : ticket.getChunkList()) {
+                boolean shouldChunkLoad = false;
+
+                for (ChunkPos pos : loaded) {
+                    if (chunk.chunkXPos == pos.chunkX && chunk.chunkZPos == pos.chunkZ) {
+                        shouldChunkLoad = true;
+                        loaded.remove(pos);
+                        break;
+                    }
+                }
+
+                if (shouldChunkLoad) {
+                    // Leave chunk loaded
+                    //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
+                } else {
+                    ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+                    try {
+                        ForgeChunkManager.unforceChunk(ticket, chunk);
+                    } catch (Exception ex) {
+                        ModCore.catching(ex);
+                    }
+                }
+            }
+
+            for (ChunkPos pos : loaded) {
+                ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
                 try {
-                    ForgeChunkManager.unforceChunk(ticket, chunk);
+                    ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(pos.chunkX, pos.chunkZ));
                 } catch (Exception ex) {
                     ModCore.catching(ex);
                 }
-            }
-        }
-
-        for (ChunkPos pos : loaded) {
-            ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
-            try {
-                ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(pos.chunkX, pos.chunkZ));
-            } catch (Exception ex) {
-                ModCore.catching(ex);
             }
         }
     }
