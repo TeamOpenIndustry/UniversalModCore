@@ -70,9 +70,9 @@ public class ItemStackHandler implements IInventory {
 
         this.internal = new ExposedItemStackHandler(size) {
             @Override
-            public void setInventorySlotContents(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            public void setInventorySlotContents(int slot, net.minecraft.item.ItemStack stack) {
                 if (checkSlot.test(slot, new ItemStack(stack))) {
-                    super.setInventorySlotContents(slot, stack.copy());
+                    super.setInventorySlotContents(slot, stack != null ? stack.copy() : null);
                     onContentsChanged(slot);
                 }
             }
@@ -135,7 +135,11 @@ public class ItemStackHandler implements IInventory {
     }
 
     public void load(TagCompound items) {
-        internal.load(items.getList("Items", ItemStack::new));
+        if (items.hasKey("Items")) {
+            List<ItemStack> inv = items.getList("Items", ItemStack::new);
+            setSize(inv.size());
+            internal.load(inv);
+        }
     }
 
 }

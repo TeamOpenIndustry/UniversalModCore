@@ -154,11 +154,6 @@ public class ModCore {
         public void commonEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
-                    addHandler(new Mouse());
-                    addHandler(new ChunkManager.EventBus());
-                    addHandler(new cam72cam.mod.world.World.EventBus());
-                    addHandler(new BlockType.EventBus());
-                    addHandler(new EntityRegistry.EntityEvents());
 
 
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
@@ -168,6 +163,12 @@ public class ModCore {
                     Packet.register(MousePressPacket::new, PacketDirection.ClientToServer);
                     break;
                 case INITIALIZE:
+                    addHandler(new Mouse());
+                    addHandler(new ChunkManager.EventBus());
+                    addHandler(new cam72cam.mod.world.World.EventBus());
+                    addHandler(new BlockType.EventBus());
+                    addHandler(new EntityRegistry.EntityEvents());
+
                     BlockType.registerBlocks();
                     ItemBase.registerItems();
                 case SETUP:
@@ -186,13 +187,14 @@ public class ModCore {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
+                    break;
+                case INITIALIZE:
                     addHandler(Audio.proxy);
                     addHandler(new EntityRegistry.EntityClientEvents());
                     addHandler(new GLTexture.EventBus());
                     addHandler(new GlobalRender.EventBus());
                     addHandler(new Keyboard.KeyboardListener());
                     addHandler(new ItemRender.EventBus());
-                case INITIALIZE:
                     EntityRenderer.registerEntities();
                     ItemRender.registerItems();
                     GlobalRender.registerGlobalRenderer();

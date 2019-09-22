@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class Entity {
     public final EntitySync sync;
@@ -178,11 +177,15 @@ public class Entity {
     }
 
     public final void addPassenger(cam72cam.mod.entity.Entity entity) {
-        internal.mountEntity(entity.internal);
+        if (internal instanceof ModdedEntity) {
+            ((ModdedEntity) internal).addPassenger(entity);
+        } else {
+            entity.internal.mountEntity(internal);
+        }
     }
 
     public final boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
-        return internal.ridingEntity.getPersistentID().equals(passenger.getUUID());
+        return internal.ridingEntity != null && internal.ridingEntity.getPersistentID().equals(passenger.getUUID());
     }
 
     public final Vec3d getRidingOffset(Entity source) {
@@ -200,7 +203,10 @@ public class Entity {
     protected List<Entity> getPassengers() {
         List<Entity> passengers = new ArrayList<>();
         if (internal.riddenByEntity != null) {
-            passengers.add(getRiding());
+            Entity passenger = getWorld().getEntity(internal.riddenByEntity.getUniqueID(), Entity.class);
+            if (passenger != null) {
+                passengers.add(passenger);
+            }
         }
 
         return passengers;
@@ -212,13 +218,13 @@ public class Entity {
 
     public Entity getRiding() {
         if (internal.ridingEntity != null) {
-            return getWorld().getEntity(internal.ridingEntity.getUniqueID(), Entity.class);
+            return getWorld().getEntity(internal.ridingEntity.getEntityId(), Entity.class);
         }
         return null;
     }
 
     public IBoundingBox getBounds() {
-        return IBoundingBox.from(internal.getBoundingBox());
+        return IBoundingBox.from(internal.boundingBox);
     }
 
     public float getRotationYawHead() {

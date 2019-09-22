@@ -21,7 +21,7 @@ public class BoundingBox extends AxisAlignedBB {
     private static double[] hack(IBoundingBox internal) {
         Vec3d min = internal.min();
         Vec3d max = internal.max();
-        return new double[]{max.x, max.y, max.z, min.x, min.y, min.z};
+        return new double[]{min.x, min.y, min.z, max.x, max.y, max.z};
     }
 
     /* NOP */

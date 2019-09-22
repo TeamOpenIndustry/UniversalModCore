@@ -121,21 +121,31 @@ public class ItemRender {
             }
              */
 
+            GL11.glPushMatrix();
+
+            GL11.glRotated(90, 0, 1, 0);
 
             ItemStack stack = new ItemStack(itemstack);
             switch (type) {
                 case INVENTORY:
-                    iconSheet.renderSprite(cacheRender.apply(stack).getKey());
-                    return;
-                case ENTITY:
+                    if (cacheRender != null) {
+                        GL11.glScaled(10, 10, 10);
+                        iconSheet.renderSprite(cacheRender.apply(stack).getKey());
+                        break;
+                    } else {
+                        GL11.glScaled(10, 10, 10);
+                    }
                 case EQUIPPED:
                 case EQUIPPED_FIRST_PERSON:
+                    GL11.glRotated(90, 0, 1, 0);
+                case ENTITY:
                     StandardModel std = model.apply(stack, MinecraftClient.getPlayer().getWorld());
                     std.renderCustom();
                     break;
                 case FIRST_PERSON_MAP:
                     break;
             }
+            GL11.glPopMatrix();
         }
 
         @Override

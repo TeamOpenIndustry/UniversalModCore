@@ -37,7 +37,7 @@ public class Vec3d {
     }
 
     public Vec3d subtract(Vec3d other) {
-        return new Vec3d(internal.subtract(other.internal));
+        return new Vec3d(other.internal.subtract(internal));
     }
 
     public Vec3d subtract(Vec3i offset) {
@@ -45,7 +45,7 @@ public class Vec3d {
     }
 
     public Vec3d subtract(double x, double y, double z) {
-        return new Vec3d(internal.subtract(Vec3.createVectorHelper(x, y, z)));
+        return new Vec3d(Vec3.createVectorHelper(x, y, z).subtract(internal));
     }
 
     public double length() {

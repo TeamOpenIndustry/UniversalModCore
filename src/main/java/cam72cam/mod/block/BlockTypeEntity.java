@@ -31,8 +31,6 @@ public abstract class BlockTypeEntity extends BlockType {
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, 0));
         te.hasTileData = true;
-        te.world = world;
-        te.pos = pos;
         return te.instance();
     }
 
@@ -114,6 +112,10 @@ public abstract class BlockTypeEntity extends BlockType {
     protected class BlockTypeInternal extends BlockInternal {
         @Override
         public final boolean hasTileEntity() {
+            return true;
+        }
+        @Override
+        public boolean hasTileEntity(int metadata) {
             return true;
         }
 

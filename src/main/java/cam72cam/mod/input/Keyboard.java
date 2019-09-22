@@ -49,7 +49,7 @@ public class Keyboard {
             ).sendToServer();
 
             for (KeyBinding key : keys) {
-                if (key.isPressed()) {
+                if (key.getIsKeyPressed()) {
                     new KeyPacket(key.getKeyDescription()).sendToServer();
                 }
             }

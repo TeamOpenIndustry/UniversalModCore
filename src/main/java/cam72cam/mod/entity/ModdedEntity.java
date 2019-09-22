@@ -10,6 +10,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.particle.EntityFX;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.monster.EntityMob;
@@ -187,22 +188,17 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
     */
 
-    @Override
-    public void mountEntity(Entity entityIn) {
-        if (entityIn == null) {
-            removePassenger(super.riddenByEntity);
+    public void addPassenger(cam72cam.mod.entity.Entity entity) {
+        passengerPositions.put(entity.getUUID(), iRidable.getMountPosition(entity));
+        if (entity.isPlayer()) {
+            entity.internal.mountEntity(this);
+            //self.addPassenger(entity);
         } else {
-            cam72cam.mod.entity.Entity entity = new cam72cam.mod.entity.Entity(entityIn);
-            passengerPositions.put(entity.getUUID(), iRidable.getMountPosition(entity));
-            if (entity.isPlayer()) {
-                self.addPassenger(entity);
-            } else {
-                StaticPassenger sp = new StaticPassenger(entity);
-                staticPassengers.add(sp);
-                entity.kill();
-            }
-            self.sendToObserving(new PassengerPositionsPacket(this));
+            StaticPassenger sp = new StaticPassenger(entity);
+            staticPassengers.add(sp);
+            entity.kill();
         }
+        self.sendToObserving(new PassengerPositionsPacket(this));
     }
 
     @Override
@@ -300,7 +296,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* ICollision */
     @Override
     public AxisAlignedBB getCollisionBox(Entity collider) {
-        return new BoundingBox(iCollision.getCollision());
+        return collider instanceof EntityFX ? null : collider.boundingBox;
     }
 
     @Override

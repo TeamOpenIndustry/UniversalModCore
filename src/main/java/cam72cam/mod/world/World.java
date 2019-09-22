@@ -139,6 +139,7 @@ public class World {
         entities.add(entity);
         entityByID.put(entityIn.getEntityId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
+
     }
 
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
@@ -242,6 +243,7 @@ public class World {
             System.out.println("BAD TE DATA " + data);
             return null;
         }
+        te.setWorldObj(internal);
         if (te.instance() == null) {
             System.out.println("Loaded " + te.isLoaded() + " " + data);
         }

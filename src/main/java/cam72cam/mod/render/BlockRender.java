@@ -128,6 +128,7 @@ public class BlockRender {
             }
         });
 
+        blocks.put(block, renderID);
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));
 
         // TODO 1.7.10 block colors

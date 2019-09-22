@@ -136,7 +136,7 @@ public class TagCompound {
 
     public <T extends cam72cam.mod.entity.Entity> T getEntity(String key, World world, Class<T> cls) {
         NBTTagCompound data = internal.getCompoundTag(key);
-        UUID id = UUID.fromString(data.getString("id"));
+        int id = data.getInteger("id");
         int dim = data.getInteger("world");
         world = World.get(dim, world.isClient);
         if (world == null) {
@@ -147,7 +147,7 @@ public class TagCompound {
 
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
         NBTTagCompound data = new NBTTagCompound();
-        data.setString("id", entity.internal.getUniqueID().toString());
+        data.setInteger("id", entity.internal.getEntityId());
         data.setInteger("world", entity.internal.worldObj.provider.dimensionId);
         internal.setTag(key, data);
     }

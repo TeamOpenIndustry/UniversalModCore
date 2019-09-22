@@ -29,8 +29,6 @@ import java.util.function.Supplier;
 
 public class TileEntity extends net.minecraft.tileentity.TileEntity {
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
-    public World world;
-    public Vec3i pos;
     public boolean hasTileData;
     private String instanceId;
 
@@ -72,13 +70,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     @Override
-    public void setWorldObj(net.minecraft.world.World world) {
-        super.setWorldObj(world);
-        this.world = World.get(world);
-    }
-
-
-    @Override
     public final void readFromNBT(NBTTagCompound compound) {
         hasTileData = true;
         load(new TagCompound(compound));
@@ -95,7 +86,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.writeToNBT(nbt.internal);
         this.writeUpdate(nbt);
 
-        return new S35PacketUpdateTileEntity(pos.x, pos.y, pos.z, 6, nbt.internal);
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 6, nbt.internal);
     }
 
     @Override
@@ -105,15 +96,15 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.readUpdate(new TagCompound(pkt.func_148857_g()));
         super.onDataPacket(net, pkt);
         if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(pos.x, pos.y, pos.z, pos.x, pos.y, pos.z);
+            worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
         }
     }
 
     @Override
     public void markDirty() {
         super.markDirty();
-        if (world.isServer) {
-            world.internal.notifyBlocksOfNeighborChange(pos.x, pos.y, pos.z, blockType, 1 + 2 + 8);
+        if (!worldObj.isRemote) {
+            worldObj.notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, blockType, 1 + 2 + 8);
             //TODO 1.7.10? world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType());
         }
     }
@@ -300,7 +291,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public void load(TagCompound data) {
         super.readFromNBT(data.internal);
-        pos = new Vec3i(xCoord, yCoord, zCoord);
 
         if (instanceId == null) {
             // If this fails something is really wrong
@@ -342,7 +332,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     public boolean isLoaded() {
-        return this.hasWorldObj() && (world.isServer || hasTileData);
+        return this.hasWorldObj() && (!worldObj.isRemote || hasTileData);
     }
 
     // TODO render system?
@@ -361,8 +351,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 }
                 this.instance = registry.get(this.instanceId).get();
                 this.instance.internal = this;
-                this.instance.world = this.world;
-                this.instance.pos = this.pos;
+                this.instance.world = World.get(worldObj);
+                this.instance.pos = new Vec3i(xCoord, yCoord, zCoord);
                 if (deferredLoad != null) {
                     this.instance.load(deferredLoad);
                 }
