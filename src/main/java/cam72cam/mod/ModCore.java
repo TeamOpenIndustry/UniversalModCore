@@ -200,13 +200,14 @@ public class ModCore {
                     GlobalRender.registerGlobalRenderer();
                     break;
                 case SETUP:
+                    /* TODO 1.7.10
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
                         if (skipN > 0) {
                             skipN--;
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                    });
+                    });*/
                     BlockRender.onPostColorSetup();
                     break;
             }

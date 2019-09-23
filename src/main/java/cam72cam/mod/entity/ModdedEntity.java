@@ -271,7 +271,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public int getPassengerCount() {
-        return this.staticPassengers.size() + self.getPassengerCount();
+        return this.staticPassengers.size() + (riddenByEntity != null ? 1 : 0);
     }
 
     public List<StaticPassenger> getStaticPassengers() {
@@ -401,7 +401,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         public Entity reconstitute(World world) {
-            Entity ent = EntityList.createEntityByName(ident.internal.toString(), world);
+            Entity ent = EntityList.createEntityByName(ident.internal.getResourcePath(), world);
             ent.readFromNBT(data.internal);
             return ent;
         }
