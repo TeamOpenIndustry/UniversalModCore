@@ -3,13 +3,11 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -72,27 +70,6 @@ public class EntityRenderer extends Render<ModdedEntity> {
             GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
             GL11.glRotatef(-90, 0, 1, 0);
             renderers.get(self.getClass()).render(self, partialTicks);
-
-            for (ModdedEntity.StaticPassenger pass : stock.getStaticPassengers()) {
-                if (pass.cache == null) {
-                    pass.cache = pass.reconstitute(stock.worldObj);
-                }
-                Vec3d pos = stock.getRidingOffset(pass.uuid);
-                if (pos == null) {
-                    continue;
-                }
-
-                //TileEntityMobSpawnerRenderer
-                EntityLiving ent = (EntityLiving) pass.cache;
-                GL11.glPushMatrix();
-                {
-                    GL11.glTranslated(pos.x, pos.y - 0.5 + 0.35, pos.z);
-                    GL11.glRotated(pass.rotation, 0, 1, 0);
-                    Minecraft.getMinecraft().getRenderManager().doRenderEntity(ent, 0, 0, 0, 0, 0, false);
-                }
-                GL11.glPopMatrix();
-            }
-
         }
         GL11.glPopMatrix();
 
