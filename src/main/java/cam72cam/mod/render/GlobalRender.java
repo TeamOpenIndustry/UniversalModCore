@@ -76,7 +76,7 @@ public class GlobalRender {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.right.size(); i++) {
-                    if (event.right.get(i).startsWith("Display: ")) {
+                    if (event.right.get(i) != null && event.right.get(i).startsWith("Display: ")) {
                         i++;
                         break;
                     }

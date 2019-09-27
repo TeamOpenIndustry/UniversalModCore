@@ -103,7 +103,7 @@ public class TagCompound {
     }
 
     public Vec3i getVec3i(String key) {
-        if (internal.getTag(key).getId() == 4) {
+        if (internal.hasKey(key) && internal.getTag(key).getId() == 4) {
             return new Vec3i(internal.getLong(key));
         }
 

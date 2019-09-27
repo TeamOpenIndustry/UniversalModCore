@@ -89,13 +89,31 @@ public class World {
             worldsByID.remove(world.provider.dimensionId);
         }
 
-            @SubscribeEvent
-            public void onWorldTick (TickEvent.WorldTickEvent event){
+        @SubscribeEvent
+        public void onWorldTick (TickEvent.WorldTickEvent event){
             if (event.phase != TickEvent.Phase.START) {
                 return;
             }
-            onTicks.forEach(fn -> fn.accept(get(event.world)));
-            get(event.world).ticks++;
+            World world = get(event.world);
+            onTicks.forEach(fn -> fn.accept(world));
+            world.ticks++;
+
+            world.entityByID.entrySet().stream()
+                    .filter(x -> x.getKey() != x.getValue().getId()).collect(Collectors.toList())
+                    .forEach(x -> {world.entityByID.remove(x.getKey()); System.out.println("BAD ENT " + x);});
+
+            world.entityByUUID.entrySet().stream()
+                    .filter(x -> !x.getKey().equals(x.getValue().getUUID())).collect(Collectors.toList())
+                    .forEach(x -> {world.entityByUUID.remove(x.getKey()); System.out.println("BAD ENT " + x);});
+
+            for (Entity entity : world.entities) {
+                if (!world.entityByID.containsKey(entity.getId())) {
+                    world.entityByID.put(entity.getId(), entity);
+                }
+                if (!world.entityByUUID.containsKey(entity.getUUID())) {
+                    world.entityByUUID.put(entity.getUUID(), entity);
+                }
+            }
         }
     }
 
@@ -153,7 +171,7 @@ public class World {
     /* Entity Methods */
 
     public Entity getEntity(net.minecraft.entity.Entity entity) {
-        return getEntity(entity.getEntityId(), Entity.class);
+        return getEntity(entity.getUniqueID(), Entity.class);
     }
 
     public <T extends Entity> T getEntity(int id, Class<T> type) {

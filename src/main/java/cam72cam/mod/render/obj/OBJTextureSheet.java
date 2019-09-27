@@ -228,7 +228,7 @@ public class OBJTextureSheet {
         if (texture.tryUpload()) {
             return texture.bind();
         }
-        System.out.println("DEFER...");
+        //System.out.println("DEFER...");
         return bindIcon();
     }
 

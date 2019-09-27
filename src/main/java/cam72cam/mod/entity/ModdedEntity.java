@@ -135,7 +135,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* ITickable */
 
     @Override
-    public final void onUpdate() {
+    public void onEntityUpdate() {
         iTickable.onTick();
         self.sync.send();
 
@@ -203,11 +203,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     public final void addPassenger(Entity entity) {
         if (!worldObj.isRemote) {
+            entity.mountEntity(null);
             System.out.println("New Seat");
             SeatEntity seat = new SeatEntity(worldObj);
             seat.setParent(this);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
+            seat.setPosition(posX, posY, posZ);
+            seat.delayedRider = passenger.getUUID();
             entity.mountEntity(seat);
             updateSeat(seat);
             worldObj.spawnEntityInWorld(seat);
@@ -238,7 +241,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
                 Vec3d pos = calculatePassengerPosition(offset);
                 seat.setPosition(pos.x, pos.y, pos.z);
-                passenger.setPosition(pos);
+                passenger.setPosition(pos.add(0, offset.y, 0));
 
                 float delta = rotationYaw - prevRotationYaw;
                 passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;

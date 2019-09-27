@@ -16,7 +16,8 @@ import java.util.UUID;
 
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
-    private UUID parent;
+    public UUID delayedRider;
+    private Integer parent;
     private UUID rider;
     private int ticksUnsure = 0;
     boolean shouldSit = true;
@@ -33,19 +34,36 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     protected void readEntityFromNBT(NBTTagCompound compound) {
         TagCompound data = new TagCompound(compound);
-        parent = data.getUUID("parent");
+        parent = data.getInteger("parent");
         shouldSit = data.getBoolean("shouldSit");
     }
 
     @Override
     protected void writeEntityToNBT(NBTTagCompound compound) {
         TagCompound data = new TagCompound(compound);
-        data.setUUID("parent", parent);
+        data.setInteger("parent", parent);
         data.setBoolean("shouldSit", shouldSit);
     }
 
     @Override
-    public void onUpdate() {
+    public void onEntityUpdate() {
+        if (this.ticksExisted < 5) {
+            return;
+        }
+
+        if (this.riddenByEntity != null) {
+            delayedRider = null;
+        }
+        if (delayedRider != null) {
+            cam72cam.mod.entity.Entity r = World.get(worldObj).getEntity(delayedRider, cam72cam.mod.entity.Entity.class);
+            if (r != null) {
+                r.internal.mountEntity(this);
+                System.out.println("YeHaw");
+                delayedRider = null;
+            }
+            return;
+        }
+
         if (parent == null) {
             System.out.println("No parent, goodbye");
             removePassenger();
@@ -75,7 +93,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public void setParent(ModdedEntity moddedEntity) {
-        this.parent = moddedEntity.getUniqueID();
+        this.parent = moddedEntity.getEntityId();
     }
 
     public cam72cam.mod.entity.Entity getParent() {
@@ -115,7 +133,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (this.isDead) {
             return null;
         }
-        if (ridingEntity == null) {
+        if (riddenByEntity == null) {
             if (rider != null) {
                 System.out.println("FALLBACK UNMOUNT");
                 return World.get(worldObj).getEntity(rider, cam72cam.mod.entity.Entity.class);
@@ -128,19 +146,21 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public void writeSpawnData(ByteBuf buffer) {
         TagCompound data = new TagCompound();
-        data.setUUID("parent", parent);
+        data.setInteger("parent", parent);
+        data.setUUID("delayedRider", delayedRider);
         ByteBufUtils.writeTag(buffer, data.internal);
     }
 
     @Override
     public void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
-        parent = data.getUUID("parent");
+        parent = data.getInteger("parent");
+        delayedRider = data.getUUID("delayedRider");
     }
 
     @Override
     @SideOnly(Side.CLIENT)
     public boolean isInRangeToRenderDist(double distance) {
-        return false;
+        return true;
     }
 }
