@@ -16,7 +16,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Entity {
     public final EntitySync sync;
@@ -178,29 +178,31 @@ public class Entity {
 
     public final void addPassenger(cam72cam.mod.entity.Entity entity) {
         if (internal instanceof ModdedEntity) {
-            ((ModdedEntity) internal).addPassenger(entity);
+            ((ModdedEntity) internal).addPassenger(entity.internal);
         } else {
             entity.internal.mountEntity(internal);
         }
     }
 
     public final boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
+        if (modded != null) {
+            return modded.isPassenger(passenger);
+        }
         return internal.ridingEntity != null && internal.ridingEntity.getPersistentID().equals(passenger.getUUID());
     }
 
-    public final Vec3d getRidingOffset(Entity source) {
-        return modded.getRidingOffset(source);
+    public void removePassenger(Entity entity) {
+        if (modded != null) {
+            modded.removePassenger(entity);
+        }
+        entity.internal.mountEntity(null);
     }
 
-    public final void setRidingOffset(Entity source, Vec3d pos) {
-        modded.setRidingOffset(source, pos);
-    }
+    public List<Entity> getPassengers() {
+        if (modded != null) {
+            return modded.getActualPassengers();
+        }
 
-    public Entity removePassenger(Predicate<ModdedEntity.StaticPassenger> o) {
-        return modded.removePassenger(o);
-    }
-
-    protected List<Entity> getPassengers() {
         List<Entity> passengers = new ArrayList<>();
         if (internal.riddenByEntity != null) {
             Entity passenger = getWorld().getEntity(internal.riddenByEntity.getUniqueID(), Entity.class);
@@ -218,7 +220,10 @@ public class Entity {
 
     public Entity getRiding() {
         if (internal.ridingEntity != null) {
-            return getWorld().getEntity(internal.ridingEntity.getEntityId(), Entity.class);
+            if (internal.ridingEntity instanceof SeatEntity) {
+                return ((SeatEntity)internal.ridingEntity).getParent();
+            }
+            return getWorld().getEntity(internal.ridingEntity);
         }
         return null;
     }

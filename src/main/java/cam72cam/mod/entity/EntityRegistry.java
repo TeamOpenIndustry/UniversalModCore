@@ -47,6 +47,7 @@ public class EntityRegistry {
     }
 
     public static void registration() {
+        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 32, 20, false);
         registrations.forEach(Runnable::run);
     }
 

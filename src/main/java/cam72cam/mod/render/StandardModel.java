@@ -21,7 +21,7 @@ public class StandardModel {
 
     private RenderBlocks renderBlocks = new RenderBlocks();
 
-    public static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
+    private static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
         int meta = stack.internal.getItemDamage();
         if (block instanceof BlockRotatedPillar) {

@@ -29,7 +29,7 @@ public class Vec3i {
         this((int)Math.floor(pos.x), (int)Math.floor(pos.y), (int)Math.floor(pos.z));
     }
 
-
+    @Deprecated
     public Vec3i(long serialized) {
         x = (int)(serialized << 64 - X_SHIFT - NUM_X_BITS >> 64 - NUM_X_BITS);
         y = (int)(serialized << 64 - Y_SHIFT - NUM_Y_BITS >> 64 - NUM_Y_BITS);
@@ -117,6 +117,11 @@ public class Vec3i {
         return add(-x, -y, -z);
     }
 
+    @Deprecated
+    public long toLong() {
+        return ((long)x & X_MASK) << X_SHIFT | ((long)y & Y_MASK) << Y_SHIFT | ((long)z & Z_MASK) << 0;
+    }
+
     public Vec3i rotate(Rotation rotation) {
         switch (rotation)
         {
@@ -148,9 +153,5 @@ public class Vec3i {
 
     public Vec3d toChunkMax() {
         return new Vec3d((x >> 4 << 4) + 16, Double.POSITIVE_INFINITY, (z >> 4 << 4) + 16);
-    }
-
-    public long toLong() {
-        return ((long)x & X_MASK) << X_SHIFT | ((long)y & Y_MASK) << Y_SHIFT | ((long)z & Z_MASK) << 0;
     }
 }
