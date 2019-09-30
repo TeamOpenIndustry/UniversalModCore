@@ -10,16 +10,9 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.fabricmc.api.ModInitializer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
@@ -29,8 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
-public class ModCore {
+public class ModCore implements ModInitializer {
     public static final String MODID = "modcore";
     public static final String NAME = "ModCore";
     public static final String VERSION = "1.0.0";
@@ -50,10 +42,15 @@ public class ModCore {
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
     }
 
+
+    @Override
+    public void onInitialize() {
+        logger = LogManager.getLogger("modcore");
+        proxy.event(ModEvent.INITIALIZE);
+    }
+
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        logger = event.getModLog();
-        proxy.event(ModEvent.INITIALIZE);
     }
 
     @EventHandler

@@ -6,25 +6,25 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class TagCompound {
-    public final NBTTagCompound internal;
+    public final CompoundTag internal;
 
-    public TagCompound(NBTTagCompound data) {
+    public TagCompound(CompoundTag data) {
         this.internal = data;
     }
 
     public TagCompound() {
-        this(new NBTTagCompound());
+        this(new CompoundTag());
     }
 
     public boolean hasKey(String key) {
-        return internal.hasKey(key);
+        return internal.containsKey(key);
     }
 
     public boolean getBoolean(String key) {
@@ -32,7 +32,7 @@ public class TagCompound {
     }
 
     public void setBoolean(String key, boolean value) {
-        internal.setBoolean(key, value);
+        internal.putBoolean(key, value);
     }
 
     public byte getByte(String key) {
@@ -40,15 +40,15 @@ public class TagCompound {
     }
 
     public void setByte(String key, byte value) {
-        internal.setByte(key, value);
+        internal.putByte(key, value);
     }
 
     public int getInteger(String key) {
-        return internal.getInteger(key);
+        return internal.getInt(key);
     }
 
     public void setInteger(String key, int value) {
-        internal.setInteger(key, value);
+        internal.putInt(key, value);
     }
 
     public long getLong(String key) {
@@ -56,7 +56,7 @@ public class TagCompound {
     }
 
     public void setLong(String key, long value) {
-        internal.setLong(key, value);
+        internal.putLong(key, value);
     }
 
     public float getFloat(String key) {
@@ -64,7 +64,7 @@ public class TagCompound {
     }
 
     public void setFloat(String key, float value) {
-        internal.setFloat(key, value);
+        internal.putFloat(key, value);
     }
 
     public double getDouble(String key) {
@@ -72,7 +72,7 @@ public class TagCompound {
     }
 
     public void setDouble(String key, double value) {
-        internal.setDouble(key, value);
+        internal.putDouble(key, value);
     }
 
     public String getString(String key) {
@@ -81,56 +81,56 @@ public class TagCompound {
 
     public void setString(String key, String value) {
         if (value == null) {
-            internal.removeTag(key);
+            internal.remove(key);
         } else {
-            internal.setString(key, value);
+            internal.putString(key, value);
         }
     }
 
     public UUID getUUID(String key) {
-        if (!internal.hasKey(key)) {
+        if (!internal.containsKey(key)) {
             return null;
         }
         return UUID.fromString(getString(key));
     }
 
     public void setUUID(String key, UUID value) {
-        internal.removeTag(key);
+        internal.remove(key);
         if (value != null) {
             setString(key, value.toString());
         }
     }
 
     public Vec3i getVec3i(String key) {
-        if (internal.getTagId(key) == 4) {
+        if (internal.containsKey(key) && internal.getTag(key).getType() == 4) {
             return new Vec3i(internal.getLong(key));
         }
 
-        NBTTagCompound tag = internal.getCompoundTag(key);
-        return new Vec3i(tag.getInteger("X"), tag.getInteger("Y"), tag.getInteger("Z"));
+        CompoundTag tag = internal.getCompound(key);
+        return new Vec3i(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"));
     }
 
     public void setVec3i(String key, Vec3i pos) {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setInteger("X", pos.x);
-        tag.setInteger("Y", pos.y);
-        tag.setInteger("Z", pos.z);
-        internal.setTag(key, tag);
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("X", pos.x);
+        tag.putInt("Y", pos.y);
+        tag.putInt("Z", pos.z);
+        internal.put(key, tag);
     }
 
     public Vec3d getVec3d(String key) {
-        NBTTagCompound nbt = internal.getCompoundTag(key);
+        CompoundTag nbt = internal.getCompound(key);
         return new Vec3d(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
     }
 
     public void setVec3d(String key, Vec3d value) {
-        NBTTagCompound nbt = new NBTTagCompound();
+        CompoundTag nbt = new CompoundTag();
         if (value != null) {
-            nbt.setDouble("x", value.x);
-            nbt.setDouble("y", value.y);
-            nbt.setDouble("z", value.z);
+            nbt.putDouble("x", value.x);
+            nbt.putDouble("y", value.y);
+            nbt.putDouble("z", value.z);
         }
-        internal.setTag(key, nbt);
+        internal.put(key, nbt);
     }
 
     public cam72cam.mod.entity.Entity getEntity(String key, World world) {
@@ -138,9 +138,9 @@ public class TagCompound {
     }
 
     public <T extends cam72cam.mod.entity.Entity> T getEntity(String key, World world, Class<T> cls) {
-        NBTTagCompound data = internal.getCompoundTag(key);
-        UUID id = data.getUniqueId("id");
-        int dim = data.getInteger("world");
+        CompoundTag data = internal.getCompound(key);
+        UUID id = data.getUuid("id");
+        int dim = data.getInt("world");
         world = World.get(dim, world.isClient);
         if (world == null) {
             return null;
@@ -149,22 +149,22 @@ public class TagCompound {
     }
 
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
-        NBTTagCompound data = new NBTTagCompound();
-        data.setUniqueId("id", entity.internal.getUniqueID());
-        data.setInteger("world", entity.internal.world.provider.getDimension());
-        internal.setTag(key, data);
+        CompoundTag data = new CompoundTag();
+        data.putUuid("id", entity.internal.getUuid());
+        data.putInt("world", entity.internal.world.getDimension().getType().getRawId());
+        internal.put(key, data);
     }
 
     public <T extends Enum> T getEnum(String key, Class<T> cls) {
-        return cls.getEnumConstants()[internal.getInteger(key)];
+        return cls.getEnumConstants()[internal.getInt(key)];
     }
 
     public void setEnum(String key, Enum value) {
-        internal.setInteger(key, value.ordinal());
+        internal.putInt(key, value.ordinal());
     }
 
     public void setEnumList(String key, List<? extends Enum> items) {
-        internal.setIntArray(key, items.stream().map(Enum::ordinal).mapToInt(i -> i).toArray());
+        internal.putIntArray(key, items.stream().map(Enum::ordinal).mapToInt(i -> i).toArray());
     }
 
     public <T extends Enum> List<T> getEnumList(String key, Class<T> cls) {
@@ -172,60 +172,60 @@ public class TagCompound {
     }
 
     public TagCompound get(String key) {
-        return new TagCompound(internal.getCompoundTag(key));
+        return new TagCompound(internal.getCompound(key));
     }
 
     public void set(String key, TagCompound value) {
-        internal.setTag(key, value.internal);
+        internal.put(key, value.internal);
     }
 
     public void remove(String key) {
-        internal.removeTag(key);
+        internal.remove(key);
     }
 
     public <T> List<T> getList(String key, Function<TagCompound, T> decoder) {
         List<T> list = new ArrayList<>();
-        NBTTagCompound data = internal.getCompoundTag(key);
-        for (int i = 0; i < data.getInteger("count"); i++) {
-            list.add(decoder.apply(new TagCompound(data.getCompoundTag(i + ""))));
+        CompoundTag data = internal.getCompound(key);
+        for (int i = 0; i < data.getInt("count"); i++) {
+            list.add(decoder.apply(new TagCompound(data.getCompound(i + ""))));
         }
         return list;
     }
 
     public <T> void setList(String key, List<T> list, Function<T, TagCompound> encoder) {
-        NBTTagCompound data = new NBTTagCompound();
-        data.setInteger("count", list.size());
+        CompoundTag data = new CompoundTag();
+        data.putInt("count", list.size());
         for (int i = 0; i < list.size(); i++) {
-            data.setTag(i + "", encoder.apply(list.get(i)).internal);
+            data.put(i + "", encoder.apply(list.get(i)).internal);
         }
-        internal.setTag(key, data);
+        internal.put(key, data);
     }
 
     public <K, V> Map<K, V> getMap(String key, Function<String, K> keyFn, Function<TagCompound, V> valFn) {
         Map<K, V> map = new HashMap<>();
-        NBTTagCompound data = internal.getCompoundTag(key);
-        for (String item : data.getKeySet()) {
-            map.put(keyFn.apply(item), valFn.apply(new TagCompound(data.getCompoundTag(item))));
+        CompoundTag data = internal.getCompound(key);
+        for (String item : data.getKeys()) {
+            map.put(keyFn.apply(item), valFn.apply(new TagCompound(data.getCompound(item))));
         }
         return map;
     }
 
     public <K, V> void setMap(String key, Map<K, V> map, Function<K, String> keyFn, Function<V, TagCompound> valFn) {
-        NBTTagCompound data = new NBTTagCompound();
+        CompoundTag data = new CompoundTag();
 
         for (K item : map.keySet()) {
-            data.setTag(keyFn.apply(item), valFn.apply(map.get(item)).internal);
+            data.put(keyFn.apply(item), valFn.apply(map.get(item)).internal);
         }
 
-        internal.setTag(key, data);
+        internal.put(key, data);
     }
 
     public ItemStack getStack(String key) {
-        return new ItemStack(new TagCompound(internal.getCompoundTag(key)));
+        return new ItemStack(new TagCompound(internal.getCompound(key)));
     }
 
     public void setStack(String key, ItemStack stack) {
-        internal.setTag(key, stack.toTag().internal);
+        internal.put(key, stack.toTag().internal);
     }
 
     public String toString() {
@@ -233,7 +233,7 @@ public class TagCompound {
     }
 
     public void setWorld(String key, World world) {
-        setInteger(key, world.internal.provider.getDimension());
+        setInteger(key, world.internal.getDimension().getType().getRawId());
     }
 
     public World getWorld(String key, boolean isClient) {
@@ -256,7 +256,7 @@ public class TagCompound {
         World world = ted.getWorld("world", isClient);
 
         //TODO pull logic in here to avoid crash
-        net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(world.internal, ted.get("data").internal);
+        net.minecraft.block.entity.BlockEntity te = net.minecraft.block.entity.BlockEntity.createFromTag(ted.get("data").internal);
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();
     }

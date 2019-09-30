@@ -6,7 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockColored;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.BlockSnow;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraftforge.client.model.pipeline.LightUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class StandardModel {
-    private List<Pair<IBlockState, IBakedModel>> models = new ArrayList<>();
+    private List<Pair<BlockState, IBakedModel>> models = new ArrayList<>();
     private List<Consumer<Float>> custom = new ArrayList<>();
 
-    private static IBlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
+    private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
         @SuppressWarnings("deprecation")
-        IBlockState gravelState = block.getStateFromMeta(stack.internal.getMetadata());
+        BlockState gravelState = block.getStateFromMeta(stack.internal.getMetadata());
         if (block instanceof BlockLog) {
             gravelState = gravelState.withProperty(BlockLog.LOG_AXIS, BlockLog.EnumAxis.Z);
         }
@@ -40,7 +40,7 @@ public class StandardModel {
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        IBlockState state = Blocks.CONCRETE.getDefaultState();
+        BlockState state = Blocks.CONCRETE.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
@@ -49,14 +49,14 @@ public class StandardModel {
 
     public StandardModel addSnow(int layers, Vec3d translate) {
         layers = Math.min(layers, 8);
-        IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
+        BlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
         models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
         return this;
     }
 
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
-        IBlockState state = itemToBlockState(bed);
+        BlockState state = itemToBlockState(bed);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
         return this;
@@ -85,9 +85,9 @@ public class StandardModel {
         return this;
     }
 
-    List<BakedQuad> getQuads(EnumFacing side, long rand) {
+    List<BakedQuad> getQuads(Direction side, long rand) {
         List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
+        for (Pair<BlockState, IBakedModel> model : models) {
             quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
         }
 
@@ -105,9 +105,9 @@ public class StandardModel {
 
     public void renderQuads() {
         List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
+        for (Pair<BlockState, IBakedModel> model : models) {
             quads.addAll(model.getRight().getQuads(null, null, 0));
-            for (EnumFacing facing : EnumFacing.values()) {
+            for (Direction facing : Direction.values()) {
                 quads.addAll(model.getRight().getQuads(null, facing, 0));
             }
 

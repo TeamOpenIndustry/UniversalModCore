@@ -15,7 +15,7 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class TileEntity extends net.minecraft.tileentity.TileEntity {
+public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
     public World world;
     public Vec3i pos;
@@ -70,7 +70,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             // TODO log a warning here?
             return;
         }
-        net.minecraft.tileentity.TileEntity.register(this.getName().internal.toString(), this.getClass());
+        net.minecraft.block.entity.BlockEntity.register(this.getName().internal.toString(), this.getClass());
     }
 
     public Identifier getName() {
@@ -102,13 +102,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
 
     @Override
-    public final void readFromNBT(NBTTagCompound compound) {
+    public final void readFromNBT(CompoundTag compound) {
         hasTileData = true;
         load(new TagCompound(compound));
     }
 
     @Override
-    public final NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    public final CompoundTag writeToNBT(CompoundTag compound) {
         save(new TagCompound(compound));
         return compound;
     }
@@ -134,8 +134,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     @Override
-    public final NBTTagCompound getUpdateTag() {
-        NBTTagCompound tag = super.getUpdateTag();
+    public final CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
         if (this.isLoaded()) {
             this.writeToNBT(tag);
             this.writeUpdate(new TagCompound(tag));
@@ -144,7 +144,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     @Override
-    public final void handleUpdateTag(NBTTagCompound tag) {
+    public final void handleUpdateTag(CompoundTag tag) {
         hasTileData = true;
         this.readFromNBT(tag);
         this.readUpdate(new TagCompound(tag));
@@ -181,14 +181,14 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     @Override
-    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing) {
+    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.Direction facing) {
         //TODO more efficient
         return getCapability(capability, facing) != null;
     }
 
     @Override
     @Nullable
-    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.EnumFacing facing) {
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.Direction facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             ITank target = getTank(Facing.from(facing));
             if (target == null) {

@@ -29,7 +29,7 @@ public interface ITrack {
     }
 
     static ITrack get(World world, Vec3d pos, boolean allowMCRail) {
-        return from(Util.getTileEntity(world.internal, pos.internal, allowMCRail));
+        return from(Util.getBlockEntity(world.internal, pos.internal, allowMCRail));
     }
 
     double getTrackGauge();

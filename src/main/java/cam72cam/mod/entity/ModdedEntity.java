@@ -11,7 +11,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -87,7 +87,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* IWorldData */
 
     @Override
-    protected final void readEntityFromNBT(NBTTagCompound compound) {
+    protected final void readEntityFromNBT(CompoundTag compound) {
         load(new TagCompound(compound));
     }
 
@@ -98,7 +98,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected final void writeEntityToNBT(NBTTagCompound compound) {
+    protected final void writeEntityToNBT(CompoundTag compound) {
         save(new TagCompound(compound));
     }
 
@@ -361,7 +361,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     /*
     //@Override
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+    public boolean hasCapability(Capability<?> capability, Direction facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return true;
         }
@@ -370,7 +370,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @SuppressWarnings("unchecked")
 	//@Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+    public <T> T getCapability(Capability<T> capability, Direction facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return (T) cargoItems;
         }
@@ -378,7 +378,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
 	@Override
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+    public boolean hasCapability(Capability<?> capability, Direction facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return true;
         }
@@ -387,7 +387,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+    public <T> T getCapability(Capability<T> capability, Direction facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return (T) theTank;
         }

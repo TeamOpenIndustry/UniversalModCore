@@ -1,7 +1,7 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 
@@ -102,7 +102,7 @@ public class BoundingBox extends AxisAlignedBB {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.x + xDelta * step, vecA.y + yDelta * step, vecA.z + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new RayTraceResult(stepPos.internal, EnumFacing.UP);
+                return new RayTraceResult(stepPos.internal, Direction.UP);
             }
         }
         return null;

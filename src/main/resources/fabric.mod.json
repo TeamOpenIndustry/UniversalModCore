@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "modcore",
+  "version": "${version}",
+
+  "name": "Universal Mod Core",
+  "description": "A universal abstraction layer for minecraft",
+  "authors": [
+    "cam72cam"
+  ],
+  "contact": {
+  },
+
+  "license": "LGPL2",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "cam72cam.modcore.ModCore"
+    ]
+  },
+  "mixins": [
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.4.0",
+    "fabric": "*"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}

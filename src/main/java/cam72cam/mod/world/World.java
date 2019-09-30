@@ -18,7 +18,7 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.*;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -208,12 +208,12 @@ public class World {
                 .collect(Collectors.toList());
     }
 
-    public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
+    public <T extends net.minecraft.block.entity.BlockEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
         return getTileEntity(pos, cls, true);
     }
 
-    public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls, boolean create) {
-        net.minecraft.tileentity.TileEntity ent = internal.getChunkFromBlockCoords(pos.internal).getTileEntity(pos.internal, create ? Chunk.EnumCreateEntityType.IMMEDIATE : Chunk.EnumCreateEntityType.CHECK);
+    public <T extends net.minecraft.block.entity.BlockEntity> T getTileEntity(Vec3i pos, Class<T> cls, boolean create) {
+        net.minecraft.block.entity.BlockEntity ent = internal.getChunkFromBlockCoords(pos.internal).getTileEntity(pos.internal, create ? Chunk.EnumCreateEntityType.IMMEDIATE : Chunk.EnumCreateEntityType.CHECK);
         if (cls.isInstance(ent)) {
             return (T) ent;
         }
@@ -303,7 +303,7 @@ public class World {
     }
 
     public int getSnowLevel(Vec3i ph) {
-        IBlockState state = internal.getBlockState(ph.internal);
+        BlockState state = internal.getBlockState(ph.internal);
         if (state.getBlock() == Blocks.SNOW_LAYER) {
             return state.getValue(BlockSnow.LAYERS);
         }
@@ -348,7 +348,7 @@ public class World {
     }
 
     public void setBlock(Vec3i pos, ItemStack stack) {
-        IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
+        BlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
         internal.setBlockState(pos.internal, state);
     }
 
@@ -420,7 +420,7 @@ public class World {
 
     /* Capabilities */
     public IInventory getInventory(Vec3i offset) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal);
+        net.minecraft.block.entity.BlockEntity te = internal.getTileEntity(offset.internal);
         if (te != null && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
             IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
             if (inv instanceof IItemHandlerModifiable) {
@@ -431,7 +431,7 @@ public class World {
     }
 
     public ITank getTank(Vec3i offset) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal);
+        net.minecraft.block.entity.BlockEntity te = internal.getTileEntity(offset.internal);
         if (te != null && te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
             IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
             if (tank != null) {
@@ -442,7 +442,7 @@ public class World {
     }
 
     public ItemStack getItemStack(Vec3i pos) {
-        IBlockState state = internal.getBlockState(pos.internal);
+        BlockState state = internal.getBlockState(pos.internal);
         return new ItemStack(state.getBlock().getItemDropped(state, internal.rand, 0), 1, state.getBlock().damageDropped(state));
     }
 

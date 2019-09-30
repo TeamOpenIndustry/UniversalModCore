@@ -4,7 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
-import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraft.block.entity.BlockEntityFurnace;
 import net.minecraftforge.fluids.FluidUtil;
 
 public class ItemStack {

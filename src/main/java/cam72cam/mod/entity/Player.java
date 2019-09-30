@@ -8,12 +8,13 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class Player extends Entity {
     public final EntityPlayer internal;
 
-    public Player(EntityPlayer player) {
+    public Player(ClientPlayerEntity player) {
         super(player);
         this.internal = player;
     }

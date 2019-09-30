@@ -1,27 +1,27 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.math.Rotation;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.Direction;
 
 public enum Facing {
-    DOWN(EnumFacing.DOWN),
-    UP(EnumFacing.UP),
-    NORTH(EnumFacing.NORTH),
-    SOUTH(EnumFacing.SOUTH),
-    WEST(EnumFacing.WEST),
-    EAST(EnumFacing.EAST),
+    DOWN(Direction.DOWN),
+    UP(Direction.UP),
+    NORTH(Direction.NORTH),
+    SOUTH(Direction.SOUTH),
+    WEST(Direction.WEST),
+    EAST(Direction.EAST),
     ;
 
     public static final Facing[] HORIZONTALS = {
             NORTH, SOUTH, EAST, WEST
     };
-    public final EnumFacing internal;
+    public final Direction internal;
 
-    Facing(EnumFacing internal) {
+    Facing(Direction internal) {
         this.internal = internal;
     }
 
-    public static Facing from(EnumFacing facing) {
+    public static Facing from(Direction facing) {
         if (facing == null) {
             return null;
         }
@@ -45,11 +45,11 @@ public enum Facing {
 
     @Deprecated
     public static Facing from(byte facing) {
-        return from(net.minecraft.util.EnumFacing.getFront(facing));
+        return from(Direction.byId(facing));
     }
 
     public static Facing fromAngle(float v) {
-        return from(EnumFacing.fromAngle(v));
+        return from(Direction.fromRotation(v));
     }
 
     public Facing getOpposite() {
@@ -76,7 +76,7 @@ public enum Facing {
     }
 
     public float getHorizontalAngle() {
-        return internal.getHorizontalAngle();
+        return internal.asRotation();
     }
 
     public Axis getAxis() {

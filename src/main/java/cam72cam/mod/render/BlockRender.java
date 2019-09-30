@@ -6,7 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.biome.BiomeColorHelper;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -43,7 +43,7 @@ public class BlockRender {
     private static final List<Consumer<ModelBakeEvent>> bakers = new ArrayList<>();
     private static final List<Runnable> colors = new ArrayList<>();
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
-    private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
+    private static List<net.minecraft.block.entity.BlockEntity> prev = new ArrayList<>();
 
     @SubscribeEvent
     public static void onModelBakeEvent(ModelBakeEvent event) {
@@ -55,7 +55,7 @@ public class BlockRender {
         if (Minecraft.getMinecraft().world == null) {
             return;
         }
-        List<net.minecraft.tileentity.TileEntity> tes = Minecraft.getMinecraft().world.loadedTileEntityList.stream()
+        List<net.minecraft.block.entity.BlockEntity> tes = Minecraft.getMinecraft().world.loadedTileEntityList.stream()
                 .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                 .collect(Collectors.toList());
         Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
@@ -114,7 +114,7 @@ public class BlockRender {
         bakers.add(event -> {
             event.getModelRegistry().putObject(new ModelResourceLocation(block.internal.getRegistryName(), ""), new IBakedModel() {
                 @Override
-                public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
+                public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, long rand) {
                     if (block instanceof BlockTypeEntity) {
                         if (!(state instanceof IExtendedBlockState)) {
                             return EMPTY;

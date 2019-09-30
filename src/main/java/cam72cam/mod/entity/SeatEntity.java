@@ -5,7 +5,7 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
@@ -30,14 +30,14 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void readEntityFromNBT(NBTTagCompound compound) {
+    protected void readEntityFromNBT(CompoundTag compound) {
         TagCompound data = new TagCompound(compound);
         parent = data.getUUID("parent");
         shouldSit = data.getBoolean("shouldSit");
     }
 
     @Override
-    protected void writeEntityToNBT(NBTTagCompound compound) {
+    protected void writeEntityToNBT(CompoundTag compound) {
         TagCompound data = new TagCompound(compound);
         data.setUUID("parent", parent);
         data.setBoolean("shouldSit", shouldSit);
