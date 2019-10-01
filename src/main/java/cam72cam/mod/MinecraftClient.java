@@ -3,6 +3,9 @@ package cam72cam.mod;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import com.mojang.blaze3d.platform.GLX;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.math.Vec3i;
+import net.minecraft.util.hit.HitResult;
 
 public class MinecraftClient {
     public static Player getPlayer() {
@@ -30,6 +33,14 @@ public class MinecraftClient {
             return getPlayer().getWorld().getEntity(ent.getUuid(), Entity.class);
         }
         return null;
+    }
+
+    public static Vec3i getBlockMouseOver() {
+        return net.minecraft.client.MinecraftClient.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3i(net.minecraft.client.MinecraftClient.getInstance().hitResult.getPos()) : null;
+    }
+
+    public static Vec3d getPosMouseOver() {
+        return net.minecraft.client.MinecraftClient.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3d(net.minecraft.client.MinecraftClient.getInstance().hitResult.getPos()) : null;
     }
 
     public static boolean isPaused() {

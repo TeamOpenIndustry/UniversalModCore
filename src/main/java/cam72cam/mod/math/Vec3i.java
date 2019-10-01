@@ -31,6 +31,10 @@ public class Vec3i {
         this(new BlockPos(pos.internal));
     }
 
+    public Vec3i(net.minecraft.util.math.Vec3d pos) {
+        this(new BlockPos(pos));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Vec3i) {
@@ -113,7 +117,7 @@ public class Vec3i {
 
     @Deprecated
     public long toLong() {
-        return internal.toLong();
+        return internal.asLong();
     }
 
     public Vec3i rotate(Rotation rotation) {
