@@ -3,6 +3,7 @@ package cam72cam.mod.item;
 import alexiil.mc.lib.attributes.fluid.mixin.api.IBucketItem;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.util.TagCompound;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.block.entity.FurnaceBlockEntity;
@@ -119,7 +120,7 @@ public class ItemStack {
     }
 
     public int getBurnTime() {
-        return AbstractFurnaceBlockEntity.createFuelTimeMap().getOrDefault(internal, 0);
+        return FuelRegistry.INSTANCE.get(internal.getItem());
     }
 
     public int getLimit() {
