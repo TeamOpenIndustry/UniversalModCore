@@ -1,11 +1,11 @@
 package cam72cam.mod.entity;
 
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.LivingEntity;
 
 public class Living extends Entity {
-    private final EntityLiving living;
+    private final LivingEntity living;
 
-    public Living(net.minecraft.entity.EntityLiving entity) {
+    public Living(net.minecraft.entity.LivingEntity entity) {
         super(entity);
         this.living = entity;
     }
