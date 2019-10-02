@@ -22,7 +22,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -123,8 +123,8 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
-        } else if (entityIn instanceof EntityPlayer) {
-            entity = new Player((EntityPlayer) entityIn);
+        } else if (entityIn instanceof PlayerEntity) {
+            entity = new Player((PlayerEntity) entityIn);
         } else if (entityIn instanceof EntityLiving) {
             entity = new Living((EntityLiving) entityIn);
         } else {

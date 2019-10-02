@@ -1,7 +1,7 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.RegistryEvent;
@@ -77,7 +77,7 @@ public class CommonEvents {
 
         @FunctionalInterface
         public interface BlockBrokenEvent {
-            boolean onBroken(net.minecraft.world.World world, BlockPos pos, EntityPlayer player);
+            boolean onBroken(net.minecraft.world.World world, BlockPos pos, PlayerEntity player);
         }
         @SubscribeEvent
         public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {

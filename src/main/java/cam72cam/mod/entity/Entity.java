@@ -8,7 +8,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.Explosion;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -108,8 +108,8 @@ public class Entity {
 
 
     public Player asPlayer() {
-        if (internal instanceof EntityPlayer) {
-            return new Player((EntityPlayer) internal);
+        if (internal instanceof PlayerEntity) {
+            return new Player((PlayerEntity) internal);
         }
         return null;
     }
@@ -150,7 +150,7 @@ public class Entity {
     public void sendToObserving(Packet packet) {
         boolean found = false;
         int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
-        for (EntityPlayer player : internal.world.playerEntities) {
+        for (PlayerEntity player : internal.world.playerEntities) {
             if (player.getPositionVector().distanceTo(internal.getPositionVector()) < syncDist) {
                 found = true;
                 break;
@@ -199,7 +199,7 @@ public class Entity {
     }
 
     public boolean isPlayer() {
-        return internal instanceof EntityPlayer;
+        return internal instanceof PlayerEntity;
     }
 
     public Entity getRiding() {

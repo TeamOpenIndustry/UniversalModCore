@@ -1,6 +1,5 @@
 package cam72cam.mod.resource;
 
-import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
@@ -8,18 +7,18 @@ import java.io.InputStream;
 import java.util.List;
 
 public class Identifier {
-    public final ResourceLocation internal;
+    public final net.minecraft.util.Identifier internal;
 
-    public Identifier(ResourceLocation internal) {
+    public Identifier(net.minecraft.util.Identifier internal) {
         this.internal = internal;
     }
 
     public Identifier(String ident) {
-        this(new ResourceLocation(ident));
+        this(new net.minecraft.util.Identifier(ident));
     }
 
     public Identifier(String domain, String path) {
-        this(new ResourceLocation(domain, path));
+        this(new net.minecraft.util.Identifier(domain, path));
     }
 
     @Override
@@ -28,11 +27,11 @@ public class Identifier {
     }
 
     public String getDomain() {
-        return internal.getResourceDomain();
+        return internal.getNamespace();
     }
 
     public String getPath() {
-        return internal.getResourcePath();
+        return internal.getPath();
     }
 
     public Identifier getRelative(String path) {

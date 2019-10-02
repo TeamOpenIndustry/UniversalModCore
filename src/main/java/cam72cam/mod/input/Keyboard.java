@@ -4,12 +4,13 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
+import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
 
 import java.util.*;
 
@@ -20,27 +21,27 @@ public class Keyboard {
         return vecs.getOrDefault(player.getUUID(), Vec3d.ZERO);
     }
 
-    @SideOnly(Side.CLIENT)
+    @Environment(EnvType.CLIENT)
     public static void registerKey(String name, int keyCode, String category, Runnable handler) {
-        KeyBinding key = new KeyBinding(name, keyCode, category);
-        ClientRegistry.registerKeyBinding(key);
+        FabricKeyBinding key = FabricKeyBinding.Builder.create(new Identifier(name), InputUtil.Type.KEYSYM, keyCode, category).build();
+        KeyBindingRegistry.INSTANCE.register(key);
         ClientEvents.TICK.subscribe(() -> {
-            if (key.isKeyDown()) {
+            if (key.isPressed()) {
                 handler.run();
             }
         });
     }
 
-    @SideOnly(Side.CLIENT)
+    @Environment(EnvType.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
-            EntityPlayerSP player = Minecraft.getMinecraft().player;
+            ClientPlayerEntity player = net.minecraft.client.MinecraftClient.getInstance().player;
             if (player == null) {
                 return;
             }
             new MovementPacket(
-                    player.getUniqueID(),
-                    new Vec3d(player.moveStrafing, 0, player.moveForward).scale(player.isSprinting() ? 0.4 : 0.2)
+                    player.getUuid(),
+                    new Vec3d(player.input.movementSideways, 0, player.input.movementForward).scale(player.isSprinting() ? 0.4 : 0.2)
             ).sendToServer();
         });
     }

@@ -1,22 +1,28 @@
 package cam72cam.mod.item;
 
-import net.minecraft.creativetab.CreativeTabs;
+import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class CreativeTab {
-    public CreativeTabs internal;
+    public ItemGroup internal;
+
+    List<Consumer<List<net.minecraft.item.ItemStack>>> items = new ArrayList<>();
 
     public CreativeTab(String label, Supplier<ItemStack> stack) {
-        internal = new CreativeTabs(label) {
-            @Override
-            public net.minecraft.item.ItemStack getTabIconItem() {
-                return stack.get().internal;
-            }
-        };
+        internal = FabricItemGroupBuilder
+                .create(new Identifier(label))
+                .icon(() -> stack.get().internal)
+                .appendItems(list -> items.forEach(x -> x.accept(list))).build();
     }
 
-    public CreativeTab(CreativeTabs tab) {
+
+    public CreativeTab(ItemGroup tab) {
         this.internal = tab;
     }
 

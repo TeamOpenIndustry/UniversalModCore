@@ -1,26 +1,29 @@
 package cam72cam.mod.text;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.common.ForgeHooks;
+
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 public class PlayerMessage {
-    public final ITextComponent internal;
+    public final Text internal;
 
-    private PlayerMessage(ITextComponent component) {
+    private PlayerMessage(Text component) {
         internal = component;
     }
 
     public static PlayerMessage direct(String msg) {
-        return new PlayerMessage(new TextComponentString(msg));
+        return new PlayerMessage(new LiteralText(msg));
     }
 
     public static PlayerMessage translate(String msg, Object... objects) {
-        return new PlayerMessage(new TextComponentTranslation(msg, objects));
+        return new PlayerMessage(new TranslatableText(msg, objects));
     }
 
     public static PlayerMessage url(String url) {
-        return new PlayerMessage(ForgeHooks.newChatWithLinks(url));
+        LiteralText text = new LiteralText(url);
+        text.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+        return new PlayerMessage(text);
     }
 }

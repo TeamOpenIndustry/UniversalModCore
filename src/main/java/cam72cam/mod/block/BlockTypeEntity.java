@@ -12,21 +12,17 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.ITrack;
 import cam72cam.mod.world.World;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.entity.EntityContext;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.property.ExtendedBlockState;
-import net.minecraftforge.common.property.IExtendedBlockState;
-import net.minecraftforge.common.property.IUnlistedProperty;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 
-import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
-    public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
     protected final Identifier id;
     private final Supplier<BlockEntity> constructData;
 
@@ -35,11 +31,11 @@ public abstract class BlockTypeEntity extends BlockType {
         id = new Identifier(settings.modID, settings.name);
         this.constructData = constructData;
         TileEntity.register(constructData, id);
-        ((TileEntity) internal.createTileEntity(null, null)).register();
+        ((TileEntity) ((BlockTypeInternal)internal).createBlockEntity(null)).register();
     }
 
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
+        TileEntity te = (TileEntity) ((BlockTypeInternal)internal).createBlockEntity(null);
         te.hasTileData = true;
         te.world = world;
         te.pos = pos;
@@ -121,14 +117,13 @@ public abstract class BlockTypeEntity extends BlockType {
         return 1;
     }
 
-    protected class BlockTypeInternal extends BlockInternal {
+    protected class BlockTypeInternal extends BlockInternal implements BlockEntityProvider {
         @Override
-        public final boolean hasTileEntity(BlockState state) {
+        public final boolean hasBlockEntity() {
             return true;
         }
 
-        @Override
-        public final net.minecraft.block.entity.BlockEntity createTileEntity(net.minecraft.world.World world, BlockState state) {
+        public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.world.BlockView var1) {
             if (constructData.get() instanceof BlockEntityTickable) {
                 if (constructData.get() instanceof ITrack) {
                     return new TileEntityTickableTrack(id);
@@ -139,43 +134,31 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         @Override
-        @Nonnull
-        protected BlockStateContainer createBlockState() {
-            return new ExtendedBlockState(this, new IProperty[0], new IUnlistedProperty<?>[]{BLOCK_DATA});
-        }
-
-        @Override
-        public BlockState getExtendedState(BlockState origState, IBlockAccess access, BlockPos pos) {
-            // Try to get the "real" world object
-            net.minecraft.block.entity.BlockEntity teorig = access.getTileEntity(pos);
-            if (teorig != null && teorig.hasWorld()) {
-
-                Object te = World.get(teorig.getWorld()).getBlockEntity(new Vec3i(pos), cam72cam.mod.block.BlockEntity.class);
-                if (te != null) {
-                    IExtendedBlockState state = (IExtendedBlockState) origState;
-                    state = state.withProperty(BLOCK_DATA, te);
-                    return state;
-                }
-            }
-            return super.getExtendedState(origState, access, pos);
-        }
-
-        @Override
-        public AxisAlignedBB getCollisionBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.block.entity.BlockEntity entity = source.getTileEntity(pos);
+        public VoxelShape getCollisionShape(BlockState state, BlockView source, BlockPos pos, EntityContext entityContext_1) {
+            net.minecraft.block.entity.BlockEntity entity = source.getBlockEntity(pos);
             if (entity == null) {
-                return super.getCollisionBoundingBox(state, source, pos);
+                return super.getCollisionShape(state, source, pos, entityContext_1);
             }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
+            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
         }
 
         @Override
-        public AxisAlignedBB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.block.entity.BlockEntity entity = source.getTileEntity(pos);
+        public VoxelShape getRayTraceShape(BlockState state, BlockView source, BlockPos pos) {
+            net.minecraft.block.entity.BlockEntity entity = source.getBlockEntity(pos);
             if (entity == null) {
-                return super.getBoundingBox(state, source, pos);
+                return super.getRayTraceShape(state, source, pos);
             }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
+            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
+        }
+
+        @Override
+        public VoxelShape getOutlineShape(BlockState state, BlockView source, BlockPos pos, EntityContext entityContext_1) {
+            net.minecraft.block.entity.BlockEntity entity = source.getBlockEntity(pos);
+            if (entity == null) {
+                return super.getOutlineShape(state, source, pos, entityContext_1);
+            }
+
+            return Block.createCuboidShape(0, 0, 0, 1, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25)+0.1, 1);
         }
     }
 

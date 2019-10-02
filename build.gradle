@@ -79,3 +79,20 @@ publishing {
 		// mavenLocal()
 	}
 }
+
+repositories {
+    maven {
+        name = "BuildCraft"
+        url = "https://mod-buildcraft.com/maven"
+    }
+}
+
+dependencies {
+    modCompile "alexiil.mc.lib:libblockattributes-all:0.5.0"
+}
+
+
+dependencies {
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
+}
+

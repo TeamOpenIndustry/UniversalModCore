@@ -1,16 +1,17 @@
 package cam72cam.mod.block;
 
-import net.minecraft.block.SoundType;
+
+import net.minecraft.sound.BlockSoundGroup;
 
 public enum Material {
-    METAL(net.minecraft.block.material.Material.IRON, SoundType.METAL),
-    WOOL(net.minecraft.block.material.Material.CARPET, SoundType.CLOTH),
+    METAL(net.minecraft.block.Material.METAL, BlockSoundGroup.METAL),
+    WOOL(net.minecraft.block.Material.CARPET, BlockSoundGroup.WOOL),
     ;
 
-    protected final net.minecraft.block.material.Material internal;
-    protected final SoundType soundType;
+    protected final net.minecraft.block.Material internal;
+    protected final BlockSoundGroup soundType;
 
-    Material(net.minecraft.block.material.Material internal, SoundType soundType) {
+    Material(net.minecraft.block.Material internal, BlockSoundGroup soundType) {
         this.internal = internal;
         this.soundType = soundType;
     }

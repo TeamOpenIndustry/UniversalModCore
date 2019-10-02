@@ -10,7 +10,7 @@ import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
@@ -145,7 +145,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Player Interact */
 
     @Override
-    public final boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
+    public final boolean processInitialInteract(PlayerEntity player, EnumHand hand) {
         return iClickable.onClick(new Player(player), Hand.from(hand)) == ClickResult.ACCEPTED;
     }
 
@@ -157,7 +157,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         DamageType type;
         if (damagesource.isExplosion() && !(damagesource.getTrueSource() instanceof EntityMob)) {
             type = DamageType.EXPLOSION;
-        } else if (damagesource.getTrueSource() instanceof EntityPlayer) {
+        } else if (damagesource.getTrueSource() instanceof PlayerEntity) {
             type = damagesource.isProjectile() ? DamageType.PROJECTILE : DamageType.PLAYER;
         } else {
             type = DamageType.OTHER;

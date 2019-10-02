@@ -8,7 +8,7 @@ import cam72cam.mod.gui.container.ClientContainerBuilder;
 import cam72cam.mod.gui.container.IContainer;
 import cam72cam.mod.gui.container.ServerContainerBuilder;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -31,13 +31,13 @@ public class GuiRegistry {
         NetworkRegistry.INSTANCE.registerGuiHandler(ModCore.instance, new IGuiHandler() {
             @Nullable
             @Override
-            public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+            public Object getServerGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
                 return registry.get(ID).apply(new CreateEvent(true, new Player(player), x, y, z));
             }
 
             @Nullable
             @Override
-            public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+            public Object getClientGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
                 return registry.get(ID).apply(new CreateEvent(false, new Player(player), x, y, z));
             }
         });

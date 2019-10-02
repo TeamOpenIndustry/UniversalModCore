@@ -2,10 +2,10 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Box;
 
 public interface IBoundingBox {
-    static IBoundingBox from(AxisAlignedBB internal) {
+    static IBoundingBox from(Box internal) {
         if (internal == null) {
             return null;
         }
@@ -42,17 +42,17 @@ public interface IBoundingBox {
 
             @Override
             public double calculateXOffset(IBoundingBox other, double offsetX) {
-                return internal.calculateXOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetX);
+                return internal.calculateXOffset(new Box(other.min().internal, other.max().internal), offsetX);
             }
 
             @Override
             public double calculateYOffset(IBoundingBox other, double offsetY) {
-                return internal.calculateYOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetY);
+                return internal.calculateYOffset(new Box(other.min().internal, other.max().internal), offsetY);
             }
 
             @Override
             public double calculateZOffset(IBoundingBox other, double offsetZ) {
-                return internal.calculateZOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetZ);
+                return internal.calculateZOffset(new Box(other.min().internal, other.max().internal), offsetZ);
             }
 
             @Override
@@ -68,7 +68,7 @@ public interface IBoundingBox {
     }
 
     static IBoundingBox from(Vec3i pos) {
-        return from(new AxisAlignedBB(pos.internal));
+        return from(new Box(pos.internal));
     }
 
     Vec3d min();

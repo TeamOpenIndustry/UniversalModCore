@@ -6,7 +6,7 @@ import cam72cam.mod.item.ItemStackHandler;
 import invtweaks.api.container.ChestContainer;
 import invtweaks.api.container.ContainerSection;
 import invtweaks.api.container.ContainerSectionCallback;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.common.Optional;
@@ -174,12 +174,12 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
 
 
     @Override
-    public final boolean canInteractWith(EntityPlayer playerIn) {
+    public final boolean canInteractWith(PlayerEntity playerIn) {
         return true;
     }
 
     @Override
-    public final net.minecraft.item.ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
+    public final net.minecraft.item.ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
         net.minecraft.item.ItemStack itemstack = net.minecraft.item.ItemStack.EMPTY;
         Slot slot = this.inventorySlots.get(index);
         int numSlots = slotRefs.get(ContainerSection.CHEST).size();

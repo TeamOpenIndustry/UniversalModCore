@@ -8,19 +8,18 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 
 public class Player extends Entity {
-    public final EntityPlayer internal;
+    public final PlayerEntity internal;
 
-    public Player(ClientPlayerEntity player) {
+    public Player(PlayerEntity player) {
         super(player);
         this.internal = player;
     }
 
     public ItemStack getHeldItem(Hand hand) {
-        return new ItemStack(internal.getHeldItem(hand.internal));
+        return new ItemStack(internal.getStackInHand(hand.internal));
     }
 
     public void sendMessage(PlayerMessage o) {

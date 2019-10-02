@@ -6,12 +6,11 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.Hand;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class Mouse {
-    @SideOnly(Side.CLIENT)
+    @Environment(EnvType.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.CLICK.subscribe(button -> {
             // So it turns out that the client sends mouse click packets to the server regardless of
@@ -19,7 +18,7 @@ public class Mouse {
             // We need to override that distance because train centers are further away
             // than 36m.
 
-            if (Minecraft.getMinecraft().objectMouseOver == null) {
+            if (net.minecraft.client.MinecraftClient.getInstance().targetedEntity == null) {
                 return false;
             }
 
@@ -58,10 +57,10 @@ public class Mouse {
             if (target != null) {
                 switch (hand) {
                     case PRIMARY:
-                        getPlayer().internal.interactOn(target.internal, hand.internal);
+                        getPlayer().internal.interact(target.internal, hand.internal);
                         break;
                     case SECONDARY:
-                        getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);
+                        getPlayer().internal.attack(target.internal);
                         break;
                 }
             }

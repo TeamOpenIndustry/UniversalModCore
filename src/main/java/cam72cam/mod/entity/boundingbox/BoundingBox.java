@@ -2,10 +2,10 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.RayTraceResult;
 
-public class BoundingBox extends AxisAlignedBB {
+public class BoundingBox extends Box {
     private final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
@@ -23,21 +23,14 @@ public class BoundingBox extends AxisAlignedBB {
         return new double[]{max.x, max.y, max.z, min.x, min.y, min.z};
     }
 
-    /* NOP */
     @Override
-    public BoundingBox setMaxY(double y) {
-        // Used by blockwall
-        return this;
-    }
-
-    @Override
-    public BoundingBox intersect(AxisAlignedBB p_191500_1_) {
+    public BoundingBox intersect(Box p_191500_1_) {
         // Used by piston
         return this;
     }
 
     @Override
-    public BoundingBox union(AxisAlignedBB other) {
+    public BoundingBox union(Box other) {
         // Used by piston
         // Used by entityliving for BB stuff
         return this;
@@ -65,17 +58,17 @@ public class BoundingBox extends AxisAlignedBB {
 
     /* Interactions */
     @Override
-    public double calculateXOffset(AxisAlignedBB other, double offsetX) {
+    public double calculateXOffset(Box other, double offsetX) {
         return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
     }
 
     @Override
-    public double calculateYOffset(AxisAlignedBB other, double offsetY) {
+    public double calculateYOffset(Box other, double offsetY) {
         return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
     }
 
     @Override
-    public double calculateZOffset(AxisAlignedBB other, double offsetZ) {
+    public double calculateZOffset(Box other, double offsetZ) {
         return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
     }
 

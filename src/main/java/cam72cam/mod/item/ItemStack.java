@@ -1,11 +1,18 @@
 package cam72cam.mod.item;
 
+import alexiil.mc.lib.attributes.fluid.mixin.api.IBucketItem;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
+import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.block.entity.FurnaceBlockEntity;
+import net.minecraft.item.BucketItem;
 import net.minecraft.item.Item;
-import net.minecraft.block.entity.BlockEntityFurnace;
-import net.minecraftforge.fluids.FluidUtil;
+import net.minecraft.item.PickaxeItem;
+import net.minecraft.item.ShovelItem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 public class ItemStack {
     public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
@@ -23,11 +30,12 @@ public class ItemStack {
     }
 
     public ItemStack(TagCompound bedItem) {
-        this(new net.minecraft.item.ItemStack(bedItem.internal));
+        this(net.minecraft.item.ItemStack.fromTag(bedItem.internal));
     }
 
     public ItemStack(Item item, int count, int meta) {
-        this(new net.minecraft.item.ItemStack(item, count, meta));
+        this(new net.minecraft.item.ItemStack(item, count));
+        internal.setDamage(meta);
     }
 
     public ItemStack(Block block) {
@@ -35,7 +43,8 @@ public class ItemStack {
     }
 
     public ItemStack(Block block, int count, int meta) {
-        this(new net.minecraft.item.ItemStack(block, count, meta));
+        this(new net.minecraft.item.ItemStack(block, count));
+        internal.setDamage(meta);
     }
 
     public ItemStack(Item item) {
@@ -47,18 +56,18 @@ public class ItemStack {
     }
 
     public ItemStack(String item, int i, int meta) {
-        this(Item.getByNameOrId(item), i, meta);
+        this(Registry.ITEM.get(new Identifier(item)), i, meta);
     }
 
     public TagCompound getTagCompound() {
-        if (internal.getTagCompound() == null) {
-            internal.setTagCompound(new TagCompound().internal);
+        if (internal.getTag() == null) {
+            internal.setTag(new TagCompound().internal);
         }
-        return new TagCompound(internal.getTagCompound());
+        return new TagCompound(internal.getTag());
     }
 
     public void setTagCompound(TagCompound data) {
-        internal.setTagCompound(data.internal);
+        internal.setTag(data.internal);
     }
 
     public ItemStack copy() {
@@ -66,7 +75,7 @@ public class ItemStack {
     }
 
     public TagCompound toTag() {
-        return new TagCompound(internal.serializeNBT());
+        return new TagCompound(internal.toTag(new CompoundTag()));
     }
 
     public int getCount() {
@@ -78,7 +87,7 @@ public class ItemStack {
     }
 
     public String getDisplayName() {
-        return internal.getDisplayName();
+        return internal.getName().getString();
     }
 
     public boolean isEmpty() {
@@ -86,7 +95,7 @@ public class ItemStack {
     }
 
     public void shrink(int i) {
-        internal.shrink(i);
+        internal.decrement(i);
     }
 
     public boolean equals(ItemStack other) {
@@ -102,7 +111,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return FluidUtil.getFluidHandler(internal) != null;
+        return item instanceof IBucketItem;
     }
 
     public boolean isFlammable() {
@@ -110,15 +119,19 @@ public class ItemStack {
     }
 
     public int getBurnTime() {
-        return TileEntityFurnace.getItemBurnTime(internal);
+        return AbstractFurnaceBlockEntity.createFuelTimeMap().getOrDefault(internal, 0);
     }
 
     public int getLimit() {
-        return internal.getMaxStackSize();
+        return internal.getMaxCount();
     }
 
     public boolean isValidTool(ToolType tool) {
-        return item.getToolClasses(internal).contains(tool.toString());
+        switch (tool) {
+            case SHOVEL:
+                return item instanceof ShovelItem;
+        }
+        return false;
     }
 
     @Override
@@ -127,6 +140,6 @@ public class ItemStack {
     }
 
     public void damageItem(int i, Player player) {
-        internal.damageItem(i, player.internal);
+        internal.damage(i, player.internal, e -> e.sendToolBreakStatus(player.internal.getActiveHand()));
     }
 }
