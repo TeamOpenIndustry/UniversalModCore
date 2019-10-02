@@ -1,33 +1,33 @@
 package cam72cam.mod.text;
 
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.Formatting;
 
 public enum TextColor {
-    BLACK(TextFormatting.BLACK),
-    DARK_BLUE(TextFormatting.DARK_BLUE),
-    DARK_GREEN(TextFormatting.DARK_GREEN),
-    DARK_AQUA(TextFormatting.DARK_AQUA),
-    DARK_RED(TextFormatting.DARK_RED),
-    DARK_PURPLE(TextFormatting.DARK_PURPLE),
-    GOLD(TextFormatting.GOLD),
-    GRAY(TextFormatting.GRAY),
-    DARK_GRAY(TextFormatting.DARK_GRAY),
-    BLUE(TextFormatting.BLUE),
-    GREEN(TextFormatting.GREEN),
-    AQUA(TextFormatting.AQUA),
-    RED(TextFormatting.RED),
-    LIGHT_PURPLE(TextFormatting.LIGHT_PURPLE),
-    YELLOW(TextFormatting.YELLOW),
-    WHITE(TextFormatting.WHITE),
-    OBFUSCATED(TextFormatting.OBFUSCATED),
-    BOLD(TextFormatting.BOLD),
-    STRIKETHROUGH(TextFormatting.STRIKETHROUGH),
-    UNDERLINE(TextFormatting.UNDERLINE),
-    ITALIC(TextFormatting.ITALIC),
-    RESET(TextFormatting.RESET);
-    public final TextFormatting internal;
+    BLACK(Formatting.BLACK),
+    DARK_BLUE(Formatting.DARK_BLUE),
+    DARK_GREEN(Formatting.DARK_GREEN),
+    DARK_AQUA(Formatting.DARK_AQUA),
+    DARK_RED(Formatting.DARK_RED),
+    DARK_PURPLE(Formatting.DARK_PURPLE),
+    GOLD(Formatting.GOLD),
+    GRAY(Formatting.GRAY),
+    DARK_GRAY(Formatting.DARK_GRAY),
+    BLUE(Formatting.BLUE),
+    GREEN(Formatting.GREEN),
+    AQUA(Formatting.AQUA),
+    RED(Formatting.RED),
+    LIGHT_PURPLE(Formatting.LIGHT_PURPLE),
+    YELLOW(Formatting.YELLOW),
+    WHITE(Formatting.WHITE),
+    OBFUSCATED(Formatting.OBFUSCATED),
+    BOLD(Formatting.BOLD),
+    STRIKETHROUGH(Formatting.STRIKETHROUGH),
+    UNDERLINE(Formatting.UNDERLINE),
+    ITALIC(Formatting.ITALIC),
+    RESET(Formatting.RESET);
+    public final Formatting internal;
 
-    TextColor(TextFormatting color) {
+    TextColor(Formatting color) {
         internal = color;
     }
 

@@ -1,14 +1,13 @@
 package cam72cam.mod.text;
 
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.Language;
 
-@SuppressWarnings("deprecation")
 public class TextUtil {
     public static String translate(String name) {
-        return I18n.translateToLocal(name);
+        return Language.getInstance().translate(name);
     }
 
     public static String translate(String name, Object[] objects) {
-        return I18n.translateToLocalFormatted(name, objects);
+        return String.format(Language.getInstance().translate(name), objects);
     }
 }
