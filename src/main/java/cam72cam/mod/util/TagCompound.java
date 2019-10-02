@@ -151,7 +151,7 @@ public class TagCompound {
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
         CompoundTag data = new CompoundTag();
         data.putUuid("id", entity.internal.getUuid());
-        data.putInt("world", entity.internal.world.getDimension().getType().getRawId());
+        data.putInt("world", entity.getWorld().getId());
         internal.put(key, data);
     }
 
@@ -233,7 +233,7 @@ public class TagCompound {
     }
 
     public void setWorld(String key, World world) {
-        setInteger(key, world.internal.getDimension().getType().getRawId());
+        setInteger(key, world.getId());
     }
 
     public World getWorld(String key, boolean isClient) {
