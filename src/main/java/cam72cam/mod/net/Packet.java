@@ -1,39 +1,60 @@
 package cam72cam.mod.net;
 
-import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.relauncher.Side;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.event.server.ServerTickCallback;
+import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
+import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
+import net.fabricmc.fabric.api.server.PlayerStream;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.packet.CustomPayloadS2CPacket;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.network.packet.CustomPayloadC2SPacket;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.PacketByteBuf;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class Packet {
-    private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
-    private static Map<String, Supplier<Packet>> types = new HashMap<>();
-
+    private static MinecraftServer server;
     static {
-        net.registerMessage(new Packet.Handler<>(), Message.class, 0, Side.CLIENT);
-        net.registerMessage(new Packet.Handler<>(), Message.class, 1, Side.SERVER);
+        // Probably should not do this...
+        ServerTickCallback.EVENT.register(server -> Packet.server = server);
     }
 
+
     protected TagCompound data = new TagCompound();
-    MessageContext ctx;
+    private Player player;
 
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
-        //TODO remove dir?
-        types.put(sup.get().getClass().toString(), sup);
+        Identifier ident = sup.get().getIdent();
+        switch (dir) {
+            case ClientToServer:
+                ServerSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
+                    Packet packet = sup.get();
+                    packet.data = new TagCompound(buffer.readCompoundTag());
+                    packet.player = new Player(ctx.getPlayer());
+                    ctx.getTaskQueue().execute(packet::handle);
+                });
+                break;
+            case ServerToClient:
+                ClientSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
+                    Packet packet = sup.get();
+                    packet.data = new TagCompound(buffer.readCompoundTag());
+                    packet.player = new Player(ctx.getPlayer());
+                    ctx.getTaskQueue().execute(packet::handle);
+                });
+                break;
+        }
+    }
+
+    private Identifier getIdent() {
+        return new Identifier(ModCore.MODID, getClass().toString());
     }
 
     protected abstract void handle();
@@ -43,58 +64,24 @@ public abstract class Packet {
     }
 
     protected final Player getPlayer() {
-        return ctx.side == Side.CLIENT ? MinecraftClient.getPlayer() : new Player(ctx.getServerHandler().player);
+        return player;
     }
 
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        net.sendToAllAround(new Message(this),
-                new NetworkRegistry.TargetPoint(world.internal.provider.getDimension(), pos.x, pos.y, pos.z, distance));
+        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
+        buff.writeCompoundTag(data.internal);
+        PlayerStream.around(world.internal, pos.internal, distance).forEach(x -> ((ServerPlayerEntity)x).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), buff)));
     }
 
     public void sendToServer() {
-        net.sendToServer(new Message(this));
+        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
+        buff.writeCompoundTag(data.internal);
+        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new CustomPayloadC2SPacket(getIdent(), buff));
     }
 
     public void sendToAll() {
-        net.sendToAll(new Message(this));
-    }
-
-    public static class Message implements IMessage {
-        Packet packet;
-
-        public Message() {
-            // FORGE REFLECTION
-        }
-
-        public Message(Packet pkt) {
-            this.packet = pkt;
-        }
-
-        @Override
-        public void fromBytes(ByteBuf buf) {
-            TagCompound data = new TagCompound(ByteBufUtils.readTag(buf));
-            String cls = data.getString("cam72cam.mod.pktid");
-            packet = types.get(cls).get();
-            packet.data = data;
-        }
-
-        @Override
-        public void toBytes(ByteBuf buf) {
-            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
-            ByteBufUtils.writeTag(buf, packet.data.internal);
-        }
-    }
-
-    public static class Handler<T extends Message> implements IMessageHandler<T, IMessage> {
-        @Override
-        public IMessage onMessage(T message, MessageContext ctx) {
-            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> handle(message, ctx));
-            return null;
-        }
-
-        private void handle(T message, MessageContext ctx) {
-            message.packet.ctx = ctx;
-            message.packet.handle();
-        }
+        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
+        buff.writeCompoundTag(data.internal);
+        server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), buff));
     }
 }
