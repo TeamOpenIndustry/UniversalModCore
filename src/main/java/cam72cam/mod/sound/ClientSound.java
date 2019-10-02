@@ -4,20 +4,15 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
-import io.netty.util.internal.ThreadLocalRandom;
-import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.util.math.MathHelper;
-import paulscode.sound.CommandObject;
-import paulscode.sound.SoundSystem;
+import net.minecraft.client.sound.*;
+import org.lwjgl.openal.AL10;
 
-import java.net.URL;
-import java.util.function.Supplier;
+import javax.sound.sampled.AudioFormat;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class ClientSound implements ISound {
     private final static float dopplerScale = 0.05f;
-    private String id;
-    private Supplier<SoundSystem> sndSystem;
-    private URL resource;
     private boolean repeats;
     private Identifier oggLocation;
     private float attenuationDistance;
@@ -28,20 +23,29 @@ public class ClientSound implements ISound {
     private float baseSoundMultiplier;
     private float scale;
     private boolean disposable = false;
+    private final int id;
+    private final int bufferId;
 
-    ClientSound(Supplier<SoundSystem> soundSystem, Identifier oggLocation, URL resource, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
-        this.sndSystem = soundSystem;
-        this.resource = resource;
+    ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.baseSoundMultiplier = baseSoundMultiplier;
         this.repeats = repeats;
         this.oggLocation = oggLocation;
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
-    }
 
-    public void init() {
-        id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
-        sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
+        id = AL10.alGenSources();
+        try {
+            OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
+            AudioFormat fmt = stream.getFormat();
+            int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
+            ByteBuffer buffer = stream.method_19720(sizeBytes);
+            StaticSound sound = new StaticSound(buffer, fmt);
+            bufferId = sound.takeStreamBufferPointer().getAsInt();
+            AL10.alSourceQueueBuffers(id, bufferId);
+            stream.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Sound not found: " + oggLocation);
+        }
     }
 
     @Override
@@ -50,46 +54,41 @@ public class ClientSound implements ISound {
         update();
 
         if (repeats || currentPos == null || MinecraftClient.getPlayer() == null) {
-            sndSystem.get().play(id);
+            AL10.alSourcePlay(id);
         } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
-            sndSystem.get().play(id);
+            AL10.alSourcePlay(id);
         }
     }
 
     @Override
     public void stop() {
         if (isPlaying()) {
-            sndSystem.get().stop(id);
+            AL10.alSourceStop(id);
         }
     }
 
     @Override
     public void terminate() {
-        if (id == null) {
-            return;
-        }
-        sndSystem.get().removeSource(id);
+        stop();
+        AL10.alSourceUnqueueBuffers(id);
+        AL10.alDeleteBuffers(bufferId);
+        AL10.alDeleteSources(id);
     }
 
     @Override
     public void update() {
-        if (id == null) {
-            init();
-        }
-
         MinecraftClient.startProfiler("irSound");
-        SoundSystem snd = sndSystem.get();
         //(float)Math.sqrt(Math.sqrt(scale()))
 
         float vol = currentVolume * baseSoundMultiplier * scale;
-        snd.CommandQueue(new CommandObject(CommandObject.SET_VOLUME, id, vol));
+        AL10.alSourcef(this.id,  AL10.AL_GAIN, vol);
 
         if (currentPos != null) {
-            snd.CommandQueue(new CommandObject(CommandObject.SET_POSITION, id, (float) currentPos.x, (float) currentPos.y, (float) currentPos.z));
+            AL10.alSourcefv(this.id, AL10.AL_POSITION, new float[]{(float)currentPos.x, (float)currentPos.y, (float)currentPos.z});
         }
 
         if (currentPos == null || velocity == null) {
-            snd.CommandQueue(new CommandObject(CommandObject.SET_PITCH, id, currentPitch / scale));
+            AL10.alSourcef(this.id, AL10.AL_PITCH, currentPitch / scale);
         } else {
             //Doppler shift
 
@@ -109,13 +108,10 @@ public class ClientSound implements ISound {
                 appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
             }
 
-            sndSystem.get().setPitch(id, appliedPitch / scale);
-            snd.CommandQueue(new CommandObject(CommandObject.SET_PITCH, id, appliedPitch / scale));
+            AL10.alSourcef(this.id, AL10.AL_PITCH, appliedPitch / scale);
         }
 
         MinecraftClient.endProfiler();
-
-        snd.interruptCommandThread();
     }
 
     @Override
@@ -145,17 +141,13 @@ public class ClientSound implements ISound {
 
     @Override
     public boolean isPlaying() {
-        if (id == null) {
-            return false;
-        }
-
-        return sndSystem.get().playing(id);
+        return AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING;
     }
 
     @Override
     public void reload() {
         // Force re-create sound
-        id = null;
+        // TODO 1.14.4
     }
 
     @Override
