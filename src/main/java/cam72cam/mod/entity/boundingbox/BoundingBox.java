@@ -1,9 +1,10 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.RayTraceResult;
+
+import java.util.Optional;
 
 public class BoundingBox extends Box {
     private final IBoundingBox internal;
@@ -24,8 +25,7 @@ public class BoundingBox extends Box {
     }
 
     @Override
-    public BoundingBox intersect(Box p_191500_1_) {
-        // Used by piston
+    public Box intersection(Box box_1) {
         return this;
     }
 
@@ -44,32 +44,23 @@ public class BoundingBox extends Box {
     }
 
     @Override
-    public BoundingBox contract(double x, double y, double z) {
+    public BoundingBox stretch(double x, double y, double z) {
+        return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
+    }
+    @Override
+    public BoundingBox shrink(double x, double y, double z) {
         return new BoundingBox(internal.contract(new Vec3d(x, y, z)));
     }
 
-    public BoundingBox grow(double x, double y, double z) {
-        return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
-    }
 
+    @Override
     public BoundingBox offset(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
-    /* Interactions */
     @Override
-    public double calculateXOffset(Box other, double offsetX) {
-        return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
-    }
-
-    @Override
-    public double calculateYOffset(Box other, double offsetY) {
-        return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
-    }
-
-    @Override
-    public double calculateZOffset(Box other, double offsetZ) {
-        return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
+    public Box offset(BlockPos pos) {
+        return offset(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override
@@ -83,7 +74,7 @@ public class BoundingBox extends Box {
     }
 
     @Override
-    public RayTraceResult calculateIntercept(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
+    public Optional<net.minecraft.util.math.Vec3d> rayTrace(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
         int steps = 10;
         double xDist = vecB.x - vecA.x;
         double yDist = vecB.y - vecA.y;
@@ -94,9 +85,9 @@ public class BoundingBox extends Box {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.x + xDelta * step, vecA.y + yDelta * step, vecA.z + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new RayTraceResult(stepPos.internal, Direction.UP);
+                return Optional.of(stepPos.internal);
             }
         }
-        return null;
+        return Optional.empty();
     }
 }
