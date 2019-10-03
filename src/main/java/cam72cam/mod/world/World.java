@@ -1,5 +1,10 @@
 package cam72cam.mod.world;
 
+import alexiil.mc.lib.attributes.AttributeList;
+import alexiil.mc.lib.attributes.AttributeProvider;
+import alexiil.mc.lib.attributes.fluid.FluidAttributes;
+import alexiil.mc.lib.attributes.fluid.FluidExtractable;
+import alexiil.mc.lib.attributes.fluid.FluidInsertable;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -16,7 +21,6 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -24,16 +28,13 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.EntityDamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.*;
@@ -412,7 +413,21 @@ public class World {
     }
 
     public ITank getTank(Vec3i offset) {
-        net.minecraft.block.entity.BlockEntity te = internal.getTileEntity(offset.internal);
+        FluidInsertable insertable = FluidAttributes.INSERTABLE.get(internal, offset.internal);
+        FluidExtractable extractable = FluidAttributes.EXTRACTABLE.get(internal, offset.internal);
+
+
+
+
+        net.minecraft.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal);
+        if (te instanceof AttributeProvider){
+            AttributeProvider ap = (AttributeProvider) te;
+            AttributeList<?> attributes = new AttributeList<>();
+            ap.addAllAttributes(internal, offset.internal, internal.getBlockState(offset.internal), attributes);
+
+
+        }
+
         if (te != null && te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
             IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
             if (tank != null) {

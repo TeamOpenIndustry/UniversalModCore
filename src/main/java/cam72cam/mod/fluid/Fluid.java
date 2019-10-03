@@ -1,27 +1,31 @@
 package cam72cam.mod.fluid;
 
-import net.minecraftforge.fluids.FluidRegistry;
+import alexiil.mc.lib.attributes.fluid.volume.FluidKey;
+import alexiil.mc.lib.attributes.fluid.volume.FluidKeys;
+import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Fluid {
-    public static final int BUCKET_VOLUME = net.minecraftforge.fluids.Fluid.BUCKET_VOLUME;
+    public static final int BUCKET_VOLUME = FluidVolume.BUCKET;
     private static Map<String, Fluid> registryCache = new HashMap<>();
     public static final Fluid WATER = getFluid("water");
     public static final Fluid LAVA = getFluid("lava");
     public final String ident;
-    public final net.minecraftforge.fluids.Fluid internal;
+    public final FluidKey internal;
 
 
-    private Fluid(String ident, net.minecraftforge.fluids.Fluid fluid) {
+    private Fluid(String ident, FluidKey fluid) {
         this.ident = ident;
         this.internal = fluid;
     }
 
     public static Fluid getFluid(String type) {
         if (!registryCache.containsKey(type)) {
-            net.minecraftforge.fluids.Fluid fluid = FluidRegistry.getFluid(type);
+            FluidKey fluid = FluidKeys.get(Registry.FLUID.get(new Identifier(type)));
             if (fluid == null) {
                 return null;
             }
@@ -30,12 +34,12 @@ public class Fluid {
         return registryCache.get(type);
     }
 
-    public static Fluid getFluid(net.minecraftforge.fluids.Fluid fluid) {
-        return getFluid(FluidRegistry.getFluidName(fluid));
+    public static Fluid getFluid(FluidKey fluid) {
+        return getFluid(Registry.FLUID.getId(fluid.getRawFluid()).toString());
     }
 
     public int getDensity() {
-        return internal.getDensity();
+        return 1000; // TODO 1.14.4
     }
 
     public String toString() {

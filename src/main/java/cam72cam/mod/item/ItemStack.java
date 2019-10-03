@@ -1,5 +1,7 @@
 package cam72cam.mod.item;
 
+import alexiil.mc.lib.attributes.AttributeProviderItem;
+import alexiil.mc.lib.attributes.fluid.FluidAttributes;
 import alexiil.mc.lib.attributes.fluid.mixin.api.IBucketItem;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.util.TagCompound;
@@ -112,7 +114,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return item instanceof IBucketItem;
+        return item instanceof AttributeProviderItem;
     }
 
     public boolean isFlammable() {

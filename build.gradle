@@ -96,3 +96,10 @@ dependencies {
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
 }
 
+repositories {
+maven { url = "http://server.bbkr.space:8081/artifactory/libs-snapshot" }
+}
+dependencies {
+modCompile "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
+}
+

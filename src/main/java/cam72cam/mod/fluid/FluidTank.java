@@ -1,24 +1,25 @@
 package cam72cam.mod.fluid;
 
+import alexiil.mc.lib.attributes.Simulation;
+import alexiil.mc.lib.attributes.fluid.filter.ExactFluidFilter;
+import alexiil.mc.lib.attributes.fluid.impl.SimpleFixedFluidInv;
 import cam72cam.mod.util.TagCompound;
 
 public class FluidTank implements ITank {
-    public final net.minecraftforge.fluids.FluidTank internal;
+    public FluidInv internal;
+
+    private class FluidInv extends SimpleFixedFluidInv {
+        FluidInv(FluidStack fluidStack, int capacity) {
+            super(1, capacity);
+            if (fluidStack != null) {
+                this.forceSetInvFluid(0, fluidStack.internal);
+            }
+        }
+    }
 
     public FluidTank(FluidStack fluidStack, int capacity) {
-        if (fluidStack == null) {
-            internal = new net.minecraftforge.fluids.FluidTank(capacity) {
-                public void onContentsChanged() {
-                    FluidTank.this.onChanged();
-                }
-            };
-        } else {
-            internal = new net.minecraftforge.fluids.FluidTank(fluidStack.internal, capacity) {
-                public void onContentsChanged() {
-                    FluidTank.this.onChanged();
-                }
-            };
-        }
+        internal = new FluidInv(fluidStack, capacity);
+        internal.addListener((inv, tank, previous, current) -> { FluidTank.this.onChanged(); }, () -> {});
     }
 
     public void onChanged() {
@@ -27,21 +28,22 @@ public class FluidTank implements ITank {
 
     @Override
     public FluidStack getContents() {
-        return new FluidStack(internal.getFluid());
+        return new FluidStack(internal.getInvFluid(0));
     }
 
     @Override
     public int getCapacity() {
-        return internal.getCapacity();
+        return internal.tankCapacity;
     }
 
     public void setCapacity(int milliBuckets) {
-        internal.setCapacity(milliBuckets);
+        internal = new FluidInv(getContents(), milliBuckets);
+        internal.addListener((inv, tank, previous, current) -> { FluidTank.this.onChanged(); }, () -> {});
     }
 
     @Override
     public boolean allows(Fluid fluid) {
-        return internal.canFill();
+        return internal.isFluidValidForTank(0, fluid.internal);
     }
 
     @Override
@@ -49,7 +51,7 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return 0;
         }
-        return internal.fill(fluidStack.internal, !simulate);
+        return internal.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
     }
 
     @Override
@@ -57,15 +59,15 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return null;
         }
-        return new FluidStack(internal.drain(fluidStack.internal, !simulate));
+        return new FluidStack(internal.attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
     }
 
     public TagCompound write(TagCompound tag) {
-        return new TagCompound(internal.writeToNBT(tag.internal));
+        return new TagCompound(internal.toTag(tag.internal));
     }
 
     public void read(TagCompound tag) {
-        internal.readFromNBT(tag.internal);
+        internal.fromTag(tag.internal);
     }
 
     public boolean tryDrain(ITank inputTank, int max, boolean simulate) {

@@ -1,27 +1,29 @@
 package cam72cam.mod.fluid;
 
-public class FluidStack {
-    public final net.minecraftforge.fluids.FluidStack internal;
+import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
 
-    public FluidStack(net.minecraftforge.fluids.FluidStack stack) {
+public class FluidStack {
+    public final FluidVolume internal;
+
+    public FluidStack(FluidVolume stack) {
         this.internal = stack;
     }
 
     public FluidStack(Fluid fluid, int amount) {
-        this.internal = fluid != null && fluid.internal != null ? new net.minecraftforge.fluids.FluidStack(fluid.internal, amount) : null;
+        this.internal = fluid != null && fluid.internal != null ? fluid.internal.withAmount(amount) : null;
     }
 
     public Fluid getFluid() {
         if (internal == null) {
             return null;
         }
-        return Fluid.getFluid(internal.getFluid().getName());
+        return Fluid.getFluid(internal.fluidKey);
     }
 
     public int getAmount() {
         if (internal == null) {
             return 0;
         }
-        return internal.amount;
+        return internal.getAmount();
     }
 }
