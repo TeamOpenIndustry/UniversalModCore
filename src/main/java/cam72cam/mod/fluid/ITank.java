@@ -3,7 +3,6 @@ package cam72cam.mod.fluid;
 import alexiil.mc.lib.attributes.Simulation;
 import alexiil.mc.lib.attributes.fluid.*;
 import alexiil.mc.lib.attributes.fluid.filter.ExactFluidFilter;
-import alexiil.mc.lib.attributes.fluid.filter.FluidFilter;
 import alexiil.mc.lib.attributes.misc.Ref;
 import cam72cam.mod.item.ItemStack;
 
@@ -11,11 +10,10 @@ import java.util.function.Consumer;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        if (!inputCopy.isFluidContainer()) {
+        FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(new Ref<>(inputCopy.internal));
+        if (inv == null) {
             return null;
         }
-
-        FixedFluidInv inv = FluidAttributes.FIXED_INV.get(new Ref<>(inputCopy.internal));
 
         return new ITank() {
             @Override
@@ -56,6 +54,10 @@ public interface ITank {
     }
 
     static ITank getTank(FixedFluidInv internal) {
+        if (internal == null) {
+            return null;
+        }
+
         return new ITank() {
             @Override
             public FluidStack getContents() {

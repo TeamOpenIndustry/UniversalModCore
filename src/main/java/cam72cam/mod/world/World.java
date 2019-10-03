@@ -2,9 +2,12 @@ package cam72cam.mod.world;
 
 import alexiil.mc.lib.attributes.AttributeList;
 import alexiil.mc.lib.attributes.AttributeProvider;
+import alexiil.mc.lib.attributes.fluid.FixedFluidInv;
 import alexiil.mc.lib.attributes.fluid.FluidAttributes;
 import alexiil.mc.lib.attributes.fluid.FluidExtractable;
 import alexiil.mc.lib.attributes.fluid.FluidInsertable;
+import alexiil.mc.lib.attributes.item.FixedItemInv;
+import alexiil.mc.lib.attributes.item.ItemAttributes;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -402,39 +405,13 @@ public class World {
 
     /* Capabilities */
     public IInventory getInventory(Vec3i offset) {
-        net.minecraft.block.entity.BlockEntity te = internal.getTileEntity(offset.internal);
-        if (te != null && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
-            IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-            if (inv instanceof IItemHandlerModifiable) {
-                return IInventory.from((IItemHandlerModifiable) inv);
-            }
-        }
-        return null;
+        FixedItemInv inv = ItemAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
+        return IInventory.from(inv);
     }
 
     public ITank getTank(Vec3i offset) {
-        FluidInsertable insertable = FluidAttributes.INSERTABLE.get(internal, offset.internal);
-        FluidExtractable extractable = FluidAttributes.EXTRACTABLE.get(internal, offset.internal);
-
-
-
-
-        net.minecraft.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal);
-        if (te instanceof AttributeProvider){
-            AttributeProvider ap = (AttributeProvider) te;
-            AttributeList<?> attributes = new AttributeList<>();
-            ap.addAllAttributes(internal, offset.internal, internal.getBlockState(offset.internal), attributes);
-
-
-        }
-
-        if (te != null && te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
-            IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
-            if (tank != null) {
-                return ITank.getTank(tank);
-            }
-        }
-        return null;
+        FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
+        return ITank.getTank(inv);
     }
 
     public ItemStack getItemStack(Vec3i pos) {

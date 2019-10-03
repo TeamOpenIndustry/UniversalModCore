@@ -114,7 +114,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return item instanceof AttributeProviderItem;
+        return FluidAttributes.FIXED_INV.getFirstOrNull(internal) != null;
     }
 
     public boolean isFlammable() {

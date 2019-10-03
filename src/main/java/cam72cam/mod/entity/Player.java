@@ -9,6 +9,8 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemUsageContext;
+import net.minecraft.util.hit.BlockHitResult;
 
 public class Player extends Entity {
     public final PlayerEntity internal;
@@ -36,19 +38,19 @@ public class Player extends Entity {
 
     @Deprecated
     public float getYawHead() {
-        return internal.rotationYawHead;
+        return internal.headYaw;
     }
 
     public void setHeldItem(Hand hand, ItemStack stack) {
-        internal.setHeldItem(hand.internal, stack.internal);
+        internal.setStackInHand(hand.internal, stack.internal);
     }
 
     public int getFoodLevel() {
-        return internal.getFoodStats().getFoodLevel();
+        return internal.getHungerManager().getFoodLevel();
     }
 
     public void setFoodLevel(int i) {
-        internal.getFoodStats().setFoodLevel(i);
+        internal.getHungerManager().setFoodLevel(i);
     }
 
     public IInventory getInventory() {
@@ -56,6 +58,6 @@ public class Player extends Entity {
     }
 
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.onItemUse(internal, getWorld().internal, pos.internal, hand.internal, Facing.DOWN.internal, (float) hit.x, (float) hit.y, (float) hit.z));
+        return ClickResult.from(getHeldItem(hand).internal.useOnBlock(new ItemUsageContext(internal, hand.internal, new BlockHitResult(hit.internal, Facing.DOWN.internal, pos.internal, false))));
     }
 }
