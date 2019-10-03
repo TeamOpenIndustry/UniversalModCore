@@ -14,7 +14,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
@@ -287,19 +287,19 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ICollision */
     @Override
-    public AxisAlignedBB getCollisionBoundingBox() {
+    public Box getCollisionBoundingBox() {
         return new BoundingBox(iCollision.getCollision());
     }
 
     @Override
-    public AxisAlignedBB getEntityBoundingBox() {
+    public Box getEntityBoundingBox() {
         return new BoundingBox(iCollision.getCollision());
     }
 
     @Override
-    public AxisAlignedBB getRenderBoundingBox() {
-        AxisAlignedBB bb = this.getEntityBoundingBox();
-        return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+    public Box getRenderBoundingBox() {
+        Box bb = this.getEntityBoundingBox();
+        return new Box(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     }
 
     /* Hacks */

@@ -153,7 +153,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
 
     /* Forge Overrides */
 
-    public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+    public net.minecraft.util.math.Box getRenderBoundingBox() {
         if (instance() != null) {
             IBoundingBox bb = instance().getBoundingBox();
             if (bb != null) {

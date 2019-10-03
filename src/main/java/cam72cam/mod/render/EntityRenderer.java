@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Box;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import org.lwjgl.opengl.GL11;
 
@@ -54,7 +54,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         List<Entity> entities = world.getEntities(Entity.class);
         for (Entity entity : entities) {
             // Duplicate forge logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
-            AxisAlignedBB chunk = new AxisAlignedBB(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
+            Box chunk = new Box(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
             if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
                 Minecraft.getMinecraft().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
             }

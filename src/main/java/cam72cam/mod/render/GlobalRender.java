@@ -108,7 +108,7 @@ public class GlobalRender {
 
     public static class GlobalRenderHelper extends TileEntity {
 
-        public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        public net.minecraft.util.math.Box getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
         }
 
