@@ -40,12 +40,12 @@ public class BoundingBox extends Box {
 
     @Override
     public BoundingBox expand(double x, double y, double z) {
-        return new BoundingBox(internal.expand(new Vec3d(x, y, z)));
+        return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
     }
 
     @Override
     public BoundingBox stretch(double x, double y, double z) {
-        return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
+        return new BoundingBox(internal.expand(new Vec3d(x, y, z)));
     }
     @Override
     public BoundingBox shrink(double x, double y, double z) {
