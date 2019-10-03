@@ -1,28 +1,30 @@
 package cam72cam.mod.energy;
 
-import net.minecraftforge.energy.IEnergyStorage;
+import alexiil.mc.lib.attributes.Simulation;
+import io.github.cottonmc.energy.api.DefaultEnergyTypes;
+import io.github.cottonmc.energy.api.EnergyAttribute;
 
 public interface IEnergy {
-    static IEnergy from(IEnergyStorage internal) {
+    static IEnergy from(EnergyAttribute internal) {
         return new IEnergy() {
             @Override
             public int receiveEnergy(int maxReceive, boolean simulate) {
-                return internal.receiveEnergy(maxReceive, simulate);
+                return internal.insertEnergy(DefaultEnergyTypes.MEDIUM_VOLTAGE, maxReceive, simulate ? Simulation.SIMULATE : Simulation.ACTION);
             }
 
             @Override
             public int extractEnergy(int maxExtract, boolean simulate) {
-                return internal.extractEnergy(maxExtract, simulate);
+                return internal.extractEnergy(DefaultEnergyTypes.MEDIUM_VOLTAGE, maxExtract, simulate ? Simulation.SIMULATE : Simulation.ACTION);
             }
 
             @Override
             public int getEnergyStored() {
-                return internal.getEnergyStored();
+                return internal.getCurrentEnergy();
             }
 
             @Override
             public int getMaxEnergyStored() {
-                return internal.getMaxEnergyStored();
+                return internal.getMaxEnergy();
             }
         };
     }
