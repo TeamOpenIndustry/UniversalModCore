@@ -6,12 +6,11 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.passive.EntityVillager;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.EntityDamageSource;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.world.Explosion;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraft.world.explosion.Explosion;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,17 +45,17 @@ public class Entity {
     }
 
     public UUID getUUID() {
-        return internal.getPersistentID();
+        return internal.getUuid();
     }
 
     /* Position / Rotation */
 
     public Vec3i getBlockPosition() {
-        return new Vec3i(internal.getPosition());
+        return new Vec3i(internal.getPos());
     }
 
     public Vec3d getPosition() {
-        return new Vec3d(internal.getPositionVector());
+        return new Vec3d(internal.getPosVector());
     }
 
     public void setPosition(Vec3d pos) {
@@ -64,43 +63,41 @@ public class Entity {
     }
 
     public Vec3d getVelocity() {
-        return new Vec3d(internal.motionX, internal.motionY, internal.motionZ);
+        return new Vec3d(internal.getVelocity());
     }
 
     public void setVelocity(Vec3d motion) {
-        internal.motionX = motion.x;
-        internal.motionY = motion.y;
-        internal.motionZ = motion.z;
+        internal.setVelocity(motion.internal);
     }
 
     public float getRotationYaw() {
-        return internal.rotationYaw;
+        return internal.yaw;
     }
 
     public void setRotationYaw(float yaw) {
-        internal.prevRotationYaw = internal.rotationYaw;
-        internal.rotationYaw = yaw;
+        internal.prevYaw = internal.yaw;
+        internal.yaw = yaw;
     }
 
     public float getRotationPitch() {
-        return internal.rotationPitch;
+        return internal.pitch;
     }
 
     public void setRotationPitch(float pitch) {
-        internal.prevRotationPitch = internal.rotationPitch;
-        internal.rotationPitch = pitch;
+        internal.prevPitch = internal.pitch;
+        internal.pitch = pitch;
     }
 
     public float getPrevRotationYaw() {
-        return internal.prevRotationYaw;
+        return internal.prevYaw;
     }
 
     public float getPrevRotationPitch() {
-        return internal.prevRotationPitch;
+        return internal.prevPitch;
     }
 
     public Vec3d getPositionEyes(float partialTicks) {
-        return new Vec3d(internal.getPositionEyes(partialTicks));
+        return new Vec3d(internal.x, internal.y + internal.getStandingEyeHeight(), internal.z);
     }
 
 
@@ -133,15 +130,15 @@ public class Entity {
     }
 
     public boolean isVillager() {
-        return this.is(EntityVillager.class);
+        return this.is(VillagerEntity.class);
     }
 
     public void kill() {
-        internal.world.removeEntity(internal);
+        internal.remove();
     }
 
     public final boolean isDead() {
-        return internal.isDead;
+        return !internal.isAlive();
     }
 
 
@@ -149,9 +146,9 @@ public class Entity {
 
     public void sendToObserving(Packet packet) {
         boolean found = false;
-        int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
-        for (PlayerEntity player : internal.world.playerEntities) {
-            if (player.getPositionVector().distanceTo(internal.getPositionVector()) < syncDist) {
+        int syncDist = internal.getType().getMaxTrackDistance();
+        for (PlayerEntity player : internal.world.getPlayers()) {
+            if (player.getPosVector().distanceTo(internal.getPosVector()) < syncDist) {
                 found = true;
                 break;
             }
@@ -162,14 +159,14 @@ public class Entity {
     }
 
     public int getTickCount() {
-        return internal.ticksExisted;
+        return internal.age;
     }
 
     public int getPassengerCount() {
         if (modded != null) {
             return modded.getPassengerCount();
         } else {
-            return internal.getPassengers().size();
+            return internal.getPassengerList().size();
         }
     }
 
@@ -181,21 +178,22 @@ public class Entity {
         if (modded != null) {
             return modded.isPassenger(passenger);
         }
-        return internal.isPassenger(passenger.internal);
+        return internal.hasPassenger(passenger.internal);
     }
 
     public void removePassenger(Entity entity) {
         if (modded != null) {
             modded.removePassenger(entity);
+        } else {
+            entity.internal.stopRiding();
         }
-        entity.internal.dismountRidingEntity();
     }
 
     public List<Entity> getPassengers() {
         if (modded != null) {
             return modded.getActualPassengers();
         }
-        return internal.getPassengers().stream().map(Entity::new).collect(Collectors.toList());
+        return internal.getPassengerList().stream().map(Entity::new).collect(Collectors.toList());
     }
 
     public boolean isPlayer() {
@@ -203,29 +201,29 @@ public class Entity {
     }
 
     public Entity getRiding() {
-        if (internal.getRidingEntity() != null) {
-            if (internal.getRidingEntity() instanceof SeatEntity) {
-                return ((SeatEntity)internal.getRidingEntity()).getParent();
+        if (internal.getVehicle() != null) {
+            if (internal.getVehicle() instanceof SeatEntity) {
+                return ((SeatEntity)internal.getVehicle()).getParent();
             }
-            return getWorld().getEntity(internal.getRidingEntity());
+            return getWorld().getEntity(internal.getVehicle());
         }
         return null;
     }
 
     public IBoundingBox getBounds() {
-        return IBoundingBox.from(internal.getEntityBoundingBox());
+        return IBoundingBox.from(internal.getBoundingBox());
     }
 
     public float getRotationYawHead() {
-        return internal.getRotationYawHead();
+        return internal.getHeadYaw();
     }
 
     public Vec3d getLastTickPos() {
-        return new Vec3d(internal.lastTickPosX, internal.lastTickPosY, internal.lastTickPosZ);
+        return new Vec3d(internal.prevX, internal.prevY, internal.prevZ);
     }
 
     public boolean isLiving() {
-        return internal instanceof EntityLivingBase;
+        return internal instanceof LivingEntity;
     }
 
     public void startRiding(Entity entity) {
@@ -237,14 +235,15 @@ public class Entity {
     }
 
     public void directDamage(String msg, double damage) {
-        internal.attackEntityFrom((new DamageSource(msg)).setDamageBypassesArmor(), (float) damage);
+        EntityDamageSource source = new EntityDamageSource(msg, null);
+        source.bypassesArmor();
+        internal.damage(source, (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain);
-        if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
-        explosion.doExplosionA();
-        explosion.doExplosionB(true);
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.DestructionType.DESTROY : Explosion.DestructionType.NONE);
+        explosion.collectBlocksAndDamageEntities();
+        explosion.affectWorld(true);
 
     }
 

@@ -245,7 +245,7 @@ public class TagCompound {
         ted.setWorld("world", preview.world);
 
         TagCompound data = new TagCompound();
-        preview.internal.writeToNBT(data.internal);
+        preview.internal.toTag(data.internal);
         ted.set("data", data);
 
         set(key, ted);

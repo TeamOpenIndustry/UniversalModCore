@@ -1,28 +1,28 @@
 package cam72cam.mod.entity;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.MobEntity;
 
 public class Living extends Entity {
-    private final LivingEntity living;
+    private final MobEntity living;
 
-    public Living(net.minecraft.entity.LivingEntity entity) {
+    public Living(MobEntity entity) {
         super(entity);
         this.living = entity;
     }
 
     public boolean isLeashedTo(Player player) {
-        return living.getLeashed() && living.getLeashHolder().getUniqueID().equals(player.getUUID());
+        return living.isLeashed() && living.getHoldingEntity().getUuid().equals(player.getUUID());
     }
 
     public void unleash(Player player) {
-        living.clearLeashed(true, !player.isCreative());
+        living.detachLeash(true, !player.isCreative());
     }
 
     public void setLeashHolder(Player player) {
-        living.setLeashHolder(player.internal, true);
+        living.attachLeash(player.internal, true);
     }
 
     public boolean canBeLeashedTo(Player player) {
-        return living.canBeLeashedTo(player.internal);
+        return living.canBeLeashedBy(player.internal);
     }
 }
