@@ -3,61 +3,48 @@ package cam72cam.mod.block.tile;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.energy.IEnergy;
-import cam72cam.mod.entity.boundingbox.BoundingBox;
-import cam72cam.mod.entity.boundingbox.IBoundingBox;
-import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.item.ItemStack;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.network.packet.BlockEntityUpdateS2CPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TileEntity extends net.minecraft.block.entity.BlockEntity {
-    private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
+    private static final Map<Supplier<? extends BlockEntity>, BlockEntityType<?>> registry = HashBiMap.create();
     public World world;
     public Vec3i pos;
     public boolean hasTileData;
-    private String instanceId;
 
     /*
     Tile registration
     */
-    private BlockEntity instance;
-    private TagCompound deferredLoad;
+    private final BlockEntity instance;
 
-    public TileEntity() {
-        // Forge reflection
-        super();
+    protected TileEntity(Supplier<? extends BlockEntity> ctr) {
+        super(registry.get(ctr));
+        instance = ctr.get();
     }
 
-    public TileEntity(Identifier id) {
-        this();
-        instanceId = id.toString();
+    public static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<BlockEntity> ctr) {
+        return register(id, ctr, TileEntity::new);
     }
-
-    public static void register(Supplier<BlockEntity> instance, Identifier id) {
-        registry.put(id.toString(), instance);
-    }
-
-    public final void register() {
-        ResourceLocation currentName = TileEntity.getKey(this.getClass());
-        if (currentName != null) {
-            if (!currentName.toString().equals(getName().toString())) {
-                throw new RuntimeException("Duplicate TileEntity registration with different name: " + currentName + " : " + getName());
-            }
-            // TODO log a warning here?
-            return;
-        }
-        net.minecraft.block.entity.BlockEntity.register(this.getName().internal.toString(), this.getClass());
+    protected static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<? extends BlockEntity> ctr, Function<Supplier<? extends BlockEntity>, ? extends TileEntity> tctr) {
+        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, BlockEntityType.Builder.create(() -> tctr.apply(ctr)).build(null));
+        registry.put(ctr, type);
+        return type;
     }
 
     public Identifier getName() {
@@ -76,12 +63,6 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     }
 
     @Override
-    protected void setWorldCreate(net.minecraft.world.World worldIn) {
-        super.setWorld(worldIn);
-        this.world = World.get(worldIn);
-    }
-
-    @Override
     public void setPos(BlockPos pos) {
         super.setPos(pos);
         this.pos = new Vec3i(pos);
@@ -89,84 +70,66 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
 
 
     @Override
-    public final void readFromNBT(CompoundTag compound) {
+    public final void fromTag(CompoundTag compound) {
         hasTileData = true;
         load(new TagCompound(compound));
+        if (compound.getBoolean("isUpdate")) {
+            readUpdate(new TagCompound(compound));
+        }
     }
 
     @Override
-    public final CompoundTag writeToNBT(CompoundTag compound) {
+    public final CompoundTag toTag(CompoundTag compound) {
         save(new TagCompound(compound));
         return compound;
     }
 
-    @Override
-    public final SPacketUpdateTileEntity getUpdatePacket() {
-        TagCompound nbt = new TagCompound();
-        this.writeToNBT(nbt.internal);
-        this.writeUpdate(nbt);
-
-        return new SPacketUpdateTileEntity(this.getPos(), 1, nbt.internal);
+    public CompoundTag toInitialChunkDataTag() {
+        TagCompound data = new TagCompound(super.toInitialChunkDataTag());
+        save(data);
+        data.setBoolean("isUpdate", true);
+        return data.internal;
     }
 
-    @Override
-    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-        hasTileData = true;
-        this.readFromNBT(pkt.getNbtCompound());
-        this.readUpdate(new TagCompound(pkt.getNbtCompound()));
-        super.onDataPacket(net, pkt);
-        if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
-        }
-    }
-
-    @Override
-    public final CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
+    public final TagCompound getUpdateTag() {
+        TagCompound tag = new TagCompound();
         if (this.isLoaded()) {
-            this.writeToNBT(tag);
-            this.writeUpdate(new TagCompound(tag));
+            this.toTag(tag.internal);
+            this.writeUpdate(tag);
         }
         return tag;
     }
 
-    @Override
-    public final void handleUpdateTag(CompoundTag tag) {
+    public final void handleUpdateTag(TagCompound tag) {
         hasTileData = true;
-        this.readFromNBT(tag);
-        this.readUpdate(new TagCompound(tag));
-        super.handleUpdateTag(tag);
+        this.fromTag(tag.internal);
+        this.readUpdate(tag);
         if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
+            world.internal.scheduleBlockRender(getPos(), super.world.getBlockState(super.pos), super.world.getBlockState(super.pos));
         }
     }
-
+    public BlockEntityUpdateS2CPacket toUpdatePacket() {
+        new BlockEntityUpdatePacket(this).sendToAllAround(world, new Vec3d(pos), 8*16);
+        return super.toUpdatePacket();
+    }
 
     @Override
     public void markDirty() {
         super.markDirty();
         if (world.isServer) {
-            world.internal.notifyBlockUpdate(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
-            world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType(), true);
+            world.internal.updateListeners(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
+            world.internal.updateNeighborsAlways(pos.internal, super.world.getBlockState(super.pos).getBlock());
         }
     }
 
     /* Forge Overrides */
 
-    public net.minecraft.util.math.Box getRenderBoundingBox() {
-        if (instance() != null) {
-            IBoundingBox bb = instance().getBoundingBox();
-            if (bb != null) {
-                return new BoundingBox(bb);
-            }
-        }
-        return INFINITE_EXTENT_AABB;
-    }
-
-    public double getMaxRenderDistanceSquared() {
+    @Override
+    public double getSquaredRenderDistance() {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
     }
 
+    /* TODO capabilities
     @Override
     public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.Direction facing) {
         //TODO more efficient
@@ -318,6 +281,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         }
         return null;
     }
+    */
 
     /*
     Wrapped functionality
@@ -332,30 +296,14 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     }
 
     public void load(TagCompound data) {
-        super.readFromNBT(data.internal);
+        super.fromTag(data.internal);
         pos = new Vec3i(super.pos);
-
-        if (instanceId == null) {
-            // If this fails something is really wrong
-            instanceId = data.getString("instanceId");
-            if (instanceId == null) {
-                throw new RuntimeException("Unable to load instanceid with " + data.toString());
-            }
-        }
-
-        if (instance() != null) {
-            instance().load(data);
-        } else {
-            deferredLoad = data;
-        }
+        instance.load(data);
     }
 
     public void save(TagCompound data) {
-        super.writeToNBT(data.internal);
-        data.setString("instanceId", instanceId);
-        if (instance() != null) {
-            instance().save(data);
-        }
+        super.toTag(data.internal);
+        instance.save(data);
     }
 
     public void writeUpdate(TagCompound nbt) {
@@ -384,25 +332,13 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     }
 
     public BlockEntity instance() {
-        if (this.instance == null) {
-            if (isLoaded()) {
-                if (this.instanceId == null) {
-                    System.out.println("WAT NULL");
-                }
-                if (!registry.containsKey(instanceId)) {
-                    System.out.println("WAT " + instanceId);
-                }
-                this.instance = registry.get(this.instanceId).get();
-                this.instance.internal = this;
-                this.instance.world = this.world;
-                this.instance.pos = this.pos;
-                if (deferredLoad != null) {
-                    this.instance.load(deferredLoad);
-                }
-                this.deferredLoad = null;
-            }
+        if (isLoaded()) {
+            this.instance.internal = this;
+            this.instance.world = this.world;
+            this.instance.pos = this.pos;
+            return this.instance;
         }
-        return this.instance;
+        return null;
     }
 
     /* Capabilities */

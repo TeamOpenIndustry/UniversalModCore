@@ -15,6 +15,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
@@ -24,18 +25,25 @@ import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
     protected final Identifier id;
-    private final Supplier<BlockEntity> constructData;
+    private final BlockEntityType<TileEntity> teType;
 
     public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
         super(settings);
         id = new Identifier(settings.modID, settings.name);
-        this.constructData = constructData;
-        TileEntity.register(constructData, id);
-        ((TileEntity) ((BlockTypeInternal)internal).createBlockEntity(null)).register();
+
+        if (constructData.get() instanceof BlockEntityTickable) {
+            if (constructData.get() instanceof ITrack) {
+                teType = TileEntityTickableTrack.register(id, constructData);
+            } else {
+                teType = TileEntityTickable.register(id, constructData);
+            }
+        } else {
+            teType = TileEntity.register(id, constructData);
+        }
     }
 
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = (TileEntity) ((BlockTypeInternal)internal).createBlockEntity(null);
+        TileEntity te = teType.instantiate();
         te.hasTileData = true;
         te.world = world;
         te.pos = pos;
@@ -124,13 +132,7 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.world.BlockView var1) {
-            if (constructData.get() instanceof BlockEntityTickable) {
-                if (constructData.get() instanceof ITrack) {
-                    return new TileEntityTickableTrack(id);
-                }
-                return new TileEntityTickable(id);
-            }
-            return new TileEntity(id);
+            return teType.instantiate();
         }
 
         @Override
