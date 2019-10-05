@@ -6,21 +6,20 @@ import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiDisconnected;
-import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiMultiplayer;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.entity.FabricEntityTypeBuilder;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.EntityCategory;
+import net.minecraft.entity.EntityType;
+import net.minecraft.util.registry.Registry;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class EntityRegistry {
-    private static final Map<Class<? extends Entity>, String> identifiers = new HashMap<>();
-    private static final Map<String, Supplier<Entity>> constructors = new HashMap<>();
-    private static final Map<String, EntitySettings> registered = new HashMap<>();
+    private static Map<Class<? extends Entity>, EntityType<ModdedEntity>> registered = new HashMap<>();
     private static String missingResources;
 
     private EntityRegistry() {
@@ -28,47 +27,22 @@ public class EntityRegistry {
     }
 
     public static void register(ModCore.Mod mod, Supplier<Entity> ctr, EntitySettings settings, int distance) {
+
         Entity tmp = ctr.get();
         Class<? extends Entity> type = tmp.getClass();
+        Identifier id = new Identifier(mod.modID(), type.getSimpleName());
 
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
-            Identifier id = new Identifier(mod.modID(), type.getSimpleName());
-
-            // This has back-compat for older entity names
-            // TODO expose updateFreq and vecUpdates
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(id.internal, ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
-
-            identifiers.put(type, id.toString());
-            constructors.put(id.toString(), ctr);
-            registered.put(id.toString(), settings);
-        });
-    }
-
-    public static EntitySettings getSettings(String type) {
-        return registered.get(type);
-    }
-
-    public static Supplier<Entity> getConstructor(String type) {
-        return constructors.get(type);
-    }
-
-    protected static Entity create(String type, ModdedEntity base) {
-        return getConstructor(type).get().setup(base);
+        EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr, settings);
+        EntityType<ModdedEntity> oet = Registry.register(Registry.ENTITY_TYPE, id.internal, FabricEntityTypeBuilder.create(EntityCategory.MISC, factory).build());
+        registered.put(type, oet);
     }
 
     public static Entity create(World world, Class<? extends Entity> cls) {
-        //TODO null checks
-        ModdedEntity ent = new ModdedEntity(world.internal);
-        String id = identifiers.get(cls);
-        ent.init(id);
-        return ent.getSelf();
+        return registered.get(cls).create(world.internal).getSelf();
     }
 
-
     public static void registerEvents() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.ID, SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 32, 20, false);
-        });
+        SeatEntity.TYPE = Registry.register(Registry.ENTITY_TYPE, SeatEntity.ID, FabricEntityTypeBuilder.create(EntityCategory.MISC, SeatEntity::new).build());
 
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {
@@ -84,14 +58,14 @@ public class EntityRegistry {
         });
     }
 
-    @SideOnly(Side.CLIENT)
+    @Environment(EnvType.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
-            if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getConnection() != null) {
+            if (missingResources != null && !MinecraftClient.getInstance().isInSingleplayer() && MinecraftClient.getInstance().getNetworkHandler() != null) {
                 System.out.println(missingResources);
-                Minecraft.getMinecraft().getConnection().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
-                Minecraft.getMinecraft().loadWorld(null);
-                Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
+                MinecraftClient.getInstance().getNetworkHandler().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
+                //MinecraftClient.getInstance().loadWorld(null);
+                //MinecraftClient.getInstance().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

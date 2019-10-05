@@ -9,19 +9,15 @@ import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
@@ -40,8 +36,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private IRidable iRidable;
     private ICollision iCollision;
 
-    public ModdedEntity(World world) {
-        super(world);
+    public ModdedEntity(EntityType<?> type, World world, Supplier<cam72cam.mod.entity.Entity> ctr, EntitySettings settings) {
+        super(type, world);
 
         super.preventEntitySpawning = true;
     }

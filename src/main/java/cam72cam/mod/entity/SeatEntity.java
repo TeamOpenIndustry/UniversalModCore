@@ -5,8 +5,9 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
@@ -15,13 +16,14 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.UUID;
 
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
-    static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
+    public static EntityType<SeatEntity> TYPE;
+    static final Identifier ID = new Identifier(ModCore.MODID, "seat");
     private UUID parent;
     private int ticksUnsure = 0;
     boolean shouldSit = true;
 
-    public SeatEntity(net.minecraft.world.World worldIn) {
-        super(worldIn);
+    public SeatEntity(EntityType<SeatEntity> type, net.minecraft.world.World worldIn) {
+        super(type, worldIn);
     }
 
     @Override
