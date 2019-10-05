@@ -53,7 +53,7 @@ public abstract class Packet {
         }
     }
 
-    private Identifier getIdent() {
+    protected Identifier getIdent() {
         return new Identifier(ModCore.MODID, getClass().toString());
     }
 

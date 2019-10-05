@@ -7,10 +7,12 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.TagCompound;
-import io.netty.buffer.ByteBuf;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.Box;
@@ -20,14 +22,13 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
-    private cam72cam.mod.entity.Entity self;
+public class ModdedEntity extends Entity implements IAdditionalSpawnData {
+    private final cam72cam.mod.entity.Entity self;
+    private final EntitySettings settings;
 
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
     private List<SeatEntity> seats = new ArrayList<>();
 
-    private EntitySettings settings;
-    private String type;
     private IWorldData iWorldData;
     private ISpawnData iSpawnData;
     private ITickable iTickable;
@@ -39,42 +40,20 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public ModdedEntity(EntityType<?> type, World world, Supplier<cam72cam.mod.entity.Entity> ctr, EntitySettings settings) {
         super(type, world);
 
-        super.preventEntitySpawning = true;
-    }
+        self = ctr.get();
+        self.setup(this);
+        this.settings = settings;
 
-    @Override
-    protected final void entityInit() {
+        iWorldData = IWorldData.get(self);
+        iSpawnData = ISpawnData.get(self);
+        iTickable = ITickable.get(self);
+        iClickable = IClickable.get(self);
+        iKillable = IKillable.get(self);
+        iRidable = IRidable.get(self);
+        iCollision = ICollision.get(self);
     }
 
     /* Init Self Wrapper */
-
-    protected final void init(String type) {
-        if (self == null) {
-            this.type = type;
-            self = EntityRegistry.create(type, this);
-
-            EntitySettings settings = EntityRegistry.getSettings(type);
-            super.isImmuneToFire = settings.immuneToFire;
-            super.entityCollisionReduction = settings.entityCollisionReduction;
-            this.settings = settings;
-
-            iWorldData = IWorldData.get(self);
-            iSpawnData = ISpawnData.get(self);
-            iTickable = ITickable.get(self);
-            iClickable = IClickable.get(self);
-            iKillable = IKillable.get(self);
-            iRidable = IRidable.get(self);
-            iCollision = ICollision.get(self);
-        }
-    }
-
-    private final void loadSelf(TagCompound data) {
-        init(data.getString("custom_mob_type"));
-    }
-
-    private final void saveSelf(TagCompound data) {
-        data.setString("custom_mob_type", type);
-    }
 
     public cam72cam.mod.entity.Entity getSelf() {
         return self;
@@ -83,77 +62,75 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* IWorldData */
 
     @Override
-    protected final void readEntityFromNBT(CompoundTag compound) {
+    protected void readCustomDataFromTag(CompoundTag compound) {
         load(new TagCompound(compound));
     }
 
     private final void load(TagCompound data) {
-        loadSelf(data);
         iWorldData.load(data);
         readPassengerData(data);
     }
 
     @Override
-    protected final void writeEntityToNBT(CompoundTag compound) {
+    protected void writeCustomDataToTag(CompoundTag compound) {
         save(new TagCompound(compound));
     }
 
     private final void save(TagCompound data) {
         iWorldData.save(data);
-        saveSelf(data);
         writePassengerData(data);
     }
 
+
     /* ISpawnData */
+    @Override
+    public net.minecraft.network.Packet<?> createSpawnPacket() {
+        return new CustomSpawnPacket(this).toPacket();
+    }
 
     @Override
-    public final void readSpawnData(ByteBuf additionalData) {
-        TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
-        loadSelf(data);
+    public final void readSpawnData(TagCompound data, float yaw, float pitch) {
+        this.setRotation(yaw, pitch);
         iSpawnData.loadSpawn(data);
         self.sync.receive(data.get("sync"));
         readPassengerData(data);
     }
 
     @Override
-    public final void writeSpawnData(ByteBuf buffer) {
-        TagCompound data = new TagCompound();
+    public final void writeSpawnData(TagCompound data) {
         iSpawnData.saveSpawn(data);
-        saveSelf(data);
         data.set("sync", self.sync);
         writePassengerData(data);
-
-        ByteBufUtils.writeTag(buffer, data.internal);
     }
 
     /* ITickable */
 
     @Override
-    public final void onUpdate() {
+    public final void tick() {
         iTickable.onTick();
         self.sync.send();
 
         if (!seats.isEmpty()) {
-            seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
+            seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
         }
     }
 
     /* Player Interact */
 
     @Override
-    public final boolean processInitialInteract(PlayerEntity player, EnumHand hand) {
+    public final boolean interact(PlayerEntity player, net.minecraft.util.Hand hand) {
         return iClickable.onClick(new Player(player), Hand.from(hand)) == ClickResult.ACCEPTED;
     }
 
     /* Death */
 
     @Override
-    public final boolean attackEntityFrom(DamageSource damagesource, float amount) {
-        cam72cam.mod.entity.Entity wrapEnt = new cam72cam.mod.entity.Entity(damagesource.getTrueSource());
+    public final boolean damage(DamageSource damagesource, float amount) {
+        cam72cam.mod.entity.Entity wrapEnt = new cam72cam.mod.entity.Entity(damagesource.getAttacker());
         DamageType type;
-        if (damagesource.isExplosion() && !(damagesource.getTrueSource() instanceof EntityMob)) {
+        if (damagesource.isExplosive() && !(damagesource.getAttacker() instanceof MobEntity)) {
             type = DamageType.EXPLOSION;
-        } else if (damagesource.getTrueSource() instanceof PlayerEntity) {
+        } else if (damagesource.getAttacker() instanceof PlayerEntity) {
             type = damagesource.isProjectile() ? DamageType.PROJECTILE : DamageType.PLAYER;
         } else {
             type = DamageType.OTHER;
@@ -164,9 +141,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public final void setDead() {
-        if (!this.isDead) {
-            super.setDead();
+    protected void initDataTracker() {
+        // lol nope!
+    }
+
+    @Override
+    public final void remove() {
+        if (this.isAlive()) {
+            super.remove();
             iKillable.onRemoved();
         }
     }
@@ -174,7 +156,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Ridable */
 
     @Override
-    public boolean canFitPassenger(Entity passenger) {
+    public boolean canAddPassenger(Entity passenger) {
         return iRidable.canFitPassenger(new cam72cam.mod.entity.Entity(passenger));
     }
 
@@ -188,12 +170,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void addPassenger(Entity entity) {
-        if (!world.isRemote) {
+        if (!world.isClient) {
             System.out.println("New Seat");
-            SeatEntity seat = new SeatEntity(world);
+            SeatEntity seat = SeatEntity.TYPE.create(world);
             seat.setParent(this);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
-            passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
+            passengerPositions.put(entity.getUuid(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
             updateSeat(seat);
             world.spawnEntity(seat);
@@ -226,8 +208,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 seat.setPosition(pos.x, pos.y, pos.z);
                 passenger.setPosition(pos);
 
-                float delta = rotationYaw - prevRotationYaw;
-                passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+                float delta = yaw - prevYaw;
+                passenger.internal.yaw = passenger.internal.yaw + delta;
 
                 seat.shouldSit = iRidable.shouldRiderSit(passenger);
             }
@@ -254,16 +236,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         for (SeatEntity seat : this.seats) {
             cam72cam.mod.entity.Entity seatPass = seat.getEntityPassenger();
             if (seatPass != null && seatPass.getUUID().equals(passenger.getUUID())) {
-                passenger.internal.dismountRidingEntity();
+                passenger.internal.stopRiding();
                 break;
             }
         }
     }
 
+    /* TODO 1.14.4
     @Override
     public boolean canRiderInteract() {
         return false;
     }
+    */
 
     public int getPassengerCount() {
         return seats.size();
@@ -283,38 +267,38 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ICollision */
     @Override
-    public Box getCollisionBoundingBox() {
+    public Box getCollisionBox() {
         return new BoundingBox(iCollision.getCollision());
     }
 
     @Override
-    public Box getEntityBoundingBox() {
+    public Box getBoundingBox() {
         return new BoundingBox(iCollision.getCollision());
     }
 
     @Override
-    public Box getRenderBoundingBox() {
-        Box bb = this.getEntityBoundingBox();
+    public Box getVisibilityBoundingBox() {
+        Box bb = this.getBoundingBox();
         return new Box(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     }
 
     /* Hacks */
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean collides() {
         // Needed for right click, probably a forge or MC bug
         return true;
     }
 
     @Override
-    public boolean canBePushed() {
+    public boolean isPushable() {
         return settings.canBePushed;
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    @Environment(EnvType.CLIENT)
+    public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
         if (settings.defaultMovement) {
-            super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.updateTrackedPositionAndAngles(x, y, z, yaw, pitch, posRotationIncrements, teleport);
         }
     }
 

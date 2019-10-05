@@ -33,7 +33,12 @@ public class EntityRegistry {
         Identifier id = new Identifier(mod.modID(), type.getSimpleName());
 
         EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr, settings);
-        EntityType<ModdedEntity> oet = Registry.register(Registry.ENTITY_TYPE, id.internal, FabricEntityTypeBuilder.create(EntityCategory.MISC, factory).build());
+        FabricEntityTypeBuilder<ModdedEntity> builder = FabricEntityTypeBuilder.create(EntityCategory.MISC, factory)
+                .trackable(distance, 20, false);
+        if (settings.immuneToFire) {
+            builder = builder.setImmuneToFire();
+        }
+        EntityType<ModdedEntity> oet = Registry.register(Registry.ENTITY_TYPE, id.internal, builder.build());
         registered.put(type, oet);
     }
 
