@@ -1,6 +1,5 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.item.ItemBase;
@@ -8,15 +7,14 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Hand;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.culling.ICamera;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,21 +25,26 @@ public class GlobalRender {
 
     public static void registerClientEvents() {
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
+            BlockEntityRendererRegistry.INSTANCE.register(GlobalRenderHelper.class, new BlockEntityRenderer<GlobalRenderHelper>() {
                 @Override
-                public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+                public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
                     renderFuncs.forEach(r -> r.accept(partialTicks));
+                }
+
+                @Override
+                public boolean method_3563(GlobalRenderHelper te) {
+                    return true;
                 }
             });
         });
 
-        TileEntity grh = new GlobalRenderHelper();
-        List<TileEntity> grhList = new ArrayList<>();
+        BlockEntity grh = new GlobalRenderHelper(null);
+        List<BlockEntity> grhList = new ArrayList<>();
         grhList.add(grh);
-        ClientEvents.TICK.subscribe(() -> Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList));
+        ClientEvents.TICK.subscribe(() -> MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
-            if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
+            if (MinecraftClient.getInstance().options.debugEnabled && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.getRight().size(); i++) {
                     if (event.getRight().get(i).startsWith("Display: ")) {
@@ -77,28 +80,22 @@ public class GlobalRender {
         });
     }
 
-    public static boolean isTransparentPass() {
-        return MinecraftForgeClient.getRenderPass() != 0;
-    }
-
     public static Vec3d getCameraPos(float partialTicks) {
-        net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().getRenderViewEntity();
-        double d0 = playerrRender.lastTickPosX + (playerrRender.posX - playerrRender.lastTickPosX) * partialTicks;
-        double d1 = playerrRender.lastTickPosY + (playerrRender.posY - playerrRender.lastTickPosY) * partialTicks;
-        double d2 = playerrRender.lastTickPosZ + (playerrRender.posZ - playerrRender.lastTickPosZ) * partialTicks;
-        return new Vec3d(d0, d1, d2);
+        net.minecraft.entity.Entity playerrRender = MinecraftClient.getInstance().cameraEntity;
+        return new Vec3d(playerrRender.getCameraPosVec(partialTicks));
     }
 
-    static ICamera getCamera(float partialTicks) {
-        ICamera camera = new Frustum();
-        Vec3d cameraPos = getCameraPos(partialTicks);
-        camera.setPosition(cameraPos.x, cameraPos.y, cameraPos.z);
-        return camera;
+    static Camera getCamera(float partialTicks) {
+        return new Camera() {
+            {
+                setPos(getCameraPos(partialTicks).internal);
+            }
+        };
     }
 
     public static boolean isInRenderDistance(Vec3d pos) {
         // max rail length is 100, 50 is center
-        return MinecraftClient.getPlayer().getPosition().distanceTo(pos) < ((Minecraft.getMinecraft().gameSettings.renderDistanceChunks + 1) * 16 + 50);
+        return MinecraftClient.getInstance().player.getPos().distanceTo(pos.internal) < ((MinecraftClient.getInstance().options.viewDistance + 1) * 16 + 50);
     }
 
     @FunctionalInterface
@@ -106,18 +103,20 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
     }
 
-    public static class GlobalRenderHelper extends TileEntity {
+    public static class GlobalRenderHelper extends net.minecraft.block.entity.BlockEntity {
 
-        public net.minecraft.util.math.Box getRenderBoundingBox() {
-            return INFINITE_EXTENT_AABB;
+        public GlobalRenderHelper(BlockEntityType<?> blockEntityType_1) {
+            super(blockEntityType_1);
         }
 
-        public double getDistanceSq(double x, double y, double z) {
+        @Environment(EnvType.CLIENT)
+        public double getSquaredRenderDistance() {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        @Environment(EnvType.CLIENT)
+        public double getSquaredDistance(double double_1, double double_2, double double_3) {
             return 1;
-        }
-
-        public boolean shouldRenderInPass(int pass) {
-            return true;
         }
 
     }

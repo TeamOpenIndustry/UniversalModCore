@@ -24,13 +24,16 @@ import net.minecraft.world.BlockView;
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
     protected final BlockSettings settings;
+    public final Identifier identifier;
 
     public BlockType(BlockSettings settings) {
         this.settings = settings;
 
         internal = getBlock();
 
-        CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, new Identifier(settings.modID, settings.name), internal));
+        identifier = new Identifier(settings.modID, settings.name)
+
+        CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, identifier, internal));
 
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
