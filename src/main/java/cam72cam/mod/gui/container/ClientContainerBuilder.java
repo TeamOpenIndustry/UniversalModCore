@@ -4,7 +4,11 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.text.Text;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -24,19 +28,19 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
     private int centerX;
     private int centerY;
 
-    public ClientContainerBuilder(ServerContainerBuilder serverContainer) {
-        super(serverContainer);
+    public ClientContainerBuilder(ServerContainerBuilder serverContainer, PlayerInventory playerInventory_1, Text text_1) {
+        super(serverContainer, playerInventory_1, text_1);
         this.server = serverContainer;
-        this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
-        this.ySize = 114 + serverContainer.slotsY * slotSize;
+        this.width = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
+        this.height = 114 + serverContainer.slotsY * slotSize;
     }
 
     @Override
     protected void drawBackground(float partialTicks, int mouseX, int mouseY) {
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
-        this.centerX = (this.width - this.xSize) / 2;
-        this.centerY = (this.height - this.ySize) / 2;
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
+        this.centerX = (this.width - this.width) / 2;
+        this.centerY = (this.height - this.height) / 2;
         server.draw.accept(this);
     }
 
@@ -44,13 +48,13 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
+        super.blit(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
         // Top Bar
         for (int k = 1; k <= slots; k++) {
-            super.drawTexturedModalRect(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
+            super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
         }
         // Top Right Corner
-        super.drawTexturedModalRect(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
+        super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
 
         return y + topOffset;
     }
@@ -59,16 +63,16 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
         x += paddingLeft;
         if (handler != null && handler.getSlotCount() > slotID) {
-            super.drawTexturedModalRect(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
+            super.blit(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
         } else {
-            Gui.drawRect(centerX + x, centerY + y, centerX + x + slotSize, centerY + y + slotSize, 0xFF444444);
+            DrawableHelper.fill(centerX + x, centerY + y, centerX + x + slotSize, centerY + y + slotSize, 0xFF444444);
         }
     }
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
         // Left Side
-        super.drawTexturedModalRect(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
+        super.blit(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
         // Middle Slots
         for (int slotID = start; slotID < start + cols; slotID++) {
             int slotOff = (slotID - start);
@@ -76,7 +80,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
         }
         GL11.glColor4f(1, 1, 1, 1);
         // Right Side
-        super.drawTexturedModalRect(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
+        super.blit(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         return y + slotSize;
     }
 
@@ -95,33 +99,33 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
     @Override
     public int drawBottomBar(int x, int y, int slots) {
         // Left Bottom
-        super.drawTexturedModalRect(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
+        super.blit(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
         // Middle Bottom
         for (int k = 1; k <= slots; k++) {
-            super.drawTexturedModalRect(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
+            super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
         }
         // Right Bottom
-        super.drawTexturedModalRect(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
+        super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
 
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
+        super.blit(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        super.drawTexturedModalRect(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
+        super.blit(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         return y + midBarHeight;
     }
 
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        super.drawTexturedModalRect(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+        super.blit(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         return y + 96;
     }
 
@@ -154,8 +158,8 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(this.fontRenderer, text, x + centerX + this.xSize / 2, y + centerY, 14737632);
-        this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
+        super.drawCenteredString(this.font, text, x + centerX + this.width / 2, y + centerY, 14737632);
+        this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
     }
 
     @Override
@@ -163,13 +167,13 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        this.mc.getRenderItem().renderItemIntoGUI(stack.internal, x, y);
-        this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
+        this.minecraft.getItemRenderer().renderGuiItemIcon(stack.internal, x, y);
+        this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
 
-        GlStateManager.enableAlpha();
-        GlStateManager.disableDepth();
-        Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
-        GlStateManager.enableDepth();
+        GlStateManager.enableAlphaTest();
+        GlStateManager.disableDepthTest();
+        DrawableHelper.fill(x, y, x + 16, y + 16, -2130706433);
+        GlStateManager.enableDepthTest();
 
         GL11.glColor4f(1, 1, 1, 1);
     }
