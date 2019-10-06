@@ -2,10 +2,11 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.particle.ParticleTextureSheet;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Camera;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.opengl.GL11;
 
@@ -32,23 +33,23 @@ public abstract class IParticle {
             I ip = ctr.apply(data);
             Particle p = new Particle(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
-                    particleMaxAge = data.lifespan;
-                    motionX = data.motion.x;
-                    motionY = data.motion.y;
-                    motionZ = data.motion.z;
+                    maxAge = data.lifespan;
+                    velocityX = data.motion.x;
+                    velocityY = data.motion.y;
+                    velocityZ = data.motion.z;
                 }
 
                 @Override
-                public boolean shouldDisableDepth() {
-                    return !ip.depthTestEnabled();
+                public ParticleTextureSheet getType() {
+                    return ip.depthTestEnabled() ? ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT : ParticleTextureSheet.PARTICLE_SHEET_OPAQUE;
                 }
 
                 @Override
-                public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
-                    ip.ticks = particleAge;
-                    ip.pos = new Vec3d(posX, posY, posZ);
-                    ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);
-                    ip.renderPos = ip.renderPos.add(this.motionX * partialTicks, this.motionY * partialTicks, this.motionZ * partialTicks);
+                public void buildGeometry(BufferBuilder buffer, Camera entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                    ip.ticks = age;
+                    ip.pos = new Vec3d(x,y,z);
+                    ip.renderPos = new Vec3d(x - cameraX, y - cameraY, z - cameraZ);
+                    ip.renderPos = ip.renderPos.add(this.velocityX * partialTicks, this.velocityY * partialTicks, this.velocityZ * partialTicks);
 
                     if (renderer == null) {
                         GL11.glPushMatrix();
@@ -70,7 +71,7 @@ public abstract class IParticle {
                 }
             };
 
-            Minecraft.getMinecraft().effectRenderer.addEffect(p);
+            MinecraftClient.getInstance().particleManager.addParticle(p);
         };
     }
 
