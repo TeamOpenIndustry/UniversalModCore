@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.item.ItemBase;
@@ -12,7 +13,6 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 
@@ -41,9 +41,10 @@ public class GlobalRender {
         BlockEntity grh = new GlobalRenderHelper(null);
         List<BlockEntity> grhList = new ArrayList<>();
         grhList.add(grh);
-        ClientEvents.TICK.subscribe(() -> MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
+        ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
+            // DebugHud
             if (MinecraftClient.getInstance().options.debugEnabled && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.getRight().size(); i++) {
@@ -62,6 +63,7 @@ public class GlobalRender {
     }
 
     public static void registerOverlay(Consumer<Float> func) {
+        // InGameHud
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
                 func.accept(event.getPartialTicks());
@@ -81,7 +83,7 @@ public class GlobalRender {
     }
 
     public static Vec3d getCameraPos(float partialTicks) {
-        net.minecraft.entity.Entity playerrRender = MinecraftClient.getInstance().cameraEntity;
+        net.minecraft.entity.Entity playerrRender = net.minecraft.client.MinecraftClient.getInstance().cameraEntity;
         return new Vec3d(playerrRender.getCameraPosVec(partialTicks));
     }
 
@@ -95,7 +97,7 @@ public class GlobalRender {
 
     public static boolean isInRenderDistance(Vec3d pos) {
         // max rail length is 100, 50 is center
-        return MinecraftClient.getInstance().player.getPos().distanceTo(pos.internal) < ((MinecraftClient.getInstance().options.viewDistance + 1) * 16 + 50);
+        return net.minecraft.client.MinecraftClient.getInstance().player.getPos().distanceTo(pos.internal) < ((net.minecraft.client.MinecraftClient.getInstance().options.viewDistance + 1) * 16 + 50);
     }
 
     @FunctionalInterface
