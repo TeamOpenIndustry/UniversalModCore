@@ -6,7 +6,6 @@ import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -89,10 +88,6 @@ public class BlockRender {
     }
 
     // TODO version for non TE blocks
-
-    public interface FullBakedModel extends BakedModel, FabricBakedModel {
-
-    }
 
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));

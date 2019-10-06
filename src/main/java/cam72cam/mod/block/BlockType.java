@@ -31,7 +31,7 @@ public abstract class BlockType {
 
         internal = getBlock();
 
-        identifier = new Identifier(settings.modID, settings.name)
+        identifier = new Identifier(settings.modID, settings.name);
 
         CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, identifier, internal));
 

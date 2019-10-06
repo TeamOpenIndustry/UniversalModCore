@@ -1,52 +1,48 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
+import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.Direction;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.model.ItemLayerModel;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.model.TRSRTransformation;
+import net.minecraft.client.gl.GlFramebuffer;
+import net.minecraft.client.render.model.*;
+import net.minecraft.client.render.model.json.JsonUnbakedModel;
+import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
+import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.render.model.json.Transformation;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.ExtendedBlockView;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final SpriteSheet iconSheet = new SpriteSheet(128);
 
     public static void register(ItemBase item, Identifier tex) {
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                tex.internal
-        )).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter())));
+        Map<String, String> textures = new HashMap<>();
+        textures.put("layer0", tex.toString());
 
-        ClientEvents.TEXTURE_STITCH.subscribe(() -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
-
-        ClientEvents.MODEL_CREATE.subscribe(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
-                new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
+                new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, true, ModelTransformation.NONE, Collections.emptyList())
+                : null);
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model) {
@@ -54,11 +50,31 @@ public class ItemRender {
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-        ClientEvents.MODEL_CREATE.subscribe(() ->
-                ModelLoader.setCustomModelResourceLocation(item.internal, 0, new ModelResourceLocation(item.getRegistryName().internal, ""))
-        );
+        ModelLoadingRegistry.INSTANCE.registerVariantProvider(manager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
+                new UnbakedModel() {
+                    @Override
+                    public Collection<net.minecraft.util.Identifier> getModelDependencies() {
+                        return Collections.emptyList();
+                    }
 
-        ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model, cacheRender)));
+                    @Override
+                    public Collection<net.minecraft.util.Identifier> getTextureDependencies(Function<net.minecraft.util.Identifier, UnbakedModel> var1, Set<String> var2) {
+                        return Collections.emptyList();
+                    }
+
+                    @Nullable
+                    @Override
+                    public BakedModel bake(ModelLoader var1, Function<net.minecraft.util.Identifier, Sprite> var2, ModelBakeSettings var3) {
+                        ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
+                            @Override
+                            public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
+                                return new BakedItemModel(new ItemStack(itemStack_1), World.get(world_1), model, cacheRender, ((BakedItemModel)bakedModel_1).isGUI, ((BakedItemModel)bakedModel_1).overrides);
+                            }
+
+                        };
+                        return new BakedItemModel(model, cacheRender, overrides);
+                    }
+                } : null);
 
         if (cacheRender != null) {
             ClientEvents.TEXTURE_STITCH.subscribe(() -> {
@@ -77,10 +93,10 @@ public class ItemRender {
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        Framebuffer fb = new Framebuffer(width, height, true);
-        fb.setFramebufferColor(0, 0, 0, 0);
-        fb.framebufferClear();
-        fb.bindFramebuffer(true);
+        GlFramebuffer fb = new GlFramebuffer(width, height, true, true);
+        fb.setClearColor(0, 0, 0, 0);
+        fb.clear(true);
+        fb.beginWrite(true);
 
         GLBoolTracker depth = new GLBoolTracker(GL11.GL_DEPTH_TEST, true);
         GL11.glDepthFunc(GL11.GL_LESS);
@@ -89,40 +105,45 @@ public class ItemRender {
         model.renderCustom();
 
         ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+        fb.beginRead();
         GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+        fb.endRead();
 
-        fb.unbindFramebuffer();
-        fb.deleteFramebuffer();
+        fb.endWrite();
+        fb.delete();
         depth.restore();
 
         iconSheet.setSprite(id, buff);
     }
 
-    static class BakedItemModel implements IBakedModel {
+    static class BakedItemModel implements FullBakedModel {
         private final ItemStack stack;
         private final World world;
         private final BiFunction<ItemStack, World, StandardModel> model;
         private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
-        private final boolean isGUI;
+        private boolean isGUI;
+        private final ModelItemPropertyOverrideList overrides;
 
-        BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
+        BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, ModelItemPropertyOverrideList overrides) {
             this.world = null;
             this.stack = null;
             this.model = model;
+            this.overrides = overrides;
             this.cacheRender = cacheRender;
             isGUI = false;
         }
 
-        BakedItemModel(ItemStack stack, World world, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, boolean isGUI) {
+        BakedItemModel(ItemStack stack, World world, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, boolean isGUI, ModelItemPropertyOverrideList overrides) {
             this.stack = stack;
             this.world = world;
             this.model = model;
             this.cacheRender = cacheRender;
             this.isGUI = isGUI;
+            this.overrides = overrides;
         }
 
         @Override
-        public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, long rand) {
+        public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
             if (stack == null || world == null) {
                 return EMPTY;
             }
@@ -157,63 +178,66 @@ public class ItemRender {
         }
 
         @Override
-        public boolean isAmbientOcclusion() {
+        public boolean useAmbientOcclusion() {
             return true;
         }
 
         @Override
-        public boolean isGui3d() {
+        public boolean hasDepthInGui() {
             return true;
         }
 
         @Override
-        public boolean isBuiltInRenderer() {
+        public boolean isBuiltin() {
             return false;
         }
 
         @Override
-        public TextureAtlasSprite getParticleTexture() {
+        public Sprite getSprite() {
             return null;
         }
 
         @Override
-        public ItemOverrideList getOverrides() {
-            return new ItemOverrideListHack();
+        public ModelItemPropertyOverrideList getItemPropertyOverrides() {
+            return overrides;
         }
 
         @Override
-        public Pair<? extends IBakedModel, Matrix4f> handlePerspective(ItemCameraTransforms.TransformType cameraTransformType) {
-            Pair<? extends IBakedModel, Matrix4f> def = ForgeHooksClient.handlePerspective(this, cameraTransformType);
-            // TODO more efficient
-            if (cacheRender != null && (cameraTransformType == ItemCameraTransforms.TransformType.GUI)) {
-                return Pair.of(new BakedItemModel(stack, world, model, cacheRender, true), def.getRight());
-            }
-            // TODO Expose as part of the renderItem API
-            if (cameraTransformType == ItemCameraTransforms.TransformType.FIXED) {
-                Matrix4f mat = new Matrix4f();
-                mat.setIdentity();
-                mat.rotY((float) Math.toRadians(90));
-                return Pair.of(def.getLeft(), mat);
-            }
-            if (cameraTransformType == ItemCameraTransforms.TransformType.HEAD) {
-                Matrix4f mat = new Matrix4f();
-                mat.setIdentity();
-                mat.setScale(2);
-                mat.setTranslation(new Vector3f(0, 1, 0));
-                return Pair.of(def.getLeft(), mat);
-            }
-            return def;
+        public ModelTransformation getTransformation() {
+            return new ModelTransformation(Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE) {
+                public Transformation getTransformation(ModelTransformation.Type cameraTransformType) {
+                    // TODO more efficient
+                    if (cacheRender != null && (cameraTransformType == Type.GUI)) {
+                        isGUI = true;
+                    } else {
+                        isGUI = false;
+                    }
+                    // TODO Expose as part of the renderItem API
+                    if (cameraTransformType == Type.FIXED) {
+                        return new Transformation(new Vector3f(0, 90, 0), new Vector3f(), new Vector3f(1,1,1));
+                    }
+                    if (cameraTransformType == Type.HEAD) {
+                        return new Transformation(new Vector3f(), new Vector3f(0, 1, 0), new Vector3f(2,2,2));
+                    }
+                    //TODO minecraft item defaults
+                    return Transformation.NONE;
+                }
+            };
         }
 
-        class ItemOverrideListHack extends ItemOverrideList {
-            ItemOverrideListHack() {
-                super(new ArrayList<>());
-            }
+        @Override
+        public boolean isVanillaAdapter() {
+            return false;
+        }
 
-            @Override
-            public IBakedModel handleItemState(IBakedModel originalModel, net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World world, @Nullable EntityLivingBase entity) {
-                return new BakedItemModel(new ItemStack(stack), MinecraftClient.getPlayer().getWorld(), model, cacheRender, isGUI);
-            }
+        @Override
+        public void emitBlockQuads(ExtendedBlockView extendedBlockView, BlockState blockState, BlockPos blockPos, Supplier<Random> supplier, RenderContext renderContext) {
+        }
+
+        @Override
+        public void emitItemQuads(net.minecraft.item.ItemStack itemStack, Supplier<Random> supplier, RenderContext renderContext) {
+            //TODO remove render override hack?
+            renderContext.fallbackConsumer().accept(this);
         }
     }
 }
