@@ -5,13 +5,11 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.culling.ICamera;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.util.ResourceLocation;
+import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -19,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class EntityRenderer extends Render<ModdedEntity> {
+public class EntityRenderer extends net.minecraft.client.render.entity.EntityRenderer<ModdedEntity> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
     static {
@@ -28,13 +26,13 @@ public class EntityRenderer extends Render<ModdedEntity> {
 
     public static void registerClientEvents() {
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, EntityRenderer::new);
+            EntityRendererRegistry.INSTANCE.register(ModdedEntity.class, EntityRenderer::new);
         });
 
     }
 
-    public EntityRenderer(RenderManager factory) {
-        super(factory);
+    public EntityRenderer(EntityRenderDispatcher entityRenderDispatcher, EntityRendererRegistry.Context context) {
+        super(entityRenderDispatcher);
     }
 
     public static void register(Class<? extends Entity> type, IEntityRender render) {
@@ -42,29 +40,32 @@ public class EntityRenderer extends Render<ModdedEntity> {
     }
 
     private static void renderLargeEntities(float partialTicks) {
-        if (GlobalRender.isTransparentPass()) {
-            return;
-        }
+        net.minecraft.client.MinecraftClient.getInstance().getProfiler().push("large_entity_helper");
 
-        Minecraft.getMinecraft().mcProfiler.startSection("large_entity_helper");
+        Camera camera = GlobalRender.getCamera(partialTicks);
 
-        ICamera camera = GlobalRender.getCamera(partialTicks);
+        Frustum frustum_1 = GlMatrixFrustum.get();
+        VisibleRegion visibleRegion_1 = new FrustumWithOrigin(frustum_1);
+        double double_1 = camera.getPos().x;
+        double double_2 = camera.getPos().y;
+        double double_3 = camera.getPos().z;
+        visibleRegion_1.setOrigin(double_1, double_2, double_3);
 
         World world = MinecraftClient.getPlayer().getWorld();
         List<Entity> entities = world.getEntities(Entity.class);
         for (Entity entity : entities) {
-            // Duplicate forge logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
+            // Duplicate minecraft logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
             Box chunk = new Box(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
-            if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
-                Minecraft.getMinecraft().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
+            if (!visibleRegion_1.intersects(chunk) && visibleRegion_1.intersects(entity.internal.getVisibilityBoundingBox())) {
+                net.minecraft.client.MinecraftClient.getInstance().getEntityRenderManager().render(entity.internal, partialTicks, true);
             }
         }
 
-        Minecraft.getMinecraft().mcProfiler.endSection();
+        net.minecraft.client.MinecraftClient.getInstance().getProfiler().pop();
     }
 
     @Override
-    public void doRender(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
+    public void render(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
         Entity self = stock.getSelf();
 
         GL11.glPushMatrix();
@@ -81,7 +82,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
 
     @Nullable
     @Override
-    protected ResourceLocation getEntityTexture(ModdedEntity entity) {
+    protected Identifier getTexture(ModdedEntity var1) {
         return null;
     }
 }
