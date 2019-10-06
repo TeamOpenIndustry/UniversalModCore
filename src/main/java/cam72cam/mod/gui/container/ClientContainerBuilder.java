@@ -4,14 +4,12 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
-public class ClientContainerBuilder extends GuiContainer implements IContainerBuilder {
+public class ClientContainerBuilder extends AbstractContainerScreen implements IContainerBuilder {
     public static final int slotSize = 18;
     public static final int topOffset = 17;
     public static final int bottomOffset = 7;
@@ -34,7 +32,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+    protected void drawBackground(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
         this.centerX = (this.width - this.xSize) / 2;

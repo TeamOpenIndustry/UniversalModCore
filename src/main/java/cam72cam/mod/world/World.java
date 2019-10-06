@@ -32,6 +32,7 @@ import net.minecraft.block.SnowBlock;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.EntityDamageSource;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
@@ -136,8 +137,8 @@ public class World {
             entity = ((ModdedEntity) entityIn).getSelf();
         } else if (entityIn instanceof PlayerEntity) {
             entity = new Player((PlayerEntity) entityIn);
-        } else if (entityIn instanceof LivingEntity) {
-            entity = new Living((LivingEntity) entityIn);
+        } else if (entityIn instanceof MobEntity) {
+            entity = new Living((MobEntity) entityIn);
         } else {
             entity = new Entity(entityIn);
         }

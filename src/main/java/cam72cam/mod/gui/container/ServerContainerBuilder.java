@@ -3,23 +3,14 @@ package cam72cam.mod.gui.container;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import invtweaks.api.container.ChestContainer;
-import invtweaks.api.container.ContainerSection;
-import invtweaks.api.container.ContainerSectionCallback;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.items.SlotItemHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @ChestContainer
-public class ServerContainerBuilder extends net.minecraft.inventory.Container implements IContainerBuilder {
+public class ServerContainerBuilder extends net.minecraft.container.Container implements IContainerBuilder {
     // server padding overrides
     public static final int slotSize = 18;
     public static final int topOffset = 18;

@@ -10,8 +10,6 @@ import cam72cam.mod.gui.container.ServerContainerBuilder;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.IGuiHandler;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -107,7 +105,7 @@ public class GuiRegistry {
     }
 
     public void openGUI(Player player, GUIType type) {
-        player.internal.openGui(ModCore.instance, type.id, player.getWorld().internal, 0, 0, 0);
+        player.internal.open.openGui(ModCore.instance, type.id, player.getWorld().internal, 0, 0, 0);
     }
 
     public void openGUI(Player player, Entity ent, GUIType type) {

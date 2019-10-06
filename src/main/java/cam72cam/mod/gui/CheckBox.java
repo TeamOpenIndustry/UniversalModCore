@@ -1,17 +1,18 @@
 package cam72cam.mod.gui;
 
-import net.minecraftforge.fml.client.config.GuiCheckBox;
+import net.minecraft.client.gui.widget.ToggleButtonWidget;
 
 public abstract class CheckBox extends Button {
     public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
-        super(builder, new GuiCheckBox(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, text, enabled));
+        super(builder, new ToggleButtonWidget(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 200, 20, enabled));
+        button.setMessage(text);
     }
 
     public boolean isChecked() {
-        return ((GuiCheckBox) this.button).isChecked();
+        return ((ToggleButtonWidget) this.button).isToggled();
     }
 
     public void setChecked(boolean val) {
-        ((GuiCheckBox) this.button).setIsChecked(val);
+        ((ToggleButtonWidget) this.button).setToggled(val);
     }
 }
