@@ -4,6 +4,7 @@ import cam72cam.mod.block.tile.BlockEntityUpdatePacket;
 import cam72cam.mod.entity.CustomSpawnPacket;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
@@ -149,6 +150,12 @@ public class ModCore implements ModInitializer {
                     Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
                     break;
                 case SETUP:
+                    CommonEvents.Block.REGISTER.execute(Runnable::run);
+                    CommonEvents.Item.REGISTER.execute(Runnable::run);
+                    CommonEvents.Entity.REGISTER.execute(Runnable::run);
+
+
+
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     GuiRegistry.registration();

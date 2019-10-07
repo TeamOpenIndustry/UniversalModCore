@@ -10,11 +10,11 @@ public class Event<T> {
     public void subscribe(T callback) {
         callbacks.add(callback);
     }
-    void execute(Consumer<T> handler) {
+    public void execute(Consumer<T> handler) {
         callbacks.forEach(handler);
     }
 
-    boolean executeCancellable(Function<T, Boolean> handler) {
+    public boolean executeCancellable(Function<T, Boolean> handler) {
         for (T callback : callbacks) {
             if (!handler.apply(callback)) {
                 return false;
