@@ -1,35 +1,33 @@
 package cam72cam.mod.item;
 
+import alexiil.mc.lib.attributes.Simulation;
+import alexiil.mc.lib.attributes.item.impl.FullFixedItemInv;
 import cam72cam.mod.util.TagCompound;
+import net.minecraft.nbt.CompoundTag;
 
-import javax.annotation.Nonnull;
 import java.util.function.BiPredicate;
 
 public class ItemStackHandler implements IInventory {
-    public final net.minecraftforge.items.ItemStackHandler internal;
+    public ItemInv internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
 
+    protected class ItemInv extends FullFixedItemInv {
+        public ItemInv(int invSize) {
+            super(invSize);
+
+            this.addListener((inv, slot, previous, current) -> {
+                onContentsChanged(slot);
+            }, () -> {});
+        }
+
+        @Override
+        public boolean isItemValidForSlot(int slot, net.minecraft.item.ItemStack item) {
+            return checkSlot.test(slot, new ItemStack(item));
+        }
+    }
+
     public ItemStackHandler(int size) {
-        this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
-            @Override
-            public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
-                if (checkSlot.test(slot, new ItemStack(stack))) {
-                    super.setStackInSlot(slot, stack.copy());
-                }
-            }
-
-            @Override
-            @Nonnull
-            public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
-                return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
-            }
-
-            @Override
-            protected void onContentsChanged(int slot) {
-                super.onContentsChanged(slot);
-                ItemStackHandler.this.onContentsChanged(slot);
-            }
-        };
+        this.internal = new ItemInv(size);
     }
 
     public ItemStackHandler() {
@@ -41,45 +39,48 @@ public class ItemStackHandler implements IInventory {
     }
 
     public void setSize(int inventorySize) {
-        internal.setSize(inventorySize);
+        // TODO more efficient / less error prone
+        CompoundTag data = internal.toTag();
+        internal = new ItemInv(inventorySize);
+        internal.fromTag(data);
     }
 
     @Override
     public int getSlotCount() {
-        return internal.getSlots();
+        return internal.getSlotCount();
     }
 
     @Override
     public ItemStack get(int slot) {
-        return new ItemStack(internal.getStackInSlot(slot));
+        return new ItemStack(internal.getInvStack(slot));
     }
 
     @Override
     public void set(int slot, ItemStack stack) {
-        internal.setStackInSlot(slot, stack.internal);
+        internal.setInvStack(slot, stack.internal, Simulation.ACTION);
     }
 
     @Override
     public ItemStack insert(int slot, ItemStack stack, boolean simulate) {
-        return new ItemStack(internal.insertItem(slot, stack.internal, simulate));
+        return new ItemStack(internal.getSlot(slot).attemptInsertion(stack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION));
     }
 
     @Override
     public ItemStack extract(int slot, int amount, boolean simulate) {
-        return new ItemStack(internal.extractItem(slot, amount, simulate));
+        return new ItemStack(internal.getSlot(slot).attemptAnyExtraction(amount, simulate ? Simulation.SIMULATE : Simulation.ACTION));
     }
 
     @Override
     public int getLimit(int slot) {
-        return internal.getSlotLimit(slot);
+        return internal.getSlot(slot).getMaxAmount(internal.getInvStack(slot));
     }
 
     public TagCompound save() {
-        return new TagCompound(internal.serializeNBT());
+        return new TagCompound(internal.toTag());
     }
 
     public void load(TagCompound items) {
-        internal.deserializeNBT(items.internal);
+        internal.fromTag(items.internal);
     }
 
 }

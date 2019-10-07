@@ -1,5 +1,7 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.gui.IScreen;
+import cam72cam.mod.gui.ScreenBuilder;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
@@ -8,6 +10,9 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.util.hit.BlockHitResult;
@@ -59,5 +64,10 @@ public class Player extends Entity {
 
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
         return ClickResult.from(getHeldItem(hand).internal.useOnBlock(new ItemUsageContext(internal, hand.internal, new BlockHitResult(hit.internal, Facing.DOWN.internal, pos.internal, false))));
+    }
+
+    @Environment(EnvType.CLIENT)
+    public void openGui(IScreen screen) {
+        MinecraftClient.getInstance().openScreen(new ScreenBuilder(screen));
     }
 }

@@ -10,7 +10,7 @@ import net.minecraft.text.LiteralText;
 import java.util.HashMap;
 import java.util.Map;
 
-class ScreenBuilder extends Screen implements IScreenBuilder {
+public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
     private Map<AbstractButtonWidget, Button> buttonMap = new HashMap<>();
 

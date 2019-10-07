@@ -84,4 +84,10 @@ public abstract class Packet {
         buff.writeCompoundTag(data.internal);
         server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), buff));
     }
+
+    public void sendToPlayer(Player player) {
+        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
+        buff.writeCompoundTag(data.internal);
+        server.getPlayerManager().getPlayer(player.getUUID()).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), buff));
+    }
 }

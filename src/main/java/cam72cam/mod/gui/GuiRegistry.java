@@ -8,10 +8,13 @@ import cam72cam.mod.gui.container.ClientContainerBuilder;
 import cam72cam.mod.gui.container.IContainer;
 import cam72cam.mod.gui.container.ServerContainerBuilder;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
+import cam72cam.mod.net.Packet;
+import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.world.World;
+import net.fabricmc.fabric.api.client.screen.ScreenProviderRegistry;
+import net.fabricmc.fabric.api.container.ContainerProviderRegistry;
+import net.minecraft.util.Identifier;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -19,46 +22,47 @@ import java.util.function.Supplier;
 
 
 public class GuiRegistry {
-    private static Map<Integer, Function<CreateEvent, Object>> registry = new HashMap<>();
+    private static Map<Identifier, Function<OpenGuiPacket, IScreen>> registry = new HashMap<>();
 
     public GuiRegistry(ModCore.Mod mod) {
         //TODO support for multiple mods using different ID ranges
     }
 
-    public static void registration() {
-        NetworkRegistry.INSTANCE.registerGuiHandler(ModCore.instance, new IGuiHandler() {
-            @Nullable
-            @Override
-            public Object getServerGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
-                return registry.get(ID).apply(new CreateEvent(true, new Player(player), x, y, z));
-            }
+    public static class OpenGuiPacket extends Packet {
+        public OpenGuiPacket() {
 
-            @Nullable
-            @Override
-            public Object getClientGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z) {
-                return registry.get(ID).apply(new CreateEvent(false, new Player(player), x, y, z));
-            }
-        });
+        }
+
+        public OpenGuiPacket(Identifier guiType, TagCompound info) {
+            data.setString("id", guiType.toString());
+            data.set("info", info);
+        }
+
+        @Override
+        protected void handle() {
+            getPlayer().openGui(registry.get(new Identifier(data.getString("id"))).apply(this));
+        }
+
+        World getPktWorld() {
+            return super.getWorld();
+        }
+
+        public TagCompound getInfo() {
+            return data.get("info");
+        }
     }
 
+
     public GUIType register(String name, Supplier<IScreen> ctr) {
-        int id = name.hashCode();
-        registry.put(id, event -> {
-            if (event.isServer) {
-                return null;
-            }
-            return new ScreenBuilder(ctr.get());
-        });
+        Identifier id = new Identifier(name);
+        registry.put(id, pkt -> ctr.get());
         return new GUIType(id);
     }
 
     public <T extends BlockEntity> GUIType registerBlock(Class<T> cls, Function<T, IScreen> ctr) {
-        int id = cls.toString().hashCode();
-        registry.put(id, event -> {
-            if (event.isServer) {
-                return null;
-            }
-            T entity = event.player.getWorld().getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
+        Identifier id = new Identifier(cls.toString());
+        registry.put(id, pkt -> {
+            T entity = pkt.getPktWorld().getBlockEntity(pkt.getInfo().getVec3i("pos"), cls);
             if (entity == null) {
                 return null;
             }
@@ -67,59 +71,79 @@ public class GuiRegistry {
                 return null;
             }
 
-            return new ScreenBuilder(screen);
+            return screen;
         });
         return new GUIType(id);
     }
 
     public <T extends Entity> GUIType registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
-        int id = ("container" + cls.toString()).hashCode();
-        registry.put(id, event -> {
-            T entity = event.player.getWorld().getEntity(event.entityIDorX, cls);
+        Identifier id = new Identifier("container" + cls.toString());
+
+        ContainerProviderRegistry.INSTANCE.registerFactory(id, (syncId, containerId, player, buffer) -> {
+            T entity = cam72cam.mod.world.World.get(player.getEntityWorld()).getEntity(buffer.readUuid(), cls);
             if (entity == null) {
                 return null;
             }
-            ServerContainerBuilder server = new ServerContainerBuilder(event.player.internal.inventory, ctr.apply(entity));
-            if (event.isServer) {
-                return server;
-            }
-            return new ClientContainerBuilder(server);
+            return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
+
+        ScreenProviderRegistry.INSTANCE.registerFactory(id, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+
         return new GUIType(id);
     }
 
     public <T extends BlockEntity> GUIType registerBlockContainer(Class<T> cls, Function<T, IContainer> ctr) {
-        int id = ("container" + cls.toString()).hashCode();
-        registry.put(id, event -> {
-            T entity = event.player.getWorld().getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
+        Identifier id = new Identifier("container" + cls.toString());
+
+        ContainerProviderRegistry.INSTANCE.registerFactory(id, (syncId, containerId, player, buffer) -> {
+            T entity = cam72cam.mod.world.World.get(player.world).getBlockEntity(new Vec3i(buffer.readBlockPos()), cls);
             if (entity == null) {
                 return null;
             }
-            ServerContainerBuilder server = new ServerContainerBuilder(event.player.internal.inventory, ctr.apply(entity));
-            if (event.isServer) {
-                return server;
-            }
-            return new ClientContainerBuilder(server);
+            return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
+
+        ScreenProviderRegistry.INSTANCE.registerFactory(id, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+
         return new GUIType(id);
     }
 
     public void openGUI(Player player, GUIType type) {
-        player.internal.open.openGui(ModCore.instance, type.id, player.getWorld().internal, 0, 0, 0);
+        OpenGuiPacket pkt = new OpenGuiPacket(type.id, new TagCompound());
+        if (player.getWorld().isClient) {
+            player.openGui(registry.get(type.id).apply(pkt));
+        } else {
+            pkt.sendToPlayer(player);
+        }
     }
 
     public void openGUI(Player player, Entity ent, GUIType type) {
-        player.internal.openGui(ModCore.instance, type.id, player.getWorld().internal, ent.internal.getEntityId(), 0, 0);
+        ContainerProviderRegistry.INSTANCE.openContainer(type.id, player.internal, buff -> {
+            buff.writeUuid(ent.getUUID());
+        });
     }
 
     public void openGUI(Player player, Vec3i pos, GUIType type) {
-        player.internal.openGui(ModCore.instance, type.id, player.getWorld().internal, pos.x, pos.y, pos.z);
+        if (registry.containsKey(type.id)) {
+            TagCompound info = new TagCompound();
+            info.setVec3i("pos", pos);
+            OpenGuiPacket pkt = new OpenGuiPacket(type.id, info);
+            if (player.getWorld().isClient) {
+                player.openGui(registry.get(type.id).apply(pkt));
+            } else {
+                pkt.sendToPlayer(player);
+            }
+        } else {
+            ContainerProviderRegistry.INSTANCE.openContainer(type.id, player.internal, buff -> {
+                buff.writeBlockPos(pos.internal);
+            });
+        }
     }
 
     public static class GUIType {
-        private final int id;
+        private final Identifier id;
 
-        private GUIType(int id) {
+        private GUIType(Identifier id) {
             this.id = id;
         }
     }

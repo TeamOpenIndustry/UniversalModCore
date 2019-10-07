@@ -146,6 +146,7 @@ public class ModCore implements ModInitializer {
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Packet.register(BlockEntityUpdatePacket::new, PacketDirection.ServerToClient);
                     Packet.register(CustomSpawnPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
                     break;
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);

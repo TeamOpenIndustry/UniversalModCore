@@ -7,8 +7,7 @@ import cam72cam.mod.item.ItemStackHandler;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -28,8 +27,8 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
     private int centerX;
     private int centerY;
 
-    public ClientContainerBuilder(ServerContainerBuilder serverContainer, PlayerInventory playerInventory_1, Text text_1) {
-        super(serverContainer, playerInventory_1, text_1);
+    public ClientContainerBuilder(ServerContainerBuilder serverContainer) {
+        super(serverContainer, serverContainer.playerInventory, new LiteralText(""));
         this.server = serverContainer;
         this.width = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.height = 114 + serverContainer.slotsY * slotSize;
