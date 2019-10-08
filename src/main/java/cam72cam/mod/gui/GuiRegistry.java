@@ -9,11 +9,11 @@ import cam72cam.mod.gui.container.IContainer;
 import cam72cam.mod.gui.container.ServerContainerBuilder;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import net.fabricmc.fabric.api.client.screen.ScreenProviderRegistry;
 import net.fabricmc.fabric.api.container.ContainerProviderRegistry;
-import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +60,7 @@ public class GuiRegistry {
     }
 
     public <T extends BlockEntity> GUIType registerBlock(Class<T> cls, Function<T, IScreen> ctr) {
-        Identifier id = new Identifier(cls.toString());
+        Identifier id = new Identifier(cls.getName());
         registry.put(id, pkt -> {
             T entity = pkt.getPktWorld().getBlockEntity(pkt.getInfo().getVec3i("pos"), cls);
             if (entity == null) {
@@ -77,9 +77,9 @@ public class GuiRegistry {
     }
 
     public <T extends Entity> GUIType registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
-        Identifier id = new Identifier("container" + cls.toString());
+        Identifier id = new Identifier("container" + cls.getName());
 
-        ContainerProviderRegistry.INSTANCE.registerFactory(id, (syncId, containerId, player, buffer) -> {
+        ContainerProviderRegistry.INSTANCE.registerFactory(id.internal, (syncId, containerId, player, buffer) -> {
             T entity = cam72cam.mod.world.World.get(player.getEntityWorld()).getEntity(buffer.readUuid(), cls);
             if (entity == null) {
                 return null;
@@ -87,15 +87,15 @@ public class GuiRegistry {
             return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
 
-        ScreenProviderRegistry.INSTANCE.registerFactory(id, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+        ScreenProviderRegistry.INSTANCE.registerFactory(id.internal, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
 
         return new GUIType(id);
     }
 
     public <T extends BlockEntity> GUIType registerBlockContainer(Class<T> cls, Function<T, IContainer> ctr) {
-        Identifier id = new Identifier("container" + cls.toString());
+        Identifier id = new Identifier("container" + cls.getName());
 
-        ContainerProviderRegistry.INSTANCE.registerFactory(id, (syncId, containerId, player, buffer) -> {
+        ContainerProviderRegistry.INSTANCE.registerFactory(id.internal, (syncId, containerId, player, buffer) -> {
             T entity = cam72cam.mod.world.World.get(player.world).getBlockEntity(new Vec3i(buffer.readBlockPos()), cls);
             if (entity == null) {
                 return null;
@@ -103,7 +103,7 @@ public class GuiRegistry {
             return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
 
-        ScreenProviderRegistry.INSTANCE.registerFactory(id, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+        ScreenProviderRegistry.INSTANCE.registerFactory(id.internal, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
 
         return new GUIType(id);
     }
@@ -118,7 +118,7 @@ public class GuiRegistry {
     }
 
     public void openGUI(Player player, Entity ent, GUIType type) {
-        ContainerProviderRegistry.INSTANCE.openContainer(type.id, player.internal, buff -> {
+        ContainerProviderRegistry.INSTANCE.openContainer(type.id.internal, player.internal, buff -> {
             buff.writeUuid(ent.getUUID());
         });
     }
@@ -134,7 +134,7 @@ public class GuiRegistry {
                 pkt.sendToPlayer(player);
             }
         } else {
-            ContainerProviderRegistry.INSTANCE.openContainer(type.id, player.internal, buff -> {
+            ContainerProviderRegistry.INSTANCE.openContainer(type.id.internal, player.internal, buff -> {
                 buff.writeBlockPos(pos.internal);
             });
         }

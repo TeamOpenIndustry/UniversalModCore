@@ -57,6 +57,10 @@ public class BlockRender {
             @Override
             public void render(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
                 BlockEntity instance = te.instance();
+                if (instance == null) {
+                    System.out.println("WAT NULL");
+                    return;
+                }
                 Class<? extends BlockEntity> cls = instance.getClass();
                 Function<BlockEntity, StandardModel> renderer = renderers.get(cls);
                 if (renderer == null) {
@@ -199,7 +203,7 @@ public class BlockRender {
 
                                 @Override
                                 public Sprite getSprite() {
-                                    return null;
+                                    return MinecraftClient.getInstance().getBlockRenderManager().getModel(Blocks.STONE.getDefaultState()).getSprite();
                                 }
 
                                 @Override

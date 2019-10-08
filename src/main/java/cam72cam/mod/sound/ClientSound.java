@@ -24,7 +24,6 @@ public class ClientSound implements ISound {
     private float scale;
     private boolean disposable = false;
     private final int id;
-    private final int bufferId;
 
     ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.baseSoundMultiplier = baseSoundMultiplier;
@@ -40,8 +39,11 @@ public class ClientSound implements ISound {
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.method_19720(sizeBytes);
             StaticSound sound = new StaticSound(buffer, fmt);
-            bufferId = sound.takeStreamBufferPointer().getAsInt();
-            AL10.alSourceQueueBuffers(id, bufferId);
+            for (int i = 0; i< 4; i++) {
+                sound.takeStreamBufferPointer().ifPresent(bufferId -> {
+                    AL10.alSourceQueueBuffers(id, bufferId);
+                });
+            }
             stream.close();
         } catch (IOException e) {
             throw new RuntimeException("Sound not found: " + oggLocation);
@@ -71,7 +73,7 @@ public class ClientSound implements ISound {
     public void terminate() {
         stop();
         AL10.alSourceUnqueueBuffers(id);
-        AL10.alDeleteBuffers(bufferId);
+        //TODO?AL10.alDeleteBuffers(bufferId);
         AL10.alDeleteSources(id);
     }
 

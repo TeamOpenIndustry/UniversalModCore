@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 import alexiil.mc.lib.attributes.Simulation;
+import alexiil.mc.lib.attributes.item.filter.ItemFilter;
 import alexiil.mc.lib.attributes.item.impl.FullFixedItemInv;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.nbt.CompoundTag;
@@ -23,6 +24,11 @@ public class ItemStackHandler implements IInventory {
         @Override
         public boolean isItemValidForSlot(int slot, net.minecraft.item.ItemStack item) {
             return checkSlot.test(slot, new ItemStack(item));
+        }
+
+        @Override
+        public ItemFilter getFilterForSlot(int slot) {
+            return item -> checkSlot.test(slot, new ItemStack(item));
         }
     }
 

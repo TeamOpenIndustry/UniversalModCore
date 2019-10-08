@@ -92,7 +92,7 @@ public class Fuzzy {
 
     public Fuzzy(String ident) {
         this.ident = ident;
-        this.tag = new Tag<>(new Identifier(ident));
+        this.tag = new Tag<>(new Identifier(ident.toLowerCase()));
     }
 
     public Fuzzy(String ident, Tag<Item> tag) {
@@ -123,6 +123,7 @@ public class Fuzzy {
     }
 
     public Fuzzy add(Item item) {
+        /* TODO
         tag.entries().add(new Tag.Entry<Item>() {
             @Override
             public void build(Collection<Item> var1) {
@@ -134,6 +135,7 @@ public class Fuzzy {
                 // NOP
             }
         });
+        */
         return this;
     }
 

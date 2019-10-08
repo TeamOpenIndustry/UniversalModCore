@@ -13,10 +13,6 @@ import java.util.List;
 public class ModCoreServer implements DedicatedServerModInitializer {
     public ModCoreServer() {
         ModCore.proxy.enableServer();
-        ModCore.instance.mods.forEach(m -> m.serverEvent(ModEvent.CONSTRUCT));
-    }
-    @Override
-    public void onInitializeServer() {
         Identifier.registerSupplier(location -> {
             URL url = this.getClass().getResource(Data.pathString(location, true));
             if (url == null) {
@@ -26,5 +22,9 @@ public class ModCoreServer implements DedicatedServerModInitializer {
             streams.add(this.getClass().getResourceAsStream(Data.pathString(location, true)));
             return streams;
         });
+        ModCore.instance.mods.forEach(m -> m.serverEvent(ModEvent.CONSTRUCT));
+    }
+    @Override
+    public void onInitializeServer() {
     }
 }

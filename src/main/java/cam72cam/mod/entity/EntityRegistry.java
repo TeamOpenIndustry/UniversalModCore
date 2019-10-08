@@ -30,7 +30,7 @@ public class EntityRegistry {
 
         Entity tmp = ctr.get();
         Class<? extends Entity> type = tmp.getClass();
-        Identifier id = new Identifier(mod.modID(), type.getSimpleName());
+        Identifier id = new Identifier(mod.modID(), type.getSimpleName().toLowerCase());
 
         EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr, settings);
         FabricEntityTypeBuilder<ModdedEntity> builder = FabricEntityTypeBuilder.create(EntityCategory.MISC, factory)

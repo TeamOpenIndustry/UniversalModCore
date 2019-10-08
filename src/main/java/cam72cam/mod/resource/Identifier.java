@@ -18,11 +18,11 @@ public class Identifier {
     }
 
     public Identifier(String ident) {
-        this(new net.minecraft.util.Identifier(ident));
+        this(new net.minecraft.util.Identifier(ident.toLowerCase()));
     }
 
     public Identifier(String domain, String path) {
-        this(new net.minecraft.util.Identifier(domain, path));
+        this(new net.minecraft.util.Identifier(domain, path.toLowerCase()));
     }
 
     @Override

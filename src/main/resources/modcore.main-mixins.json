@@ -13,7 +13,8 @@
     "MinecraftClientMixin",
     "MouseMixin",
     "SoundSystemMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "TextureManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

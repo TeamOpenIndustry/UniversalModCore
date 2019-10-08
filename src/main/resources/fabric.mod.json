@@ -16,7 +16,8 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "cam72cam.mod.ModCore"
+      "cam72cam.mod.ModCore",
+      "cam72cam.immersiverailroading.Mod"
     ],
     "client": [
       "cam72cam.mod.ModCoreClient"

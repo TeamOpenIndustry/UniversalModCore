@@ -16,6 +16,7 @@ import cam72cam.mod.block.tile.TileEntityTickable;
 import cam72cam.mod.block.tile.TileEntityTickableTrack;
 import cam72cam.mod.energy.IEnergy;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.FluidStack;
 import cam72cam.mod.fluid.ITank;
@@ -48,21 +49,23 @@ import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
     protected final Identifier id;
-    private final BlockEntityType<? extends TileEntity> teType;
+    private BlockEntityType<? extends TileEntity> teType;
 
     public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
         super(settings);
         id = new Identifier(settings.modID, settings.name);
 
-        if (constructData.get() instanceof BlockEntityTickable) {
-            if (constructData.get() instanceof ITrack) {
-                teType = TileEntityTickableTrack.register(id, constructData);
+        CommonEvents.Block.REGISTER.subscribe(() -> {
+            if (constructData.get() instanceof BlockEntityTickable) {
+                if (constructData.get() instanceof ITrack) {
+                    teType = TileEntityTickableTrack.register(id, constructData);
+                } else {
+                    teType = TileEntityTickable.register(id, constructData);
+                }
             } else {
-                teType = TileEntityTickable.register(id, constructData);
+                teType = TileEntity.register(id, constructData);
             }
-        } else {
-            teType = TileEntity.register(id, constructData);
-        }
+        });
     }
 
     public BlockEntity createBlockEntity(World world, Vec3i pos) {

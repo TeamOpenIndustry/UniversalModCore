@@ -30,6 +30,7 @@ public abstract class Packet {
 
     protected TagCompound data = new TagCompound();
     private Player player;
+    private World world;
 
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         Identifier ident = sup.get().getIdent();
@@ -39,6 +40,7 @@ public abstract class Packet {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
                     packet.player = new Player(ctx.getPlayer());
+                    packet.world = packet.player.getWorld();
                     ctx.getTaskQueue().execute(packet::handle);
                 });
                 break;
@@ -46,6 +48,7 @@ public abstract class Packet {
                 ClientSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
+                    packet.world = World.get(MinecraftClient.getInstance().world);
                     packet.player = new Player(ctx.getPlayer());
                     ctx.getTaskQueue().execute(packet::handle);
                 });
@@ -60,7 +63,7 @@ public abstract class Packet {
     protected abstract void handle();
 
     protected final World getWorld() {
-        return getPlayer().getWorld();
+        return world;
     }
 
     protected final Player getPlayer() {

@@ -37,12 +37,14 @@ public class ItemRender {
     private static final SpriteSheet iconSheet = new SpriteSheet(128);
 
     public static void register(ItemBase item, Identifier tex) {
-        Map<String, String> textures = new HashMap<>();
-        textures.put("layer0", tex.toString());
 
-        ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
-                new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, true, ModelTransformation.NONE, Collections.emptyList())
-                : null);
+        ClientEvents.MODEL_BAKE.subscribe(() -> {
+            Map<String, String> textures = new HashMap<>();
+            textures.put("layer0", tex.toString());
+            ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
+                    new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, true, ModelTransformation.NONE, Collections.emptyList())
+                    : null);
+        });
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model) {
@@ -50,31 +52,34 @@ public class ItemRender {
     }
 
     public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-        ModelLoadingRegistry.INSTANCE.registerVariantProvider(manager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
-                new UnbakedModel() {
-                    @Override
-                    public Collection<net.minecraft.util.Identifier> getModelDependencies() {
-                        return Collections.emptyList();
-                    }
 
-                    @Override
-                    public Collection<net.minecraft.util.Identifier> getTextureDependencies(Function<net.minecraft.util.Identifier, UnbakedModel> var1, Set<String> var2) {
-                        return Collections.emptyList();
-                    }
+        ClientEvents.MODEL_BAKE.subscribe(() -> {
+            ModelLoadingRegistry.INSTANCE.registerVariantProvider(manager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
+                    new UnbakedModel() {
+                        @Override
+                        public Collection<net.minecraft.util.Identifier> getModelDependencies() {
+                            return Collections.emptyList();
+                        }
 
-                    @Nullable
-                    @Override
-                    public BakedModel bake(ModelLoader var1, Function<net.minecraft.util.Identifier, Sprite> var2, ModelBakeSettings var3) {
-                        ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
-                            @Override
-                            public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
-                                return new BakedItemModel(new ItemStack(itemStack_1), World.get(world_1), model, cacheRender, ((BakedItemModel)bakedModel_1).isGUI, ((BakedItemModel)bakedModel_1).overrides);
-                            }
+                        @Override
+                        public Collection<net.minecraft.util.Identifier> getTextureDependencies(Function<net.minecraft.util.Identifier, UnbakedModel> var1, Set<String> var2) {
+                            return Collections.emptyList();
+                        }
 
-                        };
-                        return new BakedItemModel(model, cacheRender, overrides);
-                    }
-                } : null);
+                        @Nullable
+                        @Override
+                        public BakedModel bake(ModelLoader var1, Function<net.minecraft.util.Identifier, Sprite> var2, ModelBakeSettings var3) {
+                            ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
+                                @Override
+                                public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
+                                    return new BakedItemModel(new ItemStack(itemStack_1), World.get(world_1), model, cacheRender, ((BakedItemModel) bakedModel_1).isGUI, ((BakedItemModel) bakedModel_1).overrides);
+                                }
+
+                            };
+                            return new BakedItemModel(model, cacheRender, overrides);
+                        }
+                    } : null);
+        });
 
         if (cacheRender != null) {
             ClientEvents.TEXTURE_STITCH.subscribe(() -> {
@@ -114,6 +119,7 @@ public class ItemRender {
         depth.restore();
 
         iconSheet.setSprite(id, buff);
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
     }
 
     static class BakedItemModel implements FullBakedModel {

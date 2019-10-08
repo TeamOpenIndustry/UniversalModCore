@@ -5,6 +5,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.network.packet.CustomPayloadS2CPacket;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
 
@@ -46,7 +47,7 @@ public class CustomSpawnPacket extends Packet {
             ((IAdditionalSpawnData)entity).readSpawnData(data.get("entData"), data.getFloat("yaw"), data.getFloat("pitch"));
         }
 
-        getWorld().internal.spawnEntity(entity);
+        ((ClientWorld)getWorld().internal).addEntity(entity.getEntityId(), entity);
     }
 
     CustomPayloadS2CPacket toPacket() {

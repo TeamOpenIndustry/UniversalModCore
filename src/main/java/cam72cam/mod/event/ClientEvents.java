@@ -18,7 +18,7 @@ import java.util.function.Function;
 public class ClientEvents {
     public static void registerClientEvents() {
         ClientTickCallback.EVENT.register(client -> TICK.execute(Runnable::run));
-        ClientSpriteRegistryCallback.event(SpriteAtlasTexture.BLOCK_ATLAS_TEX).register((a,b) -> TEXTURE_STITCH.execute(Runnable::run));
+        //ClientSpriteRegistryCallback.event(SpriteAtlasTexture.BLOCK_ATLAS_TEX).register((a,b) -> TEXTURE_STITCH.execute(Runnable::run));
 
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
@@ -26,9 +26,6 @@ public class ClientEvents {
         Keyboard.registerClientEvents();
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
-
-        REGISTER_ENTITY.execute(Runnable::run);
-        MODEL_BAKE.execute(Runnable::run);
     }
 
     public static final Event<Runnable> TICK = new Event<>();

@@ -1,5 +1,6 @@
 package cam72cam.mod;
 
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.resource.Identifier;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.resource.Resource;
@@ -9,14 +10,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static cam72cam.mod.ModCore.proxy;
+import static cam72cam.mod.event.ClientEvents.MODEL_BAKE;
+import static cam72cam.mod.event.ClientEvents.REGISTER_ENTITY;
+
 public class ModCoreClient implements ClientModInitializer {
     public ModCoreClient() {
-        ModCore.proxy.enableClient();
-        ModCore.instance.mods.forEach(m -> m.clientEvent(ModEvent.CONSTRUCT));
-    }
+        proxy.enableClient();
 
-    @Override
-    public void onInitializeClient() {
         Identifier.registerSupplier(identifier -> {
             List<InputStream> res = new ArrayList<>();
             try {
@@ -30,5 +31,16 @@ public class ModCoreClient implements ClientModInitializer {
             }
             return res;
         });
+
+        ModCore.instance.mods.forEach(m -> m.clientEvent(ModEvent.CONSTRUCT));
+    }
+
+    @Override
+    public void onInitializeClient() {
+        //ModCore.instance.actualInit();
+        ClientEvents.registerClientEvents();
+
+        REGISTER_ENTITY.execute(Runnable::run);
+        MODEL_BAKE.execute(Runnable::run);
     }
 }

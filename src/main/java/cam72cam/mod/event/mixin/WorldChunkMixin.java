@@ -11,14 +11,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(WorldChunk.class)
 public class WorldChunkMixin {
     @Inject(at = @At("RETURN"), method = "addEntity")
-    public void addEntity(Entity entity) {
+    public void addEntity(Entity entity, CallbackInfo info) {
         if (entity.isLiving()) {
             CommonEvents.Entity.WORLD_JOIN.execute(x -> x.accept(entity));
         }
     }
 
-    @Inject(at = @At("RETURN"), method="remove(E)Z")
-    public void remove(Entity entity_1) {
+    @Inject(at = @At("RETURN"), method="remove")
+    public void remove(Entity entity_1, CallbackInfo info) {
         CommonEvents.Entity.WORLD_LEAVE.execute(x -> x.accept(entity_1));
     }
 

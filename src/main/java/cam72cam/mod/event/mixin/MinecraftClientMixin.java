@@ -1,5 +1,7 @@
 package cam72cam.mod.event.mixin;
 
+import cam72cam.mod.ModCore;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -17,5 +19,11 @@ public class MinecraftClientMixin {
         if (world != null) {
             CommonEvents.World.UNLOAD.execute(c -> c.accept(world));
         }
+    }
+
+    @Inject(method = "initializeSearchableContainers", at=@At("HEAD"))
+    public void init(CallbackInfo info) {
+        ClientEvents.TEXTURE_STITCH.execute(Runnable::run);
+        ModCore.instance.postInit();
     }
 }

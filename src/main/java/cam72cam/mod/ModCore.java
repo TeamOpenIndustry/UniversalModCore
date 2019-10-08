@@ -48,20 +48,40 @@ public class ModCore implements ModInitializer {
     public ModCore() {
         System.out.println("Welcome to ModCore!");
         instance = this;
+
+            ModCore.register(() -> {
+                try {
+                    Class<Mod> cls = (Class<Mod>) Class.forName("cam72cam.immersiverailroading.ImmersiveRailroading");
+                    return cls.newInstance();
+                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                    throw new RuntimeException("Could not construct mod " + MODID, e);
+                }
+            });
+
+
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
 
         proxy.event(ModEvent.CONSTRUCT);
+        logger = LogManager.getLogger("modcore");
     }
 
 
     @Override
     public void onInitialize() {
-        logger = LogManager.getLogger("modcore");
-        proxy.event(ModEvent.INITIALIZE);
-        proxy.event(ModEvent.SETUP);
-        proxy.event(ModEvent.FINALIZE);
+        CommonEvents.Block.REGISTER.execute(Runnable::run);
+        CommonEvents.Item.REGISTER.execute(Runnable::run);
+        CommonEvents.Entity.REGISTER.execute(Runnable::run);
 
         ServerStartCallback.EVENT.register(server -> proxy.event(ModEvent.START));
+    }
+
+    public void preInit() {
+        proxy.event(ModEvent.INITIALIZE);
+    }
+
+    public void postInit() {
+        proxy.event(ModEvent.SETUP);
+        proxy.event(ModEvent.FINALIZE);
     }
 
     public static abstract class Mod {
@@ -164,7 +184,7 @@ public class ModCore implements ModInitializer {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case INITIALIZE:
-                    ClientEvents.registerClientEvents();
+                    break;
                 case SETUP:
 
                     ((ReloadableResourceManager) MinecraftClient.getInstance().getResourceManager()).registerListener((SynchronousResourceReloadListener) manager -> {

@@ -15,7 +15,7 @@ public class TileEntityTickableTrack extends TileEntityTickable implements track
     }
 
     public static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<BlockEntity> ctr) {
-        return register(id, ctr, TileEntityTickable::new);
+        return register(id, ctr, TileEntityTickableTrack::new);
     }
 
 

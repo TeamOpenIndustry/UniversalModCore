@@ -34,7 +34,8 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void addButton(Button btn) {
-        super.buttons.add(btn.internal());
+        //super.buttons.add(btn.internal());
+        super.addButton(btn.internal());
         this.buttonMap.put(btn.internal(), btn);
     }
 
@@ -81,6 +82,9 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     public void init() {
         super.init();
         screen.init(this);
+        //this.minecraft.keyboard.enableRepeatEvents(true);
+        // removed
+        //this.minecraft.keyboard.enableRepeatEvents(false);
     }
 
     @Override

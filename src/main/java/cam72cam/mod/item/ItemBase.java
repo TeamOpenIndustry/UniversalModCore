@@ -10,6 +10,7 @@ import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -102,13 +103,17 @@ public class ItemBase {
         public void appendTooltip(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<Text> tooltip, TooltipContext context) {
             super.appendTooltip(stack, worldIn, tooltip, context);
             List<String> temp = new ArrayList<>();
-            ItemBase.this.addInformation(new ItemStack(stack), temp);
+            try {
+                ItemBase.this.addInformation(new ItemStack(stack), temp);
+            } catch (Exception ex) {
+                //TODO
+            }
             temp.forEach(x -> tooltip.add(new LiteralText(x)));
         }
 
         @Override
         public ActionResult useOnBlock(ItemUsageContext context) {
-            return ItemBase.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getWorld()), new Vec3i(context.getBlockPos()), Hand.from(context.getHand()), Facing.from(context.getSide()), new Vec3d(context.getHitPos())).internal;
+            return ItemBase.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getWorld()), new Vec3i(context.getBlockPos().up()), Hand.from(context.getHand()), Facing.from(context.getSide()), new Vec3d(context.getHitPos())).internal;
         }
 
         @Override

@@ -11,9 +11,6 @@ public class CommonEvents {
         cam72cam.mod.entity.EntityRegistry.registerEvents();
         //cam72cam.mod.world.ChunkManager.registerEvents();
 
-        CommonEvents.Block.REGISTER.execute(Runnable::run);
-        CommonEvents.Item.REGISTER.execute(Runnable::run);
-        CommonEvents.Entity.REGISTER.execute(Runnable::run);
     }
 
     public static final class World {

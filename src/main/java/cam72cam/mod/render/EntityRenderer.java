@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -77,7 +78,6 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
             renderers.get(self.getClass()).render(self, partialTicks);
         }
         GL11.glPopMatrix();
-
     }
 
     @Nullable

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Mouse.class)
 public class MouseMixin {
-    //TODO @Inject(method = "onMouseButton", at=@At(value="INVOKE", target = "Lnet/minecraft/client/options/KeyBinding;setKeyPressed;V", ordinal = 0), cancellable = true)
+    @Inject(method = "onMouseButton", at=@At(value="INVOKE", target = "net/minecraft/client/options/KeyBinding.setKeyPressed(Lnet/minecraft/client/util/InputUtil$KeyCode;Z)V", ordinal = 0), cancellable = true)
     private void onMouseButton(long long_1, int int_1, int int_2, int int_3, CallbackInfo info) {
         InputUtil.KeyCode code = InputUtil.Type.MOUSE.createFromCode(int_1);
         // Yes, I know primary/secondary are flipped...

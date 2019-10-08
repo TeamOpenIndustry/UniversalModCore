@@ -18,6 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -42,7 +43,13 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         return register(id, ctr, TileEntity::new);
     }
     protected static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<? extends BlockEntity> ctr, Function<Supplier<? extends BlockEntity>, ? extends TileEntity> tctr) {
-        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, BlockEntityType.Builder.create(() -> tctr.apply(ctr)).build(null));
+        //BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, BlockEntityType.Builder.create(() -> tctr.apply(ctr)).build(null));
+        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, new BlockEntityType<>(() -> tctr.apply(ctr), new HashSet<net.minecraft.block.Block>() {
+            public boolean contains(Object var1) {
+                // WHYYYYYYYYYYYYYYYY
+                return true;
+            }
+        }, null));
         registry.put(ctr, type);
         return type;
     }
@@ -74,6 +81,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         hasTileData = true;
         load(new TagCompound(compound));
         if (compound.getBoolean("isUpdate")) {
+            hasTileData = true;
             readUpdate(new TagCompound(compound));
         }
     }
@@ -144,6 +152,10 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     public void load(TagCompound data) {
         super.fromTag(data.internal);
         pos = new Vec3i(super.pos);
+        instance.internal = this;
+        instance.world = world;
+        instance.pos = pos;
+
         instance.load(data);
     }
 
