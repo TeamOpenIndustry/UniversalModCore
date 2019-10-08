@@ -97,7 +97,7 @@ public class BlockRender {
             blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.getColor(0.5D, 1.0D), block.internal);
         });
 
-        ClientEvents.MODEL_BAKE.subscribe(event -> {
+        ClientEvents.MODEL_BAKE.subscribe(() -> {
             ModelLoadingRegistry.INSTANCE.registerVariantProvider(manager -> (modelId, context) -> block.identifier.equals(modelId) ?
                     new UnbakedModel() {
                         @Override

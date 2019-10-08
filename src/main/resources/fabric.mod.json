@@ -16,7 +16,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "cam72cam.modcore.ModCore"
+      "cam72cam.mod.ModCore"
     ]
   },
   "mixins": [

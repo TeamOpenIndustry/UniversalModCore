@@ -49,6 +49,8 @@ public class ModCore implements ModInitializer {
         System.out.println("Welcome to ModCore!");
         instance = this;
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
+
+        proxy.event(ModEvent.CONSTRUCT);
     }
 
 
@@ -96,7 +98,6 @@ public class ModCore implements ModInitializer {
         private boolean isClient;
 
         public Proxy() {
-            event(ModEvent.CONSTRUCT);
         }
 
         public void enableClient() {

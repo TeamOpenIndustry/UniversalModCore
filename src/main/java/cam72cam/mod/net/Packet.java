@@ -54,7 +54,7 @@ public abstract class Packet {
     }
 
     protected Identifier getIdent() {
-        return new Identifier(ModCore.MODID, getClass().toString());
+        return new Identifier(ModCore.MODID, getClass().getName().replace("$", "_").toLowerCase());
     }
 
     protected abstract void handle();
