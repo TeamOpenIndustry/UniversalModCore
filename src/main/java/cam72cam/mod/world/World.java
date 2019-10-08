@@ -15,7 +15,6 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.CommonEvents;
-import cam72cam.mod.event.mixin.WorldChunkMixin;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
@@ -71,8 +70,8 @@ public class World {
     }
 
     public static void registerEvents() {
-        WorldChunkMixin.JOIN_EVENT.register(entity -> get(entity.world).onEntityAdded(entity));
-        WorldChunkMixin.LEAVE_EVENT.register(entity -> get(entity.world).onEntityRemoved(entity));
+        CommonEvents.Entity.WORLD_JOIN.subscribe(entity -> get(entity.world).onEntityAdded(entity));
+        CommonEvents.Entity.WORLD_LEAVE.subscribe(entity -> get(entity.world).onEntityRemoved(entity));
 
         CommonEvents.World.LOAD.subscribe(world -> {
             Map<net.minecraft.world.World, World> worlds = world.isClient ? clientWorlds : serverWorlds;

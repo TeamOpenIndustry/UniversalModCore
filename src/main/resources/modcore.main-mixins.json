@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "cam72cam.mod.event.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ServerPlayerInteractionManagerMixin",
+    "WorldChunkMixin",
+    "WorldMixin"
+  ],
+  "client": [
+    "DebugHudMixin",
+    "InGameHudMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "SoundSystemMixin",
+    "WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

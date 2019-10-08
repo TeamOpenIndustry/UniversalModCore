@@ -39,6 +39,8 @@ public class CommonEvents {
     public static final class Entity {
         public static final Event<Runnable> REGISTER = new Event<>();
         public static final Event<EventBus.EntityJoinEvent> JOIN = new Event<>();
+        public static final Event<Consumer<net.minecraft.entity.Entity>> WORLD_JOIN = new Event<>();
+        public static final Event<Consumer<net.minecraft.entity.Entity>> WORLD_LEAVE = new Event<>();
     }
 
     public static final class EventBus {

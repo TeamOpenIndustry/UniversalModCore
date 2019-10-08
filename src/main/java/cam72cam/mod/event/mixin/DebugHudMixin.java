@@ -15,9 +15,4 @@ public class DebugHudMixin {
     protected void getLeftText(CallbackInfoReturnable<List<String>> info) {
         ClientEvents.RENDER_DEBUG.execute(x -> x.accept(info.getReturnValue()));
     }
-
-    @Inject(at = @At("HEAD"), method = "renderHotbar")
-    protected void renderHotbar(float float_1) {
-        ClientEvents.RENDER_OVERLAY.execute(x -> x.accept(float_1));
-    }
 }
