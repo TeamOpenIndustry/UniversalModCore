@@ -34,7 +34,7 @@ public class Audio {
             }
         });
 
-        ClientEvents.SOUND_LOAD.subscribe(event -> {
+        ClientEvents.SOUND_LOAD.subscribe(() -> {
             if (soundManager == null) {
                 soundManager = new ModSoundManager();
             } else {

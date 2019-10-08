@@ -1,20 +1,19 @@
 package cam72cam.mod.event;
 
-import net.fabricmc.fabric.api.event.registry.BlockConstructedCallback;
-import net.fabricmc.fabric.api.event.world.WorldTickCallback;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.network.packet.BlockBreakingProgressS2CPacket;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.function.Consumer;
 
 public class CommonEvents {
-    private static void registerEvents() {
+    public static void registerEvents() {
         cam72cam.mod.world.World.registerEvents();
         cam72cam.mod.entity.EntityRegistry.registerEvents();
         //cam72cam.mod.world.ChunkManager.registerEvents();
+
+        CommonEvents.Block.REGISTER.execute(Runnable::run);
+        CommonEvents.Item.REGISTER.execute(Runnable::run);
+        CommonEvents.Entity.REGISTER.execute(Runnable::run);
     }
 
     public static final class World {
@@ -43,10 +42,6 @@ public class CommonEvents {
     }
 
     public static final class EventBus {
-        static {
-            registerEvents();
-        }
-
         @FunctionalInterface
         public interface BlockBrokenEvent {
             boolean onBroken(net.minecraft.world.World world, BlockPos pos, PlayerEntity player);

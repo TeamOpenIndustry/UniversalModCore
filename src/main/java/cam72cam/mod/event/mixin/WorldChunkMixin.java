@@ -48,7 +48,7 @@ public class WorldChunkMixin {
         void onLeave(Entity entity);
     }
 
-    @Inject(at = @At("HEAD"), method = "addEntity")
+    @Inject(at = @At("HEAD"), method = "addEntity", cancellable = true)
     public void addEntityHead(Entity entity, CallbackInfo info) {
         if (!CommonEvents.Entity.JOIN.executeCancellable(h -> h.onJoin(entity.world, entity))) {
             info.cancel();

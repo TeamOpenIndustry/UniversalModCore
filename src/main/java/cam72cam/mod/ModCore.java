@@ -4,6 +4,7 @@ import cam72cam.mod.block.tile.BlockEntityUpdatePacket;
 import cam72cam.mod.entity.CustomSpawnPacket;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Keyboard;
@@ -13,7 +14,13 @@ import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.world.World;
+import net.fabricmc.fabric.api.event.server.ServerStartCallback;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.ReloadableResourceManager;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.SynchronousResourceReloadListener;
+import net.minecraft.world.chunk.Chunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,7 +38,7 @@ public class ModCore implements ModInitializer {
     public static ModCore instance;
     static List<Supplier<Mod>> modCtrs = new ArrayList<>();
 
-    private List<Mod> mods;
+    List<Mod> mods;
     private Logger logger;
 
     public static void register(Supplier<Mod> ctr) {
@@ -49,25 +56,10 @@ public class ModCore implements ModInitializer {
     public void onInitialize() {
         logger = LogManager.getLogger("modcore");
         proxy.event(ModEvent.INITIALIZE);
-    }
-
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-    }
-
-    @EventHandler
-    public void init(FMLInitializationEvent event) {
         proxy.event(ModEvent.SETUP);
-    }
-
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
-    }
 
-    @EventHandler
-    public void serverStarting(FMLServerStartedEvent event) {
-        proxy.event(ModEvent.START);
+        ServerStartCallback.EVENT.register(server -> proxy.event(ModEvent.START));
     }
 
     public static abstract class Mod {
@@ -78,7 +70,7 @@ public class ModCore implements ModInitializer {
         public abstract void serverEvent(ModEvent event);
 
         public final Path getConfig(String fname) {
-            return Paths.get(Loader.instance().getConfigDir().toString(), fname);
+            return Paths.get(FabricLoader.getInstance().getConfigDirectory().toString(), fname);
         }
 
         public static void debug(String msg, Object...params) {
@@ -98,32 +90,35 @@ public class ModCore implements ModInitializer {
         }
     }
 
-    @SidedProxy(serverSide = "cam72cam.mod.ModCore$ServerProxy", clientSide = "cam72cam.mod.ModCore$ClientProxy", modId = ModCore.MODID)
-    private static Proxy proxy;
+    static Proxy proxy = new Proxy();
     public static class Proxy {
+        private boolean isServer;
+        private boolean isClient;
+
         public Proxy() {
             event(ModEvent.CONSTRUCT);
         }
 
+        public void enableClient() {
+            this.isClient = true;
+        }
+
+        public void enableServer() {
+            this.isServer = true;
+        }
+
         public void event(ModEvent event) {
             instance.mods.forEach(m -> m.commonEvent(event));
+            if (event != ModEvent.CONSTRUCT) {
+                if (isClient) {
+                    instance.mods.forEach(m -> m.clientEvent(event));
+                }
+                if (isServer) {
+                    instance.mods.forEach(m -> m.serverEvent(event));
+                }
+            }
         }
     }
-
-    public static class ClientProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.clientEvent(event));
-        }
-    }
-
-    public static class ServerProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.serverEvent(event));
-        }
-    }
-
 
     static {
         ModCore.register(Internal::new);
@@ -150,15 +145,13 @@ public class ModCore implements ModInitializer {
                     Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
                     break;
                 case SETUP:
-                    CommonEvents.Block.REGISTER.execute(Runnable::run);
-                    CommonEvents.Item.REGISTER.execute(Runnable::run);
-                    CommonEvents.Entity.REGISTER.execute(Runnable::run);
+                    CommonEvents.registerEvents();
 
 
+                    //TODO World.getEntities
+                    //World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
-                    World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
-
-                    GuiRegistry.registration();
+                    //GuiRegistry.registration();
                     break;
                 case START:
                     Command.registration();
@@ -169,8 +162,11 @@ public class ModCore implements ModInitializer {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case INITIALIZE:
+                    ClientEvents.registerClientEvents();
                 case SETUP:
-                    ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
+
+                    ((ReloadableResourceManager) MinecraftClient.getInstance().getResourceManager()).registerListener((SynchronousResourceReloadListener) manager -> {
                         if (skipN > 0) {
                             skipN--;
                             return;

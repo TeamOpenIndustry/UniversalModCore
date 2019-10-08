@@ -18,7 +18,7 @@ public class ServerPlayerInteractionManagerMixin {
     @Shadow
     public ServerPlayerEntity player;
 
-    @Inject(method = "tryBreakBlock", at=@At("HEAD"))
+    @Inject(method = "tryBreakBlock", at=@At("HEAD"), cancellable = true)
     public void tryBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> info) {
         if (!CommonEvents.Block.BROKEN.executeCancellable(h -> h.onBroken(world, pos, player))) {
             info.setReturnValue(false);

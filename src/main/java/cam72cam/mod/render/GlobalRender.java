@@ -43,18 +43,16 @@ public class GlobalRender {
         grhList.add(grh);
         ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
 
-        ClientEvents.RENDER_DEBUG.subscribe(event -> {
+        ClientEvents.RENDER_DEBUG.subscribe(right -> {
             // DebugHud
-            if (MinecraftClient.getInstance().options.debugEnabled && GPUInfo.hasGPUInfo()) {
-                int i;
-                for (i = 0; i < event.getRight().size(); i++) {
-                    if (event.getRight().get(i).startsWith("Display: ")) {
-                        i++;
-                        break;
-                    }
+            int i;
+            for (i = 0; i < right.size(); i++) {
+                if (right.get(i).startsWith("Display: ")) {
+                    i++;
+                    break;
                 }
-                event.getRight().add(i, GPUInfo.debug());
             }
+            right.add(i, GPUInfo.debug());
         });
     }
 
@@ -64,11 +62,7 @@ public class GlobalRender {
 
     public static void registerOverlay(Consumer<Float> func) {
         // InGameHud
-        ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.accept(event.getPartialTicks());
-            }
-        });
+        ClientEvents.RENDER_OVERLAY.subscribe(func::accept);
     }
 
     public static void registerItemMouseover(ItemBase item, MouseoverEvent fn) {
