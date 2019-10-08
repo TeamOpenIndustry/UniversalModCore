@@ -4,9 +4,13 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 public class Identifier {
+    private static Function<Identifier, List<InputStream>> multi = Data::getFileResourceStreams;
+
     public final net.minecraft.util.Identifier internal;
 
     public Identifier(net.minecraft.util.Identifier internal) {
@@ -40,10 +44,32 @@ public class Identifier {
 
 
     public List<InputStream> getResourceStreamAll() throws IOException {
-        return Data.proxy.getResourceStreamAll(this);
+        return multi.apply(this);
     }
 
     public InputStream getResourceStream() throws IOException {
-        return Data.proxy.getResourceStream(this);
+        InputStream chosen = null;
+        for (InputStream strm : getResourceStreamAll()) {
+            if (chosen == null) {
+                chosen = strm;
+            } else {
+                strm.close();
+            }
+        }
+        if (chosen == null) {
+            throw new java.io.FileNotFoundException(internal.toString());
+        }
+        return chosen;
+    }
+
+    public static void registerSupplier(Function<Identifier, List<InputStream>> multi) {
+        //This could probably be done cleaner with function composition
+        Function<Identifier, List<InputStream>> oldMulti = Identifier.multi;
+
+        Identifier.multi = id -> {
+            List<InputStream> values = multi.apply(id);
+            values.addAll(oldMulti.apply(id));
+            return values;
+        };
     }
 }
