@@ -12,7 +12,6 @@
     "DebugHudMixin",
     "InGameHudMixin",
     "MinecraftClientMixin",
-    "MouseMixin",
     "SoundSystemMixin",
     "WorldRendererMixin",
     "TextureManagerMixin"

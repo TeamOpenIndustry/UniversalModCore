@@ -32,7 +32,6 @@ public class ServerPlayNetworkHandlerMixin {
         if (target instanceof ModdedEntity) {
             switch (playerInteractEntityC2SPacket_1.getType()) {
                 case INTERACT:
-                    System.out.println("MAGIC!");
                     player.interact(target, playerInteractEntityC2SPacket_1.getHand());
                     info.cancel();
                     break;
