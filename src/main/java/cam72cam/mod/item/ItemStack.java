@@ -122,7 +122,7 @@ public class ItemStack {
     }
 
     public int getBurnTime() {
-        return FuelRegistry.INSTANCE.get(internal.getItem());
+        return item == null ? 0 : FuelRegistry.INSTANCE.get(item) == null ? 0 : FuelRegistry.INSTANCE.get(item);
     }
 
     public int getLimit() {

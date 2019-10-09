@@ -12,8 +12,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class WorldChunkMixin {
     @Inject(at = @At("RETURN"), method = "addEntity")
     public void addEntity(Entity entity, CallbackInfo info) {
-        if (entity.isLiving()) {
+        if (entity.isAlive()) {
+            System.out.println("ADDED " + entity);
             CommonEvents.Entity.WORLD_JOIN.execute(x -> x.accept(entity));
+        } else {
+            System.out.println("NOT ADDED " + entity);
         }
     }
 

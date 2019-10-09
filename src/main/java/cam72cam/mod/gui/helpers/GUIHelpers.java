@@ -27,10 +27,10 @@ public class GUIHelpers {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBufferBuilder();
         bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION);
-        bufferbuilder.vertex(x + 0, y + height, zLevel).end();
-        bufferbuilder.vertex(x + width, y + height, zLevel).end();
-        bufferbuilder.vertex(x + width, y + 0, zLevel).end();
-        bufferbuilder.vertex(x + 0, y + 0, zLevel).end();
+        bufferbuilder.vertex(x + 0, y + height, zLevel).next();
+        bufferbuilder.vertex(x + width, y + height, zLevel).next();
+        bufferbuilder.vertex(x + width, y + 0, zLevel).next();
+        bufferbuilder.vertex(x + 0, y + 0, zLevel).next();
         tessellator.draw();
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -43,10 +43,10 @@ public class GUIHelpers {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBufferBuilder();
         bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_UV);
-        bufferbuilder.vertex(x + 0, y + height, zLevel).texture(0, 1).end();
-        bufferbuilder.vertex(x + width, y + height, zLevel).texture(1, 1).end();
-        bufferbuilder.vertex(x + width, y + 0, zLevel).texture(1, 0).end();
-        bufferbuilder.vertex(x + 0, y + 0, zLevel).texture(0, 0).end();
+        bufferbuilder.vertex(x + 0, y + height, zLevel).texture(0, 1).next();
+        bufferbuilder.vertex(x + width, y + height, zLevel).texture(1, 1).next();
+        bufferbuilder.vertex(x + width, y + 0, zLevel).texture(1, 0).next();
+        bufferbuilder.vertex(x + 0, y + 0, zLevel).texture(0, 0).next();
         tessellator.draw();
     }
 

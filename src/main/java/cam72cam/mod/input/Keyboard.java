@@ -24,7 +24,7 @@ public class Keyboard {
     @Environment(EnvType.CLIENT)
     public static void registerKey(String name, int keyCode, String category, Runnable handler) {
         FabricKeyBinding key = FabricKeyBinding.Builder.create(new Identifier(name), InputUtil.Type.KEYSYM, keyCode, category).build();
-        KeyBindingRegistry.INSTANCE.register(key);
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> KeyBindingRegistry.INSTANCE.register(key));
         ClientEvents.TICK.subscribe(() -> {
             if (key.isPressed()) {
                 handler.run();
