@@ -5,6 +5,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,9 +22,16 @@ public class MinecraftClientMixin {
         }
     }
 
+    private static void onMouseButton(long long_1, int int_1, int int_2, int int_3) {
+        System.out.println("HERE");
+
+    }
+
     @Inject(method = "initializeSearchableContainers", at=@At("HEAD"))
     public void init(CallbackInfo info) {
         ClientEvents.TEXTURE_STITCH.execute(Runnable::run);
         ModCore.instance.postInit();
+
+        //GLFW.glfwSetMouseButtonCallback(MinecraftClient.getInstance().window.getHandle(), MinecraftClientMixin::onMouseButton);
     }
 }
