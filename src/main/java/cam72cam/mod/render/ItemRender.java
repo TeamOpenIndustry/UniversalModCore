@@ -9,6 +9,7 @@ import cam72cam.mod.world.World;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlFramebuffer;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.JsonUnbakedModel;
@@ -124,14 +125,12 @@ public class ItemRender {
 
     static class BakedItemModel implements FullBakedModel {
         private final ItemStack stack;
-        private final World world;
         private final BiFunction<ItemStack, World, StandardModel> model;
         private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
         private boolean isGUI;
         private final ModelItemPropertyOverrideList overrides;
 
         BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, ModelItemPropertyOverrideList overrides) {
-            this.world = null;
             this.stack = null;
             this.model = model;
             this.overrides = overrides;
@@ -141,7 +140,6 @@ public class ItemRender {
 
         BakedItemModel(ItemStack stack, World world, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, boolean isGUI, ModelItemPropertyOverrideList overrides) {
             this.stack = stack;
-            this.world = world;
             this.model = model;
             this.cacheRender = cacheRender;
             this.isGUI = isGUI;
@@ -159,11 +157,7 @@ public class ItemRender {
                 return EMPTY;
             }
 
-            if (world == null) {
-                return EMPTY;
-            }
-
-            StandardModel std = model.apply(stack, world);
+            StandardModel std = model.apply(stack, World.get(MinecraftClient.getInstance().world));
             if (std == null) {
                 return EMPTY;
             }

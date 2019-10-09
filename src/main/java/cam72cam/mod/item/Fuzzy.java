@@ -10,7 +10,9 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -92,7 +94,7 @@ public class Fuzzy {
 
     public Fuzzy(String ident) {
         this.ident = ident;
-        this.tag = new Tag<>(new Identifier(ident.toLowerCase()));
+        this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
     }
 
     public Fuzzy(String ident, Tag<Item> tag) {
@@ -123,7 +125,6 @@ public class Fuzzy {
     }
 
     public Fuzzy add(Item item) {
-        /* TODO
         tag.entries().add(new Tag.Entry<Item>() {
             @Override
             public void build(Collection<Item> var1) {
@@ -135,7 +136,7 @@ public class Fuzzy {
                 // NOP
             }
         });
-        */
+        tag.values().add(item);
         return this;
     }
 
