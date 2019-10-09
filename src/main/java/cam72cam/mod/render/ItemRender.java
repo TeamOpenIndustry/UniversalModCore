@@ -150,12 +150,16 @@ public class ItemRender {
 
         @Override
         public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-            if (stack == null || world == null) {
+            if (stack == null) {
                 return EMPTY;
             }
 
             if (isGUI) {
                 iconSheet.renderSprite(cacheRender.apply(stack).getKey());
+                return EMPTY;
+            }
+
+            if (world == null) {
                 return EMPTY;
             }
 

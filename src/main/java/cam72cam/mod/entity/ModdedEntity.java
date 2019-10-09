@@ -15,6 +15,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
@@ -372,4 +373,10 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
         return super.getCapability(capability, facing);
     }
      */
+
+    @Environment(EnvType.CLIENT)
+    public int getLightmapCoordinates() {
+        BlockPos blockPos_1 = new BlockPos(this.x, this.y, this.z);
+        return this.world.isBlockLoaded(blockPos_1) ? this.world.getLightmapIndex(blockPos_1, 0) : 0;
+    }
 }

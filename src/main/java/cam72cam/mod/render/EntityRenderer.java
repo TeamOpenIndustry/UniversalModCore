@@ -78,6 +78,7 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
             renderers.get(self.getClass()).render(self, partialTicks);
         }
         GL11.glPopMatrix();
+
     }
 
     @Nullable
