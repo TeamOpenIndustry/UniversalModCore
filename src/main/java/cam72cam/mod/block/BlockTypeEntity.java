@@ -167,7 +167,7 @@ public abstract class BlockTypeEntity extends BlockType {
             if (entity == null) {
                 return super.getCollisionShape(state, source, pos, entityContext_1);
             }
-            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
+            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 16.0F, 16*BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 16.0F);
         }
 
         @Override
@@ -176,7 +176,7 @@ public abstract class BlockTypeEntity extends BlockType {
             if (entity == null) {
                 return super.getRayTraceShape(state, source, pos);
             }
-            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
+            return Block.createCuboidShape(0.0F, 0.0F, 0.0F, 16.0F, 16*Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 16.0F);
         }
 
         @Override
@@ -186,7 +186,7 @@ public abstract class BlockTypeEntity extends BlockType {
                 return super.getOutlineShape(state, source, pos, entityContext_1);
             }
 
-            return Block.createCuboidShape(0, 0, 0, 1, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25)+0.1, 1);
+            return Block.createCuboidShape(0, 0, 0, 16, 16*(Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25)+0.1), 16);
         }
 
         @Override

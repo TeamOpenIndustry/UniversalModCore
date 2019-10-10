@@ -119,17 +119,17 @@ public abstract class BlockType {
 
         @Override
         public VoxelShape getCollisionShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1, EntityContext entityContext_1) {
-            return Block.createCuboidShape(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
         }
 
         @Override
         public VoxelShape getRayTraceShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1) {
-            return Block.createCuboidShape(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
         }
 
         @Override
         public VoxelShape getOutlineShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1, EntityContext entityContext_1) {
-            return Block.createCuboidShape(0, 0, 0, 1, BlockType.this.getHeight()+0.1, 1);
+            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
         }
 
         /*
