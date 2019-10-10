@@ -29,13 +29,16 @@ public class GuiRegistry {
     }
 
     public static class OpenGuiPacket extends Packet {
+        private World world;
+
         public OpenGuiPacket() {
 
         }
 
-        public OpenGuiPacket(Identifier guiType, TagCompound info) {
+        public OpenGuiPacket(Identifier guiType, TagCompound info, World world) {
             data.setString("id", guiType.toString());
             data.set("info", info);
+            this.world = world;
         }
 
         @Override
@@ -44,7 +47,7 @@ public class GuiRegistry {
         }
 
         World getPktWorld() {
-            return super.getWorld();
+            return world != null ? world : super.getWorld();
         }
 
         public TagCompound getInfo() {
@@ -109,7 +112,7 @@ public class GuiRegistry {
     }
 
     public void openGUI(Player player, GUIType type) {
-        OpenGuiPacket pkt = new OpenGuiPacket(type.id, new TagCompound());
+        OpenGuiPacket pkt = new OpenGuiPacket(type.id, new TagCompound(), player.getWorld());
         if (player.getWorld().isClient) {
             player.openGui(registry.get(type.id).apply(pkt));
         } else {
@@ -127,7 +130,7 @@ public class GuiRegistry {
         if (registry.containsKey(type.id)) {
             TagCompound info = new TagCompound();
             info.setVec3i("pos", pos);
-            OpenGuiPacket pkt = new OpenGuiPacket(type.id, info);
+            OpenGuiPacket pkt = new OpenGuiPacket(type.id, info, player.getWorld());
             if (player.getWorld().isClient) {
                 player.openGui(registry.get(type.id).apply(pkt));
             } else {
