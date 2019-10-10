@@ -86,6 +86,7 @@ public class ItemStackHandler implements IInventory {
     }
 
     public void load(TagCompound items) {
+        setSize(items.getInteger("slots"));
         internal.fromTag(items.internal);
     }
 
