@@ -98,19 +98,19 @@ public class ItemPickerGUI {
                         onExit.accept(choosenItem);
                     }
                 };
-                this.buttons.add(btn);
+                this.addButton(btn);
                 this.buttonCoordList.put(btn, new Vec3i(startX + col * 32, startY + row * 32, 0));
             }
             int rows = i / stacksX + 2;
             if (stacksY < rows) {
                 this.scrollBar = new GuiScrollBar(this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0);
-                this.buttons.add(this.scrollBar);
+                this.addButton(this.scrollBar);
             }
         }
 
         @Override
         public boolean keyPressed(int typedChar, int keyCode, int mod) {
-            if (keyCode == 1) {
+            if (keyCode == 9) {
                 onExit.accept(null);
                 return true;
             }

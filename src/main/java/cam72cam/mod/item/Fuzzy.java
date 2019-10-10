@@ -146,6 +146,7 @@ public class Fuzzy {
 
     public Fuzzy addAll(Fuzzy other) {
         tag.entries().addAll(other.tag.entries());
+        tag.values().addAll(other.tag.values());
         return this;
     }
 

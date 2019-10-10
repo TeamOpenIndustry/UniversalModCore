@@ -113,7 +113,7 @@ public class ItemBase {
 
         @Override
         public ActionResult useOnBlock(ItemUsageContext context) {
-            return ItemBase.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getWorld()), new Vec3i(context.getBlockPos().up()), Hand.from(context.getHand()), Facing.from(context.getSide()), new Vec3d(context.getHitPos())).internal;
+            return ItemBase.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getWorld()), new Vec3i(context.getBlockPos()), Hand.from(context.getHand()), Facing.from(context.getSide()), new Vec3d(context.getHitPos())).internal;
         }
 
         @Override
