@@ -351,8 +351,12 @@ public class World {
     }
 
     public void setBlock(Vec3i pos, ItemStack stack) {
-        IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
-        internal.setBlockState(pos.internal, state);
+        if (stack.isEmpty()) {
+            internal.setBlockToAir(pos.internal);
+        } else {
+            IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
+            internal.setBlockState(pos.internal, state);
+        }
     }
 
     public boolean isTopSolid(Vec3i pos) {
