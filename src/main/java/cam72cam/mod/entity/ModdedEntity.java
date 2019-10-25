@@ -75,7 +75,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     private final void loadSelf(TagCompound data) {
-        init(data.getString("custom_mob_type"));
+        String type = data.getString("custom_mob_type");
+        if (type == null) {
+            // Legacy...
+            type = data.getString("id");
+        }
+        if (type == null) {
+            throw new RuntimeException("Invalid entity data: " + data);
+        }
+        init(type);
     }
 
     private final void saveSelf(TagCompound data) {
@@ -141,6 +149,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
+            seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
         }
     }
 
@@ -197,7 +206,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!worldObj.isRemote) {
             System.out.println("New Seat");
             SeatEntity seat = new SeatEntity(worldObj);
-            seat.setParent(this);
+            seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
@@ -224,19 +233,28 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
         if (passenger != null) {
             Vec3d offset = passengerPositions.get(passenger.getUUID());
-            if (offset != null) {
-                offset = iRidable.onPassengerUpdate(passenger, offset);
+            // Weird case around player joining with a different UUID during debugging
+            if (offset == null) {
+                offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
                 passengerPositions.put(passenger.getUUID(), offset);
-
-                Vec3d pos = calculatePassengerPosition(offset);
-                seat.setPosition(pos.x, pos.y, pos.z);
-                passenger.setPosition(pos);
-
-                float delta = rotationYaw - prevRotationYaw;
-                passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
-
-                seat.shouldSit = iRidable.shouldRiderSit(passenger);
             }
+
+            offset = iRidable.onPassengerUpdate(passenger, offset);
+            passengerPositions.put(passenger.getUUID(), offset);
+
+            Vec3d pos = calculatePassengerPosition(offset);
+
+            if (worldObj.loadedEntityList.indexOf(seat) < worldObj.loadedEntityList.indexOf(passenger.internal)) {
+                pos = pos.add(motionX, motionY, motionZ);
+            }
+
+            passenger.setPosition(pos);
+            passenger.setVelocity(new Vec3d(motionX, motionY, motionZ));
+
+            float delta = rotationYaw - prevRotationYaw;
+            passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+
+            seat.shouldSit = iRidable.shouldRiderSit(passenger);
         }
     }
 
@@ -252,6 +270,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.onDismountPassenger(passenger, offset);
                 passenger.setPosition(calculatePassengerPosition(offset));
             }
+            passengerPositions.remove(passenger.getUUID());
         }
         seats.remove(seat);
     }
@@ -277,12 +296,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     private void readPassengerData(TagCompound data) {
         passengerPositions = data.getMap("passengers", UUID::fromString, (TagCompound tag) -> tag.getVec3d("pos"));
-        // TODO legacy? staticPassengers = data.getList("staticPassengers", StaticPassenger::new);
     }
 
     private void writePassengerData(TagCompound data) {
         data.setMap("passengers", passengerPositions, UUID::toString, (Vec3d pos) -> {
-            //TODO single encoder step
             TagCompound tmp = new TagCompound();
             tmp.setVec3d("pos", pos);
             return tmp;

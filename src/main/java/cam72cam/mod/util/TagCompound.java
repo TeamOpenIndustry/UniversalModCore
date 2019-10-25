@@ -76,7 +76,10 @@ public class TagCompound {
     }
 
     public String getString(String key) {
-        return internal.getString(key);
+        if (internal.hasKey(key)) {
+            return internal.getString(key);
+        }
+        return null;
     }
 
     public void setString(String key, String value) {
@@ -151,7 +154,7 @@ public class TagCompound {
     public void setEntity(String key, cam72cam.mod.entity.Entity entity) {
         NBTTagCompound data = new NBTTagCompound();
         data.setUniqueId("id", entity.internal.getUniqueID());
-        data.setInteger("world", entity.internal.worldObj.provider.getDimension());
+        data.setInteger("world", entity.getWorld().getId());
         internal.setTag(key, data);
     }
 
@@ -233,7 +236,7 @@ public class TagCompound {
     }
 
     public void setWorld(String key, World world) {
-        setInteger(key, world.internal.provider.getDimension());
+        setInteger(key, world.getId());
     }
 
     public World getWorld(String key, boolean isClient) {
@@ -255,7 +258,14 @@ public class TagCompound {
         TagCompound ted = get(key);
         World world = ted.getWorld("world", isClient);
 
-        //TODO pull logic in here to avoid crash
+        if (world == null) {
+            return null;
+        }
+
+        if (!ted.hasKey("data")) {
+            return null;
+        }
+
         net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(world.internal, ted.get("data").internal);
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();

@@ -26,7 +26,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = version_major + '.' + version_minor + '.' + version_patch
 group = "cam72cam.modcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "ModCore"
+archivesBaseName = "UniversalModCore"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -67,7 +67,6 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	compile project(":TrackAPI")
 	shade 'inventory-tweaks:InventoryTweaks:1.62:api'
 }
 
