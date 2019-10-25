@@ -89,7 +89,7 @@ public class ItemBase {
     private class ItemInternal extends Item {
         @Override
         public void getSubItems(Item itemIn, CreativeTabs tab, List<net.minecraft.item.ItemStack> items) {
-            CreativeTab myTab = tab != CreativeTabs.SEARCH ? new CreativeTab(tab) : null;
+            CreativeTab myTab = tab != CreativeTabs.SEARCH && tab != null ? new CreativeTab(tab) : null;
             items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
 
