@@ -4,12 +4,10 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.Entity;
-import cam72cam.mod.entity.Living;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
@@ -24,15 +22,13 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -42,7 +38,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(modid = ModCore.MODID)
 public class World {
 
     /* Static access to loaded worlds */
@@ -50,8 +45,8 @@ public class World {
     private static Map<net.minecraft.world.World, World> serverWorlds = new HashMap<>();
     private static Map<Integer, World> clientWorldsByID = new HashMap<>();
     private static Map<Integer, World> serverWorldsByID = new HashMap<>();
-
     private static List<Consumer<World>> onTicks = new ArrayList<>();
+
     public final net.minecraft.world.World internal;
     public final boolean isClient;
     public final boolean isServer;
@@ -71,36 +66,36 @@ public class World {
         entityByUUID = new HashMap<>();
     }
 
-    @SubscribeEvent
-    public static void onWorldLoad(WorldEvent.Load event) {
-        Map<net.minecraft.world.World, World> worlds = event.getWorld().isRemote ? clientWorlds : serverWorlds;
-        Map<Integer, World> worldsByID = event.getWorld().isRemote ? clientWorldsByID : serverWorldsByID;
+    private static void loadWorld(net.minecraft.world.World world) {
+        Map<net.minecraft.world.World, World> worlds = world.isRemote ? clientWorlds : serverWorlds;
+        if (worlds.containsKey(world)) {
+            return;
+        }
 
-        net.minecraft.world.World world = event.getWorld();
+        Map<Integer, World> worldsByID = world.isRemote ? clientWorldsByID : serverWorldsByID;
+
         World worldWrap = new World(world);
         worlds.put(world, worldWrap);
-        worldsByID.put(world.provider.getDimension(), worldWrap);
+        worldsByID.put(worldWrap.getId(), worldWrap);
 
         world.addEventListener(new WorldEventListener(worldWrap));
     }
 
-    @SubscribeEvent
-    public static void onWorldUnload(WorldEvent.Unload event) {
-        Map<net.minecraft.world.World, World> worlds = event.getWorld().isRemote ? clientWorlds : serverWorlds;
-        Map<Integer, World> worldsByID = event.getWorld().isRemote ? clientWorldsByID : serverWorldsByID;
+    public static void registerEvents() {
+        CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        net.minecraft.world.World world = event.getWorld();
-        worlds.remove(world);
-        worldsByID.remove(world.provider.getDimension());
-    }
+        CommonEvents.World.UNLOAD.subscribe(world -> {
+            Map<net.minecraft.world.World, World> worlds = world.isRemote ? clientWorlds : serverWorlds;
+            Map<Integer, World> worldsByID = world.isRemote ? clientWorldsByID : serverWorldsByID;
 
-    @SubscribeEvent
-    public static void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) {
-            return;
-        }
-        onTicks.forEach(fn -> fn.accept(get(event.world)));
-        get(event.world).ticks++;
+            worlds.remove(world);
+            worldsByID.remove(world.provider.getDimension());
+        });
+
+        CommonEvents.World.TICK.subscribe(world -> {
+            onTicks.forEach(fn -> fn.accept(get(world)));
+            get(world).ticks++;
+        });
     }
 
     public static World get(net.minecraft.world.World world) {
@@ -108,6 +103,11 @@ public class World {
             return null;
         }
         Map<net.minecraft.world.World, World> worlds = world.isRemote ? clientWorlds : serverWorlds;
+        if (!worlds.containsKey(world)) {
+            // WTF forge
+            // I should NOT need to do this
+            loadWorld(world);
+        }
 
         return worlds.get(world);
     }
@@ -120,6 +120,10 @@ public class World {
 
     public static void onTick(Consumer<World> fn) {
         onTicks.add(fn);
+    }
+
+    public int getId() {
+        return internal.provider.getDimension();
     }
 
     public boolean doesBlockCollideWith(Vec3i bp, IBoundingBox bb) {
@@ -146,11 +150,9 @@ public class World {
     }
 
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
-        if (entityByUUID.containsKey(entity.getUniqueID())) {
-            entities.remove(entityByUUID.get(entity.getUniqueID()));
-            entityByID.remove(entity.getEntityId());
-            entityByUUID.remove(entity.getUniqueID());
-        }
+        entities.stream().filter(x -> x.getUUID().equals(entity.getUniqueID())).findFirst().ifPresent(entities::remove);
+        entityByID.remove(entity.getEntityId());
+        entityByUUID.remove(entity.getUniqueID());
     }
 
     /* Entity Methods */
@@ -165,7 +167,7 @@ public class World {
             return null;
         }
         if (!type.isInstance(ent)) {
-            // TODO Warning???
+            ModCore.warn("When looking for entity %s by id %s, we instead got a %s", type, id, ent.getClass());
             return null;
         }
         return (T) ent;
@@ -177,7 +179,7 @@ public class World {
             return null;
         }
         if (!type.isInstance(ent)) {
-            // TODO Warning???
+            ModCore.warn("When looking for entity %s by id %s, we instead got a %s", type, id, ent.getClass());
             return null;
         }
         return (T) ent;
@@ -299,6 +301,7 @@ public class World {
     }
 
     public void setSnowLevel(Vec3i ph, int snowDown) {
+        snowDown = Math.max(1, Math.min(8, snowDown));
         internal.setBlockState(ph.internal, Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, snowDown));
     }
 
@@ -443,7 +446,13 @@ public class World {
 
     public ItemStack getItemStack(Vec3i pos) {
         IBlockState state = internal.getBlockState(pos.internal);
-        return new ItemStack(state.getBlock().getItemDropped(state, internal.rand, 0), 1, state.getBlock().damageDropped(state));
+        return new ItemStack(
+                state.getBlock().getPickBlock(
+                        state,
+                        new RayTraceResult(new net.minecraft.util.math.Vec3d(pos.internal), EnumFacing.UP, pos.internal), internal, pos.internal,
+                        null
+                )
+        );
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {

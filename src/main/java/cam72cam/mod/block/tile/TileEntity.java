@@ -130,9 +130,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.readFromNBT(pkt.getNbtCompound());
         this.readUpdate(new TagCompound(pkt.getNbtCompound()));
         super.onDataPacket(net, pkt);
-        if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
-        }
+        world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
     }
 
     @Override
@@ -151,9 +149,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.readFromNBT(tag);
         this.readUpdate(new TagCompound(tag));
         super.handleUpdateTag(tag);
-        if (updateRerender()) {
-            world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
-        }
+        world.internal.markBlockRangeForRenderUpdate(getPos(), getPos());
     }
 
 
@@ -299,25 +295,28 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         }
         if (capability == CapabilityEnergy.ENERGY) {
             IEnergy target = getEnergy(Facing.from(facing));
+            if (target == null) {
+                return null;
+            }
             return CapabilityEnergy.ENERGY.cast(new IEnergyStorage() {
                 @Override
                 public int receiveEnergy(int maxReceive, boolean simulate) {
-                    return target.receiveEnergy(maxReceive, simulate);
+                    return target.receive(maxReceive, simulate);
                 }
 
                 @Override
                 public int extractEnergy(int maxExtract, boolean simulate) {
-                    return target.extractEnergy(maxExtract, simulate);
+                    return target.extract(maxExtract, simulate);
                 }
 
                 @Override
                 public int getEnergyStored() {
-                    return target.getEnergyStored();
+                    return target.getCurrent();
                 }
 
                 @Override
                 public int getMaxEnergyStored() {
-                    return target.getMaxEnergyStored();
+                    return target.getMax();
                 }
 
                 @Override
@@ -391,11 +390,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public boolean isLoaded() {
         return this.hasWorld() && (world.isServer || hasTileData);
-    }
-
-    // TODO render system?
-    public boolean updateRerender() {
-        return false;
     }
 
     public BlockEntity instance() {
