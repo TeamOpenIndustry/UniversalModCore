@@ -10,6 +10,7 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.CollectionUtil;
 import cam72cam.mod.util.Hand;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -61,7 +62,11 @@ public class GlobalRender {
     public static void registerOverlay(Consumer<Float> func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+                int scale = new ScaledResolution(Minecraft.getMinecraft()).getScaleFactor();
+                GL11.glPushMatrix();
+                GL11.glScaled(scale, scale, scale);
                 func.accept(event.getPartialTicks());
+                GL11.glPopMatrix();
             }
         });
     }
