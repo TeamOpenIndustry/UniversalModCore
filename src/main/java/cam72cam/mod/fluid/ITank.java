@@ -31,18 +31,20 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                IFluidHandler temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
+                ItemStack ic = inputCopy.copy();
+                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
                 temp.fill(fluidStack.internal, true);
-                onUpdate.accept(inputCopy); // TODO 1.10.2
+                onUpdate.accept(ic);
 
                 return internal.fill(fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                IFluidHandler temp = FluidUtil.getFluidHandler(inputCopy.copy().internal);
+                ItemStack ic = inputCopy.copy();
+                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
                 temp.drain(fluidStack.internal, true);
-                onUpdate.accept(inputCopy); // TODO 1.10.2
+                onUpdate.accept(ic);
 
                 return new FluidStack(internal.drain(fluidStack.internal, !simulate));
             }
