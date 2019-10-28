@@ -1,7 +1,9 @@
 package cam72cam.mod.item;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.ItemRender;
@@ -14,18 +16,17 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.util.IIcon;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ItemBase {
-    private static List<Runnable> registrations = new ArrayList<>();
     public final Item internal;
     private final CreativeTab[] creativeTabs;
     private final String modID;
@@ -41,11 +42,7 @@ public class ItemBase {
         this.modID = modID;
         this.name = name;
 
-        registrations.add(() -> GameRegistry.registerItem(internal, name, modID));
-    }
-
-    public static void registerItems() {
-        registrations.forEach(Runnable::run);
+        CommonEvents.Item.REGISTER.subscribe(() -> GameRegistry.registerItem(internal, name, modID));
     }
 
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
@@ -58,7 +55,8 @@ public class ItemBase {
 
     /* Overrides */
 
-    public void addInformation(ItemStack itemStack, List<String> tooltip) {
+    public List<String> getTooltip(ItemStack itemStack) {
+        return Collections.emptyList();
     }
 
     public ClickResult onClickBlock(Player player, World world, Vec3i vec3i, Hand from, Facing from1, Vec3d vec3d) {
@@ -103,7 +101,7 @@ public class ItemBase {
         public final void addInformation(net.minecraft.item.ItemStack stack, EntityPlayer entityPlayer, List tooltip, boolean flagIn) {
             super.addInformation(stack, entityPlayer, tooltip, flagIn);
             applyCustomName(new ItemStack(stack));
-            ItemBase.this.addInformation(new ItemStack(stack), tooltip);
+            tooltip.addAll(ItemBase.this.getTooltip(new ItemStack(stack)));
         }
 
         @Override
@@ -113,7 +111,9 @@ public class ItemBase {
 
         @Override
         public final net.minecraft.item.ItemStack onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player) {
-            onClickAir(new Player(player), World.get(world), Hand.PRIMARY);
+            if (MinecraftClient.getBlockMouseOver() == null) {
+                onClickAir(new Player(player), World.get(world), Hand.PRIMARY);
+            }
             return super.onItemRightClick(stack, world, player);
         }
 

@@ -2,77 +2,48 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Hand;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
-import cpw.mods.fml.relauncher.Side;
+import org.lwjgl.opengl.GL11;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class GlobalRender {
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
-    private static List<Consumer<Float>> overlayFuncs = new ArrayList<>();
-    private static Map<ItemBase, MouseoverEvent> itemMouseovers = new HashMap<>();
-    private static TileEntity grh = new GlobalRenderHelper();
-    private static List<TileEntity> grhList = new ArrayList<>();
 
-    static {
-        grhList.add(grh);
-    }
-
-    public static void registerGlobalRenderer() {
-        ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer() {
-            @Override
-            public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
-                renderFuncs.forEach(r -> r.accept(partialTicks));
-            }
-        });
-    }
-
-    public static class EventBus {
-        @SubscribeEvent
-        public void onRenderMouseover(DrawBlockHighlightEvent event) {
-            Player player = MinecraftClient.getPlayer();
-
-            if (event.target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                Vec3i pos = new Vec3i(event.target.blockX, event.target.blockY, event.target.blockZ);
-                for (ItemBase item : itemMouseovers.keySet()) {
-                    ItemStack held = player.getHeldItem(Hand.PRIMARY);
-                    if (!held.isEmpty() && item.internal == held.internal.getItem()) {
-                        itemMouseovers.get(item).render(player, held, pos, new Vec3d(event.target.hitVec), event.partialTicks);
-                    }
+    public static void registerClientEvents() {
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
+            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer() {
+                @Override
+                public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
+                    renderFuncs.forEach(r -> r.accept(partialTicks));
                 }
-            }
-        }
+            });
+        });
 
-        @SubscribeEvent
-        public void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
-            if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
-                overlayFuncs.forEach(x -> x.accept(event.partialTicks));
-            }
-        }
+        GlobalRenderHelper grh = new GlobalRenderHelper();
+        ClientEvents.TICK.subscribe(() -> {
+            Minecraft.getMinecraft().renderGlobal.tileEntities.remove(grh);
+            Minecraft.getMinecraft().renderGlobal.tileEntities.add(grh);
+        });
 
-        @SubscribeEvent
-        public void onDebugRender(RenderGameOverlayEvent.Text event) {
+        ClientEvents.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.right.size(); i++) {
@@ -83,7 +54,7 @@ public class GlobalRender {
                 }
                 event.right.add(i, GPUInfo.debug());
             }
-        }
+        });
     }
 
     public static void registerRender(Consumer<Float> func) {
@@ -91,27 +62,32 @@ public class GlobalRender {
     }
 
     public static void registerOverlay(Consumer<Float> func) {
-        overlayFuncs.add(func);
+        ClientEvents.RENDER_OVERLAY.subscribe(event -> {
+            if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+                Minecraft mc = Minecraft.getMinecraft();
+                int scale = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
+                GL11.glPushMatrix();
+                GL11.glScaled(scale, scale, scale);
+                func.accept(event.partialTicks);
+                GL11.glPopMatrix();
+            }
+        });
     }
 
     public static void registerItemMouseover(ItemBase item, MouseoverEvent fn) {
-        itemMouseovers.put(item, fn);
+        ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
+            if (MinecraftClient.getBlockMouseOver() != null) {
+                Player player = MinecraftClient.getPlayer();
+                if (!player.getHeldItem(Hand.PRIMARY).isEmpty() && item.internal == player.getHeldItem(Hand.PRIMARY).internal.getItem()) {
+                    fn.render(player, player.getHeldItem(Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), partialTicks);
+                }
+            }
+        });
     }
 
     public static boolean isTransparentPass() {
         return MinecraftForgeClient.getRenderPass() != 0;
     }
-
-    /* Removed 1.7.10
-    @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) {
-            return;
-        }
-
-        Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList);
-    }
-    */
 
     public static Vec3d getCameraPos(float partialTicks) {
         net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().renderViewEntity;
@@ -133,6 +109,10 @@ public class GlobalRender {
         return MinecraftClient.getPlayer().getPosition().distanceTo(pos) < ((Minecraft.getMinecraft().gameSettings.renderDistanceChunks + 1) * 16 + 50);
     }
 
+    public static void mulMatrix(FloatBuffer fbm) {
+        GL11.glMultMatrix(fbm);
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
@@ -140,14 +120,12 @@ public class GlobalRender {
 
     public static class GlobalRenderHelper extends TileEntity {
 
+        @Override
         public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
         }
 
-        public double getDistanceSq(double x, double y, double z) {
-            return 1;
-        }
-
+        @Override
         public boolean shouldRenderInPass(int pass) {
             return true;
         }

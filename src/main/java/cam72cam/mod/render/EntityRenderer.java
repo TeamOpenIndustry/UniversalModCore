@@ -2,9 +2,10 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.SeatEntity;
+import cam72cam.mod.event.ClientEvents;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
@@ -14,40 +15,24 @@ import java.util.Map;
 public class EntityRenderer extends Render {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
-    static {
-        GlobalRender.registerRender(EntityRenderer::renderLargeEntities);
-    }
+    public static void registerClientEvents() {
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, new EntityRenderer()));
 
-    public static void registerEntities() {
-        RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, new EntityRenderer());
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.class, new Render() {
+            @Override
+            public void doRender(net.minecraft.entity.Entity p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
+
+            }
+
+            @Override
+            protected ResourceLocation getEntityTexture(net.minecraft.entity.Entity p_110775_1_) {
+                return null;
+            }
+        }));
     }
 
     public static void register(Class<? extends Entity> type, IEntityRender render) {
         renderers.put(type, render);
-    }
-
-    private static void renderLargeEntities(float partialTicks) {
-        if (GlobalRender.isTransparentPass()) {
-            return;
-        }
-
-        /* TODO 1.7.10
-        Minecraft.getMinecraft().mcProfiler.startSection("large_entity_helper");
-
-        ICamera camera = GlobalRender.getCamera(partialTicks);
-
-        World world = MinecraftClient.getPlayer().getWorld();
-        List<Entity> entities = world.getEntities(Entity.class);
-        for (Entity entity : entities) {
-            // Duplicate forge logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
-            AxisAlignedBB chunk = IBoundingBox.(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
-            if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
-                Minecraft.getMinecraft().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
-            }
-        }
-
-        Minecraft.getMinecraft().mcProfiler.endSection();
-        */
     }
 
     @Override

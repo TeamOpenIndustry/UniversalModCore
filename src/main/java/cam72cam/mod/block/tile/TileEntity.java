@@ -95,9 +95,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         this.readFromNBT(pkt.func_148857_g());
         this.readUpdate(new TagCompound(pkt.func_148857_g()));
         super.onDataPacket(net, pkt);
-        if (updateRerender()) {
-            worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
-        }
+        worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
     }
 
     @Override
@@ -245,25 +243,28 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         }
         if (capability == CapabilityEnergy.ENERGY) {
             IEnergy target = getEnergy(Facing.from(facing));
+            if (target == null) {
+                return null;
+            }
             return CapabilityEnergy.ENERGY.cast(new IEnergyStorage() {
                 @Override
                 public int receiveEnergy(int maxReceive, boolean simulate) {
-                    return target.receiveEnergy(maxReceive, simulate);
+                    return target.receive(maxReceive, simulate);
                 }
 
                 @Override
                 public int extractEnergy(int maxExtract, boolean simulate) {
-                    return target.extractEnergy(maxExtract, simulate);
+                    return target.extract(maxExtract, simulate);
                 }
 
                 @Override
                 public int getEnergyStored() {
-                    return target.getEnergyStored();
+                    return target.getCurrent();
                 }
 
                 @Override
                 public int getMaxEnergyStored() {
-                    return target.getMaxEnergyStored();
+                    return target.getMax();
                 }
 
                 @Override
@@ -333,11 +334,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public boolean isLoaded() {
         return this.hasWorldObj() && (!worldObj.isRemote || hasTileData);
-    }
-
-    // TODO render system?
-    public boolean updateRerender() {
-        return false;
     }
 
     public BlockEntity instance() {

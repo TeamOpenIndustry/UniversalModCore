@@ -1,10 +1,12 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.fluid.Fluid;
+import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
@@ -119,5 +121,10 @@ public class GUIHelpers {
     public static int getScreenHeight() {
         Minecraft mc = Minecraft.getMinecraft();
         return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaledHeight();
+    }
+
+    private static RenderItem itemrenderer = new RenderItem();
+    public static void drawItem(ItemStack stack, int x, int y) {
+        itemrenderer.renderItemIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), stack.internal, x, y);
     }
 }

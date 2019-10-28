@@ -1,80 +1,109 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.client.event.TextureStitchEvent;
-import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class ItemRender {
-    private static final List<Runnable> registers = new ArrayList<>();
-    private static final List<Consumer<TextureStitchEvent.Pre>> textures = new ArrayList<>();
     private static final SpriteSheet iconSheet = new SpriteSheet(128);
     private static Map<ItemBase, IIcon> icons = new HashMap<>();
-
-    public static void registerItems() {
-        registers.forEach(Runnable::run);
-    }
 
     public static IIcon getIcon(ItemBase itemBase) {
         return icons.get(itemBase);
     }
 
-
-    public static class EventBus {
-        @SubscribeEvent(priority = EventPriority.LOW)
-        public void onTextureStich(TextureStitchEvent.Pre event) {
-            textures.forEach(texture -> texture.accept(event));
-        }
-    }
-
     public static void register(ItemBase item, Identifier tex) {
-        textures.add(event -> icons.put(item, Minecraft.getMinecraft().getTextureMapBlocks().registerIcon(tex.internal.toString())));
+        ClientEvents.TEXTURE_STITCH.subscribe(() -> {
+            icons.put(item, Minecraft.getMinecraft().getTextureMapBlocks().registerIcon(tex.internal.toString()));
+        });
     }
 
-    public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model) {
-        register(item, model, null);
-    }
-
-    public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-        registers.add(() ->
-                MinecraftForgeClient.registerItemRenderer(item.internal, new BakedItemModel(model, cacheRender))
+    public static void register(ItemBase item, IItemModel model) {
+        ClientEvents.MODEL_CREATE.subscribe(() ->
+                MinecraftForgeClient.registerItemRenderer(item.internal, new BakedItemModel(model))
         );
 
-        if (cacheRender != null) {
-            textures.add((event) -> {
+        if (model instanceof ISpriteItemModel) {
+            ClientEvents.RELOAD.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
-                    Pair<String, StandardModel> info = cacheRender.apply(stack);
-                    bar.step(info.getKey());
-                    createSprite(info.getKey(), info.getValue());
+                    String id = ((ISpriteItemModel) model).getSpriteKey(stack);
+                    bar.step(id);
+                    createSprite(id, ((ISpriteItemModel) model).getSpriteModel(stack));
                 }
                 Progress.pop(bar);
             });
         }
     }
+
+    public enum ItemRenderType {
+        NONE(null),
+        THIRD_PERSON_LEFT_HAND(null),
+        THIRD_PERSON_RIGHT_HAND(IItemRenderer.ItemRenderType.EQUIPPED),
+        FIRST_PERSON_LEFT_HAND(null),
+        FIRST_PERSON_RIGHT_HAND(IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON),
+        HEAD(null),
+        GUI(IItemRenderer.ItemRenderType.INVENTORY),
+        ENTITY(IItemRenderer.ItemRenderType.ENTITY),
+        FRAME(null); // Handled by ENTITY
+
+        private final IItemRenderer.ItemRenderType type;
+
+        ItemRenderType(IItemRenderer.ItemRenderType type) {
+            this.type = type;
+        }
+
+        public static ItemRenderType from(IItemRenderer.ItemRenderType cameraTransformType) {
+            if (cameraTransformType == null) {
+                return NONE;
+            }
+
+            for (ItemRenderType type : values()) {
+                if (cameraTransformType == type.type) {
+                    return type;
+                }
+            }
+            return null;
+        }
+    }
+
+    @FunctionalInterface
+    public interface IItemModel {
+        StandardModel getModel(World world, ItemStack stack);
+        default void applyTransform(ItemRenderType type) {
+            switch (type) {
+                case FRAME:
+                    GL11.glRotated(90, 0, 1, 0);
+                    break;
+                case HEAD:
+                    GL11.glScaled(2, 2, 2);
+                    GL11.glTranslated(0, 1, 0);
+            }
+        }
+    }
+
+    public interface ISpriteItemModel extends IItemModel {
+        String getSpriteKey(ItemStack stack);
+        StandardModel getSpriteModel(ItemStack stack);
+    }
+
 
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
@@ -85,6 +114,7 @@ public class ItemRender {
         fb.bindFramebuffer(true);
 
         GLBoolTracker depth = new GLBoolTracker(GL11.GL_DEPTH_TEST, true);
+        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
         GL11.glDepthFunc(GL11.GL_LESS);
         GL11.glClearDepth(1);
 
@@ -95,57 +125,17 @@ public class ItemRender {
 
         fb.unbindFramebuffer();
         fb.deleteFramebuffer();
+        GL11.glDepthFunc(oldDepth);
         depth.restore();
 
         iconSheet.setSprite(id, buff);
     }
 
     static class BakedItemModel implements IItemRenderer {
-        private final BiFunction<ItemStack, World, StandardModel> model;
-        private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
+        private final IItemModel model;
 
-        BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
+        BakedItemModel(IItemModel model) {
             this.model = model;
-            this.cacheRender = cacheRender;
-        }
-
-
-        @Override
-        public void renderItem(ItemRenderType type, net.minecraft.item.ItemStack itemstack, Object... data) {
-            /* TODO 1.7.10
-            if (type == ItemCameraTransforms.TransformType.FIXED) {
-                return new ItemTransformVec3f(new Vector3f(0, 90, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));
-            }
-            if (type == ItemCameraTransforms.TransformType.HEAD) {
-                return new ItemTransformVec3f(new Vector3f(0, 0, 0), new Vector3f(0, 1, 0), new Vector3f(2, 2, 2));
-            }
-             */
-
-            GL11.glPushMatrix();
-
-            GL11.glRotated(90, 0, 1, 0);
-
-            ItemStack stack = new ItemStack(itemstack);
-            switch (type) {
-                case INVENTORY:
-                    if (cacheRender != null) {
-                        GL11.glScaled(10, 10, 10);
-                        iconSheet.renderSprite(cacheRender.apply(stack).getKey());
-                        break;
-                    } else {
-                        GL11.glScaled(10, 10, 10);
-                    }
-                case EQUIPPED:
-                case EQUIPPED_FIRST_PERSON:
-                    GL11.glRotated(90, 0, 1, 0);
-                case ENTITY:
-                    StandardModel std = model.apply(stack, MinecraftClient.getPlayer().getWorld());
-                    std.renderCustom();
-                    break;
-                case FIRST_PERSON_MAP:
-                    break;
-            }
-            GL11.glPopMatrix();
         }
 
         @Override
@@ -156,6 +146,39 @@ public class ItemRender {
         @Override
         public boolean shouldUseRenderHelper(ItemRenderType type, net.minecraft.item.ItemStack item, ItemRendererHelper helper) {
             return false;
+        }
+
+        @Override
+        public void renderItem(ItemRenderType typeIn, net.minecraft.item.ItemStack item, Object... data) {
+            ItemStack stack = new ItemStack(item);
+            if (stack.isEmpty()) {
+                return;
+            }
+
+            ItemRender.ItemRenderType type = ItemRender.ItemRenderType.from(typeIn);
+
+            if (type == ItemRender.ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                return;
+            }
+
+            StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
+            if (std == null) {
+                return;
+            }
+
+            /*
+             * I am an evil wizard!
+             *
+             * So it turns out that I can stick a draw call in here to
+             * render my own stuff. This subverts forge's entire baked model
+             * system with a single line of code and injects my own OpenGL
+             * payload. Fuck you modeling restrictions.
+             *
+             * This is probably really fragile if someone calls getQuads
+             * before actually setting up the correct GL context.
+             */
+            std.render();
         }
     }
 }

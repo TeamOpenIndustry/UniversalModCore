@@ -1,14 +1,12 @@
 package cam72cam.mod.world;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
-import net.minecraftforge.event.world.WorldEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 
@@ -28,6 +26,19 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
 
 
     private static ChunkManager instance;
+
+    public static void registerEvents() {
+        CommonEvents.World.LOAD.subscribe(world -> {
+            if (instance == null) {
+                instance = new ChunkManager();
+                instance.init();
+            }
+        });
+
+        CommonEvents.World.TICK.subscribe(world -> {
+            onWorldTick(world);
+        });
+    }
 
     private static Ticket ticketForWorld(World world) {
         int dim = world.provider.dimensionId;
@@ -55,27 +66,14 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         CHUNK_MAP.put(pos, Math.max(100, Math.min(10, currTicks)));
     }
 
-    public static class EventBus {
-        @SubscribeEvent
-        public void onWorldTick(TickEvent.WorldTickEvent event) {
-            if (event.phase != TickEvent.Phase.START) {
-                return;
-            }
-            if (instance == null) {
-                instance = new ChunkManager();
-                instance.init();
-            }
-
-
-            World world = event.world;
-
-            Ticket ticket;
-            try {
-                ticket = ticketForWorld(world);
-            } catch (Exception ex) {
-                ModCore.error("Something broke inside ticketForWorld!");
-                return;
-            }
+    public static void onWorldTick(World world) {
+        Ticket ticket;
+        try {
+            ticket = ticketForWorld(world);
+        } catch (Exception ex) {
+            ModCore.error("Something broke inside ticketForWorld!");
+            return;
+        }
 
             int dim = world.provider.dimensionId;
             Set<ChunkPos> keys = CHUNK_MAP.keySet();
@@ -134,7 +132,6 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
                     ModCore.catching(ex);
                 }
             }
-        }
     }
 
     private void init() {
@@ -154,9 +151,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
     @Override
     public void ticketsLoaded(List<Ticket> tickets, World world) {
         int dim = world.provider.dimensionId;
-        if (TICKETS.containsKey(dim)) {
-            TICKETS.remove(dim);
-        }
+        TICKETS.remove(dim);
 
         if (tickets.size() == 1) {
             TICKETS.put(dim, tickets.get(0));

@@ -4,56 +4,45 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
+import cam72cam.mod.event.ClientEvents;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.IBlockAccess;
 import org.lwjgl.opengl.GL11;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class BlockRender {
+    private static Map<BlockType, Integer> blocks = new HashMap<>();
     private static final List<Runnable> colors = new ArrayList<>();
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
-    private static Map<BlockType, Integer> blocks = new HashMap<>();
-
-
-    public static int getRenderType(BlockType blockType) {
-        return blocks.get(blockType);
+    static {
+        ClientEvents.TICK.subscribe(() -> {
+            if (Minecraft.getMinecraft().theWorld == null) {
+                return;
+            }
+            List tes = (List) Minecraft.getMinecraft().theWorld.loadedTileEntityList.stream()
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+                    .collect(Collectors.toList());
+            Minecraft.getMinecraft().renderGlobal.tileEntities.removeAll(prev);
+            Minecraft.getMinecraft().renderGlobal.tileEntities.addAll(tes);
+            prev = tes;
+        });
     }
-
-    /* TODO 1.7.10
-    @SubscribeEvent
-    public static void onTick(TickEvent.ClientTickEvent tick) {
-        if (Minecraft.getMinecraft().theWorld == null) {
-            return;
-        }
-        List<net.minecraft.tileentity.TileEntity> tes = Minecraft.getMinecraft().theWorld.loadedTileEntityList.stream()
-                .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
-                .collect(Collectors.toList());
-        Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
-        prev = tes;
-    }
-    */
 
     public static void onPostColorSetup() {
-        // TODO call from non mod context (subscribe event)
         colors.forEach(Runnable::run);
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntitySpecialRenderer() {
@@ -132,5 +121,9 @@ public class BlockRender {
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));
 
         // TODO 1.7.10 block colors
+    }
+
+    public static int getRenderType(BlockType block) {
+        return blocks.get(block);
     }
 }

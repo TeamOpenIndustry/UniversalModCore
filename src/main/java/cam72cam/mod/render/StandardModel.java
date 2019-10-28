@@ -4,6 +4,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRotatedPillar;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.init.Blocks;
@@ -35,6 +36,7 @@ public class StandardModel {
         int meta = color.internal;
 
         models.add(() -> {
+            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
             renderBlocks.setOverrideBlockTexture(state.getIcon(0, meta));
             renderBlocks.renderBlockAllFaces(state, 0, 0, 0);
         });
@@ -44,9 +46,10 @@ public class StandardModel {
 
     public StandardModel addSnow(int layers, Vec3d translate) {
         models.add(() -> {
+            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
             GL11.glPushMatrix();
-            GL11.glScaled(1, Math.min(layers, 8)/8f, 1);
-            GL11.glTranslated(0, (-1 + Math.min(layers, 8)/8f)/2, 0);
+            GL11.glScaled(1, Math.max(1, Math.min(8, layers))/8f, 1);
+            GL11.glTranslated(0, (-1 + Math.max(1, Math.min(layers, 8))/8f)/2, 0);
             renderBlocks.renderBlockAllFaces(Blocks.snow, 0, 0, 0);
             GL11.glPopMatrix();
         });
@@ -56,6 +59,7 @@ public class StandardModel {
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
         Pair<Block, Integer> info = itemToBlockState(bed);
         models.add(() -> {
+            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
             GL11.glPushMatrix();
             GL11.glScaled(scale.x, scale.y, scale.z);
             GL11.glTranslated(translate.x, (-1 + scale.y)/2 + translate.y, translate.z);

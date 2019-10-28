@@ -32,20 +32,20 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                ItemStack dup = inputCopy.copy();
-                IFluidContainerItem temp = (IFluidContainerItem)dup;
-                temp.fill(dup.internal, fluidStack.internal, true);
-                onUpdate.accept(dup);
+                ItemStack ic = inputCopy.copy();
+                IFluidContainerItem temp = (IFluidContainerItem)ic;
+                temp.fill(ic.internal, fluidStack.internal, true);
+                onUpdate.accept(ic);
 
                 return internal.fill(inputCopy.internal, fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                ItemStack dup = inputCopy.copy();
-                IFluidContainerItem temp = (IFluidContainerItem)dup;
-                temp.drain(dup.internal, fluidStack.internal.amount, true);
-                onUpdate.accept(dup);
+                ItemStack ic = inputCopy.copy();
+                IFluidContainerItem temp = (IFluidContainerItem)ic;
+                temp.drain(ic.internal, fluidStack.internal.amount, true);
+                onUpdate.accept(ic);
 
                 return new FluidStack(internal.drain(inputCopy.internal, fluidStack.internal.amount, !simulate));
             }

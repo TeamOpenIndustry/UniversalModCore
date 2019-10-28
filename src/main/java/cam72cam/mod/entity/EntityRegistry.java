@@ -1,9 +1,13 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
@@ -12,9 +16,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -22,7 +24,6 @@ public class EntityRegistry {
     private static final Map<Class<? extends Entity>, String> identifiers = new HashMap<>();
     private static final Map<String, Supplier<Entity>> constructors = new HashMap<>();
     private static final Map<String, EntitySettings> registered = new HashMap<>();
-    private static final List<Runnable> registrations = new ArrayList<>();
     private static String missingResources;
 
     private EntityRegistry() {
@@ -33,7 +34,7 @@ public class EntityRegistry {
         Entity tmp = ctr.get();
         Class<? extends Entity> type = tmp.getClass();
 
-        registrations.add(() -> {
+        CommonEvents.Entity.REGISTER.subscribe(() -> {
             Identifier id = new Identifier(mod.modID(), type.getSimpleName());
 
             // This has back-compat for older entity names
@@ -44,11 +45,6 @@ public class EntityRegistry {
             constructors.put(id.toString(), ctr);
             registered.put(id.toString(), settings);
         });
-    }
-
-    public static void registration() {
-        cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 32, 20, false);
-        registrations.forEach(Runnable::run);
     }
 
     public static EntitySettings getSettings(String type) {
@@ -71,27 +67,28 @@ public class EntityRegistry {
         return ent.getSelf();
     }
 
-    public static class EntityEvents {
-        @SubscribeEvent
-        public void onEntityJoin(EntityJoinWorldEvent event) {
-            if (World.get(event.world) == null) {
-                return;
-            }
+    public static void registerEvents() {
+        CommonEvents.Entity.REGISTER.subscribe(() -> {
+            cpw.mods.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 512, 20, false);
+        });
 
-
-            if (event.entity instanceof ModdedEntity) {
-                String msg = ((ModdedEntity) event.entity).getSelf().tryJoinWorld();
-                if (msg != null) {
-                    event.setCanceled(true);
-                    missingResources = msg;
+        CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
+            if (entity instanceof ModdedEntity) {
+                if (World.get(world) != null) {
+                    String msg = ((ModdedEntity) entity).getSelf().tryJoinWorld();
+                    if (msg != null) {
+                        missingResources = msg;
+                        return false;
+                    }
                 }
             }
-        }
+            return true;
+        });
     }
 
-    public static class EntityClientEvents {
-        @SubscribeEvent
-        public void onClientTick(TickEvent.ClientTickEvent event) {
+    @SideOnly(Side.CLIENT)
+    public static void registerClientEvents() {
+        ClientEvents.TICK.subscribe(() -> {
             if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getNetHandler() != null) {
                 System.out.println(missingResources);
                 Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
@@ -99,6 +96,6 @@ public class EntityRegistry {
                 Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
-        }
+        });
     }
 }
