@@ -5,8 +5,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
@@ -27,7 +25,7 @@ public class Keyboard {
         KeyBinding key = new KeyBinding(name, keyCode, category);
         ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
-            if (key.isPressed()) {
+            if (key.getIsKeyPressed()) {
                 handler.run();
             }
         });
@@ -53,14 +51,13 @@ public class Keyboard {
         }
 
         public MovementPacket(UUID id, Vec3d move) {
-            data.setUUID("id", id);
             data.setVec3d("move", move);
-            vecs.put(data.getUUID("id"), data.getVec3d("move"));
+            vecs.put(id, data.getVec3d("move"));
         }
 
         @Override
         protected void handle() {
-            vecs.put(data.getUUID("id"), data.getVec3d("move"));
+            vecs.put(getPlayer().getUUID(), data.getVec3d("move"));
         }
     }
 }

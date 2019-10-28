@@ -249,8 +249,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 passengerPositions.put(passenger.getUUID(), offset);
             }
 
+            offset = iRidable.onPassengerUpdate(passenger, offset);
+            passengerPositions.put(passenger.getUUID(), offset);
+
             Vec3d pos = calculatePassengerPosition(offset);
-            //pos = pos.add(0, offset.y* 2, 0);
+            pos = pos.add(0, 1.5, 0);
 
             if (worldObj.loadedEntityList.indexOf(seat) < worldObj.loadedEntityList.indexOf(passenger.internal)) {
                 pos = pos.add(motionX, motionY, motionZ);
