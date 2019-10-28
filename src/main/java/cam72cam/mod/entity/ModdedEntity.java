@@ -121,6 +121,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
+        this.entityUniqueID = data.getUUID("UUIDSYNC");
         loadSelf(data);
         iSpawnData.loadSpawn(data);
         self.sync.receive(data.get("sync"));
@@ -130,6 +131,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void writeSpawnData(ByteBuf buffer) {
         TagCompound data = new TagCompound();
+        data.setUUID("UUIDSYNC", this.getPersistentID());
         iSpawnData.saveSpawn(data);
         saveSelf(data);
         data.set("sync", self.sync);
@@ -248,7 +250,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             }
 
             Vec3d pos = calculatePassengerPosition(offset);
-            pos = pos.add(0, offset.y, 0);
+            //pos = pos.add(0, offset.y* 2, 0);
 
             if (worldObj.loadedEntityList.indexOf(seat) < worldObj.loadedEntityList.indexOf(passenger.internal)) {
                 pos = pos.add(motionX, motionY, motionZ);

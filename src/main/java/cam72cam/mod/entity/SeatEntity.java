@@ -50,7 +50,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public void onEntityUpdate() {
         ticks ++;
-        if (worldObj.isRemote || ticks < 5) {
+        if (ticks < 5) {
             return;
         }
 
