@@ -37,7 +37,6 @@ public class ItemBase {
         internal.setUnlocalizedName(modID + ":" + name);
         internal.setMaxStackSize(stackSize);
         internal.setCreativeTab(tabs[0].internal);
-        // TODO 1.7.10 split between creative tabs!
         this.creativeTabs = tabs;
         this.modID = modID;
         this.name = name;
@@ -92,8 +91,8 @@ public class ItemBase {
     private class ItemInternal extends Item {
         @Override
         public void getSubItems(Item itemIn, CreativeTabs tab, List items) {
-            //TODO 1.7.10 CreativeTab myTab = tab != CreativeTabs.tabAllSearch ? new CreativeTab(tab) : null;
-            items.addAll(getItemVariants(null).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
+            CreativeTab myTab = tab != CreativeTabs.tabAllSearch && tab != null ? new CreativeTab(tab) : null;
+            items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
 
         @Override
