@@ -38,7 +38,10 @@ public class TextField {
     }
 
     public String getText() {
-        return textfield.getText();
+        if (validator.apply(textfield.getText())) {
+            return textfield.getText();
+        }
+        return "";
     }
 
     public void setText(String s) {
