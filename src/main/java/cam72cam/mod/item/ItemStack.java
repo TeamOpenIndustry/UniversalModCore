@@ -109,7 +109,7 @@ public class ItemStack {
     }
 
     public boolean equals(ItemStack other) {
-        return (other.internal == null && internal == null) ||  internal != null && internal.isItemEqual(other.internal);
+        return (other.internal == null && internal == null) ||  internal != null && other.internal != null && internal.isItemEqual(other.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {

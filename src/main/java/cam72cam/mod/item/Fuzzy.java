@@ -57,7 +57,7 @@ public class Fuzzy {
     }
 
     public boolean matches(ItemStack stack) {
-        return OreDictionary.getOres(ident).stream().anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false));
+        return new ArrayList<>(OreDictionary.getOres(ident)).stream().anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false));
     }
 
     public List<ItemStack> enumerate() {
@@ -103,7 +103,7 @@ public class Fuzzy {
     }
 
     public Fuzzy addAll(String other) {
-        OreDictionary.getOres(other).stream().map(ItemStack::new).forEach(this::add);
+        new ArrayList<>(OreDictionary.getOres(other)).stream().map(ItemStack::new).forEach(this::add);
         return this;
     }
 
