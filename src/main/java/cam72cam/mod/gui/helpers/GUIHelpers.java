@@ -10,6 +10,8 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.GL11;
 
 public class GUIHelpers {
@@ -125,6 +127,10 @@ public class GUIHelpers {
 
     private static RenderItem itemrenderer = new RenderItem();
     public static void drawItem(ItemStack stack, int x, int y) {
-        itemrenderer.renderItemIntoGUI(Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getTextureManager(), stack.internal, x, y);
+        IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
+        GL11.glPushMatrix();
+        GL11.glTranslated(x, y, 0);
+        ir.renderItem(IItemRenderer.ItemRenderType.INVENTORY, stack.internal);
+        GL11.glPopMatrix();
     }
 }
