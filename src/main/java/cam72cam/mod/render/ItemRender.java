@@ -80,7 +80,7 @@ public class ItemRender {
                     return type;
                 }
             }
-            return null;
+            return NONE;
         }
     }
 
@@ -158,7 +158,14 @@ public class ItemRender {
             ItemRender.ItemRenderType type = ItemRender.ItemRenderType.from(typeIn);
 
             if (type == ItemRender.ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                GL11.glPushMatrix();
+                GL11.glRotated(180, 1, 0, 0);
+                //GL11.glRotated(180, 0, 1, 0);
+                GL11.glTranslated(-2, 2, 0);
+                GL11.glScaled(20, 20, 20);
+                GL11.glTranslated(0, -1, 0);
                 iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                GL11.glPopMatrix();
                 return;
             }
 
@@ -167,18 +174,34 @@ public class ItemRender {
                 return;
             }
 
-            /*
-             * I am an evil wizard!
-             *
-             * So it turns out that I can stick a draw call in here to
-             * render my own stuff. This subverts forge's entire baked model
-             * system with a single line of code and injects my own OpenGL
-             * payload. Fuck you modeling restrictions.
-             *
-             * This is probably really fragile if someone calls getQuads
-             * before actually setting up the correct GL context.
-             */
+            GL11.glPushMatrix();
+            switch (type) {
+                case GUI:
+                    GL11.glRotated(180, 1, 0, 0);
+                    GL11.glRotated(180, 0, 1, 0);
+                    GL11.glTranslated(2, 2, 0);
+                    GL11.glScaled(20, 20, 20);
+                    GL11.glTranslated(-1, -1, 0);
+                    break;
+                case FIRST_PERSON_RIGHT_HAND:
+                    GL11.glRotated(90, 0, 1, 0);
+                    GL11.glTranslated(1, 0, 0.7);
+                    GL11.glRotated(180, 0, 1, 0);
+                    GL11.glRotated(10, 1, 0, 0);
+                    break;
+                case THIRD_PERSON_RIGHT_HAND:
+                    GL11.glTranslated(1, -0.5, 0.5);
+                    GL11.glRotated(180, 0, 1, 0);
+                    break;
+                case ENTITY:
+                    GL11.glTranslated(0.5, 0, 0.5);
+                    GL11.glRotated(180, 0, 1, 0);
+                    break;
+            }
+
+            model.applyTransform(type);
             std.render();
+            GL11.glPopMatrix();
         }
     }
 }
