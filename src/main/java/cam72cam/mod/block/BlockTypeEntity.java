@@ -10,6 +10,7 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 
 import java.util.function.Supplier;
 
@@ -143,13 +144,21 @@ public abstract class BlockTypeEntity extends BlockType {
             return constructData.get().supplier(id);
         }
 
+        public void setBlockBoundsBasedOnState(IBlockAccess source, int posX, int posY, int posZ) {
+            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(posX, posY, posZ);
+            if (entity == null) {
+                super.setBlockBoundsBasedOnState(source, posX, posY, posZ);
+            }
+            super.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, (float) BlockTypeEntity.this.getHeight(World.get(entity.getWorldObj()), new Vec3i(posX, posY, posZ)), 1.0F);
+        }
+
         @Override
         public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
             net.minecraft.tileentity.TileEntity entity = source.getTileEntity(posX, posY, posZ);
             if (entity == null) {
                 return super.getCollisionBoundingBoxFromPool(source, posX, posY, posZ);
             }
-            return AxisAlignedBB.getBoundingBox(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(source), new Vec3i(posX, posY, posZ)), 1.0F);
+            return AxisAlignedBB.getBoundingBox(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(source), new Vec3i(posX, posY, posZ)), 1.0F).offset(posX, posY, posZ);
         }
     }
 

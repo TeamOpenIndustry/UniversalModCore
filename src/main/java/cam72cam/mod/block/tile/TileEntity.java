@@ -358,6 +358,10 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
                     this.instance.load(deferredLoad);
                 }
                 this.deferredLoad = null;
+                if (worldObj.isRemote) {
+                    worldObj.notifyBlockChange(xCoord, yCoord, zCoord, this.getBlockType());
+                    worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+                }
             }
         }
         return this.instance;

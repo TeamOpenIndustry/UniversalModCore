@@ -21,6 +21,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.List;
 import java.util.Random;
 
 public abstract class BlockType {
@@ -147,21 +148,22 @@ public abstract class BlockType {
 
         @Override
         public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
-            return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+            return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, BlockType.this.getHeight(), 1).offset(posX, posY, posZ);
         }
 
-        /* Removed 1.7.10
-        @Override
-        public AxisAlignedBB getBoundingBox(Block block, int meta, IBlockAccess source, int posX, int posY, int posZ) {
-            return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+        public void addCollisionBoxesToList(net.minecraft.world.World source, int posX, int posY, int posZ, AxisAlignedBB other, List list, Entity ent) {
+            super.addCollisionBoxesToList(source, posX, posY, posZ, other, list, ent);
         }
-        */
+
+        public void setBlockBoundsBasedOnState(IBlockAccess p_149719_1_, int p_149719_2_, int p_149719_3_, int p_149719_4_) {
+            this.setBlockBounds(0, 0, 0, 1, (float) BlockType.this.getHeight(), 1);
+        }
 
         @Override
         public AxisAlignedBB getSelectedBoundingBoxFromPool(net.minecraft.world.World worldIn, int posX, int posY, int posZ) {
             return getCollisionBoundingBoxFromPool(worldIn, posX, posY, posZ)
                     .expand(0, 0.1, 0)
-                    .offset(posX, posY, posZ);
+                    ;
         }
 
         /* Removed 1.7.10
