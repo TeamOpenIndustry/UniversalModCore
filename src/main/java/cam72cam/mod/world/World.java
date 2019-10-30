@@ -349,7 +349,7 @@ public class World {
     }
 
     public boolean isBlockLoaded(Vec3i pos) {
-        return internal.getPersistentChunks().containsKey(new ChunkCoordIntPair(pos.x >> 4, pos.z >> 4));
+        return internal.getChunkProvider().chunkExists(pos.x >> 4, pos.z >> 4);
     }
 
     public void breakBlock(Vec3i pos) {
