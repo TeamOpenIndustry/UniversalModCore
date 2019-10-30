@@ -13,11 +13,15 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import java.util.Random;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
@@ -212,6 +216,16 @@ public abstract class BlockType {
             return BlockRenderLayer.CUTOUT_MIPPED;
         }
         */
+
+        public int quantityDropped(Random p_149745_1_)
+        {
+            return 0;
+        }
+
+        public Item getItemDropped(int p_149650_1_, Random p_149650_2_, int p_149650_3_)
+        {
+            return Item.getItemFromBlock(Blocks.air);
+        }
 
     }
 }
