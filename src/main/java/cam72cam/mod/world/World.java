@@ -376,7 +376,7 @@ public class World {
         if (stack.isEmpty()) {
             internal.setBlockToAir(pos.x, pos.y, pos.z);
         } else {
-            internal.setBlock(pos.x, pos.y, pos.z, Block.getBlockFromItem(stack.internal.getItem()));
+            internal.setBlock(pos.x, pos.y, pos.z, Block.getBlockFromItem(stack.internal.getItem()), stack.internal.getItemDamage(), 3);
         }
     }
 
