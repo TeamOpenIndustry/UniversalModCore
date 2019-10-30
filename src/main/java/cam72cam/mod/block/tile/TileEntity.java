@@ -107,7 +107,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
         super.markDirty();
         if (!worldObj.isRemote) {
             worldObj.notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, blockType, 1 + 2 + 8);
-            //TODO 1.7.10? world.internal.notifyNeighborsOfStateChange(pos.internal, this.getBlockType());
+            worldObj.notifyBlockChange(xCoord, yCoord, zCoord, this.getBlockType());
+            worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
         }
     }
 
