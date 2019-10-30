@@ -34,41 +34,17 @@ public class StandardModel {
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        Block state = Blocks.wool;
-        int meta = color.internal;
-
-        models.add(() -> {
-            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
-            renderBlocks.setOverrideBlockTexture(state.getIcon(0, meta));
-            renderBlocks.renderBlockAllFaces(state, 0, 0, 0);
-        });
-
+        addItem(new ItemStack(Blocks.wool, 1, color.internal), translate.add(0.5, 0.5, 0), scale);
         return this;
     }
 
     public StandardModel addSnow(int layers, Vec3d translate) {
-        models.add(() -> {
-            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
-            GL11.glPushMatrix();
-            GL11.glScaled(1, Math.max(1, Math.min(8, layers))/8f, 1);
-            GL11.glTranslated(0, (-1 + Math.max(1, Math.min(layers, 8))/8f)/2, 0);
-            renderBlocks.renderBlockAllFaces(Blocks.snow, 0, 0, 0);
-            GL11.glPopMatrix();
-        });
+        addItem(new ItemStack(Blocks.snow), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
         return this;
     }
 
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
-        Pair<Block, Integer> info = itemToBlockState(bed);
-        models.add(() -> {
-            renderBlocks.blockAccess = Minecraft.getMinecraft().theWorld;
-            GL11.glPushMatrix();
-            GL11.glScaled(scale.x, scale.y, scale.z);
-            GL11.glTranslated(translate.x, (-1 + scale.y)/2 + translate.y, translate.z);
-            // TODO meta
-            renderBlocks.renderBlockAllFaces(info.getKey(), 0, 0, 0);
-            GL11.glPopMatrix();
-        });
+        addItem(bed, translate, scale);
         return this;
     }
 

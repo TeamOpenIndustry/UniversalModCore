@@ -179,8 +179,7 @@ public class ItemRender {
                 case GUI:
                     GL11.glRotated(180, 1, 0, 0);
                     GL11.glRotated(180, 0, 1, 0);
-                    GL11.glTranslated(2, 2, 0);
-                    GL11.glScaled(20, 20, 20);
+                    GL11.glScaled(16, 16, 16);
                     GL11.glTranslated(-1, -1, 0);
                     break;
                 case FIRST_PERSON_RIGHT_HAND:
