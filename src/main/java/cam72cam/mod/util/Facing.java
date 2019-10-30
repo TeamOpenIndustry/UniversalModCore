@@ -3,6 +3,7 @@ package cam72cam.mod.util;
 import cam72cam.mod.math.Rotation;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public enum Facing {
     DOWN(EnumFacing.DOWN),
@@ -61,6 +62,25 @@ public enum Facing {
                 return EAST;
             default:
                 return NORTH;
+        }
+    }
+
+    public static Facing from(ForgeDirection dir) {
+        switch (dir) {
+            case DOWN:
+                return DOWN;
+            case UP:
+                return UP;
+            case NORTH:
+                return NORTH;
+            case SOUTH:
+                return SOUTH;
+            case WEST:
+                return WEST;
+            case EAST:
+                return EAST;
+            default:
+                return null;
         }
     }
 

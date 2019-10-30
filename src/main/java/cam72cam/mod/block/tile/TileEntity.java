@@ -13,6 +13,9 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
+import cofh.api.energy.IEnergyConnection;
+import cofh.api.energy.IEnergyHandler;
+import cofh.api.energy.IEnergyStorage;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -20,6 +23,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
@@ -27,7 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class TileEntity extends net.minecraft.tileentity.TileEntity {
+public class TileEntity extends net.minecraft.tileentity.TileEntity implements IEnergyHandler, IEnergyConnection {
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
     public boolean hasTileData;
     private String instanceId;
@@ -370,5 +374,30 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public IEnergy getEnergy(Facing side) {
         return instance() != null ? instance().getEnergy(side) : null;
+    }
+
+    @Override
+    public int receiveEnergy(ForgeDirection dir, int maxReceive, boolean simulate) {
+        return getEnergy(Facing.from(dir)) == null ? 0 : getEnergy(null).receive(maxReceive, simulate);
+    }
+
+    @Override
+    public int extractEnergy(ForgeDirection dir, int maxExtract, boolean simulate) {
+        return getEnergy(null) == null ? 0 : getEnergy(null).extract(maxExtract, simulate);
+    }
+
+    @Override
+    public int getEnergyStored(ForgeDirection dir) {
+        return getEnergy(null) == null ? 0 : getEnergy(null).getCurrent();
+    }
+
+    @Override
+    public int getMaxEnergyStored(ForgeDirection dir) {
+        return getEnergy(null) == null ? 0 : getEnergy(null).getMax();
+    }
+
+    @Override
+    public boolean canConnectEnergy(ForgeDirection from) {
+        return getEnergy(null) != null;
     }
 }
