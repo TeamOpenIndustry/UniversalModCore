@@ -466,7 +466,7 @@ public class World {
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, new BoundingBox(bb));
+        List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, new BoundingBox(bb).expand(0, 1, 0));
         return items.stream().map((EntityItem::getEntityItem)).map(ItemStack::new).collect(Collectors.toList());
     }
 
