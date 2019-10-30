@@ -2,6 +2,7 @@ package cam72cam.mod.world;
 
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 
 public class BlockInfo {
     final Block internal;
@@ -13,14 +14,21 @@ public class BlockInfo {
     }
 
     public BlockInfo(TagCompound info) {
-        internal = Block.getBlockFromName(info.getString("block"));
-        internalMeta = info.getInteger("meta");
+        if (info.hasKey("block")) {
+            internal = Block.getBlockFromName(info.getString("block"));
+            internalMeta = info.getInteger("meta");
+        } else {
+            internal = Blocks.air;
+            internalMeta = 0;
+        }
     }
 
     public TagCompound toNBT() {
         TagCompound data = new TagCompound();
-        data.setString("block", internal.getUnlocalizedName());
-        data.setInteger("meta", internalMeta);
+        if (internal != null) {
+            data.setString("block", internal.getUnlocalizedName());
+            data.setInteger("meta", internalMeta);
+        }
         return data;
     }
 }
