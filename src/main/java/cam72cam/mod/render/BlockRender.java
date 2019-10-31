@@ -92,12 +92,16 @@ public class BlockRender {
 
             @Override
             public boolean renderWorldBlock(IBlockAccess world, int x, int y, int z, Block blockIn, int modelId, RenderBlocks renderer) {
-                if (block instanceof BlockTypeEntity) {
-                    net.minecraft.tileentity.TileEntity tile = world.getTileEntity(x, y, z);
-                    if (cls.isInstance(tile)) {
-                        StandardModel render = model.apply(cls.cast(tile));
-                        if (render != null) {
-                            render.renderQuads();
+                if (block.internal == blockIn) {
+                    net.minecraft.tileentity.TileEntity tileRaw = world.getTileEntity(x, y, z);
+                    if (tileRaw instanceof TileEntity) {
+                        TileEntity tile = (TileEntity) tileRaw;
+
+                        if (cls.isInstance(tile.instance())) {
+                            StandardModel render = model.apply(cls.cast(tile.instance()));
+                            if (render != null) {
+                                render.renderQuads(world, x, y, z);
+                            }
                         }
                     }
                 } else {

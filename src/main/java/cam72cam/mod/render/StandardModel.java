@@ -2,13 +2,16 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,7 +22,20 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class StandardModel {
-    private List<Runnable> models = new ArrayList<>();
+    private List<Consumer<RenderInfo>> models = new ArrayList<>();
+    private class RenderInfo {
+        IBlockAccess world;
+        int x;
+        int y;
+        int z;
+
+        public RenderInfo(IBlockAccess world, int x, int y, int z) {
+            this.world = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
     private List<Consumer<Float>> custom = new ArrayList<>();
 
     private RenderBlocks renderBlocks = new RenderBlocks();
@@ -34,17 +50,30 @@ public class StandardModel {
     }
 
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        addItem(new ItemStack(Blocks.wool, 1, color.internal), translate.add(0.5, 0.5, 0), scale);
+        addItemBlock(new ItemStack(Blocks.wool, 1, color.internal), translate, scale);
         return this;
     }
 
     public StandardModel addSnow(int layers, Vec3d translate) {
-        addItem(new ItemStack(Blocks.snow), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
+        addItemBlock(new ItemStack(Blocks.snow), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
         return this;
     }
 
-    public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
-        addItem(bed, translate, scale);
+    public StandardModel addItemBlock(ItemStack stack, Vec3d translate, Vec3d scale) {
+        if (stack.isEmpty()) {
+            return this;
+        }
+        models.add((pt) -> {
+            Block block = Block.getBlockFromItem(stack.internal.getItem());
+            if (block != null) {
+                renderBlocks.blockAccess = pt.world;
+                renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
+                renderBlocks.lockBlockBounds = true;
+                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getItemDamage()));
+                renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
+                renderBlocks.lockBlockBounds = false;
+            }
+        });
         return this;
     }
 
@@ -91,11 +120,21 @@ public class StandardModel {
 
     public void render(float partialTicks) {
         renderCustom(partialTicks);
-        renderQuads();
+        GL11.glPushMatrix();
+        {
+            GLBoolTracker tex = new GLBoolTracker(GL11.GL_TEXTURE_2D, true);
+            GL11.glTranslated(0, -255, 0);
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+            Tessellator.instance.startDrawingQuads();
+            renderQuads(Minecraft.getMinecraft().theWorld, 0, 255, 0);
+            Tessellator.instance.draw();
+            tex.restore();
+        }
+        GL11.glPopMatrix();
     }
 
-    public void renderQuads() {
-        models.forEach(Runnable::run);
+    public void renderQuads(IBlockAccess world, int x, int y, int z) {
+        models.forEach(a -> a.accept(new RenderInfo(world, x, y, z)));
     }
 
     public void renderCustom() {
