@@ -19,6 +19,8 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.Logger;
@@ -178,14 +180,13 @@ public class ModCore {
                     addHandler(new ClientEvents.ClientEventBus());
                     break;
                 case SETUP:
-                    /* TODO 1.7.10
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
                         if (skipN > 0) {
                             skipN--;
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                    });*/
+                    });
                     BlockRender.onPostColorSetup();
                     ClientEvents.fireReload();
                     break;

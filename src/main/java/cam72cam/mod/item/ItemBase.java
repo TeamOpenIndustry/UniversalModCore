@@ -13,6 +13,7 @@ import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -132,10 +133,27 @@ public class ItemBase {
             return Arrays.stream(ItemBase.this.creativeTabs).map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
         }
 
+        /*
         @SideOnly(Side.CLIENT)
         public IIcon getIconFromDamageForRenderPass(int p_77618_1_, int p_77618_2_)
         {
             return ItemRender.getIcon(ItemBase.this);
+        }
+
+        @SideOnly(Side.CLIENT)
+        public IIcon getIconFromDamage(int p_77617_1_) {
+            return ItemRender.getIcon(ItemBase.this);
+        }
+        */
+
+        @SideOnly(Side.CLIENT)
+        public void registerIcons(IIconRegister ir) {
+            String iconName = ItemRender.getIcon(ItemBase.this);
+            if (iconName != null) {
+                this.itemIcon = ir.registerIcon(iconName.replace(":items/", ":"));
+            } else {
+                super.registerIcons(ir);
+            }
         }
     }
 }

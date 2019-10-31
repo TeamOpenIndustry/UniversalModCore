@@ -7,9 +7,7 @@ import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.util.IIcon;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.GL11;
@@ -22,16 +20,14 @@ import java.util.Map;
 
 public class ItemRender {
     private static final SpriteSheet iconSheet = new SpriteSheet(128);
-    private static Map<ItemBase, IIcon> icons = new HashMap<>();
+    private static Map<ItemBase, String> icons = new HashMap<>();
 
-    public static IIcon getIcon(ItemBase itemBase) {
+    public static String getIcon(ItemBase itemBase) {
         return icons.get(itemBase);
     }
 
     public static void register(ItemBase item, Identifier tex) {
-        ClientEvents.TEXTURE_STITCH.subscribe(() -> {
-            icons.put(item, Minecraft.getMinecraft().getTextureMapBlocks().registerIcon(tex.internal.toString()));
-        });
+        icons.put(item, tex.toString());
     }
 
     public static void register(ItemBase item, IItemModel model) {
