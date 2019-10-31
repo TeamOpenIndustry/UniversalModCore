@@ -56,12 +56,12 @@ public interface ITank {
         return new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(internal.getTankInfo(ForgeDirection.UNKNOWN)[0].fluid);
+                return new FluidStack(internal.getTankInfo(ForgeDirection.UNKNOWN).length == 0 ? null : internal.getTankInfo(ForgeDirection.UNKNOWN)[0].fluid);
             }
 
             @Override
             public int getCapacity() {
-                return internal.getTankInfo(ForgeDirection.UNKNOWN)[0].capacity;
+                return internal.getTankInfo(ForgeDirection.UNKNOWN).length == 0 ? 0 : internal.getTankInfo(ForgeDirection.UNKNOWN)[0].capacity;
             }
 
             @Override

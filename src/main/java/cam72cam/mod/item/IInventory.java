@@ -60,7 +60,9 @@ public interface IInventory {
                 net.minecraft.item.ItemStack current = inventory.getStackInSlot(slot);
 
                 if (current == null || current.stackSize == 0) {
-                    set(slot, itemStack);
+                    if (!simulate) {
+                        set(slot, itemStack);
+                    }
                     return ItemStack.EMPTY;
                 }
 
