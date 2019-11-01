@@ -476,7 +476,11 @@ public class World {
 
     public void setBlock(Vec3i pos, BlockInfo info) {
         internal.removeTileEntity(pos.x, pos.y, pos.z);
-        internal.setBlock(pos.x, pos.y, pos.z, info.internal, info.internalMeta, 3);
+        if (info == null || info.internal == null) {
+            internal.setBlockToAir(pos.x, pos.y, pos.z);
+        } else {
+            internal.setBlock(pos.x, pos.y, pos.z, info.internal, info.internalMeta, 3);
+        }
     }
 
     public boolean canEntityCollideWith(Vec3i pos, String damageType) {

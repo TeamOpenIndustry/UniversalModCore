@@ -334,7 +334,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     public boolean isItemValidForSlot(int slot, ItemStack stack) {
         IInventory inv = getInventory(null);
         // remainder != input size
-        System.out.println("VALID" + slot + " " + stack);
         return inv != null && stack != null && inv.insert(slot, new cam72cam.mod.item.ItemStack(stack), true).getCount() != stack.stackSize;
     }
 
