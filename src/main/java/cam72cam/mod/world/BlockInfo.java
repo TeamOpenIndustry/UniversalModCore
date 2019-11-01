@@ -26,7 +26,7 @@ public class BlockInfo {
     public TagCompound toNBT() {
         TagCompound data = new TagCompound();
         if (internal != null) {
-            data.setString("block", internal.getUnlocalizedName());
+            data.setString("block", Block.blockRegistry.getNameForObject(internal));
             data.setInteger("meta", internalMeta);
         }
         return data;
