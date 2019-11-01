@@ -41,4 +41,9 @@ public class Fluid {
     public String toString() {
         return ident + " : " + internal.toString() + " : " + super.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Fluid && ((Fluid)o).ident.equals(ident);
+    }
 }
