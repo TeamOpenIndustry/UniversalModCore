@@ -160,6 +160,7 @@ public class ItemRender {
                 GL11.glTranslated(-2, 2, 0);
                 GL11.glScaled(20, 20, 20);
                 GL11.glTranslated(0, -1, 0);
+                GL11.glEnable(GL11.GL_ALPHA_TEST);
                 iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
                 GL11.glPopMatrix();
                 return;
