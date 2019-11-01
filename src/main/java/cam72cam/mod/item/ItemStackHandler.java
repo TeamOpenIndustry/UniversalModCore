@@ -130,7 +130,7 @@ public class ItemStackHandler implements IInventory {
         }
 
         TagCompound data = new TagCompound();
-        data.setList("Items", stacks, ItemStack::getTagCompound);
+        data.setList("Items", stacks, ItemStack::toTag);
         return data;
     }
 
