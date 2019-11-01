@@ -169,11 +169,10 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         itemRender.zLevel = 400;
         itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glDisable(GL11.GL_LIGHTING);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
 
-        GL11.glEnable(GL11.GL_ALPHA);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
