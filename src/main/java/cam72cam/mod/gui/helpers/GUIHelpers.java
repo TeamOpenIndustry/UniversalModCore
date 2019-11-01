@@ -9,9 +9,11 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.fluids.BlockFluidBase;
 import org.lwjgl.opengl.GL11;
 
 public class GUIHelpers {
@@ -53,13 +55,10 @@ public class GUIHelpers {
     }
 
     public static void drawFluid(Fluid fluid, double x, double d, double width, int height, int scale) {
-        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.internal.getStillIcon().toString());
-        if (sprite != null) {
-            drawSprite(sprite, fluid.internal.getColor(), x, d, width, height, scale);
-        }
+        drawSprite(fluid.internal.getStillIcon(), fluid.internal.getColor(), x, d, width, height, scale);
     }
 
-    public static void drawSprite(TextureAtlasSprite sprite, int col, double x, double y, double width, double height, int scale) {
+    public static void drawSprite(IIcon sprite, int col, double x, double y, double width, double height, int scale) {
         double zLevel = 0;
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);

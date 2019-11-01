@@ -167,7 +167,10 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
+        itemRender.zLevel = 400;
         itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glDisable(GL11.GL_LIGHTING);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
 
         GL11.glEnable(GL11.GL_ALPHA);
@@ -185,7 +188,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         drawRect(x, y + (int)(16 - 16 * height), x + 16, y + 16, color);
 
-        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
+        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId.replace("minecraft:blocks/", ""));
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
         GL11.glColor4f(1,1,1,1);
         super.drawTexturedModelRectFromIcon(x, y, sprite, 16, 16);
