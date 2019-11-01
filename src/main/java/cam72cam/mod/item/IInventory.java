@@ -78,7 +78,7 @@ public interface IInventory {
                 }
 
                 int space = current.getMaxStackSize() - current.stackSize;
-                if (space >= 0) {
+                if (space <= 0) {
                     return itemStack;
                 }
 
@@ -89,7 +89,7 @@ public interface IInventory {
                     set(slot, copy);
                 }
 
-                ItemStack remainder = new ItemStack(itemStack.internal);
+                ItemStack remainder = new ItemStack(itemStack.internal.copy());
                 remainder.setCount(itemStack.getCount() - toMove);
                 return remainder;
             }
