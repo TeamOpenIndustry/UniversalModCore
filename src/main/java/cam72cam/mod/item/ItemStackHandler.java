@@ -18,42 +18,41 @@ public class ItemStackHandler implements IInventory {
             super("", false, size);
         }
 
-        @Override
-        public void onInventoryChanged(InventoryBasic p_76316_1_) {
-
-        }
-
         public void load(List<ItemStack> stacks) {
             for (int i = 0; i < stacks.size(); i++) {
                 super.setInventorySlotContents(i, stacks.get(i).internal);
             }
         }
+
+        @Override
+        public void setInventorySlotContents(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            if (checkSlot.test(slot, new ItemStack(stack))) {
+                super.setInventorySlotContents(slot, stack);
+                onContentsChanged(slot);
+            }
+        }
+        @Override
+        public boolean isItemValidForSlot(int slot, net.minecraft.item.ItemStack stack) {
+            return checkSlot.test(slot, new ItemStack(stack));
+        }
+
+        @Override
+        public net.minecraft.item.ItemStack decrStackSize(int slot, int ammount) {
+            net.minecraft.item.ItemStack res = super.decrStackSize(slot, ammount);
+            onContentsChanged(slot);
+            return res;
+        }
+
+        @Override
+        public void onInventoryChanged(InventoryBasic p_76316_1_) {
+            for (int slot = 0; slot < super.getSizeInventory(); slot++) {
+                onContentsChanged(slot);
+            }
+        }
     }
 
     public ItemStackHandler(int size) {
-        this.internal = new ExposedItemStackHandler(size) {
-            @Override
-            public void setInventorySlotContents(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
-                if (checkSlot.test(slot, new ItemStack(stack))) {
-                    super.setInventorySlotContents(slot, stack);
-                    onContentsChanged(slot);
-                }
-            }
-            @Override
-            public net.minecraft.item.ItemStack decrStackSize(int slot, int ammount) {
-                net.minecraft.item.ItemStack res = super.decrStackSize(slot, ammount);
-                onContentsChanged(slot);
-                return res;
-            }
-
-            @Override
-            public void onInventoryChanged(InventoryBasic p_76316_1_) {
-                super.onInventoryChanged(p_76316_1_);
-                for (int slot = 0; slot < super.getSizeInventory(); slot++) {
-                    onContentsChanged(slot);
-                }
-            }
-        };
+        this.internal = new ExposedItemStackHandler(size);
     }
 
     public ItemStackHandler() {
@@ -68,29 +67,7 @@ public class ItemStackHandler implements IInventory {
         //internal.setSize(inventorySize);
         // TODO 1.7.10 COPY CONTENTS
 
-        this.internal = new ExposedItemStackHandler(size) {
-            @Override
-            public void setInventorySlotContents(int slot, net.minecraft.item.ItemStack stack) {
-                if (checkSlot.test(slot, new ItemStack(stack))) {
-                    super.setInventorySlotContents(slot, stack != null && stack.stackSize > 0 ? stack : null);
-                    onContentsChanged(slot);
-                }
-            }
-            @Override
-            public net.minecraft.item.ItemStack decrStackSize(int slot, int ammount) {
-                net.minecraft.item.ItemStack res = super.decrStackSize(slot, ammount);
-                onContentsChanged(slot);
-                return res;
-            }
-
-            @Override
-            public void onInventoryChanged(InventoryBasic p_76316_1_) {
-                super.onInventoryChanged(p_76316_1_);
-                for (int slot = 0; slot < super.getSizeInventory(); slot++) {
-                    onContentsChanged(slot);
-                }
-            }
-        };
+        this.internal = new ExposedItemStackHandler(size);
     }
 
     @Override

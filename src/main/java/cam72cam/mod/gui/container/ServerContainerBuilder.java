@@ -8,6 +8,7 @@ import invtweaks.api.container.ContainerSection;
 import invtweaks.api.container.ContainerSectionCallback;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
 import cpw.mods.fml.common.Optional;
 
@@ -74,7 +75,12 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
         x += paddingLeft;
         if (handler != null && handler.getSlotCount() > slotID) {
-            this.addSlotToContainer(new Slot(handler.internal, slotID, x, y));
+            this.addSlotToContainer(new Slot(handler.internal, slotID, x, y) {
+                @Override
+                public boolean isItemValid(net.minecraft.item.ItemStack p_75214_1_) {
+                    return ((InventoryBasic)handler.internal).isItemValidForSlot(slotID, p_75214_1_);
+                }
+            });
             slotRefs.get(ContainerSection.CHEST).add((Slot) inventorySlots.get(inventorySlots.size() - 1));
         }
     }
