@@ -167,7 +167,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        itemRender.zLevel = 400;
+        itemRender.zLevel = this.zLevel+1;
         itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
 

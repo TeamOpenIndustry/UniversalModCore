@@ -5,6 +5,7 @@ import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.IFluidContainerItem;
 
 public class ItemStack {
@@ -121,7 +122,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return internal != null && internal.getItem() instanceof IFluidContainerItem;
+        return internal != null && (internal.getItem() instanceof IFluidContainerItem || FluidContainerRegistry.isContainer(internal));
     }
 
     public boolean isFlammable() {

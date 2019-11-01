@@ -85,7 +85,7 @@ public interface IInventory {
                 int toMove = Math.min(space, itemStack.getCount());
                 if (!simulate) {
                     ItemStack copy = itemStack.copy();
-                    copy.setCount(toMove);
+                    copy.setCount(toMove + current.stackSize);
                     set(slot, copy);
                 }
 
