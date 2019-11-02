@@ -86,6 +86,7 @@ public abstract class BlockType {
                     .sounds(settings.material.soundType)
                     .hardness(settings.hardness)
                     .resistance(settings.resistance)
+                    .dynamicBounds()
                     .build());
         }
 
