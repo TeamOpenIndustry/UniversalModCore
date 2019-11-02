@@ -13,10 +13,7 @@ public class WorldChunkMixin {
     @Inject(at = @At("RETURN"), method = "addEntity")
     public void addEntity(Entity entity, CallbackInfo info) {
         if (entity.isAlive()) {
-            System.out.println("ADDED " + entity);
             CommonEvents.Entity.WORLD_JOIN.execute(x -> x.accept(entity));
-        } else {
-            System.out.println("NOT ADDED " + entity);
         }
     }
 
