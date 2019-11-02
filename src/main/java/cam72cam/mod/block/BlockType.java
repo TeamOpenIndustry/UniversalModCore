@@ -17,6 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
@@ -68,6 +69,14 @@ public abstract class BlockType {
 
     public double getHeight() {
         return 1;
+    }
+
+    public int getStrongPower(World world, Vec3i vec3i, Facing from) {
+        return 0;
+    }
+
+    public int getWeakPower(World world, Vec3i vec3i, Facing from) {
+        return 0;
     }
 
     protected class BlockInternal extends net.minecraft.block.Block {
@@ -137,7 +146,7 @@ public abstract class BlockType {
          */
         /*
         @Override
-        public boolean canBeConnectedTo(IBlockAccess internal, BlockPos pos, Direction facing) {
+        public boolean canBeConnectedTo(BlockView internal, BlockPos pos, Direction facing) {
             return settings.connectable;
         }
         */
@@ -147,42 +156,31 @@ public abstract class BlockType {
         }
 
         /* Redstone */
-        /* TODO REDSTONE!!!
 
         @Override
-        public int getWeakPower(BlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
+        public int getWeakRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            if (settings.entity == null) {
-                return 0;
-            }
-            World world = World.get((net.minecraft.world.World) blockAccess);
-            net.minecraft.block.entity.BlockEntity ent =  world.getTileEntity(new Vec3i(pos), net.minecraft.block.entity.BlockEntity.class);
-            if (ent instanceof IRedstoneProvider) {
-                IRedstoneProvider provider = (IRedstoneProvider) ent;
-                return provider.getRedstoneLevel();
-            }
-            return 0;
+            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
-        public int getStrongPower(BlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
+        public int getStrongRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            return this.getWeakPower(blockState, blockAccess, pos, side);
+            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
-        public boolean canProvidePower(BlockState state)
+        public boolean emitsRedstonePower(BlockState state)
         {
-            return true;
+            return settings.redstoneProvider;
+        }
+
+        /* TODO
+        @SideOnly(Side.CLIENT)
+        public BlockRenderLayer getBlockLayer() {
+            return BlockRenderLayer.CUTOUT_MIPPED;
         }
         */
-
-            /* TODO
-            @SideOnly(Side.CLIENT)
-            public BlockRenderLayer getBlockLayer() {
-                return BlockRenderLayer.CUTOUT_MIPPED;
-            }
-            */
 
     }
 }

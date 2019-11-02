@@ -145,4 +145,8 @@ public class ItemStack {
     public void damageItem(int i, Player player) {
         internal.damage(i, player.internal, e -> e.sendToolBreakStatus(player.internal.getActiveHand()));
     }
+
+    public void clearTagCompound() {
+        internal.setTagCompound(null);
+    }
 }

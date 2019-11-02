@@ -22,6 +22,10 @@ public class ClientEvents {
         Audio.registerClientCallbacks();
     }
 
+    public static void fireReload() {
+        RELOAD.execute(Runnable::run);
+    }
+
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Runnable> MODEL_BAKE = new Event<>();
     public static final Event<Runnable> TEXTURE_STITCH = new Event<>();
@@ -30,4 +34,5 @@ public class ClientEvents {
     public static final Event<Consumer<Float>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<Float>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Runnable> SOUND_LOAD = new Event<>();
+    public static final Event<Runnable> RELOAD = new Event<>();
 }

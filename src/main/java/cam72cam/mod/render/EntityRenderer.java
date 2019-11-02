@@ -3,9 +3,9 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -26,10 +26,15 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
     }
 
     public static void registerClientEvents() {
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            EntityRendererRegistry.INSTANCE.register(ModdedEntity.class, EntityRenderer::new);
-        });
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(ModdedEntity.class, EntityRenderer::new));
 
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(SeatEntity.class, (manager, ctx) -> new net.minecraft.client.render.entity.EntityRenderer<SeatEntity>(manager) {
+            @Nullable
+            @Override
+            protected Identifier getTexture(SeatEntity var1) {
+                return null;
+            }
+        }));
     }
 
     public EntityRenderer(EntityRenderDispatcher entityRenderDispatcher, EntityRendererRegistry.Context context) {

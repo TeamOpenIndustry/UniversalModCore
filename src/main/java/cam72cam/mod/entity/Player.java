@@ -51,11 +51,11 @@ public class Player extends Entity {
     }
 
     public int getFoodLevel() {
-        return internal.getHungerManager().getFoodLevel();
+        return internal.getHungerManager().getFoodLevel() + (int)(internal.getHungerManager().getSaturationLevel());
     }
 
-    public void setFoodLevel(int i) {
-        internal.getHungerManager().setFoodLevel(i);
+    public void useFood(int i) {
+        internal.getHungerManager().addExhaustion(i);
     }
 
     public IInventory getInventory() {

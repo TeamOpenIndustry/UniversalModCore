@@ -47,7 +47,7 @@ public class EntityRegistry {
     }
 
     public static void registerEvents() {
-        SeatEntity.TYPE = Registry.register(Registry.ENTITY_TYPE, SeatEntity.ID, FabricEntityTypeBuilder.create(EntityCategory.MISC, SeatEntity::new).build());
+        SeatEntity.TYPE = Registry.register(Registry.ENTITY_TYPE, SeatEntity.ID, FabricEntityTypeBuilder.create(EntityCategory.MISC, SeatEntity::new).trackable(512, 20, false).build());
 
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {

@@ -8,10 +8,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.Entity;
-import cam72cam.mod.entity.Living;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.CommonEvents;
@@ -75,6 +72,10 @@ public class World {
 
         CommonEvents.World.LOAD.subscribe(world -> {
             Map<net.minecraft.world.World, World> worlds = world.isClient ? clientWorlds : serverWorlds;
+            if (worlds.containsKey(world)) {
+                return;
+            }
+
             Map<Integer, World> worldsByID = world.isClient ? clientWorldsByID : serverWorldsByID;
 
             World worldWrap = new World(world);
@@ -143,11 +144,9 @@ public class World {
     }
 
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
-        if (entityByUUID.containsKey(entity.getUuid())) {
-            entities.remove(entityByUUID.get(entity.getUuid()));
-            entityByID.remove(entity.getEntityId());
-            entityByUUID.remove(entity.getUuid());
-        }
+        entities.stream().filter(x -> x.getUUID().equals(entity.getUuid())).findFirst().ifPresent(entities::remove);
+        entityByID.remove(entity.getEntityId());
+        entityByUUID.remove(entity.getUuid());
     }
 
     /* Entity Methods */
@@ -296,6 +295,7 @@ public class World {
     }
 
     public void setSnowLevel(Vec3i ph, int snowDown) {
+        snowDown = Math.max(1, Math.min(8, snowDown));
         internal.setBlockState(ph.internal, Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, snowDown));
     }
 

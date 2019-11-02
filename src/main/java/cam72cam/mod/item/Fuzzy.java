@@ -12,7 +12,6 @@ import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -84,6 +83,8 @@ public class Fuzzy {
     public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool", ItemTags.WOOL);
     public static final Fuzzy BUCKET = new Fuzzy("bucket").add(Items.BUCKET);
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald").add(Items.EMERALD);
+    public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
+    public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");
 
     static {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::new);

@@ -4,6 +4,7 @@ import cam72cam.mod.block.tile.BlockEntityUpdatePacket;
 import cam72cam.mod.entity.CustomSpawnPacket;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Keyboard;
@@ -188,8 +189,10 @@ public class ModCore implements ModInitializer {
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                        ClientEvents.fireReload();
                     });
                     BlockRender.onPostColorSetup();
+                    ClientEvents.fireReload();
                     break;
             }
 

@@ -2,6 +2,7 @@ package cam72cam.mod.gui.helpers;
 
 import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
 import cam72cam.mod.fluid.Fluid;
+import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
@@ -85,5 +86,9 @@ public class GUIHelpers {
 
     public static int getScreenHeight() {
         return MinecraftClient.getInstance().window.getFramebufferHeight();
+    }
+
+    public static void drawItem(ItemStack stack, int x, int y) {
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(stack.internal, x, y);
     }
 }

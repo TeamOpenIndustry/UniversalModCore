@@ -1,5 +1,6 @@
 package cam72cam.mod.item;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
@@ -10,7 +11,6 @@ import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -21,6 +21,7 @@ import net.minecraft.util.registry.Registry;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,8 @@ public class ItemBase {
 
     /* Overrides */
 
-    public void addInformation(ItemStack itemStack, List<String> tooltip) {
+    public List<String> getTooltip(ItemStack itemStack) {
+        return Collections.emptyList();
     }
 
     public ClickResult onClickBlock(Player player, World world, Vec3i vec3i, Hand from, Facing from1, Vec3d vec3d) {
@@ -102,13 +104,7 @@ public class ItemBase {
         @Environment(EnvType.CLIENT)
         public void appendTooltip(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<Text> tooltip, TooltipContext context) {
             super.appendTooltip(stack, worldIn, tooltip, context);
-            List<String> temp = new ArrayList<>();
-            try {
-                ItemBase.this.addInformation(new ItemStack(stack), temp);
-            } catch (Exception ex) {
-                //TODO
-            }
-            temp.forEach(x -> tooltip.add(new LiteralText(x)));
+            tooltip.addAll(ItemBase.this.getTooltip(new ItemStack(stack)).stream().map(LiteralText::new).collect(Collectors.toList()));
         }
 
         @Override
@@ -118,6 +114,9 @@ public class ItemBase {
 
         @Override
         public TypedActionResult<net.minecraft.item.ItemStack> use(net.minecraft.world.World world, PlayerEntity player, net.minecraft.util.Hand hand) {
+            if (MinecraftClient.getBlockMouseOver() == null) {
+                onClickAir(new Player(player), World.get(world), Hand.from(hand));
+            }
             onClickAir(new Player(player), World.get(world), Hand.from(hand));
             return super.use(world, player, hand);
         }

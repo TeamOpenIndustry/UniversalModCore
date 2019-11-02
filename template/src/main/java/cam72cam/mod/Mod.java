@@ -1,9 +1,9 @@
 package cam72cam.#MODID#;
 
 import cam72cam.mod.ModCore;
+import net.fabricmc.api.ModInitializer;
 
-@net.minecraftforge.fml.common.Mod(modid = Mod.MODID, name = Mod.NAME, version = Mod.VERSION, dependencies = "required-before:modcore", acceptedMinecraftVersions = "[1.12,1.13)")
-public class Mod {
+public class Mod implements ModInitializer {
     public static final String MODID = "#MODID#";
     public static final String NAME = "#MODNAME#";
     public static final String VERSION = "#MODVERSION#";
@@ -21,6 +21,11 @@ public class Mod {
         } catch (Exception e) {
             throw new RuntimeException("Could not load mod " + MODID, e);
         }
+    }
+
+    @Override
+    public void onInitialize() {
+
     }
 }
 

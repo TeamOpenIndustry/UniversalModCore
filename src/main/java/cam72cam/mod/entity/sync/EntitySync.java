@@ -6,6 +6,9 @@ import cam72cam.mod.util.TagCompound;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class EntitySync extends TagCompound {
     private final Entity entity;
     private TagCompound old;
@@ -19,6 +22,10 @@ public class EntitySync extends TagCompound {
     }
 
     public void send() {
+        if (entity.getWorld().isClient) {
+            return;
+        }
+
         // Is this faster than the below check?
         // Could also put a bool tracker in TagCompound
         if (oldString.equals(this.toString())) {
@@ -26,6 +33,8 @@ public class EntitySync extends TagCompound {
         }
 
         TagCompound sync = new TagCompound();
+        List<String> removed = new ArrayList<>();
+
         for (String key : internal.getKeys()) {
             Tag newVal = internal.getTag(key);
             if (old.internal.containsKey(key)) {
@@ -36,7 +45,19 @@ public class EntitySync extends TagCompound {
             }
             sync.internal.put(key, newVal);
         }
-        //TODO removed keys!
+
+        for (String key : old.internal.getKeys()) {
+            if (!internal.containsKey(key)) {
+                removed.add(key);
+            }
+        }
+        if (!removed.isEmpty()) {
+            sync.setList("sync_internal_removed", removed, key -> {
+                TagCompound tc = new TagCompound();
+                tc.setString("removed", key);
+                return tc;
+            });
+        }
 
         if (sync.internal.getKeys().size() != 0) {
             old = new TagCompound((CompoundTag) this.internal.copy());
@@ -48,7 +69,13 @@ public class EntitySync extends TagCompound {
 
     public void receive(TagCompound sync) {
         for (String key : sync.internal.getKeys()) {
-            internal.put(key, sync.internal.getTag(key));
+            if (key.equals("sync_internal_removed")) {
+                for (String removed : sync.getList(key, x -> x.getString("removed"))) {
+                    internal.remove(removed);
+                }
+            } else {
+                internal.put(key, sync.internal.getTag(key));
+            }
         }
         old = this;
     }

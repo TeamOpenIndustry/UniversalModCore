@@ -8,15 +8,10 @@ import alexiil.mc.lib.attributes.fluid.FluidInvTankChangeListener;
 import alexiil.mc.lib.attributes.fluid.volume.FluidKey;
 import alexiil.mc.lib.attributes.fluid.volume.FluidKeys;
 import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
-import alexiil.mc.lib.attributes.item.FixedItemInv;
-import alexiil.mc.lib.attributes.item.InvMarkDirtyListener;
 import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.block.tile.TileEntityTickable;
-import cam72cam.mod.block.tile.TileEntityTickableTrack;
 import cam72cam.mod.energy.IEnergy;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.FluidStack;
 import cam72cam.mod.fluid.ITank;
@@ -27,7 +22,6 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
-import cam72cam.mod.util.ITrack;
 import cam72cam.mod.world.World;
 import io.github.cottonmc.energy.api.DefaultEnergyTypes;
 import io.github.cottonmc.energy.api.EnergyAttribute;
@@ -44,32 +38,21 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
     protected final Identifier id;
-    private BlockEntityType<? extends TileEntity> teType;
+    private final Supplier<BlockEntity> constructData;
 
     public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
-        super(settings);
+        super(settings.withRedstonePovider(constructData.get() instanceof IRedstoneProvider));
         id = new Identifier(settings.modID, settings.name);
-
-        CommonEvents.Block.REGISTER.subscribe(() -> {
-            if (constructData.get() instanceof BlockEntityTickable) {
-                if (constructData.get() instanceof ITrack) {
-                    teType = TileEntityTickableTrack.register(id, constructData);
-                } else {
-                    teType = TileEntityTickable.register(id, constructData);
-                }
-            } else {
-                teType = TileEntity.register(id, constructData);
-            }
-        });
+        this.constructData = constructData;
+        TileEntity.register(constructData, () -> constructData.get().supplier(id), id);
     }
 
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = teType.instantiate();
+        TileEntity te = TileEntity.create(id);
         te.hasTileData = true;
         te.world = world;
         te.pos = pos;
@@ -89,7 +72,7 @@ public abstract class BlockTypeEntity extends BlockType {
     private BlockEntity getInstance(World world, Vec3i pos) {
         TileEntity te = world.getTileEntity(pos, TileEntity.class);
         if (te != null) {
-            return (BlockEntity) te.instance();
+            return te.instance();
         }
         return null;
     }
@@ -151,6 +134,28 @@ public abstract class BlockTypeEntity extends BlockType {
         return 1;
     }
 
+    @Override
+    public int getStrongPower(World world, Vec3i pos, Facing from) {
+        if (settings.redstoneProvider) {
+            BlockEntity instance = getInstance(world, pos);
+            if (instance instanceof IRedstoneProvider) {
+                return ((IRedstoneProvider)instance).getStrongPower(from);
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int getWeakPower(World world, Vec3i pos, Facing from) {
+        if (settings.redstoneProvider) {
+            BlockEntity instance = getInstance(world, pos);
+            if (instance instanceof IRedstoneProvider) {
+                return ((IRedstoneProvider)instance).getWeakPower(from);
+            }
+        }
+        return 0;
+    }
+
     protected class BlockTypeInternal extends BlockInternal implements BlockEntityProvider, AttributeProvider {
         @Override
         public final boolean hasBlockEntity() {
@@ -158,7 +163,7 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.world.BlockView var1) {
-            return teType.instantiate();
+            return constructData.get().supplier(id);
         }
 
         @Override
@@ -311,12 +316,12 @@ public abstract class BlockTypeEntity extends BlockType {
 
                         @Override
                         public int getMaxEnergy() {
-                            return energy.getMaxEnergyStored();
+                            return energy.getMax();
                         }
 
                         @Override
                         public int getCurrentEnergy() {
-                            return energy.getEnergyStored();
+                            return energy.getCurrent();
                         }
 
                         @Override
@@ -327,7 +332,7 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Nonnull
                         @Override
                         public int insertEnergy(EnergyType energyType, int i, Simulation simulation) {
-                            return energy.receiveEnergy(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate());
+                            return energy.receive(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate());
                         }
 
                         @Override
@@ -338,7 +343,7 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Nonnull
                         @Override
                         public int extractEnergy(EnergyType energyType, int i, Simulation simulation) {
-                            return energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, energy.extractEnergy(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate()));
+                            return energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, energy.extract(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate()));
                         }
 
                         @Nonnull

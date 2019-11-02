@@ -17,19 +17,16 @@ import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.render.model.json.Transformation;
 import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.ExtendedBlockView;
-import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -48,12 +45,7 @@ public class ItemRender {
         });
     }
 
-    public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model) {
-        register(item, model, null);
-    }
-
-    public static void register(ItemBase item, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender) {
-
+    public static void register(ItemBase item, IItemModel model) {
         ClientEvents.MODEL_BAKE.subscribe(() -> {
             ModelLoadingRegistry.INSTANCE.registerVariantProvider(manager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
                     new UnbakedModel() {
@@ -73,28 +65,76 @@ public class ItemRender {
                             ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
                                 @Override
                                 public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
-                                    return new BakedItemModel(new ItemStack(itemStack_1), World.get(world_1), model, cacheRender, ((BakedItemModel) bakedModel_1).isGUI, ((BakedItemModel) bakedModel_1).overrides);
+                                    ((BakedItemModel)bakedModel_1).stack = new ItemStack(itemStack_1);
+                                    return bakedModel_1;
                                 }
-
                             };
-                            return new BakedItemModel(model, cacheRender, overrides);
+                            return new BakedItemModel(model, overrides);
                         }
                     } : null);
         });
 
-        if (cacheRender != null) {
-            ClientEvents.TEXTURE_STITCH.subscribe(() -> {
+        if (model instanceof ISpriteItemModel) {
+            ClientEvents.RELOAD.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
-                    Pair<String, StandardModel> info = cacheRender.apply(stack);
-                    bar.step(info.getKey());
-                    createSprite(info.getKey(), info.getValue());
+                    String id = ((ISpriteItemModel) model).getSpriteKey(stack);
+                    bar.step(id);
+                    createSprite(id, ((ISpriteItemModel) model).getSpriteModel(stack));
                 }
                 Progress.pop(bar);
             });
         }
     }
+
+    public enum ItemRenderType {
+        NONE(ModelTransformation.Type.NONE),
+        THIRD_PERSON_LEFT_HAND(ModelTransformation.Type.THIRD_PERSON_LEFT_HAND),
+        THIRD_PERSON_RIGHT_HAND(ModelTransformation.Type.THIRD_PERSON_RIGHT_HAND),
+        FIRST_PERSON_LEFT_HAND(ModelTransformation.Type.FIRST_PERSON_LEFT_HAND),
+        FIRST_PERSON_RIGHT_HAND(ModelTransformation.Type.FIRST_PERSON_RIGHT_HAND),
+        HEAD(ModelTransformation.Type.HEAD),
+        GUI(ModelTransformation.Type.GUI),
+        ENTITY(ModelTransformation.Type.GROUND),
+        FRAME(ModelTransformation.Type.FIXED);
+
+        private final ModelTransformation.Type type;
+
+        ItemRenderType(ModelTransformation.Type type) {
+            this.type = type;
+        }
+
+        public static ItemRenderType from(ModelTransformation.Type cameraTransformType) {
+            for (ItemRenderType type : values()) {
+                if (cameraTransformType == type.type) {
+                    return type;
+                }
+            }
+            return null;
+        }
+    }
+
+    @FunctionalInterface
+    public interface IItemModel {
+        StandardModel getModel(World world, ItemStack stack);
+        default void applyTransform(ItemRenderType type) {
+            switch (type) {
+                case FRAME:
+                    GL11.glRotated(90, 0, 1, 0);
+                    break;
+                case HEAD:
+                    GL11.glScaled(2, 2, 2);
+                    GL11.glTranslated(0, 1, 0);
+            }
+        }
+    }
+
+    public interface ISpriteItemModel extends IItemModel {
+        String getSpriteKey(ItemStack stack);
+        StandardModel getSpriteModel(ItemStack stack);
+    }
+
 
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
@@ -105,6 +145,7 @@ public class ItemRender {
         fb.beginWrite(true);
 
         GLBoolTracker depth = new GLBoolTracker(GL11.GL_DEPTH_TEST, true);
+        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
         GL11.glDepthFunc(GL11.GL_LESS);
         GL11.glClearDepth(1);
 
@@ -117,6 +158,7 @@ public class ItemRender {
 
         fb.endWrite();
         fb.delete();
+        GL11.glDepthFunc(oldDepth);
         depth.restore();
 
         iconSheet.setSprite(id, buff);
@@ -124,25 +166,15 @@ public class ItemRender {
     }
 
     static class BakedItemModel implements FullBakedModel {
-        private final ItemStack stack;
-        private final BiFunction<ItemStack, World, StandardModel> model;
-        private final Function<ItemStack, Pair<String, StandardModel>> cacheRender;
-        private boolean isGUI;
+        private ItemStack stack;
+        private final IItemModel model;
+        private ItemRenderType type;
         private final ModelItemPropertyOverrideList overrides;
 
-        BakedItemModel(BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, ModelItemPropertyOverrideList overrides) {
+        BakedItemModel(IItemModel model, ModelItemPropertyOverrideList overrides) {
             this.stack = null;
             this.model = model;
-            this.overrides = overrides;
-            this.cacheRender = cacheRender;
-            isGUI = false;
-        }
-
-        BakedItemModel(ItemStack stack, World world, BiFunction<ItemStack, World, StandardModel> model, Function<ItemStack, Pair<String, StandardModel>> cacheRender, boolean isGUI, ModelItemPropertyOverrideList overrides) {
-            this.stack = stack;
-            this.model = model;
-            this.cacheRender = cacheRender;
-            this.isGUI = isGUI;
+            this.type = ItemRenderType.NONE;
             this.overrides = overrides;
         }
 
@@ -152,12 +184,12 @@ public class ItemRender {
                 return EMPTY;
             }
 
-            if (isGUI) {
-                iconSheet.renderSprite(cacheRender.apply(stack).getKey());
+            if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
                 return EMPTY;
             }
 
-            StandardModel std = model.apply(stack, World.get(MinecraftClient.getInstance().world));
+            StandardModel std = model.getModel(World.get(MinecraftClient.getInstance().world), stack);
             if (std == null) {
                 return EMPTY;
             }
@@ -175,6 +207,7 @@ public class ItemRender {
              * before actually setting up the correct GL context.
              */
             if (side == null) {
+                model.applyTransform(type);
                 std.renderCustom();
             }
 
@@ -210,20 +243,7 @@ public class ItemRender {
         public ModelTransformation getTransformation() {
             return new ModelTransformation(Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE) {
                 public Transformation getTransformation(ModelTransformation.Type cameraTransformType) {
-                    // TODO more efficient
-                    if (cacheRender != null && (cameraTransformType == Type.GUI)) {
-                        isGUI = true;
-                    } else {
-                        isGUI = false;
-                    }
-                    // TODO Expose as part of the renderItem API
-                    if (cameraTransformType == Type.FIXED) {
-                        return new Transformation(new Vector3f(0, 90, 0), new Vector3f(), new Vector3f(1,1,1));
-                    }
-                    if (cameraTransformType == Type.HEAD) {
-                        return new Transformation(new Vector3f(), new Vector3f(0, 1, 0), new Vector3f(2,2,2));
-                    }
-                    //TODO minecraft item defaults
+                    BakedItemModel.this.type = ItemRenderType.from(cameraTransformType);
                     return Transformation.NONE;
                 }
             };
@@ -240,7 +260,7 @@ public class ItemRender {
 
         @Override
         public void emitItemQuads(net.minecraft.item.ItemStack itemStack, Supplier<Random> supplier, RenderContext renderContext) {
-            //TODO remove render override hack?
+            this.stack = new ItemStack(itemStack);
             renderContext.fallbackConsumer().accept(this);
         }
     }

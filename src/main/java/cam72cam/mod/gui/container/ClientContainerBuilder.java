@@ -7,6 +7,8 @@ import cam72cam.mod.item.ItemStackHandler;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.text.LiteralText;
 import org.lwjgl.opengl.GL11;
 
@@ -175,5 +177,19 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
         GlStateManager.enableDepthTest();
 
         GL11.glColor4f(1, 1, 1, 1);
+    }
+
+    @Override
+    public void drawSlotOverlay(String spriteId, int x, int y, double height, int color) {
+        x += centerX + 1 + paddingLeft;
+        y += centerY + 1;
+
+        GUIHelpers.drawRect(x, y + (int)(16 - 16 * height), x + 16, y + 16, color);
+
+        Sprite sprite = minecraft.getSpriteAtlas().getSprite(spriteId);
+        minecraft.getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
+        GlStateManager.color4f(1,1,1,1);
+        DrawableHelper.blit(x, y, 0, 16, 16, sprite);
+        minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
     }
 }

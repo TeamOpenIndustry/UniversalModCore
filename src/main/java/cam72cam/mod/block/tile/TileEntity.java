@@ -24,7 +24,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TileEntity extends net.minecraft.block.entity.BlockEntity {
-    private static final Map<Supplier<? extends BlockEntity>, BlockEntityType<?>> registry = HashBiMap.create();
+    private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
+    private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
     public World world;
     public Vec3i pos;
     public boolean hasTileData;
@@ -34,24 +35,27 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
     private final BlockEntity instance;
 
-    protected TileEntity(Supplier<? extends BlockEntity> ctr) {
-        super(registry.get(ctr));
-        instance = ctr.get();
+    public TileEntity(Identifier id) {
+        super(types.get(id.toString()));
+        instance = registry.get(id.toString()).get();
     }
 
-    public static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<BlockEntity> ctr) {
-        return register(id, ctr, TileEntity::new);
-    }
-    protected static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<? extends BlockEntity> ctr, Function<Supplier<? extends BlockEntity>, ? extends TileEntity> tctr) {
+    public static BlockEntityType<? extends TileEntity> register(Supplier<BlockEntity> ctr, Supplier<TileEntity> teCtr, Identifier id) {
+        registry.put(id.toString(), ctr);
+
         //BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, BlockEntityType.Builder.create(() -> tctr.apply(ctr)).build(null));
-        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, new BlockEntityType<>(() -> tctr.apply(ctr), new HashSet<net.minecraft.block.Block>() {
+        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, new BlockEntityType<>(teCtr, new HashSet<net.minecraft.block.Block>() {
             public boolean contains(Object var1) {
                 // WHYYYYYYYYYYYYYYYY
                 return true;
             }
         }, null));
-        registry.put(ctr, type);
+        types.put(id.toString(), type);
         return type;
+    }
+
+    public static TileEntity create(Identifier id) {
+        return types.get(id).instantiate();
     }
 
     public Identifier getName() {
@@ -112,9 +116,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         hasTileData = true;
         this.fromTag(tag.internal);
         this.readUpdate(tag);
-        if (updateRerender()) {
-            world.internal.scheduleBlockRender(getPos(), super.world.getBlockState(super.pos), super.world.getBlockState(super.pos));
-        }
+        world.internal.scheduleBlockRender(getPos(), super.world.getBlockState(super.pos), super.world.getBlockState(super.pos));
     }
     public BlockEntityUpdateS2CPacket toUpdatePacket() {
         new BlockEntityUpdatePacket(this).sendToAllAround(world, new Vec3d(pos), 8*16);
@@ -182,11 +184,6 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
 
     public boolean isLoaded() {
         return this.hasWorld() && (world.isServer || hasTileData);
-    }
-
-    // TODO render system?
-    public boolean updateRerender() {
-        return false;
     }
 
     public BlockEntity instance() {

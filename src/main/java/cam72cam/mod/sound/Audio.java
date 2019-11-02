@@ -58,4 +58,8 @@ public class Audio {
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
         return soundManager.createSound(oggLocation, repeats, attenuationDistance, scale);
     }
+
+    public static void setSoundChannels(int max) {
+        //SoundSystemConfig.setNumberNormalChannels(Math.max(SoundSystemConfig.getNumberNormalChannels(), max));
+    }
 }

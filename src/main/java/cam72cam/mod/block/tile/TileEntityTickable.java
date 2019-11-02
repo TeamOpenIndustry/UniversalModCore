@@ -10,12 +10,8 @@ import net.minecraft.util.Tickable;
 import java.util.function.Supplier;
 
 public class TileEntityTickable extends TileEntity implements Tickable {
-    protected TileEntityTickable(Supplier<? extends BlockEntity> ctr) {
-        super(ctr);
-    }
-
-    public static BlockEntityType<? extends TileEntity> register(Identifier id, Supplier<BlockEntity> ctr) {
-        return register(id, ctr, TileEntityTickable::new);
+    public TileEntityTickable(Identifier id) {
+        super(id);
     }
 
     @Override

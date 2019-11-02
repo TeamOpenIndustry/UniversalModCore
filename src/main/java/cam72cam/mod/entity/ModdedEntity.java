@@ -113,6 +113,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
+            seats.forEach(seat -> seat.setPosition(x, y, z));
         }
     }
 
@@ -174,7 +175,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
         if (!world.isClient) {
             System.out.println("New Seat");
             SeatEntity seat = SeatEntity.TYPE.create(world);
-            seat.setParent(this);
+            seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getUuid(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
@@ -201,19 +202,30 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
         if (passenger != null) {
             Vec3d offset = passengerPositions.get(passenger.getUUID());
-            if (offset != null) {
-                offset = iRidable.onPassengerUpdate(passenger, offset);
+            // Weird case around player joining with a different UUID during debugging
+            if (offset == null) {
+                offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
                 passengerPositions.put(passenger.getUUID(), offset);
-
-                Vec3d pos = calculatePassengerPosition(offset);
-                seat.setPosition(pos.x, pos.y, pos.z);
-                passenger.setPosition(pos);
-
-                float delta = yaw - prevYaw;
-                passenger.internal.yaw = passenger.internal.yaw + delta;
-
-                seat.shouldSit = iRidable.shouldRiderSit(passenger);
             }
+
+            offset = iRidable.onPassengerUpdate(passenger, offset);
+            passengerPositions.put(passenger.getUUID(), offset);
+
+            Vec3d pos = calculatePassengerPosition(offset);
+
+            /* TODO 1.14.4 figure out tick order
+            if (world.getEntities().loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
+                pos = pos.add(motionX, motionY, motionZ);
+            }
+            */
+
+            passenger.setPosition(pos);
+            passenger.setVelocity(new Vec3d(getVelocity()));
+
+            float delta = yaw - prevYaw;
+            passenger.internal.yaw = passenger.internal.yaw + delta;
+
+            seat.shouldSit = iRidable.shouldRiderSit(passenger);
         }
     }
 
@@ -229,6 +241,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
                 offset = iRidable.onDismountPassenger(passenger, offset);
                 passenger.setPosition(calculatePassengerPosition(offset));
             }
+            passengerPositions.remove(passenger.getUUID());
         }
         seats.remove(seat);
     }

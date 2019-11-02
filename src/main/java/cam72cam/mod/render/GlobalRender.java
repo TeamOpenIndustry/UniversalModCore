@@ -7,6 +7,7 @@ import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.util.CollectionUtil;
 import cam72cam.mod.util.Hand;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -15,7 +16,9 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import org.lwjgl.opengl.GL11;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -38,9 +41,7 @@ public class GlobalRender {
             });
         });
 
-        BlockEntity grh = new GlobalRenderHelper(null);
-        List<BlockEntity> grhList = new ArrayList<>();
-        grhList.add(grh);
+        List<BlockEntity> grhList = CollectionUtil.listOf(new GlobalRenderHelper(null));
         ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(right -> {
@@ -92,6 +93,10 @@ public class GlobalRender {
     public static boolean isInRenderDistance(Vec3d pos) {
         // max rail length is 100, 50 is center
         return net.minecraft.client.MinecraftClient.getInstance().player.getPos().distanceTo(pos.internal) < ((net.minecraft.client.MinecraftClient.getInstance().options.viewDistance + 1) * 16 + 50);
+    }
+
+    public static void mulMatrix(FloatBuffer fbm) {
+        GL11.glMultMatrixf(fbm);
     }
 
     @FunctionalInterface
