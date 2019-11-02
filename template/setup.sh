@@ -8,6 +8,8 @@ rm -rf src/main/java/cam72cam/$MODID/Mod.java
 rm -rf *gradle*
 
 cp UniversalModCore/template/src/main/java/cam72cam/mod/Mod.java src/main/java/cam72cam/$MODID/Mod.java
+ln -s UniversalModCore/src/main/resources/fabric.mod.json src/main/resources/fabric.mod.json
+ln -s UniversalModCore/src/main/resources/modcore.main-mixins.json src/main/resources/modcore.main-mixins.json
 cp -r UniversalModCore/template/*gradle* .
 
 sed -i gradle.properties -e "s/#MODID#/$MODID/" -e "s/#MODNAME#/$MODNAME/" -e "s/#MODVERSION#/$MODVERSION/"
