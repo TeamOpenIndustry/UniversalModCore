@@ -76,7 +76,7 @@ public class TagCompound {
     }
 
     public String getString(String key) {
-        if (internal.hasKey(key)) {
+        if (internal.containsKey(key)) {
             return internal.getString(key);
         }
         return null;

@@ -1,6 +1,7 @@
 plugins {
 	id 'fabric-loom' version '0.2.5-SNAPSHOT'
 	id 'maven-publish'
+	id "com.wynprice.cursemaven" version "2.1.1"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8

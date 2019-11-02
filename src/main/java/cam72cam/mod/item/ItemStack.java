@@ -147,6 +147,6 @@ public class ItemStack {
     }
 
     public void clearTagCompound() {
-        internal.setTagCompound(null);
+        internal.setTag(null);
     }
 }
