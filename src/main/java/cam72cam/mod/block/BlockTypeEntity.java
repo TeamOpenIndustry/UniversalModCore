@@ -332,7 +332,8 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Nonnull
                         @Override
                         public int insertEnergy(EnergyType energyType, int i, Simulation simulation) {
-                            return energy.receive(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate());
+                            //TODO energyType
+                            return energy.receive(i, simulation.isSimulate());
                         }
 
                         @Override
@@ -343,7 +344,8 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Nonnull
                         @Override
                         public int extractEnergy(EnergyType energyType, int i, Simulation simulation) {
-                            return energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, energy.extract(energyType.convertFrom(DefaultEnergyTypes.MEDIUM_VOLTAGE, i), simulation.isSimulate()));
+                            //TODO energyType
+                            return energy.extract(i, simulation.isSimulate());
                         }
 
                         @Nonnull
