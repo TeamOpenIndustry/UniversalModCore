@@ -1,6 +1,6 @@
 package cam72cam.mod.text;
 
-import cam72cam.mod.resource.Identifier;
+import net.minecraft.client.MinecraftClient;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,28 +9,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CustomTranslations {
-    private static Map<String, String> translations = null;
+    private static Map<String, Map<String, String>> translations = new HashMap<>();
     public static Map<String, String> getTranslations() {
-        if (translations == null) {
+        String lang = MinecraftClient.getInstance().getLanguageManager().getLanguage().getCode();
+        if (!translations.containsKey(lang)) {
             try {
-                InputStream input = CustomTranslations.class.getResourceAsStream("/assets/immersiverailroading/lang/en_US.lang");
+                String langStr = lang.split("_")[0] + "_" + lang.split("_")[1].toUpperCase();
+                InputStream input = CustomTranslations.class.getResourceAsStream("/assets/immersiverailroading/lang/" + langStr + ".lang");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                translations = new HashMap<>();
+                Map<String, String> lt = new HashMap<>();
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] splits = line.split("=", 2);
                     if (splits.length == 2) {
-                        translations.put(splits[0], splits[1]);
+                        lt.put(splits[0], splits[1]);
                     }
                 }
+                translations.put(lang, lt);
                 reader.close();
                 input.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        return translations;
+        return translations.get(lang);
     }
 
 
