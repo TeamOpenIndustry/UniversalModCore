@@ -116,7 +116,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         hasTileData = true;
         this.fromTag(tag.internal);
         this.readUpdate(tag);
-        world.internal.scheduleBlockRender(getPos(), super.world.getBlockState(super.pos), super.world.getBlockState(super.pos));
+        world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
     }
     public BlockEntityUpdateS2CPacket toUpdatePacket() {
         new BlockEntityUpdatePacket(this).sendToAllAround(world, new Vec3d(pos), 8*16);
@@ -129,6 +129,8 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         if (world.isServer) {
             world.internal.updateListeners(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
             world.internal.updateNeighborsAlways(pos.internal, super.world.getBlockState(super.pos).getBlock());
+        } else {
+            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
         }
     }
 
