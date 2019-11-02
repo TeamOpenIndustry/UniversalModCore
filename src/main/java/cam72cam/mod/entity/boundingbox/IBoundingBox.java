@@ -56,7 +56,9 @@ public interface IBoundingBox {
             }
 
             @Override
-            public boolean intersects(Vec3d min, Vec3d max) {
+            public boolean intersects(Vec3d a, Vec3d b) {
+                Vec3d min = a.min(b);
+                Vec3d max = a.max(b);
                 return internal.intersects(min.x, min.y, min.z, max.x, max.y, max.z);
             }
 
