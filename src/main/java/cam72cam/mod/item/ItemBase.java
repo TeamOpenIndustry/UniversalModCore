@@ -93,6 +93,12 @@ public class ItemBase {
         }
 
         @Override
+        public void appendStacks(ItemGroup tab, DefaultedList<net.minecraft.item.ItemStack> items) {
+            CreativeTab myTab = tab != null && tab != ItemGroup.SEARCH ? new CreativeTab(tab) : null;
+            items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
+        }
+
+        @Override
         public Text getName(net.minecraft.item.ItemStack stack) {
             if (stack.getTag() != null && stack.getTag().containsKey(CUSTOM_NAME_KEY)) {
                 return new LiteralText(stack.getTag().getString(CUSTOM_NAME_KEY));
