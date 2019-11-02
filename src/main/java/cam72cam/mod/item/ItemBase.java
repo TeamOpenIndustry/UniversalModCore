@@ -16,6 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.*;
 import net.minecraft.util.registry.Registry;
 
@@ -103,7 +104,7 @@ public class ItemBase {
             if (stack.getTag() != null && stack.getTag().containsKey(CUSTOM_NAME_KEY)) {
                 return new LiteralText(stack.getTag().getString(CUSTOM_NAME_KEY));
             }
-            return super.getName(stack);
+            return new TranslatableText("item." + identifier + ".name", new Object[0]);
         }
 
         @Override
