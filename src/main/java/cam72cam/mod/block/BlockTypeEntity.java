@@ -333,7 +333,7 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Override
                         public int insertEnergy(EnergyType energyType, int i, Simulation simulation) {
                             //TODO energyType
-                            return energy.receive(i, simulation.isSimulate());
+                            return i - energy.receive(i*64, simulation.isSimulate())/64;
                         }
 
                         @Override
@@ -345,7 +345,7 @@ public abstract class BlockTypeEntity extends BlockType {
                         @Override
                         public int extractEnergy(EnergyType energyType, int i, Simulation simulation) {
                             //TODO energyType
-                            return energy.extract(i, simulation.isSimulate());
+                            return energy.extract(i*64, simulation.isSimulate())/64;
                         }
 
                         @Nonnull
