@@ -2,7 +2,6 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
-import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
 import cpw.mods.fml.client.registry.ClientRegistry;
@@ -23,7 +22,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BlockRender {
-    private static Map<BlockType, Integer> blocks = new HashMap<>();
     private static final List<Runnable> colors = new ArrayList<>();
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
@@ -121,13 +119,9 @@ public class BlockRender {
             }
         });
 
-        blocks.put(block, renderID);
+        BlockType.blocks.put(block, renderID);
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));
 
         // TODO 1.7.10 block colors
-    }
-
-    public static int getRenderType(BlockType block) {
-        return blocks.get(block);
     }
 }

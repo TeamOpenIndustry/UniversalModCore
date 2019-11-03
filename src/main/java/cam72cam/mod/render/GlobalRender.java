@@ -63,13 +63,8 @@ public class GlobalRender {
 
     public static void registerOverlay(Consumer<Float> func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
-                Minecraft mc = Minecraft.getMinecraft();
-                int scale = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
-                GL11.glPushMatrix();
-                GL11.glScaled(scale, scale, scale);
+            if (event.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
                 func.accept(event.partialTicks);
-                GL11.glPopMatrix();
             }
         });
     }

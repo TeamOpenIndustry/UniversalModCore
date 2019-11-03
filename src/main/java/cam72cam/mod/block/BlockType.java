@@ -21,10 +21,13 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public abstract class BlockType {
+    public static Map<BlockType, Integer> blocks = new HashMap<>();
     public final net.minecraft.block.Block internal;
     protected final BlockSettings settings;
 
@@ -89,7 +92,7 @@ public abstract class BlockType {
 
         @Override
         public int getRenderType() {
-            return BlockRender.getRenderType(BlockType.this);
+            return blocks.getOrDefault(BlockType.this, -1);
         }
 
         @Override
