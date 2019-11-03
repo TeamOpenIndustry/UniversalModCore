@@ -102,18 +102,28 @@ public class Fuzzy {
             this.subTags = tags.get(ident).subTags;
         } else {
             // New
-            this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
+            Tag<Item> currentTag = ItemTags.getContainer().get(new Identifier(ident));
+            if (currentTag != null) {
+                this.tag = currentTag;
+            } else {
+                // I don't think this will survive a reload...
+                this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
+                ItemTags.getContainer().getEntries().put(new Identifier(ident), this.tag);
+            }
+
             this.subTags.add(tag);
             tags.put(ident, this);
         }
     }
 
     private Fuzzy(String ident, Tag<Item> tag) {
+        // alias
         this.ident = ident;
         this.tag = tag;
         tags.put(ident, this);
         subTags.add(tag);
     }
+
 
     private List<Item> values() {
         return subTags.stream().map(Tag::values).collect(ArrayList::new, List::addAll, List::addAll);
