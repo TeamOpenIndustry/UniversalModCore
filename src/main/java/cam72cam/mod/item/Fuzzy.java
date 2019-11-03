@@ -10,13 +10,13 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Fuzzy {
+    static Map<String, Fuzzy> tags = new HashMap<>();
+
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood").add(Items.STICK);
     public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood", ItemTags.PLANKS);
     public static final Fuzzy REDSTONE_DUST = new Fuzzy("dustRedstone").add(Items.REDSTONE);
@@ -92,23 +92,39 @@ public class Fuzzy {
 
     private final String ident;
     private final Tag<Item> tag;
+    private List<Tag<Item>> subTags = new ArrayList<>();
 
     public Fuzzy(String ident) {
         this.ident = ident;
-        this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
+        if (tags.containsKey(ident)) {
+            // Clone
+            this.tag = tags.get(ident).tag;
+            this.subTags = tags.get(ident).subTags;
+        } else {
+            // New
+            this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
+            this.subTags.add(tag);
+            tags.put(ident, this);
+        }
     }
 
-    public Fuzzy(String ident, Tag<Item> tag) {
+    private Fuzzy(String ident, Tag<Item> tag) {
         this.ident = ident;
         this.tag = tag;
+        tags.put(ident, this);
+        subTags.add(tag);
+    }
+
+    private List<Item> values() {
+        return subTags.stream().map(Tag::values).collect(ArrayList::new, List::addAll, List::addAll);
     }
 
     public boolean matches(ItemStack stack) {
-        return tag.values().stream().anyMatch(potential -> potential == stack.internal.getItem());
+        return values().stream().anyMatch(potential -> potential == stack.internal.getItem());
     }
 
     public List<ItemStack> enumerate() {
-        return tag.values().stream().map(ItemStack::new).collect(Collectors.toList());
+        return values().stream().map(ItemStack::new).collect(Collectors.toList());
     }
 
     public ItemStack example() {
@@ -146,8 +162,7 @@ public class Fuzzy {
     }
 
     public Fuzzy addAll(Fuzzy other) {
-        tag.entries().addAll(other.tag.entries());
-        tag.values().addAll(other.tag.values());
+        subTags.add(other.tag);
         return this;
     }
 
