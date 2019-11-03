@@ -48,6 +48,10 @@ public class ClientSound implements ISound {
         } catch (IOException e) {
             throw new RuntimeException("Sound not found: " + oggLocation);
         }
+
+        if (repeats) {
+            AL10.alSourcei(id, AL10.AL_LOOPING, 1);
+        }
     }
 
     @Override
@@ -77,20 +81,28 @@ public class ClientSound implements ISound {
         AL10.alDeleteSources(id);
     }
 
+    Vec3d lastPos;
+    float lastPitch = -1;
+    float lastVol = -1;
+
     @Override
     public void update() {
         MinecraftClient.startProfiler("irSound");
         //(float)Math.sqrt(Math.sqrt(scale()))
 
         float vol = currentVolume * baseSoundMultiplier * scale;
-        AL10.alSourcef(this.id,  AL10.AL_GAIN, vol);
-
-        if (currentPos != null) {
-            AL10.alSourcefv(this.id, AL10.AL_POSITION, new float[]{(float)currentPos.x, (float)currentPos.y, (float)currentPos.z});
+        if (vol != lastVol) {
+            AL10.alSourcef(this.id, AL10.AL_GAIN, vol);
+            lastVol = vol;
         }
 
+        if (currentPos != null && !currentPos.equals(lastPos)) {
+            AL10.alSourcefv(this.id, AL10.AL_POSITION, new float[]{(float)currentPos.x, (float)currentPos.y, (float)currentPos.z});
+            lastPos = currentPos;
+        }
+
+        float newPitch = currentPitch / scale;
         if (currentPos == null || velocity == null) {
-            AL10.alSourcef(this.id, AL10.AL_PITCH, currentPitch / scale);
         } else {
             //Doppler shift
 
@@ -110,8 +122,14 @@ public class ClientSound implements ISound {
                 appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
             }
 
-            AL10.alSourcef(this.id, AL10.AL_PITCH, appliedPitch / scale);
+            newPitch = appliedPitch / scale;
         }
+
+        if (lastPitch != newPitch) {
+            AL10.alSourcef(this.id, AL10.AL_PITCH, newPitch);
+            lastPitch = newPitch;
+        }
+
 
         MinecraftClient.endProfiler();
     }

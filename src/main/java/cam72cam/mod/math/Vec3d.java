@@ -88,4 +88,9 @@ public class Vec3d {
         double cos = Math.cos(rad);
         return new Vec3d(cos * x + sin * z, y, sin * x + cos * z);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Vec3d && ((Vec3d) o).internal.equals(this.internal);
+    }
 }
