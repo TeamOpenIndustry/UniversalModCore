@@ -31,6 +31,7 @@ public class Fuzzy {
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy("ingotGold").add(Items.GOLD_INGOT);
     public static final Fuzzy STEEL_INGOT = new Fuzzy("ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy("blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy("ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy("blockIron").add(Items.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
