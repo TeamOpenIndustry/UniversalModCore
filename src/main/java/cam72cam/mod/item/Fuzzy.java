@@ -65,9 +65,10 @@ public class Fuzzy {
         List<ItemStack> results = new ArrayList<>();
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
             if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
-                List<net.minecraft.item.ItemStack> temp = new ArrayList<>();
-                stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
-                results.addAll(temp.stream().map(ItemStack::new).collect(Collectors.toList()));
+                for (int i = 0; i < 16; i++) {
+                    // This is terrible
+                    results.add(new ItemStack(stack.getItem(), 1, i));
+                }
             } else {
                 results.add(new ItemStack(stack));
             }

@@ -150,17 +150,20 @@ public class Keyboard {
 
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.TICK.subscribe(() -> {
-            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-            if (player == null) {
-                return;
-            }
-            new MovementPacket(
-                    player.getUniqueID(),
-                    new Vec3d(player.moveStrafing, 0, player.moveForward).scale(player.isSprinting() ? 0.4 : 0.2)
-            ).sendToServer();
-        });
+        ClientEvents.TICK.subscribe(Keyboard::doRegisteration);
     }
+    @SideOnly(Side.CLIENT)
+    private static void doRegisteration() {
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        if (player == null) {
+            return;
+        }
+        new MovementPacket(
+                player.getUniqueID(),
+                new Vec3d(player.moveStrafing, 0, player.moveForward).scale(player.isSprinting() ? 0.4 : 0.2)
+        ).sendToServer();
+    }
+
 
     public static class MovementPacket extends Packet {
         public MovementPacket() {

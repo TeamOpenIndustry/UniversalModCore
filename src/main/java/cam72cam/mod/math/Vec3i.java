@@ -4,7 +4,39 @@ import cam72cam.mod.util.Facing;
 import net.minecraft.util.MathHelper;
 
 public class Vec3i {
-    private static final int NUM_X_BITS = 1 + MathHelper.calculateLogBaseTwo(MathHelper.roundUpToPowerOfTwo(30000000));
+    // Why is this all ClientOnly???
+    private static final int[] multiplyDeBruijnBitPosition = new int[] {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
+    private static boolean isPowerOfTwo(int p_151235_0_)
+    {
+        return p_151235_0_ != 0 && (p_151235_0_ & p_151235_0_ - 1) == 0;
+    }
+    public static int roundUpToPowerOfTwo(int p_151236_0_)
+    {
+        int j = p_151236_0_ - 1;
+        j |= j >> 1;
+        j |= j >> 2;
+        j |= j >> 4;
+        j |= j >> 8;
+        j |= j >> 16;
+        return j + 1;
+    }
+    private static int calculateLogBaseTwoDeBruijn(int p_151241_0_)
+    {
+        p_151241_0_ = isPowerOfTwo(p_151241_0_) ? p_151241_0_ : roundUpToPowerOfTwo(p_151241_0_);
+        return multiplyDeBruijnBitPosition[(int)((long)p_151241_0_ * 125613361L >> 27) & 31];
+    }
+    public static int calculateLogBaseTwo(int p_151239_0_)
+    {
+        /**
+         * Uses a B(2, 5) De Bruijn sequence and a lookup table to efficiently calculate the log-base-two of the given
+         * value.  Optimized for cases where the input value is a power-of-two.  If the input value is not a power-of-
+         * two, then subtract 1 from the return value.
+         */
+        return calculateLogBaseTwoDeBruijn(p_151239_0_) - (isPowerOfTwo(p_151239_0_) ? 0 : 1);
+    }
+
+
+    private static final int NUM_X_BITS = 1 + calculateLogBaseTwo(roundUpToPowerOfTwo(30000000));
     private static final int NUM_Z_BITS = NUM_X_BITS;
     private static final int NUM_Y_BITS = 64 - NUM_X_BITS - NUM_Z_BITS;
     private static final int Y_SHIFT = 0 + NUM_Z_BITS;

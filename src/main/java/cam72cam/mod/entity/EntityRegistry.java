@@ -12,9 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,14 +85,17 @@ public class EntityRegistry {
 
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.TICK.subscribe(() -> {
-            if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getNetHandler() != null) {
-                System.out.println(missingResources);
-                Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
-                Minecraft.getMinecraft().loadWorld(null);
-                Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
-                missingResources = null;
-            }
-        });
+        ClientEvents.TICK.subscribe(EntityRegistry::checkEntityOk);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void checkEntityOk() {
+        if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getNetHandler() != null) {
+            System.out.println(missingResources);
+            Minecraft.getMinecraft().getNetHandler().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
+            Minecraft.getMinecraft().loadWorld(null);
+            Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
+            missingResources = null;
+        }
     }
 }

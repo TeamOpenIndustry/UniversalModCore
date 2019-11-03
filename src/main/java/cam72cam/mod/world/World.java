@@ -23,6 +23,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.item.Item;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MovingObjectPosition;
@@ -462,7 +463,11 @@ public class World {
 
     public ItemStack getItemStack(Vec3i pos) {
         Block state = internal.getBlock(pos.x, pos.y, pos.z);
-        return new ItemStack(state.getPickBlock(new MovingObjectPosition(pos.x, pos.y, pos.z, 1, Vec3.createVectorHelper(0,0,0)), internal, pos.x, pos.y, pos.z));
+        try {
+            return new ItemStack(state.getPickBlock(new MovingObjectPosition(pos.x, pos.y, pos.z, 1, Vec3.createVectorHelper(0, 0, 0)), internal, pos.x, pos.y, pos.z));
+        } catch (NoSuchMethodError ex) {
+            return new ItemStack(Item.getItemFromBlock(state));
+        }
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
