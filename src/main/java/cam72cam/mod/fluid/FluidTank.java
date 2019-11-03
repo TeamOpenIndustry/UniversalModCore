@@ -63,7 +63,7 @@ public class FluidTank implements ITank {
         }
 
         if (internal.getFluid().equals(fluidStack.getFluid())) {
-            int remainder = Math.min(internal.getAmount() - fluidStack.getAmount(), 0);
+            int remainder = Math.max(internal.getAmount() - fluidStack.getAmount(), 0);
             if (!simulate) {
                 internal = new FluidStack(fluidStack.getFluid(), remainder);
                 onChanged();
