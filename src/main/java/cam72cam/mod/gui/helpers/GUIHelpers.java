@@ -53,6 +53,7 @@ public class GUIHelpers {
 
     public static void drawFluid(Fluid fluid, double x, double d, double width, int height, int scale) {
         FluidVolume.create(fluid.internal, 1000).renderGuiRect(x, d, x + width, d + height);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
     }
 
     public static void drawTankBlock(double x, double y, double width, double height, Fluid fluid, float percentFull) {
