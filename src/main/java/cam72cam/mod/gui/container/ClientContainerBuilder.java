@@ -32,16 +32,16 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
     public ClientContainerBuilder(ServerContainerBuilder serverContainer) {
         super(serverContainer, serverContainer.playerInventory, new LiteralText(""));
         this.server = serverContainer;
-        this.width = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
-        this.height = 114 + serverContainer.slotsY * slotSize;
+        this.containerWidth = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
+        this.containerHeight = 114 + serverContainer.slotsY * slotSize;
     }
 
     @Override
     protected void drawBackground(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
-        this.centerX = (this.width - this.width) / 2;
-        this.centerY = (this.height - this.height) / 2;
+        this.centerX = (this.width - this.containerWidth)/2;
+        this.centerY = (this.height - this.containerHeight)/2;
         server.draw.accept(this);
     }
 
@@ -159,7 +159,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(this.font, text, x + centerX + this.width / 2, y + centerY, 14737632);
+        super.drawCenteredString(this.font, text, x + centerX + this.containerWidth / 2, y + centerY, 14737632);
         this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
     }
 
