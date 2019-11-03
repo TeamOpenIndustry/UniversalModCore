@@ -29,6 +29,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.WorldChunk;
@@ -121,7 +122,11 @@ public class World {
     }
 
     public boolean doesBlockCollideWith(Vec3i bp, IBoundingBox bb) {
-        IBoundingBox bbb = IBoundingBox.from(internal.getBlockState(bp.internal).getCollisionShape(internal, bp.internal).getBoundingBox());
+        VoxelShape vs = internal.getBlockState(bp.internal).getCollisionShape(internal, bp.internal);
+        if (vs.isEmpty()) {
+            return false;
+        }
+        IBoundingBox bbb = IBoundingBox.from(vs.getBoundingBox());
         return bbb != null && bb.intersects(bbb);
     }
 
@@ -413,7 +418,7 @@ public class World {
 
     public ItemStack getItemStack(Vec3i pos) {
         BlockState state = internal.getBlockState(pos.internal);
-        return new ItemStack(state.getBlock().getPickStack(internal, pos.internal, state));
+        return new ItemStack(state.getBlock());
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {

@@ -26,5 +26,7 @@ public class ModCoreServer implements DedicatedServerModInitializer {
     }
     @Override
     public void onInitializeServer() {
+        ModCore.instance.preInit();
+        ModCore.instance.postInit();
     }
 }

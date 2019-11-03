@@ -122,9 +122,6 @@ public class ItemBase {
 
         @Override
         public TypedActionResult<net.minecraft.item.ItemStack> use(net.minecraft.world.World world, PlayerEntity player, net.minecraft.util.Hand hand) {
-            if (MinecraftClient.getBlockMouseOver() == null) {
-                onClickAir(new Player(player), World.get(world), Hand.from(hand));
-            }
             onClickAir(new Player(player), World.get(world), Hand.from(hand));
             return super.use(world, player, hand);
         }

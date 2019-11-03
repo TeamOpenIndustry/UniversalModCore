@@ -6,11 +6,12 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import io.netty.buffer.Unpooled;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.event.server.ServerTickCallback;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.fabricmc.fabric.api.server.PlayerStream;
-import net.minecraft.client.MinecraftClient;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.network.packet.CustomPayloadS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -45,6 +46,9 @@ public abstract class Packet {
                 });
                 break;
             case ServerToClient:
+                if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+                    return;
+                }
                 ClientSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
@@ -79,7 +83,7 @@ public abstract class Packet {
     public void sendToServer() {
         PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
         buff.writeCompoundTag(data.internal);
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new CustomPayloadC2SPacket(getIdent(), buff));
+        ClientSidePacketRegistry.INSTANCE.sendToServer(new CustomPayloadC2SPacket(getIdent(), buff));
     }
 
     public void sendToAll() {
@@ -97,6 +101,6 @@ public abstract class Packet {
         if (server == null) {
             return;
         }
-        server.getPlayerManager().getPlayer(player.getUUID()).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), buff));
+        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player.internal, new CustomPayloadS2CPacket(getIdent(), buff));
     }
 }

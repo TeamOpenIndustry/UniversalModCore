@@ -12,8 +12,12 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
-import net.fabricmc.fabric.api.client.screen.ScreenProviderRegistry;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.container.ContainerProviderRegistry;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
+import net.minecraft.container.Container;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,6 +83,16 @@ public class GuiRegistry {
         return new GUIType(id);
     }
 
+    @Environment(EnvType.CLIENT)
+    private static AbstractContainerScreen create(Container container) {
+        return new ClientContainerBuilder((ServerContainerBuilder) container);
+    }
+
+    @Environment(EnvType.CLIENT)
+    private void register(Identifier id) {
+        net.fabricmc.fabric.api.client.screen.ScreenProviderRegistry.INSTANCE.registerFactory(id.internal, GuiRegistry::create);
+    }
+
     public <T extends Entity> GUIType registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
         Identifier id = new Identifier("container" + cls.getName());
 
@@ -90,7 +104,9 @@ public class GuiRegistry {
             return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
 
-        ScreenProviderRegistry.INSTANCE.registerFactory(id.internal, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            register(id);
+        }
 
         return new GUIType(id);
     }
@@ -106,7 +122,9 @@ public class GuiRegistry {
             return new ServerContainerBuilder(player.inventory, ctr.apply(entity), syncId);
         });
 
-        ScreenProviderRegistry.INSTANCE.registerFactory(id.internal, container -> new ClientContainerBuilder((ServerContainerBuilder)container));
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            register(id);
+        }
 
         return new GUIType(id);
     }

@@ -5,6 +5,8 @@ import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
 import net.minecraft.client.texture.Sprite;
@@ -14,6 +16,7 @@ import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
+@Environment(EnvType.CLIENT)
 public class ClientContainerBuilder extends AbstractContainerScreen implements IContainerBuilder {
     public static final int slotSize = 18;
     public static final int topOffset = 17;
