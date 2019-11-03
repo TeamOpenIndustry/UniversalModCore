@@ -83,7 +83,6 @@ public class ClientSound implements ISound {
 
     Vec3d lastPos;
     float lastPitch = -1;
-    float lastVol = -1;
 
     @Override
     public void update() {
@@ -91,10 +90,8 @@ public class ClientSound implements ISound {
         //(float)Math.sqrt(Math.sqrt(scale()))
 
         float vol = currentVolume * baseSoundMultiplier * scale;
-        if (vol != lastVol) {
-            AL10.alSourcef(this.id, AL10.AL_GAIN, vol);
-            lastVol = vol;
-        }
+        vol *= 1-Math.min(0.99, Math.max(0.01, currentPos.subtract(MinecraftClient.getPlayer().getPosition()).length() / attenuationDistance));
+        AL10.alSourcef(this.id, AL10.AL_GAIN, vol);
 
         if (currentPos != null && !currentPos.equals(lastPos)) {
             AL10.alSourcefv(this.id, AL10.AL_POSITION, new float[]{(float)currentPos.x, (float)currentPos.y, (float)currentPos.z});
