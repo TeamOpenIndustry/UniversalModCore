@@ -2,7 +2,7 @@ package cam72cam.#MODID#;
 
 import cam72cam.mod.ModCore;
 
-@cpw.mods.fml.common.Mod(modid = Mod.MODID, name = Mod.NAME, version = Mod.VERSION, dependencies = "required-before:universalmodcore", acceptedMinecraftVersions = "[1.10,1.11)")
+@cpw.mods.fml.common.Mod(modid = Mod.MODID, name = Mod.NAME, version = Mod.VERSION, dependencies = "required-before:universalmodcore", acceptedMinecraftVersions = "[1.7.10,1.10)")
 public class Mod {
     public static final String MODID = "#MODID#";
     public static final String NAME = "#MODNAME#";
