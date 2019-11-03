@@ -24,6 +24,7 @@ public class Fluid {
     }
 
     public static Fluid getFluid(String type) {
+        type = new Identifier(type).toString();
         if (!registryCache.containsKey(type)) {
             FluidKey fluid = FluidKeys.get(Registry.FLUID.get(new Identifier(type)));
             if (fluid == null) {

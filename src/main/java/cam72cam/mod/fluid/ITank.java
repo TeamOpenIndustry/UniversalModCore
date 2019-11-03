@@ -3,14 +3,16 @@ package cam72cam.mod.fluid;
 import alexiil.mc.lib.attributes.Simulation;
 import alexiil.mc.lib.attributes.fluid.*;
 import alexiil.mc.lib.attributes.fluid.filter.ExactFluidFilter;
+import alexiil.mc.lib.attributes.fluid.volume.FluidKey;
 import alexiil.mc.lib.attributes.misc.Ref;
 import cam72cam.mod.item.ItemStack;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(new Ref<>(inputCopy.internal));
+        GroupedFluidInv inv = FluidAttributes.GROUPED_INV.getFirstOrNull(new Ref<>(inputCopy.internal));
         if (inv == null) {
             return null;
         }
@@ -18,37 +20,42 @@ public interface ITank {
         return new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(inv.getTank(0).get());
+                Set<FluidKey> fluids = inv.getStoredFluids();
+                if (fluids.size() == 0) {
+                    return new FluidStack(null);
+                }
+                FluidKey fluid = (FluidKey) fluids.toArray()[0];
+                return new FluidStack(Fluid.getFluid(fluid), inv.getAmount(fluid));
             }
 
             @Override
             public int getCapacity() {
-                return inv.getTank(0).getMaxAmount();
+                return inv.getTotalCapacity();
             }
 
             @Override
             public boolean allows(Fluid fluid) {
-                return inv.getTank(0).isValid(fluid.internal);
+                return inv.getInsertionFilter().matches(fluid.internal);
             }
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
                 ItemStack ts = inputCopy.copy();
-                FixedFluidInv temp = FluidAttributes.FIXED_INV.get(new Ref<>(ts.internal));
-                temp.getTank(0).attemptInsertion(fluidStack.internal, Simulation.ACTION);
+                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(new Ref<>(ts.internal));
+                temp.attemptInsertion(fluidStack.internal, Simulation.ACTION);
                 onUpdate.accept(ts);
 
-                return inv.getTank(0).attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
+                return inv.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
                 ItemStack ts = inputCopy.copy();
-                FixedFluidInv temp = FluidAttributes.FIXED_INV.get(new Ref<>(ts.internal));
-                temp.getTank(0).attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), Simulation.ACTION);
+                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(new Ref<>(ts.internal));
+                temp.attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), Simulation.ACTION);
                 onUpdate.accept(ts);
 
-                return new FluidStack(inv.getTank(0).attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
+                return new FluidStack(inv.attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
             }
         };
     }

@@ -114,7 +114,7 @@ public class ItemStack {
     }
 
     public boolean isFluidContainer() {
-        return FluidAttributes.FIXED_INV.getFirstOrNull(internal) != null;
+        return FluidAttributes.GROUPED_INV.getFirstOrNull(internal) != null;
     }
 
     public boolean isFlammable() {

@@ -51,7 +51,7 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return 0;
         }
-        return internal.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
+        return fluidStack.internal.getAmount() - internal.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
     }
 
     @Override
