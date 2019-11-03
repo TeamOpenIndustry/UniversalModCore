@@ -242,6 +242,7 @@ public class World {
             System.out.println("BAD TE DATA " + data);
             return null;
         }
+        te.setWorld(internal);
         if (te.instance() == null) {
             System.out.println("Loaded " + te.isLoaded() + " " + data);
         }
