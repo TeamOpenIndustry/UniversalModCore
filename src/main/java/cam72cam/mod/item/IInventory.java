@@ -6,6 +6,9 @@ import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper;
 
 public interface IInventory {
     static IInventory from(FixedItemInv inv) {
+        if (inv == null) {
+            return null;
+        }
         return new IInventory() {
             @Override
             public int getSlotCount() {
