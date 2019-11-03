@@ -11,7 +11,7 @@
   "contact": {
   },
 
-  "license": "LGPL2",
+  "license": "LGPL3",
 
   "environment": "*",
   "entrypoints": {
@@ -32,9 +32,10 @@
 
   "depends": {
     "fabricloader": ">=0.4.0",
-    "fabric": "*"
+    "fabric": "*",
+    "libblockattributes": "0.5.0",
+    "trackapi": "1.1"
   },
   "suggests": {
-    "flamingo": "*"
   }
 }
