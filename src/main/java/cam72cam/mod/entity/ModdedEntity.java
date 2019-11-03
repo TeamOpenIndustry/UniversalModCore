@@ -217,11 +217,9 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
 
             Vec3d pos = calculatePassengerPosition(offset);
 
-            /* TODO 1.14.4 figure out tick order
-            if (world.getEntities().loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
-                pos = pos.add(motionX, motionY, motionZ);
-            }
-            */
+            //if (world.getEntities().loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
+                pos = pos.add(new Vec3d(getVelocity()));
+            //}
 
             passenger.setPosition(pos);
             passenger.setVelocity(new Vec3d(getVelocity()));
