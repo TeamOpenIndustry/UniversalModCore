@@ -209,7 +209,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
             }
 
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            if (!seat.hasPassenger(passenger.internal)) {
                 return;
             }
 
