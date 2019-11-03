@@ -31,8 +31,8 @@ apply plugin: 'forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "#MODVERSION#"
-group = "cam72cam.modcoremod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+version = "#MODVERSION#_1.12.2"
+group = "cam72cam.universalmodcoremod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#MODNAME#"
 
 sourceCompatibility = targetCompatibility = 1.8
