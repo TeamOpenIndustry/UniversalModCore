@@ -85,12 +85,18 @@ public abstract class Packet {
     public void sendToAll() {
         PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
         buff.writeCompoundTag(data.internal);
+        if (server == null) {
+            return;
+        }
         server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), buff));
     }
 
     public void sendToPlayer(Player player) {
         PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
         buff.writeCompoundTag(data.internal);
+        if (server == null) {
+            return;
+        }
         server.getPlayerManager().getPlayer(player.getUUID()).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), buff));
     }
 }

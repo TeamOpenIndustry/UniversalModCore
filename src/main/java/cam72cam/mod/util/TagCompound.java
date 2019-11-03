@@ -267,6 +267,7 @@ public class TagCompound {
         }
 
         net.minecraft.block.entity.BlockEntity te = net.minecraft.block.entity.BlockEntity.createFromTag(ted.get("data").internal);
+        te.setWorld(world.internal);
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();
     }

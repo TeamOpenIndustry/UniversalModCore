@@ -12,14 +12,19 @@ import cam72cam.mod.util.Hand;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.texture.SpriteAtlasTexture;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -31,6 +36,7 @@ public class GlobalRender {
             BlockEntityRendererRegistry.INSTANCE.register(GlobalRenderHelper.class, new BlockEntityRenderer<GlobalRenderHelper>() {
                 @Override
                 public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
+                    net.minecraft.client.MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
                     renderFuncs.forEach(r -> r.accept(partialTicks));
                 }
 
@@ -105,10 +111,28 @@ public class GlobalRender {
     }
 
     public static class GlobalRenderHelper extends net.minecraft.block.entity.BlockEntity {
-
         public GlobalRenderHelper(BlockEntityType<?> blockEntityType_1) {
             super(blockEntityType_1);
         }
+
+        @Override
+        public boolean hasWorld() {
+            return true;
+        }
+
+        public BlockEntityType<?> getType() {
+            return new BlockEntityType<GlobalRenderHelper>(() -> new GlobalRenderHelper(null), new HashSet<>(), null) {
+                @Override
+                public boolean supports(Block block_1) {
+                    return true;
+                }
+            };
+        }
+
+        public BlockState getCachedState() {
+            return Blocks.AIR.getDefaultState();
+        }
+
 
         @Environment(EnvType.CLIENT)
         public double getSquaredRenderDistance() {
