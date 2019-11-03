@@ -111,6 +111,7 @@ public class ItemBase {
 
         @Override
         public final net.minecraft.item.ItemStack onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player) {
+            onClickAir(new Player(player), World.get(world), Hand.PRIMARY);
             return super.onItemRightClick(stack, world, player);
         }
 
