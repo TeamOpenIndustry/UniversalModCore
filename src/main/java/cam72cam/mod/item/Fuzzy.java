@@ -133,6 +133,7 @@ public class Fuzzy {
     }
 
     public Fuzzy add(ItemStack item) {
+        add(item.internal.getItem());
         return this;
     }
 
