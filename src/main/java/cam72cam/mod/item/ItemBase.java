@@ -108,9 +108,6 @@ public class ItemBase {
 
         @Override
         public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
-            if (MinecraftClient.getBlockMouseOver() == null) {
-                onClickAir(new Player(player), World.get(world), Hand.from(hand));
-            }
             return super.onItemRightClick(stack, world, player, hand);
         }
 
