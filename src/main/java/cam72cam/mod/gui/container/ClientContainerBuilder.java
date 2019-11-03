@@ -184,7 +184,12 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        GUIHelpers.drawRect(x, y + (int)(16 - 16 * height), x + 16, y + 16, color);
+        // TODO better sprite map, but this kinda sucks between versions.  maybe add an enum...
+        if (spriteId.equals("minecraft:blocks/fire_layer_1")) {
+            spriteId = "minecraft:block/fire_1";
+        }
+
+        GUIHelpers.drawRect(x, y + (int)(16 - 16 * height), 16,  16 * height, color);
 
         Sprite sprite = minecraft.getSpriteAtlas().getSprite(spriteId);
         minecraft.getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
