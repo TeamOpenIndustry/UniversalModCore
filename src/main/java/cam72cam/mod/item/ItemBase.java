@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ItemBase {
-    private static final String CUSTOM_NAME_KEY = "universalmodcore_name";
     public final Item internal;
     private final CreativeTab[] creativeTabs;
     private final Identifier identifier;
@@ -77,10 +76,6 @@ public class ItemBase {
     /* Name Hacks */
 
     protected final void applyCustomName(ItemStack stack) {
-        String custom = getCustomName(stack);
-        if (custom != null) {
-            stack.getTagCompound().setString(CUSTOM_NAME_KEY, custom);
-        }
     }
 
     public Identifier getRegistryName() {
@@ -101,8 +96,14 @@ public class ItemBase {
 
         @Override
         public Text getName(net.minecraft.item.ItemStack stack) {
+            /*
             if (stack.getTag() != null && stack.getTag().containsKey(CUSTOM_NAME_KEY)) {
                 return new LiteralText(stack.getTag().getString(CUSTOM_NAME_KEY));
+            }
+            */
+            String cn = getCustomName(new ItemStack(stack));
+            if (cn != null) {
+                return new LiteralText(cn);
             }
             return new TranslatableText("item." + identifier + ".name", new Object[0]);
         }
