@@ -14,7 +14,7 @@ public class BlockEntityUpdatePacket extends Packet {
 
     @Override
     protected void handle() {
-        net.minecraft.block.entity.BlockEntity te = getPlayer().getWorld().internal.getBlockEntity(data.getVec3i("pos").internal);
+        net.minecraft.block.entity.BlockEntity te = getWorld().internal.getBlockEntity(data.getVec3i("pos").internal);
         if (te instanceof TileEntity) {
             ((TileEntity)te).handleUpdateTag(data.get("data"));
         }
