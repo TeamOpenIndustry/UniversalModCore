@@ -18,20 +18,20 @@ public class Fuzzy {
     static Map<String, Fuzzy> tags = new HashMap<>();
 
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood").add(Items.STICK);
-    public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood", ItemTags.PLANKS);
+    public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood").addAll(new Fuzzy(ItemTags.PLANKS.getId().toString()));
     public static final Fuzzy REDSTONE_DUST = new Fuzzy("dustRedstone").add(Items.REDSTONE);
     public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW);
     public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW_BLOCK);
     public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
 
-    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone", ItemTags.SLABS);
-    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone", ItemTags.STONE_BRICKS);
-    public static final Fuzzy SAND = new Fuzzy("sand", ItemTags.SAND);
+    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").addAll(new Fuzzy(ItemTags.SLABS.getId().toString()));
+    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone").addAll(new Fuzzy(ItemTags.STONE_BRICKS.getId().toString()));
+    public static final Fuzzy SAND = new Fuzzy("sand").addAll(new Fuzzy(ItemTags.SAND.getId().toString()));
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Blocks.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy("ingotGold").add(Items.GOLD_INGOT);
-    public static final Fuzzy STEEL_INGOT = new Fuzzy("ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy("blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy("ingotSteel").addAll(new Fuzzy("c:steel_ingot"));
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy("blockSteel").addAll(new Fuzzy("c:steel_block"));
     public static final Fuzzy IRON_INGOT = new Fuzzy("ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy("blockIron").add(Items.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -78,10 +78,10 @@ public class Fuzzy {
             .add(Blocks.RED_TERRACOTTA)
             .add(Blocks.BLACK_TERRACOTTA);
 
-    public static final Fuzzy LOG_WOOD = new Fuzzy("logWood", ItemTags.LOGS);
+    public static final Fuzzy LOG_WOOD = new Fuzzy("logWood").addAll(new Fuzzy(ItemTags.LOGS.getId().toString()));
     public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.PAPER);
     public static final Fuzzy BOOK = new Fuzzy("book").add(Items.BOOK);
-    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool", ItemTags.WOOL);
+    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").addAll(new Fuzzy(ItemTags.WOOL.getId().toString()));
     public static final Fuzzy BUCKET = new Fuzzy("bucket").add(Items.BUCKET);
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald").add(Items.EMERALD);
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
@@ -92,42 +92,29 @@ public class Fuzzy {
     }
 
     private final String ident;
-    private final Tag<Item> tag;
-    private List<Tag<Item>> subTags = new ArrayList<>();
+    private List<Item> customItems = new ArrayList<>();
+    private List<Fuzzy> subTags = new ArrayList<>();
 
     public Fuzzy(String ident) {
         this.ident = ident;
         if (tags.containsKey(ident)) {
-            // Clone
-            this.tag = tags.get(ident).tag;
+            this.customItems = tags.get(ident).customItems;
             this.subTags = tags.get(ident).subTags;
         } else {
-            // New
-            Tag<Item> currentTag = ItemTags.getContainer().get(new Identifier(ident));
-            if (currentTag != null) {
-                this.tag = currentTag;
-            } else {
-                // I don't think this will survive a reload...
-                this.tag = new Tag<>(new Identifier(ident.toLowerCase()), new ArrayList<>(), true);
-                ItemTags.getContainer().getEntries().put(new Identifier(ident), this.tag);
-            }
-
-            this.subTags.add(tag);
             tags.put(ident, this);
         }
     }
 
-    private Fuzzy(String ident, Tag<Item> tag) {
-        // alias
-        this.ident = ident;
-        this.tag = tag;
-        tags.put(ident, this);
-        subTags.add(tag);
-    }
-
-
     private List<Item> values() {
-        return subTags.stream().map(Tag::values).collect(ArrayList::new, List::addAll, List::addAll);
+        List<Item> values = new ArrayList<>(customItems);
+        Tag<Item> registered = ItemTags.getContainer().get(new Identifier(ident.toLowerCase()));
+        if (registered != null) {
+            values.addAll(registered.values());
+        }
+
+        subTags.stream().map(Fuzzy::values).forEach(values::addAll);
+
+        return values;
     }
 
     public boolean matches(ItemStack stack) {
@@ -154,18 +141,7 @@ public class Fuzzy {
     }
 
     public Fuzzy add(Item item) {
-        tag.entries().add(new Tag.Entry<Item>() {
-            @Override
-            public void build(Collection<Item> var1) {
-                var1.add(item);
-            }
-
-            @Override
-            public void toJson(JsonArray var1, Function<Item, Identifier> var2) {
-                // NOP
-            }
-        });
-        tag.values().add(item);
+        customItems.add(item);
         return this;
     }
 
@@ -174,13 +150,14 @@ public class Fuzzy {
     }
 
     public Fuzzy addAll(Fuzzy other) {
-        subTags.add(other.tag);
+        if (!other.ident.equals(this.ident)) {
+            subTags.add(other);
+        }
         return this;
     }
 
     public void clear() {
         // This might break stuff in fantastic ways!
-        tag.entries().clear();
     }
 
     @Override
