@@ -41,19 +41,21 @@ public interface ITank {
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
                 ItemStack ts = inputCopy.copy();
-                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(new Ref<>(ts.internal));
+                Ref<net.minecraft.item.ItemStack> ref = new Ref<>(ts.internal);
+                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(ref);
                 temp.attemptInsertion(fluidStack.internal, Simulation.ACTION);
-                onUpdate.accept(ts);
+                onUpdate.accept(new ItemStack(ref.get()));
 
-                return inv.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
+                return fluidStack.getAmount() - inv.attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
                 ItemStack ts = inputCopy.copy();
-                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(new Ref<>(ts.internal));
+                Ref<net.minecraft.item.ItemStack> ref = new Ref<>(ts.internal);
+                GroupedFluidInv temp = FluidAttributes.GROUPED_INV.get(ref);
                 temp.attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), Simulation.ACTION);
-                onUpdate.accept(ts);
+                onUpdate.accept(new ItemStack(ref.get()));
 
                 return new FluidStack(inv.attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
             }
@@ -83,7 +85,7 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                return internal.getTank(0).attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
+                return fluidStack.getAmount() - internal.getTank(0).attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
             }
 
             @Override
