@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "modcore",
+  "id": "universalmodcore",
   "version": "${version}",
 
   "name": "Universal Mod Core",
