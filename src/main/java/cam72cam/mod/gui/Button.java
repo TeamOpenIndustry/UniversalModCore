@@ -47,7 +47,7 @@ public abstract class Button {
 
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
         this(builder, new ButtonWidget(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
-        ((ButtonWidget)button).clicker = this::onClick;
+        ((ButtonWidget)button).clicker = this::onClickInternal;
     }
 
     Button(IScreenBuilder builder, AbstractButtonWidget button) {
@@ -57,6 +57,10 @@ public abstract class Button {
 
     public void setText(String text) {
         button.setMessage(text);
+    }
+
+    protected void onClickInternal(Hand hand) {
+        onClick(hand);
     }
 
     public abstract void onClick(Hand hand);

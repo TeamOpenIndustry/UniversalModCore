@@ -1,21 +1,27 @@
 package cam72cam.mod.gui;
 
-import net.minecraft.client.gui.widget.ToggleButtonWidget;
-import net.minecraft.util.Identifier;
+import cam72cam.mod.util.Hand;
 
 public abstract class CheckBox extends Button {
-    protected static final Identifier TEXTURE = new Identifier("textures/gui/recipe_book.png");
     public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
-        super(builder, new ToggleButtonWidget(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 200, 20, enabled));
-        ((ToggleButtonWidget)button).setTextureUV(152, 182, 28, 18, TEXTURE);
-        button.setMessage(text);
+        super(builder, x-25, y, 200, 20, (enabled ? "X" : "█") + " " + text);
     }
 
     public boolean isChecked() {
-        return ((ToggleButtonWidget) this.button).isToggled();
+        return button.getMessage().contains("X");
+    }
+
+    @Override
+    protected void onClickInternal(Hand hand) {
+        this.setChecked(!this.isChecked());
+        super.onClickInternal(hand);
     }
 
     public void setChecked(boolean val) {
-        ((ToggleButtonWidget) this.button).setToggled(val);
+        if (val) {
+            button.setMessage(button.getMessage().replace("█", "X"));
+        } else {
+            button.setMessage(button.getMessage().replace("X", "█"));
+        }
     }
 }
