@@ -391,6 +391,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
+    @Override
+    public String getName() {
+        return this.type;
+    }
+
     /*
      * TODO!!!
      */
