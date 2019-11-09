@@ -32,14 +32,14 @@ public class Fuzzy {
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.iron_bars);
 
     public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.nether_brick);
-    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel");
-    public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock");
+    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel").add(Blocks.gravel);
+    public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.brick_block);
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
     public static final Fuzzy CONCRETE = new Fuzzy("concrete");
     public static final Fuzzy DIRT = new Fuzzy("dirt");
-    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.hardened_clay, 1, OreDictionary.WILDCARD_VALUE));
+    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.stained_hardened_clay, 1, OreDictionary.WILDCARD_VALUE));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
-    public static final Fuzzy PAPER = new Fuzzy("paper");
+    public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.paper);
     public static final Fuzzy BOOK = new Fuzzy("book").add(Items.book);
     public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE));
     public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(Items.bucket, 1));
