@@ -20,6 +20,7 @@ import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -38,7 +39,7 @@ public abstract class BlockType {
 
         internal = getBlock();
 
-        CommonEvents.Block.REGISTER.subscribe(() -> GameRegistry.registerBlock(internal, getName()));
+        CommonEvents.Block.REGISTER.subscribe(() -> GameRegistry.registerBlock(internal, new ResourceLocation(settings.modID, settings.name).toString()));
 
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlock(pos.x, pos.y, pos.z);
