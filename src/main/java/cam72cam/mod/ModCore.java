@@ -182,13 +182,17 @@ public class ModCore {
                     addHandler(new ClientEvents.ClientEventBus());
                     break;
                 case SETUP:
-                    ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
-                        if (skipN > 0) {
-                            skipN--;
-                            return;
-                        }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                    });
+                    if (Minecraft.getMinecraft().getResourceManager() instanceof SimpleReloadableResourceManager) {
+                        ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
+                            if (skipN > 0) {
+                                skipN--;
+                                return;
+                            }
+                            ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                        });
+                    } else {
+                        error("BAD RESOURCE MANAGER TYPE " + Minecraft.getMinecraft().getResourceManager());
+                    }
                     BlockRender.onPostColorSetup();
                     ClientEvents.fireReload();
                     break;
