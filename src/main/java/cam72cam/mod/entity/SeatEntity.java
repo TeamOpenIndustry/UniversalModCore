@@ -76,6 +76,10 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                     }
                 }
             } else {
+                cam72cam.mod.entity.Entity toRide = World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                if (toRide != null && !(toRide.internal.ridingEntity instanceof SeatEntity)) {
+                    removePassenger();
+                }
                 System.out.println("No passengers, goodbye");
                 this.setDead();
                 return;
