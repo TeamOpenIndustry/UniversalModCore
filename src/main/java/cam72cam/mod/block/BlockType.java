@@ -11,6 +11,8 @@ import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockLeaves;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -93,6 +95,11 @@ public abstract class BlockType {
         @Override
         public int getRenderType() {
             return blocks.getOrDefault(BlockType.this, -1);
+        }
+
+        @Override
+        public boolean renderAsNormalBlock() {
+            return false;
         }
 
         @Override
