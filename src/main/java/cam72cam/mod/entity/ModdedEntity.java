@@ -8,7 +8,6 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.particle.EntityFX;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
@@ -324,7 +323,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* ICollision */
     @Override
     public AxisAlignedBB getCollisionBox(Entity collider) {
-        return collider instanceof EntityFX ? null : collider.boundingBox;
+        return null;
     }
 
     @Override
@@ -391,7 +390,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
-    @Override
     public String getName() {
         return this.type;
     }

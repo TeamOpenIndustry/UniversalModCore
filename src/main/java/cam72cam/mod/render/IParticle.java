@@ -6,7 +6,6 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ public abstract class IParticle {
                     motionX = data.motion.x;
                     motionY = data.motion.y;
                     motionZ = data.motion.z;
+                    this.noClip = true;
                 }
 
                 /* TODO 1.7.10
