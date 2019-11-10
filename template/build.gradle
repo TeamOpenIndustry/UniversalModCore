@@ -37,6 +37,7 @@ dependencies {
 	//modCompile project(":TrackAPI")
 
 	modCompile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+	include group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
 }
 
 processResources {
