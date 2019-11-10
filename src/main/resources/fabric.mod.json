@@ -34,7 +34,7 @@
     "fabricloader": ">=0.4.0",
     "fabric": "*",
     "libblockattributes": "0.5.0",
-    "trackapi": "1.1"
+    "trackapi": ">=1.1"
   },
   "suggests": {
   }
