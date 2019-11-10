@@ -21,6 +21,8 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cam72cam.mod.util.ModCoreCommand;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -183,12 +185,17 @@ public class ModCore {
                     break;
                 case SETUP:
                     if (Minecraft.getMinecraft().getResourceManager() instanceof SimpleReloadableResourceManager) {
-                        ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
-                            if (skipN > 0) {
-                                skipN--;
-                                return;
+                        // Lambda does not work here!  Don't simplify!
+                        ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new IResourceManagerReloadListener() {
+                            @Override
+                            public void onResourceManagerReload(IResourceManager p_110549_1_) {
+
+                                if (skipN > 0) {
+                                    skipN--;
+                                    return;
+                                }
+                                ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
                             }
-                            ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
                         });
                     } else {
                         error("BAD RESOURCE MANAGER TYPE " + Minecraft.getMinecraft().getResourceManager());
