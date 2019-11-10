@@ -17,7 +17,7 @@ public class TileEntityTickable extends TileEntity {
     public void updateEntity() {
         BlockEntityTickable tickable = (BlockEntityTickable) instance();
         if (tickable == null) {
-            System.out.println("uhhhhh, null tickable?");
+            ModCore.debug("uhhhhh, null tickable?");
             return;
         }
         tickable.update();

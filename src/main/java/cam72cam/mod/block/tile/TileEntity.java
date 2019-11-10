@@ -191,10 +191,10 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
         if (this.instance == null) {
             if (isLoaded()) {
                 if (this.instanceId == null) {
-                    System.out.println("WAT NULL");
+                    ModCore.debug("WAT NULL");
                 }
                 if (!registry.containsKey(instanceId)) {
-                    System.out.println("WAT " + instanceId);
+                    ModCore.debug("WAT " + instanceId);
                 }
                 this.instance = registry.get(this.instanceId).get();
                 this.instance.internal = this;

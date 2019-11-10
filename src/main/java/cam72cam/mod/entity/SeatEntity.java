@@ -55,12 +55,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         if (parent == null) {
-            System.out.println("No parent, goodbye");
+            ModCore.debug("No parent, goodbye");
             this.setDead();
             return;
         }
         if (passenger == null) {
-            System.out.println("No passenger, goodbye");
+            ModCore.debug("No passenger, goodbye");
             this.setDead();
             return;
         }
@@ -70,7 +70,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 if (!hasHadPassenger) {
                     cam72cam.mod.entity.Entity toRide = World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
                     if (toRide != null) {
-                        System.out.println("FORCE RIDER");
+                        ModCore.debug("FORCE RIDER");
                         toRide.internal.mountEntity(this);
                         hasHadPassenger = true;
                     }
@@ -80,7 +80,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 if (toRide != null && !(toRide.internal.ridingEntity instanceof SeatEntity)) {
                     removePassenger();
                 }
-                System.out.println("No passengers, goodbye");
+                ModCore.debug("No passengers, goodbye");
                 this.setDead();
                 return;
             }
@@ -88,7 +88,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
         if (getParent() == null) {
             if (ticks > 20) {
-                System.out.println("No parent found, goodbye");
+                ModCore.debug("No parent found, goodbye");
                 this.setDead();
             }
         }
@@ -139,7 +139,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         }
         if (riddenByEntity == null) {
             if (passenger != null) {
-                System.out.println("FALLBACK UNMOUNT");
+                ModCore.debug("FALLBACK UNMOUNT");
                 return World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
             }
             return null;

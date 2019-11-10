@@ -268,12 +268,12 @@ public class World {
     public BlockEntity reconstituteBlockEntity(TagCompound data) {
         TileEntity te = (TileEntity) TileEntity.createAndLoadEntity(data.internal);
         if (te == null) {
-            System.out.println("BAD TE DATA " + data);
+            ModCore.warn("BAD TE DATA " + data);
             return null;
         }
         te.setWorldObj(internal);
         if (te.instance() == null) {
-            System.out.println("Loaded " + te.isLoaded() + " " + data);
+            ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
         return te.instance();
     }

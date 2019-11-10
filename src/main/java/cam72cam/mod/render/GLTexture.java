@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cpw.mods.fml.common.Loader;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -83,7 +84,7 @@ public class GLTexture {
             while (queue.size() != 0) {
                 try {
                     Thread.sleep(1000);
-                    System.out.println("Waiting for free write slot...");
+                    ModCore.info("Waiting for free write slot...");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -105,7 +106,7 @@ public class GLTexture {
 
     private void transition(TextureState state) {
         this.state = state;
-        //System.out.println(state.name() + " " + texLoc);
+        //ModCore.info(state.name() + " " + texLoc);
     }
 
     private IntBuffer imageToPixels(BufferedImage image) {
@@ -130,7 +131,8 @@ public class GLTexture {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 
-        GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+        //GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
         pixels = null;
         transition(TextureState.ALLOCATED);
         return textureID;
