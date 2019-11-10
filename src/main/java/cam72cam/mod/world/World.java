@@ -244,12 +244,12 @@ public class World {
     public BlockEntity reconstituteBlockEntity(TagCompound data) {
         TileEntity te = (TileEntity) net.minecraft.block.entity.BlockEntity.createFromTag(data.internal);
         if (te == null) {
-            System.out.println("BAD TE DATA " + data);
+            ModCore.warn("BAD TE DATA " + data);
             return null;
         }
         te.setWorld(internal);
         if (te.instance() == null) {
-            System.out.println("Loaded " + te.isLoaded() + " " + data);
+            ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
         return te.instance();
     }
@@ -436,7 +436,7 @@ public class World {
 
     public boolean canEntityCollideWith(Vec3i bp, String damageType) {
         Block block = internal.getBlockState(bp.internal).getBlock();
-        return block instanceof IConditionalCollision &&
+        return ! (block instanceof IConditionalCollision) ||
                 ((IConditionalCollision) block).canCollide(internal, bp.internal, internal.getBlockState(bp.internal), new EntityDamageSource(damageType, null));
     }
 

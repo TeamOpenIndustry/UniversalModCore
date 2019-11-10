@@ -12,6 +12,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
+import cam72cam.mod.util.ModCoreCommand;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.server.ServerStartCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -160,6 +161,7 @@ public class ModCore implements ModInitializer {
                     Packet.register(BlockEntityUpdatePacket::new, PacketDirection.ServerToClient);
                     Packet.register(CustomSpawnPacket::new, PacketDirection.ServerToClient);
                     Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
+                    Command.register(new ModCoreCommand());
                     break;
                 case SETUP:
                     CommonEvents.registerEvents();

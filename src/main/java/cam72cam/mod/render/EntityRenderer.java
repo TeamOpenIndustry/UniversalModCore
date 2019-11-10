@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.client.render.*;
@@ -60,6 +61,9 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
         World world = MinecraftClient.getPlayer().getWorld();
         List<Entity> entities = world.getEntities(Entity.class);
         for (Entity entity : entities) {
+            if (!(entity.internal instanceof ModdedEntity)) {
+                continue;
+            }
             // Duplicate minecraft logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
             Box chunk = new Box(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
             if (!visibleRegion_1.intersects(chunk) && visibleRegion_1.intersects(entity.internal.getVisibilityBoundingBox())) {

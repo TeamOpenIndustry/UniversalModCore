@@ -1,5 +1,7 @@
 package cam72cam.mod.config;
 
+import cam72cam.mod.ModCore;
+import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;
@@ -8,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,32 +37,49 @@ public class ConfigFile {
 
     }
 
-    public static void sync(Class cls, Path path) {
-        PropertyClass pc = new PropertyClass(cls);
+    static class ConfigInstance {
+        final PropertyClass pc;
+        final Path path;
 
-        if (Files.exists(path)) {
-            List<String> lines;
+        public ConfigInstance(Class<?> cls) {
+            this.pc = new PropertyClass(cls);
+            File file = pc.getAnnotation(File.class);
+            this.path = Paths.get(FabricLoader.getInstance().getConfigDirectory().toString(), file.value());
+        }
+
+        public void read() {
+            if (Files.exists(path)) {
+                List<String> lines;
+                try {
+                    lines = Files.readAllLines(path);
+                } catch (Exception e) {
+                    throw new RuntimeException("Unable to read config file " + path, e);
+                }
+
+                lines = lines.stream()
+                        .filter(x -> !x.matches("\\s*#.*"))
+                        .filter(x -> !x.matches("\\s*"))
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+
+                if (lines.size() > 2) {
+                    pc.read(lines);
+                }
+            }
+        }
+        public void write() {
             try {
-                lines = Files.readAllLines(path);
+                Files.write(path, String.join(System.lineSeparator(), pc.write()).getBytes());
             } catch (Exception e) {
-                throw new RuntimeException("Unable to read config file " + path, e);
-            }
-
-            lines = lines.stream()
-                    .filter(x -> !x.matches("\\s*#.*"))
-                    .filter(x -> !x.matches("\\s*"))
-                    .map(String::trim)
-                    .collect(Collectors.toList());
-
-            if (lines.size() > 2) {
-                pc.read(lines);
+                throw new RuntimeException("Unable to write config file " + path, e);
             }
         }
-        try {
-            Files.write(path, String.join(System.lineSeparator(), pc.write()).getBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to write config file " + path, e);
-        }
+    }
+
+    public static void sync(Class cls) {
+        ConfigInstance ci = new ConfigInstance(cls);
+        ci.read();
+        ci.write();
     }
 
     public static <T> void addMapper(Class<T> cls, Function<T, String> encoder, Function<String, T> decoder) {
@@ -89,6 +109,11 @@ public class ConfigFile {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
+    public @interface File {
+        String value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface Name {
         String value();
     }
@@ -98,7 +123,7 @@ public class ConfigFile {
         String value();
     }
 
-    private abstract static class Property {
+    abstract static class Property {
         protected abstract <A extends Annotation> A getAnnotation(Class<A> cls);
 
         protected abstract void read(List<String> lines);
@@ -140,8 +165,8 @@ public class ConfigFile {
         }
     }
 
-    private static class PropertyField extends Property {
-        private final Field field;
+    static class PropertyField extends Property {
+        final Field field;
 
         private PropertyField(Field f) {
             this.field = f;
@@ -167,7 +192,7 @@ public class ConfigFile {
                             }
                             field.set(null, array);
                         } catch (IllegalAccessException | NullPointerException e) {
-                            System.out.println("Error reading field " + field);
+                            ModCore.error("Error reading field " + field);
                             e.printStackTrace();
                         }
                         return;
@@ -198,7 +223,7 @@ public class ConfigFile {
                                 data.put(key, val);
                             }
                         } catch (IllegalAccessException | NullPointerException e) {
-                            System.out.println("Error reading field " + field);
+                            ModCore.error("Error reading field " + field);
                             e.printStackTrace();
                         }
                         return;
@@ -212,7 +237,7 @@ public class ConfigFile {
             try {
                 field.set(null, decode(field.getType(), line.split("=", 2)[1]));
             } catch (IllegalAccessException | NullPointerException e) {
-                System.out.println("Error reading field " + field);
+                ModCore.error("Error reading field " + field);
                 e.printStackTrace();
             }
         }
@@ -270,10 +295,10 @@ public class ConfigFile {
         }
     }
 
-    private static class PropertyClass extends Property {
+    static class PropertyClass extends Property {
 
         private final Class<?> cls;
-        private final List<Property> properties;
+        final List<Property> properties;
 
         public PropertyClass(Class<?> cls) {
             this.cls = cls;

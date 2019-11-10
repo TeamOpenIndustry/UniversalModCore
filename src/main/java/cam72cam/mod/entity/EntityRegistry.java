@@ -67,7 +67,7 @@ public class EntityRegistry {
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
             if (missingResources != null && !MinecraftClient.getInstance().isInSingleplayer() && MinecraftClient.getInstance().getNetworkHandler() != null) {
-                System.out.println(missingResources);
+                ModCore.error(missingResources);
                 MinecraftClient.getInstance().getNetworkHandler().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
                 //MinecraftClient.getInstance().loadWorld(null);
                 //MinecraftClient.getInstance().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
