@@ -1,5 +1,6 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.custom.*;
 import cam72cam.mod.item.ClickResult;
@@ -204,7 +205,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void addPassenger(Entity entity) {
         if (!worldObj.isRemote) {
-            System.out.println("New Seat");
+            ModCore.debug("New Seat");
             SeatEntity seat = new SeatEntity(worldObj);
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
@@ -214,7 +215,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             worldObj.spawnEntityInWorld(seat);
             self.sendToObserving(new PassengerPositionsPacket(this));
         } else {
-            System.out.println("skip");
+            ModCore.debug("skip");
         }
     }
 
