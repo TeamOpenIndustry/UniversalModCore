@@ -20,6 +20,8 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cam72cam.mod.util.ModCoreCommand;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
@@ -176,6 +178,7 @@ public class ModCore {
         }
 
         @Override
+        @SideOnly(Side.CLIENT)
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
