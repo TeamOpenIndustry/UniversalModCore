@@ -20,7 +20,7 @@ public class Mouse {
             // We need to override that distance because train centers are further away
             // than 36m.
 
-            if (Minecraft.getMinecraft().objectMouseOver == null) {
+            if (Minecraft.getMinecraft().objectMouseOver == null || Minecraft.getMinecraft().currentScreen != null) {
                 return true;
             }
 
