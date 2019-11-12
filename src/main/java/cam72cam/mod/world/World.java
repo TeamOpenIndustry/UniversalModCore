@@ -24,11 +24,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -462,11 +460,18 @@ public class World {
     }
 
     public ItemStack getItemStack(Vec3i pos) {
-        Block state = internal.getBlock(pos.x, pos.y, pos.z);
+        Block block = internal.getBlock(pos.x, pos.y, pos.z);
+        Item item = Item.getItemFromBlock(block);
+
+        if (item == null) {
+            return ItemStack.EMPTY;
+        }
+
         try {
-            return new ItemStack(state.getPickBlock(new MovingObjectPosition(pos.x, pos.y, pos.z, 1, Vec3.createVectorHelper(0, 0, 0)), internal, pos.x, pos.y, pos.z));
+            block = item instanceof ItemBlock && !block.isFlowerPot() ? Block.getBlockFromItem(item) : block;
+            return new ItemStack(item, 1, block.getDamageValue(internal, pos.x, pos.y, pos.z));
         } catch (Exception ex) {
-            return new ItemStack(Item.getItemFromBlock(state));
+            return new ItemStack(block, 1, block.damageDropped(internal.getBlockMetadata(pos.x, pos.y, pos.z)));
         }
     }
 
