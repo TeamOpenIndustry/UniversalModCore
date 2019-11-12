@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ItemRender {
-    private static final SpriteSheet iconSheet = new SpriteSheet(128);
+    private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
     private static Map<ItemBase, String> icons = new HashMap<>();
 
     public static String getIcon(ItemBase itemBase) {
