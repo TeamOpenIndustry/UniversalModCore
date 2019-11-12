@@ -114,9 +114,14 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
 
     public final void handleUpdateTag(TagCompound tag) {
         hasTileData = true;
-        this.fromTag(tag.internal);
-        this.readUpdate(tag);
-        world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+        try {
+            this.fromTag(tag.internal);
+            this.readUpdate(tag);
+            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+        } catch (Exception ex) {
+            ModCore.error("IN UPDATE: %s", tag);
+            ModCore.catching(ex);
+        }
     }
     public BlockEntityUpdateS2CPacket toUpdatePacket() {
         new BlockEntityUpdatePacket(this).sendToAllAround(world, new Vec3d(pos), 8*16);

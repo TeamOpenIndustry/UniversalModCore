@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.ItemBase;
@@ -32,7 +33,7 @@ import java.util.function.Supplier;
 
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
-    private static final SpriteSheet iconSheet = new SpriteSheet(128);
+    private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
     public static void register(ItemBase item, Identifier tex) {
 

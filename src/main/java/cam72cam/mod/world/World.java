@@ -418,7 +418,17 @@ public class World {
 
     public ItemStack getItemStack(Vec3i pos) {
         BlockState state = internal.getBlockState(pos.internal);
-        return new ItemStack(state.getBlock());
+        try {
+            return new ItemStack(
+                    state.getBlock().getPickStack(
+                            internal,
+                            pos.internal,
+                            state
+                    )
+            );
+        } catch (Exception ex) {
+            return new ItemStack(state.getBlock());
+        }
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {

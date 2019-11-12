@@ -2,6 +2,7 @@ package cam72cam.mod;
 
 import cam72cam.mod.block.tile.BlockEntityUpdatePacket;
 import cam72cam.mod.entity.CustomSpawnPacket;
+import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
@@ -162,6 +163,7 @@ public class ModCore implements ModInitializer {
                     Packet.register(CustomSpawnPacket::new, PacketDirection.ServerToClient);
                     Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
+                    ConfigFile.sync(Config.class);
                     break;
                 case SETUP:
                     CommonEvents.registerEvents();
