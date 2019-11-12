@@ -465,7 +465,7 @@ public class World {
         Block state = internal.getBlock(pos.x, pos.y, pos.z);
         try {
             return new ItemStack(state.getPickBlock(new MovingObjectPosition(pos.x, pos.y, pos.z, 1, Vec3.createVectorHelper(0, 0, 0)), internal, pos.x, pos.y, pos.z));
-        } catch (NoSuchMethodError ex) {
+        } catch (Exception ex) {
             return new ItemStack(Item.getItemFromBlock(state));
         }
     }
