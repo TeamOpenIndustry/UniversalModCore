@@ -1,5 +1,6 @@
 package cam72cam.mod.world;
 
+import cam72cam.immersiverailroading.ImmersiveRailroading;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -461,17 +462,11 @@ public class World {
 
     public ItemStack getItemStack(Vec3i pos) {
         Block block = internal.getBlock(pos.x, pos.y, pos.z);
-        Item item = Item.getItemFromBlock(block);
-
-        if (item == null) {
-            return ItemStack.EMPTY;
-        }
-
         try {
-            block = item instanceof ItemBlock && !block.isFlowerPot() ? Block.getBlockFromItem(item) : block;
-            return new ItemStack(item, 1, block.getDamageValue(internal, pos.x, pos.y, pos.z));
-        } catch (Exception ex) {
             return new ItemStack(block, 1, block.damageDropped(internal.getBlockMetadata(pos.x, pos.y, pos.z)));
+        } catch (Exception ex) {
+            ImmersiveRailroading.catching(ex);
+            return ItemStack.EMPTY;
         }
     }
 

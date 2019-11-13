@@ -36,7 +36,7 @@ public class ModSoundManager {
 
         initSoundSystem();
 
-        lastSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category.internal);
+        lastSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category.internal());
     }
 
     private final void initSoundSystem() {
@@ -112,7 +112,7 @@ public class ModSoundManager {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
         }
 
-        float newSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category.internal) * dampenLevel;
+        float newSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category.internal()) * dampenLevel;
         if (newSoundLevel != lastSoundLevel) {
             lastSoundLevel = newSoundLevel;
             for (ISound sound : this.sounds) {

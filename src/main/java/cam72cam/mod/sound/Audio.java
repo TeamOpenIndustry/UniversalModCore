@@ -8,6 +8,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.SidedProxy;
@@ -54,7 +55,9 @@ public class Audio {
     }
 
     public static void playSound(Vec3i pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
-        playSound(new Vec3d(pos), sound, category, volume, pitch);
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            playSound(new Vec3d(pos), sound, category, volume, pitch);
+        }
     }
 
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
