@@ -66,7 +66,7 @@ public class ItemBase {
     }
 
     public boolean isValidArmor(ItemStack itemStack, ArmorSlot from, Entity entity) {
-        return false;//internal.isValidArmor(itemStack.internal, from.internal, entity.internal);
+        return false;
     }
 
     public String getCustomName(ItemStack stack) {
