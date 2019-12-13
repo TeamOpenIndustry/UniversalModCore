@@ -4,6 +4,7 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
@@ -84,7 +85,8 @@ public class BlockRender {
 
                 GL11.glPushMatrix();
                 {
-                    GL11.glTranslated(te.pos.x, te.pos.y, te.pos.z);
+                    //GL11.glTranslated(te.pos.x, te.pos.y, te.pos.z);
+                    RenderSystem.multMatrix(var3.peek().getModel());
                     model.renderCustom(partialTicks);
                 }
                 GL11.glPopMatrix();

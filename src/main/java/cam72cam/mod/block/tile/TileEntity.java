@@ -76,6 +76,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     public void setWorld(net.minecraft.world.World world, BlockPos pos) {
         super.setWorld(world, pos);
         this.world = World.get(world);
+        this.pos = new Vec3i(pos);
     }
 
     @Override

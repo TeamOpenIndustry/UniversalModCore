@@ -3,7 +3,9 @@ package cam72cam.mod.entity;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
+import net.fabricmc.fabric.api.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
@@ -12,7 +14,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 public class SeatEntity extends Entity implements IAdditionalSpawnData {
-    public static EntityType<SeatEntity> TYPE;
+    public static EntityType<SeatEntity> TYPE = FabricEntityTypeBuilder.create(EntityCategory.MISC, SeatEntity::new).trackable(512, 20, false).build();
     static final Identifier ID = new Identifier(ModCore.MODID, "seat");
     private UUID parent;
     private UUID passenger;

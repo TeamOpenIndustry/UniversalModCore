@@ -127,6 +127,8 @@ public class ItemRender {
         }
         static void defaultTransform(ItemRenderType type) {
             switch (type) {
+                case GUI:
+                    GL11.glTranslated(0.5, 0, 0);
                 case FRAME:
                     GL11.glRotated(90, 0, 1, 0);
                     break;

@@ -8,6 +8,7 @@ import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -90,7 +91,7 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
         GL11.glPushMatrix();
         {
             //TODO 1.15 lerp xyz
-            GL11.glTranslated(stock.getX(), stock.getY(), stock.getZ());
+            RenderSystem.multMatrix(matrixStack_1.peek().getModel());
             GL11.glRotatef(180 - entityYaw, 0, 1, 0);
             GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
             GL11.glRotatef(-90, 0, 1, 0);
