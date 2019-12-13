@@ -114,7 +114,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
-            seats.forEach(seat -> seat.setPosition(x, y, z));
+            seats.forEach(seat -> seat.setPosition(getX(), getY(), getZ()));
         }
     }
 
@@ -296,7 +296,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
     @Override
     public Box getVisibilityBoundingBox() {
         Box bb = this.getBoundingBox();
-        return new Box(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        return new Box(bb.x1, bb.y1, bb.z1, bb.x2, bb.y2, bb.z2);
     }
 
     /* Hacks */
@@ -390,9 +390,11 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
     }
      */
 
+    /* TODO 1.15
     @Environment(EnvType.CLIENT)
     public int getLightmapCoordinates() {
-        BlockPos blockPos_1 = new BlockPos(this.x, this.y, this.z);
+        BlockPos blockPos_1 = new BlockPos(getPos());
         return this.world.isBlockLoaded(blockPos_1) ? this.world.getLightmapIndex(blockPos_1, 0) : 0;
     }
+    */
 }

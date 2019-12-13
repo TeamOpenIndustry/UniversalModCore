@@ -2,14 +2,17 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
+import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.MobEntityRenderer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import org.lwjgl.opengl.GL11;
@@ -23,16 +26,20 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
     static {
-        GlobalRender.registerRender(EntityRenderer::renderLargeEntities);
+        //GlobalRender.registerRender(EntityRenderer::renderLargeEntities);
     }
 
     public static void registerClientEvents() {
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(ModdedEntity.class, EntityRenderer::new));
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
+            EntityRegistry.getTypes().forEach(t -> {
+                EntityRendererRegistry.INSTANCE.register(t, EntityRenderer::new);
+            });
+        });
 
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(SeatEntity.class, (manager, ctx) -> new net.minecraft.client.render.entity.EntityRenderer<SeatEntity>(manager) {
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(SeatEntity.TYPE, (manager, ctx) -> new net.minecraft.client.render.entity.EntityRenderer<SeatEntity>(manager) {
             @Nullable
             @Override
-            protected Identifier getTexture(SeatEntity var1) {
+            public Identifier getTexture(SeatEntity var1) {
                 return null;
             }
         }));
@@ -46,6 +53,7 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
         renderers.put(type, render);
     }
 
+    /*  I think 1.15 fixed this!
     private static void renderLargeEntities(float partialTicks) {
         net.minecraft.client.MinecraftClient.getInstance().getProfiler().push("large_entity_helper");
 
@@ -73,14 +81,16 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
 
         net.minecraft.client.MinecraftClient.getInstance().getProfiler().pop();
     }
+    */
 
     @Override
-    public void render(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
+    public void render(ModdedEntity stock, float entityYaw, float partialTicks, MatrixStack matrixStack_1, VertexConsumerProvider vertexConsumerProvider_1, int int_1) {
         Entity self = stock.getSelf();
 
         GL11.glPushMatrix();
         {
-            GL11.glTranslated(x, y, z);
+            //TODO 1.15 lerp xyz
+            GL11.glTranslated(stock.getX(), stock.getY(), stock.getZ());
             GL11.glRotatef(180 - entityYaw, 0, 1, 0);
             GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
             GL11.glRotatef(-90, 0, 1, 0);
@@ -92,7 +102,7 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
 
     @Nullable
     @Override
-    protected Identifier getTexture(ModdedEntity var1) {
+    public Identifier getTexture(ModdedEntity var1) {
         return null;
     }
 }

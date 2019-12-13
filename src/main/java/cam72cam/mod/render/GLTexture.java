@@ -2,8 +2,8 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import com.mojang.blaze3d.platform.TextureUtil;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.texture.TextureUtil;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;

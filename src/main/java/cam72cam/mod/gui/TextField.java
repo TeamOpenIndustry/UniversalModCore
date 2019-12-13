@@ -24,7 +24,7 @@ public class TextField extends Button {
     }
 
     public void setFocused(boolean b) {
-        internal().method_1876(b);
+        internal().changeFocus(b);
     }
 
     public String getText() {

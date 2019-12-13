@@ -97,7 +97,7 @@ public class Entity {
     }
 
     public Vec3d getPositionEyes(float partialTicks) {
-        return new Vec3d(internal.x, internal.y + internal.getStandingEyeHeight(), internal.z);
+        return new Vec3d(internal.getX(), internal.getY() + internal.getStandingEyeHeight(), internal.getZ());
     }
 
 

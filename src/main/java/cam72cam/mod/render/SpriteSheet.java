@@ -1,6 +1,6 @@
 package cam72cam.mod.render;
 
-import com.mojang.blaze3d.platform.TextureUtil;
+import net.minecraft.client.texture.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 

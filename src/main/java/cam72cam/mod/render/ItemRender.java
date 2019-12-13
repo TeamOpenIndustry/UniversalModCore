@@ -7,21 +7,24 @@ import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlFramebuffer;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.JsonUnbakedModel;
 import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.render.model.json.Transformation;
 import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.ExtendedBlockView;
+import net.minecraft.world.BlockRenderView;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -38,8 +41,8 @@ public class ItemRender {
     public static void register(ItemBase item, Identifier tex) {
 
         ClientEvents.MODEL_BAKE.subscribe(() -> {
-            Map<String, String> textures = new HashMap<>();
-            textures.put("layer0", tex.toString());
+            Map<String, Either<SpriteIdentifier, String>> textures = new HashMap<>();
+            textures.put("layer0", Either.right(tex.toString()));
             ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
                     new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, true, ModelTransformation.NONE, Collections.emptyList())
                     : null);
@@ -56,13 +59,13 @@ public class ItemRender {
                         }
 
                         @Override
-                        public Collection<net.minecraft.util.Identifier> getTextureDependencies(Function<net.minecraft.util.Identifier, UnbakedModel> var1, Set<String> var2) {
+                        public Collection<SpriteIdentifier> getTextureDependencies(Function<net.minecraft.util.Identifier, UnbakedModel> var1, Set<Pair<String, String>> var2) {
                             return Collections.emptyList();
                         }
 
                         @Nullable
                         @Override
-                        public BakedModel bake(ModelLoader var1, Function<net.minecraft.util.Identifier, Sprite> var2, ModelBakeSettings var3) {
+                        public BakedModel bake(ModelLoader var1, Function<SpriteIdentifier, Sprite> var2, ModelBakeSettings var3, net.minecraft.util.Identifier var4) {
                             ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
                                 @Override
                                 public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
@@ -144,7 +147,7 @@ public class ItemRender {
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        GlFramebuffer fb = new GlFramebuffer(width, height, true, true);
+        Framebuffer fb = new Framebuffer(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
         fb.clear(true);
         fb.beginWrite(true);
@@ -274,7 +277,7 @@ public class ItemRender {
         }
 
         @Override
-        public void emitBlockQuads(ExtendedBlockView extendedBlockView, BlockState blockState, BlockPos blockPos, Supplier<Random> supplier, RenderContext renderContext) {
+        public void emitBlockQuads(BlockRenderView extendedBlockView, BlockState blockState, BlockPos blockPos, Supplier<Random> supplier, RenderContext renderContext) {
         }
 
         @Override

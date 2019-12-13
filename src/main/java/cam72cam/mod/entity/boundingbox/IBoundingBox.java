@@ -12,12 +12,12 @@ public interface IBoundingBox {
         return new IBoundingBox() {
             @Override
             public Vec3d min() {
-                return new Vec3d(internal.minX, internal.minY, internal.minZ);
+                return new Vec3d(internal.x1, internal.y1, internal.z1);
             }
 
             @Override
             public Vec3d max() {
-                return new Vec3d(internal.maxX, internal.maxY, internal.maxZ);
+                return new Vec3d(internal.x2, internal.y2, internal.z2);
             }
 
             @Override

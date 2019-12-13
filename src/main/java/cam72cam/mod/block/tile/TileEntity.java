@@ -14,13 +14,14 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.network.packet.BlockEntityUpdateS2CPacket;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TileEntity extends net.minecraft.block.entity.BlockEntity {
@@ -34,6 +35,10 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     Tile registration
     */
     private final BlockEntity instance;
+
+    public static Collection<BlockEntityType<? extends TileEntity>> getTypes() {
+        return types.values();
+    }
 
     public TileEntity(Identifier id) {
         super(types.get(id.toString()));
@@ -68,8 +73,8 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
 
     @Override
-    public void setWorld(net.minecraft.world.World world) {
-        super.setWorld(world);
+    public void setWorld(net.minecraft.world.World world, BlockPos pos) {
+        super.setWorld(world, pos);
         this.world = World.get(world);
     }
 
@@ -117,7 +122,9 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         try {
             this.fromTag(tag.internal);
             this.readUpdate(tag);
-            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+            if (world.internal instanceof ClientWorld) {
+                ((ClientWorld)world.internal).scheduleBlockRenders(pos.x, pos.y, pos.z);
+            }
         } catch (Exception ex) {
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
@@ -134,8 +141,8 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         if (world.isServer) {
             world.internal.updateListeners(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
             world.internal.updateNeighborsAlways(pos.internal, super.world.getBlockState(super.pos).getBlock());
-        } else {
-            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+        } else if (world.internal instanceof ClientWorld) {
+            ((ClientWorld)world.internal).scheduleBlockRenders(pos.x, pos.y, pos.z);
         }
     }
 
@@ -151,7 +158,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
 
     public void setWorld(World world) {
-        super.setWorld(world.internal);
+        super.setWorld(world.internal, pos.internal);
     }
 
     public void setPos(Vec3i pos) {

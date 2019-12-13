@@ -4,26 +4,31 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
-import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.Material;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.client.color.world.GrassColors;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.SpriteIdentifier;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.ExtendedBlockView;
+import net.minecraft.world.BlockRenderView;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -45,7 +50,7 @@ public class BlockRender {
             List<net.minecraft.block.entity.BlockEntity> tes = MinecraftClient.getInstance().world.blockEntities.stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
-            MinecraftClient.getInstance().worldRenderer.updateBlockEntities(prev, tes);
+            MinecraftClient.getInstance().worldRenderer.updateNoCullingBlockEntities(prev, tes);
             prev = tes;
         });
     }
@@ -53,9 +58,10 @@ public class BlockRender {
     public static void onPostColorSetup() {
         colors.forEach(Runnable::run);
 
-        BlockEntityRendererRegistry.INSTANCE.register(TileEntity.class, new BlockEntityRenderer<TileEntity>() {
+        TileEntity.getTypes().forEach(t -> {
+        BlockEntityRendererRegistry.INSTANCE.register((BlockEntityType<TileEntity>)t, x -> new BlockEntityRenderer<TileEntity>(x) {
             @Override
-            public void render(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+            public void render(TileEntity te, float partialTicks, MatrixStack var3, VertexConsumerProvider var4, int var5, int var6) {
                 BlockEntity instance = te.instance();
                 if (instance == null) {
                     System.out.println("WAT NULL");
@@ -78,16 +84,18 @@ public class BlockRender {
 
                 GL11.glPushMatrix();
                 {
-                    GL11.glTranslated(x, y, z);
+                    GL11.glTranslated(te.pos.x, te.pos.y, te.pos.z);
                     model.renderCustom(partialTicks);
                 }
                 GL11.glPopMatrix();
             }
 
             @Override
-            public boolean method_3563(TileEntity te) {
+            public boolean rendersOutsideBoundingBox(TileEntity te) {
                 return true;
             }
+        });
+
         });
     }
 
@@ -98,7 +106,7 @@ public class BlockRender {
 
         colors.add(() -> {
             BlockColors blockColors = MinecraftClient.getInstance().getBlockColorMap();
-            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.getColor(0.5D, 1.0D), block.internal);
+            blockColors.registerColorProvider((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.getColor(0.5D, 1.0D), block.internal);
         });
 
         ClientEvents.MODEL_BAKE.subscribe(() -> {
@@ -110,13 +118,13 @@ public class BlockRender {
                         }
 
                         @Override
-                        public Collection<Identifier> getTextureDependencies(Function<Identifier, UnbakedModel> var1, Set<String> var2) {
+                        public Collection<SpriteIdentifier> getTextureDependencies(Function<Identifier, UnbakedModel> var1, Set<Pair<String, String>> var2) {
                             return Collections.emptyList();
                         }
 
                         @Nullable
                         @Override
-                        public BakedModel bake(ModelLoader var1, Function<Identifier, Sprite> var2, ModelBakeSettings var3) {
+                        public BakedModel bake(ModelLoader var1, Function<SpriteIdentifier, Sprite> var2, ModelBakeSettings var3, Identifier var4) {
                             return new FullBakedModel() {
                                 @Override
                                 public boolean isVanillaAdapter() {
@@ -124,7 +132,7 @@ public class BlockRender {
                                 }
 
                                 @Override
-                                public void emitBlockQuads(ExtendedBlockView blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
+                                public void emitBlockQuads(BlockRenderView blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
                                     net.minecraft.block.entity.BlockEntity be = blockView.getBlockEntity(pos);
                                     if (be instanceof TileEntity) {
                                         TileEntity te = (TileEntity) be;

@@ -11,15 +11,17 @@ import cam72cam.mod.util.CollectionUtil;
 import cam72cam.mod.util.Hand;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.FloatBuffer;
@@ -31,24 +33,32 @@ import java.util.function.Consumer;
 public class GlobalRender {
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
 
+    static BlockEntityType<GlobalRenderHelper> grh = new BlockEntityType<GlobalRenderHelper>(() -> new GlobalRenderHelper(null), new HashSet<>(), null) {
+        @Override
+        public boolean supports(Block block_1) {
+            return true;
+        }
+    };
+
     public static void registerClientEvents() {
+
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            BlockEntityRendererRegistry.INSTANCE.register(GlobalRenderHelper.class, new BlockEntityRenderer<GlobalRenderHelper>() {
+            BlockEntityRendererRegistry.INSTANCE.register(grh, x -> new BlockEntityRenderer<GlobalRenderHelper>(x) {
                 @Override
-                public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
+                public void render(GlobalRenderHelper te, float partialTicks, MatrixStack var3, VertexConsumerProvider var4, int var5, int var6) {
                     net.minecraft.client.MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
                     renderFuncs.forEach(r -> r.accept(partialTicks));
                 }
 
                 @Override
-                public boolean method_3563(GlobalRenderHelper te) {
+                public boolean rendersOutsideBoundingBox(GlobalRenderHelper te) {
                     return true;
                 }
             });
         });
 
         List<BlockEntity> grhList = CollectionUtil.listOf(new GlobalRenderHelper(null));
-        ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
+        ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateNoCullingBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(right -> {
             // DebugHud
@@ -121,12 +131,7 @@ public class GlobalRender {
         }
 
         public BlockEntityType<?> getType() {
-            return new BlockEntityType<GlobalRenderHelper>(() -> new GlobalRenderHelper(null), new HashSet<>(), null) {
-                @Override
-                public boolean supports(Block block_1) {
-                    return true;
-                }
-            };
+            return GlobalRender.grh;
         }
 
         public BlockState getCachedState() {

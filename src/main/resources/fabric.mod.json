@@ -31,10 +31,11 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.4.0",
+    "fabricloader": ">=0.7.2",
     "fabric": "*",
     "libblockattributes": "0.5.0",
-    "trackapi": ">=1.1"
+    "trackapi": ">=1.1",
+	"minecraft": "1.15.x"
   },
   "suggests": {
   }

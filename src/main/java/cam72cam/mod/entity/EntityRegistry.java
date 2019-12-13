@@ -14,6 +14,7 @@ import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.registry.Registry;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -24,6 +25,10 @@ public class EntityRegistry {
 
     private EntityRegistry() {
 
+    }
+
+    public static Collection<EntityType<ModdedEntity>> getTypes() {
+        return registered.values();
     }
 
     public static void register(ModCore.Mod mod, Supplier<Entity> ctr, EntitySettings settings, int distance) {

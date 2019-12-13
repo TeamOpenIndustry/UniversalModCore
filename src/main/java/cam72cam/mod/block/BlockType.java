@@ -14,8 +14,10 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
@@ -86,6 +88,7 @@ public abstract class BlockType {
                     .sounds(settings.material.soundType)
                     .hardness(settings.hardness)
                     .resistance(settings.resistance)
+                    .nonOpaque()
                     .dynamicBounds()
                     .build());
         }
@@ -97,8 +100,8 @@ public abstract class BlockType {
         }
 
         @Override
-        public boolean activate(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockHitResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos()));
+        public ActionResult onUse(BlockState blockState, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockHitResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos())) ? ActionResult.SUCCESS : ActionResult.FAIL;
         }
 
         @Override
@@ -119,12 +122,6 @@ public abstract class BlockType {
         public final BlockRenderType getRenderType(BlockState state) {
             // TESR Renderer TODO OPTIONAL!@!!!!
             return BlockRenderType.MODEL;
-        }
-
-
-        @Override
-        public boolean isOpaque(BlockState blockState_1) {
-            return false;
         }
 
         @Override
