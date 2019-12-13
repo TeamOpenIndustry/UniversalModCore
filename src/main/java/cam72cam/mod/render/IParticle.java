@@ -7,6 +7,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.VertexConsumer;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.opengl.GL11;
 
@@ -45,10 +46,10 @@ public abstract class IParticle {
                 }
 
                 @Override
-                public void buildGeometry(BufferBuilder buffer, Camera entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                public void buildGeometry(VertexConsumer var1, Camera camera, float partialTicks) {
                     ip.ticks = age;
                     ip.pos = new Vec3d(x,y,z);
-                    ip.renderPos = new Vec3d(x - cameraX, y - cameraY, z - cameraZ);
+                    ip.renderPos = new Vec3d(x - camera.getPos().x, y - camera.getPos().y, z - camera.getPos().z);
                     ip.renderPos = ip.renderPos.add(this.velocityX * partialTicks, this.velocityY * partialTicks, this.velocityZ * partialTicks);
 
                     if (renderer == null) {

@@ -24,7 +24,7 @@ public class MinecraftClient {
     }
 
     public static boolean useVBO() {
-        return GLX.useVbo();
+        return true;
     }
 
     public static Entity getEntityMouseOver() {
@@ -36,11 +36,11 @@ public class MinecraftClient {
     }
 
     public static Vec3i getBlockMouseOver() {
-        return net.minecraft.client.MinecraftClient.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3i(net.minecraft.client.MinecraftClient.getInstance().hitResult.getPos()) : null;
+        return net.minecraft.client.MinecraftClient.getInstance().crosshairTarget.getType() == HitResult.Type.BLOCK ? new Vec3i(net.minecraft.client.MinecraftClient.getInstance().crosshairTarget.getPos()) : null;
     }
 
     public static Vec3d getPosMouseOver() {
-        return net.minecraft.client.MinecraftClient.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3d(net.minecraft.client.MinecraftClient.getInstance().hitResult.getPos()) : null;
+        return net.minecraft.client.MinecraftClient.getInstance().crosshairTarget.getType() == HitResult.Type.BLOCK ? new Vec3d(net.minecraft.client.MinecraftClient.getInstance().crosshairTarget.getPos()) : null;
     }
 
     public static boolean isPaused() {

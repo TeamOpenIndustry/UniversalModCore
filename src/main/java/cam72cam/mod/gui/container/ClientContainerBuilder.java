@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -194,7 +195,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen implements I
 
         GUIHelpers.drawRect(x, y + (int)(16 - 16 * height), 16,  16 * height, color);
 
-        Sprite sprite = minecraft.getSpriteAtlas().getSprite(spriteId);
+        Sprite sprite = minecraft.getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEX).apply(new Identifier(spriteId));
         minecraft.getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
         GlStateManager.color4f(1,1,1,1);
         DrawableHelper.blit(x, y, 0, 16, 16, sprite);

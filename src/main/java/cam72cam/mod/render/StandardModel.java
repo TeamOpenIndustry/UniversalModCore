@@ -10,11 +10,13 @@ import net.minecraft.block.SnowBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,7 +69,7 @@ public class StandardModel {
             {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                MinecraftClient.getInstance().getItemRenderer().renderItem(stack.internal, ModelTransformation.Type .NONE);
+                MinecraftClient.getInstance().getItemRenderer().renderItem(stack.internal, ModelTransformation.Type .NONE, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers());
             }
             GL11.glPopMatrix();
         });
@@ -118,10 +120,11 @@ public class StandardModel {
         MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
 
         BufferBuilder worldRenderer = new BufferBuilder(2048);
-        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR_UV_NORMAL);
+        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
 
         for (BakedQuad quad : quads) {
-            worldRenderer.putVertexData(quad.getVertexData());
+            int[] data = quad.getVertexData();
+            worldRenderer.vertex(data[0], data[1], data[2]);
             /* TODO
             if (quad.hasColor()) {
                 MinecraftClient.getInstance().getBlockColorMap().getColorMultiplier(state, null, null, 0)
@@ -130,13 +133,13 @@ public class StandardModel {
                 worldRenderer.setQuadColor(float_1, float_1, float_1);
             }
             */
-            worldRenderer.setQuadColor(1, 1, 1);
+            worldRenderer.color(1, 1, 1, 1);
 
             Vec3i vec3i_1 = quad.getFace().getVector();
-            worldRenderer.postNormal((float)vec3i_1.getX(), (float)vec3i_1.getY(), (float)vec3i_1.getZ());
+            worldRenderer.normal((float)vec3i_1.getX(), (float)vec3i_1.getY(), (float)vec3i_1.getZ());
         }
         worldRenderer.end();
-        new BufferRenderer().draw(worldRenderer);
+        BufferRenderer.draw(worldRenderer);
     }
 
     public void renderCustom() {

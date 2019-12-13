@@ -26,7 +26,7 @@ public class GUIHelpers {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBufferBuilder();
+        BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION);
         bufferbuilder.vertex(x + 0, y + height, zLevel).next();
         bufferbuilder.vertex(x + width, y + height, zLevel).next();
@@ -42,8 +42,8 @@ public class GUIHelpers {
     public static void texturedRect(double x, double y, double width, double height) {
         double zLevel = 0;
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBufferBuilder();
-        bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_UV);
+        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
         bufferbuilder.vertex(x + 0, y + height, zLevel).texture(0, 1).next();
         bufferbuilder.vertex(x + width, y + height, zLevel).texture(1, 1).next();
         bufferbuilder.vertex(x + width, y + 0, zLevel).texture(1, 0).next();
@@ -82,11 +82,11 @@ public class GUIHelpers {
     }
 
     public static int getScreenWidth() {
-        return MinecraftClient.getInstance().window.getFramebufferWidth()/2;
+        return MinecraftClient.getInstance().getWindow().getFramebufferWidth()/2;
     }
 
     public static int getScreenHeight() {
-        return MinecraftClient.getInstance().window.getFramebufferHeight() /2;
+        return MinecraftClient.getInstance().getWindow().getFramebufferHeight() /2;
     }
 
     public static void drawItem(ItemStack stack, int x, int y) {
