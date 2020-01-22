@@ -247,7 +247,7 @@ public class World {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
-        te.setWorld(internal, te.getPos());
+        te.setLocation(internal, te.getPos());
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }

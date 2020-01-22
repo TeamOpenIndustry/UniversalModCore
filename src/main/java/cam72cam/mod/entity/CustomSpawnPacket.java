@@ -39,7 +39,7 @@ public class CustomSpawnPacket extends Packet {
         entity.setEntityId(data.getInteger("id"));
         entity.setUuid(data.getUUID("uuid"));
         Vec3d pos = data.getVec3d("pos");
-        entity.setPosition(pos.x, pos.y, pos.z);
+        entity.setPos(pos.x, pos.y, pos.z);
         entity.updateTrackedPosition(pos.x, pos.y, pos.z);
         entity.setVelocity(data.getVec3d("vel").internal);
 

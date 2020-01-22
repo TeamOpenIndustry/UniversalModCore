@@ -154,7 +154,12 @@ public class BlockRender {
                                                     }
 
                                                     @Override
-                                                    public boolean hasDepthInGui() {
+                                                    public boolean hasDepth() {
+                                                        return true;
+                                                    }
+
+                                                    @Override
+                                                    public boolean isSideLit() {
                                                         return true;
                                                     }
 
@@ -202,8 +207,13 @@ public class BlockRender {
                                 }
 
                                 @Override
-                                public boolean hasDepthInGui() {
+                                public boolean hasDepth() {
                                     return false;
+                                }
+
+                                @Override
+                                public boolean isSideLit() {
+                                    return true;
                                 }
 
                                 @Override

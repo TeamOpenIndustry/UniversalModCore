@@ -59,7 +59,7 @@ public class Entity {
     }
 
     public void setPosition(Vec3d pos) {
-        internal.setPosition(pos.x, pos.y, pos.z);
+        internal.setPos(pos.x, pos.y, pos.z);
     }
 
     public Vec3d getVelocity() {

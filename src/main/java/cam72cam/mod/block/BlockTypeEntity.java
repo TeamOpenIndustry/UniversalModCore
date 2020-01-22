@@ -5,6 +5,7 @@ import alexiil.mc.lib.attributes.fluid.FixedFluidInv;
 import alexiil.mc.lib.attributes.fluid.FluidExtractable;
 import alexiil.mc.lib.attributes.fluid.FluidInsertable;
 import alexiil.mc.lib.attributes.fluid.FluidInvTankChangeListener;
+import alexiil.mc.lib.attributes.fluid.filter.FluidFilter;
 import alexiil.mc.lib.attributes.fluid.volume.FluidKey;
 import alexiil.mc.lib.attributes.fluid.volume.FluidKeys;
 import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
@@ -29,7 +30,6 @@ import io.github.cottonmc.energy.api.EnergyType;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
@@ -243,11 +243,14 @@ public abstract class BlockTypeEntity extends BlockType {
 
                         @Override
                         public FluidExtractable getExtractable() {
-                            return (filter, amount, simulation) -> {
-                                if (filter.matches(tank.getContents().internal.getFluidKey())) {
-                                    return tank.drain(new FluidStack(tank.getContents().getFluid(), amount), simulation.isSimulate()).internal;
+                            return new FluidExtractable() {
+                                @Override
+                                public FluidVolume attemptExtraction(FluidFilter filter, int maxAmount, Simulation simulation) {
+                                    if (filter.matches(tank.getContents().internal.getFluidKey())) {
+                                        return tank.drain(new FluidStack(tank.getContents().getFluid(), maxAmount), simulation.isSimulate()).internal;
+                                    }
+                                    return FluidVolume.create(FluidKeys.EMPTY, 0);
                                 }
-                                return FluidVolume.create(FluidKeys.EMPTY, 0);
                             };
                         }
                     });

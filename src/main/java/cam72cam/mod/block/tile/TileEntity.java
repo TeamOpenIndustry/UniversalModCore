@@ -49,7 +49,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         registry.put(id.toString(), ctr);
 
         //BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, BlockEntityType.Builder.create(() -> tctr.apply(ctr)).build(null));
-        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY, id.internal, new BlockEntityType<>(teCtr, new HashSet<net.minecraft.block.Block>() {
+        BlockEntityType<? extends TileEntity> type = Registry.register(Registry.BLOCK_ENTITY_TYPE, id.internal, new BlockEntityType<>(teCtr, new HashSet<net.minecraft.block.Block>() {
             public boolean contains(Object var1) {
                 // WHYYYYYYYYYYYYYYYY
                 return true;
@@ -73,8 +73,8 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
 
     @Override
-    public void setWorld(net.minecraft.world.World world, BlockPos pos) {
-        super.setWorld(world, pos);
+    public void setLocation(net.minecraft.world.World world, BlockPos pos) {
+        super.setLocation(world, pos);
         this.world = World.get(world);
         this.pos = new Vec3i(pos);
     }
@@ -159,7 +159,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
 
     public void setWorld(World world) {
-        super.setWorld(world.internal, pos.internal);
+        super.setLocation(world.internal, pos.internal);
     }
 
     public void setPos(Vec3i pos) {

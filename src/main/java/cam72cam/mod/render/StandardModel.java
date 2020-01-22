@@ -69,7 +69,7 @@ public class StandardModel {
             {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                MinecraftClient.getInstance().getItemRenderer().renderItem(stack.internal, ModelTransformation.Type .NONE, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers());
+                MinecraftClient.getInstance().getItemRenderer().renderItem(stack.internal, ModelTransformation.Mode.NONE, 0, 0, new MatrixStack(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers());
             }
             GL11.glPopMatrix();
         });

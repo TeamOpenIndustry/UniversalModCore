@@ -44,7 +44,7 @@ public class ItemRender {
             Map<String, Either<SpriteIdentifier, String>> textures = new HashMap<>();
             textures.put("layer0", Either.right(tex.toString()));
             ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
-                    new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, true, ModelTransformation.NONE, Collections.emptyList())
+                    new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, JsonUnbakedModel.GuiLight.FRONT, ModelTransformation.NONE, Collections.emptyList())
                     : null);
         });
     }
@@ -93,23 +93,23 @@ public class ItemRender {
     }
 
     public enum ItemRenderType {
-        NONE(ModelTransformation.Type.NONE),
-        THIRD_PERSON_LEFT_HAND(ModelTransformation.Type.THIRD_PERSON_LEFT_HAND),
-        THIRD_PERSON_RIGHT_HAND(ModelTransformation.Type.THIRD_PERSON_RIGHT_HAND),
-        FIRST_PERSON_LEFT_HAND(ModelTransformation.Type.FIRST_PERSON_LEFT_HAND),
-        FIRST_PERSON_RIGHT_HAND(ModelTransformation.Type.FIRST_PERSON_RIGHT_HAND),
-        HEAD(ModelTransformation.Type.HEAD),
-        GUI(ModelTransformation.Type.GUI),
-        ENTITY(ModelTransformation.Type.GROUND),
-        FRAME(ModelTransformation.Type.FIXED);
+        NONE(ModelTransformation.Mode.NONE),
+        THIRD_PERSON_LEFT_HAND(ModelTransformation.Mode.THIRD_PERSON_LEFT_HAND),
+        THIRD_PERSON_RIGHT_HAND(ModelTransformation.Mode.THIRD_PERSON_RIGHT_HAND),
+        FIRST_PERSON_LEFT_HAND(ModelTransformation.Mode.FIRST_PERSON_LEFT_HAND),
+        FIRST_PERSON_RIGHT_HAND(ModelTransformation.Mode.FIRST_PERSON_RIGHT_HAND),
+        HEAD(ModelTransformation.Mode.HEAD),
+        GUI(ModelTransformation.Mode.GUI),
+        ENTITY(ModelTransformation.Mode.GROUND),
+        FRAME(ModelTransformation.Mode.FIXED);
 
-        private final ModelTransformation.Type type;
+        private final ModelTransformation.Mode type;
 
-        ItemRenderType(ModelTransformation.Type type) {
+        ItemRenderType(ModelTransformation.Mode type) {
             this.type = type;
         }
 
-        public static ItemRenderType from(ModelTransformation.Type cameraTransformType) {
+        public static ItemRenderType from(ModelTransformation.Mode cameraTransformType) {
             for (ItemRenderType type : values()) {
                 if (cameraTransformType == type.type) {
                     return type;
@@ -244,7 +244,12 @@ public class ItemRender {
         }
 
         @Override
-        public boolean hasDepthInGui() {
+        public boolean hasDepth() {
+            return true;
+        }
+
+        @Override
+        public boolean isSideLit() {
             return true;
         }
 
@@ -265,10 +270,10 @@ public class ItemRender {
 
         @Override
         public ModelTransformation getTransformation() {
-            return new ModelTransformation(Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE) {
-                public Transformation getTransformation(ModelTransformation.Type cameraTransformType) {
-                    BakedItemModel.this.type = ItemRenderType.from(cameraTransformType);
-                    return Transformation.NONE;
+            return new ModelTransformation(ModelTransformation.NONE) {
+                public Transformation getTransformation(ModelTransformation.Mode mode) {
+                    BakedItemModel.this.type = ItemRenderType.from(mode);
+                    return Transformation.IDENTITY;
                 }
             };
         }

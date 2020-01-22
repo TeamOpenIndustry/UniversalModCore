@@ -92,7 +92,7 @@ public class SeatEntity extends Entity implements IAdditionalSpawnData {
 
     public void setup(ModdedEntity moddedEntity, Entity passenger) {
         this.parent = moddedEntity.getUuid();
-        this.setPosition(moddedEntity.getX(), moddedEntity.getY(), moddedEntity.getZ());
+        this.setPos(moddedEntity.getX(), moddedEntity.getY(), moddedEntity.getZ());
         this.passenger = passenger.getUuid();
     }
 

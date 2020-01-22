@@ -60,8 +60,13 @@ public class BakedScaledModel implements BakedModel {
     }
 
     @Override
-    public boolean hasDepthInGui() {
-        return source.hasDepthInGui();
+    public boolean hasDepth() {
+        return source.hasDepth();
+    }
+
+    @Override
+    public boolean isSideLit() {
+        return source.isSideLit();
     }
 
     @Override

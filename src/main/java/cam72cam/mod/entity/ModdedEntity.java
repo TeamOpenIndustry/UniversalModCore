@@ -114,7 +114,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
-            seats.forEach(seat -> seat.setPosition(getX(), getY(), getZ()));
+            seats.forEach(seat -> seat.setPos(getX(), getY(), getZ()));
         }
     }
 
