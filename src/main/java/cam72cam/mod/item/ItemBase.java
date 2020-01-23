@@ -80,7 +80,13 @@ public class ItemBase {
     protected final void applyCustomName(ItemStack stack) {
         String custom = getCustomName(stack);
         if (custom != null) {
-            stack.internal.setStackDisplayName(ChatFormatting.RESET + custom);
+            try {
+                stack.internal.setStackDisplayName(ChatFormatting.RESET + custom);
+            } catch (NoClassDefFoundError err) {
+                // NOP
+                // Draconic Evolution calls this server side on entityPickupEvent
+                // We need to handle that case here
+            }
         }
     }
 
