@@ -39,7 +39,7 @@ public class BlockRender {
             if (Minecraft.getMinecraft().theWorld == null) {
                 return;
             }
-            List<net.minecraft.tileentity.TileEntity> tes = Minecraft.getMinecraft().theWorld.loadedTileEntityList.stream()
+            List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getMinecraft().theWorld.loadedTileEntityList).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
             Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
