@@ -10,7 +10,6 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Hand;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;

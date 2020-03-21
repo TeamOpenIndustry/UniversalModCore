@@ -37,7 +37,7 @@ public class MinecraftClient {
     }
 
     public static Vec3i getBlockMouseOver() {
-        return Minecraft.getMinecraft().objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ?
+        return Minecraft.getMinecraft().objectMouseOver != null && Minecraft.getMinecraft().objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ?
                 new Vec3i(
                         Minecraft.getMinecraft().objectMouseOver.blockX,
                         Minecraft.getMinecraft().objectMouseOver.blockY,
@@ -46,7 +46,7 @@ public class MinecraftClient {
     }
 
     public static Vec3d getPosMouseOver() {
-        return Minecraft.getMinecraft().objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? new Vec3d(Minecraft.getMinecraft().objectMouseOver.hitVec) : null;
+        return Minecraft.getMinecraft().objectMouseOver != null && Minecraft.getMinecraft().objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? new Vec3d(Minecraft.getMinecraft().objectMouseOver.hitVec) : null;
     }
 
     public static boolean isPaused() {

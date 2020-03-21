@@ -17,6 +17,7 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.entity.EntityLiving;
@@ -452,10 +453,24 @@ public class World {
         return null;
     }
 
-    public ITank getTank(Vec3i pos) {
+    public IInventory getInventory(Vec3i offset, Facing dir) {
+        return getInventory(offset);
+    }
+
+    public ITank getTank(Vec3i offset) {
+        for (Facing value : Facing.values()) {
+            ITank tank = getTank(offset, value);
+            if (tank != null) {
+                return tank;
+            }
+        }
+        return getTank(offset, null);
+    }
+
+    public ITank getTank(Vec3i pos, Facing dir) {
         net.minecraft.tileentity.TileEntity te = internal.getTileEntity(pos.x, pos.y, pos.z);
         if (te instanceof IFluidHandler) {
-                return ITank.getTank((IFluidHandler)te);
+            return ITank.getTank((IFluidHandler) te, dir);
         }
         return null;
     }

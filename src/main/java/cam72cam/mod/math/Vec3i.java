@@ -1,7 +1,6 @@
 package cam72cam.mod.math;
 
 import cam72cam.mod.util.Facing;
-import net.minecraft.util.MathHelper;
 
 public class Vec3i {
     // Why is this all ClientOnly???

@@ -1,6 +1,7 @@
 package cam72cam.mod.fluid;
 
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.util.Facing;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.IFluidContainerItem;
@@ -98,16 +99,20 @@ public interface ITank {
         return null;
     }
 
-    static ITank getTank(IFluidHandler internal) {
+    static ITank getTank(IFluidHandler internal, Facing dir) {
+        ForgeDirection fd = dir == null ? ForgeDirection.UNKNOWN : dir.to();
+        if (internal.getTankInfo(fd).length == 0) {
+            return null;
+        }
         return new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(internal.getTankInfo(ForgeDirection.UNKNOWN).length == 0 ? null : internal.getTankInfo(ForgeDirection.UNKNOWN)[0].fluid);
+                return new FluidStack(internal.getTankInfo(fd)[0].fluid);
             }
 
             @Override
             public int getCapacity() {
-                return internal.getTankInfo(ForgeDirection.UNKNOWN).length == 0 ? 0 : internal.getTankInfo(ForgeDirection.UNKNOWN)[0].capacity;
+                return internal.getTankInfo(fd)[0].capacity;
             }
 
             @Override
@@ -120,12 +125,12 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                return internal.fill(ForgeDirection.UNKNOWN, fluidStack.internal, !simulate);
+                return internal.fill(fd, fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                return new FluidStack(internal.drain(ForgeDirection.UNKNOWN, fluidStack.internal.amount, !simulate));
+                return new FluidStack(internal.drain(fd, fluidStack.internal.amount, !simulate));
             }
         };
     }

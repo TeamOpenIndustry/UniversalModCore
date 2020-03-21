@@ -14,10 +14,8 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import cofh.api.energy.IEnergyConnection;
 import cofh.api.energy.IEnergyHandler;
-import cofh.api.energy.IEnergyStorage;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -30,8 +28,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -136,10 +132,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     /*
     Wrapped functionality
     */
-
-    public void setWorld(World world) {
-        super.setWorldObj(world.internal);
-    }
 
     public void load(TagCompound data) {
         super.readFromNBT(data.internal);

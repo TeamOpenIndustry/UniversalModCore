@@ -84,6 +84,25 @@ public enum Facing {
         }
     }
 
+    public ForgeDirection to() {
+        switch (this) {
+            case DOWN:
+                return ForgeDirection.DOWN;
+            case UP:
+                return ForgeDirection.UP;
+            case NORTH:
+                return ForgeDirection.NORTH;
+            case SOUTH:
+                return ForgeDirection.SOUTH;
+            case WEST:
+                return ForgeDirection.WEST;
+            case EAST:
+                return ForgeDirection.EAST;
+            default:
+                return null;
+        }
+    }
+
     public Facing getOpposite() {
         switch (this) {
             case DOWN:

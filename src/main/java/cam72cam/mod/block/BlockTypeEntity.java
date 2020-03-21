@@ -29,6 +29,10 @@ public abstract class BlockTypeEntity extends BlockType {
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, 0));
         te.hasTileData = true;
+        te.setWorldObj(world.internal);
+        te.xCoord = pos.x;
+        te.yCoord = pos.y;
+        te.zCoord = pos.z;
         return te.instance();
     }
 

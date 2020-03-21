@@ -220,7 +220,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             seat.setPosition(posX, posY, posZ);
             entity.mountEntity(seat);
-            updateSeat(seat);
+            //updateSeat(seat); Don't do this here, can cause StackOverflow
             worldObj.spawnEntityInWorld(seat);
             self.sendToObserving(new PassengerPositionsPacket(this));
         } else {
