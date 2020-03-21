@@ -29,7 +29,6 @@ import io.github.cottonmc.energy.api.EnergyType;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
@@ -54,8 +53,8 @@ public abstract class BlockTypeEntity extends BlockType {
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = TileEntity.create(id);
         te.hasTileData = true;
-        te.world = world;
-        te.pos = pos;
+        te.setWorld(world);
+        te.setPos(pos);
         return te.instance();
     }
 

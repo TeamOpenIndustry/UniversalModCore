@@ -17,6 +17,7 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -410,10 +411,17 @@ public class World {
         FixedItemInv inv = ItemAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
         return IInventory.from(inv);
     }
+    public IInventory getInventory(Vec3i offset, Facing dir) {
+        return getInventory(offset);
+    }
 
     public ITank getTank(Vec3i offset) {
         FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
         return ITank.getTank(inv);
+    }
+
+    public ITank getTank(Vec3i offset, Facing dir) {
+        return getTank(offset);
     }
 
     public ItemStack getItemStack(Vec3i pos) {
