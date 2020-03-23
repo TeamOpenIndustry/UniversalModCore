@@ -109,8 +109,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
                 Boolean invoke = (Boolean) cls.getMethod("isCubicWorld").invoke(null, world);
                 if (invoke) {
                     cls.getMethod("handleLoaded").invoke(null, world, ticket, loaded);
+                    return;
                 }
-                return;
             } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
