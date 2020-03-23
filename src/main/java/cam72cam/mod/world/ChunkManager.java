@@ -6,7 +6,9 @@ import cam72cam.mod.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
+import net.minecraftforge.fml.common.Loader;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
@@ -20,8 +22,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
      * This is used in internal onTick to force/unforce chunks
      */
 
-    private static final Map<Integer, Ticket> TICKETS = new HashMap<Integer, Ticket>();
-    private static final Map<ChunkPos, Integer> CHUNK_MAP = new HashMap<ChunkPos, Integer>();
+    private static final Map<Integer, Ticket> TICKETS = new HashMap<>();
+    private static final Map<ChunkPos, Integer> CHUNK_MAP = new HashMap<>();
 
 
     private static ChunkManager instance;
@@ -78,8 +80,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         int dim = world.provider.getDimension();
         Set<ChunkPos> keys = CHUNK_MAP.keySet();
 
-        Set<ChunkPos> loaded = new HashSet<ChunkPos>();
-        Set<ChunkPos> unload = new HashSet<ChunkPos>();
+        Set<ChunkPos> loaded = new HashSet<>();
+        Set<ChunkPos> unload = new HashSet<>();
 
         for (ChunkPos pos : keys) {
             if (pos.dim != dim) {
@@ -100,6 +102,24 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
             CHUNK_MAP.remove(pos);
         }
 
+        if (Loader.isModLoaded("CubicChunks")) {
+            Class<?> cls = null;
+            try {
+                cls = Class.forName("cam72cam.mod.world.CubicChunks");
+                Boolean invoke = (Boolean) cls.getMethod("isCubicWorld").invoke(null, world);
+                if (invoke) {
+                    cls.getMethod("handleLoaded").invoke(null, world, ticket, loaded);
+                }
+                return;
+            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+
+        handleLoaded(ticket, loaded);
+    }
+
+    private static void handleLoaded(Ticket ticket, Set<ChunkPos> loaded) {
         for (net.minecraft.util.math.ChunkPos chunk : ticket.getChunkList()) {
             boolean shouldChunkLoad = false;
 
