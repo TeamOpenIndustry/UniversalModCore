@@ -18,6 +18,13 @@ repositories {
 		name = "CurseForge"
 		url = "https://minecraft.curseforge.com/api/maven/"
 	}
+	maven {
+		name = "Sonatype"
+		url = "https://oss.sonatype.org/content/repositories/snapshots/"
+	}
+	maven {
+            setUrl("http://repo.spongepowered.org/maven")
+        }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -57,6 +64,7 @@ sourceSets {
 
 dependencies {
 	shade 'inventory-tweaks:InventoryTweaks:1.63:api'
+	deobfCompile("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
 }
 
 jar {
