@@ -180,7 +180,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getUuid(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
-            updateSeat(seat);
+            //updateSeat(seat); Don't do this here, can cause StackOverflow
             world.spawnEntity(seat);
             self.sendToObserving(new PassengerPositionsPacket(this));
         } else {

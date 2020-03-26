@@ -27,8 +27,8 @@ import java.util.function.Supplier;
 public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
-    public World world;
-    public Vec3i pos;
+    private World world;
+    private Vec3i pos;
     public boolean hasTileData;
 
     /*
@@ -159,10 +159,12 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
     */
 
     public void setWorld(World world) {
+        this.world = world;
         super.setLocation(world.internal, pos.internal);
     }
 
     public void setPos(Vec3i pos) {
+        this.pos = pos;
         super.setPos(pos.internal);
     }
 

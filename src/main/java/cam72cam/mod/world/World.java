@@ -17,6 +17,7 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -51,9 +52,9 @@ public class World {
     public final net.minecraft.world.World internal;
     public final boolean isClient;
     public final boolean isServer;
-    private final List<Entity> entities;
     private final Map<Integer, Entity> entityByID;
     private final Map<UUID, Entity> entityByUUID;
+    private final Map<Class<?>, List<Entity>> entitiesByClass;
     private long ticks;
 
     /* World Initialization */
@@ -62,7 +63,7 @@ public class World {
         internal = world;
         isClient = world.isClient;
         isServer = !world.isClient;
-        entities = new ArrayList<>();
+        entitiesByClass = new HashMap<>();
         entityByID = new HashMap<>();
         entityByUUID = new HashMap<>();
     }
@@ -143,13 +144,16 @@ public class World {
         } else {
             entity = new Entity(entityIn);
         }
-        entities.add(entity);
+        entitiesByClass.putIfAbsent(entity.getClass(), new ArrayList<>());
+        entitiesByClass.get(entity.getClass()).add(entity);
         entityByID.put(entityIn.getEntityId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
     }
 
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
-        entities.stream().filter(x -> x.getUUID().equals(entity.getUuid())).findFirst().ifPresent(entities::remove);
+        for (List<Entity> value : entitiesByClass.values()) {
+            value.removeAll(value.stream().filter(inner -> inner.getUUID().equals(entity.getUuid())).collect(Collectors.toList()));
+        }
         entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUuid());
     }
@@ -189,7 +193,20 @@ public class World {
     }
 
     public <T extends Entity> List<T> getEntities(Predicate<T> filter, Class<T> type) {
-        return entities.stream().map(entity -> entity.as(type)).filter(Objects::nonNull).filter(filter).collect(Collectors.toList());
+        List<T> list = new ArrayList<>();
+        for (Class<?> key : entitiesByClass.keySet()) {
+            if (type.isAssignableFrom(key)) {
+                for (Entity entity : entitiesByClass.get(key)) {
+                    T as = entity.as(type);
+                    if (as != null) {
+                        if (filter.test(as)) {
+                            list.add(as);
+                        }
+                    }
+                }
+            }
+        }
+        return list;
     }
 
     public boolean spawnEntity(Entity ent) {
@@ -410,10 +427,17 @@ public class World {
         FixedItemInv inv = ItemAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
         return IInventory.from(inv);
     }
+    public IInventory getInventory(Vec3i offset, Facing dir) {
+        return getInventory(offset);
+    }
 
     public ITank getTank(Vec3i offset) {
         FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
         return ITank.getTank(inv);
+    }
+
+    public ITank getTank(Vec3i offset, Facing dir) {
+        return getTank(offset);
     }
 
     public ItemStack getItemStack(Vec3i pos) {

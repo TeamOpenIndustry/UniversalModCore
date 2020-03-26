@@ -31,7 +31,7 @@ public class OBJRender {
                 this.textures.put(name, new OBJTextureSheet(model, name, cacheSeconds));
             }
         } else {
-            this.textures.put(null, new OBJTextureSheet(model, cacheSeconds));
+            this.textures.put(null, new OBJTextureSheet(model, "", cacheSeconds));
         }
     }
 
