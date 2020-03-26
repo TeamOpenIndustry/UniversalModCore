@@ -105,12 +105,14 @@ public class World {
                     .filter(x -> !x.getKey().equals(x.getValue().getUUID())).collect(Collectors.toList())
                     .forEach(x -> {world.entityByUUID.remove(x.getKey()); System.out.println("BAD ENT " + x);});
 
-            for (Entity entity : world.entities) {
-                if (!world.entityByID.containsKey(entity.getId())) {
-                    world.entityByID.put(entity.getId(), entity);
-                }
-                if (!world.entityByUUID.containsKey(entity.getUUID())) {
-                    world.entityByUUID.put(entity.getUUID(), entity);
+            for (List<Entity> entities : world.entitiesByClass.values()) {
+                for (Entity entity : entities) {
+                    if (!world.entityByID.containsKey(entity.getId())) {
+                        world.entityByID.put(entity.getId(), entity);
+                    }
+                    if (!world.entityByUUID.containsKey(entity.getUUID())) {
+                        world.entityByUUID.put(entity.getUUID(), entity);
+                    }
                 }
             }
         });
