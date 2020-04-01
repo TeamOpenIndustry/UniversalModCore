@@ -1,16 +1,14 @@
-package cam72cam.#MODID#;
+package #PACKAGE#;
 
 import cam72cam.mod.ModCore;
 
-@net.minecraftforge.fml.common.Mod(modid = Mod.MODID, name = Mod.NAME, version = Mod.VERSION, dependencies = "required-before:universalmodcore", acceptedMinecraftVersions = "[1.11,1.12)")
+@net.minecraftforge.fml.common.Mod(modid = Mod.MODID, name = "#NAME#", version = "#VERSION#", dependencies = "required-before:universalmodcore@[#UMC_API#,#UMC_API_NEXT#)", acceptedMinecraftVersions = "[1.11,1.12)")
 public class Mod {
-    public static final String MODID = "#MODID#";
-    public static final String NAME = "#MODNAME#";
-    public static final String VERSION = "#MODVERSION#";
+    public static final String MODID = "#ID#";
 
     static {
         try {
-            Class<ModCore.Mod> cls = (Class<ModCore.Mod>) Class.forName("#MODCLASS#");
+            Class<ModCore.Mod> cls = (Class<ModCore.Mod>) Class.forName("#PACKAGE#.#CLASS#");
             ModCore.register(() -> {
                 try {
                     return cls.newInstance();
