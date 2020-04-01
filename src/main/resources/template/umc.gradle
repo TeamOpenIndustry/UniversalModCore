@@ -1,16 +1,21 @@
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 buildscript {
     repositories {
         jcenter()
         maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 	dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
 	}
+}
+
+apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
+
+
+configurations {
+    shade
+    compile.extendsFrom shade
 }
 
 repositories {
@@ -20,13 +25,14 @@ repositories {
 	}
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
+//apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "#MODVERSION#_1.10.2"
-group = "cam72cam.universalmodcoremod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "#MODNAME#"
+version = "#VERSION#-1.10.2-forge"
+group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "#NAME#"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -46,17 +52,10 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
-apply plugin: 'java'
-sourceSets {
-	main {
-		java {
-			srcDir "UniversalModCore/src/main/java"
-		}
-	}
-}
-
 dependencies {
 	shade 'inventory-tweaks:InventoryTweaks:1.62:api'
+
+    compile #UMC_DEPENDENCY#
 }
 
 jar {
