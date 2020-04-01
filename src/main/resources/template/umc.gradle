@@ -1,10 +1,6 @@
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 buildscript {
     repositories {
+        jcenter()
         mavenCentral()
         maven {
             name = "forge"
@@ -14,10 +10,20 @@ buildscript {
             name = "sonatype"
             url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
     }
+}
+
+apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
+
+
+configurations {
+    shade
+    compile.extendsFrom shade
 }
 
 repositories {
@@ -31,9 +37,9 @@ apply plugin: 'forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "#MODVERSION#_1.7.10"
-group = "cam72cam.universalmodcoremod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "#MODNAME#"
+version = "#VERSION#-1.10.2-forge"
+group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "#NAME#"
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -42,17 +48,10 @@ minecraft {
     runDir = "run"
 }
 
-apply plugin: 'java'
-sourceSets {
-	main {
-		java {
-			srcDir "UniversalModCore/src/main/java"
-		}
-	}
-}
-
 dependencies {
 	shade 'inventory-tweaks:InventoryTweaks:1.62:api'
+
+    compile #UMC_DEPENDENCY#
 }
 
 jar {

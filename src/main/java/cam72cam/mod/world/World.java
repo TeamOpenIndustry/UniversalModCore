@@ -1,6 +1,5 @@
 package cam72cam.mod.world;
 
-import cam72cam.immersiverailroading.ImmersiveRailroading;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -498,7 +497,7 @@ public class World {
         try {
             return new ItemStack(block, 1, block.damageDropped(internal.getBlockMetadata(pos.x, pos.y, pos.z)));
         } catch (Exception ex) {
-            ImmersiveRailroading.catching(ex);
+            ModCore.catching(ex);
             return ItemStack.EMPTY;
         }
     }
