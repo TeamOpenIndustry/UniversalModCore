@@ -6,7 +6,6 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
-import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
@@ -30,7 +29,7 @@ public class Player extends Entity {
     }
 
     public boolean isCrouching() {
-        return internal.isSneaking();
+        return internal.isCrouching();
     }
 
     public boolean isCreative() {

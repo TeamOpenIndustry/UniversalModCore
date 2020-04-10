@@ -268,7 +268,7 @@ public class TagCompound {
         }
 
         net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(ted.get("data").internal);
-        te.setWorld(world.internal);
+        te.setWorldAndPos(world.internal, te.getPos());
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();
     }

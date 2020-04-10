@@ -3,6 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.block.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -69,7 +70,7 @@ public class StandardModel {
             {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                Minecraft.getInstance().getItemRenderer().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
+                Minecraft.getInstance().getItemRenderer().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE, 0, 0, new MatrixStack(), Minecraft.getInstance().getRenderTypeBuffers().getBufferSource());
             }
             GL11.glPopMatrix();
         });
@@ -121,7 +122,7 @@ public class StandardModel {
 
         BufferBuilder worldRenderer = new BufferBuilder(2048);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
+        quads.forEach(quad -> LightUtil.setLightData(quad, -1));
         worldRenderer.finishDrawing();
         new WorldVertexBufferUploader().draw(worldRenderer);
     }

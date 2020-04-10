@@ -6,6 +6,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.ItemRender;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.TextUtil;
 import cam72cam.mod.util.Facing;

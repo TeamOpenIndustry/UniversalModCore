@@ -26,7 +26,7 @@ public class MinecraftClient {
     }
 
     public static boolean useVBO() {
-        return GLX.useVbo();
+        return true;
     }
 
     public static Entity getEntityMouseOver() {

@@ -81,7 +81,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onRenderMouseover(DrawBlockHighlightEvent event) {
+        public static void onRenderMouseover(DrawHighlightEvent.HighlightBlock event) {
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
         }
 

@@ -82,8 +82,12 @@ public class ModCore {
         hasResources = true;
     }
 
+    private boolean hasSetup = false;
     public void init(InterModEnqueueEvent event) {
-        proxy.event(ModEvent.SETUP);
+        if(!hasSetup) {
+            hasSetup = true;
+            proxy.event(ModEvent.SETUP);
+        }
     }
 
     public void postInit(FMLLoadCompleteEvent event) {
@@ -224,7 +228,7 @@ public class ModCore {
 
     static int i = 1;
     public static void testReload() {
-        if (i % 4 == 0) { // 4 sheets, we fire on the last one
+        if (i % 10 == 0) { // 4 sheets, we fire on the last one
             ModCore.isInReload = true;
             proxy.event(ModEvent.RELOAD);
             ClientEvents.fireReload();

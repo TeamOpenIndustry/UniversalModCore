@@ -54,7 +54,7 @@ public class GUIHelpers {
     }
 
     public static void drawFluid(Fluid fluid, double x, double d, double width, int height, int scale) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureMap().getAtlasSprite(fluid.internal.getAttributes().getStillTexture().toString());
+        TextureAtlasSprite sprite = Minecraft.getInstance().getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(fluid.internal.getAttributes().getStillTexture());
         drawSprite(sprite, fluid.internal.getAttributes().getColor(), x, d, width, height, scale);
     }
 
@@ -116,11 +116,11 @@ public class GUIHelpers {
     }
 
     public static int getScreenWidth() {
-        return Minecraft.getInstance().mainWindow.getFramebufferWidth()/2;
+        return Minecraft.getInstance().getMainWindow().getFramebufferWidth()/2;
     }
 
     public static int getScreenHeight() {
-        return Minecraft.getInstance().mainWindow.getFramebufferHeight()/2;
+        return Minecraft.getInstance().getMainWindow().getFramebufferHeight()/2;
     }
 
     public static void drawItem(ItemStack stack, int x, int y) {

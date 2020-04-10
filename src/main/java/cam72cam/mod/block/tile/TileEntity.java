@@ -73,13 +73,18 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         });
     }
 
+    public static TileEntityType<? extends TileEntity> getType(Identifier id) {
+        return types.get(id.toString());
+    }
+
     /*
     Standard Tile function overrides
     */
 
     @Override
-    public void setWorld(net.minecraft.world.World world) {
-        super.setWorld(world);
+    public void setWorldAndPos(net.minecraft.world.World world, BlockPos pos) {
+        super.setWorldAndPos(world, pos);
+        this.pos = new Vec3i(pos);
         this.world = World.get(world);
     }
 
@@ -313,7 +318,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public void setWorld(World world) {
         this.world = world;
-        super.setWorld(world.internal);
+        super.setWorldAndPos(world.internal, super.pos);
     }
 
     public void setPos(Vec3i pos) {

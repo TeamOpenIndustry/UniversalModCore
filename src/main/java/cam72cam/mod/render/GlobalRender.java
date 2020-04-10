@@ -9,17 +9,18 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.CollectionUtil;
 import cam72cam.mod.util.Hand;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
-import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
@@ -35,9 +36,9 @@ public class GlobalRender {
 
     public static void registerClientEvents() {
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntityRenderer<GlobalRenderHelper>() {
+            ClientRegistry.bindTileEntityRenderer(grhtype, (ted) -> new TileEntityRenderer<GlobalRenderHelper>(ted) {
                 @Override
-                public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
+                public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
                     renderFuncs.forEach(r -> r.accept(partialTicks));
                 }
             });
@@ -91,13 +92,12 @@ public class GlobalRender {
         return new Vec3d(Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView());
     }
 
-    static ICamera getCamera(float partialTicks) {
-        ClippingHelperImpl ch = new ClippingHelperImpl();
-        ch.init();
-        ICamera camera = new Frustum(ch); // Must be new instance per Johni0702 otherwise will be affected by weird global state!
-        Vec3d cameraPos = getCameraPos(partialTicks);
-        camera.setPosition(cameraPos.x, cameraPos.y, cameraPos.z);
-        return camera;
+    static ActiveRenderInfo getCamera(float partialTicks) {
+        return new ActiveRenderInfo() {
+            {
+                setPostion(getCameraPos(partialTicks).internal);
+            }
+        };
     }
 
     public static boolean isInRenderDistance(Vec3d pos) {
@@ -114,15 +114,17 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
     }
 
+    static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
+        @Override
+        public boolean isValidBlock(Block block_1) {
+            return true;
+        }
+    };
+
     public static class GlobalRenderHelper extends TileEntity {
 
         public GlobalRenderHelper() {
-            super(new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
-                @Override
-                public boolean isValidBlock(Block block_1) {
-                    return true;
-                }
-            });
+            super(grhtype);
         }
 
         @Override

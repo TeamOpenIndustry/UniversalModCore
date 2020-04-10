@@ -6,10 +6,13 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
@@ -17,6 +20,7 @@ import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.GrassColors;
 import net.minecraft.world.biome.BiomeColors;
@@ -33,7 +37,7 @@ import java.util.stream.Collectors;
 public class BlockRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final List<Runnable> colors = new ArrayList<>();
-    private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
+    private static final Map<TileEntityType<? extends TileEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
     static {
@@ -52,44 +56,47 @@ public class BlockRender {
     public static void onPostColorSetup() {
         colors.forEach(Runnable::run);
 
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntityRenderer<TileEntity>() {
-            @Override
-            public void render(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
-                if (ModCore.isInReload()) {
-                    return;
+        renderers.forEach((type, render) -> {
+            ClientRegistry.bindTileEntityRenderer(type, (ted) -> new TileEntityRenderer<TileEntity>(ted) {
+                @Override
+                public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int var5, int var6) {
+                    if (ModCore.isInReload()) {
+                        return;
+                    }
+
+                    BlockEntity instance = te.instance();
+                    if (instance == null) {
+                        System.out.println("Render TE is null");
+                        return;
+                    }
+                    Class<? extends BlockEntity> cls = instance.getClass();
+                    StandardModel model = render.apply(instance);
+                    if (model == null) {
+                        System.out.println("Render model is null");
+                        return;
+                    }
+
+                    if (!model.hasCustom()) {
+                        System.out.println("No Custom");
+                        return;
+                    }
+
+                    GL11.glPushMatrix();
+                    {
+                        //TODO 1.15 lerp xyz
+                        RenderSystem.multMatrix(var3.getLast().getMatrix());
+                        System.out.println("RenderTE");
+                        model.renderCustom(partialTicks);
+                    }
+                    GL11.glPopMatrix();
                 }
 
-                BlockEntity instance = te.instance();
-                if (instance == null) {
-                    return;
+                public boolean isGlobalRenderer(TileEntity te) {
+                    return true;
                 }
-                Class<? extends BlockEntity> cls = instance.getClass();
-                Function<BlockEntity, StandardModel> renderer = renderers.get(cls);
-                if (renderer == null) {
-                    return;
-                }
-
-                StandardModel model = renderer.apply(instance);
-                if (model == null) {
-                    return;
-                }
-
-                if (!model.hasCustom()) {
-                    return;
-                }
-
-                GL11.glPushMatrix();
-                {
-                    GL11.glTranslated(x, y, z);
-                    model.renderCustom(partialTicks);
-                }
-                GL11.glPopMatrix();
-            }
-
-            public boolean isGlobalRenderer(TileEntity te) {
-                return true;
-            }
+            });
         });
+
     }
 
     // TODO version for non TE blocks
@@ -99,7 +106,7 @@ public class BlockRender {
     }
 
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
-        renderers.put(cls, (te) -> model.apply(cls.cast(te)));
+        renderers.put(TileEntity.getType(((BlockTypeEntity)block).id), (te) -> model.apply(cls.cast(te)));
 
         colors.add(() -> {
             BlockColors blockColors = Minecraft.getInstance().getBlockColors();
@@ -112,11 +119,13 @@ public class BlockRender {
                 public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData properties) {
                     if (block instanceof BlockTypeEntity) {
                         TileEntity data = properties.getData(TileEntity.TE_PROPERTY);
-                        if (!cls.isInstance(data.instance())) {
+                        if (data == null || !cls.isInstance(data.instance())) {
+                            System.out.println(data);
                             return EMPTY;
                         }
                         StandardModel out = model.apply(cls.cast(data.instance()));
                         if (out == null) {
+                            System.out.println(model);
                             return EMPTY;
                         }
                         return out.getQuads(side, rand);
@@ -139,6 +148,11 @@ public class BlockRender {
                 @Override
                 public boolean isGui3d() {
                     return true;
+                }
+
+                @Override
+                public boolean func_230044_c_() {
+                    return false;
                 }
 
                 @Override

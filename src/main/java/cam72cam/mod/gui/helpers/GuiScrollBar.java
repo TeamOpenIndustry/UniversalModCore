@@ -1,11 +1,12 @@
 package cam72cam.mod.gui.helpers;
 
-import net.minecraftforge.fml.client.config.GuiSlider;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraftforge.fml.client.gui.widget.Slider;
 
-public class GuiScrollBar extends GuiSlider {
+public class GuiScrollBar extends Slider {
 
 
-    public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, IPressable par) {
+    public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, Button.IPressable par) {
         super(xPos, yPos, width, height, displayStr, displayStr, minVal, maxVal, currentVal, true, false, par);
     }
 

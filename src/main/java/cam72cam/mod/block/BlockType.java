@@ -12,7 +12,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -93,8 +93,8 @@ public abstract class BlockType {
         }
 
         @Override
-        public boolean onBlockActivated(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec()));
+        public ActionResultType onBlockActivated(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec())) ? ActionResultType.SUCCESS : ActionResultType.PASS;
         }
 
         @Override
@@ -169,13 +169,15 @@ public abstract class BlockType {
             return settings.redstoneProvider;
         }
 
+        /* TODO 1.15.2
         @Override
         public BlockRenderLayer getRenderLayer() {
             return BlockRenderLayer.CUTOUT_MIPPED;
         }
+         */
 
         @Override
-        public boolean func_220074_n(BlockState state) {
+        public boolean isTransparent(BlockState state) {
             return true;
         }
     }

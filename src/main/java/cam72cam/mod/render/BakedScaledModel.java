@@ -39,16 +39,14 @@ public class BakedScaledModel implements IBakedModel {
             for (BakedQuad quad : quads) {
                 int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
 
-                VertexFormat format = quad.getFormat();
-
                 for (int i = 0; i < 4; ++i) {
-                    int j = format.getIntegerSize() * i;
+                    int j = 7 * i;
                     newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
                     newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
                     newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
                 }
 
-                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
+                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.func_187508_a(), quad.shouldApplyDiffuseLighting()));
             }
         }
 
@@ -63,6 +61,11 @@ public class BakedScaledModel implements IBakedModel {
     @Override
     public boolean isGui3d() {
         return source.isGui3d();
+    }
+
+    @Override
+    public boolean func_230044_c_() {
+        return false;
     }
 
     @Override

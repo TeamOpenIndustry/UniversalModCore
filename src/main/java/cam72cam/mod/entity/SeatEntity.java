@@ -18,16 +18,22 @@ import java.util.UUID;
 
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
-    public static final EntityType<?> TYPE;
-    static {
-        TYPE = EntityType.Builder.create(SeatEntity::new, EntityClassification.MISC)
+    public static final EntityType<SeatEntity> TYPE = makeType();
+
+    private static EntityType<SeatEntity> makeType() {
+        EntityType.IFactory<SeatEntity> ctr = SeatEntity::new;
+        EntityType<SeatEntity> et = EntityType.Builder.create(ctr, EntityClassification.MISC)
                 .setShouldReceiveVelocityUpdates(false)
                 .setTrackingRange(512)
                 .setUpdateInterval(20)
                 .immuneToFire()
                 .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.getByValue(msg.getTypeId()), world))
-                .build(SeatEntity.ID.toString())
-                .setRegistryName(ID);
+                .build(SeatEntity.ID.toString());
+        et.setRegistryName(ID);
+        return et;
+    }
+
+    static {
     }
     private UUID parent;
     private UUID passenger;
@@ -105,7 +111,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     public void setup(ModdedEntity moddedEntity, Entity passenger) {
         this.parent = moddedEntity.getUniqueID();
-        this.setPosition(moddedEntity.posX, moddedEntity.posY, moddedEntity.posZ);
+        this.setPosition(moddedEntity.serverPosX, moddedEntity.serverPosY, moddedEntity.serverPosZ);
         this.passenger = passenger.getUniqueID();
     }
 

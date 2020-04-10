@@ -9,47 +9,98 @@ import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Matrix4f;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.*;
 import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.tileentity.ItemStackTileEntityRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Direction;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.model.IModelConfiguration;
 import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.SimpleModelState;
-import org.apache.commons.lang3.tuple.Pair;
+import net.minecraftforge.client.model.SimpleModelTransform;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import util.Matrix4;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Matrix4f;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
     public static void register(ItemBase item, Identifier tex) {
+        SimpleModelTransform foo = new SimpleModelTransform(ImmutableMap.of());
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                tex.internal
-        )).bake(event.getModelLoader(), ModelLoader.defaultTextureGetter(), new SimpleModelState(ImmutableMap.of()), DefaultVertexFormats.ITEM)));
+                new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE, tex.internal)
+        )).bake(new IModelConfiguration() {
+            @Nullable
+            @Override
+            public IUnbakedModel getOwnerModel() {
+                return null;
+            }
+
+            @Override
+            public String getModelName() {
+                return null;
+            }
+
+            @Override
+            public boolean isTexturePresent(String name) {
+                return false;
+            }
+
+            @Override
+            public Material resolveTexture(String name) {
+                return null;
+            }
+
+            @Override
+            public boolean isShadedInGui() {
+                return false;
+            }
+
+            @Override
+            public boolean isSideLit() {
+                return false;
+            }
+
+            @Override
+            public boolean useSmoothLighting() {
+                return false;
+            }
+
+            @Override
+            public ItemCameraTransforms getCameraTransforms() {
+                return null;
+            }
+
+            @Override
+            public IModelTransform getCombinedTransform() {
+                return null;
+            }
+        }, event.getModelLoader(), ModelLoader.defaultTextureGetter(), foo, ItemOverrideList.EMPTY, tex.internal)));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
 
@@ -199,12 +250,15 @@ public class ItemRender {
         private ItemStack stack;
         private final IItemModel model;
         private ItemRenderType type;
+        private Matrix4f mat;
 
 
         BakedItemModel(IItemModel model) {
             this.stack = null;
             this.model = model;
             this.type = ItemRenderType.NONE;
+            this.mat = new Matrix4f();
+            this.mat.setIdentity();
         }
 
         @Override
@@ -214,7 +268,10 @@ public class ItemRender {
             }
 
             if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                GL11.glPushMatrix();
+                RenderSystem.multMatrix(mat);
                 iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                GL11.glPopMatrix();
                 return EMPTY;
             }
 
@@ -236,8 +293,13 @@ public class ItemRender {
              * before actually setting up the correct GL context.
              */
             if (side == null && !ModCore.isInReload()) {
+                RenderType.getSolid().setupRenderState();
+                GL11.glPushMatrix();
+                RenderSystem.multMatrix(mat);
                 model.applyTransform(type);
                 std.renderCustom();
+                GL11.glPopMatrix();
+                RenderType.getSolid().clearRenderState();
             }
 
             return std.getQuads(side, rand);
@@ -251,6 +313,11 @@ public class ItemRender {
         @Override
         public boolean isGui3d() {
             return true;
+        }
+
+        @Override
+        public boolean func_230044_c_() {
+            return false;
         }
 
         @Override
@@ -269,9 +336,11 @@ public class ItemRender {
         }
 
         @Override
-        public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+        public IBakedModel handlePerspective(ItemCameraTransforms.TransformType cameraTransformType, MatrixStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
-            return ForgeHooksClient.handlePerspective(this, cameraTransformType);
+            ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
+            this.mat = mat.getLast().getMatrix();
+            return this;
         }
 
         class ItemOverrideListHack extends ItemOverrideList {

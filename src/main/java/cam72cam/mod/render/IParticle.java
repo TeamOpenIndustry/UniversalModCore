@@ -2,6 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.particle.Particle;
@@ -48,10 +49,10 @@ public abstract class IParticle {
                 }
 
                 @Override
-                public void renderParticle(BufferBuilder buffer, ActiveRenderInfo entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                public void renderParticle(IVertexBuilder iVertexBuilder, ActiveRenderInfo activeRenderInfo, float partialTicks) {
                     ip.ticks = age;
                     ip.pos = new Vec3d(posX, posY, posZ);
-                    ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);
+                    ip.renderPos = ip.pos;
                     ip.renderPos = ip.renderPos.add(this.motionX * partialTicks, this.motionY * partialTicks, this.motionZ * partialTicks);
 
                     if (renderer == null) {

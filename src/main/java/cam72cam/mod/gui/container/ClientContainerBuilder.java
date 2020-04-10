@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import org.lwjgl.opengl.GL11;
@@ -195,7 +196,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
             spriteId = "minecraft:block/fire_1";
         }
 
-        TextureAtlasSprite sprite = minecraft.getTextureMap().getAtlasSprite(spriteId);
+        TextureAtlasSprite sprite = minecraft.getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(new ResourceLocation(spriteId));
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color4f(1,1,1,1);
         blit(x, y, 0, 16, 16, sprite);

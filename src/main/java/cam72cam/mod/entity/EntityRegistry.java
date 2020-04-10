@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class EntityRegistry {
-    private static final Map<Class<? extends Entity>, EntityType<?>> registered = new HashMap<>();
+    private static final Map<Class<? extends Entity>, EntityType<? extends ModdedEntity>> registered = new HashMap<>();
 
     private static String missingResources;
 
@@ -37,7 +37,8 @@ public class EntityRegistry {
         // TODO expose updateFreq and vecUpdates
 
         CommonEvents.Entity.REGISTER.subscribe(() -> {
-            EntityType.Builder<net.minecraft.entity.Entity> builder = EntityType.Builder.create((et, world) -> new ModdedEntity(et, world, ctr, settings), EntityClassification.MISC)
+            EntityType.IFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr, settings);
+            EntityType.Builder<ModdedEntity> builder = EntityType.Builder.create(factory, EntityClassification.MISC)
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
                     .setUpdateInterval(20)
@@ -45,11 +46,15 @@ public class EntityRegistry {
             if (settings.immuneToFire) {
                 builder = builder.immuneToFire();
             }
-            EntityType<net.minecraft.entity.Entity> et = builder.build(id.toString());
+            EntityType<? extends ModdedEntity> et = builder.build(id.toString());
             et.setRegistryName(id.internal);
             ForgeRegistries.ENTITIES.register(et);
             registered.put(type, et);
         });
+    }
+
+    public static EntityType<? extends ModdedEntity> type(Class<? extends Entity> type) {
+        return registered.get(type);
     }
 
     public static Entity create(World world, Class<? extends Entity> cls) {

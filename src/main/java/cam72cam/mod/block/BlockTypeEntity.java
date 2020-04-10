@@ -20,7 +20,7 @@ import net.minecraft.world.IBlockReader;
 import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
-    protected final Identifier id;
+    public final Identifier id;
     private final Supplier<BlockEntity> constructData;
 
     public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
