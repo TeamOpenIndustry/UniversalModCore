@@ -11,6 +11,7 @@ import cam72cam.mod.sound.Audio;
 import cam72cam.mod.util.Hand;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -84,10 +85,12 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onRenderMouseover(DrawHighlightEvent.HighlightBlock event) {
+            RenderType.getCutout().setupRenderState();
             GL11.glPushMatrix();
             RenderSystem.multMatrix(event.getMatrix().getLast().getMatrix());
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
             GL11.glPopMatrix();
+            RenderType.getCutout().clearRenderState();
         }
 
         @SubscribeEvent

@@ -340,7 +340,8 @@ public class ItemRender {
                     RenderType.getSolid().setupRenderState();
                     GL11.glPushMatrix();
                     model.applyTransform(type);
-                    std.renderCustom();
+                    //std.renderCustom();
+                    std.render();
                     GL11.glPopMatrix();
                     RenderType.getSolid().clearRenderState();
                 }

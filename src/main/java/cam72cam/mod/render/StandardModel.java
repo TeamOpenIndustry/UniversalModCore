@@ -12,9 +12,11 @@ import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
-import net.minecraftforge.client.model.pipeline.LightUtil;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ILightReader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -106,25 +108,32 @@ public class StandardModel {
     }
 
     public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
+        if (models.isEmpty()) {
+            return;
+        }
+
+        Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        BufferBuilder worldRenderer = new BufferBuilder(2048);
+        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+
         for (Pair<BlockState, IBakedModel> model : models) {
+            List<BakedQuad> quads = new ArrayList<>();
+
+            int i = Minecraft.getInstance().getBlockColors().getColor(model.getLeft(), null, null, 0);
+            float f = (float)(i >> 16 & 255) / 255.0F;
+            float f1 = (float)(i >> 8 & 255) / 255.0F;
+            float f2 = (float)(i & 255) / 255.0F;
+
             quads.addAll(model.getRight().getQuads(null, null, new Random()));
             for (Direction facing : Direction.values()) {
                 quads.addAll(model.getRight().getQuads(null, facing, new Random()));
             }
 
-        }
-        if (quads.isEmpty()) {
-            return;
+            quads.forEach(quad -> worldRenderer.addQuad(new MatrixStack().getLast(), quad, f, f1, f2, 12 << 4, OverlayTexture.NO_OVERLAY));
         }
 
-        Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
-        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        quads.forEach(quad -> LightUtil.setLightData(quad, -1));
         worldRenderer.finishDrawing();
-        new WorldVertexBufferUploader().draw(worldRenderer);
+        WorldVertexBufferUploader.draw(worldRenderer);
     }
 
     public void renderCustom() {

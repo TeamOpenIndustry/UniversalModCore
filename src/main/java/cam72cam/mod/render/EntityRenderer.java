@@ -86,7 +86,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     public void render(T stock, float entityYaw, float partialTicks, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int p_225623_6_) {
         Entity self = stock.getSelf();
 
-        RenderType.getSolid().setupRenderState();
+        RenderType.getCutout().setupRenderState();
 
 
         GL11.glPushMatrix();
@@ -100,7 +100,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         }
         GL11.glPopMatrix();
 
-        RenderType.getSolid().clearRenderState();
+        RenderType.getCutout().clearRenderState();
 
     }
 
