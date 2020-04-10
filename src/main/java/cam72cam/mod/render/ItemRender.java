@@ -15,6 +15,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.*;
@@ -246,63 +247,34 @@ public class ItemRender {
         }
     }
 
+    static Runnable doRender = () -> {};
+    public static Callable<ItemStackTileEntityRenderer> ISTER() {
+        return () -> new ItemStackTileEntityRenderer() {
+            public void render(net.minecraft.item.ItemStack itemStackIn, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+                GL11.glPushMatrix();
+                RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+                doRender.run();
+                GL11.glPopMatrix();
+            }
+        };
+    }
+
     static class BakedItemModel implements IBakedModel {
         private ItemStack stack;
         private final IItemModel model;
         private ItemRenderType type;
-        private Matrix4f mat;
 
 
         BakedItemModel(IItemModel model) {
             this.stack = null;
             this.model = model;
             this.type = ItemRenderType.NONE;
-            this.mat = new Matrix4f();
-            this.mat.setIdentity();
         }
 
         @Override
         public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-            if (stack == null) {
-                return EMPTY;
-            }
+            return EMPTY;
 
-            if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                GL11.glPushMatrix();
-                RenderSystem.multMatrix(mat);
-                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
-                GL11.glPopMatrix();
-                return EMPTY;
-            }
-
-            StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
-            if (std == null) {
-                return EMPTY;
-            }
-
-
-            /*
-             * I am an evil wizard!
-             *
-             * So it turns out that I can stick a draw call in here to
-             * render my own stuff. This subverts forge's entire baked model
-             * system with a single line of code and injects my own OpenGL
-             * payload. Fuck you modeling restrictions.
-             *
-             * This is probably really fragile if someone calls getQuads
-             * before actually setting up the correct GL context.
-             */
-            if (side == null && !ModCore.isInReload()) {
-                RenderType.getSolid().setupRenderState();
-                GL11.glPushMatrix();
-                RenderSystem.multMatrix(mat);
-                model.applyTransform(type);
-                std.renderCustom();
-                GL11.glPopMatrix();
-                RenderType.getSolid().clearRenderState();
-            }
-
-            return std.getQuads(side, rand);
         }
 
         @Override
@@ -322,7 +294,7 @@ public class ItemRender {
 
         @Override
         public boolean isBuiltInRenderer() {
-            return false;
+            return true;
         }
 
         @Override
@@ -338,9 +310,45 @@ public class ItemRender {
         @Override
         public IBakedModel handlePerspective(ItemCameraTransforms.TransformType cameraTransformType, MatrixStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
-            ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
-            this.mat = mat.getLast().getMatrix();
-            return this;
+
+            doRender = () -> {
+                if (stack == null) {
+                    return;
+                }
+
+                if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                    return ;
+                }
+
+                StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
+                if (std == null) {
+                    return ;
+                }
+                /*
+                 * I am an evil wizard!
+                 *
+                 * So it turns out that I can stick a draw call in here to
+                 * render my own stuff. This subverts forge's entire baked model
+                 * system with a single line of code and injects my own OpenGL
+                 * payload. Fuck you modeling restrictions.
+                 *
+                 * This is probably really fragile if someone calls getQuads
+                 * before actually setting up the correct GL context.
+                 */
+                if (!ModCore.isInReload()) {
+                    RenderType.getSolid().setupRenderState();
+                    GL11.glPushMatrix();
+                    model.applyTransform(type);
+                    std.renderCustom();
+                    GL11.glPopMatrix();
+                    RenderType.getSolid().clearRenderState();
+                }
+                // TODO return std.getQuads(side, rand);
+            };
+
+
+            return ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
         }
 
         class ItemOverrideListHack extends ItemOverrideList {

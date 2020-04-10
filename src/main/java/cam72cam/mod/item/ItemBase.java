@@ -41,7 +41,7 @@ public class ItemBase {
     public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
         identifier = new ResourceLocation(modID, name);
 
-        internal = new ItemInternal(new Item.Properties().maxStackSize(stackSize).group(tabs[0].internal)); // .setTEISR()
+        internal = new ItemInternal(new Item.Properties().maxStackSize(stackSize).group(tabs[0].internal).setISTER(ItemRender::ISTER)); // .setTEISR()
         internal.setRegistryName(identifier);
         this.creativeTabs = tabs;
 
