@@ -6,6 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
@@ -13,6 +14,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
@@ -37,7 +39,7 @@ import java.util.stream.Collectors;
 public class BlockRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final List<Runnable> colors = new ArrayList<>();
-    private static final Map<TileEntityType<? extends TileEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
+    private static final Map<Identifier, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
     static {
@@ -57,7 +59,7 @@ public class BlockRender {
         colors.forEach(Runnable::run);
 
         renderers.forEach((type, render) -> {
-            ClientRegistry.bindTileEntityRenderer(type, (ted) -> new TileEntityRenderer<TileEntity>(ted) {
+            ClientRegistry.bindTileEntityRenderer(TileEntity.getType(type), (ted) -> new TileEntityRenderer<TileEntity>(ted) {
                 @Override
                 public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int var5, int var6) {
                     if (ModCore.isInReload()) {
@@ -66,29 +68,29 @@ public class BlockRender {
 
                     BlockEntity instance = te.instance();
                     if (instance == null) {
-                        System.out.println("Render TE is null");
                         return;
                     }
                     Class<? extends BlockEntity> cls = instance.getClass();
                     StandardModel model = render.apply(instance);
                     if (model == null) {
-                        System.out.println("Render model is null");
                         return;
                     }
 
                     if (!model.hasCustom()) {
-                        System.out.println("No Custom");
                         return;
                     }
+
+                    RenderType.getSolid().setupRenderState();
 
                     GL11.glPushMatrix();
                     {
                         //TODO 1.15 lerp xyz
                         RenderSystem.multMatrix(var3.getLast().getMatrix());
-                        System.out.println("RenderTE");
                         model.renderCustom(partialTicks);
                     }
                     GL11.glPopMatrix();
+
+                    RenderType.getSolid().clearRenderState();
                 }
 
                 public boolean isGlobalRenderer(TileEntity te) {
@@ -106,7 +108,7 @@ public class BlockRender {
     }
 
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
-        renderers.put(TileEntity.getType(((BlockTypeEntity)block).id), (te) -> model.apply(cls.cast(te)));
+        renderers.put(((BlockTypeEntity)block).id, (te) -> model.apply(cls.cast(te)));
 
         colors.add(() -> {
             BlockColors blockColors = Minecraft.getInstance().getBlockColors();

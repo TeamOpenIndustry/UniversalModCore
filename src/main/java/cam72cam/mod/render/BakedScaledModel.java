@@ -40,7 +40,7 @@ public class BakedScaledModel implements IBakedModel {
                 int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
 
                 for (int i = 0; i < 4; ++i) {
-                    int j = 7 * i;
+                    int j = 8 * i;
                     newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
                     newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
                     newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
