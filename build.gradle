@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.2.5-SNAPSHOT'
+	id 'fabric-loom' version '0.2.6-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -24,7 +24,6 @@ dependencies {
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
-	//modCompile project(":TrackAPI")
 
 	modCompile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
 }
