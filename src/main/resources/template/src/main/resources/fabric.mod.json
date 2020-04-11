@@ -29,7 +29,8 @@
   "depends": {
     "fabricloader": ">=0.4.0",
     "fabric": "*",
-    "libblockattributes": "0.5.0"
+    "libblockattributes": "0.5.0",
+    "universalmodcore": ">=#UMC_API# <#UMC_API_NEXT#"
   },
   "suggests": {
   }

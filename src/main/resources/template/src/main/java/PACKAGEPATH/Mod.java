@@ -9,18 +9,13 @@ public class Mod implements ModInitializer {
     public static final String VERSION = "#VERSION#";
 
     static {
-        try {
-            Class<ModCore.Mod> cls = (Class<ModCore.Mod>) Class.forName("#PACKAGE#.#CLASS#");
-            ModCore.register(() -> {
-                try {
-                    return cls.newInstance();
-                } catch (InstantiationException | IllegalAccessException e) {
-                    throw new RuntimeException("Could not construct mod " + MODID, e);
-                }
-            });
-        } catch (Exception e) {
-            throw new RuntimeException("Could not load mod " + MODID, e);
-        }
+        ModCore.register(() -> {
+            try {
+                return new #PACKAGE#.#CLASS#();
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException("Could not construct mod " + MODID, e);
+            }
+        });
     }
 
     @Override
