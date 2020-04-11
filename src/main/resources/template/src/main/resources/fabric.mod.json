@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "#ID#",
-  "version": "${version}",
+  "version": "#VERSION#",
 
   "name": "#NAME#",
   "description": "#DESCRIPTION#",

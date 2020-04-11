@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "universalmodcore",
-  "version": "${version}",
+  "version": "0.1.0",
 
   "name": "Universal Mod Core",
   "description": "A universal abstraction layer for minecraft",

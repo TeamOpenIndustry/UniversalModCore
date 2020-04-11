@@ -1,7 +1,20 @@
-plugins {
-	id 'fabric-loom' version '0.2.7-SNAPSHOT'
-	id "com.wynprice.cursemaven" version "2.1.1"
+buildscript {
+	repositories {
+		jcenter()
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		gradlePluginPortal()
+	}
+	dependencies {
+		classpath 'net.fabricmc:fabric-loom:0.2.7-SNAPSHOT'
+		classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
+	}
 }
+
+apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
+apply plugin: net.fabricmc.loom.LoomGradlePlugin
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -12,13 +25,13 @@ archivesBaseName = "#CLASS#"
 
 // Fabric Properties
 // check these on https://fabricmc.net/use
-minecraft_version="1.14.4"
-yarn_mappings="1.14.4+build.16"
-loader_version="0.8.2+build.194"
+String minecraft_version="1.14.4"
+String yarn_mappings="1.14.4+build.16"
+String loader_version="0.8.2+build.194"
 
 // Dependencies
 // currently not on the main fabric site, check on the maven: https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api
-fabric_version="0.4.3+build.247-1.14"
+String fabric_version="0.4.3+build.247-1.14"
 
 minecraft {
 }
@@ -34,6 +47,8 @@ dependencies {
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
+
+	modCompile #UMC_DEPENDENCY#
 }
 
 processResources {
