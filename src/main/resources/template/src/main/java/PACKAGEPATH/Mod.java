@@ -9,13 +9,7 @@ public class Mod implements ModInitializer {
     public static final String VERSION = "#VERSION#";
 
     static {
-        ModCore.register(() -> {
-            try {
-                return new #PACKAGE#.#CLASS#();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException("Could not construct mod " + MODID, e);
-            }
-        });
+        ModCore.register(#PACKAGE#.#CLASS#::new);
     }
 
     @Override
