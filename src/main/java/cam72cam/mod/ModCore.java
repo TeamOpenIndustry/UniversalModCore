@@ -74,7 +74,7 @@ public class ModCore implements ModInitializer {
     }
 
     public static List<String> modIDs() {
-        return instance.mods.stream().map(Mod::modID).collect(Collectors.toList());
+        return instance.mods.stream().filter(m -> !(m instanceof Internal)).map(Mod::modID).collect(Collectors.toList());
     }
 
     public static abstract class Mod {
