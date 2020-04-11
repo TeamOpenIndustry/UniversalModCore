@@ -1,51 +1,47 @@
 plugins {
-	id 'fabric-loom' version '0.2.5-SNAPSHOT'
-	id 'maven-publish'
+	id 'fabric-loom' version '0.2.7-SNAPSHOT'
 	id "com.wynprice.cursemaven" version "2.1.1"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
+version = "#VERSION#-1.14.4-fabric"
+group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "#CLASS#"
+
+// Fabric Properties
+// check these on https://fabricmc.net/use
+minecraft_version="1.14.4"
+yarn_mappings="1.14.4+build.16"
+loader_version="0.8.2+build.194"
+
+// Dependencies
+// currently not on the main fabric site, check on the maven: https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api
+fabric_version="0.4.3+build.247-1.14"
 
 minecraft {
 }
 
-apply plugin: 'java'
-sourceSets {
-	main {
-		java {
-			srcDir "UniversalModCore/src/main/java"
-		}
-	}
-}
-
 dependencies {
 	//to change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
-	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+	minecraft "com.mojang:minecraft:${minecraft_version}"
+	mappings "net.fabricmc:yarn:${yarn_mappings}"
+	modCompile "net.fabricmc:fabric-loader:${loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modCompile "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
-	//modCompile project(":TrackAPI")
-
-	modCompile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-	include group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", version
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
-		expand "version": project.version
+		expand "version": version
 	}
 
 	from(sourceSets.main.resources.srcDirs) {
@@ -91,27 +87,4 @@ publishing {
 		// uncomment to publish to the local maven
 		// mavenLocal()
 	}
-}
-
-repositories {
-    maven {
-        name = "BuildCraft"
-        url = "https://mod-buildcraft.com/maven"
-    }
-}
-
-dependencies {
-    modCompile "alexiil.mc.lib:libblockattributes-all:0.5.0"
-}
-
-
-dependencies {
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
-}
-
-repositories {
-maven { url = "http://server.bbkr.space:8081/artifactory/libs-snapshot" }
-}
-dependencies {
-modCompile "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
 }

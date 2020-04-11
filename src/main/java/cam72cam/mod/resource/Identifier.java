@@ -56,7 +56,9 @@ public class Identifier {
 
 
     public List<InputStream> getResourceStreamAll() throws IOException {
-        return multi.apply(this);
+        List<InputStream> values = multi.apply(this);
+        Collections.reverse(values);
+        return values;
     }
 
     public InputStream getResourceStream() throws IOException {

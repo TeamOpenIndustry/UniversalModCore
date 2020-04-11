@@ -14,12 +14,15 @@ public class TileEntityTickable extends TileEntity implements Tickable {
         super(id);
     }
 
+    private BlockEntityTickable tickable;
     @Override
     public void tick() {
-        BlockEntityTickable tickable = (BlockEntityTickable) instance();
         if (tickable == null) {
-            ModCore.debug("uhhhhh, null tickable?");
-            return;
+            tickable = (BlockEntityTickable) instance();
+            if (tickable == null) {
+                ModCore.debug("uhhhhh, null tickable?");
+                return;
+            }
         }
         tickable.update();
     }

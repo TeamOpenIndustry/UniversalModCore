@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.2.6-SNAPSHOT'
+	id 'fabric-loom' version '0.2.7-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -16,7 +16,7 @@ minecraft {
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
@@ -26,10 +26,11 @@ dependencies {
 	// You may need to force-disable transitiveness on them.
 
 	modCompile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+	include group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", project.version + "-1.14.4-fabric"
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
@@ -89,7 +90,8 @@ repositories {
 }
 
 dependencies {
-    modCompile "alexiil.mc.lib:libblockattributes-all:0.5.0"
+	modImplementation "alexiil.mc.lib:libblockattributes-all:0.5.0"
+	include "alexiil.mc.lib:libblockattributes-all:0.5.0"
 }
 
 
@@ -98,8 +100,9 @@ dependencies {
 }
 
 repositories {
-maven { url = "http://server.bbkr.space:8081/artifactory/libs-snapshot" }
+	maven { url = "http://server.bbkr.space:8081/artifactory/libs-snapshot" }
 }
 dependencies {
-modCompile "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
+	modImplementation "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
+	include "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
 }

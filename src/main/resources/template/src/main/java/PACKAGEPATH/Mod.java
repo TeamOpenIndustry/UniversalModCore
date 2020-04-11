@@ -1,16 +1,16 @@
-package cam72cam.#MODID#;
+package #PACKAGE#;
 
 import cam72cam.mod.ModCore;
 import net.fabricmc.api.ModInitializer;
 
 public class Mod implements ModInitializer {
-    public static final String MODID = "#MODID#";
-    public static final String NAME = "#MODNAME#";
-    public static final String VERSION = "#MODVERSION#";
+    public static final String MODID = "#ID#";
+    public static final String NAME = "#NAME#";
+    public static final String VERSION = "#VERSION#";
 
     static {
         try {
-            Class<ModCore.Mod> cls = (Class<ModCore.Mod>) Class.forName("#MODCLASS#");
+            Class<ModCore.Mod> cls = (Class<ModCore.Mod>) Class.forName("#PACKAGE#.#CLASS#");
             ModCore.register(() -> {
                 try {
                     return cls.newInstance();

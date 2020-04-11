@@ -1,32 +1,29 @@
 {
   "schemaVersion": 1,
-  "id": "universalmodcore",
+  "id": "#ID#",
   "version": "${version}",
 
-  "name": "Universal Mod Core",
-  "description": "A universal abstraction layer for minecraft",
+  "name": "#NAME#",
+  "description": "#DESCRIPTION#",
   "authors": [
-    "cam72cam"
+    "#AUTHORS#"
   ],
   "contact": {
   },
 
-  "license": "LGPL3",
+  "license": "#LICENSE#",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "cam72cam.mod.ModCore"
+      "#PACKAGE#.Mod"
     ],
     "client": [
-      "cam72cam.mod.ModCoreClient"
     ],
     "server": [
-      "cam72cam.mod.ModCoreServer"
     ]
   },
   "mixins": [
-    "modcore.main-mixins.json"
   ],
 
   "depends": {
