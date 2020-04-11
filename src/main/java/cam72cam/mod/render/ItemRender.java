@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlFramebuffer;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.JsonUnbakedModel;
 import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
@@ -21,7 +21,7 @@ import net.minecraft.client.texture.Sprite;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.ExtendedBlockView;
+import net.minecraft.world.BlockRenderView;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -165,7 +165,7 @@ public class ItemRender {
             }
         }
 
-        GlFramebuffer fb = new GlFramebuffer(width, height, true, true);
+        Framebuffer fb = new Framebuffer(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
         fb.clear(true);
         fb.beginWrite(true);
@@ -268,7 +268,7 @@ public class ItemRender {
         }
 
         @Override
-        public boolean hasDepthInGui() {
+        public boolean hasDepth() {
             return true;
         }
 
@@ -289,10 +289,10 @@ public class ItemRender {
 
         @Override
         public ModelTransformation getTransformation() {
-            return new ModelTransformation(Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE, Transformation.NONE) {
+            return new ModelTransformation(Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY) {
                 public Transformation getTransformation(ModelTransformation.Type cameraTransformType) {
                     BakedItemModel.this.type = ItemRenderType.from(cameraTransformType);
-                    return Transformation.NONE;
+                    return Transformation.IDENTITY;
                 }
             };
         }
@@ -303,7 +303,7 @@ public class ItemRender {
         }
 
         @Override
-        public void emitBlockQuads(ExtendedBlockView extendedBlockView, BlockState blockState, BlockPos blockPos, Supplier<Random> supplier, RenderContext renderContext) {
+        public void emitBlockQuads(BlockRenderView extendedBlockView, BlockState blockState, BlockPos blockPos, Supplier<Random> supplier, RenderContext renderContext) {
         }
 
         @Override

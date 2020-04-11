@@ -36,9 +36,9 @@ public class EntitySync extends TagCompound {
         List<String> removed = new ArrayList<>();
 
         for (String key : internal.getKeys()) {
-            Tag newVal = internal.getTag(key);
-            if (old.internal.containsKey(key)) {
-                Tag oldVal = old.internal.getTag(key);
+            Tag newVal = internal.get(key);
+            if (old.internal.contains(key)) {
+                Tag oldVal = old.internal.get(key);
                 if (newVal.equals(oldVal)) {
                     continue;
                 }
@@ -47,7 +47,7 @@ public class EntitySync extends TagCompound {
         }
 
         for (String key : old.internal.getKeys()) {
-            if (!internal.containsKey(key)) {
+            if (!internal.contains(key)) {
                 removed.add(key);
             }
         }
@@ -74,7 +74,7 @@ public class EntitySync extends TagCompound {
                     internal.remove(removed);
                 }
             } else {
-                internal.put(key, sync.internal.getTag(key));
+                internal.put(key, sync.internal.get(key));
             }
         }
         old = this;

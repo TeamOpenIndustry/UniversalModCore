@@ -118,7 +118,7 @@ public class StandardModel {
         MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
 
         BufferBuilder worldRenderer = new BufferBuilder(2048);
-        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR_UV_NORMAL);
+        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
         for (BakedQuad quad : quads) {
             worldRenderer.putVertexData(quad.getVertexData());

@@ -277,7 +277,7 @@ public class World {
     }
 
     public void setToAir(Vec3i pos) {
-        internal.clearBlockState(pos.internal, false);
+        internal.removeBlock(pos.internal, false);
     }
 
     public long getTime() {
@@ -446,7 +446,7 @@ public class World {
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<ItemEntity> items = internal.getEntities(ItemEntity.class, new BoundingBox(bb));
+        List<ItemEntity> items = internal.getEntities(ItemEntity.class, new BoundingBox(bb), null);
         return items.stream().map((ItemEntity::getStack)).map(ItemStack::new).collect(Collectors.toList());
     }
 

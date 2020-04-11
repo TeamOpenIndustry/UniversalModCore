@@ -24,7 +24,7 @@ public class TagCompound {
     }
 
     public boolean hasKey(String key) {
-        return internal.containsKey(key);
+        return internal.contains(key);
     }
 
     public boolean getBoolean(String key) {
@@ -76,7 +76,7 @@ public class TagCompound {
     }
 
     public String getString(String key) {
-        if (internal.containsKey(key)) {
+        if (internal.contains(key)) {
             return internal.getString(key);
         }
         return null;
@@ -91,7 +91,7 @@ public class TagCompound {
     }
 
     public UUID getUUID(String key) {
-        if (!internal.containsKey(key)) {
+        if (!internal.contains(key)) {
             return null;
         }
         return UUID.fromString(getString(key));
@@ -105,7 +105,7 @@ public class TagCompound {
     }
 
     public Vec3i getVec3i(String key) {
-        if (internal.containsKey(key) && internal.getTag(key).getType() == 4) {
+        if (internal.contains(key) && internal.get(key).getType() == 4) {
             return new Vec3i(internal.getLong(key));
         }
 

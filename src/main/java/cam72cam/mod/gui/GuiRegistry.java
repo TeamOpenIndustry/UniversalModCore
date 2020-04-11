@@ -15,7 +15,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.container.ContainerProviderRegistry;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
+import net.minecraft.client.gui.screen.ingame.ContainerScreen;
 import net.minecraft.container.Container;
 
 import java.util.HashMap;
@@ -116,7 +116,7 @@ public class GuiRegistry {
     }
 
     @Environment(EnvType.CLIENT)
-    private static AbstractContainerScreen create(Container container) {
+    private static ContainerScreen create(Container container) {
         return new ClientContainerBuilder((ServerContainerBuilder) container);
     }
 

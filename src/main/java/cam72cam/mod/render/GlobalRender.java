@@ -48,7 +48,7 @@ public class GlobalRender {
         });
 
         List<BlockEntity> grhList = CollectionUtil.listOf(new GlobalRenderHelper(null));
-        ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateBlockEntities(grhList, grhList));
+        ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateNoCullingBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(right -> {
             // DebugHud

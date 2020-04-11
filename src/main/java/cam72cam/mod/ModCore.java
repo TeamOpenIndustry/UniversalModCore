@@ -48,16 +48,6 @@ public class ModCore implements ModInitializer {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
 
-            ModCore.register(() -> {
-                try {
-                    Class<Mod> cls = (Class<Mod>) Class.forName("cam72cam.immersiverailroading.ImmersiveRailroading");
-                    return cls.newInstance();
-                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                    throw new RuntimeException("Could not construct mod " + MODID, e);
-                }
-            });
-
-
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
 
         proxy.event(ModEvent.CONSTRUCT);
@@ -81,6 +71,10 @@ public class ModCore implements ModInitializer {
     public void postInit() {
         proxy.event(ModEvent.SETUP);
         proxy.event(ModEvent.FINALIZE);
+    }
+
+    public static List<String> modIDs() {
+        return instance.mods.stream().map(Mod::modID).collect(Collectors.toList());
     }
 
     public static abstract class Mod {

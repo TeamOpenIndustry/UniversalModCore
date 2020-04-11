@@ -23,7 +23,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.ExtendedBlockView;
+import net.minecraft.world.BlockRenderView;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -45,7 +45,7 @@ public class BlockRender {
             List<net.minecraft.block.entity.BlockEntity> tes = new ArrayList<>(MinecraftClient.getInstance().world.blockEntities).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
-            MinecraftClient.getInstance().worldRenderer.updateBlockEntities(prev, tes);
+            MinecraftClient.getInstance().worldRenderer.updateNoCullingBlockEntities(prev, tes);
             prev = tes;
         });
     }
@@ -98,7 +98,7 @@ public class BlockRender {
 
         colors.add(() -> {
             BlockColors blockColors = MinecraftClient.getInstance().getBlockColorMap();
-            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.getColor(0.5D, 1.0D), block.internal);
+            blockColors.registerColorProvider((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.getColor(0.5D, 1.0D), block.internal);
         });
 
         ClientEvents.MODEL_BAKE.subscribe(() -> {
@@ -124,7 +124,7 @@ public class BlockRender {
                                 }
 
                                 @Override
-                                public void emitBlockQuads(ExtendedBlockView blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
+                                public void emitBlockQuads(BlockRenderView blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
                                     net.minecraft.block.entity.BlockEntity be = blockView.getBlockEntity(pos);
                                     if (be instanceof TileEntity) {
                                         TileEntity te = (TileEntity) be;
@@ -144,7 +144,7 @@ public class BlockRender {
                                                     }
 
                                                     @Override
-                                                    public boolean hasDepthInGui() {
+                                                    public boolean hasDepth() {
                                                         return true;
                                                     }
 
@@ -192,7 +192,7 @@ public class BlockRender {
                                 }
 
                                 @Override
-                                public boolean hasDepthInGui() {
+                                public boolean hasDepth() {
                                     return false;
                                 }
 

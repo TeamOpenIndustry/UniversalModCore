@@ -4,8 +4,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.util.TagCompound;
 import io.netty.buffer.Unpooled;
-import net.minecraft.client.network.packet.CustomPayloadS2CPacket;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
 
@@ -39,7 +39,7 @@ public class CustomSpawnPacket extends Packet {
         entity.setEntityId(data.getInteger("id"));
         entity.setUuid(data.getUUID("uuid"));
         Vec3d pos = data.getVec3d("pos");
-        entity.setPosition(pos.x, pos.y, pos.z);
+        entity.updatePosition(pos.x, pos.y, pos.z);
         entity.updateTrackedPosition(pos.x, pos.y, pos.z);
         entity.setVelocity(data.getVec3d("vel").internal);
 

@@ -13,8 +13,8 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.network.packet.BlockEntityUpdateS2CPacket;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
@@ -117,7 +117,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         try {
             this.fromTag(tag.internal);
             this.readUpdate(tag);
-            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+            world.internal.checkBlockRerender(getPos(), null, super.world.getBlockState(super.pos));
         } catch (Exception ex) {
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
@@ -135,7 +135,7 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
             world.internal.updateListeners(getPos(), world.internal.getBlockState(getPos()), world.internal.getBlockState(getPos()), 1 + 2 + 8);
             world.internal.updateNeighborsAlways(pos.internal, super.world.getBlockState(super.pos).getBlock());
         } else {
-            world.internal.scheduleBlockRender(getPos(), null, super.world.getBlockState(super.pos));
+            world.internal.checkBlockRerender(getPos(), null, super.world.getBlockState(super.pos));
         }
     }
 

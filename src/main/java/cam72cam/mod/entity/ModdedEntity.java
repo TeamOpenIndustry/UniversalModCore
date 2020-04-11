@@ -114,7 +114,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
-            seats.forEach(seat -> seat.setPosition(x, y, z));
+            seats.forEach(seat -> seat.updatePosition(x, y, z));
         }
     }
 
@@ -296,7 +296,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
     @Override
     public Box getVisibilityBoundingBox() {
         Box bb = this.getBoundingBox();
-        return new Box(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        return new Box(bb.x1, bb.y1, bb.z1, bb.x2, bb.y2, bb.z2);
     }
 
     /* Hacks */
