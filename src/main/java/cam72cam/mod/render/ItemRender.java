@@ -131,14 +131,17 @@ public class ItemRender {
         }
         static void defaultTransform(ItemRenderType type) {
             switch (type) {
-                case GUI:
-                    GL11.glTranslated(0.5, 0, 0);
-                case FRAME:
-                    GL11.glRotated(90, 0, 1, 0);
-                    break;
                 case HEAD:
                     GL11.glTranslated(-0.5, 1, 0);
                     GL11.glScaled(2, 2, 2);
+                    break;
+                case FIRST_PERSON_LEFT_HAND:
+                    GL11.glTranslated(0, 0, -0.5);
+                    GL11.glTranslated(0, 0, -0.5);
+                    break;
+                case FRAME:
+                    GL11.glTranslated(0, 0, 0.5);
+                    GL11.glRotated(90, 0, 1, 0);
                     break;
             }
         }
@@ -279,11 +282,11 @@ public class ItemRender {
                 GL11.glPushMatrix();
                 RenderLayer.getCutout().startDrawing();
                 RenderSystem.multMatrix(matrixStack.peek().getModel());
-                GL11.glTranslated(-0.5, -0.5, 0);
 
                 ItemStack stack = new ItemStack(stackIn);
                 ItemRenderType type = ItemRenderType.from(transformMode);
                 if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                    GL11.glTranslated(-0.5, -0.5, 0);
                     iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
                     return;
                 }
@@ -291,6 +294,12 @@ public class ItemRender {
                 StandardModel std = model.getModel(World.get(MinecraftClient.getInstance().world), stack);
                 if (std == null) {
                     return;
+                }
+
+                if (type == ItemRenderType.GUI) {
+                    GL11.glTranslated(-0.5, -0.5, 0);
+                } else {
+                    GL11.glTranslated(-0.5, -0.5, -0.5);
                 }
 
                 model.applyTransform(type);
