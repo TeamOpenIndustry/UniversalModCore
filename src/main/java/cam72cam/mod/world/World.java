@@ -446,7 +446,7 @@ public class World {
     }
 
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<ItemEntity> items = internal.getEntities(ItemEntity.class, new BoundingBox(bb), x -> true);
+        List<ItemEntity> items = internal.getEntities(ItemEntity.class, new BoundingBox(bb), null);
         return items.stream().map((ItemEntity::getStack)).map(ItemStack::new).collect(Collectors.toList());
     }
 

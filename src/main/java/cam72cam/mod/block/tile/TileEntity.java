@@ -13,9 +13,9 @@ import cam72cam.mod.util.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.network.packet.BlockEntityUpdateS2CPacket;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 

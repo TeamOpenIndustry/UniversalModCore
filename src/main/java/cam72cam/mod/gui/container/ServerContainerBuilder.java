@@ -129,7 +129,7 @@ public class ServerContainerBuilder extends net.minecraft.container.Container im
     public int drawPlayerInventory(int currY, int horizSlots) {
         currY += 9;
 
-        int offset = slotList.size();
+        int offset = slots.size();
 
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft;
 
@@ -158,14 +158,14 @@ public class ServerContainerBuilder extends net.minecraft.container.Container im
     @Override
     public final net.minecraft.item.ItemStack transferSlot(PlayerEntity playerIn, int index) {
         net.minecraft.item.ItemStack itemstack = net.minecraft.item.ItemStack.EMPTY;
-        Slot slot = this.slotList.get(index);
+        Slot slot = this.slots.get(index);
         int numSlots = totalSlots;
 
         if (slot != null && slot.hasStack()) {
             net.minecraft.item.ItemStack itemstack1 = slot.getStack();
             itemstack = itemstack1.copy();
             if (index < numSlots) {
-                if (!this.insertItem(itemstack1, numSlots, this.slotList.size(), true)) {
+                if (!this.insertItem(itemstack1, numSlots, this.slots.size(), true)) {
                     return net.minecraft.item.ItemStack.EMPTY;
                 }
             } else if (!this.insertItem(itemstack1, 0, numSlots, false)) {

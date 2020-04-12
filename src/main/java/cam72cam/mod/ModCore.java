@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class ModCore implements ModInitializer {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "0.1.0";
     public static ModCore instance;
     static List<Supplier<Mod>> modCtrs = new ArrayList<>();
 
@@ -47,16 +47,6 @@ public class ModCore implements ModInitializer {
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
-
-            ModCore.register(() -> {
-                try {
-                    Class<Mod> cls = (Class<Mod>) Class.forName("cam72cam.immersiverailroading.ImmersiveRailroading");
-                    return cls.newInstance();
-                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                    throw new RuntimeException("Could not construct mod " + MODID, e);
-                }
-            });
-
 
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
 
@@ -81,6 +71,10 @@ public class ModCore implements ModInitializer {
     public void postInit() {
         proxy.event(ModEvent.SETUP);
         proxy.event(ModEvent.FINALIZE);
+    }
+
+    public static List<String> modIDs() {
+        return instance.mods.stream().filter(m -> !(m instanceof Internal)).map(Mod::modID).collect(Collectors.toList());
     }
 
     public static abstract class Mod {

@@ -52,7 +52,7 @@ public class ItemRender {
             Map<String, Either<SpriteIdentifier, String>> textures = new HashMap<>();
             textures.put("layer0", Either.right(tex.toString()));
             ModelLoadingRegistry.INSTANCE.registerVariantProvider(resourceManager -> (modelId, context) -> item.getRegistryName().internal.equals(modelId) ?
-                    new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, JsonUnbakedModel.GuiLight.FRONT, ModelTransformation.NONE, Collections.emptyList())
+                    new JsonUnbakedModel(new net.minecraft.util.Identifier("item/generated"), Collections.emptyList(), textures, true, null, ModelTransformation.NONE, Collections.emptyList())
                     : null);
         });
     }
@@ -299,9 +299,9 @@ public class ItemRender {
 
         @Override
         public ModelTransformation getTransformation() {
-            return new ModelTransformation(ModelTransformation.NONE) {
-                public Transformation getTransformation(ModelTransformation.Mode mode) {
-                    BakedItemModel.this.type = ItemRenderType.from(mode);
+            return new ModelTransformation(Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY) {
+                public Transformation getTransformation(ModelTransformation.Mode cameraTransformType) {
+                    BakedItemModel.this.type = ItemRenderType.from(cameraTransformType);
                     return Transformation.IDENTITY;
                 }
             };

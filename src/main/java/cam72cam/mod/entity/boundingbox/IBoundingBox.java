@@ -22,22 +22,22 @@ public interface IBoundingBox {
 
             @Override
             public IBoundingBox expand(Vec3d centered) {
-                return from(internal.stretch(centered.x, centered.y, centered.z));
+                return IBoundingBox.from(internal.stretch(centered.x, centered.y, centered.z));
             }
 
             @Override
             public IBoundingBox contract(Vec3d centered) {
-                return from(internal.shrink(centered.x, centered.y, centered.z));
+                return IBoundingBox.from(internal.shrink(centered.x, centered.y, centered.z));
             }
 
             @Override
             public IBoundingBox grow(Vec3d val) {
-                return from(internal.expand(val.x, val.y, val.z));
+                return IBoundingBox.from(internal.expand(val.x, val.y, val.z));
             }
 
             @Override
             public IBoundingBox offset(Vec3d vec3d) {
-                return from(internal.offset(vec3d.internal));
+                return IBoundingBox.from(internal.offset(vec3d.internal));
             }
 
             @Override
