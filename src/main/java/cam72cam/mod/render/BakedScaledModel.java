@@ -40,14 +40,13 @@ public class BakedScaledModel implements BakedModel {
                 int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
 
                 for (int i = 0; i < 4; ++i) {
-                    int j = i * 7;
-                    //This probably breaks everything...
-                    quad.getVertexData()[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
-                    quad.getVertexData()[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
-                    quad.getVertexData()[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
+                    int j = i * (quad.getVertexData().length / 4);
+                    newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
+                    newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
+                    newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
                 }
 
-                //quadCache.get(side).add(new BakedQuad(newData, quad.getColorIndex(), quad.getFace(), quad.getSprite()));
+                quadCache.get(side).add(new BakedQuad(newData, quad.getColorIndex(), quad.getFace(), source.getSprite()));
             }
         }
 

@@ -8,10 +8,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.json.ModelTransformation;
@@ -105,38 +102,28 @@ public class StandardModel {
     }
 
     public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<BlockState, BakedModel> model : models) {
-            quads.addAll(model.getRight().getQuads(null, null, new Random()));
-            for (Direction facing : Direction.values()) {
-                quads.addAll(model.getRight().getQuads(null, facing, new Random()));
-            }
-
-        }
-        if (quads.isEmpty()) {
+        if (models.isEmpty()) {
             return;
         }
 
         MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
-
         BufferBuilder worldRenderer = new BufferBuilder(2048);
         worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
 
-        for (BakedQuad quad : quads) {
-            int[] data = quad.getVertexData();
-            worldRenderer.vertex(data[0], data[1], data[2]);
-            /* TODO
-            if (quad.hasColor()) {
-                MinecraftClient.getInstance().getBlockColorMap().getColorMultiplier(state, null, null, 0)
-                worldRenderer.setQuadColor(float_2 * float_1, float_3 * float_1, float_4 * float_1);
-            } else {
-                worldRenderer.setQuadColor(float_1, float_1, float_1);
-            }
-            */
-            worldRenderer.color(1, 1, 1, 1);
+        for (Pair<BlockState, BakedModel> model : models) {
+            List<BakedQuad> quads = new ArrayList<>();
 
-            Vec3i vec3i_1 = quad.getFace().getVector();
-            worldRenderer.normal((float)vec3i_1.getX(), (float)vec3i_1.getY(), (float)vec3i_1.getZ());
+            int i = MinecraftClient.getInstance().getBlockColorMap().getColor(model.getLeft(), null, null, 0);
+            float f = (float)(i >> 16 & 255) / 255.0F;
+            float f1 = (float)(i >> 8 & 255) / 255.0F;
+            float f2 = (float)(i & 255) / 255.0F;
+
+            quads.addAll(model.getRight().getQuads(model.getLeft(), null, new Random()));
+            for (Direction facing : Direction.values()) {
+                quads.addAll(model.getRight().getQuads(model.getLeft(), facing, new Random()));
+            }
+
+            quads.forEach(quad -> worldRenderer.quad(new MatrixStack().peek(), quad, f, f1, f2, 12 << 4, OverlayTexture.DEFAULT_UV));
         }
         worldRenderer.end();
         BufferRenderer.draw(worldRenderer);
