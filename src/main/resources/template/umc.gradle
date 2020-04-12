@@ -33,11 +33,13 @@ repositories {
 	}
 }
 
-apply plugin: 'forge'
+#UMC_REPO#
+
+apply plugin: net.minecraftforge.gradle.user.patch.ForgeUserPlugin
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
-version = "#VERSION#-1.10.2-forge"
+version = "#VERSION#-1.7.10-forge"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#NAME#"
 
