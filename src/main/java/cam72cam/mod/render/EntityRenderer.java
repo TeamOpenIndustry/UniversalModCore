@@ -91,11 +91,13 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
         GL11.glPushMatrix();
         {
             //TODO 1.15 lerp xyz
+            RenderLayer.getCutout().startDrawing();
             RenderSystem.multMatrix(matrixStack_1.peek().getModel());
             GL11.glRotatef(180 - entityYaw, 0, 1, 0);
             GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
             GL11.glRotatef(-90, 0, 1, 0);
             renderers.get(self.getClass()).render(self, partialTicks);
+            RenderLayer.getCutout().endDrawing();
         }
         GL11.glPopMatrix();
 

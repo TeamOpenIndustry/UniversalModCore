@@ -7,6 +7,7 @@ import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
@@ -14,6 +15,7 @@ import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.JsonUnbakedModel;
 import net.minecraft.client.render.model.json.ModelItemPropertyOverrideList;
@@ -21,6 +23,7 @@ import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.render.model.json.Transformation;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -74,14 +77,7 @@ public class ItemRender {
                         @Nullable
                         @Override
                         public BakedModel bake(ModelLoader var1, Function<SpriteIdentifier, Sprite> var2, ModelBakeSettings var3, net.minecraft.util.Identifier var4) {
-                            ModelItemPropertyOverrideList overrides = new ModelItemPropertyOverrideList(var1, null, id -> null, Collections.emptyList()) {
-                                @Override
-                                public BakedModel apply(BakedModel bakedModel_1, net.minecraft.item.ItemStack itemStack_1, @Nullable net.minecraft.world.World world_1, @Nullable LivingEntity livingEntity_1) {
-                                    ((BakedItemModel)bakedModel_1).stack = new ItemStack(itemStack_1);
-                                    return bakedModel_1;
-                                }
-                            };
-                            return new BakedItemModel(model, overrides);
+                            return new BakedItemModel(model);
                         }
                     } : null);
         });
@@ -218,53 +214,16 @@ public class ItemRender {
         }
     }
 
-    static class BakedItemModel implements FullBakedModel {
-        private ItemStack stack;
+    public static class BakedItemModel implements FullBakedModel {
         private final IItemModel model;
-        private ItemRenderType type;
-        private final ModelItemPropertyOverrideList overrides;
 
-        BakedItemModel(IItemModel model, ModelItemPropertyOverrideList overrides) {
-            this.stack = null;
+        BakedItemModel(IItemModel model) {
             this.model = model;
-            this.type = ItemRenderType.NONE;
-            this.overrides = overrides;
         }
 
         @Override
         public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-            if (stack == null) {
-                return EMPTY;
-            }
-
-            if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
-                return EMPTY;
-            }
-
-            StandardModel std = model.getModel(World.get(MinecraftClient.getInstance().world), stack);
-            if (std == null) {
-                return EMPTY;
-            }
-
-
-            /*
-             * I am an evil wizard!
-             *
-             * So it turns out that I can stick a draw call in here to
-             * render my own stuff. This subverts forge's entire baked model
-             * system with a single line of code and injects my own OpenGL
-             * payload. Fuck you modeling restrictions.
-             *
-             * This is probably really fragile if someone calls getQuads
-             * before actually setting up the correct GL context.
-             */
-            if (side == null) {
-                model.applyTransform(type);
-                std.renderCustom();
-            }
-
-            return std.getQuads(side, rand);
+            return EMPTY;
         }
 
         @Override
@@ -294,22 +253,17 @@ public class ItemRender {
 
         @Override
         public ModelItemPropertyOverrideList getItemPropertyOverrides() {
-            return overrides;
+            return ModelItemPropertyOverrideList.EMPTY;
         }
 
         @Override
         public ModelTransformation getTransformation() {
-            return new ModelTransformation(Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY, Transformation.IDENTITY) {
-                public Transformation getTransformation(ModelTransformation.Mode cameraTransformType) {
-                    BakedItemModel.this.type = ItemRenderType.from(cameraTransformType);
-                    return Transformation.IDENTITY;
-                }
-            };
+            return ModelTransformation.NONE;
         }
 
         @Override
         public boolean isVanillaAdapter() {
-            return false;
+            return true;
         }
 
         @Override
@@ -318,8 +272,33 @@ public class ItemRender {
 
         @Override
         public void emitItemQuads(net.minecraft.item.ItemStack itemStack, Supplier<Random> supplier, RenderContext renderContext) {
-            this.stack = new ItemStack(itemStack);
-            renderContext.fallbackConsumer().accept(this);
+        }
+
+        public void render(net.minecraft.item.ItemStack stackIn, ModelTransformation.Mode transformMode, MatrixStack matrixStack, int light, int overlay) {
+            try {
+                GL11.glPushMatrix();
+                RenderLayer.getCutout().startDrawing();
+                RenderSystem.multMatrix(matrixStack.peek().getModel());
+                GL11.glTranslated(-0.5, -0.5, 0);
+
+                ItemStack stack = new ItemStack(stackIn);
+                ItemRenderType type = ItemRenderType.from(transformMode);
+                if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                    return;
+                }
+
+                StandardModel std = model.getModel(World.get(MinecraftClient.getInstance().world), stack);
+                if (std == null) {
+                    return;
+                }
+
+                model.applyTransform(type);
+                std.render();
+            } finally {
+                RenderLayer.getCutout().endDrawing();
+                GL11.glPopMatrix();
+            }
         }
     }
 }

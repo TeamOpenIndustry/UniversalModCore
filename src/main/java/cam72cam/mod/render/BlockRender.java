@@ -17,6 +17,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.client.color.world.GrassColors;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.model.*;
@@ -85,9 +86,11 @@ public class BlockRender {
 
                 GL11.glPushMatrix();
                 {
+                    RenderLayer.getSolid().startDrawing();
                     //GL11.glTranslated(te.pos.x, te.pos.y, te.pos.z);
                     RenderSystem.multMatrix(var3.peek().getModel());
                     model.renderCustom(partialTicks);
+                    RenderLayer.getSolid().endDrawing();
                 }
                 GL11.glPopMatrix();
             }
