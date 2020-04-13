@@ -8,7 +8,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -120,7 +119,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 //TODO 1.11.2 will this break anything? this.selectedButton = guibutton;
-                guibutton.func_146113_a(this.mc.getSoundHandler());
+                guibutton.playPressSound(this.mc.getSoundHandler());
                 buttonMap.get(guibutton).onClick(mouseButton == 0 ? Hand.PRIMARY : Hand.SECONDARY);
             }
         }

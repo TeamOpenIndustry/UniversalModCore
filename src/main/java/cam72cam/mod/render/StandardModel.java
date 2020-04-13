@@ -42,7 +42,7 @@ public class StandardModel {
 
     private static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
-        int meta = stack.internal.getItemDamage();
+        int meta = stack.internal.getMetadata();
         if (block instanceof BlockRotatedPillar) {
             meta = 2;
         }
@@ -69,7 +69,7 @@ public class StandardModel {
                 renderBlocks.blockAccess = pt.world;
                 renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
                 renderBlocks.lockBlockBounds = true;
-                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getItemDamage()));
+                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
                 renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
                 renderBlocks.lockBlockBounds = false;
             }
@@ -94,7 +94,7 @@ public class StandardModel {
                     Block block = Block.getBlockFromItem(stack.internal.getItem());
                     if (block != null) {
                         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
-                        renderBlocks.renderBlockAsItem(block, stack.internal.getItemDamage(), 1.0f);
+                        renderBlocks.renderBlockAsItem(block, stack.internal.getMetadata(), 1.0f);
                     }
                 }
             }

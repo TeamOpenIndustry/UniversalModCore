@@ -9,7 +9,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood");
@@ -64,7 +63,7 @@ public class Fuzzy {
     public List<ItemStack> enumerate() {
         List<ItemStack> results = new ArrayList<>();
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
-            if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+            if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
                 for (int i = 0; i < 16; i++) {
                     // This is terrible
                     results.add(new ItemStack(stack.getItem(), 1, i));

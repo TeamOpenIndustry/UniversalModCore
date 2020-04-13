@@ -153,7 +153,7 @@ public abstract class BlockTypeEntity extends BlockType {
             if (entity == null) {
                 super.setBlockBoundsBasedOnState(source, posX, posY, posZ);
             }
-            super.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, (float) BlockTypeEntity.this.getHeight(World.get(entity.getWorldObj()), new Vec3i(posX, posY, posZ)), 1.0F);
+            super.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, (float) BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(posX, posY, posZ)), 1.0F);
         }
 
         @Override

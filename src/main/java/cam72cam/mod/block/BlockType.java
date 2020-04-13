@@ -5,14 +5,11 @@ import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFenceGate;
-import net.minecraft.block.BlockLeaves;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -89,8 +86,8 @@ public abstract class BlockType {
             super(settings.material.internal);
             setHardness(settings.hardness);
             setStepSound(settings.material.soundType);
-            setBlockName(settings.modID + ":" + settings.name);
-            setBlockTextureName("iron_block");
+            setUnlocalizedName(settings.modID + ":" + settings.name);
+            setTextureName("iron_block");
             // REMOVED 1.7.10 setRegistryName(new ResourceLocation(settings.modID, settings.name));
         }
 

@@ -37,7 +37,7 @@ public class EntitySync extends TagCompound {
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
 
-        for (String key : (Set<String>)internal.func_150296_c()) {
+        for (String key : (Set<String>)internal.getKeySet()) {
             NBTBase newVal = internal.getTag(key);
             if (old.internal.hasKey(key)) {
                 NBTBase oldVal = old.internal.getTag(key);
@@ -48,7 +48,7 @@ public class EntitySync extends TagCompound {
             sync.internal.setTag(key, newVal);
         }
 
-        for (String key : (Set<String>)old.internal.func_150296_c()) {
+        for (String key : (Set<String>)old.internal.getKeySet()) {
             if (!internal.hasKey(key)) {
                 removed.add(key);
             }
@@ -61,7 +61,7 @@ public class EntitySync extends TagCompound {
             });
         }
 
-        if (sync.internal.func_150296_c().size() != 0) {
+        if (sync.internal.getKeySet().size() != 0) {
             old = new TagCompound((NBTTagCompound) this.internal.copy());
             oldString = old.toString();
 
@@ -70,7 +70,7 @@ public class EntitySync extends TagCompound {
     }
 
     public void receive(TagCompound sync) {
-        for (String key : ((Set<String>)sync.internal.func_150296_c())) {
+        for (String key : ((Set<String>)sync.internal.getKeySet())) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
                     internal.removeTag(removed);

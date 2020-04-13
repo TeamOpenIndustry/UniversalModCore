@@ -15,7 +15,7 @@ public class TextField {
 
     GuiTextField create(IScreenBuilder builder, int x, int y, int width, int height) {
         validator = str -> true;
-        return new GuiTextField(Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height) {
+        return new GuiTextField(Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height) {
             @Override
             public void setText(String text) {
                 if (validator.apply(text)) {

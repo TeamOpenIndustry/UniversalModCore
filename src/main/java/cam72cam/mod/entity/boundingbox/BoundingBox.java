@@ -34,7 +34,7 @@ public class BoundingBox extends AxisAlignedBB {
     */
 
     @Override
-    public BoundingBox func_111270_a(AxisAlignedBB other) {
+    public BoundingBox union(AxisAlignedBB other) {
         // Used by piston
         // Used by entityliving for BB stuff
         return this;

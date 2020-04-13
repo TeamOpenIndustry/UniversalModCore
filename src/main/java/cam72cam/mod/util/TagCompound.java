@@ -207,7 +207,7 @@ public class TagCompound {
     public <K, V> Map<K, V> getMap(String key, Function<String, K> keyFn, Function<TagCompound, V> valFn) {
         Map<K, V> map = new HashMap<>();
         NBTTagCompound data = internal.getCompoundTag(key);
-        for (String item : (Set<String>)data.func_150296_c()) {
+        for (String item : (Set<String>)data.getKeySet()) {
             map.put(keyFn.apply(item), valFn.apply(new TagCompound(data.getCompoundTag(item))));
         }
         return map;

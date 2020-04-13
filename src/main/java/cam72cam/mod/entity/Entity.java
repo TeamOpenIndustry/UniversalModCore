@@ -16,7 +16,6 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class Entity {
     public final EntitySync sync;

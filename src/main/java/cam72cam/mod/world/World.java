@@ -28,6 +28,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -375,7 +377,7 @@ public class World {
     }
 
     public void breakBlock(Vec3i pos, boolean drop) {
-        internal.func_147480_a(pos.x, pos.y, pos.z, drop);
+        internal.breakBlock(pos.x, pos.y, pos.z, drop);
     }
 
     public void dropItem(ItemStack stack, Vec3i pos) {
@@ -394,7 +396,7 @@ public class World {
         if (stack.isEmpty()) {
             internal.setBlockToAir(pos.x, pos.y, pos.z);
         } else {
-            internal.setBlock(pos.x, pos.y, pos.z, Block.getBlockFromItem(stack.internal.getItem()), stack.internal.getItemDamage(), 3);
+            internal.setBlock(pos.x, pos.y, pos.z, Block.getBlockFromItem(stack.internal.getItem()), stack.internal.getMetadata(), 3);
         }
     }
 

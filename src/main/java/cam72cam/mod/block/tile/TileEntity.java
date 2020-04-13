@@ -42,6 +42,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     */
     private BlockEntity instance;
     private TagCompound deferredLoad;
+    private World world;
 
     public TileEntity() {
         // Forge reflection
@@ -75,6 +76,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     */
 
     @Override
+    public void setWorldObj(net.minecraft.world.World world) {
+        super.setWorldObj(world);
+        this.world = World.get(world);
+    }
+
+
+    @Override
     public final void readFromNBT(NBTTagCompound compound) {
         hasTileData = true;
         load(new TagCompound(compound));
@@ -97,8 +105,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     @Override
     public final void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
         hasTileData = true;
-        this.readFromNBT(pkt.func_148857_g());
-        this.readUpdate(new TagCompound(pkt.func_148857_g()));
+        this.readFromNBT(pkt.getNbtCompound());
+        this.readUpdate(new TagCompound(pkt.getNbtCompound()));
         super.onDataPacket(net, pkt);
         worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
     }
@@ -132,6 +140,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     /*
     Wrapped functionality
     */
+
+    public void setWorld(World world) {
+        this.world = world;
+        super.setWorldObj(world.internal);
+    }
 
     public void load(TagCompound data) {
         super.readFromNBT(data.internal);
@@ -176,7 +189,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     */
 
     public boolean isLoaded() {
-        return this.hasWorldObj() && (!worldObj.isRemote || hasTileData);
+        return this.hasWorldObj() && (world.isServer || hasTileData);
     }
 
     public BlockEntity instance() {
@@ -245,7 +258,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     }
 
     @Override
-    public int[] getAccessibleSlotsFromSide(int side) {
+    public int[] getSlotsForFace(int side) {
         return IntStream.range(0, getInventory(Facing.from((byte) side)) == null ? 0 : getInventory(Facing.from((byte) side)).getSlotCount()).toArray();
     }
 
@@ -267,12 +280,12 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     }
 
     @Override
-    public void openInventory() {
+    public void openChest() {
 
     }
 
     @Override
-    public void closeInventory() {
+    public void closeChest() {
 
     }
 
@@ -313,7 +326,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     }
 
     @Override
-    public boolean hasCustomInventoryName() {
+    public boolean isCustomInventoryName() {
         return false;
     }
 
