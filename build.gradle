@@ -59,7 +59,7 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	shade 'curse.maven:InventoryTweaks:2315241'
+	shade 'curse.maven:InventoryTweaks:2431302'
 }
 
 jar {
