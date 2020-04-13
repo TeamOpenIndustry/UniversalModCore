@@ -18,13 +18,6 @@ configurations {
     compile.extendsFrom shade
 }
 
-repositories {
-	maven {
-		name = "CurseForge"
-		url = "https://minecraft.curseforge.com/api/maven/"
-	}
-}
-
 //apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
