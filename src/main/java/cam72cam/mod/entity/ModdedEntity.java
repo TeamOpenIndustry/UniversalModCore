@@ -204,16 +204,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void addPassenger(Entity entity) {
-        if (!worldObj.isRemote) {
+        if (!world.isRemote) {
             ModCore.debug("New Seat");
-            SeatEntity seat = new SeatEntity(worldObj);
+            SeatEntity seat = new SeatEntity(world);
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
             updateSeat(seat);
-            worldObj.spawnEntityInWorld(seat);
+            world.spawnEntity(seat);
             self.sendToObserving(new PassengerPositionsPacket(this));
         } else {
             ModCore.debug("skip");
@@ -250,7 +250,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
             Vec3d pos = calculatePassengerPosition(offset);
 
-            if (worldObj.loadedEntityList.indexOf(seat) < worldObj.loadedEntityList.indexOf(passenger.internal)) {
+            if (world.loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
                 pos = pos.add(motionX, motionY, motionZ);
             }
 

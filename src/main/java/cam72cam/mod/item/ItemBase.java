@@ -1,6 +1,5 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;

@@ -161,7 +161,7 @@ public abstract class BlockTypeEntity extends BlockType {
         public IBlockState getExtendedState(IBlockState origState, IBlockAccess access, BlockPos pos) {
             // Try to get the "real" world object
             net.minecraft.tileentity.TileEntity teorig = access.getTileEntity(pos);
-            if (teorig != null && teorig.hasWorldObj()) {
+            if (teorig != null && teorig.hasWorld()) {
 
                 Object te = World.get(teorig.getWorld()).getBlockEntity(new Vec3i(pos), cam72cam.mod.block.BlockEntity.class);
                 if (te != null) {

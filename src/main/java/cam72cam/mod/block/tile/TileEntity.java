@@ -82,14 +82,14 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     @Override
-    public void setWorldObj(net.minecraft.world.World world) {
-        super.setWorldObj(world);
+    public void setWorld(net.minecraft.world.World world) {
+        super.setWorld(world);
         this.world = World.get(world);
     }
 
     @Override
     protected void setWorldCreate(net.minecraft.world.World worldIn) {
-        super.setWorldObj(worldIn);
+        super.setWorld(worldIn);
         this.world = World.get(worldIn);
     }
 
@@ -342,7 +342,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public void setWorld(World world) {
         this.world = world;
-        super.setWorldObj(world.internal);
+        super.setWorld(world.internal);
     }
 
     public void setPos(Vec3i pos) {
@@ -394,7 +394,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     */
 
     public boolean isLoaded() {
-        return this.hasWorldObj() && (world.isServer || hasTileData);
+        return this.hasWorld() && (world.isServer || hasTileData);
     }
 
     public BlockEntity instance() {

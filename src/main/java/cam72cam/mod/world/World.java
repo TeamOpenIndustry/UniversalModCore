@@ -24,7 +24,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -210,7 +209,7 @@ public class World {
     }
 
     public boolean spawnEntity(Entity ent) {
-        return internal.spawnEntityInWorld(ent.internal);
+        return internal.spawnEntity(ent.internal);
     }
 
 
@@ -359,7 +358,7 @@ public class World {
     }
 
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.spawnEntityInWorld(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
+        internal.spawnEntity(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
     }
 
     public void setBlock(Vec3i pos, BlockType block) {

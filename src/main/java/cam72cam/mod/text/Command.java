@@ -18,12 +18,12 @@ public abstract class Command {
     protected Command() {
         this.internal = new CommandBase() {
             @Override
-            public String getCommandName() {
+            public String getName() {
                 return Command.this.getPrefix();
             }
 
             @Override
-            public String getCommandUsage(ICommandSender sender) {
+            public String getUsage(ICommandSender sender) {
                 return Command.this.getUsage();
             }
 
@@ -34,8 +34,8 @@ public abstract class Command {
 
             @Override
             public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-                if (!Command.this.execute(World.get(sender.getEntityWorld()), m -> sender.addChatMessage(m.internal), args)) {
-                    throw new CommandException(getCommandUsage(sender));
+                if (!Command.this.execute(World.get(sender.getEntityWorld()), m -> sender.sendMessage(m.internal), args)) {
+                    throw new CommandException(getUsage(sender));
                 }
             }
         };

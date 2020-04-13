@@ -50,7 +50,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public void onUpdate() {
         ticks ++;
-        if (worldObj.isRemote || ticks < 5) {
+        if (world.isRemote || ticks < 5) {
             return;
         }
 
@@ -68,7 +68,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (getPassengers().isEmpty()) {
             if (this.ticks < 20) {
                 if (!hasHadPassenger) {
-                    cam72cam.mod.entity.Entity toRide = World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                    cam72cam.mod.entity.Entity toRide = World.get(world).getEntity(passenger, cam72cam.mod.entity.Entity.class);
                     if (toRide != null) {
                         ModCore.debug("FORCE RIDER");
                         toRide.internal.startRiding(this, true);
@@ -97,7 +97,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public cam72cam.mod.entity.Entity getParent() {
-        cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             return linked;
         }
@@ -111,7 +111,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void updatePassenger(net.minecraft.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).updateSeat(this);
         }
@@ -124,7 +124,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void removePassenger(net.minecraft.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).removeSeat(this);
         }
@@ -138,7 +138,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (this.getPassengers().size() == 0) {
             return null;
         }
-        return World.get(worldObj).getEntity(getPassengers().get(0));
+        return World.get(world).getEntity(getPassengers().get(0));
     }
 
     @Override

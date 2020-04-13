@@ -10,10 +10,10 @@ import net.minecraft.util.math.RayTraceResult;
 
 public class MinecraftClient {
     public static Player getPlayer() {
-        if (Minecraft.getMinecraft().thePlayer == null) {
+        if (Minecraft.getMinecraft().player == null) {
             return null;
         }
-        return new Player(Minecraft.getMinecraft().thePlayer);
+        return new Player(Minecraft.getMinecraft().player);
     }
 
     public static void startProfiler(String section) {
