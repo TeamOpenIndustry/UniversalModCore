@@ -18,10 +18,6 @@ jobs:
             - uses: actions/upload-artifact@v2-preview
               with:
                 name: UniversalModCore-${{ env.ref }}
-                path: build/libs/UniversalModCore-0.1.0-1.12.2-forge.jar
-            - uses: actions/upload-artifact@v2-preview
-              with:
-                name: UniversalModCore-${{ env.ref }}-sources
-                path: build/libs/UniversalModCore-0.1.0-1.12.2-forge-sources.jar
+                path: build/libs/UniversalModCore-*.jar
 
 
