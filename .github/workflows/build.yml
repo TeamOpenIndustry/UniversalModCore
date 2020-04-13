@@ -7,6 +7,12 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
+            - run: |
+                    ref=`echo ${github_ref} | sed -e 's,refs/heads/,,' | tr '/' '-'`
+                    echo $ref
+                    echo "::set-env name=ref::$ref"
+                  env:
+                    github_ref: ${{ github.ref }}
             - name: Gradle build
               run: ./gradlew build
             - uses: actions/upload-artifact@v2-preview
