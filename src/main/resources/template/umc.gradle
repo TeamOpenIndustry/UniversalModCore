@@ -18,6 +18,8 @@ buildscript {
     }
 }
 
+apply plugin: net.minecraftforge.gradle.user.patch.ForgeUserPlugin
+
 apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
 
 
@@ -26,22 +28,13 @@ configurations {
     compile.extendsFrom shade
 }
 
-repositories {
-	maven {
-		name = "CurseForge"
-		url = "https://minecraft.curseforge.com/api/maven/"
-	}
-}
 
 #UMC_REPO#
-
-apply plugin: net.minecraftforge.gradle.user.patch.ForgeUserPlugin
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
 
 version = "#VERSION#-1.7.10-forge"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "#NAME#"
+archivesBaseName = "#CLASS#"
 
 sourceCompatibility = targetCompatibility = 1.8
 

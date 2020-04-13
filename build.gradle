@@ -1,8 +1,3 @@
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 buildscript {
     repositories {
         mavenCentral()
@@ -20,16 +15,16 @@ buildscript {
     }
 }
 
-repositories {
-    maven {
-        name = "CurseForge"
-        url = "https://minecraft.curseforge.com/api/maven/"
-    }
+plugins {
+    id "com.wynprice.cursemaven" version "2.1.1"
 }
 
 apply plugin: 'forge'
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
 
 version = "0.1.0-1.7.10-forge"
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -64,7 +59,7 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	shade 'inventory-tweaks:InventoryTweaks:1.62:api'
+	shade 'curse.maven:InventoryTweaks:2315241'
 }
 
 jar {
