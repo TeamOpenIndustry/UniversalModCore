@@ -90,6 +90,7 @@ public abstract class BlockType {
             setHardness(settings.hardness);
             setStepSound(settings.material.soundType);
             setBlockName(settings.modID + ":" + settings.name);
+            setBlockTextureName("iron_block");
             // REMOVED 1.7.10 setRegistryName(new ResourceLocation(settings.modID, settings.name));
         }
 
