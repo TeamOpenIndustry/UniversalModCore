@@ -1,6 +1,5 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;
@@ -35,7 +34,7 @@ public class ItemBase {
     private final CreativeTab[] creativeTabs;
     public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
         internal = new ItemInternal();
-        internal.setUnlocalizedName(modID + ":" + name);
+        internal.setTranslationKey(modID + ":" + name);
         internal.setRegistryName(new ResourceLocation(modID, name));
         internal.setMaxStackSize(stackSize);
         internal.setCreativeTab(tabs[0].internal);
@@ -120,9 +119,9 @@ public class ItemBase {
         }
 
         @Override
-        public final String getUnlocalizedName(net.minecraft.item.ItemStack stack) {
+        public final String getTranslationKey(net.minecraft.item.ItemStack stack) {
             applyCustomName(new ItemStack(stack));
-            return super.getUnlocalizedName(stack);
+            return super.getTranslationKey(stack);
         }
 
         @Override

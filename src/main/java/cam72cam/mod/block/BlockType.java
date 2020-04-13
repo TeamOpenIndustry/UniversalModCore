@@ -81,7 +81,7 @@ public abstract class BlockType {
             super(settings.material.internal);
             setHardness(settings.hardness);
             setSoundType(settings.material.soundType);
-            setUnlocalizedName(settings.modID + ":" + settings.name);
+            setTranslationKey(settings.modID + ":" + settings.name);
             setRegistryName(new ResourceLocation(settings.modID, settings.name));
         }
 

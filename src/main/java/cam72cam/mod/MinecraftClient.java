@@ -17,11 +17,11 @@ public class MinecraftClient {
     }
 
     public static void startProfiler(String section) {
-        Minecraft.getMinecraft().mcProfiler.startSection(section);
+        Minecraft.getMinecraft().profiler.startSection(section);
     }
 
     public static void endProfiler() {
-        Minecraft.getMinecraft().mcProfiler.endSection();
+        Minecraft.getMinecraft().profiler.endSection();
     }
 
     public static boolean useVBO() {

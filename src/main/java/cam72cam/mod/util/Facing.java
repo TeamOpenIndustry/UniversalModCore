@@ -45,7 +45,7 @@ public enum Facing {
 
     @Deprecated
     public static Facing from(byte facing) {
-        return from(net.minecraft.util.EnumFacing.getFront(facing));
+        return from(net.minecraft.util.EnumFacing.byIndex(facing));
     }
 
     public static Facing fromAngle(float v) {

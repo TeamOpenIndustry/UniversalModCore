@@ -54,7 +54,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
             return;
         }
 
-        Minecraft.getMinecraft().mcProfiler.startSection("large_entity_helper");
+        Minecraft.getMinecraft().profiler.startSection("large_entity_helper");
 
         ICamera camera = GlobalRender.getCamera(partialTicks);
 
@@ -77,7 +77,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
             }
         }
 
-        Minecraft.getMinecraft().mcProfiler.endSection();
+        Minecraft.getMinecraft().profiler.endSection();
     }
 
     @Override
