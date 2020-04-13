@@ -1,0 +1,21 @@
+name: Universal Mod Core CI
+
+on: [push]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Gradle build
+              run: ./gradlew build
+            - uses: actions/upload-artifact@v2-preview
+              with:
+                name: UniversalModCore-${{ github.ref }}
+                path: build/libs/UniversalModCore-0.1.0-1.12.2-forge.jar
+            - uses: actions/upload-artifact@v2-preview
+              with:
+                name: UniversalModCore-${{ github.ref }}-sources
+                path: build/libs/UniversalModCore-0.1.0-1.12.2-forge-sources.jar
+
+
