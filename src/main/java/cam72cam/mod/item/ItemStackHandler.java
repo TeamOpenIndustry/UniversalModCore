@@ -1,6 +1,6 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 
 import javax.annotation.Nonnull;
 import java.util.function.BiPredicate;

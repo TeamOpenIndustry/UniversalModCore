@@ -2,7 +2,7 @@ package cam72cam.mod.entity.sync;
 
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.net.Packet;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.nbt.NBTBase;
 
 import java.util.ArrayList;

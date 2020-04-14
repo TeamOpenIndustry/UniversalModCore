@@ -12,11 +12,8 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public abstract class BlockEntity {
     public TileEntity internal;

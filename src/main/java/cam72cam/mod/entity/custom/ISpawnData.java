@@ -1,6 +1,6 @@
 package cam72cam.mod.entity.custom;
 
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 
 public interface ISpawnData {
     ISpawnData NOP = new ISpawnData() {

@@ -1,7 +1,7 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;

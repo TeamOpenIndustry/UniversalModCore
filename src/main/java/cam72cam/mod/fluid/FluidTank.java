@@ -1,6 +1,6 @@
 package cam72cam.mod.fluid;
 
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 
 public class FluidTank implements ITank {
     public final net.minecraftforge.fluids.FluidTank internal;
