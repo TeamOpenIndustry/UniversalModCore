@@ -3,14 +3,11 @@ package cam72cam.mod.serialization;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.world.World;
 import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public class Test {
     @TagField
@@ -369,14 +366,13 @@ public class Test {
     @TagField(mapper=IntListMapper.class)
     public List<Integer> genList;
 
-    public static class IntListMapper implements TagMapper {
+    private static class IntListMapper implements TagMapper<List<Integer>> {
         @Override
-        public BiFunction<TagCompound, World, Object> deserializer(Class<?> type, String fieldName, TagField tag) {
-            return (d, w) -> d.getList(fieldName, c -> c.getInteger("value"));
-        }
-        @Override
-        public BiConsumer<TagCompound, Object> serializer(Class<?> type, String fieldName, TagField tag) {
-            return (d, o) -> d.setList(fieldName, (List<Integer>)o, v -> new TagCompound().setInteger("value", (Integer)v));
+        public TagAccessor<List<Integer>> apply(Class<List<Integer>> type, String fieldName, TagField tag) {
+            return new TagAccessor<>(
+                (d, o) -> d.setList(fieldName, o, v -> new TagCompound().setInteger("value", (Integer)v)),
+                d -> d.getList(fieldName, c -> c.getInteger("value"))
+            );
         }
     }
 
@@ -400,10 +396,9 @@ public class Test {
         Assert.assertNull(t.genList);
 
         t.genList = new ArrayList<>();
-        TagSerializer.deserialize(data, t);
         TagSerializer.serialize(data, t);
         TagSerializer.deserialize(data, t);
-        Assert.assertEquals(t.genList.size(), 0);
+        Assert.assertEquals(data.toString(), t.genList.size(), 0);
 
         t.genList.add(53);
         t.genList.add(683);
@@ -412,6 +407,84 @@ public class Test {
         TagSerializer.deserialize(data, t);
         Assert.assertEquals(t.genList.get(0), (Integer)53);
         Assert.assertEquals(t.genList.get(1), (Integer)683);
+    }
+
+    @TagField("sub")
+    Test subObject;
+
+    @org.junit.Test
+    public void testSubObjects() throws SerializationException {
+        TagCompound data = new TagCompound();
+
+        Test t = new Test();
+        t.subObject = t;
+
+        Assert.assertThrows(SerializationException.class, () -> TagSerializer.serialize(data, t));
+
+        t.facing = Facing.EAST;
+        t.subObject = new Test();
+        t.subObject.facing = Facing.NORTH;
+
+        TagSerializer.serialize(data, t);
+
+        Test o = new Test();
+
+        TagSerializer.deserialize(data, o);
+
+        Assert.assertEquals(t.facing, o.facing);
+        Assert.assertEquals(t.subObject.facing, o.subObject.facing);
+    }
+
+    @TagField
+    private final Integer hidden = 0;
+
+    @org.junit.Test
+    public void testHidden() throws SerializationException {
+        TagCompound data = new TagCompound();
+        Test t = new Test();
+
+        data.setInteger("hidden", 55);
+
+        TagSerializer.deserialize(data, t);
+        Assert.assertEquals(t.hidden, (Integer)55);
+    }
+
+    private static class CustomMapper implements TagMapper<CustomClass> {
+        @Override
+        public TagAccessor<CustomClass> apply(Class<CustomClass> type, String fieldName, TagField tag) throws SerializationException {
+            return new TagAccessor<>(
+                    (d, o) -> {
+                        if (o != null) {
+                            d.setInteger(fieldName, o.field * 10);
+                        }
+                    },
+                    d -> new CustomClass(d.getInteger(fieldName))
+            );
+        }
+    }
+
+    @TagMapped(CustomMapper.class)
+    public static class CustomClass {
+        private final Integer field;
+
+        public CustomClass(Integer integer) {
+            this.field = integer;
+        }
+    }
+
+    @TagField
+    CustomClass cc;
+
+    @org.junit.Test
+    public void customMapped() throws SerializationException {
+        TagCompound data = new TagCompound();
+
+        Test t = new Test();
+        t.cc = new CustomClass(1);
+        TagSerializer.serialize(data, t);
+        TagSerializer.deserialize(data, t);
+        Assert.assertEquals(t.cc.field, (Integer)10);
+
     }
 
 }

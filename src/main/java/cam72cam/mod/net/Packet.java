@@ -1,9 +1,13 @@
 package cam72cam.mod.net;
 
 import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -28,8 +32,8 @@ public abstract class Packet {
         net.registerMessage(new Packet.Handler<>(), Message.class, 1, Side.SERVER);
     }
 
-    protected TagCompound data = new TagCompound();
     MessageContext ctx;
+    private TagCompound data;
 
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         types.put(sup.get().getClass().toString(), sup);
@@ -79,8 +83,14 @@ public abstract class Packet {
 
         @Override
         public void toBytes(ByteBuf buf) {
-            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
-            ByteBufUtils.writeTag(buf, packet.data.internal);
+            TagCompound data = new TagCompound();
+            data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            try {
+                TagSerializer.serialize(data, packet);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
+            ByteBufUtils.writeTag(buf, data.internal);
         }
     }
 
@@ -93,6 +103,11 @@ public abstract class Packet {
 
         private void handle(T message, MessageContext ctx) {
             message.packet.ctx = ctx;
+            try {
+                TagSerializer.deserialize(message.packet.data, message.packet, message.packet.getWorld());
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
             message.packet.handle();
         }
     }

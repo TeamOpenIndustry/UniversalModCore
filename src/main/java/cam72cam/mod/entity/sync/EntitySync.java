@@ -3,6 +3,7 @@ package cam72cam.mod.entity.sync;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
 import net.minecraft.nbt.NBTBase;
 
 import java.util.ArrayList;
@@ -80,20 +81,22 @@ public class EntitySync extends TagCompound {
     }
 
     public static class EntitySyncPacket extends Packet {
-        public EntitySyncPacket() {
-            // Reflection
-        }
+        @TagField
+        Entity target;
+        @TagField
+        private TagCompound info;
+
+        public EntitySyncPacket() {}
 
         public EntitySyncPacket(Entity entity, TagCompound sync) {
-            data.setEntity("target", entity);
-            data.set("info", sync);
+            this.target = entity;
+            this.info = sync;
         }
 
         @Override
         public void handle() {
-            Entity stock = data.getEntity("target", getWorld(), Entity.class);
-            if (stock != null) {
-                stock.sync.receive(data.get("info"));
+            if (target != null) {
+                target.sync.receive(info);
             }
         }
     }

@@ -45,8 +45,10 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+#UMC_REPO#
+
 dependencies {
-	shade 'inventory-tweaks:InventoryTweaks:1.63:api'
+    shade 'curse.maven:InventoryTweaks:2482482'
 
     compile #UMC_DEPENDENCY#
 }

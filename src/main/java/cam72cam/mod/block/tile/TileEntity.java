@@ -10,6 +10,8 @@ import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
@@ -362,6 +364,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         }
 
         if (instance() != null) {
+            try {
+                TagSerializer.deserialize(data, instance());
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
             instance().load(data);
         } else {
             deferredLoad = data;
@@ -372,6 +379,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         super.writeToNBT(data.internal);
         data.setString("instanceId", instanceId);
         if (instance() != null) {
+            try {
+                TagSerializer.serialize(data, instance());
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
             instance().save(data);
         }
     }
@@ -410,6 +422,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 this.instance.world = this.world;
                 this.instance.pos = this.pos;
                 if (deferredLoad != null) {
+                    try {
+                        TagSerializer.deserialize(deferredLoad, this.instance);
+                    } catch (SerializationException e) {
+                        throw new RuntimeException(e);
+                    }
                     this.instance.load(deferredLoad);
                 }
                 this.deferredLoad = null;

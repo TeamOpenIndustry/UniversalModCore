@@ -3,14 +3,11 @@ package cam72cam.mod.serialization;
 import cam72cam.mod.world.World;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.*;
 
 public class TagSerializer {
 
@@ -28,11 +25,13 @@ public class TagSerializer {
         SerializationException serialize(TagCompound data, Object target);
     }
 
-    private static TagMapper getMapper(Class<? extends TagMapper> mapCls) throws SerializationException {
+    static TagMapper getMapper(Class<? extends TagMapper> mapCls) throws SerializationException {
         if (!mappers.containsKey(mapCls)) {
             try {
-                mappers.put(mapCls, mapCls.newInstance());
-            } catch (InstantiationException | IllegalAccessException e) {
+                Constructor<? extends TagMapper> ctr = mapCls.getDeclaredConstructor();
+                ctr.setAccessible(true);
+                mappers.put(mapCls, ctr.newInstance());
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 throw new SerializationException("Invalid type mapper: " + mapCls, e);
             }
         }
@@ -45,21 +44,40 @@ public class TagSerializer {
         }
         List<Deserializer> cachedDeserializers = new ArrayList<>();
         List<Serializer> cachedSerializers = new ArrayList<>();
-        Field[] fields = cls.getDeclaredFields();
+        List<Field> fields = new ArrayList<>();
+        Class<?> parent = cls;
+        while(parent != null && parent != Object.class) {
+            System.out.println(parent);
+            fields.addAll(Arrays.asList(parent.getDeclaredFields()));
+            parent = parent.getSuperclass();
+        }
         for (Field field : fields) {
             field.setAccessible(true);
-            if (canAccess(field.getModifiers())) {
+            if (!Modifier.isStatic(field.getModifiers())) {
                 TagField tag = field.getAnnotation(TagField.class);
                 if (tag != null) {
                     String fieldName = tag.value().isEmpty() ? field.getName() : tag.value();
-                    TagMapper mapper = getMapper(tag.mapper());
-                    BiFunction<TagCompound, World, Object> deserializer = mapper.deserializer(field.getType(), fieldName, tag);
-                    BiConsumer<TagCompound, Object> serializer = mapper.serializer(field.getType(), fieldName, tag);
+
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        try {
+                            Field modifiersField = Field.class.getDeclaredField("modifiers");
+                            modifiersField.setAccessible(true);
+                            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            throw new SerializationException(String.format("Unable to access field %s in class %s", fieldName, cls), e);
+                        }
+                    }
+
+                    TagMapped mapped = field.getType().getAnnotation(TagMapped.class);
+
+                    TagMapper mapper = getMapper(tag.mapper().equals(DefaultTagMapper.class) && mapped != null ? mapped.value() : tag.mapper());
+
+                    TagMapper.TagAccessor<?> accessor = mapper.apply(field.getType(), fieldName, tag);
                     cachedDeserializers.add((data, target, world) -> {
-                        if (data.hasKey(fieldName)) {
+                        if (accessor.applyIfMissing() || data.hasKey(fieldName)) {
                             try {
-                                field.set(target, deserializer.apply(data, world));
-                            } catch (IllegalAccessException e) {
+                                field.set(target, accessor.deserializer.deserialize(data, world));
+                            } catch (IllegalAccessException | SerializationException e) {
                                 return new SerializationException(String.format("Error decoding field %s in %s", fieldName, cls), e);
                             }
                         }
@@ -67,8 +85,9 @@ public class TagSerializer {
                     });
                     cachedSerializers.add((data, target) -> {
                         try {
-                            serializer.accept(data, field.get(target));
-                        } catch (IllegalAccessException e) {
+                            Object o = field.get(target);
+                            accessor.serializer.serialize(data, o);
+                        } catch (IllegalAccessException | SerializationException | StackOverflowError e) {
                             return new SerializationException(String.format("Error encoding field %s in %s", fieldName, cls), e);
                         }
                         return null;
@@ -116,9 +135,5 @@ public class TagSerializer {
         if (ex != null) {
             throw ex;
         }
-    }
-
-    private static boolean canAccess(int modifiers) {
-        return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
     }
 }
