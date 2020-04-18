@@ -104,12 +104,17 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     private final void load(TagCompound data) {
         loadSelf(data);
-        iWorldData.load(data);
         try {
             TagSerializer.deserialize(data, this);
         } catch (SerializationException e) {
             ModCore.catching(e);
         }
+        try {
+            TagSerializer.deserialize(data, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e);
+        }
+        iWorldData.load(data);
     }
 
     @Override
@@ -118,13 +123,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     private final void save(TagCompound data) {
-        iWorldData.save(data);
-        saveSelf(data);
         try {
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
             ModCore.catching(e);
         }
+        try {
+            TagSerializer.serialize(data, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e);
+        }
+        iWorldData.save(data);
+        saveSelf(data);
     }
 
     /* ISpawnData */
@@ -133,23 +143,35 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
         loadSelf(data);
-        iSpawnData.loadSpawn(data);
-        self.sync.receive(data.get("sync"));
         try {
             TagSerializer.deserialize(data, this);
         } catch (SerializationException e) {
             ModCore.catching(e);
         }
+        try {
+            TagSerializer.deserialize(data, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e);
+        }
+        iWorldData.load(data);
+        iSpawnData.loadSpawn(data);
+        self.sync.receive(data.get("sync"));
     }
 
     @Override
     public final void writeSpawnData(ByteBuf buffer) {
         TagCompound data = new TagCompound();
         iSpawnData.saveSpawn(data);
+        iWorldData.save(data);
         saveSelf(data);
         data.set("sync", self.sync);
         try {
             TagSerializer.serialize(data, this);
+        } catch (SerializationException e) {
+            ModCore.catching(e);
+        }
+        try {
+            TagSerializer.serialize(data, self);
         } catch (SerializationException e) {
             ModCore.catching(e);
         }
