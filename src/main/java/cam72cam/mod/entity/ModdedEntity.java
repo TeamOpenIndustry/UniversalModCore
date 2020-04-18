@@ -36,7 +36,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private EntitySettings settings;
     private String type;
     private IWorldData iWorldData;
-    private ISpawnData iSpawnData;
     private ITickable iTickable;
     private IClickable iClickable;
     private IKillable iKillable;
@@ -66,7 +65,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             this.settings = settings;
 
             iWorldData = IWorldData.get(self);
-            iSpawnData = ISpawnData.get(self);
             iTickable = ITickable.get(self);
             iClickable = IClickable.get(self);
             iKillable = IKillable.get(self);
@@ -142,40 +140,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
-        loadSelf(data);
-        try {
-            TagSerializer.deserialize(data, this);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-        try {
-            TagSerializer.deserialize(data, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-        iWorldData.load(data);
-        iSpawnData.loadSpawn(data);
+        load(data);
         self.sync.receive(data.get("sync"));
     }
 
     @Override
     public final void writeSpawnData(ByteBuf buffer) {
         TagCompound data = new TagCompound();
-        iSpawnData.saveSpawn(data);
-        iWorldData.save(data);
-        saveSelf(data);
         data.set("sync", self.sync);
-        try {
-            TagSerializer.serialize(data, this);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-        try {
-            TagSerializer.serialize(data, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-
+        save(data);
         ByteBufUtils.writeTag(buffer, data.internal);
     }
 
