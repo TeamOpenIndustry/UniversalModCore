@@ -366,10 +366,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         if (instance() != null) {
             try {
                 TagSerializer.deserialize(data, instance());
+                instance().load(data);
             } catch (SerializationException e) {
+                // TODO how should we handle this?
                 throw new RuntimeException(e);
             }
-            instance().load(data);
         } else {
             deferredLoad = data;
         }
@@ -381,22 +382,30 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         if (instance() != null) {
             try {
                 TagSerializer.serialize(data, instance());
+                instance().save(data);
             } catch (SerializationException e) {
                 throw new RuntimeException(e);
             }
-            instance().save(data);
         }
     }
 
     public void writeUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().writeUpdate(nbt);
+            try {
+                instance().writeUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 
     public void readUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().readUpdate(nbt);
+            try {
+                instance().readUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 
@@ -424,10 +433,10 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 if (deferredLoad != null) {
                     try {
                         TagSerializer.deserialize(deferredLoad, this.instance);
+                        this.instance.load(deferredLoad);
                     } catch (SerializationException e) {
                         throw new RuntimeException(e);
                     }
-                    this.instance.load(deferredLoad);
                 }
                 this.deferredLoad = null;
             }
