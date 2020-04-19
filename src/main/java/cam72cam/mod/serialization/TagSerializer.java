@@ -48,7 +48,6 @@ public class TagSerializer {
         List<Field> fields = new ArrayList<>();
         Class<?> parent = cls;
         while(parent != null && parent != Object.class) {
-            System.out.println(parent);
             fields.addAll(Arrays.asList(parent.getDeclaredFields()));
             parent = parent.getSuperclass();
         }

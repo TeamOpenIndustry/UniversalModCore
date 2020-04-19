@@ -80,35 +80,31 @@ class DefaultTagMapper implements TagMapper {
             try {
                 Constructor<?> ctr = type.getDeclaredConstructor();
                 ctr.setAccessible(true);
-                if (ctr.isAccessible()) {
-                    // Make sure construction works...
-                    ctr.newInstance();
-                    return new TagAccessor<>(
-                            (d, o) -> {
-                                if (o == null) {
-                                    d.remove(fieldName);
-                                    return;
-                                }
-
-                                TagCompound sub = new TagCompound();
-                                TagSerializer.serialize(sub, o);
-                                d.set(fieldName, sub);
-                            },
-                            (d, w) -> {
-                                try {
-                                    Object o = ctr.newInstance();
-                                    TagSerializer.deserialize(d.get(fieldName), o);
-                                    return o;
-                                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                                    throw new SerializationException(String.format("Unable to construct type %s for field %s during deserialization", type, fieldName), e);
-                                }
+                // Make sure construction works...
+                ctr.newInstance();
+                return new TagAccessor<>(
+                        (d, o) -> {
+                            if (o == null) {
+                                d.remove(fieldName);
+                                return;
                             }
-                    );
-                } else {
-                    throw new SerializationException("TODO");
-                }
+
+                            TagCompound sub = new TagCompound();
+                            TagSerializer.serialize(sub, o);
+                            d.set(fieldName, sub);
+                        },
+                        (d, w) -> {
+                            try {
+                                Object o = ctr.newInstance();
+                                TagSerializer.deserialize(d.get(fieldName), o);
+                                return o;
+                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                                throw new SerializationException(String.format("Unable to construct type %s for field %s during deserialization", type, fieldName), e);
+                            }
+                        }
+                );
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new SerializationException("TODO", e);
+                throw new SerializationException(String.format("Unable to construct type %s for field %s", type, fieldName), e);
             }
         }
         throw new SerializationException(String.format("Invalid type %s for field %s", type, fieldName));
