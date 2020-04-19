@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.UUID;
 
-final class DefaultTagMapper implements TagMapper {
+class DefaultTagMapper implements TagMapper {
     @Override
     public TagAccessor apply(Class type, String fieldName, TagField tag) throws SerializationException {
         if (type == Boolean.class || type == boolean.class) {

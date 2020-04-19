@@ -104,13 +104,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         loadSelf(data);
         try {
             TagSerializer.deserialize(data, this);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-        try {
             TagSerializer.deserialize(data, self);
         } catch (SerializationException e) {
-            ModCore.catching(e);
+            ModCore.catching(e, "Error during entity load: %s - %s", self, data);
         }
         iWorldData.load(data);
     }
@@ -122,14 +118,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     private final void save(TagCompound data) {
         try {
+            TagSerializer.serialize(data, self);
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
-            ModCore.catching(e);
-        }
-        try {
-            TagSerializer.serialize(data, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e);
+            ModCore.catching(e, "Error during entity save: %s - %s", this, self);
         }
         iWorldData.save(data);
         saveSelf(data);
@@ -141,7 +133,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
         load(data);
-        self.sync.receive(data.get("sync"));
+        try {
+            self.sync.receive(data.get("sync"));
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Invalid sync payload %s for %s", data.get("sync"), this);
+        }
     }
 
     @Override
@@ -157,7 +153,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void onUpdate() {
         iTickable.onTick();
-        self.sync.send();
+        try {
+            self.sync.send();
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
+        }
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));

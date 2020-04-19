@@ -3,6 +3,7 @@ package cam72cam.mod.serialization;
 import cam72cam.mod.world.World;
 
 import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -17,12 +18,12 @@ public class TagSerializer {
 
     @FunctionalInterface
     private interface Deserializer {
-        SerializationException deserialize(TagCompound data, Object target, @Nullable World world);
+        SerializationException deserialize(TagCompound data, Object target, @Nullable World world, Class<? extends Annotation>[] filter);
     }
 
     @FunctionalInterface
     private interface Serializer {
-        SerializationException serialize(TagCompound data, Object target);
+        SerializationException serialize(TagCompound data, Object target, Class<? extends Annotation>[] filter);
     }
 
     static TagMapper getMapper(Class<? extends TagMapper> mapCls) throws SerializationException {
@@ -73,8 +74,16 @@ public class TagSerializer {
                     TagMapper mapper = getMapper(tag.mapper().equals(DefaultTagMapper.class) && mapped != null ? mapped.value() : tag.mapper());
 
                     TagMapper.TagAccessor<?> accessor = mapper.apply(field.getType(), fieldName, tag);
-                    cachedDeserializers.add((data, target, world) -> {
+                    cachedDeserializers.add((data, target, world, filter) -> {
                         if (accessor.applyIfMissing() || data.hasKey(fieldName)) {
+                            if (filter != null && filter.length != 0) {
+                                for (Class<? extends Annotation> annotation : filter) {
+                                    if (field.getAnnotation(annotation) == null) {
+                                        return null;
+                                    }
+                                }
+                            }
+
                             try {
                                 field.set(target, accessor.deserializer.deserialize(data, world));
                             } catch (IllegalAccessException | SerializationException e) {
@@ -83,8 +92,16 @@ public class TagSerializer {
                         }
                         return null;
                     });
-                    cachedSerializers.add((data, target) -> {
+                    cachedSerializers.add((data, target, filter) -> {
                         try {
+                            if (filter != null && filter.length != 0) {
+                                for (Class<? extends Annotation> annotation : filter) {
+                                    if (field.getAnnotation(annotation) == null) {
+                                        return null;
+                                    }
+                                }
+                            }
+
                             Object o = field.get(target);
                             accessor.serializer.serialize(data, o);
                         } catch (IllegalAccessException | SerializationException | StackOverflowError e) {
@@ -95,9 +112,9 @@ public class TagSerializer {
                 }
             }
         }
-        deserializers.put(cls, (data, target, world) -> {
+        deserializers.put(cls, (data, target, world, filter) -> {
             for (Deserializer d : cachedDeserializers) {
-                SerializationException ex = d.deserialize(data, target, world);
+                SerializationException ex = d.deserialize(data, target, world, filter);
                 if (ex != null) {
                     // TODO agg serialization exception?
                     return ex;
@@ -105,9 +122,9 @@ public class TagSerializer {
             }
             return null;
         });
-        serializers.put(cls, (data, target) -> {
+        serializers.put(cls, (data, target, filter) -> {
             for (Serializer d : cachedSerializers) {
-                SerializationException ex = d.serialize(data, target);
+                SerializationException ex = d.serialize(data, target, filter);
                 if (ex != null) {
                     // TODO agg serialization exception?
                     return ex;
@@ -121,17 +138,19 @@ public class TagSerializer {
         deserialize(data, target, null);
     }
 
-    public static void deserialize(TagCompound data, Object target, @Nullable World world) throws SerializationException {
+    @SafeVarargs
+    public static void deserialize(TagCompound data, Object target, @Nullable World world, Class<? extends Annotation>... filter) throws SerializationException {
         init(target.getClass());
-        SerializationException ex = deserializers.get(target.getClass()).deserialize(data, target, world);
+        SerializationException ex = deserializers.get(target.getClass()).deserialize(data, target, world, filter);
         if (ex != null) {
             throw ex;
         }
     }
 
-    public static void serialize(TagCompound data, Object target) throws SerializationException {
+    @SafeVarargs
+    public static void serialize(TagCompound data, Object target, Class<? extends Annotation>... filter) throws SerializationException {
         init(target.getClass());
-        SerializationException ex = serializers.get(target.getClass()).serialize(data, target);
+        SerializationException ex = serializers.get(target.getClass()).serialize(data, target, filter);
         if (ex != null) {
             throw ex;
         }
