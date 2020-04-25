@@ -270,4 +270,8 @@ public class TagCompound {
         assert te instanceof TileEntity;
         return (T) ((TileEntity) te).instance();
     }
+
+    public boolean hasNoTags() {
+        return internal.hasNoTags();
+    }
 }
