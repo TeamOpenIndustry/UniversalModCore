@@ -271,7 +271,7 @@ public class TagCompound {
         return (T) ((TileEntity) te).instance();
     }
 
-    public boolean hasNoTags() {
+    public boolean isEmpty() {
         return internal.hasNoTags();
     }
 }
