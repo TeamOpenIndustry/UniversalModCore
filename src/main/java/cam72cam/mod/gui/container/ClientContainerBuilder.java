@@ -4,10 +4,10 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import cam72cam.mod.render.OpenGL;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
@@ -38,11 +38,12 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
-        this.centerX = (this.width - this.xSize) / 2;
-        this.centerY = (this.height - this.ySize) / 2;
-        server.draw.accept(this);
+        try (OpenGL.With color = OpenGL.color(1, 1, 1, 1)) {
+            //this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
+            this.centerX = (this.width - this.xSize) / 2;
+            this.centerY = (this.height - this.ySize) / 2;
+            server.draw.accept(this);
+        }
     }
 
     /* IContainerBuilder */
@@ -171,12 +172,13 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         this.mc.getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
 
-        GlStateManager.enableAlpha();
-        GlStateManager.disableDepth();
-        Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
-        GlStateManager.enableDepth();
-
-        GL11.glColor4f(1, 1, 1, 1);
+        try (
+                OpenGL.With color = OpenGL.color(1, 1, 1, 1);
+                OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
+                OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false)
+        ) {
+            Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
+        }
     }
 
     @Override
@@ -184,11 +186,12 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        drawRect(x, y + (int)(16 - 16 * height), x + 16, y + 16, color);
+        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
+            drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
+        }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        GlStateManager.color(1,1,1,1);
         super.drawTexturedModalRect(x, y, sprite, 16, 16);
         Minecraft.getMinecraft().getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
     }

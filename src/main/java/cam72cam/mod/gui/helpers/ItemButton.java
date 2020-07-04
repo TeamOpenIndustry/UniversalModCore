@@ -1,6 +1,7 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.OpenGL;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -27,14 +28,12 @@ public class ItemButton extends GuiButton {
             font = mc.fontRenderer;
         }
         //mc.getRenderItem().renderItemIntoGUI(stack, x, y);
-        GL11.glPushMatrix();
-        {
+        try (OpenGL.With matrix = OpenGL.matrix()) {
             GL11.glTranslated(x, y, 0);
             GL11.glScaled(2, 2, 1);
             mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
             mc.getRenderItem().renderItemOverlays(font, stack.internal, 0, 0);
         }
-        GL11.glPopMatrix();
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {

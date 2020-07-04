@@ -51,12 +51,10 @@ public abstract class IParticle {
                     ip.renderPos = ip.renderPos.add(this.motionX * partialTicks, this.motionY * partialTicks, this.motionZ * partialTicks);
 
                     if (renderer == null) {
-                        GL11.glPushMatrix();
-                        {
+                        try (OpenGL.With c = OpenGL.matrix()) {
                             GL11.glTranslated(ip.renderPos.x, ip.renderPos.y, ip.renderPos.z);
                             ip.render(partialTicks);
                         }
-                        GL11.glPopMatrix();
                     } else {
                         if (!ip.canRender) {
                             renderer.accept(particles, subp -> GL11.glTranslated(subp.renderPos.x, subp.renderPos.y, subp.renderPos.z), partialTicks);
