@@ -20,23 +20,28 @@ import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
 import javax.annotation.Nonnull;
-import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
     public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
     protected final Identifier id;
-    private final Supplier<BlockEntity> constructData;
 
-    public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
-        super(settings.withRedstonePovider(constructData.get() instanceof IRedstoneProvider));
-        id = new Identifier(settings.modID, settings.name);
-        this.constructData = constructData;
-        TileEntity.register(constructData, id);
-        constructData.get().supplier(id).register();
+    public BlockTypeEntity(String modID, String name) {
+        super(modID, name);
+        id = new Identifier(modID, name);
+        TileEntity.register(this::constructBlockEntity, id);
+        constructBlockEntity().supplier(id).register();
     }
 
-    public BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te =  ((TileEntity) internal.createTileEntity(null, null));
+    public abstract BlockEntity constructBlockEntity();
+
+    @Override
+    public final boolean isRedstoneProvider() {
+        return constructBlockEntity() instanceof IRedstoneProvider;
+    }
+
+    // Hack for initializing a "fake" te
+    public final BlockEntity createBlockEntity(World world, Vec3i pos) {
+        TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
         te.hasTileData = true;
         te.setWorld(world);
         te.setPos(pos);
@@ -120,7 +125,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     @Override
     public int getStrongPower(World world, Vec3i pos, Facing from) {
-        if (settings.redstoneProvider) {
+        if (isRedstoneProvider()) {
             BlockEntity instance = getInstance(world, pos);
             if (instance instanceof IRedstoneProvider) {
                 return ((IRedstoneProvider)instance).getStrongPower(from);
@@ -131,7 +136,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     @Override
     public int getWeakPower(World world, Vec3i pos, Facing from) {
-        if (settings.redstoneProvider) {
+        if (isRedstoneProvider()) {
             BlockEntity instance = getInstance(world, pos);
             if (instance instanceof IRedstoneProvider) {
                 return ((IRedstoneProvider)instance).getWeakPower(from);
@@ -148,7 +153,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
         @Override
         public final net.minecraft.tileentity.TileEntity createTileEntity(net.minecraft.world.World world, IBlockState state) {
-            return constructData.get().supplier(id);
+            return constructBlockEntity().supplier(id);
         }
 
         @Override

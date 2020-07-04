@@ -26,10 +26,12 @@ import javax.annotation.Nullable;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
+    private final String name;
+    private final String modID;
 
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
+    public BlockType(String modID, String name) {
+        this.modID = modID;
+        this.name = name;
 
         internal = getBlock();
 
@@ -44,8 +46,8 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
+    public final String getName() {
+        return name;
     }
 
     protected BlockInternal getBlock() {
@@ -53,6 +55,26 @@ public abstract class BlockType {
     }
 
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+    public boolean isConnectable() {
+        return true;
+    }
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
@@ -80,11 +102,12 @@ public abstract class BlockType {
 
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(settings.material.internal);
-            setHardness(settings.hardness);
-            setSoundType(settings.material.soundType);
-            setUnlocalizedName(settings.modID + ":" + settings.name);
-            setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            super(BlockType.this.getMaterial().internal);
+            BlockType type = BlockType.this;
+            setHardness(type.getHardness());
+            setSoundType(type.getMaterial().soundType);
+            setUnlocalizedName(type.modID + ":" + type.name);
+            setRegistryName(new ResourceLocation(type.modID, type.name));
         }
 
         @Override
@@ -119,7 +142,7 @@ public abstract class BlockType {
          */
         @Override
         public final float getExplosionResistance(Entity exploder) {
-            return settings.resistance;
+            return BlockType.this.getExplosionResistance();
         }
 
 
@@ -167,7 +190,7 @@ public abstract class BlockType {
         @Deprecated
         @Override
         public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side) {
-            if (settings.connectable) {
+            if (BlockType.this.isConnectable()) {
                 return super.isSideSolid(base_state, world, pos, side);
             }
 
@@ -184,19 +207,19 @@ public abstract class BlockType {
         @Override
         public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public boolean canProvidePower(IBlockState state)
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         /* TODO

@@ -1,8 +1,12 @@
 package cam72cam.mod.entity.sync;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.net.Packet;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagSerializer;
 import net.minecraft.nbt.NBTBase;
 
 import java.util.ArrayList;
@@ -20,10 +24,12 @@ public class EntitySync extends TagCompound {
         this.oldString = old.toString();
     }
 
-    public void send() {
+    public void send() throws SerializationException {
         if (entity.getWorld().isClient) {
             return;
         }
+
+        TagSerializer.serialize(this, entity, TagSync.class);
 
         // Is this faster than the below check?
         // Could also put a bool tracker in TagCompound
@@ -66,7 +72,7 @@ public class EntitySync extends TagCompound {
         }
     }
 
-    public void receive(TagCompound sync) {
+    public void receive(TagCompound sync) throws SerializationException {
         for (String key : sync.internal.getKeySet()) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
@@ -76,24 +82,30 @@ public class EntitySync extends TagCompound {
                 internal.setTag(key, sync.internal.getTag(key));
             }
         }
-        old = this;
+        TagSerializer.deserialize(this, entity, entity.getWorld(), TagSync.class);
     }
 
     public static class EntitySyncPacket extends Packet {
-        public EntitySyncPacket() {
-            // Reflection
-        }
+        @TagField
+        Entity target;
+        @TagField
+        private TagCompound info;
+
+        public EntitySyncPacket() {}
 
         public EntitySyncPacket(Entity entity, TagCompound sync) {
-            data.setEntity("target", entity);
-            data.set("info", sync);
+            this.target = entity;
+            this.info = sync;
         }
 
         @Override
         public void handle() {
-            Entity stock = data.getEntity("target", getWorld(), Entity.class);
-            if (stock != null) {
-                stock.sync.receive(data.get("info"));
+            if (target != null) {
+                try {
+                    target.sync.receive(info);
+                } catch (SerializationException e) {
+                    ModCore.catching(e, "Invalid sync payload for %s: %s", target, info);
+                }
             }
         }
     }

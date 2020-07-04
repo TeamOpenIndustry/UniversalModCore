@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -47,7 +48,18 @@ public class Fuzzy {
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
     public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");
 
+    private static boolean isPostItemRegistration = false;
+
+    private static void postItemRegistration(Runnable fn) {
+        if(isPostItemRegistration) {
+            fn.run();
+        } else {
+            CommonEvents.Item.REGISTER.post(fn);
+        }
+    }
+
     static {
+        CommonEvents.Item.REGISTER.post(() -> isPostItemRegistration = true);
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::new);
     }
 
@@ -81,17 +93,17 @@ public class Fuzzy {
     }
 
     public Fuzzy add(ItemStack item) {
-        OreDictionary.registerOre(ident, item.internal);
+        postItemRegistration(() -> OreDictionary.registerOre(ident, item.internal));
         return this;
     }
 
     public Fuzzy add(Block block) {
-        OreDictionary.registerOre(ident, block);
+        postItemRegistration(() -> OreDictionary.registerOre(ident, block));
         return this;
     }
 
     public Fuzzy add(Item item) {
-        OreDictionary.registerOre(ident, item);
+        postItemRegistration(() -> OreDictionary.registerOre(ident, item));
         return this;
     }
 
@@ -104,13 +116,8 @@ public class Fuzzy {
     }
 
     public Fuzzy addAll(String other) {
-        OreDictionary.getOres(other).stream().map(ItemStack::new).forEach(this::add);
+        postItemRegistration(() -> OreDictionary.getOres(other).stream().map(ItemStack::new).forEach(this::add));
         return this;
-    }
-
-    public void clear() {
-        // This might break stuff in fantastic ways!
-        OreDictionary.getOres(ident).clear();
     }
 
     @Override

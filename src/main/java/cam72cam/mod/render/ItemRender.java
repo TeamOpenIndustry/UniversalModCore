@@ -2,10 +2,12 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.ItemBase;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
@@ -142,43 +144,35 @@ public class ItemRender {
         fb.framebufferClear();
         fb.bindFramebuffer(true);
 
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
+        try (With projection = OpenGL.matrix(GL11.GL_PROJECTION)) {
+            GL11.glLoadIdentity();
+            try (With modelM = OpenGL.matrix(GL11.GL_MODELVIEW)) {
+                GL11.glLoadIdentity();
+                try (With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, true)) {
+                    int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+                    GL11.glDepthFunc(GL11.GL_LESS);
+                    GL11.glClearDepth(1);
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
+                    model.renderCustom();
 
-        GLBoolTracker depth = new GLBoolTracker(GL11.GL_DEPTH_TEST, true);
-        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-        GL11.glDepthFunc(GL11.GL_LESS);
-        GL11.glClearDepth(1);
+                    ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+                    GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
 
-        model.renderCustom();
+                    fb.unbindFramebuffer();
+                    fb.deleteFramebuffer();
+                    GL11.glDepthFunc(oldDepth);
 
-        ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+                    iconSheet.setSprite(id, buff);
 
-        fb.unbindFramebuffer();
-        fb.deleteFramebuffer();
-        GL11.glDepthFunc(oldDepth);
-        depth.restore();
-
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-
-        iconSheet.setSprite(id, buff);
-
-        try {
-            byte[] data = new byte[buff.capacity()];
-            buff.get(data);
-            Files.write(sprite.toPath(), data);
-        } catch (IOException e) {
-            e.printStackTrace();
+                    try {
+                        byte[] data = new byte[buff.capacity()];
+                        buff.get(data);
+                        Files.write(sprite.toPath(), data);
+                    } catch (IOException e) {
+                        ModCore.catching(e);
+                    }
+                }
+            }
         }
     }
 

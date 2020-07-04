@@ -6,6 +6,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.ICamera;
@@ -13,7 +14,6 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import org.lwjgl.opengl.GL11;
 
@@ -88,16 +88,13 @@ public class EntityRenderer extends Render<ModdedEntity> {
     public void doRender(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
         Entity self = stock.getSelf();
 
-        GL11.glPushMatrix();
-        {
-            GL11.glTranslated(x, y, z);
-            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-            GL11.glRotatef(-90, 0, 1, 0);
-            renderers.get(self.getClass()).render(self, partialTicks);
+        try (With c = OpenGL.matrix()) {
+                GL11.glTranslated(x, y, z);
+                GL11.glRotatef(180 - entityYaw, 0, 1, 0);
+                GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
+                GL11.glRotatef(-90, 0, 1, 0);
+                renderers.get(self.getClass()).render(self, partialTicks);
         }
-        GL11.glPopMatrix();
-
     }
 
     @Nullable

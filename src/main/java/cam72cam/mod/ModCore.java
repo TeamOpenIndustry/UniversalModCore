@@ -230,6 +230,11 @@ public class ModCore {
         instance.logger.error(String.format(msg, params));
     }
 
+    public static void catching(Throwable ex, String msg, Object... params) {
+        error(msg, params);
+        catching(ex);
+    }
+
     public static void catching(Throwable ex) {
         if (instance == null || instance.logger == null) {
             ex.printStackTrace();
