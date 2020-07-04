@@ -77,6 +77,7 @@ public class GLTexture {
                 } catch (IOException e) {
                     internalError = new RuntimeException(e);
                     transition(TextureState.ERROR);
+                    texLoc.delete();
                     throw internalError;
                 }
                 transition(TextureState.UNALLOCATED);
@@ -100,6 +101,7 @@ public class GLTexture {
                     } catch (IOException e) {
                         internalError = new RuntimeException("Unable to save image " + texLoc, e);
                         transition(TextureState.ERROR);
+                        texLoc.delete();
                         throw internalError;
                     }
                 });
@@ -182,8 +184,10 @@ public class GLTexture {
                         this.pixels = imageToPixels(ImageIO.read(texLoc));
                         transition(TextureState.READ);
                     } catch (Exception e) {
+                        ModCore.warn("Unable to read file " + texLoc.toString() + ".  The cache file has been removed.  Please try launching again.  If this error happens multiple times, try removing your .minecraft/cache/ directory.");
                         transition(TextureState.ERROR);
                         internalError = new RuntimeException(texLoc.toString(), e);
+                        texLoc.delete();
                         throw internalError;
                     }
                 });
