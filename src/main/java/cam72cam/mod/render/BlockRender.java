@@ -72,12 +72,10 @@ public class BlockRender {
                     return;
                 }
 
-                GL11.glPushMatrix();
-                {
+                try (OpenGL.With matrix = OpenGL.matrix()) {
                     GL11.glTranslated(x, y, z);
                     model.renderCustom(partialTicks);
                 }
-                GL11.glPopMatrix();
             }
 
             public boolean isGlobalRenderer(TileEntity te) {

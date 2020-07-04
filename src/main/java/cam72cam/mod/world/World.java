@@ -14,7 +14,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
@@ -458,9 +458,9 @@ public class World {
         return null;
     }
 
-    public ITank getTank(Vec3i offset) {
+    public List<ITank> getTank(Vec3i offset) {
         for (Facing value : Facing.values()) {
-            ITank tank = getTank(offset, value);
+            List<ITank> tank = getTank(offset, value);
             if (tank != null) {
                 return tank;
             }
@@ -468,7 +468,7 @@ public class World {
         return getTank(offset, null);
     }
 
-    public ITank getTank(Vec3i offset, Facing dir) {
+    public List<ITank> getTank(Vec3i offset, Facing dir) {
         net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal);
         EnumFacing face = dir != null ? dir.internal : null;
         if (te != null && te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face)) {
