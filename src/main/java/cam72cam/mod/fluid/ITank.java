@@ -4,11 +4,14 @@ import cam72cam.mod.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
@@ -54,21 +57,21 @@ public interface ITank {
     }
 
     static List<ITank> getTank(IFluidHandler internal) {
-        return Arrays.stream(internal.getTankProperties()).map(p -> new ITank() {
+        return IntStream.range(0, internal.getTankProperties().length).mapToObj(i -> new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(p.getContents());
+                return new FluidStack(internal.getTankProperties()[i].getContents());
             }
 
             @Override
             public int getCapacity() {
-                return p.getCapacity();
+                return internal.getTankProperties()[i].getCapacity();
             }
 
             @Override
             public boolean allows(Fluid fluid) {
-                return p.canDrainFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0)) ||
-                        p.canFillFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0));
+                return internal.getTankProperties()[i].canDrainFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0)) ||
+                        internal.getTankProperties()[i].canFillFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0));
             }
 
             @Override
