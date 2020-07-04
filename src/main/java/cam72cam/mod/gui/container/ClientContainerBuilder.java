@@ -50,7 +50,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
             // Top Bar
             for (int k = 1; k <= slots; k++) {
@@ -64,7 +64,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             x += paddingLeft;
             if (handler != null && handler.getSlotCount() > slotID) {
                 super.drawTexturedModalRect(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
@@ -76,7 +76,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             // Left Side
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
             // Middle Slots
@@ -105,7 +105,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             // Left Bottom
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
             // Middle Bottom
@@ -120,7 +120,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         }
         return y + bottomOffset;
@@ -128,7 +128,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         }
         return y + midBarHeight;
@@ -137,7 +137,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        try (OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
             super.drawTexturedModalRect(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         }
         return y + 96;
@@ -201,7 +201,10 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
-        try (OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))) {
+        try (
+                OpenGL.With color_ = OpenGL.color(1,1,1,1);
+                OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))
+        ) {
             super.drawTexturedModalRect(x, y, sprite, 16, 16);
         }
     }
