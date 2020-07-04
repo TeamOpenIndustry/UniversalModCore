@@ -117,7 +117,7 @@ public class Fuzzy {
     }
 
     public Fuzzy addAll(String other) {
-        OreDictionary.getOres(other).stream().map(ItemStack::new).forEach(this::add);
+        postItemRegistration(() -> OreDictionary.getOres(other).stream().map(ItemStack::new).forEach(this::add));
         return this;
     }
 
