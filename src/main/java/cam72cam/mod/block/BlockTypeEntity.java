@@ -25,9 +25,9 @@ public abstract class BlockTypeEntity extends BlockType {
     public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
     protected final Identifier id;
 
-    public BlockTypeEntity() {
-        super();
-        id = new Identifier(getModID(), getName());
+    public BlockTypeEntity(String modID, String name) {
+        super(modID, name);
+        id = new Identifier(modID, name);
         TileEntity.register(this::constructBlockEntity, id);
         constructBlockEntity().supplier(id).register();
     }

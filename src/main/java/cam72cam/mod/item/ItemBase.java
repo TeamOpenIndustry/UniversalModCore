@@ -24,23 +24,26 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ItemBase {
+public abstract class ItemBase {
     public final Item internal;
-    private final CreativeTab[] creativeTabs;
-    public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
+    public ItemBase(String modID, String name) {
         internal = new ItemInternal();
         internal.setTranslationKey(modID + ":" + name);
         internal.setRegistryName(new ResourceLocation(modID, name));
-        internal.setMaxStackSize(stackSize);
-        internal.setCreativeTab(tabs[0].internal);
-        this.creativeTabs = tabs;
+        internal.setMaxStackSize(getStackSize());
+        internal.setCreativeTab(getCreativeTabs().get(0).internal);
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+    }
+
+    public abstract List<CreativeTab> getCreativeTabs();
+
+    public int getStackSize() {
+        return 64;
     }
 
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
@@ -50,8 +53,6 @@ public class ItemBase {
         }
         return res;
     }
-
-    /* Overrides */
 
     public List<String> getTooltip(ItemStack itemStack) {
         return Collections.emptyList();
@@ -126,7 +127,7 @@ public class ItemBase {
 
         @Override
         public final CreativeTabs[] getCreativeTabs() {
-            return Arrays.stream(ItemBase.this.creativeTabs).map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
+            return ItemBase.this.getCreativeTabs().stream().map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
         }
     }
 }

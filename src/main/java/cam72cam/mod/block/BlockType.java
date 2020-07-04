@@ -24,8 +24,12 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
+    private final String name;
+    private final String modID;
 
-    public BlockType() {
+    public BlockType(String modID, String name) {
+        this.modID = modID;
+        this.name = name;
 
         internal = getBlock();
 
@@ -40,6 +44,10 @@ public abstract class BlockType {
         });
     }
 
+    public final String getName() {
+        return name;
+    }
+
     protected BlockInternal getBlock() {
         return new BlockInternal();
     }
@@ -49,8 +57,6 @@ public abstract class BlockType {
     /*
     Properties
      */
-    public abstract String getName();
-    public abstract String getModID();
     public Material getMaterial() {
         return Material.METAL;
     }
@@ -98,8 +104,8 @@ public abstract class BlockType {
             BlockType type = BlockType.this;
             setHardness(type.getHardness());
             setSoundType(type.getMaterial().soundType);
-            setTranslationKey(type.getModID() + ":" + type.getName());
-            setRegistryName(new ResourceLocation(type.getModID(), type.getName()));
+            setTranslationKey(type.modID + ":" + type.name);
+            setRegistryName(new ResourceLocation(type.modID, type.name));
         }
 
         @Override
