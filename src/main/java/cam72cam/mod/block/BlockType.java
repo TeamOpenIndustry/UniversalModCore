@@ -24,10 +24,8 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
 
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
+    public BlockType() {
 
         internal = getBlock();
 
@@ -42,15 +40,33 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
-    }
-
     protected BlockInternal getBlock() {
         return new BlockInternal();
     }
 
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+    public abstract String getName();
+    public abstract String getModID();
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+    public boolean isConnectable() {
+        return true;
+    }
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
@@ -78,11 +94,12 @@ public abstract class BlockType {
 
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(settings.material.internal);
-            setHardness(settings.hardness);
-            setSoundType(settings.material.soundType);
-            setTranslationKey(settings.modID + ":" + settings.name);
-            setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            super(BlockType.this.getMaterial().internal);
+            BlockType type = BlockType.this;
+            setHardness(type.getHardness());
+            setSoundType(type.getMaterial().soundType);
+            setTranslationKey(type.getModID() + ":" + type.getName());
+            setRegistryName(new ResourceLocation(type.getModID(), type.getName()));
         }
 
         @Override
@@ -116,7 +133,7 @@ public abstract class BlockType {
          */
         @Override
         public final float getExplosionResistance(Entity exploder) {
-            return settings.resistance;
+            return BlockType.this.getExplosionResistance();
         }
 
 
@@ -162,13 +179,13 @@ public abstract class BlockType {
          */
         @Override
         public boolean canBeConnectedTo(IBlockAccess internal, BlockPos pos, EnumFacing facing) {
-            return settings.connectable;
+            return BlockType.this.isConnectable();
         }
 
         @Deprecated
         @Override
         public BlockFaceShape getBlockFaceShape(IBlockAccess p_193383_1_, IBlockState p_193383_2_, BlockPos p_193383_3_, EnumFacing p_193383_4_) {
-            if (settings.connectable) {
+            if (BlockType.this.isConnectable()) {
                 return super.getBlockFaceShape(p_193383_1_, p_193383_2_, p_193383_3_, p_193383_4_);
             }
 
@@ -188,19 +205,19 @@ public abstract class BlockType {
         @Override
         public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public boolean canProvidePower(IBlockState state)
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         /* TODO
