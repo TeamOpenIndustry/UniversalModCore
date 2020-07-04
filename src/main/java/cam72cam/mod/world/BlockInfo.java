@@ -1,9 +1,12 @@
 package cam72cam.mod.world;
 
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagMapped;
 
+@TagMapped(BlockInfo.TagMapper.class)
 public class BlockInfo {
     final Block internal;
     final int internalMeta;
@@ -13,22 +16,29 @@ public class BlockInfo {
         internalMeta = meta;
     }
 
-    public BlockInfo(TagCompound info) {
-        if (info.hasKey("block")) {
-            internal = Block.getBlockFromName(info.getString("block"));
-            internalMeta = info.getInteger("meta");
-        } else {
-            internal = Blocks.air;
-            internalMeta = 0;
+    public static class TagMapper implements cam72cam.mod.serialization.TagMapper<BlockInfo> {
+        @Override
+        public TagAccessor<BlockInfo> apply(Class<BlockInfo> type, String fieldName, TagField tag) {
+            return new TagAccessor<>(
+                    (d, o) -> {
+                        if (o == null) {
+                            d.remove(fieldName);
+                            return;
+                        }
+                        TagCompound data = new TagCompound();
+                        if (o.internal != null) {
+                            data.setString("block", Block.blockRegistry.getNameForObject(o.internal));
+                            data.setInteger("meta", o.internalMeta);
+                        }
+                        d.set(fieldName, data);
+                    },
+                    info -> {
+                        if (!info.hasKey("block")) {
+                            return new BlockInfo(Blocks.air, 0);
+                        }
+                        return new BlockInfo(Block.getBlockFromName(info.getString("block")), info.getInteger("meta"));
+                    }
+            );
         }
-    }
-
-    public TagCompound toNBT() {
-        TagCompound data = new TagCompound();
-        if (internal != null) {
-            data.setString("block", Block.blockRegistry.getNameForObject(internal));
-            data.setInteger("meta", internalMeta);
-        }
-        return data;
     }
 }

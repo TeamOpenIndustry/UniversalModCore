@@ -29,14 +29,16 @@ import java.util.Random;
 public abstract class BlockType {
     public static Map<BlockType, Integer> blocks = new HashMap<>();
     public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
+    private final String name;
+    private final String modID;
 
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
+    public BlockType(String modID, String name) {
+        this.modID = modID;
+        this.name = name;
 
         internal = getBlock();
 
-        CommonEvents.Block.REGISTER.subscribe(() -> GameRegistry.registerBlock(internal, new ResourceLocation(settings.modID, settings.name).toString()));
+        CommonEvents.Block.REGISTER.subscribe(() -> GameRegistry.registerBlock(internal, new ResourceLocation(modID, name).toString()));
 
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlock(pos.x, pos.y, pos.z);
@@ -47,8 +49,8 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
+    public final String getName() {
+        return name;
     }
 
     protected BlockInternal getBlock() {
@@ -56,6 +58,26 @@ public abstract class BlockType {
     }
 
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+    public boolean isConnectable() {
+        return true;
+    }
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
@@ -83,12 +105,12 @@ public abstract class BlockType {
 
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(settings.material.internal);
-            setHardness(settings.hardness);
-            setStepSound(settings.material.soundType);
-            setUnlocalizedName(settings.modID + ":" + settings.name);
-            setTextureName("iron_block");
-            // REMOVED 1.7.10 setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            super(BlockType.this.getMaterial().internal);
+            BlockType type = BlockType.this;
+            setHardness(type.getHardness());
+            setStepSound(type.getMaterial().soundType);
+            setUnlocalizedName(type.modID + ":" + type.name);
+            // REMOVED 1.7.10 setRegistryName(new ResourceLocation(type.modID, type.name));
         }
 
         @Override
@@ -133,7 +155,7 @@ public abstract class BlockType {
          */
         @Override
         public final float getExplosionResistance(Entity exploder) {
-            return settings.resistance;
+            return BlockType.this.getExplosionResistance();
         }
 
         /* TODO 1.7.10
@@ -189,7 +211,7 @@ public abstract class BlockType {
         @Deprecated
         @Override
         public boolean isSideSolid(IBlockAccess world, int posX, int posY, int posZ, ForgeDirection side) {
-            if (settings.connectable) {
+            if (BlockType.this.isConnectable()) {
                 return super.isSideSolid(world, posX, posY, posZ, side);
             }
 
@@ -206,19 +228,19 @@ public abstract class BlockType {
         @Override
         public int isProvidingWeakPower(IBlockAccess blockAccess, int posX, int posY, int posZ, int side)
         {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
         }
 
         @Override
         public int isProvidingStrongPower(IBlockAccess blockAccess, int posX, int posY, int posZ, int side)
         {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
         }
 
         @Override
         public boolean canProvidePower()
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         /* TODO

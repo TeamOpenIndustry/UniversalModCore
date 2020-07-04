@@ -1,19 +1,39 @@
 package cam72cam.mod.energy;
 
+import cam72cam.mod.serialization.TagField;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Energy implements IEnergy {
+    @TagField("max")
     private final int max;
+    @TagField("stored")
     private int stored;
 
-    public Energy(int maxStorage) {
-        this.stored = 0;
+    private List<Runnable> onChanged = new ArrayList<>();
+
+    private Energy() {
+        // Serialization
+        max = 0;
+        stored = 0;
+    }
+
+    public Energy(int stored, int maxStorage) {
+        this.stored = stored;
         this.max = maxStorage;
+    }
+
+    public void onChanged(Runnable fn) {
+        onChanged.add(fn);
     }
 
     @Override
     public int receive(int maxReceive, boolean simulate) {
         int delta = Math.min(maxReceive, max - stored);
-        if (!simulate) {
+        if (!simulate && delta != 0) {
             this.stored += delta;
+            onChanged.forEach(Runnable::run);
         }
         return delta;
     }
@@ -21,8 +41,9 @@ public class Energy implements IEnergy {
     @Override
     public int extract(int maxExtract, boolean simulate) {
         int delta = Math.min(maxExtract, stored);
-        if (!simulate) {
+        if (!simulate && delta != 0) {
             this.stored -= delta;
+            onChanged.forEach(Runnable::run);
         }
         return delta;
     }

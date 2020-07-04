@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.OpenGL.With;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.util.ResourceLocation;
@@ -40,16 +41,13 @@ public class EntityRenderer extends Render {
         ModdedEntity stock = (ModdedEntity) stockuncast;
         Entity self = stock.getSelf();
 
-        GL11.glPushMatrix();
-        {
-            GL11.glTranslated(x, y, z);
-            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-            GL11.glRotatef(-90, 0, 1, 0);
-            renderers.get(self.getClass()).render(self, partialTicks);
+        try (With c = OpenGL.matrix()) {
+                GL11.glTranslated(x, y, z);
+                GL11.glRotatef(180 - entityYaw, 0, 1, 0);
+                GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
+                GL11.glRotatef(-90, 0, 1, 0);
+                renderers.get(self.getClass()).render(self, partialTicks);
         }
-        GL11.glPopMatrix();
-
     }
 
     @Override

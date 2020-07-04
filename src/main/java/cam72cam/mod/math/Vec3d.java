@@ -93,6 +93,10 @@ public class Vec3d {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Vec3d && internal.equals(((Vec3d) other).internal);
+        if (other instanceof Vec3d) {
+            Vec3d ov = (Vec3d) other;
+            return this.x == ov.x && this.y == ov.y && this.z == ov.z;
+        }
+        return false;
     }
 }

@@ -9,8 +9,10 @@ import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import cofh.api.energy.IEnergyConnection;
 import cofh.api.energy.IEnergyHandler;
@@ -158,7 +160,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
         }
 
         if (instance() != null) {
-            instance().load(data);
+            try {
+                TagSerializer.deserialize(data, instance());
+                instance().load(data);
+            } catch (SerializationException e) {
+                // TODO how should we handle this?
+                throw new RuntimeException(e);
+            }
         } else {
             deferredLoad = data;
         }
@@ -168,19 +176,32 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
         super.writeToNBT(data.internal);
         data.setString("instanceId", instanceId);
         if (instance() != null) {
-            instance().save(data);
+            try {
+                TagSerializer.serialize(data, instance());
+                instance().save(data);
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void writeUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().writeUpdate(nbt);
+            try {
+                instance().writeUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 
     public void readUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().readUpdate(nbt);
+            try {
+                instance().readUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 
@@ -206,7 +227,12 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
                 this.instance.world = World.get(worldObj);
                 this.instance.pos = new Vec3i(xCoord, yCoord, zCoord);
                 if (deferredLoad != null) {
-                    this.instance.load(deferredLoad);
+                    try {
+                        TagSerializer.deserialize(deferredLoad, this.instance);
+                        this.instance.load(deferredLoad);
+                    } catch (SerializationException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 this.deferredLoad = null;
                 if (worldObj.isRemote) {

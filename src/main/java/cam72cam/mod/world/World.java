@@ -17,19 +17,15 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -476,9 +472,9 @@ public class World {
         return getInventory(offset);
     }
 
-    public ITank getTank(Vec3i offset) {
+    public List<ITank> getTank(Vec3i offset) {
         for (Facing value : Facing.values()) {
-            ITank tank = getTank(offset, value);
+            List<ITank> tank = getTank(offset, value);
             if (tank != null) {
                 return tank;
             }
@@ -486,7 +482,7 @@ public class World {
         return getTank(offset, null);
     }
 
-    public ITank getTank(Vec3i pos, Facing dir) {
+    public List<ITank> getTank(Vec3i pos, Facing dir) {
         net.minecraft.tileentity.TileEntity te = internal.getTileEntity(pos.x, pos.y, pos.z);
         if (te instanceof IFluidHandler) {
             return ITank.getTank((IFluidHandler) te, dir);

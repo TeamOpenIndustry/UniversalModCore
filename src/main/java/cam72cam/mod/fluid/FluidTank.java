@@ -1,37 +1,106 @@
 package cam72cam.mod.fluid;
 
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 public class FluidTank implements ITank {
-    private FluidStack internal;
-    private int capacity;
+    // TODO clean up capacity crap.  Probably just want to implement my own fluid handler from scratch TBH
 
-    public FluidTank(FluidStack fluidStack, int capacity) {
-        this.internal = fluidStack == null ? new FluidStack(null) : fluidStack;
-        this.capacity = capacity;
+    public final net.minecraftforge.fluids.FluidTank internal;
+    private Supplier<List<Fluid>> filter;
+    private Runnable onChange = () -> {};
+
+    private FluidTank() {
+        // Serialization
+        this(null, 0);
     }
 
-    public void onChanged() {
-        //NOP
+    public FluidTank(FluidStack fluidStack, int capacity) {
+        if (fluidStack == null) {
+            internal = new net.minecraftforge.fluids.FluidTank(capacity) {
+                @Override
+                public void setFluid(net.minecraftforge.fluids.FluidStack fluid) {
+                    super.setFluid(fluid);
+                    if (this.fluid == null || !this.fluid.isFluidStackIdentical(fluid)) {
+                        FluidTank.this.onChange.run();
+                    }
+                }
+                public int fill(net.minecraftforge.fluids.FluidStack resource, boolean doFill) {
+                    int res = super.fill(resource, doFill);
+                    if (doFill && res != 0) {
+                        FluidTank.this.onChange.run();
+                    }
+                    return res;
+                }
+                public net.minecraftforge.fluids.FluidStack drain(int maxDrain, boolean doDrain) {
+                    net.minecraftforge.fluids.FluidStack res = super.drain(maxDrain, doDrain);
+                    if (res != null && doDrain) {
+                        FluidTank.this.onChange.run();
+                    }
+                    return res;
+                }
+            };
+        } else {
+            internal = new net.minecraftforge.fluids.FluidTank(fluidStack.internal, capacity) {
+                @Override
+                public void setFluid(net.minecraftforge.fluids.FluidStack fluid) {
+                    super.setFluid(fluid);
+                    if (this.fluid == null || !this.fluid.isFluidStackIdentical(fluid)) {
+                        FluidTank.this.onChange.run();
+                    }
+                }
+                public int fill(net.minecraftforge.fluids.FluidStack resource, boolean doFill) {
+                    int res = super.fill(resource, doFill);
+                    if (doFill && res != 0) {
+                        FluidTank.this.onChange.run();
+                    }
+                    return res;
+                }
+                public net.minecraftforge.fluids.FluidStack drain(int maxDrain, boolean doDrain) {
+                    net.minecraftforge.fluids.FluidStack res = super.drain(maxDrain, doDrain);
+                    if (res != null && doDrain) {
+                        FluidTank.this.onChange.run();
+                    }
+                    return res;
+                }
+            };
+        }
+    }
+
+    public void onChanged(Runnable onChange) {
+        this.onChange = onChange;
     }
 
     @Override
     public FluidStack getContents() {
-        return internal;
+        return new FluidStack(internal.getFluid());
     }
 
     @Override
     public int getCapacity() {
-        return capacity;
+        return internal.getCapacity();
     }
 
     public void setCapacity(int milliBuckets) {
-        capacity = milliBuckets;
+        if (internal.getFluidAmount() > milliBuckets) {
+            internal.drain(internal.getFluidAmount() - milliBuckets, true);
+        }
+        internal.setCapacity(milliBuckets);
+    }
+
+    /**
+     * null == all
+     * [] == none
+     */
+    public void setFilter(Supplier<List<Fluid>> filter) {
+        this.filter = filter;
     }
 
     @Override
     public boolean allows(Fluid fluid) {
-        return true; // TODO 1.7.10
+        return (filter == null || filter.get() == null || filter.get().contains(fluid));
     }
 
     @Override
@@ -39,52 +108,23 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return 0;
         }
-
-        if (fluidStack.getAmount() < 0 || internal.getAmount() == capacity) {
-            return 0;
-        }
-
-        if (internal.getAmount() == 0 || internal.getFluid().equals(fluidStack.getFluid())) {
-            int amount = Math.min(fluidStack.getAmount() + internal.getAmount(), capacity);
-            int prevAmount = internal.getAmount();
-            if (!simulate) {
-                internal = new FluidStack(fluidStack.getFluid(), amount);
-                onChanged();
-            }
-            return amount - prevAmount;
-        }
-        return 0;
+        return internal.fill(fluidStack.internal, !simulate);
     }
 
     @Override
     public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-        if (!allows(fluidStack.getFluid()) || internal.getAmount() == 0) {
+        if (!allows(fluidStack.getFluid())) {
             return null;
         }
-
-        if (internal.getFluid().equals(fluidStack.getFluid())) {
-            int remainder = Math.max(internal.getAmount() - fluidStack.getAmount(), 0);
-            if (!simulate) {
-                internal = new FluidStack(fluidStack.getFluid(), remainder);
-                onChanged();
-            }
-            return new FluidStack(fluidStack.getFluid(), fluidStack.getAmount() - remainder);
-        }
-        return null;
+        return new FluidStack(internal.drain(fluidStack.internal.amount, !simulate));
     }
 
     public TagCompound write(TagCompound tag) {
-        TagCompound tc = new TagCompound();
-        tc.setInteger("capacity", capacity);
-        if (internal.getAmount() != 0) {
-            internal.internal.writeToNBT(tc.internal);
-        }
-        return tc;
+        return new TagCompound(internal.writeToNBT(tag.internal));
     }
 
     public void read(TagCompound tag) {
-        capacity = tag.getInteger("capacity");
-        internal = new FluidStack(net.minecraftforge.fluids.FluidStack.loadFluidStackFromNBT(tag.internal));
+        internal.readFromNBT(tag.internal);
     }
 
     public boolean tryDrain(ITank inputTank, int max, boolean simulate) {

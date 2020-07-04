@@ -2,13 +2,11 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.IBlockAccess;
@@ -82,9 +80,7 @@ public class StandardModel {
             return this;
         }
         custom.add((pt) -> {
-            GLBoolTracker tex = new GLBoolTracker(GL11.GL_TEXTURE_2D, true);
-            GL11.glPushMatrix();
-            {
+            try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.ENTITY);
@@ -98,8 +94,6 @@ public class StandardModel {
                     }
                 }
             }
-            GL11.glPopMatrix();
-            tex.restore();
         });
         return this;
     }

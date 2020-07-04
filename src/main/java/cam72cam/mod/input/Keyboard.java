@@ -7,6 +7,7 @@ import cam72cam.mod.net.Packet;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
@@ -166,18 +167,22 @@ public class Keyboard {
 
 
     public static class MovementPacket extends Packet {
-        public MovementPacket() {
+        @TagField
+        private UUID id;
+        @TagField
+        private Vec3d move;
 
-        }
+        public MovementPacket() {}
 
         public MovementPacket(UUID id, Vec3d move) {
-            data.setVec3d("move", move);
-            vecs.put(id, data.getVec3d("move"));
+            this.id = id;
+            this.move = move;
+            vecs.put(id, move);
         }
 
         @Override
         protected void handle() {
-            vecs.put(getPlayer().getUUID(), data.getVec3d("move"));
+            vecs.put(id, move);
         }
     }
 }

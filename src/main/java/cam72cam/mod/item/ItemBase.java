@@ -18,30 +18,32 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.util.IIcon;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ItemBase {
+public abstract class ItemBase {
     public final Item internal;
-    private final CreativeTab[] creativeTabs;
     private final String modID;
     private final String name;
 
-    public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
+    public ItemBase(String modID, String name) {
         internal = new ItemInternal();
         internal.setUnlocalizedName(modID + ":" + name);
-        internal.setMaxStackSize(stackSize);
-        internal.setCreativeTab(tabs[0].internal);
-        this.creativeTabs = tabs;
+        internal.setMaxStackSize(getStackSize());
+        internal.setCreativeTab(getCreativeTabs().get(0).internal);
         this.modID = modID;
         this.name = name;
 
         CommonEvents.Item.REGISTER.subscribe(() -> GameRegistry.registerItem(internal, name, modID));
+    }
+
+    public abstract List<CreativeTab> getCreativeTabs();
+
+    public int getStackSize() {
+        return 64;
     }
 
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
@@ -51,8 +53,6 @@ public class ItemBase {
         }
         return res;
     }
-
-    /* Overrides */
 
     public List<String> getTooltip(ItemStack itemStack) {
         return Collections.emptyList();
@@ -133,7 +133,7 @@ public class ItemBase {
 
         @Override
         public final CreativeTabs[] getCreativeTabs() {
-            return Arrays.stream(ItemBase.this.creativeTabs).map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
+            return ItemBase.this.getCreativeTabs().stream().map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
         }
 
         /*

@@ -7,7 +7,10 @@ import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import net.minecraftforge.fluids.IFluidHandler;
 
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
@@ -99,20 +102,20 @@ public interface ITank {
         return null;
     }
 
-    static ITank getTank(IFluidHandler internal, Facing dir) {
+    static List<ITank> getTank(IFluidHandler internal, Facing dir) {
         ForgeDirection fd = dir == null ? ForgeDirection.UNKNOWN : dir.to();
         if (internal.getTankInfo(fd).length == 0) {
             return null;
         }
-        return new ITank() {
+        return IntStream.range(0, internal.getTankInfo(fd).length).mapToObj(id -> new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(internal.getTankInfo(fd)[0].fluid);
+                return new FluidStack(internal.getTankInfo(fd)[id].fluid);
             }
 
             @Override
             public int getCapacity() {
-                return internal.getTankInfo(fd)[0].capacity;
+                return internal.getTankInfo(fd)[id].capacity;
             }
 
             @Override
@@ -125,14 +128,18 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
+                // BUG: This is a pretty fundamental problem with how forge's fluid API works.
+                // IFluidHandler should really expose a list of distinct tanks
                 return internal.fill(fd, fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
+                // BUG: This is a pretty fundamental problem with how forge's fluid API works.
+                // IFluidHandler should really expose a list of distinct tanks
                 return new FluidStack(internal.drain(fd, fluidStack.internal.amount, !simulate));
             }
-        };
+        }).collect(Collectors.toList());
     }
 
     FluidStack getContents();

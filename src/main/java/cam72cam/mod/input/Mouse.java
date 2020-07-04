@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.net.Packet;
+import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.util.Hand;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
@@ -39,23 +40,20 @@ public class Mouse {
     }
 
     public static class MousePressPacket extends Packet {
-        static {
-        }
+        @TagField
+        private Hand hand;
+        @TagField
+        private Entity target;
 
-        public MousePressPacket() {
-            // Forge Reflection
-        }
+        public MousePressPacket() {}
 
         MousePressPacket(Hand hand, Entity target) {
-            super();
-            data.setEnum("hand", hand);
-            data.setEntity("target", target);
+            this.hand = hand;
+            this.target = target;
         }
 
         @Override
         public void handle() {
-            Hand hand = data.getEnum("hand", Hand.class);
-            Entity target = data.getEntity("target", getWorld());
             if (target != null) {
                 switch (hand) {
                     case PRIMARY:

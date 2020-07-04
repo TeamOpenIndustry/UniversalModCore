@@ -1,17 +1,27 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.inventory.IInvBasic;
 import net.minecraft.inventory.InventoryBasic;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import cam72cam.mod.serialization.*;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+@TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
     public ExposedItemStackHandler internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
+    private final List<Consumer<Integer>> onChanged = new ArrayList<>();
+    private Function<Integer, Integer> slotLimit = null;
+
 
     private class ExposedItemStackHandler extends InventoryBasic implements IInvBasic {
         public ExposedItemStackHandler(int size) {
@@ -62,15 +72,36 @@ public class ItemStackHandler implements IInventory {
         this(1);
     }
 
-    protected void onContentsChanged(int slot) {
-        //NOP
+    public void onChanged(Consumer<Integer> fn) {
+        onChanged.add(fn);
     }
 
-    public void setSize(int size) {
-        //internal.setSize(inventorySize);
-        // TODO 1.7.10 COPY CONTENTS
+    @Deprecated
+    protected void onContentsChanged(int slot) {
+        onChanged.forEach(f -> f.accept(slot));
+    }
 
-        this.internal = new ExposedItemStackHandler(size);
+    public void setSlotLimit(Function<Integer, Integer> limiter) {
+        slotLimit = limiter;
+    }
+
+    public List<ItemStack> setSize(int inventorySize) {
+        if (inventorySize == getSlotCount()) {
+            return Collections.emptyList();
+        }
+
+        List<ItemStack> keep = new ArrayList<>();
+        List<ItemStack> extra = new ArrayList<>();
+        if (internal.getSizeInventory() > inventorySize) {
+            for (int i = 0; i < internal.getSizeInventory(); i++) {
+                (i < inventorySize ? keep : extra).add(get(i));
+            }
+        }
+        this.internal = new ExposedItemStackHandler(inventorySize);
+        for (int i = 0; i < keep.size(); i++) {
+            internal.setInventorySlotContents(i, keep.get(i).internal);
+        }
+        return extra;
     }
 
     @Override
@@ -103,6 +134,7 @@ public class ItemStackHandler implements IInventory {
         return IInventory.from(internal).getLimit(slot);
     }
 
+    @Deprecated
     public TagCompound save() {
         List<ItemStack> stacks = new ArrayList<>();
         for (int i = 0; i < getSlotCount(); i++) {
@@ -114,6 +146,7 @@ public class ItemStackHandler implements IInventory {
         return data;
     }
 
+    @Deprecated
     public void load(TagCompound items) {
         if (items.hasKey("Items")) {
             List<ItemStack> inv = items.getList("Items", ItemStack::new);
@@ -122,4 +155,34 @@ public class ItemStackHandler implements IInventory {
         }
     }
 
+    public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
+        @Override
+        public TagAccessor<ItemStackHandler> apply(Class<ItemStackHandler> type, String fieldName, TagField tag) throws SerializationException {
+            Constructor<ItemStackHandler> ctr;
+            try {
+                ctr = type.getDeclaredConstructor();
+                ctr.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                throw new SerializationException("Unable to detect constructor for " + type, e);
+            }
+            return new TagAccessor<>(
+                    (d, o) -> {
+                        if (o == null) {
+                            d.remove(fieldName);
+                            return;
+                        }
+                        d.set(fieldName, o.save());
+                    },
+                    (d, w) -> {
+                        try {
+                            ItemStackHandler o = ctr.newInstance();
+                            o.load(d);
+                            return o;
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            throw new SerializationException("Unable to construct item stack handler " + type, e);
+                        }
+                    }
+            );
+        }
+    }
 }
