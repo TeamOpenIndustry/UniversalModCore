@@ -1,9 +1,13 @@
 package cam72cam.mod.net;
 
 import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.network.PacketBuffer;
@@ -38,8 +42,8 @@ public abstract class Packet {
         });
     }
 
-    protected TagCompound data = new TagCompound();
     NetworkEvent.Context ctx;
+    private TagCompound data;
 
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         types.put(sup.get().getClass().toString(), sup);
@@ -87,6 +91,11 @@ public abstract class Packet {
 
         public void toBytes(PacketBuffer buf) {
             packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            try {
+                TagSerializer.serialize(packet.data, packet);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
             buf.writeCompoundTag(packet.data.internal);
         }
     }

@@ -17,7 +17,6 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -29,8 +28,8 @@ import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.biome.Biome;
+import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -472,9 +471,9 @@ public class World {
         return null;
     }
 
-    public ITank getTank(Vec3i offset) {
+    public List<ITank> getTank(Vec3i offset) {
         for (Facing value : Facing.values()) {
-            ITank tank = getTank(offset, value);
+            List<ITank> tank = getTank(offset, value);
             if (tank != null) {
                 return tank;
             }
@@ -482,7 +481,7 @@ public class World {
         return getTank(offset, null);
     }
 
-    public ITank getTank(Vec3i offset, Facing dir) {
+    public List<ITank> getTank(Vec3i offset, Facing dir) {
         net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal);
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).isPresent()) {

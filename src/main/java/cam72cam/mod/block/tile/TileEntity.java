@@ -11,8 +11,10 @@ import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.Block;
@@ -329,23 +331,44 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         instance.world = world;
         instance.pos = pos;
 
-        instance.load(data);
+        try {
+            TagSerializer.deserialize(data, instance());
+            instance().load(data);
+        } catch (SerializationException e) {
+            // TODO how should we handle this?
+            throw new RuntimeException(e);
+        }
     }
 
     public void save(TagCompound data) {
         super.write(data.internal);
-        instance.save(data);
+        if (instance() != null) {
+            try {
+                TagSerializer.serialize(data, instance());
+                instance().save(data);
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void writeUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().writeUpdate(nbt);
+            try {
+                instance().writeUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 
     public void readUpdate(TagCompound nbt) {
         if (instance() != null) {
-            instance().readUpdate(nbt);
+            try {
+                instance().readUpdate(nbt);
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
     }
 

@@ -24,12 +24,6 @@ configurations {
     compile.extendsFrom shade
 }
 
-repositories {
-    maven {
-        name = "CurseForge"
-        url = "https://minecraft.curseforge.com/api/maven/"
-    }
-}
 
 version = "#VERSION#-1.14.4-forge"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -102,6 +96,8 @@ minecraft {
         }
     }
 }
+
+#UMC_REPO#
 
 dependencies {
 	minecraft 'net.minecraftforge:forge:1.14.4-28.2.0'

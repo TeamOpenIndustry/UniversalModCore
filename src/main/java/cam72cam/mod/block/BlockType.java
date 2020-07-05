@@ -28,10 +28,12 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
+    private final String name;
+    private final String modID;
 
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
+    public BlockType(String modID, String name) {
+        this.modID = modID;
+        this.name = name;
 
         internal = getBlock();
 
@@ -46,8 +48,8 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
+    public final String getName() {
+        return name;
     }
 
     protected BlockInternal getBlock() {
@@ -55,6 +57,26 @@ public abstract class BlockType {
     }
 
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+    public boolean isConnectable() {
+        return true;
+    }
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
@@ -82,8 +104,11 @@ public abstract class BlockType {
 
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(Block.Properties.create(settings.material.internal).sound(settings.material.soundType).hardnessAndResistance(settings.hardness).variableOpacity());
-            setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            super(Block.Properties.create(BlockType.this.getMaterial().internal)
+                    .sound(BlockType.this.getMaterial().soundType)
+                    .hardnessAndResistance(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .variableOpacity());
+            setRegistryName(new ResourceLocation(BlockType.this.modID, BlockType.this.name));
         }
 
         @Override
@@ -115,11 +140,6 @@ public abstract class BlockType {
         /*
         Overrides
          */
-        @Override
-        public float getExplosionResistance() {
-            return settings.resistance;
-        }
-
 
         @Override
         public BlockRenderType getRenderType(BlockState state) {
@@ -155,18 +175,18 @@ public abstract class BlockType {
 
         @Override
         public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public boolean canProvidePower(BlockState state)
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         @Override

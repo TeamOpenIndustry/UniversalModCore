@@ -6,8 +6,8 @@ import cam72cam.mod.entity.custom.*;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
+import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.Hand;
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
@@ -31,11 +31,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private cam72cam.mod.entity.Entity self;
     private EntitySettings settings;
 
+    @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
     private List<SeatEntity> seats = new ArrayList<>();
 
     private IWorldData iWorldData;
-    private ISpawnData iSpawnData;
     private ITickable iTickable;
     private IClickable iClickable;
     private IKillable iKillable;
@@ -52,7 +53,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         this.settings = settings;
 
         iWorldData = IWorldData.get(self);
-        iSpawnData = ISpawnData.get(self);
         iTickable = ITickable.get(self);
         iClickable = IClickable.get(self);
         iKillable = IKillable.get(self);
@@ -72,8 +72,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     private final void load(TagCompound data) {
+        try {
+            TagSerializer.deserialize(data, this);
+            TagSerializer.deserialize(data, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Error during entity load: %s - %s", self, data);
+        }
         iWorldData.load(data);
-        readPassengerData(data);
     }
 
     @Override
@@ -82,8 +87,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     private final void save(TagCompound data) {
+        try {
+            TagSerializer.serialize(data, self);
+            TagSerializer.serialize(data, this);
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Error during entity save: %s - %s", this, self);
+        }
         iWorldData.save(data);
-        writePassengerData(data);
     }
 
     /* ISpawnData */
@@ -91,18 +101,19 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void readSpawnData(PacketBuffer additionalData) {
         TagCompound data = new TagCompound(additionalData.readCompoundTag());
-        iSpawnData.loadSpawn(data);
-        self.sync.receive(data.get("sync"));
-        readPassengerData(data);
+        load(data);
+        try {
+            self.sync.receive(data.get("sync"));
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Invalid sync payload %s for %s", data.get("sync"), this);
+        }
     }
 
     @Override
     public final void writeSpawnData(PacketBuffer buffer) {
         TagCompound data = new TagCompound();
-        iSpawnData.saveSpawn(data);
         data.set("sync", self.sync);
-        writePassengerData(data);
-
+        save(data);
         buffer.writeCompoundTag(data.internal);
     }
 
@@ -111,7 +122,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void tick() {
         iTickable.onTick();
-        self.sync.send();
+        try {
+            self.sync.send();
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
+        }
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
@@ -270,18 +285,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return seats.size();
     }
 
-    private void readPassengerData(TagCompound data) {
-        passengerPositions = data.getMap("passengers", UUID::fromString, (TagCompound tag) -> tag.getVec3d("pos"));
-    }
-
-    private void writePassengerData(TagCompound data) {
-        data.setMap("passengers", passengerPositions, UUID::toString, (Vec3d pos) -> {
-            TagCompound tmp = new TagCompound();
-            tmp.setVec3d("pos", pos);
-            return tmp;
-        });
-    }
-
     /* ICollision */
     @Override
     public AxisAlignedBB getCollisionBoundingBox() {
@@ -335,23 +338,36 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * Disable standard entity sync
      */
 
-    public static class PassengerPositionsPacket extends Packet {
-        public PassengerPositionsPacket() {
-            // Forge Reflection
+
+    private static class PassengerMapper implements TagMapper<Map<UUID, Vec3d>> {
+        @Override
+        public TagAccessor<Map<UUID, Vec3d>> apply(Class<Map<UUID, Vec3d>> type, String fieldName, TagField tag) {
+            return new TagAccessor<>(
+                (d, o) -> d.setMap(fieldName, o, UUID::toString, (Vec3d pos) -> new TagCompound().setVec3d("pos", pos)),
+                d -> d.getMap(fieldName, UUID::fromString, t -> t.getVec3d("pos"))
+            );
         }
+    }
 
-        public PassengerPositionsPacket(ModdedEntity stock) {
-            data.setEntity("stock", stock.self);
+    public static class PassengerPositionsPacket extends Packet {
+        @TagField
+        private cam72cam.mod.entity.Entity target;
 
-            stock.writePassengerData(data);
+        @TagField(mapper = PassengerMapper.class)
+        private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
+        public PassengerPositionsPacket() {}
+
+        public PassengerPositionsPacket(ModdedEntity target) {
+            this.target = target.self;
+            this.passengerPositions = target.passengerPositions;
         }
 
         @Override
         public void handle() {
-            cam72cam.mod.entity.Entity entity = data.getEntity("stock", getWorld());
-            if (entity != null && entity.internal instanceof ModdedEntity) {
-                ModdedEntity stock = (ModdedEntity) entity.internal;
-                stock.readPassengerData(data);
+            if (target != null && target.internal instanceof ModdedEntity) {
+                ModdedEntity target = (ModdedEntity) this.target.internal;
+                target.passengerPositions = this.passengerPositions;
             }
         }
     }

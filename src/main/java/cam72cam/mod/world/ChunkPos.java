@@ -11,8 +11,9 @@ public class ChunkPos {
 
     public ChunkPos(World world, BlockPos pos) {
         dim = world.getDimension().getType().getId();
-        chunkX = pos.getX() >> 4;
-        chunkZ = pos.getZ() >> 4;
+        net.minecraft.util.math.ChunkPos chunk = world.getChunk(pos).getPos();
+        chunkX = chunk.x;
+        chunkZ = chunk.z;
     }
 
     public ChunkPos(Entity entity) {

@@ -11,7 +11,7 @@ public class CreativeTab {
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         internal = new ItemGroup(label) {
             @Override
-            public net.minecraft.item.ItemStack createIcon(){
+            public net.minecraft.item.ItemStack createIcon() {
                 return stack.get().internal;
             }
             @Override

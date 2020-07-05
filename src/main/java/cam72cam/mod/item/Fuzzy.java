@@ -159,10 +159,6 @@ public class Fuzzy {
         return this;
     }
 
-    public void clear() {
-        // This might break stuff in fantastic ways!
-    }
-
     @Override
     public String toString() {
         return ident;

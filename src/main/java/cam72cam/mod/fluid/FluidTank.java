@@ -1,24 +1,36 @@
 package cam72cam.mod.fluid;
 
-import cam72cam.mod.util.TagCompound;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import cam72cam.mod.serialization.TagCompound;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 public class FluidTank implements ITank {
+    // TODO clean up capacity crap.  Probably just want to implement my own fluid handler from scratch TBH
     public final net.minecraftforge.fluids.capability.templates.FluidTank internal;
 
+    private Supplier<List<Fluid>> filter;
+    private Runnable onChange = () -> {};
+
+    private FluidTank() {
+        // Serialization
+        this(null, 0);
+    }
+
     public FluidTank(FluidStack fluidStack, int capacity) {
-            internal = new net.minecraftforge.fluids.capability.templates.FluidTank(capacity) {
-                public void onContentsChanged() {
-                    FluidTank.this.onChanged();
-                }
-            };
+        internal = new net.minecraftforge.fluids.capability.templates.FluidTank(capacity) {
+            public void onContentsChanged() {
+                FluidTank.this.onChange.run();
+            }
+        };
         if (fluidStack != null) {
             internal.setFluid(fluidStack.internal);
         }
     }
 
-    public void onChanged() {
-        //NOP
+    public void onChanged(Runnable onChange) {
+        this.onChange = onChange;
     }
 
     @Override
@@ -32,12 +44,24 @@ public class FluidTank implements ITank {
     }
 
     public void setCapacity(int milliBuckets) {
+        if (internal.getFluidAmount() > milliBuckets) {
+            internal.drain(internal.getFluidAmount() - milliBuckets, FluidAction.EXECUTE);
+        }
         internal.setCapacity(milliBuckets);
+    }
+
+    /**
+     * null == all
+     * [] == none
+     */
+    public void setFilter(Supplier<List<Fluid>> filter) {
+        this.filter = filter;
     }
 
     @Override
     public boolean allows(Fluid fluid) {
-        return internal.isFluidValid(new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
+        return (filter == null || filter.get() == null || filter.get().contains(fluid)) &&
+                internal.isFluidValid(new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
     }
 
     @Override

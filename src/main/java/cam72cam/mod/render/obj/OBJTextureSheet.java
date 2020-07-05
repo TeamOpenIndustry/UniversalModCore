@@ -6,6 +6,7 @@ import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.Vec2f;
 import cam72cam.mod.render.GLTexture;
 import cam72cam.mod.render.GPUInfo;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.google.common.hash.Hashing;
@@ -20,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.List;
@@ -253,7 +253,7 @@ public class OBJTextureSheet {
         icon.dealloc();
     }
 
-    int bind() {
+    OpenGL.With bind() {
         if (!texture.isLoaded()) {
             icon.tryUpload(); //hit the queue first
         }
@@ -265,7 +265,7 @@ public class OBJTextureSheet {
         return bindIcon();
     }
 
-    int bindIcon() {
+    OpenGL.With bindIcon() {
         if (!icon.tryUpload()) {
             if (empty == null) {
                 BufferedImage ei = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);

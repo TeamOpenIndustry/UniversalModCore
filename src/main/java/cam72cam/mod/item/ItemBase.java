@@ -32,19 +32,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ItemBase {
+public abstract class ItemBase {
     public final Item internal;
-    private final CreativeTab[] creativeTabs;
     private final ResourceLocation identifier;
 
-    public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
+    public ItemBase(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        internal = new ItemInternal(new Item.Properties().maxStackSize(stackSize).group(tabs[0].internal)); // .setTEISR()
+        internal = new ItemInternal(new Item.Properties().maxStackSize(getStackSize()).group(getCreativeTabs().get(0).internal)); // .setTEISR()
         internal.setRegistryName(identifier);
-        this.creativeTabs = tabs;
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+    }
+
+    public abstract List<CreativeTab> getCreativeTabs();
+
+    public int getStackSize() {
+        return 64;
     }
 
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
@@ -54,8 +58,6 @@ public class ItemBase {
         }
         return res;
     }
-
-    /* Overrides */
 
     public List<String> getTooltip(ItemStack itemStack) {
         return Collections.emptyList();

@@ -6,7 +6,10 @@ import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
@@ -51,33 +54,37 @@ public interface ITank {
         };
     }
 
-    static ITank getTank(IFluidHandler internal) {
-        return new ITank() {
+    static List<ITank> getTank(IFluidHandler internal) {
+        return IntStream.range(0, internal.getTanks()).mapToObj(i -> new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(internal.getFluidInTank(0));
+                return new FluidStack(internal.getFluidInTank(i));
             }
 
             @Override
             public int getCapacity() {
-                return internal.getTankCapacity(0);
+                return internal.getTankCapacity(i);
             }
 
             @Override
             public boolean allows(Fluid fluid) {
-                return internal.isFluidValid(0, new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
+                return internal.isFluidValid(i, new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
             }
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
+                // BUG: This is a pretty fundamental problem with how forge's fluid API works.
+                // IFluidHandler should really expose a list of distinct tanks
                 return internal.fill(fluidStack.internal, simulate ? IFluidHandler.FluidAction.SIMULATE : IFluidHandler.FluidAction.EXECUTE);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
+                // BUG: This is a pretty fundamental problem with how forge's fluid API works.
+                // IFluidHandler should really expose a list of distinct tanks
                 return new FluidStack(internal.drain(fluidStack.internal, simulate ? IFluidHandler.FluidAction.SIMULATE : IFluidHandler.FluidAction.EXECUTE));
             }
-        };
+        }).collect(Collectors.toList());
     }
 
     FluidStack getContents();

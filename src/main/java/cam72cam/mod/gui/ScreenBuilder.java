@@ -56,9 +56,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void drawImage(Identifier tex, int x, int y, int width, int height) {
-        this.minecraft.getTextureManager().bindTexture(tex.internal);
-
-        GUIHelpers.texturedRect(this.width / 2 + x, this.height / 4 + y, width, height);
+        GUIHelpers.texturedRect(tex, this.width / 2 + x, this.height / 4 + y, width, height);
     }
 
     @Override
