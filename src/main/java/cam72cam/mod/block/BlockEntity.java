@@ -10,35 +10,40 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public abstract class BlockEntity {
     public TileEntity internal;
     public World world;
     public Vec3i pos;
 
-    public abstract void load(TagCompound nbt);
+    public void load(TagCompound nbt) throws SerializationException {
+    }
 
-    public abstract void save(TagCompound nbt);
+    public void save(TagCompound nbt) throws SerializationException {
+    }
 
-    public abstract void writeUpdate(TagCompound nbt);
+    public void writeUpdate(TagCompound nbt) throws SerializationException {
+    }
 
-    public abstract void readUpdate(TagCompound nbt);
+    public void readUpdate(TagCompound nbt) throws SerializationException {
+    }
 
+    public void onBreak() {
+    }
 
-    public abstract void onBreak();
-
-    public abstract boolean onClick(Player player, Hand hand, Facing facing, Vec3d hit);
+    public boolean onClick(Player player, Hand hand, Facing facing, Vec3d hit) {
+        return false;
+    }
 
     public abstract ItemStack onPick();
 
-    public abstract void onNeighborChange(Vec3i neighbor);
+    public void onNeighborChange(Vec3i neighbor) {
+    }
 
     public double getHeight() {
         return 1;

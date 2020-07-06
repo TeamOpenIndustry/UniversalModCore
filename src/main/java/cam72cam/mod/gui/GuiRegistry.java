@@ -9,7 +9,8 @@ import cam72cam.mod.gui.container.ServerContainerBuilder;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.world.World;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -31,6 +32,11 @@ public class GuiRegistry {
     }
 
     public static class OpenGuiPacket extends Packet {
+        @TagField
+        private String id;
+        @TagField
+        private TagCompound info;
+        @TagField
         private World world;
 
         public OpenGuiPacket() {
@@ -38,14 +44,14 @@ public class GuiRegistry {
         }
 
         public OpenGuiPacket(Identifier guiType, TagCompound info, World world) {
-            data.setString("id", guiType.toString());
-            data.set("info", info);
+            this.id = guiType.toString();
+            this.info = info;
             this.world = world;
         }
 
         @Override
         protected void handle() {
-            getPlayer().openGui(registry.get(new Identifier(data.getString("id"))).apply(this));
+            getPlayer().openGui(registry.get(new Identifier(id)).apply(this));
         }
 
         World getPktWorld() {
@@ -53,7 +59,7 @@ public class GuiRegistry {
         }
 
         public TagCompound getInfo() {
-            return data.get("info");
+            return info;
         }
     }
 

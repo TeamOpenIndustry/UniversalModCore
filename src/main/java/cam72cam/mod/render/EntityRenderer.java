@@ -6,6 +6,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.world.World;
 import net.fabricmc.fabric.api.client.render.EntityRendererRegistry;
 import net.minecraft.client.render.*;
@@ -78,16 +79,13 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
     public void render(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
         Entity self = stock.getSelf();
 
-        GL11.glPushMatrix();
-        {
-            GL11.glTranslated(x, y, z);
-            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-            GL11.glRotatef(-90, 0, 1, 0);
-            renderers.get(self.getClass()).render(self, partialTicks);
+        try (With c = OpenGL.matrix()) {
+                GL11.glTranslated(x, y, z);
+                GL11.glRotatef(180 - entityYaw, 0, 1, 0);
+                GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
+                GL11.glRotatef(-90, 0, 1, 0);
+                renderers.get(self.getClass()).render(self, partialTicks);
         }
-        GL11.glPopMatrix();
-
     }
 
     @Nullable

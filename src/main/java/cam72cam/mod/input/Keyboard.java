@@ -12,6 +12,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
+import cam72cam.mod.serialization.TagField;
 
 import java.util.*;
 
@@ -165,19 +166,22 @@ public class Keyboard {
     }
 
     public static class MovementPacket extends Packet {
-        public MovementPacket() {
+        @TagField
+        private UUID id;
+        @TagField
+        private Vec3d move;
 
-        }
+        public MovementPacket() {}
 
         public MovementPacket(UUID id, Vec3d move) {
-            data.setUUID("id", id);
-            data.setVec3d("move", move);
-            vecs.put(data.getUUID("id"), data.getVec3d("move"));
+            this.id = id;
+            this.move = move;
+            vecs.put(id, move);
         }
 
         @Override
         protected void handle() {
-            vecs.put(data.getUUID("id"), data.getVec3d("move"));
+            vecs.put(id, move);
         }
     }
 }

@@ -37,19 +37,24 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 
 import javax.annotation.Nonnull;
-import java.util.function.Supplier;
 
 public abstract class BlockTypeEntity extends BlockType {
     protected final Identifier id;
-    private final Supplier<BlockEntity> constructData;
 
-    public BlockTypeEntity(BlockSettings settings, Supplier<BlockEntity> constructData) {
-        super(settings.withRedstonePovider(constructData.get() instanceof IRedstoneProvider));
-        id = new Identifier(settings.modID, settings.name);
-        this.constructData = constructData;
-        TileEntity.register(constructData, () -> constructData.get().supplier(id), id);
+    public BlockTypeEntity(String modID, String name) {
+        super(modID, name);
+        id = new Identifier(modID, name);
+        TileEntity.register(this::constructBlockEntity, () -> constructBlockEntity().supplier(id), id);
     }
 
+    public abstract BlockEntity constructBlockEntity();
+
+    @Override
+    public final boolean isRedstoneProvider() {
+        return constructBlockEntity() instanceof IRedstoneProvider;
+    }
+
+    // Hack for initializing a "fake" te
     public BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = TileEntity.create(id);
         te.hasTileData = true;
@@ -135,7 +140,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     @Override
     public int getStrongPower(World world, Vec3i pos, Facing from) {
-        if (settings.redstoneProvider) {
+        if (isRedstoneProvider()) {
             BlockEntity instance = getInstance(world, pos);
             if (instance instanceof IRedstoneProvider) {
                 return ((IRedstoneProvider)instance).getStrongPower(from);
@@ -146,7 +151,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     @Override
     public int getWeakPower(World world, Vec3i pos, Facing from) {
-        if (settings.redstoneProvider) {
+        if (isRedstoneProvider()) {
             BlockEntity instance = getInstance(world, pos);
             if (instance instanceof IRedstoneProvider) {
                 return ((IRedstoneProvider)instance).getWeakPower(from);
@@ -162,7 +167,7 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.world.BlockView var1) {
-            return constructData.get().supplier(id);
+            return constructBlockEntity().supplier(id);
         }
 
         @Override

@@ -3,7 +3,9 @@ package cam72cam.mod.net;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
@@ -28,8 +30,7 @@ public abstract class Packet {
         ServerTickCallback.EVENT.register(server -> Packet.server = server);
     }
 
-
-    protected TagCompound data = new TagCompound();
+    private TagCompound data;
     private Player player;
     private Supplier<World> world;
 
@@ -40,6 +41,11 @@ public abstract class Packet {
                 ServerSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
+                    try {
+                        TagSerializer.deserialize(packet.data, packet);
+                    } catch (SerializationException e) {
+                        ModCore.catching(e);
+                    }
                     packet.player = new Player(ctx.getPlayer());
                     packet.world = () -> packet.player.getWorld();
                     ctx.getTaskQueue().execute(packet::handle);
@@ -52,6 +58,11 @@ public abstract class Packet {
                 ClientSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
+                    try {
+                        TagSerializer.deserialize(packet.data, packet);
+                    } catch (SerializationException e) {
+                        ModCore.catching(e);
+                    }
                     packet.world = () -> World.get(ctx.getPlayer().getEntityWorld());
                     packet.player = new Player(ctx.getPlayer());
                     ctx.getTaskQueue().execute(packet::handle);
@@ -74,33 +85,38 @@ public abstract class Packet {
         return player;
     }
 
-    public void sendToAllAround(World world, Vec3d pos, double distance) {
+    protected PacketByteBuf getBuffer() {
         PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
+        data = new TagCompound();
+        try {
+            TagSerializer.serialize(data, this);
+        } catch (SerializationException e) {
+            ModCore.catching(e);
+        }
         buff.writeCompoundTag(data.internal);
-        PlayerStream.around(world.internal, pos.internal, distance).forEach(x -> ((ServerPlayerEntity)x).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), buff)));
+        return buff;
+    }
+
+
+    public void sendToAllAround(World world, Vec3d pos, double distance) {
+        PlayerStream.around(world.internal, pos.internal, distance).forEach(x -> ((ServerPlayerEntity)x).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), getBuffer())));
     }
 
     public void sendToServer() {
-        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
-        buff.writeCompoundTag(data.internal);
-        ClientSidePacketRegistry.INSTANCE.sendToServer(new CustomPayloadC2SPacket(getIdent(), buff));
+        ClientSidePacketRegistry.INSTANCE.sendToServer(new CustomPayloadC2SPacket(getIdent(), getBuffer()));
     }
 
     public void sendToAll() {
-        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
-        buff.writeCompoundTag(data.internal);
         if (server == null) {
             return;
         }
-        server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), buff));
+        server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), getBuffer()));
     }
 
     public void sendToPlayer(Player player) {
-        PacketByteBuf buff = new PacketByteBuf(Unpooled.buffer());
-        buff.writeCompoundTag(data.internal);
         if (server == null) {
             return;
         }
-        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player.internal, new CustomPayloadS2CPacket(getIdent(), buff));
+        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player.internal, new CustomPayloadS2CPacket(getIdent(), getBuffer()));
     }
 }

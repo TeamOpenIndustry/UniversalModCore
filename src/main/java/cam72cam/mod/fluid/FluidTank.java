@@ -3,10 +3,14 @@ package cam72cam.mod.fluid;
 import alexiil.mc.lib.attributes.Simulation;
 import alexiil.mc.lib.attributes.fluid.filter.ExactFluidFilter;
 import alexiil.mc.lib.attributes.fluid.impl.SimpleFixedFluidInv;
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class FluidTank implements ITank {
     public FluidInv internal;
+    private Supplier<List<Fluid>> filter;
+    private Runnable onChange = () -> {};
 
     private class FluidInv extends SimpleFixedFluidInv {
         FluidInv(FluidStack fluidStack, int capacity) {
@@ -19,11 +23,11 @@ public class FluidTank implements ITank {
 
     public FluidTank(FluidStack fluidStack, int capacity) {
         internal = new FluidInv(fluidStack, capacity);
-        internal.addListener((inv, tank, previous, current) -> { FluidTank.this.onChanged(); }, () -> {});
+        internal.addListener((inv, tank, previous, current) -> { FluidTank.this.onChange.run(); }, () -> {});
     }
 
-    public void onChanged() {
-        //NOP
+    public void onChanged(Runnable onChange) {
+        this.onChange = onChange;
     }
 
     @Override
@@ -38,12 +42,20 @@ public class FluidTank implements ITank {
 
     public void setCapacity(int milliBuckets) {
         internal = new FluidInv(getContents(), milliBuckets);
-        internal.addListener((inv, tank, previous, current) -> { FluidTank.this.onChanged(); }, () -> {});
+        internal.addListener((inv, tank, previous, current) -> FluidTank.this.onChange.run(), () -> {});
+    }
+
+    /**
+     * null == all
+     * [] == none
+     */
+    public void setFilter(Supplier<List<Fluid>> filter) {
+        this.filter = filter;
     }
 
     @Override
     public boolean allows(Fluid fluid) {
-        return internal.isFluidValidForTank(0, fluid.internal);
+        return (filter == null || filter.get() == null || filter.get().contains(fluid)) && internal.isFluidValidForTank(0, fluid.internal);
     }
 
     @Override

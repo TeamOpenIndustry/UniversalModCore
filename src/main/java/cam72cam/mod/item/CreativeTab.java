@@ -1,9 +1,7 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.text.TextUtil;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.minecraft.item.ItemGroup;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;

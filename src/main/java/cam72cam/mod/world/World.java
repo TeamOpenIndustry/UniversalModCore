@@ -18,7 +18,6 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -34,6 +33,7 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.WorldChunk;
+import cam72cam.mod.serialization.TagCompound;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -431,12 +431,12 @@ public class World {
         return getInventory(offset);
     }
 
-    public ITank getTank(Vec3i offset) {
+    public List<ITank> getTank(Vec3i offset) {
         FixedFluidInv inv = FluidAttributes.FIXED_INV.getFirstOrNull(internal, offset.internal);
         return ITank.getTank(inv);
     }
 
-    public ITank getTank(Vec3i offset, Facing dir) {
+    public List<ITank> getTank(Vec3i offset, Facing dir) {
         return getTank(offset);
     }
 

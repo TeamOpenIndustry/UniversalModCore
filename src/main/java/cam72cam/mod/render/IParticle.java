@@ -7,7 +7,6 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Camera;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public abstract class IParticle {
         return register(ctr, null);
     }
 
-    public static <P extends ParticleData, I extends IParticle> Consumer<P> register(Function<P, I> ctr, TriConsumer<List<I>, Consumer<I>, Float> renderer) {
+    public static <P extends ParticleData, I extends IParticle> Consumer<P> register(Function<P, I> ctr, MultiRenderer<I> renderer) {
         List<I> particles = new ArrayList<>();
 
         return data -> {
@@ -52,12 +51,10 @@ public abstract class IParticle {
                     ip.renderPos = ip.renderPos.add(this.velocityX * partialTicks, this.velocityY * partialTicks, this.velocityZ * partialTicks);
 
                     if (renderer == null) {
-                        GL11.glPushMatrix();
-                        {
+                        try (OpenGL.With c = OpenGL.matrix()) {
                             GL11.glTranslated(ip.renderPos.x, ip.renderPos.y, ip.renderPos.z);
                             ip.render(partialTicks);
                         }
-                        GL11.glPopMatrix();
                     } else {
                         if (!ip.canRender) {
                             renderer.accept(particles, subp -> GL11.glTranslated(subp.renderPos.x, subp.renderPos.y, subp.renderPos.z), partialTicks);
@@ -77,6 +74,11 @@ public abstract class IParticle {
     protected abstract boolean depthTestEnabled();
 
     protected abstract void render(float partialTicks);
+
+    @FunctionalInterface
+    public interface MultiRenderer<I extends IParticle> {
+        void accept(List<I> l, Consumer<I> c, float pt);
+    }
 
     public static class ParticleData {
         public final World world;

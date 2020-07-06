@@ -46,6 +46,8 @@ dependencies {
 
 	modImplementation "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
 	include "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
+
+	testCompile('junit:junit:4.13')
 }
 
 processResources {
@@ -99,4 +101,9 @@ publishing {
 		// uncomment to publish to the local maven
 		// mavenLocal()
 	}
+}
+
+test {
+	useJUnit()
+	maxHeapSize = '1G'
 }

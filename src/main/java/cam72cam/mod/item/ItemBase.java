@@ -1,6 +1,5 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
@@ -26,21 +25,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ItemBase {
+public abstract class ItemBase {
     public final Item internal;
-    private final CreativeTab[] creativeTabs;
     private final Identifier identifier;
 
-    public ItemBase(String modID, String name, int stackSize, CreativeTab... tabs) {
-        internal = new ItemInternal(modID, name, stackSize, tabs);
+    public ItemBase(String modID, String name) {
+        internal = new ItemInternal();
         identifier = new Identifier(modID, name);
-        this.creativeTabs = tabs;
 
         Registry.ITEM.add(identifier.internal, internal);
 
-        for (CreativeTab tab : tabs) {
+        for (CreativeTab tab : getCreativeTabs()) {
             tab.items.add(list -> list.addAll(getItemVariants(tab).stream().map(x -> x.internal).collect(Collectors.toList())));
         }
+    }
+
+    public abstract List<CreativeTab> getCreativeTabs();
+
+    public int getStackSize() {
+        return 64;
     }
 
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
@@ -50,8 +53,6 @@ public class ItemBase {
         }
         return res;
     }
-
-    /* Overrides */
 
     public List<String> getTooltip(ItemStack itemStack) {
         return Collections.emptyList();
@@ -83,8 +84,8 @@ public class ItemBase {
     }
 
     private class ItemInternal extends Item {
-        public ItemInternal(String modID, String name, int stackSize, CreativeTab[] tabs) {
-            super(new Item.Settings().group(tabs[0].internal).maxCount(stackSize));
+        public ItemInternal() {
+            super(new Item.Settings().group(getCreativeTabs().get(0).internal).maxCount(getStackSize()));
             // TODO 1.14.4 MobEntity.canEquipmentSlotContain()
         }
 

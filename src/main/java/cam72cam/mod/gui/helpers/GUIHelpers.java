@@ -3,6 +3,7 @@ package cam72cam.mod.gui.helpers;
 import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
@@ -10,6 +11,7 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 public class GUIHelpers {
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
@@ -21,39 +23,44 @@ public class GUIHelpers {
         float f = (float) (color >> 16 & 255) / 255.0F;
         float f1 = (float) (color >> 8 & 255) / 255.0F;
         float f2 = (float) (color & 255) / 255.0F;
-        GL11.glColor4f(f, f1, f2, f3);
 
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION);
-        bufferbuilder.vertex(x + 0, y + height, zLevel).next();
-        bufferbuilder.vertex(x + width, y + height, zLevel).next();
-        bufferbuilder.vertex(x + width, y + 0, zLevel).next();
-        bufferbuilder.vertex(x + 0, y + 0, zLevel).next();
-        tessellator.draw();
-
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-
-        GL11.glColor4f(1, 1, 1, 1);
+        try (
+                OpenGL.With c = OpenGL.color(f, f1, f2, f3);
+                OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, false)
+        ) {
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder bufferbuilder = tessellator.getBuffer();
+            bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION);
+            bufferbuilder.vertex(x + 0, y + height, zLevel).next();
+            bufferbuilder.vertex(x + width, y + height, zLevel).next();
+            bufferbuilder.vertex(x + width, y + 0, zLevel).next();
+            bufferbuilder.vertex(x + 0, y + 0, zLevel).next();
+            tessellator.draw();
+        }
     }
 
-    public static void texturedRect(double x, double y, double width, double height) {
-        double zLevel = 0;
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferbuilder.vertex(x + 0, y + height, zLevel).texture(0, 1).next();
-        bufferbuilder.vertex(x + width, y + height, zLevel).texture(1, 1).next();
-        bufferbuilder.vertex(x + width, y + 0, zLevel).texture(1, 0).next();
-        bufferbuilder.vertex(x + 0, y + 0, zLevel).texture(0, 0).next();
-        tessellator.draw();
+    public static void texturedRect(Identifier tex, double x, double y, double width, double height) {
+        texturedRect(tex, x, y, width, height, 0, 0);
+    }
+
+    public static void texturedRect(Identifier tex, double x, double y, double width, double height, int texX, int texY) {
+        try (OpenGL.With t = OpenGL.texture(tex)) {
+            double zLevel = 0;
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder bufferbuilder = tessellator.getBuffer();
+            bufferbuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
+            bufferbuilder.vertex(x + 0, y + height, zLevel).texture(0, 1).next();
+            bufferbuilder.vertex(x + width, y + height, zLevel).texture(1, 1).next();
+            bufferbuilder.vertex(x + width, y + 0, zLevel).texture(1, 0).next();
+            bufferbuilder.vertex(x + 0, y + 0, zLevel).texture(0, 0).next();
+            tessellator.draw();
+        }
     }
 
     public static void drawFluid(Fluid fluid, double x, double d, double width, int height, int scale) {
-        FluidVolume.create(fluid.internal, 1000).renderGuiRect(x, d, x + width, d + height);
-        MinecraftClient.getInstance().getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
+        try (OpenGL.With t = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            FluidVolume.create(fluid.internal, 1000).renderGuiRect(x, d, x + width, d + height);
+        }
     }
 
     public static void drawTankBlock(double x, double y, double width, double height, Fluid fluid, float percentFull) {
@@ -74,11 +81,9 @@ public class GUIHelpers {
     }
 
     public static void drawCenteredString(String text, int x, int y, int color) {
-        MinecraftClient.getInstance().textRenderer.drawWithShadow(text, (float) (x - MinecraftClient.getInstance().textRenderer.getStringWidth(text) / 2), (float) y, color);
-    }
-
-    public static void bindTexture(Identifier tex) {
-        MinecraftClient.getInstance().getTextureManager().bindTexture(tex.internal);
+        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
+            MinecraftClient.getInstance().textRenderer.drawWithShadow(text, (float) (x - MinecraftClient.getInstance().textRenderer.getStringWidth(text) / 2), (float) y, color);
+        }
     }
 
     public static int getScreenWidth() {
@@ -90,6 +95,13 @@ public class GUIHelpers {
     }
 
     public static void drawItem(ItemStack stack, int x, int y) {
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(stack.internal, x, y);
+        try (
+            OpenGL.With c = OpenGL.color(1, 1, 1, 1);
+            OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
+            OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
+        ) {
+            MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(stack.internal, x, y);
+        }
     }
 }

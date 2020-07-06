@@ -63,13 +63,11 @@ public class StandardModel {
 
     public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
         custom.add((pt) -> {
-            GL11.glPushMatrix();
-            {
+            try (OpenGL.With matrix = OpenGL.matrix()) {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 MinecraftClient.getInstance().getItemRenderer().renderItem(stack.internal, ModelTransformation.Type .NONE);
             }
-            GL11.glPopMatrix();
         });
         return this;
     }

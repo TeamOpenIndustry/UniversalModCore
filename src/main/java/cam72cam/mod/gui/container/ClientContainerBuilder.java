@@ -12,6 +12,8 @@ import net.minecraft.client.gui.screen.ingame.ContainerScreen;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.text.LiteralText;
+import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.resource.Identifier;
 import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
@@ -41,50 +43,55 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
 
     @Override
     protected void drawBackground(float partialTicks, int mouseX, int mouseY) {
-        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
-        this.centerX = (this.width - this.containerWidth)/2;
-        this.centerY = (this.height - this.containerHeight)/2;
-        server.draw.accept(this);
+        try (OpenGL.With color = OpenGL.color(1, 1, 1, 1)) {
+            GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            this.centerX = (this.width - this.containerWidth) / 2;
+            this.centerY = (this.height - this.containerHeight) / 2;
+            server.draw.accept(this);
+        }
     }
 
     /* IContainerBuilder */
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        super.blit(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
-        // Top Bar
-        for (int k = 1; k <= slots; k++) {
-            super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            super.blit(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
+            // Top Bar
+            for (int k = 1; k <= slots; k++) {
+                super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
+            }
+            // Top Right Corner
+            super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
         }
-        // Top Right Corner
-        super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
-
         return y + topOffset;
     }
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
-        x += paddingLeft;
-        if (handler != null && handler.getSlotCount() > slotID) {
-            super.blit(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
-        } else {
-            DrawableHelper.fill(centerX + x, centerY + y, centerX + x + slotSize, centerY + y + slotSize, 0xFF444444);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            x += paddingLeft;
+            if (handler != null && handler.getSlotCount() > slotID) {
+                super.blit(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
+            } else {
+                DrawableHelper.fill(centerX + x, centerY + y, centerX + x + slotSize, centerY + y + slotSize, 0xFF444444);
+            }
         }
     }
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
-        // Left Side
-        super.blit(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
-        // Middle Slots
-        for (int slotID = start; slotID < start + cols; slotID++) {
-            int slotOff = (slotID - start);
-            drawSlot(handler, slotID, x + slotOff * slotSize, y);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            // Left Side
+            super.blit(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
+            // Middle Slots
+            for (int slotID = start; slotID < start + cols; slotID++) {
+                int slotOff = (slotID - start);
+                drawSlot(handler, slotID, x + slotOff * slotSize, y);
+            }
+            // Right Side
+            super.blit(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         }
-        GL11.glColor4f(1, 1, 1, 1);
-        // Right Side
-        super.blit(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         return y + slotSize;
     }
 
@@ -102,34 +109,41 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
-        // Left Bottom
-        super.blit(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
-        // Middle Bottom
-        for (int k = 1; k <= slots; k++) {
-            super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            // Left Bottom
+            super.blit(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
+            // Middle Bottom
+            for (int k = 1; k <= slots; k++) {
+                super.blit(centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
+            }
+            // Right Bottom
+            super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
         }
-        // Right Bottom
-        super.blit(centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
-
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        super.blit(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            super.blit(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
+        }
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        super.blit(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            super.blit(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
+        }
         return y + midBarHeight;
     }
 
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        super.blit(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+            super.blit(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+        }
         return y + 96;
     }
 
@@ -163,7 +177,6 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
     @Override
     public void drawCenteredString(String text, int x, int y) {
         super.drawCenteredString(this.font, text, x + centerX + this.containerWidth / 2, y + centerY, 14737632);
-        this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
     }
 
     @Override
@@ -174,12 +187,13 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
         this.minecraft.getItemRenderer().renderGuiItemIcon(stack.internal, x, y);
         this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
 
-        GlStateManager.enableAlphaTest();
-        GlStateManager.disableDepthTest();
-        DrawableHelper.fill(x, y, x + 16, y + 16, -2130706433);
-        GlStateManager.enableDepthTest();
-
-        GL11.glColor4f(1, 1, 1, 1);
+        try (
+                OpenGL.With color = OpenGL.color(1, 1, 1, 1);
+                OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
+                OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false)
+        ) {
+            DrawableHelper.fill(x, y, x + 16, y + 16, -2130706433);
+        }
     }
 
     @Override
@@ -192,12 +206,14 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
             spriteId = "minecraft:block/fire_1";
         }
 
-        GUIHelpers.drawRect(x, y + (int)(16 - 16 * height), 16,  16 * height, color);
+        GUIHelpers.drawRect(x, y + (int) (16 - 16 * height), 16, 16 * height, color);
 
         Sprite sprite = minecraft.getSpriteAtlas().getSprite(spriteId);
-        minecraft.getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
-        GlStateManager.color4f(1,1,1,1);
-        DrawableHelper.blit(x, y, 0, 16, 16, sprite);
-        minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE.internal);
+        try (
+                OpenGL.With color_ = OpenGL.color(1,1,1,1);
+                OpenGL.With tex = OpenGL.texture(new Identifier(SpriteAtlasTexture.BLOCK_ATLAS_TEX))
+        ) {
+            DrawableHelper.blit(x, y, 0, 16, 16, sprite);
+        }
     }
 }

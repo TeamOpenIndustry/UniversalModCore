@@ -8,7 +8,11 @@ import alexiil.mc.lib.attributes.misc.Ref;
 import cam72cam.mod.item.ItemStack;
 
 import java.util.Set;
+
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public interface ITank {
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
@@ -62,37 +66,37 @@ public interface ITank {
         };
     }
 
-    static ITank getTank(FixedFluidInv internal) {
+    static List<ITank> getTank(FixedFluidInv internal) {
         if (internal == null) {
             return null;
         }
 
-        return new ITank() {
+        return IntStream.range(0, internal.getTankCount()).mapToObj(i -> new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(internal.getTank(0).get());
+                return new FluidStack(internal.getTank(i).get());
             }
 
             @Override
             public int getCapacity() {
-                return internal.getTank(0).getMaxAmount();
+                return internal.getTank(i).getMaxAmount();
             }
 
             @Override
             public boolean allows(Fluid fluid) {
-                return internal.getTank(0).isValid(fluid.internal);
+                return internal.getTank(i).isValid(fluid.internal);
             }
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                return fluidStack.getAmount() - internal.getTank(0).attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
+                return fluidStack.getAmount() - internal.getTank(i).attemptInsertion(fluidStack.internal, simulate ? Simulation.SIMULATE : Simulation.ACTION).getAmount();
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                return new FluidStack(internal.getTank(0).attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
+                return new FluidStack(internal.getTank(i).attemptExtraction(new ExactFluidFilter(fluidStack.internal.getFluidKey()), fluidStack.internal.getAmount(), simulate ? Simulation.SIMULATE : Simulation.ACTION));
             }
-        };
+        }).collect(Collectors.toList());
     }
 
     FluidStack getContents();

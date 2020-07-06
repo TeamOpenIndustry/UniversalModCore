@@ -24,15 +24,17 @@ import net.minecraft.world.BlockView;
 
 public abstract class BlockType {
     public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
     public final Identifier identifier;
+    private final String name;
+    private final String modID;
 
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
+    public BlockType(String modID, String name) {
+        this.modID = modID;
+        this.name = name;
 
         internal = getBlock();
 
-        identifier = new Identifier(settings.modID, settings.name);
+        identifier = new Identifier(modID, name);
 
         CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, identifier, internal));
 
@@ -45,8 +47,8 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
+    public final String getName() {
+        return name;
     }
 
     protected BlockInternal getBlock() {
@@ -54,6 +56,26 @@ public abstract class BlockType {
     }
 
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+    public boolean isConnectable() {
+        return true;
+    }
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
@@ -82,10 +104,10 @@ public abstract class BlockType {
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
             super(FabricBlockSettings
-                    .of(settings.material.internal)
-                    .sounds(settings.material.soundType)
-                    .hardness(settings.hardness)
-                    .resistance(settings.resistance)
+                    .of(BlockType.this.getMaterial().internal)
+                    .sounds(BlockType.this.getMaterial().soundType)
+                    .hardness(BlockType.this.getHardness())
+                    .resistance(BlockType.this.getExplosionResistance())
                     .dynamicBounds()
                     .build());
         }
@@ -147,8 +169,8 @@ public abstract class BlockType {
          */
         /*
         @Override
-        public boolean canBeConnectedTo(BlockView internal, BlockPos pos, Direction facing) {
-            return settings.connectable;
+        public boolean canBeConnectedTo(IBlockAccess internal, BlockPos pos, EnumFacing facing) {
+            return BlockType.this.isConnectable();
         }
         */
 
@@ -161,19 +183,19 @@ public abstract class BlockType {
         @Override
         public int getWeakRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public int getStrongRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public boolean emitsRedstonePower(BlockState state)
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         /* TODO

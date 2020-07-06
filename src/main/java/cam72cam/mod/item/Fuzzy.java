@@ -1,7 +1,6 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
-import com.google.gson.JsonArray;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
@@ -11,7 +10,6 @@ import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Fuzzy {
@@ -154,10 +152,6 @@ public class Fuzzy {
             subTags.add(other);
         }
         return this;
-    }
-
-    public void clear() {
-        // This might break stuff in fantastic ways!
     }
 
     @Override

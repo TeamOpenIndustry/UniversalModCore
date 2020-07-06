@@ -10,8 +10,9 @@ public class ChunkPos {
 
     public ChunkPos(World world, BlockPos pos) {
         dim = world.getDimension().getType().getRawId();
-        chunkX = pos.getX() >> 4;
-        chunkZ = pos.getZ() >> 4;
+        net.minecraft.util.math.ChunkPos chunk = world.getChunk(pos).getPos();
+        chunkX = chunk.x;
+        chunkZ = chunk.z;
     }
 
     @Override
