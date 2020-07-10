@@ -1,6 +1,9 @@
 package cam72cam.mod.event;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.automate.Automation;
+import cam72cam.mod.automate.Playbook;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
@@ -9,6 +12,8 @@ import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
 import cam72cam.mod.util.Hand;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.RegistryEvent;
@@ -18,6 +23,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -52,10 +61,13 @@ public class ClientEvents {
     public static class ClientEventBus {
         static {
             registerClientEvents();
+            //TODO remove me?
+            Automation.INSTANCE.tick();
         }
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
+            Automation.INSTANCE.tick();
             TICK.execute(Runnable::run);
         }
 

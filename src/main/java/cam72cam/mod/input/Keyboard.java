@@ -131,7 +131,7 @@ public class Keyboard {
         LMETA(org.lwjgl.input.Keyboard.KEY_LMETA),
         RMETA(org.lwjgl.input.Keyboard.KEY_RMETA);
 
-        private final int code;
+        public final int code;
 
         KeyCode(int code) {
             this.code = code;
