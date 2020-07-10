@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiTextField;
 
 import java.awt.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,11 +37,19 @@ public class GuiSetText extends Action {
                     if (field.getName().toLowerCase().contains(partialName.toLowerCase()) && GuiTextField.class.isAssignableFrom(field.getType())) {
                         field.setAccessible(true);
                         GuiTextField textField = (GuiTextField) field.get(screen);
-                        textField.setText(value);
+                        //textField.setText(value);
+                        textField.setText("");
+                        textField.setFocused(true);
+                        for (char c : value.toCharArray()) {
+                            //textField.textboxKeyTyped(c, -1);
+                            Method keyTyped = GuiScreen.class.getDeclaredMethod("keyTyped", char.class, int.class);
+                            keyTyped.setAccessible(true);
+                            keyTyped.invoke(screen, c, -1);
+                        }
                         return true;
                     }
                 }
-            } catch (IllegalAccessException e) {
+            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }

@@ -62,7 +62,7 @@ public class GuiSelectWorld extends Action {
         panel.add(l);
 
         TextField tn = new TextField(worldName);
-        tn.addActionListener(a -> worldName = tn.getText());
+        tn.addTextListener(a -> worldName = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
     }

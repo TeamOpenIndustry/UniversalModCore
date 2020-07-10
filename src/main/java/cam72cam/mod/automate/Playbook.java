@@ -115,9 +115,10 @@ public class Playbook extends Panel {
                 public void mouseClicked(MouseEvent mouseEvent) {
                     if (actionIdx == finalI) {
                         runStep = true;
+                    } else {
+                        actionIdx = finalI;
+                        redraw();
                     }
-                    actionIdx = finalI;
-                    redraw();
                     super.mouseClicked(mouseEvent);
                 }
             });

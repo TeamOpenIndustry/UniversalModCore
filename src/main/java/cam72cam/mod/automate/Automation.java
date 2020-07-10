@@ -17,6 +17,7 @@ public class Automation {
         Action.register(PlayerLook.TYPE, PlayerLook::new, PlayerLook::getPotential);
         Action.register(GuiSelectWorld.TYPE, GuiSelectWorld::new, GuiSelectWorld::getPotential);
         Action.register(WaitTicks.TYPE, WaitTicks::new, WaitTicks::getPotential);
+        Action.register(GuiSelectCreativeTab.TYPE, GuiSelectCreativeTab::new, GuiSelectCreativeTab::getPotential);
     }
 
 }

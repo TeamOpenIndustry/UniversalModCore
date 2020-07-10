@@ -62,7 +62,7 @@ public class GuiClickButton extends Action {
         panel.add(l);
 
         TextField tn = new TextField(buttonText);
-        tn.addActionListener(a -> buttonText = tn.getText());
+        tn.addTextListener(a -> buttonText = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
     }

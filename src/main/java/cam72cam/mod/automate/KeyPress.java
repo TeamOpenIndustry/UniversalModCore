@@ -37,8 +37,13 @@ public class KeyPress extends Action {
             // Hack...
             if (Minecraft.getMinecraft().currentScreen == null && enKey == Keyboard.KeyCode.ESCAPE) {
                 Minecraft.getMinecraft().displayInGameMenu();
-            } else {
-                if (Minecraft.getMinecraft().currentScreen != null) {
+            } else if (Minecraft.getMinecraft().currentScreen != null) {
+                if (enKey == Keyboard.KeyCode.ESCAPE) {
+                    Minecraft.getMinecraft().displayGuiScreen((GuiScreen) null);
+                    if (Minecraft.getMinecraft().currentScreen == null) {
+                        Minecraft.getMinecraft().setIngameFocus();
+                    }
+                } else {
                     try {
                         Method keyTyped = GuiScreen.class.getDeclaredMethod("keyTyped", char.class, int.class);
                         keyTyped.setAccessible(true);
