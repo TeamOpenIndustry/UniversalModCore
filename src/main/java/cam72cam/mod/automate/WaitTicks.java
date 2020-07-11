@@ -22,11 +22,14 @@ public class WaitTicks extends Action {
 
     @Override
     public boolean tick() {
-        counter++;
-        if (counter >= Integer.parseInt(ticks)) {
+        if (counter > Integer.parseInt(ticks)) {
+            counter = 0;
+        }
+        if (counter == Integer.parseInt(ticks)) {
             counter = 0;
             return true;
         }
+        counter++;
         return false;
     }
 

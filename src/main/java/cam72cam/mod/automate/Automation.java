@@ -18,6 +18,8 @@ public class Automation {
         Action.register(GuiSelectWorld.TYPE, GuiSelectWorld::new, GuiSelectWorld::getPotential);
         Action.register(WaitTicks.TYPE, WaitTicks::new, WaitTicks::getPotential);
         Action.register(GuiSelectCreativeTab.TYPE, GuiSelectCreativeTab::new, GuiSelectCreativeTab::getPotential);
+        Action.register(GuiClickSlot.TYPE, GuiClickSlot::new, GuiClickSlot::getPotential);
+        Action.register(ClickButton.TYPE, ClickButton::new, ClickButton::getPotential);
     }
 
 }
