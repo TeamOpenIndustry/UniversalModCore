@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +51,6 @@ public class Playbook extends JScrollPane {
         }
 
         this.redraw();
-
     }
 
     public void startover() {
@@ -105,6 +105,52 @@ public class Playbook extends JScrollPane {
 
     private void redraw() {
         pane.removeAll();
+
+        pane.addMouseListener(new MouseAdapter() {
+            private int start;
+            /*
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (actionIdx == finalI) {
+                    runStep = true;
+                } else {
+                    actionIdx = finalI;
+                    redraw();
+                }
+            }*/
+
+            @Override
+            public void mousePressed(MouseEvent mouseEvent) {
+                if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                    this.start = Arrays.asList(pane.getComponents()).indexOf(pane.getComponentAt(mouseEvent.getPoint()));
+                    pane.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent mouseEvent) {
+                int dest = Arrays.asList(pane.getComponents()).indexOf(pane.getComponentAt(mouseEvent.getPoint()));
+                if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                    pane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    if (dest >= 0 && start >= 0) {
+                        if (dest / 2 != start / 2) {
+                            Action got = actions.remove(start / 2);
+                            actions.add(dest / 2, got);
+                            start = -1;
+                            redraw();
+                        }
+                    }
+                }
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                    if (actionIdx != dest/2 && dest >= 0) {
+                        System.out.println(actionIdx);
+                        actionIdx = dest/2;
+                        redraw();
+                    }
+                }
+            }
+        });
+
         for (int i = 0; i < actions.size(); i++) {
             JPanel sub = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -114,19 +160,6 @@ public class Playbook extends JScrollPane {
             if (i == actionIdx) {
                 sub.setBackground(runStep || runAll ? Color.GREEN : Color.YELLOW);
             }
-            int finalI = i;
-            l.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent mouseEvent) {
-                    if (actionIdx == finalI) {
-                        runStep = true;
-                    } else {
-                        actionIdx = finalI;
-                        redraw();
-                    }
-                    super.mouseClicked(mouseEvent);
-                }
-            });
 
             action.renderEditor(sub);
             sub.revalidate();
