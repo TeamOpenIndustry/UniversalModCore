@@ -129,12 +129,8 @@ public class UserInterface extends JFrame {
             restart.setEnabled(true);
             addMenu.setEnabled(true);
 
-            JScrollPane pane = new JScrollPane(playbook);
-
-            playbook.pane = pane;
-
             JToolBar tb = new JToolBar("Playbook");
-            tb.add(pane);
+            tb.add(playbook);
             add(tb, BorderLayout.CENTER);
 
             this.revalidate();

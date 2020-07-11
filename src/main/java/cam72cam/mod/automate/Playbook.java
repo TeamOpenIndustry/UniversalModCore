@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Playbook extends JPanel {
+public class Playbook extends JScrollPane {
     private final File file;
 
     private final List<Action> actions = new ArrayList<>();
-    JScrollPane pane;
+    JPanel pane;
     private int actionIdx = 0;
     private boolean runStep = false;
     private boolean runAll = false;
@@ -23,7 +23,9 @@ public class Playbook extends JPanel {
     private final GridBagConstraints c;
 
     public Playbook(File file) throws IOException {
-        super(new GridBagLayout());
+        super();
+        pane = new JPanel(new GridBagLayout());
+        setViewportView(pane);
         setName(file.getName());
 
         c = new GridBagConstraints();
@@ -102,10 +104,7 @@ public class Playbook extends JPanel {
     }
 
     private void redraw() {
-        if (pane != null) {
-            pane.getVerticalScrollBar().setValue((int) (pane.getVerticalScrollBar().getMaximum() * ((double)actionIdx / actions.size())));
-        }
-        this.removeAll();
+        pane.removeAll();
         for (int i = 0; i < actions.size(); i++) {
             JPanel sub = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -136,14 +135,14 @@ public class Playbook extends JPanel {
             c.gridx = 0;
             c.gridy = i;
             c.gridwidth = 1;
-            this.add(l, c);
+            pane.add(l, c);
             c.fill = GridBagConstraints.HORIZONTAL;
             c.gridx = 1;
             c.gridy = i;
             c.gridwidth = 5;
-            this.add(sub, c);
+            pane.add(sub, c);
         }
-        this.revalidate();
+        pane.revalidate();
     }
 
     public void removeCurrentAction() {
