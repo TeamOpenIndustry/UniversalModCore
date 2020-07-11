@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
-import java.awt.*;
+import javax.swing.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -70,32 +70,32 @@ public class GuiSetText extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Set text of ");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Set text of ");
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(partialName);
-        tn.addTextListener(a -> {
+        JTextField tn = new JTextField(partialName);
+        tn.getDocument().addDocumentListener((TextListener)() -> {
             partialName = tn.getText();
         });
         tn.setVisible(true);
         panel.add(tn);
 
-        Label l2 = new Label(" to ");
+        JLabel l2 = new JLabel(" to ");
         l2.setVisible(true);
         panel.add(l2);
 
-        TextField tv = new TextField(value);
-        tv.addTextListener(e -> {
+        JTextField tv = new JTextField(value);
+        tv.getDocument().addDocumentListener((TextListener)() -> {
             value = tv.getText();
         });
         panel.add(tv);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label(String.format("Set text of %%%s%% to '%s'", partialName, value));
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel(String.format("Set text of %%%s%% to '%s'", partialName, value));
         l.setVisible(true);
         panel.add(l);
     }

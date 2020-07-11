@@ -1,4 +1,4 @@
-package #PACKAGE#;
+/*package #PACKAGE#;
 
 import cam72cam.mod.ModCore;
 
@@ -14,3 +14,4 @@ public class Mod {
         }
     }
 }
+*/

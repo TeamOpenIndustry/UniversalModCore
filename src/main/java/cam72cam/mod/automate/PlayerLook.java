@@ -2,10 +2,8 @@ package cam72cam.mod.automate;
 
 import cam72cam.mod.util.CollectionUtil;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.input.Mouse;
 
-import java.awt.*;
-import java.lang.reflect.Field;
+import javax.swing.*;
 import java.util.List;
 
 public class PlayerLook extends Action {
@@ -35,28 +33,28 @@ public class PlayerLook extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Player look yaw:");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Player look yaw:");
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(yaw);
-        tn.addTextListener(a -> yaw = tn.getText());
+        JTextField tn = new JTextField(yaw);
+        tn.getDocument().addDocumentListener((TextListener)() -> yaw = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
 
-        Label l2 = new Label("pitch:");
+        JLabel l2 = new JLabel("pitch:");
         l2.setVisible(true);
         panel.add(l2);
 
-        TextField tv = new TextField(pitch);
-        tv.addTextListener(e -> pitch = tv.getText());
+        JTextField tv = new JTextField(pitch);
+        tn.getDocument().addDocumentListener((TextListener)() -> pitch = tv.getText());
         panel.add(tv);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label(String.format("Player look yaw:%s pitch:%s", yaw, pitch));
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel(String.format("Player look yaw:%s pitch:%s", yaw, pitch));
         l.setVisible(true);
         panel.add(l);
     }

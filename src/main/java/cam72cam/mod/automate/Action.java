@@ -1,6 +1,6 @@
 package cam72cam.mod.automate;
 
-import java.awt.*;
+import javax.swing.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
@@ -39,9 +39,9 @@ public abstract class Action {
     public abstract List<String> getParams();
     public abstract boolean tick();
 
-    public abstract void renderEditor(Container panel);
+    public abstract void renderEditor(JComponent panel);
 
-    public abstract void renderSummary(Container panel);
+    public abstract void renderSummary(JComponent panel);
 
     public final String serialize() {
         return type + "|||" + String.join("|||", getParams());

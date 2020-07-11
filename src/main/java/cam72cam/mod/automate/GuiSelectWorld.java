@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiWorldSelection;
 import net.minecraft.world.storage.WorldSummary;
 
-import java.awt.*;
+import javax.swing.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,20 +56,20 @@ public class GuiSelectWorld extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Select World");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Select World");
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(worldName);
-        tn.addTextListener(a -> worldName = tn.getText());
+        JTextField tn = new JTextField(worldName);
+        tn.getDocument().addDocumentListener((TextListener)() -> worldName = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label("Select World '" + worldName + "'");
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel("Select World '" + worldName + "'");
         l.setVisible(true);
         panel.add(l);
     }

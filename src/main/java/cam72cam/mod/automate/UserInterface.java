@@ -1,28 +1,32 @@
 package cam72cam.mod.automate;
 
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.io.IOException;
 
-public class UserInterface extends Frame {
-    private final MenuItem savePlaybook;
-    private final MenuItem savePlaybookAs;
-    private final Menu runMenu;
-    private final Menu addMenu;
+public class UserInterface extends JFrame {
+    private final JMenuItem savePlaybook;
+    private final JMenuItem savePlaybookAs;
+    private final JMenu addMenu;
+    private final JButton run;
+    private final JButton step;
+    private final JButton pause;
+    private final JButton stop;
+    private final JButton restart;
 
     public Playbook playbook;
 
     public UserInterface() {
         setSize(500,300);
         setTitle("Playbook Manager");
-        MenuBar mb = new MenuBar();
-        Menu fileMenu = new Menu("File");
-        MenuItem newPlaybook = new MenuItem("New Playbook");
-        MenuItem openPlaybook = new MenuItem("Open Playbook");
-        savePlaybook = new MenuItem("Save Playbook");
-        savePlaybookAs = new MenuItem("Save Playbook As");
+        setLayout(new BorderLayout());
+        JMenuBar mb = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem newPlaybook = new JMenuItem("New Playbook");
+        JMenuItem openPlaybook = new JMenuItem("Open Playbook");
+        savePlaybook = new JMenuItem("Save Playbook");
+        savePlaybookAs = new JMenuItem("Save Playbook As");
 
         newPlaybook.addActionListener(e -> {
             File file = openFileDialog(FileDialog.SAVE);
@@ -65,12 +69,11 @@ public class UserInterface extends Frame {
         fileMenu.add(savePlaybookAs);
         mb.add(fileMenu);
 
-        runMenu = new Menu("Run");
-        MenuItem run = new MenuItem("Run Playbook");
-        MenuItem step = new MenuItem("Step Playbook");
-        MenuItem pause = new MenuItem("Pause Playbook");
-        MenuItem stop = new MenuItem("Stop Playbook");
-        MenuItem restart = new MenuItem("Restart Playbook");
+        run = new JButton("Run");
+        step = new JButton("Step");
+        pause = new JButton("Pause");
+        stop = new JButton("Stop");
+        restart = new JButton("Restart");
 
         run.addActionListener(e -> this.playbook.runAll());
         step.addActionListener(e -> this.playbook.runStep());
@@ -78,58 +81,60 @@ public class UserInterface extends Frame {
         stop.addActionListener(e -> this.playbook.stop());
         restart.addActionListener(e -> this.playbook.startover());
 
-        runMenu.add(run);
-        runMenu.add(step);
-        runMenu.add(pause);
-        runMenu.add(stop);
-        runMenu.add(restart);
+        JToolBar actions = new JToolBar("Actions");
+        actions.add(run);
+        actions.add(step);
+        actions.add(pause);
+        actions.add(stop);
+        actions.add(restart);
 
-        runMenu.setEnabled(false);
-        mb.add(runMenu);
+        run.setEnabled(false);
+        step.setEnabled(false);
+        pause.setEnabled(false);
+        stop.setEnabled(false);
+        restart.setEnabled(false);
+        this.add(actions, BorderLayout.PAGE_START);
 
-        addMenu = new Menu("Actions");
+        addMenu = new JMenu("Actions");
 
-        MenuItem append = new MenuItem("Append Item to Playbook");
-        MenuItem insert = new MenuItem("Insert After Current Item");
-        MenuItem remove = new MenuItem("Remove Current Item");
+        //MenuItem append = new JMenuItem("Append Item to Playbook");
+        //MenuItem insert = new JMenuItem("Insert After Current Item");
+        JMenuItem remove = new JMenuItem("Remove Current Item");
 
-        append.addActionListener(e -> new ActionChooser(this, false).setVisible(true));
-        insert.addActionListener(e -> new ActionChooser(this, true).setVisible(true));
+        //append.addActionListener(e -> new ActionChooser(this, false).setVisible(true));
+        //insert.addActionListener(e -> new ActionChooser(this, true).setVisible(true));
         remove.addActionListener(e -> this.playbook.removeCurrentAction());
 
-        addMenu.add(append);
-        addMenu.add(insert);
+        //addMenu.add(append);
+        //addMenu.add(insert);
         addMenu.add(remove);
 
         addMenu.setEnabled(false);
         mb.add(addMenu);
 
-        setMenuBar(mb);
-        setLayout(new FlowLayout());
+        add(new ActionChooser(), BorderLayout.LINE_END);
+
+        setJMenuBar(mb);
         setVisible(true);
     }
 
     private void setupPlaybook(File file) {
         try {
             playbook = new Playbook(file);
+            setTitle("Playbook Manager " + playbook.getName());
             savePlaybook.setEnabled(true);
             savePlaybookAs.setEnabled(true);
-            runMenu.setEnabled(true);
+            run.setEnabled(true);
+            step.setEnabled(true);
+            pause.setEnabled(true);
+            stop.setEnabled(true);
+            restart.setEnabled(true);
             addMenu.setEnabled(true);
 
-            ScrollPane pane = new ScrollPane();
-            pane.add(playbook);
-            pane.setSize(this.getSize());
-            pane.setVisible(true);
-            this.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent componentEvent) {
-                    pane.setSize(componentEvent.getComponent().getSize().width, componentEvent.getComponent().getSize().height - 20);
-                    playbook.revalidate();
-                    super.componentResized(componentEvent);
-                }
-            });
-            add(pane);
+            JScrollPane pane = new JScrollPane(playbook);
+            JToolBar tb = new JToolBar("Playbook");
+            tb.add(pane);
+            add(tb, BorderLayout.CENTER);
 
             this.revalidate();
             this.repaint();

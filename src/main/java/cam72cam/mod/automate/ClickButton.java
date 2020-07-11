@@ -4,7 +4,7 @@ import cam72cam.mod.util.CollectionUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 
-import java.awt.*;
+import javax.swing.*;
 import java.util.List;
 
 public class ClickButton extends Action {
@@ -63,34 +63,28 @@ public class ClickButton extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Choice pt = new Choice();
-        for (PressType value : PressType.values()) {
-            pt.add(value.name());
-        }
-        pt.select(pressType.name());
-        pt.addItemListener(a -> pressType = PressType.valueOf(pt.getSelectedItem()));
+    public void renderEditor(JComponent panel) {
+        JComboBox<PressType> pt = new JComboBox<>(PressType.values());
+        pt.setSelectedItem(pressType);
+        pt.addItemListener(a -> pressType = (PressType) pt.getSelectedItem());
         pt.setVisible(true);
         panel.add(pt);
 
-        Label l = new Label("Mouse");
+        JLabel l = new JLabel("Mouse");
         l.setVisible(true);
         panel.add(l);
 
-        Choice ct = new Choice();
-        for (GuiClickSlot.ClickType value : GuiClickSlot.ClickType.values()) {
-            ct.add(value.name());
-        }
-        ct.select(clickType.name());
-        ct.addItemListener(a -> clickType = GuiClickSlot.ClickType.valueOf(ct.getSelectedItem()));
+        JComboBox<GuiClickSlot.ClickType> ct = new JComboBox<>(GuiClickSlot.ClickType.values());
+        ct.setSelectedItem(clickType);
+        ct.addItemListener(a -> clickType = (GuiClickSlot.ClickType)ct.getSelectedItem());
         ct.setVisible(true);
         panel.add(ct);
 
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label(pressType.toString() + " Mouse " + clickType.toString());
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel(pressType.toString() + " Mouse " + clickType.toString());
         l.setVisible(true);
         panel.add(l);
     }

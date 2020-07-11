@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 
-import java.awt.*;
+import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,24 +48,24 @@ public class GuiSelectCreativeTab extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Select Creative Tab");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Select Creative Tab");
         l.setVisible(true);
         panel.add(l);
 
-        Choice tn = new Choice();
+        JComboBox<String> tn = new JComboBox<>();
         for (CreativeTabs creativeTab : CreativeTabs.CREATIVE_TAB_ARRAY) {
-            tn.add(creativeTab.getTranslationKey().replace("itemGroup.", ""));
+            tn.addItem(creativeTab.getTranslationKey().replace("itemGroup.", ""));
         }
-        tn.select(tabName);
-        tn.addItemListener(a -> tabName = tn.getSelectedItem());
+        tn.setSelectedItem(tabName);
+        tn.addItemListener(a -> tabName = (String) tn.getSelectedItem());
         tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label("Select Creative Tab '" + tabName + "'");
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel("Select Creative Tab '" + tabName + "'");
         l.setVisible(true);
         panel.add(l);
     }

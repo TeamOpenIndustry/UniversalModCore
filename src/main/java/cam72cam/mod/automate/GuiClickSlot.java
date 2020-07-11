@@ -7,7 +7,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import java.awt.*;
+import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -69,26 +69,23 @@ public class GuiClickSlot extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
+    public void renderEditor(JComponent panel) {
         String stackInfo = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
-        Choice ct = new Choice();
-        for (ClickType value : ClickType.values()) {
-            ct.add(value.name());
-        }
-        ct.select(clickType.name());
-        ct.addItemListener(a -> clickType = ClickType.valueOf(ct.getSelectedItem()));
+        JComboBox<ClickType> ct = new JComboBox<>(ClickType.values());
+        ct.setSelectedItem(clickType);
+        ct.addItemListener(a -> clickType = (ClickType)ct.getSelectedItem());
         ct.setVisible(true);
         panel.add(ct);
 
-        Label l = new Label(" Click Slot ");
+        JLabel l = new JLabel(" Click Slot ");
         l.setVisible(true);
         panel.add(l);
 
-        Label l2 = new Label(stackInfo);
+        JLabel l2 = new JLabel(stackInfo);
         l2.setVisible(true);
 
-        TextField tn = new TextField(slotId);
-        tn.addTextListener(a -> {
+        JTextField tn = new JTextField(slotId);
+        tn.getDocument().addDocumentListener((TextListener)() -> {
             slotId = tn.getText();
             String stackInfo2 = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
             l2.setText(stackInfo2);
@@ -100,9 +97,9 @@ public class GuiClickSlot extends Action {
     }
 
     @Override
-    public void renderSummary(Container panel) {
+    public void renderSummary(JComponent panel) {
         String stackInfo = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
-        Label l = new Label(clickType.toString() + " Click Slot " + slotId + stackInfo);
+        JLabel l = new JLabel(clickType.toString() + " Click Slot " + slotId + stackInfo);
         l.setVisible(true);
         panel.add(l);
     }

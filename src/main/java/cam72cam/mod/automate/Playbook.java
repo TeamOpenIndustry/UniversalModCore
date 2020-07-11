@@ -1,5 +1,6 @@
 package cam72cam.mod.automate;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Playbook extends Panel {
+public class Playbook extends JPanel {
     private final File file;
 
     private final List<Action> actions = new ArrayList<>();
@@ -22,6 +23,7 @@ public class Playbook extends Panel {
 
     public Playbook(File file) throws IOException {
         super(new GridBagLayout());
+        setName(file.getName());
 
         c = new GridBagConstraints();
 
@@ -102,11 +104,13 @@ public class Playbook extends Panel {
     private void redraw() {
         this.removeAll();
         for (int i = 0; i < actions.size(); i++) {
+            JPanel sub = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
             Action action = actions.get(i);
-            Label l = new Label(i + "");
-            l.setAlignment(Label.CENTER);
+            JLabel l = new JLabel(i + "");
+            l.setHorizontalAlignment(JLabel.CENTER);
             if (i == actionIdx) {
-                l.setBackground(runStep || runAll ? Color.GREEN : Color.YELLOW);
+                sub.setBackground(runStep || runAll ? Color.GREEN : Color.YELLOW);
             }
             l.setVisible(true);
             int finalI = i;
@@ -123,7 +127,6 @@ public class Playbook extends Panel {
                 }
             });
 
-            Panel sub = new Panel(new FlowLayout(FlowLayout.LEFT));
             action.renderEditor(sub);
             sub.setVisible(true);
             sub.revalidate();

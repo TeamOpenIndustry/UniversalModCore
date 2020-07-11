@@ -6,39 +6,38 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 
-import java.awt.*;
+import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
 public class KeyPress extends Action {
     public static final String TYPE = "KeyPress";
-    private String key;
+    private Keyboard.KeyCode key;
     private int ticks;
     private int counter;
 
     public KeyPress(String... options) {
         super(TYPE);
-        this.key = options[0];
+        this.key = Keyboard.KeyCode.valueOf(options[0]);
         this.ticks = Integer.parseInt(options[1]);
     }
 
     @Override
     public List<String> getParams() {
-        return CollectionUtil.listOf(key, "" + ticks);
+        return CollectionUtil.listOf(key.toString(), "" + ticks);
     }
 
     @Override
     public boolean tick() {
-        Keyboard.KeyCode enKey = Keyboard.KeyCode.valueOf(key);
-        KeyBinding.setKeyBindState(enKey.code, counter != ticks);
-        KeyBinding.onTick(enKey.code);
+        KeyBinding.setKeyBindState(key.code, counter != ticks);
+        KeyBinding.onTick(key.code);
         if (counter >= ticks) {
             // Hack...
-            if (Minecraft.getMinecraft().currentScreen == null && enKey == Keyboard.KeyCode.ESCAPE) {
+            if (Minecraft.getMinecraft().currentScreen == null && key == Keyboard.KeyCode.ESCAPE) {
                 Minecraft.getMinecraft().displayInGameMenu();
             } else if (Minecraft.getMinecraft().currentScreen != null) {
-                if (enKey == Keyboard.KeyCode.ESCAPE) {
+                if (key == Keyboard.KeyCode.ESCAPE) {
                     Minecraft.getMinecraft().displayGuiScreen((GuiScreen) null);
                     if (Minecraft.getMinecraft().currentScreen == null) {
                         Minecraft.getMinecraft().setIngameFocus();
@@ -48,7 +47,7 @@ public class KeyPress extends Action {
                         Method keyTyped = GuiScreen.class.getDeclaredMethod("keyTyped", char.class, int.class);
                         keyTyped.setAccessible(true);
                         // TODO proper char
-                        keyTyped.invoke(Minecraft.getMinecraft().currentScreen, key.charAt(0), enKey.code);
+                        keyTyped.invoke(Minecraft.getMinecraft().currentScreen, this.key.toString().charAt(0), key.code);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -62,25 +61,22 @@ public class KeyPress extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Choice l = new Choice();
-        for (Keyboard.KeyCode value : Keyboard.KeyCode.values()) {
-            l.add(value.toString());
-        }
-        l.select(key);
-        l.addItemListener(e -> key = l.getSelectedItem());
+    public void renderEditor(JComponent panel) {
+        JComboBox<Keyboard.KeyCode> l = new JComboBox<>(Keyboard.KeyCode.values());
+        l.setSelectedItem(key);
+        l.addItemListener(e -> key = (Keyboard.KeyCode) l.getSelectedItem());
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(ticks + "");
-        tn.addTextListener(a -> ticks = Integer.parseInt(tn.getText()));
+        JTextField tn = new JTextField(ticks + "");
+        tn.getDocument().addDocumentListener((TextListener)() -> ticks = Integer.parseInt(tn.getText()));
         tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label(String.format("Press '%s' for '%s' ticks", key, ticks));
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel(String.format("Press '%s' for '%s' ticks", key, ticks));
         l.setVisible(true);
         panel.add(l);
     }

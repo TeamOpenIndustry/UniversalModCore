@@ -2,7 +2,7 @@ package cam72cam.mod.automate;
 
 import cam72cam.mod.util.CollectionUtil;
 
-import java.awt.*;
+import javax.swing.*;
 import java.util.List;
 
 public class WaitTicks extends Action {
@@ -34,24 +34,24 @@ public class WaitTicks extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Wait");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Wait");
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(ticks);
-        tn.addTextListener(a -> ticks = tn.getText());
+        JTextField tn = new JTextField(ticks);
+        tn.getDocument().addDocumentListener((TextListener)() -> ticks = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
 
-        Label l2 = new Label("ticks");
+        JLabel l2 = new JLabel("ticks");
         l2.setVisible(true);
         panel.add(l2);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label(String.format("Wait %s ticks", ticks));
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel(String.format("Wait %s ticks", ticks));
         l.setVisible(true);
         panel.add(l);
     }

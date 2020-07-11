@@ -4,13 +4,12 @@ import cam72cam.mod.util.CollectionUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
+import javax.swing.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import java.awt.*;
 
 public class GuiClickButton extends Action {
     public static final String TYPE = "GuiClickButton";
@@ -56,20 +55,20 @@ public class GuiClickButton extends Action {
     }
 
     @Override
-    public void renderEditor(Container panel) {
-        Label l = new Label("Click");
+    public void renderEditor(JComponent panel) {
+        JLabel l = new JLabel("Click");
         l.setVisible(true);
         panel.add(l);
 
-        TextField tn = new TextField(buttonText);
-        tn.addTextListener(a -> buttonText = tn.getText());
+        JTextField tn = new JTextField(buttonText);
+        tn.getDocument().addDocumentListener((TextListener)() -> buttonText = tn.getText());
         tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
-    public void renderSummary(Container panel) {
-        Label l = new Label("Click '" + buttonText + "'");
+    public void renderSummary(JComponent panel) {
+        JLabel l = new JLabel("Click '" + buttonText + "'");
         l.setVisible(true);
         panel.add(l);
     }
