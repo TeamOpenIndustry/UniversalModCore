@@ -62,22 +62,19 @@ public class KeyPress extends Action {
 
     @Override
     public void renderEditor(JComponent panel) {
-        JComboBox<Keyboard.KeyCode> l = new JComboBox<>(Keyboard.KeyCode.values());
+        JComboBox<Keyboard.KeyCode> l = new JComboBox<>(Keyboard.KeyCode.values().clone());
         l.setSelectedItem(key);
         l.addItemListener(e -> key = (Keyboard.KeyCode) l.getSelectedItem());
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(ticks + "");
         tn.getDocument().addDocumentListener((TextListener)() -> ticks = Integer.parseInt(tn.getText()));
-        tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel(String.format("Press '%s' for '%s' ticks", key, ticks));
-        l.setVisible(true);
         panel.add(l);
     }
 

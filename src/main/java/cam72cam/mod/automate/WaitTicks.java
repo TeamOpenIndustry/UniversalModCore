@@ -36,23 +36,19 @@ public class WaitTicks extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Wait");
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(ticks);
         tn.getDocument().addDocumentListener((TextListener)() -> ticks = tn.getText());
-        tn.setVisible(true);
         panel.add(tn);
 
         JLabel l2 = new JLabel("ticks");
-        l2.setVisible(true);
         panel.add(l2);
     }
 
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel(String.format("Wait %s ticks", ticks));
-        l.setVisible(true);
         panel.add(l);
     }
 

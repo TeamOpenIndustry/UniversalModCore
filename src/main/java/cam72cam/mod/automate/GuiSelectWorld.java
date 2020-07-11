@@ -58,19 +58,16 @@ public class GuiSelectWorld extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Select World");
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(worldName);
         tn.getDocument().addDocumentListener((TextListener)() -> worldName = tn.getText());
-        tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel("Select World '" + worldName + "'");
-        l.setVisible(true);
         panel.add(l);
     }
 

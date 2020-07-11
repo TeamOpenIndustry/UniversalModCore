@@ -35,16 +35,13 @@ public class PlayerLook extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Player look yaw:");
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(yaw);
         tn.getDocument().addDocumentListener((TextListener)() -> yaw = tn.getText());
-        tn.setVisible(true);
         panel.add(tn);
 
         JLabel l2 = new JLabel("pitch:");
-        l2.setVisible(true);
         panel.add(l2);
 
         JTextField tv = new JTextField(pitch);
@@ -55,7 +52,6 @@ public class PlayerLook extends Action {
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel(String.format("Player look yaw:%s pitch:%s", yaw, pitch));
-        l.setVisible(true);
         panel.add(l);
     }
 

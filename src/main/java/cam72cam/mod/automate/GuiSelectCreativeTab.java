@@ -50,7 +50,6 @@ public class GuiSelectCreativeTab extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Select Creative Tab");
-        l.setVisible(true);
         panel.add(l);
 
         JComboBox<String> tn = new JComboBox<>();
@@ -59,14 +58,12 @@ public class GuiSelectCreativeTab extends Action {
         }
         tn.setSelectedItem(tabName);
         tn.addItemListener(a -> tabName = (String) tn.getSelectedItem());
-        tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel("Select Creative Tab '" + tabName + "'");
-        l.setVisible(true);
         panel.add(l);
     }
 

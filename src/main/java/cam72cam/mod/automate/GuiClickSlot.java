@@ -71,18 +71,15 @@ public class GuiClickSlot extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         String stackInfo = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
-        JComboBox<ClickType> ct = new JComboBox<>(ClickType.values());
+        JComboBox<ClickType> ct = new JComboBox<>(ClickType.values().clone());
         ct.setSelectedItem(clickType);
         ct.addItemListener(a -> clickType = (ClickType)ct.getSelectedItem());
-        ct.setVisible(true);
         panel.add(ct);
 
         JLabel l = new JLabel(" Click Slot ");
-        l.setVisible(true);
         panel.add(l);
 
         JLabel l2 = new JLabel(stackInfo);
-        l2.setVisible(true);
 
         JTextField tn = new JTextField(slotId);
         tn.getDocument().addDocumentListener((TextListener)() -> {
@@ -90,7 +87,6 @@ public class GuiClickSlot extends Action {
             String stackInfo2 = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
             l2.setText(stackInfo2);
         });
-        tn.setVisible(true);
         panel.add(tn);
 
         panel.add(l2);
@@ -100,7 +96,6 @@ public class GuiClickSlot extends Action {
     public void renderSummary(JComponent panel) {
         String stackInfo = getStack() != null ? " (has " + getStack().getDisplayName() + ")" : "";
         JLabel l = new JLabel(clickType.toString() + " Click Slot " + slotId + stackInfo);
-        l.setVisible(true);
         panel.add(l);
     }
 

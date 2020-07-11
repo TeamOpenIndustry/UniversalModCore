@@ -11,7 +11,6 @@ public class ActionChooser extends JToolBar {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JComboBox<String> chooser = new JComboBox<>(Action.getTypes().toArray(new String[0]));
-        chooser.setVisible(true);
         add(chooser);
 
         JPanel list = new JPanel(new GridBagLayout());
@@ -28,15 +27,12 @@ public class ActionChooser extends JToolBar {
                 l.setAlignment(FlowLayout.LEFT);
                 JPanel sub = new JPanel(l);
                 action.renderSummary(sub);
-                sub.setVisible(true);
                 sub.revalidate();
 
                 JButton append = new JButton("Add");
-                append.setVisible(true);
                 append.addActionListener(e -> Automation.INSTANCE.UI.playbook.appendAction(action));
 
                 JButton insert = new JButton("Insert");
-                insert.setVisible(true);
                 insert.addActionListener(e -> Automation.INSTANCE.UI.playbook.insertAction(action));
 
 
@@ -65,7 +61,6 @@ public class ActionChooser extends JToolBar {
         refresh.run();
         chooser.addItemListener(l -> refresh.run());
 
-        list.setVisible(true);
         add(list);
     }
 

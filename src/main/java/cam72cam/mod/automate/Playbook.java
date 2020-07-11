@@ -15,6 +15,7 @@ public class Playbook extends JPanel {
     private final File file;
 
     private final List<Action> actions = new ArrayList<>();
+    JScrollPane pane;
     private int actionIdx = 0;
     private boolean runStep = false;
     private boolean runAll = false;
@@ -48,7 +49,6 @@ public class Playbook extends JPanel {
 
         this.redraw();
 
-        this.setVisible(true);
     }
 
     public void startover() {
@@ -102,6 +102,9 @@ public class Playbook extends JPanel {
     }
 
     private void redraw() {
+        if (pane != null) {
+            pane.getVerticalScrollBar().setValue((int) (pane.getVerticalScrollBar().getMaximum() * ((double)actionIdx / actions.size())));
+        }
         this.removeAll();
         for (int i = 0; i < actions.size(); i++) {
             JPanel sub = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -112,7 +115,6 @@ public class Playbook extends JPanel {
             if (i == actionIdx) {
                 sub.setBackground(runStep || runAll ? Color.GREEN : Color.YELLOW);
             }
-            l.setVisible(true);
             int finalI = i;
             l.addMouseListener(new MouseAdapter() {
                 @Override
@@ -128,7 +130,6 @@ public class Playbook extends JPanel {
             });
 
             action.renderEditor(sub);
-            sub.setVisible(true);
             sub.revalidate();
 
             c.fill = GridBagConstraints.HORIZONTAL;

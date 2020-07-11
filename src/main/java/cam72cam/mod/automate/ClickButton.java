@@ -64,20 +64,17 @@ public class ClickButton extends Action {
 
     @Override
     public void renderEditor(JComponent panel) {
-        JComboBox<PressType> pt = new JComboBox<>(PressType.values());
+        JComboBox<PressType> pt = new JComboBox<>(PressType.values().clone());
         pt.setSelectedItem(pressType);
         pt.addItemListener(a -> pressType = (PressType) pt.getSelectedItem());
-        pt.setVisible(true);
         panel.add(pt);
 
         JLabel l = new JLabel("Mouse");
-        l.setVisible(true);
         panel.add(l);
 
-        JComboBox<GuiClickSlot.ClickType> ct = new JComboBox<>(GuiClickSlot.ClickType.values());
+        JComboBox<GuiClickSlot.ClickType> ct = new JComboBox<>(GuiClickSlot.ClickType.values().clone());
         ct.setSelectedItem(clickType);
         ct.addItemListener(a -> clickType = (GuiClickSlot.ClickType)ct.getSelectedItem());
-        ct.setVisible(true);
         panel.add(ct);
 
     }
@@ -85,7 +82,6 @@ public class ClickButton extends Action {
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel(pressType.toString() + " Mouse " + clickType.toString());
-        l.setVisible(true);
         panel.add(l);
     }
 

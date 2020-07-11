@@ -72,18 +72,15 @@ public class GuiSetText extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Set text of ");
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(partialName);
         tn.getDocument().addDocumentListener((TextListener)() -> {
             partialName = tn.getText();
         });
-        tn.setVisible(true);
         panel.add(tn);
 
         JLabel l2 = new JLabel(" to ");
-        l2.setVisible(true);
         panel.add(l2);
 
         JTextField tv = new JTextField(value);
@@ -96,7 +93,6 @@ public class GuiSetText extends Action {
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel(String.format("Set text of %%%s%% to '%s'", partialName, value));
-        l.setVisible(true);
         panel.add(l);
     }
 }

@@ -57,19 +57,16 @@ public class GuiClickButton extends Action {
     @Override
     public void renderEditor(JComponent panel) {
         JLabel l = new JLabel("Click");
-        l.setVisible(true);
         panel.add(l);
 
         JTextField tn = new JTextField(buttonText);
         tn.getDocument().addDocumentListener((TextListener)() -> buttonText = tn.getText());
-        tn.setVisible(true);
         panel.add(tn);
     }
 
     @Override
     public void renderSummary(JComponent panel) {
         JLabel l = new JLabel("Click '" + buttonText + "'");
-        l.setVisible(true);
         panel.add(l);
     }
 

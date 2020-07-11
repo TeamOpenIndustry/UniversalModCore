@@ -101,8 +101,6 @@ public class UserInterface extends JFrame {
         //MenuItem insert = new JMenuItem("Insert After Current Item");
         JMenuItem remove = new JMenuItem("Remove Current Item");
 
-        //append.addActionListener(e -> new ActionChooser(this, false).setVisible(true));
-        //insert.addActionListener(e -> new ActionChooser(this, true).setVisible(true));
         remove.addActionListener(e -> this.playbook.removeCurrentAction());
 
         //addMenu.add(append);
@@ -132,6 +130,9 @@ public class UserInterface extends JFrame {
             addMenu.setEnabled(true);
 
             JScrollPane pane = new JScrollPane(playbook);
+
+            playbook.pane = pane;
+
             JToolBar tb = new JToolBar("Playbook");
             tb.add(pane);
             add(tb, BorderLayout.CENTER);
