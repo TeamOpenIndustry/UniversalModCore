@@ -16,6 +16,7 @@ public class UserInterface extends JFrame {
     private final JButton restart;
 
     public Playbook playbook;
+    private JToolBar tb;
 
     public UserInterface() {
         setSize(500,300);
@@ -118,6 +119,9 @@ public class UserInterface extends JFrame {
 
     private void setupPlaybook(File file) {
         try {
+            if (tb != null) {
+                remove(tb);
+            }
             playbook = new Playbook(file);
             setTitle("Playbook Manager " + playbook.getName());
             savePlaybook.setEnabled(true);
@@ -129,7 +133,7 @@ public class UserInterface extends JFrame {
             restart.setEnabled(true);
             addMenu.setEnabled(true);
 
-            JToolBar tb = new JToolBar("Playbook");
+            this.tb = new JToolBar("Playbook");
             tb.add(playbook);
             add(tb, BorderLayout.CENTER);
 
