@@ -81,7 +81,6 @@ public class GuiClickButton extends Action {
                 List<net.minecraft.client.gui.GuiButton> buttonList = (List<net.minecraft.client.gui.GuiButton>) bl.get(screen);
                 if (buttonList != null) {
                     for (net.minecraft.client.gui.GuiButton guiButton : buttonList) {
-                        System.out.println(guiButton.id + " : " + guiButton.displayString);
                         actions.add(new GuiClickButton(guiButton.displayString));
                     }
                 }
