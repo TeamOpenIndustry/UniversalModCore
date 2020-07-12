@@ -4,6 +4,7 @@ import net.minecraftforge.fml.common.Loader;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +20,8 @@ public class UserInterface extends JFrame {
     private final JButton stop;
     private final JButton restart;
     private final ActionChooser ac;
+    private final FileNode fn;
+    private final DefaultTreeModel tm;
 
     public Playbook playbook;
     private JToolBar tb;
@@ -119,7 +122,9 @@ public class UserInterface extends JFrame {
         ac = new ActionChooser();
         add(ac, BorderLayout.LINE_END);
 
-        JTree ft = new JTree(new FileNode(Loader.instance().getConfigDir().getParentFile()));
+        fn = new FileNode(Loader.instance().getConfigDir().getParentFile());
+        tm = new DefaultTreeModel(fn);
+        JTree ft = new JTree(tm);
         ft.addTreeSelectionListener(e -> {
             File path = ((FileNode) e.getPath().getLastPathComponent()).path;
             if (path.isFile()) {
@@ -175,6 +180,8 @@ public class UserInterface extends JFrame {
         if (tick % 20 == 0) {
             tick = 0;
             ac.refresh();
+            fn.refresh();
+            tm.reload();
         }
 
         if (playbook != null) {
