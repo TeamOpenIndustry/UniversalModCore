@@ -4,11 +4,9 @@ import net.minecraftforge.fml.common.Loader;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.MutableTreeNode;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 public class UserInterface extends JFrame {
@@ -20,6 +18,7 @@ public class UserInterface extends JFrame {
     private final JButton pause;
     private final JButton stop;
     private final JButton restart;
+    private final ActionChooser ac;
 
     public Playbook playbook;
     private JToolBar tb;
@@ -117,7 +116,8 @@ public class UserInterface extends JFrame {
         addMenu.setEnabled(false);
         mb.add(addMenu);
 
-        add(new ActionChooser(), BorderLayout.LINE_END);
+        ac = new ActionChooser();
+        add(ac, BorderLayout.LINE_END);
 
         JTree ft = new JTree(new FileNode(Loader.instance().getConfigDir().getParentFile()));
         ft.addTreeSelectionListener(e -> {
@@ -129,7 +129,6 @@ public class UserInterface extends JFrame {
         JToolBar ttb = new JToolBar("Tree");
         ttb.add(new JScrollPane(ft));
         add(ttb, BorderLayout.LINE_START);
-
 
         setJMenuBar(mb);
         setVisible(true);
@@ -170,7 +169,14 @@ public class UserInterface extends JFrame {
         return fd.getFile() != null ? new File(fd.getDirectory(), fd.getFile()) : null;
     }
 
+    int tick = 0;
     public void tick() {
+        tick ++;
+        if (tick % 20 == 0) {
+            tick = 0;
+            ac.refresh();
+        }
+
         if (playbook != null) {
             playbook.tick();
         }
@@ -190,7 +196,11 @@ public class UserInterface extends JFrame {
             if (path.isDirectory()) {
                 for (File child : Objects.requireNonNull(path.listFiles())) {
                     if (child.isDirectory() || child.getName().endsWith("mcplay")) {
-                        this.add(new FileNode(child));
+                        FileNode cn = new FileNode(child);
+                        if (child.isDirectory() && !cn.children().hasMoreElements()) {
+                            continue;
+                        }
+                        this.add(cn);
                     }
                 }
             }
