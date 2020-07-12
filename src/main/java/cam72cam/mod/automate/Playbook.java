@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Playbook extends JScrollPane {
-    private final File file;
+    public final File file;
 
     private final List<Action> actions = new ArrayList<>();
     JPanel pane;

@@ -34,10 +34,10 @@ public class ActionChooser extends JToolBar {
                     sub.revalidate();
 
                     JButton append = new JButton("Add");
-                    append.addActionListener(e -> Automation.INSTANCE.UI.playbook.appendAction(action));
+                    append.addActionListener(e -> Automation.INSTANCE.UI.getSelectedPlaybook().appendAction(action));
 
                     JButton insert = new JButton("Insert");
-                    insert.addActionListener(e -> Automation.INSTANCE.UI.playbook.insertAction(action));
+                    insert.addActionListener(e -> Automation.INSTANCE.UI.getSelectedPlaybook().insertAction(action));
 
 
                     c.fill = GridBagConstraints.HORIZONTAL;

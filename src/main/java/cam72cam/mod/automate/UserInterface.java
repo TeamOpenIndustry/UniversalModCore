@@ -22,9 +22,7 @@ public class UserInterface extends JFrame {
     private final ActionChooser ac;
     private final FileNode fn;
     private final DefaultTreeModel tm;
-
-    public Playbook playbook;
-    private JToolBar tb;
+    private final JTabbedPane playbooks;
 
     public UserInterface() {
         setSize(500,300);
@@ -53,7 +51,7 @@ public class UserInterface extends JFrame {
 
         savePlaybook.addActionListener(e -> {
             try {
-                playbook.save();
+                getSelectedPlaybook().save();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -64,7 +62,7 @@ public class UserInterface extends JFrame {
             File file = openFileDialog(FileDialog.SAVE);
             if (file != null) {
                 try {
-                    playbook.saveAs(file);
+                    getSelectedPlaybook().saveAs(file);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -84,11 +82,11 @@ public class UserInterface extends JFrame {
         stop = new JButton("Stop");
         restart = new JButton("Restart");
 
-        run.addActionListener(e -> this.playbook.runAll());
-        step.addActionListener(e -> this.playbook.runStep());
-        pause.addActionListener(e -> this.playbook.pause());
-        stop.addActionListener(e -> this.playbook.stop());
-        restart.addActionListener(e -> this.playbook.startover());
+        run.addActionListener(e -> this.getSelectedPlaybook().runAll());
+        step.addActionListener(e -> this.getSelectedPlaybook().runStep());
+        pause.addActionListener(e -> this.getSelectedPlaybook().pause());
+        stop.addActionListener(e -> this.getSelectedPlaybook().stop());
+        restart.addActionListener(e -> this.getSelectedPlaybook().startover());
 
         JToolBar actions = new JToolBar("Actions");
         actions.add(run);
@@ -110,7 +108,7 @@ public class UserInterface extends JFrame {
         //MenuItem insert = new JMenuItem("Insert After Current Item");
         JMenuItem remove = new JMenuItem("Remove Current Item");
 
-        remove.addActionListener(e -> this.playbook.removeCurrentAction());
+        remove.addActionListener(e -> this.getSelectedPlaybook().removeCurrentAction());
 
         //addMenu.add(append);
         //addMenu.add(insert);
@@ -135,17 +133,28 @@ public class UserInterface extends JFrame {
         ttb.add(new JScrollPane(ft));
         add(ttb, BorderLayout.LINE_START);
 
+        JToolBar pbtb = new JToolBar("Playbooks");
+        playbooks = new JTabbedPane();
+        pbtb.add(playbooks);
+        add(pbtb);
+
+
         setJMenuBar(mb);
         setVisible(true);
     }
 
     private void setupPlaybook(File file) {
-        try {
-            if (tb != null) {
-                remove(tb);
+        for (Component component : playbooks.getComponents()) {
+            Playbook playbook = (Playbook) component;
+            if (playbook.file.equals(file)) {
+                return;
             }
-            playbook = new Playbook(file);
-            setTitle("Playbook Manager " + playbook.getName());
+        }
+        try {
+            Playbook selectedPlaybook = new Playbook(file);
+            playbooks.add(selectedPlaybook);
+
+            setTitle("Playbook Manager " + selectedPlaybook.getName());
             savePlaybook.setEnabled(true);
             savePlaybookAs.setEnabled(true);
             run.setEnabled(true);
@@ -154,10 +163,6 @@ public class UserInterface extends JFrame {
             stop.setEnabled(true);
             restart.setEnabled(true);
             addMenu.setEnabled(true);
-
-            this.tb = new JToolBar("Playbook");
-            tb.add(playbook);
-            add(tb, BorderLayout.CENTER);
 
             this.revalidate();
             this.repaint();
@@ -184,9 +189,13 @@ public class UserInterface extends JFrame {
             tm.reload();
         }
 
-        if (playbook != null) {
-            playbook.tick();
+        if (getSelectedPlaybook() != null) {
+            getSelectedPlaybook().tick();
         }
+    }
+
+    public Playbook getSelectedPlaybook() {
+        return (Playbook) playbooks.getSelectedComponent();
     }
 
     public static class FileNode extends DefaultMutableTreeNode {
