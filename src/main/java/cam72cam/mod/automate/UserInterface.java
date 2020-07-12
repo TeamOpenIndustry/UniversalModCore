@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -135,6 +137,51 @@ public class UserInterface extends JFrame {
 
         JToolBar pbtb = new JToolBar("Playbooks");
         playbooks = new JTabbedPane();
+        playbooks.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                    int tabId = playbooks.getUI().tabForCoordinate(playbooks, mouseEvent.getX(), mouseEvent.getY());
+                    if (tabId >= 0) {
+                        JPopupMenu ctx = new JPopupMenu();
+                        JMenuItem save = new JMenuItem("Save Playbook");
+                        save.addActionListener(e -> {
+                            Playbook playbook = (Playbook) playbooks.getComponent(tabId);
+                            try {
+                                playbook.save();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                                JOptionPane.showMessageDialog(UserInterface.this, ex.toString());
+                            }
+                        });
+                        ctx.add(save);
+
+                        JMenuItem saveAs = new JMenuItem("Save Playbook As");
+                        saveAs.addActionListener(e -> {
+                            Playbook playbook = (Playbook) playbooks.getComponent(tabId);
+                            try {
+                                File file = openFileDialog(FileDialog.SAVE);
+                                if (file != null) {
+                                    playbook.saveAs(file);
+                                }
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                                JOptionPane.showMessageDialog(UserInterface.this, ex.toString());
+                            }
+                        });
+                        ctx.add(saveAs);
+
+                        JMenuItem close = new JMenuItem("Close Playbook");
+                        close.addActionListener(e -> playbooks.remove(tabId));
+                        ctx.add(close);
+
+                        UserInterface.this.add(ctx);
+                        ctx.show(playbooks, mouseEvent.getX(), mouseEvent.getY());
+                    }
+                }
+            }
+        });
+
         pbtb.add(playbooks);
         add(pbtb);
 
