@@ -1,9 +1,15 @@
 package cam72cam.mod.automate;
 
+import net.minecraftforge.fml.common.Loader;
+
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 public class UserInterface extends JFrame {
     private final JMenuItem savePlaybook;
@@ -113,6 +119,18 @@ public class UserInterface extends JFrame {
 
         add(new ActionChooser(), BorderLayout.LINE_END);
 
+        JTree ft = new JTree(new FileNode(Loader.instance().getConfigDir().getParentFile()));
+        ft.addTreeSelectionListener(e -> {
+            File path = ((FileNode) e.getPath().getLastPathComponent()).path;
+            if (path.isFile()) {
+                setupPlaybook(path);
+            }
+        });
+        JToolBar ttb = new JToolBar("Tree");
+        ttb.add(new JScrollPane(ft));
+        add(ttb, BorderLayout.LINE_START);
+
+
         setJMenuBar(mb);
         setVisible(true);
     }
@@ -155,6 +173,27 @@ public class UserInterface extends JFrame {
     public void tick() {
         if (playbook != null) {
             playbook.tick();
+        }
+    }
+
+    public static class FileNode extends DefaultMutableTreeNode {
+        private final File path;
+
+        public FileNode(File path) {
+            super(path.getName());
+            this.path = path;
+            this.refresh();
+        }
+
+        public void refresh() {
+            this.removeAllChildren();
+            if (path.isDirectory()) {
+                for (File child : Objects.requireNonNull(path.listFiles())) {
+                    if (child.isDirectory() || child.getName().endsWith("mcplay")) {
+                        this.add(new FileNode(child));
+                    }
+                }
+            }
         }
     }
 }
