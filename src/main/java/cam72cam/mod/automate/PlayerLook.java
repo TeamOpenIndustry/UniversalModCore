@@ -56,6 +56,12 @@ public class PlayerLook extends Action {
     }
 
     public static List<Action> getPotential() {
-        return CollectionUtil.listOf(new PlayerLook("0", "0"));
+        float yaw = 0;
+        float pitch = 0;
+        if (Minecraft.getMinecraft().player != null) {
+            yaw = Minecraft.getMinecraft().player.rotationYaw;
+            pitch = Minecraft.getMinecraft().player.rotationPitch;
+        }
+        return CollectionUtil.listOf(new PlayerLook(yaw+"", pitch+""));
     }
 }
