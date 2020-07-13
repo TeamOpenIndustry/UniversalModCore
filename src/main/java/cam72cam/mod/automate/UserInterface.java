@@ -5,11 +5,13 @@ import net.minecraftforge.fml.common.Loader;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class UserInterface extends JFrame {
@@ -25,6 +27,7 @@ public class UserInterface extends JFrame {
     private final FileNode fn;
     private final DefaultTreeModel tm;
     private final JTabbedPane playbooks;
+    private final JTree ft;
 
     public UserInterface() {
         setSize(500,300);
@@ -124,11 +127,52 @@ public class UserInterface extends JFrame {
 
         fn = new FileNode(Loader.instance().getConfigDir().getParentFile());
         tm = new DefaultTreeModel(fn);
-        JTree ft = new JTree(tm);
+        ft = new JTree(tm);
         ft.addTreeSelectionListener(e -> {
             File path = ((FileNode) e.getPath().getLastPathComponent()).path;
             if (path.isFile()) {
                 setupPlaybook(path);
+            }
+        });
+        ft.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                    TreePath fpath = ft.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+                    System.out.println(fpath);
+                    if (fpath != null) {
+                        FileNode node = (FileNode) fpath.getLastPathComponent();
+                        File path = node.path;
+                        System.out.println(path);
+                        if (path.isDirectory()) {
+                            JPopupMenu ctx = new JPopupMenu();
+
+                            JMenuItem newPlaybook = new JMenuItem("New Playbook");
+                            newPlaybook.addActionListener(e -> {
+                                File file = openFileDialog(FileDialog.SAVE);
+                                if (file != null) {
+                                    setupPlaybook(file);
+                                    try {
+                                        getSelectedPlaybook().save();
+                                    } catch (IOException ioException) {
+                                        ioException.printStackTrace();
+                                    }
+                                }
+                            });
+                            ctx.add(newPlaybook);
+
+                            if (fpath.getPath().length == 1) {
+                                JMenuItem close = new JMenuItem("Close Directory");
+                                close.addActionListener(e -> {
+                                    System.out.println("Close " + path);
+                                });
+                                ctx.add(close);
+                            }
+                            UserInterface.this.add(ctx);
+                            ctx.show(ft, mouseEvent.getX(), mouseEvent.getY());
+                        }
+                    }
+                }
             }
         });
         JToolBar ttb = new JToolBar("Tree");
@@ -231,8 +275,10 @@ public class UserInterface extends JFrame {
         tick ++;
         if (tick % 20 == 0) {
             tick = 0;
+            TreePath path = ft.getSelectionPath();
             ac.refresh();
             fn.refresh();
+            ft.setSelectionPath(path);
             tm.reload();
         }
 
@@ -257,7 +303,9 @@ public class UserInterface extends JFrame {
         public void refresh() {
             this.removeAllChildren();
             if (path.isDirectory()) {
-                for (File child : Objects.requireNonNull(path.listFiles())) {
+                File[] files = path.listFiles().clone();
+                Arrays.sort(files);
+                for (File child : files) {
                     if (child.isDirectory() || child.getName().endsWith("mcplay")) {
                         FileNode cn = new FileNode(child);
                         if (child.isDirectory() && !cn.children().hasMoreElements()) {
