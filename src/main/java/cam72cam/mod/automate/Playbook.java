@@ -22,6 +22,7 @@ public class Playbook extends JScrollPane {
     private boolean runAll = false;
 
     private final GridBagConstraints c;
+    private final String originalContents;
 
     public Playbook(File file) throws IOException {
         super();
@@ -37,6 +38,7 @@ public class Playbook extends JScrollPane {
             for (String line : lines) {
                 actions.add(Action.deserialize(line));
             }
+            originalContents = String.join(System.lineSeparator(), lines);
         } else {
             actions.add(new GuiClickButton("Singleplayer"));
             actions.add(new GuiClickButton("Create New World"));
@@ -48,6 +50,7 @@ public class Playbook extends JScrollPane {
             actions.add(new GuiSetText("seed", "let it grow"));
             actions.add(new GuiClickButton("Create New World"));
             //actions.add(new GuiButtonClick("More World Options..."));
+            originalContents = "";
         }
 
         this.redraw();
@@ -83,7 +86,15 @@ public class Playbook extends JScrollPane {
     }
 
     public void saveAs(File file) throws IOException {
-        Files.write(file.toPath(), actions.stream().map(Action::serialize).collect(Collectors.joining(System.lineSeparator())).getBytes());
+        Files.write(file.toPath(), saveContents().getBytes());
+    }
+
+    private String saveContents() {
+        return actions.stream().map(Action::serialize).collect(Collectors.joining(System.lineSeparator()));
+    }
+
+    public boolean isModified() {
+        return !saveContents().equals(originalContents);
     }
 
     public void tick() {
@@ -132,7 +143,7 @@ public class Playbook extends JScrollPane {
                 int dest = Arrays.asList(pane.getComponents()).indexOf(pane.getComponentAt(mouseEvent.getPoint()));
                 if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
                     pane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                    if (dest >= 0 && start >= 0) {
+                    if (start >= 0) {
                         if (dest / 2 != start / 2) {
                             Action got = actions.remove(start / 2);
                             actions.add(dest / 2, got);

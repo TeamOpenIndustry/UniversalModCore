@@ -8,7 +8,7 @@ import java.util.List;
 public class ActionChooser extends JToolBar {
     private final List<Runnable> refreshes = new ArrayList<>();
 
-    public ActionChooser() {
+    public ActionChooser(Project project) {
         super("Available Actions");
         setSize(200,200);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -34,10 +34,14 @@ public class ActionChooser extends JToolBar {
                     sub.revalidate();
 
                     JButton append = new JButton("Add");
-                    append.addActionListener(e -> Automation.INSTANCE.UI.getSelectedPlaybook().appendAction(action));
+                    if (project.getSelectedPlaybook() != null) {
+                        append.addActionListener(e -> project.getSelectedPlaybook().appendAction(action));
+                    }
 
                     JButton insert = new JButton("Insert");
-                    insert.addActionListener(e -> Automation.INSTANCE.UI.getSelectedPlaybook().insertAction(action));
+                    if (project.getSelectedPlaybook() != null) {
+                        insert.addActionListener(e -> project.getSelectedPlaybook().insertAction(action));
+                    }
 
 
                     c.fill = GridBagConstraints.HORIZONTAL;

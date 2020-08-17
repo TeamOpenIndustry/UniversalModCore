@@ -1,7 +1,5 @@
 package cam72cam.mod.automate;
 
-import net.minecraftforge.fml.common.Loader;
-
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -9,14 +7,15 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Map;
+import java.util.HashMap;
 
-public class UserInterface extends JFrame {
-    private final JMenuItem savePlaybook;
-    private final JMenuItem savePlaybookAs;
+public class Project extends JFrame {
     private final JMenu addMenu;
     private final JButton run;
     private final JButton step;
@@ -25,60 +24,38 @@ public class UserInterface extends JFrame {
     private final JButton restart;
     private final ActionChooser ac;
     private final FileNode fn;
-    private final DefaultTreeModel tm;
     private final JTabbedPane playbooks;
     private final JTree ft;
+    final File dir;
 
-    public UserInterface() {
-        setSize(500,300);
+    public Project(File dir) {
+        this.dir = dir;
+
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        int width = gd.getDisplayMode().getWidth();
+        int height = gd.getDisplayMode().getHeight();
+
+        setSize(width/2, height);
         setTitle("Playbook Manager");
         setLayout(new BorderLayout());
         JMenuBar mb = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        JMenuItem newPlaybook = new JMenuItem("New Playbook");
-        JMenuItem openPlaybook = new JMenuItem("Open Playbook");
-        savePlaybook = new JMenuItem("Save Playbook");
-        savePlaybookAs = new JMenuItem("Save Playbook As");
+        JMenuItem openProject = new JMenuItem("Open Project");
+        JMenuItem closeProject = new JMenuItem("Close Project");
 
-        newPlaybook.addActionListener(e -> {
-            File file = openFileDialog(FileDialog.SAVE);
-            if (file != null) {
-                setupPlaybook(file);
-            }
-        });
-
-        openPlaybook.addActionListener(e -> {
-            File file = openFileDialog(FileDialog.LOAD);
-            if (file != null) {
-                setupPlaybook(file);
-            }
-        });
-
-        savePlaybook.addActionListener(e -> {
-            try {
-                getSelectedPlaybook().save();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        });
-        savePlaybook.setEnabled(false);
-
-        savePlaybookAs.addActionListener(e -> {
-            File file = openFileDialog(FileDialog.SAVE);
-            if (file != null) {
-                try {
-                    getSelectedPlaybook().saveAs(file);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+        openProject.addActionListener(e -> {
+            JFileChooser fd = new JFileChooser(dir);
+            fd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            if (fd.showDialog(Project.this, "Choose Project Directory") == JFileChooser.APPROVE_OPTION) {
+                if (!fd.getSelectedFile().exists()) {
+                    fd.getSelectedFile().mkdirs();
                 }
+                Automation.INSTANCE.openProject(fd.getSelectedFile());
             }
         });
-        savePlaybookAs.setEnabled(false);
 
-        fileMenu.add(newPlaybook);
-        fileMenu.add(openPlaybook);
-        fileMenu.add(savePlaybook);
-        fileMenu.add(savePlaybookAs);
+        fileMenu.add(openProject);
+        fileMenu.add(closeProject);
         mb.add(fileMenu);
 
         run = new JButton("Run");
@@ -122,38 +99,31 @@ public class UserInterface extends JFrame {
         addMenu.setEnabled(false);
         mb.add(addMenu);
 
-        ac = new ActionChooser();
-        add(ac, BorderLayout.LINE_END);
-
-        fn = new FileNode(Loader.instance().getConfigDir().getParentFile());
-        tm = new DefaultTreeModel(fn);
+        DefaultTreeModel tm = new DefaultTreeModel(null);
+        fn = new FileNode(tm, dir);
+        tm.setRoot(fn);
         ft = new JTree(tm);
-        ft.addTreeSelectionListener(e -> {
-            File path = ((FileNode) e.getPath().getLastPathComponent()).path;
-            if (path.isFile()) {
-                setupPlaybook(path);
-            }
-        });
         ft.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                    TreePath fpath = ft.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
-                    System.out.println(fpath);
-                    if (fpath != null) {
-                        FileNode node = (FileNode) fpath.getLastPathComponent();
-                        File path = node.path;
-                        System.out.println(path);
+                TreePath fpath = ft.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+                if (fpath != null) {
+                    FileNode node = (FileNode) fpath.getLastPathComponent();
+                    File path = node.path;
+                    if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                         if (path.isDirectory()) {
                             JPopupMenu ctx = new JPopupMenu();
 
                             JMenuItem newPlaybook = new JMenuItem("New Playbook");
                             newPlaybook.addActionListener(e -> {
-                                File file = openFileDialog(FileDialog.SAVE);
-                                if (file != null) {
-                                    setupPlaybook(file);
+                                String fname = JOptionPane.showInputDialog(Project.this, "New Playbook");
+                                if (fname != null && !fname.isEmpty()) {
+                                    if (!fname.endsWith(".mcplay")) {
+                                        fname += ".mcplay";
+                                    }
+                                    File file = new File(path, fname);
                                     try {
-                                        getSelectedPlaybook().save();
+                                        setupPlaybook(file).save();
                                     } catch (IOException ioException) {
                                         ioException.printStackTrace();
                                     }
@@ -161,15 +131,37 @@ public class UserInterface extends JFrame {
                             });
                             ctx.add(newPlaybook);
 
-                            if (fpath.getPath().length == 1) {
-                                JMenuItem close = new JMenuItem("Close Directory");
-                                close.addActionListener(e -> {
-                                    System.out.println("Close " + path);
+                            JMenuItem newDirectory = new JMenuItem("New Directory");
+                            newDirectory.addActionListener(e -> {
+                                String dirname = JOptionPane.showInputDialog(Project.this, "New Directory");
+                                if (dirname != null && !dirname.isEmpty()) {
+                                    File newDir = new File(path, dirname);
+                                    if (!newDir.exists()) {
+                                        newDir.mkdirs();
+                                    }
+                                }
+                            });
+                            ctx.add(newDirectory);
+
+                            if (!node.isRoot()) {
+                                JMenuItem rmDirectory = new JMenuItem("Remove Directory");
+                                rmDirectory.addActionListener(e -> {
+                                    if (JOptionPane.showConfirmDialog(Project.this, "Are you sure you want to delete " + path + "?", "Remove Directory", JOptionPane.YES_NO_OPTION,
+                                            JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+                                        path.delete();
+                                    }
                                 });
-                                ctx.add(close);
+                                ctx.add(rmDirectory);
                             }
-                            UserInterface.this.add(ctx);
+
+                            Project.this.add(ctx);
                             ctx.show(ft, mouseEvent.getX(), mouseEvent.getY());
+                        }
+                    }
+
+                    if (SwingUtilities.isLeftMouseButton(mouseEvent)) {
+                        if (path.isFile()) {
+                            setupPlaybook(path);
                         }
                     }
                 }
@@ -195,7 +187,7 @@ public class UserInterface extends JFrame {
                                 playbook.save();
                             } catch (IOException ex) {
                                 ex.printStackTrace();
-                                JOptionPane.showMessageDialog(UserInterface.this, ex.toString());
+                                JOptionPane.showMessageDialog(Project.this, ex.toString());
                             }
                         });
                         ctx.add(save);
@@ -210,16 +202,25 @@ public class UserInterface extends JFrame {
                                 }
                             } catch (IOException ex) {
                                 ex.printStackTrace();
-                                JOptionPane.showMessageDialog(UserInterface.this, ex.toString());
+                                JOptionPane.showMessageDialog(Project.this, ex.toString());
                             }
                         });
                         ctx.add(saveAs);
 
                         JMenuItem close = new JMenuItem("Close Playbook");
-                        close.addActionListener(e -> playbooks.remove(tabId));
+                        close.addActionListener(e -> {
+                            Playbook playbook = (Playbook) playbooks.getComponent(tabId);
+                            if (playbook.isModified()) {
+                                if (JOptionPane.showConfirmDialog(Project.this, "Are you sure you want to close " + playbook.file.getName() + "?", "Unsaved Playbook", JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.QUESTION_MESSAGE) == JOptionPane.NO_OPTION) {
+                                    return;
+                                }
+                            }
+                            playbooks.remove(tabId);
+                        });
                         ctx.add(close);
 
-                        UserInterface.this.add(ctx);
+                        Project.this.add(ctx);
                         ctx.show(playbooks, mouseEvent.getX(), mouseEvent.getY());
                     }
                 }
@@ -229,25 +230,46 @@ public class UserInterface extends JFrame {
         pbtb.add(playbooks);
         add(pbtb);
 
+        ac = new ActionChooser(this);
+        add(ac, BorderLayout.LINE_END);
+
+        //
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (Arrays.stream(playbooks.getComponents()).map(c -> (Playbook)c).anyMatch(Playbook::isModified)) {
+                    if (JOptionPane.showConfirmDialog(Project.this, "Are you sure you want to close this project?  Not all playbooks have been saved", "Close Project?",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE) == JOptionPane.NO_OPTION) {
+                        return;
+                    }
+                }
+                Automation.INSTANCE.closeProject(Project.this);
+                Project.this.dispose();
+            }
+        });
+
 
         setJMenuBar(mb);
         setVisible(true);
+
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
 
-    private void setupPlaybook(File file) {
+    private Playbook setupPlaybook(File file) {
         for (Component component : playbooks.getComponents()) {
             Playbook playbook = (Playbook) component;
             if (playbook.file.equals(file)) {
-                return;
+                playbooks.setSelectedComponent(playbook);
+                return playbook;
             }
         }
         try {
             Playbook selectedPlaybook = new Playbook(file);
             playbooks.add(selectedPlaybook);
+            playbooks.setSelectedComponent(selectedPlaybook);
 
             setTitle("Playbook Manager " + selectedPlaybook.getName());
-            savePlaybook.setEnabled(true);
-            savePlaybookAs.setEnabled(true);
             run.setEnabled(true);
             step.setEnabled(true);
             pause.setEnabled(true);
@@ -257,9 +279,11 @@ public class UserInterface extends JFrame {
 
             this.revalidate();
             this.repaint();
+            return selectedPlaybook;
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        return getSelectedPlaybook();
     }
 
     private File openFileDialog(int mode) {
@@ -275,11 +299,14 @@ public class UserInterface extends JFrame {
         tick ++;
         if (tick % 20 == 0) {
             tick = 0;
-            TreePath path = ft.getSelectionPath();
             ac.refresh();
             fn.refresh();
-            ft.setSelectionPath(path);
-            tm.reload();
+        }
+
+        Component[] components = playbooks.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            Playbook playbook = (Playbook) components[i];
+            playbooks.setTitleAt(i, playbook.file.getName() + (playbook.isModified() ? " *" : ""));
         }
 
         if (getSelectedPlaybook() != null) {
@@ -293,26 +320,43 @@ public class UserInterface extends JFrame {
 
     public static class FileNode extends DefaultMutableTreeNode {
         private final File path;
+        private final DefaultTreeModel tm;
 
-        public FileNode(File path) {
+        public FileNode(DefaultTreeModel tm, File path) {
             super(path.getName());
+            this.tm = tm;
             this.path = path;
             this.refresh();
         }
 
         public void refresh() {
-            this.removeAllChildren();
+            Map<File, FileNode> children = new HashMap<>();
+
+            for (int i = 0; i < this.getChildCount(); i++) {
+                FileNode fn = ((FileNode)this.getChildAt(i));
+                children.put(fn.path, fn);
+            }
+
             if (path.isDirectory()) {
                 File[] files = path.listFiles().clone();
                 Arrays.sort(files);
                 for (File child : files) {
                     if (child.isDirectory() || child.getName().endsWith("mcplay")) {
-                        FileNode cn = new FileNode(child);
-                        if (child.isDirectory() && !cn.children().hasMoreElements()) {
-                            continue;
+                        if (children.containsKey(child)) {
+                            children.get(child).refresh();
+                            children.remove(child);
+                        } else {
+                            FileNode nn = new FileNode(tm, child);
+                            this.add(nn);
+                            tm.reload(this);
                         }
-                        this.add(cn);
                     }
+                }
+            }
+            for (int i = 0; i < this.getChildCount(); i++) {
+                if (children.containsValue((FileNode)this.getChildAt(i))) {
+                    this.remove(i);
+                    tm.reload(this);
                 }
             }
         }
