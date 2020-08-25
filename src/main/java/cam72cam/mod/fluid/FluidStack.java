@@ -1,8 +1,10 @@
 package cam72cam.mod.fluid;
 
+/** Wrapper around forge FluidStack */
 public class FluidStack {
     public final net.minecraftforge.fluids.FluidStack internal;
 
+    /** Wrapper, don't use directly */
     public FluidStack(net.minecraftforge.fluids.FluidStack stack) {
         this.internal = stack;
     }

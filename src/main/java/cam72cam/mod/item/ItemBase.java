@@ -116,7 +116,7 @@ public abstract class ItemBase {
 
         @Override
         public final boolean isValidArmor(net.minecraft.item.ItemStack stack, EntityEquipmentSlot armorType, net.minecraft.entity.Entity entity) {
-            return ItemBase.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), new Entity(entity));
+            return ItemBase.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), World.get(entity.world).getEntity(entity));
         }
 
         @Override

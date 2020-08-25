@@ -2,7 +2,6 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
@@ -21,13 +20,13 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Registry of events that fire off client side only */
 public class ClientEvents {
 
     private static void registerClientEvents() {
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
-        Keyboard.registerClientEvents();
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
     }

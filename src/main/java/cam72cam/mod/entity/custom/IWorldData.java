@@ -22,7 +22,9 @@ public interface IWorldData {
         return IWorldData.NOP;
     }
 
+    /** World Load */
     void load(TagCompound data);
 
+    /** World Save */
     void save(TagCompound data);
 }

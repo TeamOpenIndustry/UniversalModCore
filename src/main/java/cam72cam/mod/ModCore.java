@@ -5,7 +5,6 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.GuiRegistry;
-import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
@@ -145,7 +144,6 @@ public class ModCore {
             switch (event) {
                 case CONSTRUCT:
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
-                    Packet.register(Keyboard.MovementPacket::new, PacketDirection.ClientToServer);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());

@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+/** Only used for MC bugfixes, don't use directly */
 public class Mouse {
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {

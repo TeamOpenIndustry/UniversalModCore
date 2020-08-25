@@ -13,5 +13,6 @@ public interface ICollision {
         return NOP;
     }
 
+    /** Collision Bounding Box */
     IBoundingBox getCollision();
 }

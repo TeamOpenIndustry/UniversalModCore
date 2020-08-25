@@ -295,7 +295,7 @@ public class TagCompound {
     public <T extends BlockEntity> TagCompound setTile(String key, T tile) {
         return setter(key, tile, () -> {
             TagCompound ted = new TagCompound();
-            ted.setWorld("world", tile.world);
+            ted.setWorld("world", tile.getWorld());
 
             TagCompound data = new TagCompound();
             tile.internal.writeToNBT(data.internal);

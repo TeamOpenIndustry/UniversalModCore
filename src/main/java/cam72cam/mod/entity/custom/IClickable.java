@@ -14,5 +14,6 @@ public interface IClickable {
         return NOP;
     }
 
+    /** Called when entity is interacted with */
     ClickResult onClick(Player player, Hand hand);
 }

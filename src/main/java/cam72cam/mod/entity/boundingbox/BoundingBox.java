@@ -6,7 +6,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 
 public class BoundingBox extends AxisAlignedBB {
-    private final IBoundingBox internal;
+    public final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
         super(constructorParams[0], constructorParams[1], constructorParams[2], constructorParams[3], constructorParams[4], constructorParams[5]);

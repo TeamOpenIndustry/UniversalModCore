@@ -5,13 +5,14 @@ import cam72cam.mod.serialization.TagField;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Reference IEnergy implementation */
 public class Energy implements IEnergy {
     @TagField("max")
     private final int max;
     @TagField("stored")
     private int stored;
 
-    private List<Runnable> onChanged = new ArrayList<>();
+    private final List<Runnable> onChanged = new ArrayList<>();
 
     private Energy() {
         // Serialization
@@ -24,6 +25,7 @@ public class Energy implements IEnergy {
         this.max = maxStorage;
     }
 
+    /** Subscribe to on-change event */
     public void onChanged(Runnable fn) {
         onChanged.add(fn);
     }

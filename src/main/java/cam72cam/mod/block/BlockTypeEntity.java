@@ -21,30 +21,40 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Extension to BlockType that integrates with BlockEntities.
+ *
+ * Most if not all of the functions exposed are now redirected to the block entity (break/pick/etc...)
+ */
 public abstract class BlockTypeEntity extends BlockType {
+    /** This is a crappy hack that allows us to pass the block entity instance into the renderer */
     public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
-    protected final Identifier id;
+
+    // Cached from ctr
+    private final boolean isRedstoneProvider;
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
-        id = new Identifier(modID, name);
         TileEntity.register(this::constructBlockEntity, id);
-        constructBlockEntity().supplier(id).register();
+        this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
+
+        // Force supplier load (may trigger static blocks like TE registration)
+        constructBlockEntity().supplier(id);
     }
 
+    /** Supply your custom BlockEntity constructor here */
     public abstract BlockEntity constructBlockEntity();
 
     @Override
     public final boolean isRedstoneProvider() {
-        return constructBlockEntity() instanceof IRedstoneProvider;
+        return isRedstoneProvider;
     }
 
-    // Hack for initializing a "fake" te
+    /** Hack for initializing a "fake" te */
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
-        te.hasTileData = true;
-        te.setWorld(world);
-        te.setPos(pos);
+        te.setWorld(world.internal);
+        te.setPos(pos.internal);
         return te.instance();
     }
 

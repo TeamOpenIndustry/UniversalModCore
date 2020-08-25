@@ -9,6 +9,7 @@ public interface IBoundingBox {
         if (internal == null) {
             return null;
         }
+        // TODO consider caching min/max objects?
         return new IBoundingBox() {
             @Override
             public Vec3d min() {
@@ -67,20 +68,27 @@ public interface IBoundingBox {
         };
     }
 
+    /** Create a new 0 size BB at pos */
     static IBoundingBox from(Vec3i pos) {
         return from(new AxisAlignedBB(pos.internal));
     }
 
+    /** Smaller corner of the BB */
     Vec3d min();
 
+    /** Larger corner of the BB */
     Vec3d max();
 
+    /** Expands the BB in one direction (positive/negative) */
     IBoundingBox expand(Vec3d val);
 
+    /** Contracts the BB in one direction (positive/negative) */
     IBoundingBox contract(Vec3d val);
 
+    /** Increase the BB's size in all dimensions by value specified (by axis) */
     IBoundingBox grow(Vec3d val);
 
+    /** Move the BB by the given amount */
     IBoundingBox offset(Vec3d vec3d);
 
     double calculateXOffset(IBoundingBox other, double offsetX);
@@ -89,8 +97,10 @@ public interface IBoundingBox {
 
     double calculateZOffset(IBoundingBox other, double offsetZ);
 
+    /** Does the AABB represented by these coords intersect this BB */
     boolean intersects(Vec3d min, Vec3d max);
 
+    /** Is this vector within bounds */
     boolean contains(Vec3d vec);
 
     default boolean intersects(IBoundingBox bounds) {

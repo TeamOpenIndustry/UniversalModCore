@@ -2,6 +2,7 @@ package cam72cam.mod.net;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.serialization.SerializationException;
@@ -10,6 +11,7 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -17,6 +19,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.HashMap;
@@ -52,6 +55,12 @@ public abstract class Packet {
     public void sendToAllAround(World world, Vec3d pos, double distance) {
         net.sendToAllAround(new Message(this),
                 new NetworkRegistry.TargetPoint(world.getId(), pos.x, pos.y, pos.z, distance));
+    }
+
+    public void sendToObserving(Entity entity) {
+        net.minecraft.entity.Entity internal = entity.internal;
+        int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
+        this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
 
     public void sendToServer() {
