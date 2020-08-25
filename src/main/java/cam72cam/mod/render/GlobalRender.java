@@ -3,7 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.item.ItemBase;
+import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -67,7 +67,7 @@ public class GlobalRender {
         });
     }
 
-    public static void registerItemMouseover(ItemBase item, MouseoverEvent fn) {
+    public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();

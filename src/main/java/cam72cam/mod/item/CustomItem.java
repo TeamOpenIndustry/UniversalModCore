@@ -28,9 +28,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class ItemBase {
+public abstract class CustomItem {
     public final Item internal;
-    public ItemBase(String modID, String name) {
+    public CustomItem(String modID, String name) {
         internal = new ItemInternal();
         internal.setTranslationKey(modID + ":" + name);
         internal.setRegistryName(new ResourceLocation(modID, name));
@@ -100,12 +100,12 @@ public abstract class ItemBase {
         public final void addInformation(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
             super.addInformation(stack, worldIn, tooltip, flagIn);
             applyCustomName(new ItemStack(stack));
-            tooltip.addAll(ItemBase.this.getTooltip(new ItemStack(stack)));
+            tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)));
         }
 
         @Override
         public final EnumActionResult onItemUse(EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-            return ItemBase.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
+            return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
         }
 
         @Override
@@ -116,7 +116,7 @@ public abstract class ItemBase {
 
         @Override
         public final boolean isValidArmor(net.minecraft.item.ItemStack stack, EntityEquipmentSlot armorType, net.minecraft.entity.Entity entity) {
-            return ItemBase.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), World.get(entity.world).getEntity(entity));
+            return CustomItem.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), World.get(entity.world).getEntity(entity));
         }
 
         @Override
@@ -127,7 +127,7 @@ public abstract class ItemBase {
 
         @Override
         public final CreativeTabs[] getCreativeTabs() {
-            return ItemBase.this.getCreativeTabs().stream().map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
+            return CustomItem.this.getCreativeTabs().stream().map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
         }
     }
 }

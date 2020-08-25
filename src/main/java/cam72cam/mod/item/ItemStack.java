@@ -42,7 +42,7 @@ public class ItemStack {
         this(new net.minecraft.item.ItemStack(item));
     }
 
-    public ItemStack(ItemBase item, int count) {
+    public ItemStack(CustomItem item, int count) {
         this(item.internal, count);
     }
 
@@ -97,7 +97,7 @@ public class ItemStack {
         return fuzzy.matches(this);
     }
 
-    public boolean is(ItemBase item) {
+    public boolean is(CustomItem item) {
         return item.internal == this.item;
     }
 

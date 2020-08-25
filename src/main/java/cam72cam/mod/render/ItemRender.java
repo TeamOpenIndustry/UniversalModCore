@@ -5,7 +5,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
-import cam72cam.mod.item.ItemBase;
+import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
@@ -42,7 +42,7 @@ public class ItemRender {
     private static final List<BakedQuad> EMPTY = new ArrayList<>();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
-    public static void register(ItemBase item, Identifier tex) {
+    public static void register(CustomItem item, Identifier tex) {
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
                 tex.internal
         )).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter())));
@@ -53,7 +53,7 @@ public class ItemRender {
                 new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
-    public static void register(ItemBase item, IItemModel model) {
+    public static void register(CustomItem item, IItemModel model) {
         ClientEvents.MODEL_CREATE.subscribe(() ->
                 ModelLoader.setCustomModelResourceLocation(item.internal, 0, new ModelResourceLocation(item.getRegistryName().internal, ""))
         );

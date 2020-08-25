@@ -108,7 +108,7 @@ public class Fuzzy {
         return this;
     }
 
-    public void add(ItemBase item) {
+    public void add(CustomItem item) {
         add(item.internal);
     }
 
