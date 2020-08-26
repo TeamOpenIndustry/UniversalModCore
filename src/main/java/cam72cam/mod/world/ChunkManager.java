@@ -53,7 +53,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
             return;
         }
 
-        ChunkPos pos = new ChunkPos(world.internal, inPos.internal);
+        ChunkPos pos = new ChunkPos(world.internal, inPos.internal());
 
         int currTicks = 0;
 

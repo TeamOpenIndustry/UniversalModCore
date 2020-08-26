@@ -82,4 +82,16 @@ public enum Facing {
     public Axis getAxis() {
         return Axis.from(internal.getAxis());
     }
+
+    public int getXMultiplier() {
+        return internal.getXOffset();
+    }
+
+    public int getYMultiplier() {
+        return internal.getYOffset();
+    }
+
+    public int getZMultiplier() {
+        return internal.getZOffset();
+    }
 }

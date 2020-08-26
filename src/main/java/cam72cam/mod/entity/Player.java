@@ -58,7 +58,7 @@ public class Player extends Entity {
 
     /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.onItemUse(internal, getWorld().internal, pos.internal, hand.internal, Facing.DOWN.internal, (float) hit.x, (float) hit.y, (float) hit.z));
+        return ClickResult.from(getHeldItem(hand).internal.onItemUse(internal, getWorld().internal, pos.internal(), hand.internal, Facing.DOWN.internal, (float) hit.x, (float) hit.y, (float) hit.z));
     }
 
     /** What direction the player is trying to move and how fast */

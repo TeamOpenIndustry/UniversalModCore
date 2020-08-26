@@ -5,7 +5,6 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
@@ -54,7 +53,7 @@ public abstract class BlockTypeEntity extends BlockType {
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
         te.setWorld(world.internal);
-        te.setPos(pos.internal);
+        te.setPos(pos.internal());
         return te.instance();
     }
 

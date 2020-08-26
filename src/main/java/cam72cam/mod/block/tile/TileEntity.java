@@ -21,7 +21,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
@@ -115,7 +114,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Wrap getPos() in a cached UMC Vec3i */
     public Vec3i getUMCPos() {
-        if (umcPos == null || umcPos.internal != pos) {
+        if (umcPos == null || !umcPos.internal().equals(pos)) {
             umcPos = new Vec3i(pos);
         }
         return umcPos;

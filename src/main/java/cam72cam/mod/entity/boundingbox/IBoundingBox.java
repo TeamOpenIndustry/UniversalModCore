@@ -38,22 +38,22 @@ public interface IBoundingBox {
 
             @Override
             public IBoundingBox offset(Vec3d vec3d) {
-                return from(internal.offset(vec3d.internal));
+                return from(internal.offset(vec3d.internal()));
             }
 
             @Override
             public double calculateXOffset(IBoundingBox other, double offsetX) {
-                return internal.calculateXOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetX);
+                return internal.calculateXOffset(new BoundingBox(other), offsetX);
             }
 
             @Override
             public double calculateYOffset(IBoundingBox other, double offsetY) {
-                return internal.calculateYOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetY);
+                return internal.calculateYOffset(new BoundingBox(other), offsetY);
             }
 
             @Override
             public double calculateZOffset(IBoundingBox other, double offsetZ) {
-                return internal.calculateZOffset(new AxisAlignedBB(other.min().internal, other.max().internal), offsetZ);
+                return internal.calculateZOffset(new BoundingBox(other), offsetZ);
             }
 
             @Override
@@ -63,14 +63,14 @@ public interface IBoundingBox {
 
             @Override
             public boolean contains(Vec3d vec) {
-                return internal.contains(vec.internal);
+                return internal.contains(vec.internal());
             }
         };
     }
 
     /** Create a new 0 size BB at pos */
     static IBoundingBox from(Vec3i pos) {
-        return from(new AxisAlignedBB(pos.internal));
+        return from(new AxisAlignedBB(pos.internal()));
     }
 
     /** Smaller corner of the BB */

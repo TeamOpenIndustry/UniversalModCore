@@ -71,7 +71,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
             min = new Vec3d(min.x, yoff, min.z);
             Vec3d max = entity.getBlockPosition().toChunkMax();
             max = new Vec3d(max.x, yoff + 16, max.z);
-            AxisAlignedBB chunk = new AxisAlignedBB(min.internal, max.internal);
+            AxisAlignedBB chunk = new AxisAlignedBB(min.internal(), max.internal());
             if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
                 Minecraft.getMinecraft().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
             }
