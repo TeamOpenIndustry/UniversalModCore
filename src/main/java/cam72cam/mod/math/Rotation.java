@@ -2,6 +2,7 @@ package cam72cam.mod.math;
 
 import cam72cam.mod.util.Facing;
 
+/** Represents a rotation around the Y axis */
 public enum Rotation {
     NONE(net.minecraft.util.Rotation.NONE),
     CLOCKWISE_90(net.minecraft.util.Rotation.CLOCKWISE_90),

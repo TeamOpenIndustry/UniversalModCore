@@ -1,5 +1,6 @@
 package cam72cam.mod.math;
 
+/** Wrapper around MC's Vec3d */
 public class Vec3d {
     public static final Vec3d ZERO = new Vec3d(net.minecraft.util.math.Vec3d.ZERO);
     public final net.minecraft.util.math.Vec3d internal;

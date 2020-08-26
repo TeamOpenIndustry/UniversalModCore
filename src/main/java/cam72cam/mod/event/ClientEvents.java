@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/** Registry of events that fire off client side only */
+/** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
 
     private static void registerClientEvents() {
@@ -31,6 +31,7 @@ public class ClientEvents {
         Audio.registerClientCallbacks();
     }
 
+    /** Fires off a client resource reload event (UMC only).  Do not use directly */
     public static void fireReload() {
         RELOAD.execute(Runnable::run);
     }

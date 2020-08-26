@@ -485,7 +485,7 @@ public class World {
         try {
             return new ItemStack(state.getBlock().getItem(internal, pos.internal, state));
         } catch (Exception ex) {
-            return new ItemStack(state.getBlock(), 1, state.getBlock().damageDropped(state));
+            return new ItemStack(new net.minecraft.item.ItemStack(state.getBlock(), 1, state.getBlock().damageDropped(state)));
         }
     }
 
