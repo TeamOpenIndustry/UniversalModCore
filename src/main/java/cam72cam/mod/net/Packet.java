@@ -11,7 +11,6 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -26,51 +25,89 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+/**
+ * Packet abstraction and registration
+ * @see TagSerializer
+ */
 public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
-    private static Map<String, Supplier<Packet>> types = new HashMap<>();
+
+    // Packet class name -> Packet Constructor
+    private static final Map<String, Supplier<Packet>> types = new HashMap<>();
 
     static {
+        // Client to server
         net.registerMessage(new Packet.Handler<>(), Message.class, 0, Side.CLIENT);
+        // Server to client
         net.registerMessage(new Packet.Handler<>(), Message.class, 1, Side.SERVER);
     }
 
-    MessageContext ctx;
+    // Received packet context
+    private MessageContext ctx;
+    // Received packet data
     private TagCompound data;
 
+    /**
+     * So either forge or minecraft has a bug where it mixes up the player in the context handler...
+     *
+     * We now track player and world ourselves
+     */
+    @TagField("umcPlayer")
+    private Player player;
+
+    @TagField("umcWorld")
+    private World world;
+
+    /** How to register a packet (do in CONSTRUCT phase) */
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         types.put(sup.get().getClass().toString(), sup);
     }
 
+    /** Called after deserialization */
     protected abstract void handle();
 
+    /** Only valid during handle */
     protected final World getWorld() {
-        return getPlayer().getWorld();
+        if (ctx.side == Side.CLIENT) {
+            return getPlayer().getWorld();
+        }
+        return world;
     }
 
+    /** Only valid during handle */
     protected final Player getPlayer() {
-        return ctx.side == Side.CLIENT ? MinecraftClient.getPlayer() : new Player(ctx.getServerHandler().player);
+        if (ctx.side == Side.CLIENT) {
+            return MinecraftClient.getPlayer();
+        }
+        return player;
     }
 
+    /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
         net.sendToAllAround(new Message(this),
                 new NetworkRegistry.TargetPoint(world.getId(), pos.x, pos.y, pos.z, distance));
     }
 
+    /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
         net.minecraft.entity.Entity internal = entity.internal;
         int syncDist = EntityRegistry.instance().lookupModSpawn(internal.getClass(), true).getTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
 
+    /** Send from client to server */
     public void sendToServer() {
+        this.player = MinecraftClient.getPlayer();
+        this.world = MinecraftClient.getPlayer().getWorld();
         net.sendToServer(new Message(this));
     }
 
+    /** Broadcast to all players from server */
     public void sendToAll() {
         net.sendToAll(new Message(this));
     }
 
+    /** Forge message construct.  Do not use directly */
     public static class Message implements IMessage {
         Packet packet;
 
@@ -103,6 +140,7 @@ public abstract class Packet {
         }
     }
 
+    /** Forge message handler construct.  Do not use directly */
     public static class Handler<T extends Message> implements IMessageHandler<T, IMessage> {
         @Override
         public IMessage onMessage(T message, MessageContext ctx) {
@@ -112,8 +150,9 @@ public abstract class Packet {
 
         private void handle(T message, MessageContext ctx) {
             message.packet.ctx = ctx;
+            World world = ctx.side == Side.CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.getServerHandler().player.world);
             try {
-                TagSerializer.deserialize(message.packet.data, message.packet, message.packet.getWorld());
+                TagSerializer.deserialize(message.packet.data, message.packet, world);
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }

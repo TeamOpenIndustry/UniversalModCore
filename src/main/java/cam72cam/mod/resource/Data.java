@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/** Internal, do not use directly */
 class Data {
     @SidedProxy(clientSide = "cam72cam.mod.resource.Data$ClientProxy", serverSide = "cam72cam.mod.resource.Data$ServerProxy", modId = ModCore.MODID)
     public static DataProxy proxy;

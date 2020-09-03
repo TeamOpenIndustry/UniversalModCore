@@ -15,9 +15,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/** Wraps MC's tag object */
 public class TagCompound {
+    /** Internal, do not use */
     public final NBTTagCompound internal;
 
+    /** Wraps MC object, do not use */
     public TagCompound(NBTTagCompound data) {
         this.internal = data;
     }

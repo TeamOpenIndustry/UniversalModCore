@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+/** Main deserialization API */
 public class TagSerializer {
 
     private static final Map<Class<? extends TagMapper>, TagMapper> mappers = new HashMap<>();
@@ -133,10 +134,12 @@ public class TagSerializer {
         });
     }
 
+    /** Look for @TagFields in target and try to match with fields in data */
     public static void deserialize(TagCompound data, Object target) throws SerializationException {
         deserialize(data, target, null);
     }
 
+    /** Look for @TagFields in target and try to match with fields in data.  Filter based on filter annotations (default no filter) */
     @SafeVarargs
     public static void deserialize(TagCompound data, Object target, @Nullable World world, Class<? extends Annotation>... filter) throws SerializationException {
         init(target.getClass());
@@ -146,6 +149,7 @@ public class TagSerializer {
         }
     }
 
+    /** Look for @TagFields in target and turn them into TagCompounds to be added to data.  Filter based on filter annotations (default no filter) */
     @SafeVarargs
     public static void serialize(TagCompound data, Object target, Class<? extends Annotation>... filter) throws SerializationException {
         init(target.getClass());
