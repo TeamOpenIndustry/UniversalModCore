@@ -7,7 +7,6 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.util.CollectionUtil;
 import cam72cam.mod.util.Hand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
@@ -22,6 +21,8 @@ import org.lwjgl.opengl.GL11;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -38,7 +39,7 @@ public class GlobalRender {
             });
         });
 
-        List<TileEntity> grhList = CollectionUtil.listOf(new GlobalRenderHelper());
+        List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
         ClientEvents.TICK.subscribe(() -> Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(event -> {

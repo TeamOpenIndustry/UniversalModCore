@@ -9,9 +9,13 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.math.RayTraceResult;
 
 public class MinecraftClient {
+    public static boolean isReady() {
+        return Minecraft.getMinecraft().player != null;
+    }
+
     public static Player getPlayer() {
         if (Minecraft.getMinecraft().player == null) {
-            return null;
+            throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
         return new Player(Minecraft.getMinecraft().player);
     }
