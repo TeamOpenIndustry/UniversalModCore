@@ -12,7 +12,6 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 
@@ -80,7 +79,7 @@ public abstract class BlockEntity {
      * Called when a player right-clicks a block.
      * @return true if this accepts the click (stop processing it after this call)
      */
-    public boolean onClick(Player player, Hand hand, Facing facing, Vec3d hit) {
+    public boolean onClick(Player player, Player.Hand hand, Facing facing, Vec3d hit) {
         return false;
     }
 

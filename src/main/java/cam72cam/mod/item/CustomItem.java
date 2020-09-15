@@ -10,7 +10,6 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -66,12 +65,12 @@ public abstract class CustomItem {
     }
 
     /** Called when the item is used to click on a block */
-    public ClickResult onClickBlock(Player player, World world, Vec3i pos, Hand hand, Facing facing, Vec3d inBlockPos) {
+    public ClickResult onClickBlock(Player player, World world, Vec3i pos, Player.Hand hand, Facing facing, Vec3d inBlockPos) {
         return ClickResult.PASS;
     }
 
     /** Called when the item is used to click on nothing */
-    public void onClickAir(Player player, World world, Hand hand) {
+    public void onClickAir(Player player, World world, Player.Hand hand) {
 
     }
 
@@ -116,12 +115,12 @@ public abstract class CustomItem {
 
         @Override
         public final EnumActionResult onItemUse(EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-            return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
+            return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Player.Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
         }
 
         @Override
         public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
-            onClickAir(new Player(player), World.get(world), Hand.from(hand));
+            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
             return super.onItemRightClick(world, player, hand);
         }
 

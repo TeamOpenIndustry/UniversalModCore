@@ -1,6 +1,6 @@
 package cam72cam.mod.gui;
 
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.entity.Player;
 import net.minecraftforge.fml.client.config.GuiSlider;
 
 public abstract class Slider extends Button {
@@ -12,7 +12,7 @@ public abstract class Slider extends Button {
     }
 
     @Override
-    public void onClick(Hand hand) {
+    public void onClick(Player.Hand hand) {
 
     }
 

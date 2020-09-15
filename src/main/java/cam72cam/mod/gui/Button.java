@@ -1,6 +1,6 @@
 package cam72cam.mod.gui;
 
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.GuiButton;
 
 public abstract class Button {
@@ -26,7 +26,7 @@ public abstract class Button {
         button.displayString = text;
     }
 
-    public abstract void onClick(Hand hand);
+    public abstract void onClick(Player.Hand hand);
 
     GuiButton internal() {
         return button;

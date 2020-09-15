@@ -7,8 +7,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
 
 /** Wrapper around EntityPlayer */
 public class Player extends Entity {
@@ -64,5 +64,28 @@ public class Player extends Entity {
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
         return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+    }
+
+    public enum Hand {
+        PRIMARY(EnumHand.MAIN_HAND),
+        SECONDARY(EnumHand.OFF_HAND),
+        ;
+
+        public final EnumHand internal;
+
+        Hand(EnumHand internal) {
+            this.internal = internal;
+        }
+
+        public static Hand from(EnumHand hand) {
+            switch (hand) {
+                case MAIN_HAND:
+                    return PRIMARY;
+                case OFF_HAND:
+                    return SECONDARY;
+                default:
+                    return null;
+            }
+        }
     }
 }

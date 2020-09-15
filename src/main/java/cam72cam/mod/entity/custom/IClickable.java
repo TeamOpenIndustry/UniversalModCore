@@ -2,7 +2,6 @@ package cam72cam.mod.entity.custom;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.item.ClickResult;
-import cam72cam.mod.util.Hand;
 
 public interface IClickable {
     IClickable NOP = (player, hand) -> ClickResult.PASS;
@@ -15,5 +14,5 @@ public interface IClickable {
     }
 
     /** Called when entity is interacted with */
-    ClickResult onClick(Player player, Hand hand);
+    ClickResult onClick(Player player, Player.Hand hand);
 }

@@ -8,10 +8,8 @@ import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
-import cam72cam.mod.util.Hand;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -210,7 +208,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see IClickable */
     @Override
     public final boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
-        return iClickable.onClick(new Player(player), Hand.from(hand)) == ClickResult.ACCEPTED;
+        return iClickable.onClick(new Player(player), Player.Hand.from(hand)) == ClickResult.ACCEPTED;
     }
 
     /* Death */

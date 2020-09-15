@@ -1,9 +1,9 @@
 package cam72cam.mod.gui;
 
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.util.Hand;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -119,7 +119,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
-                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Hand.PRIMARY : Hand.SECONDARY);
+                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
             }
         }
 

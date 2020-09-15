@@ -6,7 +6,6 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
@@ -99,7 +98,7 @@ public abstract class BlockTypeEntity extends BlockType {
     }
 
     @Override
-    public final boolean onClick(World world, Vec3i pos, Player player, Hand hand, Facing facing, Vec3d hit) {
+    public final boolean onClick(World world, Vec3i pos, Player player, Player.Hand hand, Facing facing, Vec3d hit) {
         BlockEntity instance = getInstance(world, pos);
         if (instance != null) {
             return instance.onClick(player, hand, facing, hit);
