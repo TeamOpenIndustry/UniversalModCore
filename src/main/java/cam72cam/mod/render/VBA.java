@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL15;
 import java.nio.FloatBuffer;
 import java.util.Map;
 
+/** VBA/VBO abstraction */
 public class VBA {
     private Map<String, Pair<Integer, Integer>> groupIdx;
     private boolean isVBO;
@@ -25,6 +26,7 @@ public class VBA {
     private int vcbo = -1;
     private boolean has_vn = true;
 
+    /** Create a buffer with number of verts */
     public VBA(int size) {
         this.size = size;
         vertexBuffer = BufferUtils.createFloatBuffer(size * 3 * 3);
@@ -34,11 +36,13 @@ public class VBA {
         isVBO = MinecraftClient.useVBO();
     }
 
+    /** Create a buffer with number of verts and group info (start/stop idx) */
     public VBA(int size, Map<String, Pair<Integer, Integer>> groupIdx) {
         this(size);
         this.groupIdx = groupIdx;
     }
 
+    /** Add a point to the VB */
     public void addPoint(Vec3d v, Vec3d vn, Vec2f vt, float r, float g, float b, float a) {
         vertexBuffer.put((float) (v.x));
         vertexBuffer.put((float) (v.y));
@@ -58,6 +62,7 @@ public class VBA {
         colorBuffer.put(a);
     }
 
+    /** Draw the entire VB */
     public void draw() {
         if (isVBO) {
             drawVBO(null);
@@ -66,6 +71,7 @@ public class VBA {
         }
     }
 
+    /** Draw these groups in the VB */
     public void draw(Iterable<String> groups) {
         if (isVBO) {
             drawVBO(groups);
@@ -145,6 +151,7 @@ public class VBA {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, prev);
     }
 
+    /** This really is not efficient and should probably just be removed */
     private void drawVBA(Iterable<String> groups) {
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
@@ -183,6 +190,7 @@ public class VBA {
         GL11.glColor4f(1, 1, 1, 1);
     }
 
+    /** Clear this VB from standard and GPU memory */
     public void free() {
         vertexBuffer = null;
         normalBuffer = null;

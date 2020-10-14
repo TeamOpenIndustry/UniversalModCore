@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Entity Rendering Registry */
 public class EntityRenderer extends Render<ModdedEntity> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
@@ -30,8 +31,10 @@ public class EntityRenderer extends Render<ModdedEntity> {
     }
 
     public static void registerClientEvents() {
+        // Hook in our entity renderer which will dispatch to the IEntityRenderers
         ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, EntityRenderer::new));
 
+        // Don't render seat entities
         ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.class, manager -> new Render<SeatEntity>(manager) {
             @Nullable
             @Override
@@ -41,14 +44,23 @@ public class EntityRenderer extends Render<ModdedEntity> {
         }));
     }
 
+    /** Internal, do not use */
     public EntityRenderer(RenderManager factory) {
         super(factory);
     }
 
+    /** This is how you register your entities renderer */
     public static void register(Class<? extends Entity> type, IEntityRender render) {
         renderers.put(type, render);
     }
 
+    /**
+     * Sooo this is a fun one...
+     *
+     * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
+     * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
+     * We try to detect entities in this edge case and render them here to prevent the issue.
+     */
     private static void renderLargeEntities(float partialTicks) {
         if (GlobalRender.isTransparentPass()) {
             return;

@@ -3,7 +3,6 @@ package cam72cam.mod.render;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
@@ -13,23 +12,29 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class IParticle {
+/** Registry and Abstraction for Particles */
+public abstract class Particle {
+    /** Current position of the particle */
     protected Vec3d pos;
+    /** Current alive ticks of the particle */
     protected long ticks;
+    /** Used internally for multirendering */
     boolean canRender = true;
-
+    /** Used internally for rendering */
     Vec3d renderPos;
 
-    public static <P extends ParticleData> Consumer<P> register(Function<P, IParticle> ctr) {
+    /** Simple registration */
+    public static <P extends ParticleData> Consumer<P> register(Function<P, Particle> ctr) {
         return register(ctr, null);
     }
 
-    public static <P extends ParticleData, I extends IParticle> Consumer<P> register(Function<P, I> ctr, MultiRenderer<I> renderer) {
+    /** Particle registration with multi-particle renderer (useful for efficient shaders / textures) */
+    public static <P extends ParticleData, I extends Particle> Consumer<P> register(Function<P, I> ctr, MultiRenderer<I> renderer) {
         List<I> particles = new ArrayList<>();
 
         return data -> {
             I ip = ctr.apply(data);
-            Particle p = new Particle(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
+            net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
                     particleMaxAge = data.lifespan;
                     motionX = data.motion.x;
@@ -70,15 +75,19 @@ public abstract class IParticle {
         };
     }
 
+    /** Should depth test be applied to this particle? */
     protected abstract boolean depthTestEnabled();
 
+    /** Render this particle */
     protected abstract void render(float partialTicks);
 
+    /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
-    public interface MultiRenderer<I extends IParticle> {
+    public interface MultiRenderer<I extends Particle> {
         void accept(List<I> l, Consumer<I> c, float pt);
     }
 
+    /** Data to be stored for each particle (can be extended) */
     public static class ParticleData {
         public final World world;
         public final Vec3d pos;

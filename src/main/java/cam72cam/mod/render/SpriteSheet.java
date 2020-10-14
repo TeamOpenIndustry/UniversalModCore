@@ -10,14 +10,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** A custom sprite sheet which can span multiple texture sheets */
 public class SpriteSheet {
     public final int spriteSize;
     private final Map<String, SpriteInfo> sprites = new HashMap<>();
     private final List<SpriteInfo> unallocated = new ArrayList<>();
+    /** sprite width/height in px */
     public SpriteSheet(int spriteSize) {
         this.spriteSize = spriteSize;
     }
 
+    /** Create new blank sheet and add slots to unallocated */
     private void allocateSheet() {
         int textureID = GL11.glGenTextures();
         try (OpenGL.With tex = OpenGL.texture(textureID)) {
@@ -39,6 +42,7 @@ public class SpriteSheet {
         }
     }
 
+    /** Allocate a slot in the sheet and write pixels to it */
     public void setSprite(String id, ByteBuffer pixels) {
         if (!sprites.containsKey(id)) {
             if (unallocated.size() == 0) {
@@ -53,6 +57,7 @@ public class SpriteSheet {
         }
     }
 
+    /** Render the sprite represented by id (skip if unknown) */
     public void renderSprite(String id) {
         SpriteInfo sprite = sprites.get(id);
         if (sprite == null) {
@@ -77,12 +82,13 @@ public class SpriteSheet {
         }
     }
 
+    /** Remove a sprite from the sheet (does not reduce used GPU memory yet) */
     public void freeSprite(String id) {
         unallocated.add(sprites.remove(id));
         // TODO shrink number of sheets?
     }
 
-    private class SpriteInfo {
+    private static class SpriteInfo {
         final float uMin;
         final float uMax;
         final int uPx;

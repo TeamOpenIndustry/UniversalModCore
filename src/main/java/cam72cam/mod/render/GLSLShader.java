@@ -1,6 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.resource.Identifier;
+import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.ARBFragmentShader;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ARBVertexShader;
@@ -10,11 +11,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+/** Optional GLSL Shader wrapper */
 public class GLSLShader {
-    private int program;
-    private int oldProc;
+    private final int program;
 
-    public GLSLShader(String vert, String frag) {
+    /** Create a shader with vert and frag */
+    public GLSLShader(Identifier vert, Identifier frag) {
         int vertShader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB);
         int fragShader = ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
         ARBShaderObjects.glShaderSourceARB(vertShader, readShader(vert));
@@ -44,19 +46,22 @@ public class GLSLShader {
         return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(obj, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
     }
 
-    public void bind() {
-        oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
+    /** Bind the shader, make sure you call restore() or put this in a try block */
+    public OpenGL.With bind() {
+        int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
         ARBShaderObjects.glUseProgramObjectARB(program);
+        return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
     }
 
-    public void unbind() {
-        ARBShaderObjects.glUseProgramObjectARB(oldProc);
-    }
-
+    /** Set the param to the given values (up to 3) */
     public void paramFloat(String name, float... params) {
+        // TODO possible optimization would be to cache the glGetUniformLocationARB calls.  I *think* they are consistent.
         switch (params.length) {
             case 1:
                 ARBShaderObjects.glUniform1fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0]);
+                break;
+            case 2:
+                ARBShaderObjects.glUniform2fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0], params[1]);
                 break;
             case 3:
                 ARBShaderObjects.glUniform3fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0], params[1], params[2]);
@@ -64,10 +69,10 @@ public class GLSLShader {
         }
     }
 
-    private String readShader(String fname) {
+    private String readShader(Identifier fname) {
         InputStream input;
         try {
-            input = new Identifier(fname).getResourceStream();
+            input = fname.getResourceStream();
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Error reading shader " + fname);

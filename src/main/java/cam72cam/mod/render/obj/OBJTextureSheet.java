@@ -24,6 +24,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Object texture sheet that contains all textures for a given model
+ *
+ * The fun part is it auto-expands entries in the sheet to support texture wrapping
+ */
 public class OBJTextureSheet {
     private static GLTexture empty;
 

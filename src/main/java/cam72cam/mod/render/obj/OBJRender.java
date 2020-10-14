@@ -11,6 +11,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
+/**
+ * VBA/VBO Backed object renderer
+ */
 public class OBJRender {
     public OBJModel model;
     public Map<String, OBJTextureSheet> textures = new HashMap<>();

@@ -24,10 +24,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** Global Render Registry and helper functions */
 public class GlobalRender {
+    // Fire these off every tick
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
 
+    // Internal hack
+    private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
+
+    /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
+        // Beacon like hack for always running a single global render during the TE render phase
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
             ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
                 @Override
@@ -36,10 +43,10 @@ public class GlobalRender {
                 }
             });
         });
-
-        List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
         ClientEvents.TICK.subscribe(() -> Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList));
 
+
+        // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
                 int i;
@@ -54,10 +61,12 @@ public class GlobalRender {
         });
     }
 
+    /** Register a function that is called (with partial ticks) during the Block Entity render phase */
     public static void registerRender(Consumer<Float> func) {
         renderFuncs.add(func);
     }
 
+    /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(Consumer<Float> func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
@@ -66,6 +75,7 @@ public class GlobalRender {
         });
     }
 
+    /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
@@ -77,10 +87,12 @@ public class GlobalRender {
         });
     }
 
+    /** Is MC in the Transparent Render Pass? */
     public static boolean isTransparentPass() {
         return MinecraftForgeClient.getRenderPass() != 0;
     }
 
+    /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
         net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().getRenderViewEntity();
         double d0 = playerrRender.lastTickPosX + (playerrRender.posX - playerrRender.lastTickPosX) * partialTicks;
@@ -89,6 +101,7 @@ public class GlobalRender {
         return new Vec3d(d0, d1, d2);
     }
 
+    /** Internal camera helper */
     static ICamera getCamera(float partialTicks) {
         ClippingHelperImpl ch = new ClippingHelperImpl();
         ch.init();
@@ -98,13 +111,9 @@ public class GlobalRender {
         return camera;
     }
 
-    public static boolean isInRenderDistance(Vec3d pos) {
-        // max rail length is 100, 50 is center
-        return MinecraftClient.getPlayer().getPosition().distanceTo(pos) < ((Minecraft.getMinecraft().gameSettings.renderDistanceChunks + 1) * 16 + 50);
-    }
-
-    public static void mulMatrix(FloatBuffer fbm) {
-        GL11.glMultMatrix(fbm);
+    /** Return the render distance in meters */
+    public static int getRenderDistance() {
+        return Minecraft.getMinecraft().gameSettings.renderDistanceChunks * 16;
     }
 
     @FunctionalInterface
