@@ -1,4 +1,4 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
 import com.google.common.base.Predicate;
 import net.minecraft.client.Minecraft;

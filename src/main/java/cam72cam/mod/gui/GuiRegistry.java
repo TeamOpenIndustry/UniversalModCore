@@ -7,6 +7,8 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.container.ClientContainerBuilder;
 import cam72cam.mod.gui.container.IContainer;
 import cam72cam.mod.gui.container.ServerContainerBuilder;
+import cam72cam.mod.gui.screen.IScreen;
+import cam72cam.mod.gui.screen.ScreenBuilder;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.entity.player.EntityPlayer;

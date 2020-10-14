@@ -1,4 +1,4 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.GuiButton;

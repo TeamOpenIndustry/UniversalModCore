@@ -1,4 +1,4 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 
