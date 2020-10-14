@@ -16,8 +16,8 @@ import java.util.Map;
 
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
-    private Map<GuiButton, Button> buttonMap = new HashMap<>();
-    private List<GuiTextField> textFields = new ArrayList<>();
+    private final Map<GuiButton, Button> buttonMap = new HashMap<>();
+    private final List<GuiTextField> textFields = new ArrayList<>();
 
     public ScreenBuilder(IScreen screen) {
         this.screen = screen;
@@ -56,7 +56,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     }
 
     @Override
-    public void drawTank(double x, int y, double width, double height, Fluid fluid, float fluidPercent, boolean background, int color) {
+    public void drawTank(int x, int y, int width, int height, Fluid fluid, float fluidPercent, boolean background, int color) {
         GUIHelpers.drawTankBlock(this.width / 2 + x, this.height / 4 + y, width, height, fluid, fluidPercent, background, color);
     }
 

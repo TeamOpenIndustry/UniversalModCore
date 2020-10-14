@@ -44,7 +44,7 @@ public class ModCore {
 
     /** Register a mod, must happen before UMC is loaded! */
     public static void register(Supplier<Mod> ctr) {
-        if (instance == null) {
+        if (instance != null) {
             throw new RuntimeException("Unable to register mods after UMC has been constructed");
         }
         modCtrs.add(ctr);

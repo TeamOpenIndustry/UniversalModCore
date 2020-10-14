@@ -14,7 +14,7 @@ public interface IScreenBuilder {
 
     void drawImage(Identifier tex, int x, int y, int width, int height);
 
-    void drawTank(double x, int y, double width, double height, Fluid fluid, float fluidPercent, boolean background, int color);
+    void drawTank(int x, int y, int width, int height, Fluid fluid, float fluidPercent, boolean background, int color);
 
     void drawCenteredString(String str, int x, int y, int color);
 
