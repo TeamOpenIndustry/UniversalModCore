@@ -14,15 +14,16 @@ import org.lwjgl.opengl.GL11;
 
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
+/** GUI Container wrapper for the client side, Do not use directly */
 public class ClientContainerBuilder extends GuiContainer implements IContainerBuilder {
-    public static final int slotSize = 18;
-    public static final int topOffset = 17;
-    public static final int bottomOffset = 7;
-    public static final int textureHeight = 222;
-    public static final int paddingRight = 7;
-    public static final int paddingLeft = 7;
-    public static final int stdUiHorizSlots = 9;
-    public static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
+    private static final int slotSize = 18;
+    private static final int topOffset = 17;
+    private static final int bottomOffset = 7;
+    private static final int textureHeight = 222;
+    private static final int paddingRight = 7;
+    private static final int paddingLeft = 7;
+    private static final int stdUiHorizSlots = 9;
+    private static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
     private static final int midBarOffset = 4;
     private static final int midBarHeight = 4;
     private final ServerContainerBuilder server;

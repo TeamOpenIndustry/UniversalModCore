@@ -9,7 +9,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import org.lwjgl.opengl.GL11;
 
-public class ItemButton extends GuiButton {
+/** Internal item button class */
+class ItemButton extends GuiButton {
 
     public ItemStack stack;
 

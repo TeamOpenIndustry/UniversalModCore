@@ -36,8 +36,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void addButton(Button btn) {
-        super.buttonList.add(btn.internal());
-        this.buttonMap.put(btn.internal(), btn);
+        super.buttonList.add(btn.button);
+        this.buttonMap.put(btn.button, btn);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void addTextField(TextField textField) {
-        this.textFields.add(textField.internal());
+        this.textFields.add(textField.textfield);
     }
 
     // GuiScreen
