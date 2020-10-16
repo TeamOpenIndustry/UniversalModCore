@@ -79,9 +79,10 @@ public class ItemStack {
         internal.shrink(i);
     }
 
+    /** Compares: item, count, damage, data */
     @Override
     public boolean equals(Object other) {
-        return other instanceof ItemStack && internal.isItemEqual(((ItemStack)other).internal);
+        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
