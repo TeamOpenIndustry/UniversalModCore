@@ -6,6 +6,7 @@ import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import io.netty.buffer.ByteBuf;
@@ -349,7 +350,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             Vec3d offset = passengerPositions.get(passenger.getUUID());
             if (offset != null) {
                 offset = iRidable.onDismountPassenger(passenger, offset);
-                passenger.setPosition(calculatePassengerPosition(offset));
+
+                Vec3d pos = calculatePassengerPosition(offset);
+
+                while (!(world.isAirBlock(new Vec3i(pos).internal()) && world.isAirBlock(new Vec3i(pos).up().internal()))) {
+                    pos = pos.add(0, 1, 0);
+                }
+                passenger.setPosition(pos);
             }
             passengerPositions.remove(passenger.getUUID());
         }
