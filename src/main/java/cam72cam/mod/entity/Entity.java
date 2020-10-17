@@ -3,14 +3,16 @@ package cam72cam.mod.entity;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.Explosion;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -152,7 +154,7 @@ public class Entity {
     }
 
     public List<Entity> getPassengers() {
-        return internal.getPassengers().stream().map(Entity::new).collect(Collectors.toList());
+        return internal.getPassengers().stream().map(e -> getWorld().getEntity(e)).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public Entity getRiding() {
@@ -165,8 +167,9 @@ public class Entity {
         return null;
     }
 
+    private final SingleCache<AxisAlignedBB, IBoundingBox> boundingBox = new SingleCache<>(IBoundingBox::from);
     public IBoundingBox getBounds() {
-        return IBoundingBox.from(internal.getEntityBoundingBox());
+        return boundingBox.get(internal.getEntityBoundingBox());
     }
 
     public float getRotationYawHead() {

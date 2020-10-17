@@ -9,6 +9,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
@@ -20,6 +21,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.UMCWorldAccessor;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
@@ -208,15 +210,12 @@ public abstract class BlockType {
             return getBoundingBox(state, source, pos);
         }
 
-        private BoundingBox bbCache = null;
+        private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
         @Override
         public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            // Reduce total AABB allocations
-            IBoundingBox bb = BlockType.this.getBoundingBox(World.get((net.minecraft.world.World) source), new Vec3i(pos));
-            if (bbCache == null || bbCache.internal != bb) {
-                bbCache = new BoundingBox(bb);
-            }
-            return bbCache;
+            return bbCache.get(
+                    BlockType.this.getBoundingBox(World.get(UMCWorldAccessor.world(source)), new Vec3i(pos))
+            );
         }
 
         @Override
@@ -260,13 +259,13 @@ public abstract class BlockType {
         @Override
         public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get(UMCWorldAccessor.world(blockAccess)), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override
         public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get(UMCWorldAccessor.world(blockAccess)), new Vec3i(pos), Facing.from(side)) : 0;
         }
 
         @Override

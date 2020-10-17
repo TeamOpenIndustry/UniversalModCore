@@ -3,73 +3,28 @@ package cam72cam.mod.entity.boundingbox;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import net.minecraft.block.Block;
 import net.minecraft.util.math.AxisAlignedBB;
 
 public interface IBoundingBox {
-    IBoundingBox INFINITE = from(TileEntity.INFINITE_EXTENT_AABB);
-    IBoundingBox ORIGIN = from(new AxisAlignedBB(0,0,0,0,0,0));
+    IBoundingBox INFINITE = new DefaultBoundingBox(TileEntity.INFINITE_EXTENT_AABB);
+    IBoundingBox ORIGIN = new DefaultBoundingBox(new AxisAlignedBB(0,0,0,0,0,0));
+    IBoundingBox BLOCK = new DefaultBoundingBox(Block.FULL_BLOCK_AABB);
 
     static IBoundingBox from(AxisAlignedBB internal) {
         if (internal == null) {
             return null;
         }
-        // TODO consider caching min/max objects?
-        return new IBoundingBox() {
-            @Override
-            public Vec3d min() {
-                return new Vec3d(internal.minX, internal.minY, internal.minZ);
-            }
-
-            @Override
-            public Vec3d max() {
-                return new Vec3d(internal.maxX, internal.maxY, internal.maxZ);
-            }
-
-            @Override
-            public IBoundingBox expand(Vec3d centered) {
-                return from(internal.expand(centered.x, centered.y, centered.z));
-            }
-
-            @Override
-            public IBoundingBox contract(Vec3d centered) {
-                return from(internal.contract(centered.x, centered.y, centered.z));
-            }
-
-            @Override
-            public IBoundingBox grow(Vec3d val) {
-                return from(internal.grow(val.x, val.y, val.z));
-            }
-
-            @Override
-            public IBoundingBox offset(Vec3d vec3d) {
-                return from(internal.offset(vec3d.internal()));
-            }
-
-            @Override
-            public double calculateXOffset(IBoundingBox other, double offsetX) {
-                return internal.calculateXOffset(new BoundingBox(other), offsetX);
-            }
-
-            @Override
-            public double calculateYOffset(IBoundingBox other, double offsetY) {
-                return internal.calculateYOffset(new BoundingBox(other), offsetY);
-            }
-
-            @Override
-            public double calculateZOffset(IBoundingBox other, double offsetZ) {
-                return internal.calculateZOffset(new BoundingBox(other), offsetZ);
-            }
-
-            @Override
-            public boolean intersects(Vec3d min, Vec3d max) {
-                return internal.intersects(min.x, min.y, min.z, max.x, max.y, max.z);
-            }
-
-            @Override
-            public boolean contains(Vec3d vec) {
-                return internal.contains(vec.internal());
-            }
-        };
+        if (internal instanceof BoundingBox) {
+            return ((BoundingBox) internal).internal;
+        }
+        if (internal == Block.FULL_BLOCK_AABB ||
+                internal.minX == 0 && internal.minY == 0 && internal.minZ == 0 &&
+                internal.maxX == 1 && internal.maxY == 1 && internal.maxZ == 1
+        ) {
+            return BLOCK;
+        }
+        return new DefaultBoundingBox(internal);
     }
 
     /** Create a new 0 size BB at pos */
@@ -110,4 +65,5 @@ public interface IBoundingBox {
     default boolean intersects(IBoundingBox bounds) {
         return this.intersects(bounds.min(), bounds.max());
     }
+
 }

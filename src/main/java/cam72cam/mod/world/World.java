@@ -553,7 +553,7 @@ public class World {
 
     /** Get dropped items within the given area */
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, new BoundingBox(bb));
+        List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, BoundingBox.from(bb));
         return items.stream().map((EntityItem::getItem)).map(ItemStack::new).collect(Collectors.toList());
     }
 

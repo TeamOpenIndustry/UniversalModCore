@@ -13,8 +13,15 @@ public class BoundingBox extends AxisAlignedBB {
         this.internal = internal;
     }
 
-    public BoundingBox(IBoundingBox internal) {
+    private BoundingBox(IBoundingBox internal) {
         this(internal, hack(internal));
+    }
+
+    public static AxisAlignedBB from(IBoundingBox internal) {
+        if (internal instanceof DefaultBoundingBox) {
+            return ((DefaultBoundingBox) internal).internal;
+        }
+        return new BoundingBox(internal);
     }
 
     private static double[] hack(IBoundingBox internal) {

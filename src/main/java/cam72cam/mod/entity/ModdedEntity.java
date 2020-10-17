@@ -9,6 +9,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
+import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -48,9 +49,17 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private IRidable iRidable;
     private ICollision iCollision;
 
-    private BoundingBox cachedCollisionBB = null;
-    private IBoundingBox cachedRenderBB = null;
-    private AxisAlignedBB cachedRenderAABB = null;
+    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedCollisionBB = new SingleCache<>(BoundingBox::from);
+    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedRenderBB = new SingleCache<>(internal -> {
+        AxisAlignedBB bb = BoundingBox.from(internal);
+        /*
+         So why do we wrap this with a new AABB here instead of passing the BB straight through?
+         Good question
+         Certain mods (like IR) use custom bounding boxes that do some really funky shit to break
+         the axis constraint.  We don't care about that when rendering, just want a worst-case sized BB
+        */
+        return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+    });
 
     /** Standard forge constructor */
     public ModdedEntity(World world) {
@@ -398,11 +407,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public AxisAlignedBB getEntityBoundingBox() {
-        IBoundingBox found = iCollision.getCollision();
-        if (cachedCollisionBB == null || found != cachedCollisionBB.internal) {
-            cachedCollisionBB = new BoundingBox(found);
-        }
-        return cachedCollisionBB;
+        return cachedCollisionBB.get(iCollision.getCollision());
     }
 
     /**
@@ -412,19 +417,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        /*
-         So why do we wrap this with a new AABB here instead of passing the BB straight through?
-         Good question
-         Certain mods (like IR) use custom bounding boxes that do some really funky shit to break
-         the axis constraint.  We don't care about that when rendering, just want a worst-case sized BB
-        */
-        IBoundingBox found = iCollision.getCollision();
-        if (found != cachedRenderBB) {
-            cachedRenderBB = iCollision.getCollision();
-            BoundingBox bb = new BoundingBox(cachedRenderBB);
-            cachedRenderAABB = new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
-        }
-        return cachedRenderAABB;
+        return cachedRenderBB.get(iCollision.getCollision());
     }
 
     /* Hacks */

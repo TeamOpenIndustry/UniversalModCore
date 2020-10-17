@@ -14,6 +14,7 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.item.ItemStack;
@@ -21,6 +22,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
@@ -260,20 +262,16 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /* Forge Overrides */
 
+    private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
+            new SingleCache<>(internal -> BoundingBox.from(internal).offset(pos.getX(), pos.getY(), pos.getZ()));
     /**
      * @return Instance's bounding box
      * @see BlockEntity
      */
-    private BoundingBox cachedBB = null;
     @Override
     public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         if (instance() != null) {
-            IBoundingBox bb = instance().getRenderBoundingBox();
-            if (cachedBB == null || cachedBB.internal != bb) {
-                cachedBB = new BoundingBox(bb)
-                        .offset(pos.getX(), pos.getY(), pos.getZ());
-            }
-            return cachedBB;
+            return bbCache.get(instance().getRenderBoundingBox());
         }
         return INFINITE_EXTENT_AABB;
     }
