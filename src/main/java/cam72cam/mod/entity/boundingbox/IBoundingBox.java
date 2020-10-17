@@ -1,10 +1,14 @@
 package cam72cam.mod.entity.boundingbox;
 
+import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.util.math.AxisAlignedBB;
 
 public interface IBoundingBox {
+    IBoundingBox INFINITE = from(TileEntity.INFINITE_EXTENT_AABB);
+    IBoundingBox ORIGIN = from(new AxisAlignedBB(0,0,0,0,0,0));
+
     static IBoundingBox from(AxisAlignedBB internal) {
         if (internal == null) {
             return null;

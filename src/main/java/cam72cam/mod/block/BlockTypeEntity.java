@@ -2,6 +2,7 @@ package cam72cam.mod.block;
 
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -123,12 +124,13 @@ public abstract class BlockTypeEntity extends BlockType {
         }
     }
 
-    public final double getHeight(World world, Vec3i pos) {
+    @Override
+    public IBoundingBox getBoundingBox(World world, Vec3i pos) {
         BlockEntity instance = getInstance(world, pos);
         if (instance != null) {
-            return instance.getHeight();
+            return instance.getBoundingBox();
         }
-        return 1;
+        return super.getBoundingBox(world, pos);
     }
 
     @Override
@@ -185,25 +187,5 @@ public abstract class BlockTypeEntity extends BlockType {
             }
             return super.getExtendedState(origState, access, pos);
         }
-
-        @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
-            if (entity == null) {
-                return super.getCollisionBoundingBox(state, source, pos);
-            }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
-        }
-
-        @Override
-        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
-            if (entity == null) {
-                return super.getBoundingBox(state, source, pos);
-            }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
-        }
     }
-
-
 }

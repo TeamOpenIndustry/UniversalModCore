@@ -264,13 +264,16 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @return Instance's bounding box
      * @see BlockEntity
      */
+    private BoundingBox cachedBB = null;
     @Override
     public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         if (instance() != null) {
-            IBoundingBox bb = instance().getBoundingBox();
-            if (bb != null) {
-                return new BoundingBox(bb);
+            IBoundingBox bb = instance().getRenderBoundingBox();
+            if (cachedBB == null || cachedBB.internal != bb) {
+                cachedBB = new BoundingBox(bb)
+                        .offset(pos.getX(), pos.getY(), pos.getZ());
             }
+            return cachedBB;
         }
         return INFINITE_EXTENT_AABB;
     }

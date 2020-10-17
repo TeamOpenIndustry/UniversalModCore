@@ -1,6 +1,8 @@
 package cam72cam.mod.block;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
@@ -110,11 +112,11 @@ public abstract class BlockType {
     public abstract void onNeighborChange(World world, Vec3i pos, Vec3i neighbor);
 
     /**
-     * Height of the block.
-     * TODO replace with actual bounding box code instead of IR specific stuff!
+     * Shape of the block.
      */
-    public double getHeight() {
-        return 1;
+    protected static final IBoundingBox defaultBox = IBoundingBox.from(new AxisAlignedBB(0, 0, 0, 1, 1, 1));
+    public IBoundingBox getBoundingBox(World world, Vec3i pos) {
+        return defaultBox;
     }
 
     /**
@@ -203,17 +205,23 @@ public abstract class BlockType {
 
         @Override
         public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            return new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+            return getBoundingBox(state, source, pos);
         }
 
+        private BoundingBox bbCache = null;
         @Override
         public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            return new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1);
+            // Reduce total AABB allocations
+            IBoundingBox bb = BlockType.this.getBoundingBox(World.get((net.minecraft.world.World) source), new Vec3i(pos));
+            if (bbCache == null || bbCache.internal != bb) {
+                bbCache = new BoundingBox(bb);
+            }
+            return bbCache;
         }
 
         @Override
         public AxisAlignedBB getSelectedBoundingBox(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos) {
-            return getCollisionBoundingBox(state, worldIn, pos).expand(0, 0.1, 0).offset(pos);
+            return getCollisionBoundingBox(state, worldIn, pos).offset(pos);
         }
 
         @Override

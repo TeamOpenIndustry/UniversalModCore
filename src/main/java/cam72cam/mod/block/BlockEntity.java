@@ -93,14 +93,6 @@ public abstract class BlockEntity {
     public void onNeighborChange(Vec3i neighbor) {
     }
 
-    /**
-     * Height of the block.
-     * TODO replace with actual bounding box code instead of IR specific stuff!
-     */
-    public double getHeight() {
-        return 1;
-    }
-
     /** Marks block for re-render on the client or sends an update packet on the server. */
     public void markDirty() {
         internal.markDirty();
@@ -133,9 +125,14 @@ public abstract class BlockEntity {
         return true;
     }
 
-    /** @return Render Bounding Box */
+    /** @return Bounding Box (offset from origin) */
     public IBoundingBox getBoundingBox() {
-        return null;
+        return BlockType.defaultBox;
+    }
+
+    /** @return Bounding Box (offset from origin) */
+    public IBoundingBox getRenderBoundingBox() {
+        return getBoundingBox();
     }
 
     /** @return Max render distance for this entity */
