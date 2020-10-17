@@ -78,7 +78,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
             }
 
             // Duplicate forge logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
-            double yoff = Math.floor(entity.getPosition().y / 16f);
+            double yoff = ((int)entity.getPosition().y) >> 4 << 4;
             Vec3d min = entity.getBlockPosition().toChunkMin();
             min = new Vec3d(min.x, yoff, min.z);
             Vec3d max = entity.getBlockPosition().toChunkMax();
