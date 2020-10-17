@@ -16,12 +16,15 @@ import java.util.function.Function;
 public abstract class Particle {
     /** Current position of the particle */
     protected Vec3d pos;
+
     /** Current alive ticks of the particle */
     protected long ticks;
     /** Used internally for multirendering */
     boolean canRender = true;
     /** Used internally for rendering */
-    Vec3d renderPos;
+    double renderX;
+    double renderY;
+    double renderZ;
 
     /** Simple registration */
     public static <P extends ParticleData> Consumer<P> register(Function<P, Particle> ctr) {
@@ -51,17 +54,18 @@ public abstract class Particle {
                 public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
                     ip.ticks = particleAge;
                     ip.pos = new Vec3d(posX, posY, posZ);
-                    ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);
-                    ip.renderPos = ip.renderPos.add(this.motionX * partialTicks, this.motionY * partialTicks, this.motionZ * partialTicks);
+                    ip.renderX = posX - interpPosX + this.motionX * partialTicks;
+                    ip.renderY = posY - interpPosY + this.motionY * partialTicks;
+                    ip.renderZ = posZ - interpPosZ + this.motionZ * partialTicks;
 
                     if (renderer == null) {
                         try (OpenGL.With c = OpenGL.matrix()) {
-                            GL11.glTranslated(ip.renderPos.x, ip.renderPos.y, ip.renderPos.z);
+                            GL11.glTranslated(ip.renderX, ip.renderY, ip.renderZ);
                             ip.render(partialTicks);
                         }
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, subp -> GL11.glTranslated(subp.renderPos.x, subp.renderPos.y, subp.renderPos.z), partialTicks);
+                            renderer.accept(particles, subp -> GL11.glTranslated(subp.renderX, subp.renderY, subp.renderZ), partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }
