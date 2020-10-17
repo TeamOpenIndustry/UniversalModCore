@@ -9,6 +9,8 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 /** Optional GLSL Shader wrapper */
@@ -53,18 +55,20 @@ public class GLSLShader {
         return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
     }
 
+    private final Map<String, Integer> paramLocations = new HashMap<>();
     /** Set the param to the given values (up to 3) */
     public void paramFloat(String name, float... params) {
-        // TODO possible optimization would be to cache the glGetUniformLocationARB calls.  I *think* they are consistent.
+        Integer loc = paramLocations.computeIfAbsent(name, n -> ARBShaderObjects.glGetUniformLocationARB(program, n));
+
         switch (params.length) {
             case 1:
-                ARBShaderObjects.glUniform1fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0]);
+                ARBShaderObjects.glUniform1fARB(loc, params[0]);
                 break;
             case 2:
-                ARBShaderObjects.glUniform2fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0], params[1]);
+                ARBShaderObjects.glUniform2fARB(loc, params[0], params[1]);
                 break;
             case 3:
-                ARBShaderObjects.glUniform3fARB(ARBShaderObjects.glGetUniformLocationARB(program, name), params[0], params[1], params[2]);
+                ARBShaderObjects.glUniform3fARB(loc, params[0], params[1], params[2]);
                 break;
         }
     }
