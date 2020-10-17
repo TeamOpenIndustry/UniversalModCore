@@ -150,6 +150,7 @@ public class OBJRender {
         model.offsetU = null;
         model.offsetV = null;
         model.faceMTLs = null;
+        model.faceVerts = null;
         model.vertices = null;
 
         return vba;
