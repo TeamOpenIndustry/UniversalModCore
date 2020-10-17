@@ -47,13 +47,18 @@ public class Vec3d {
         return new Vec3d(this.x - x, this.y - y, this.z - z);
     }
 
+    private static double length(double x, double y, double z) {
+        return Math.sqrt(x * x + y * y + z * z);
+    }
+
     public double length() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        return length(x, y, z);
     }
 
     public double distanceTo(Vec3d other) {
-        // Could be optimized by inlining the subtract (removes 1 allocation)
-        return this.subtract(other).length();
+        // optimized by inlining the subtract (removes 1 allocation)
+        //return this.subtract(other).length();
+        return length(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     public Vec3d scale(double scale) {
