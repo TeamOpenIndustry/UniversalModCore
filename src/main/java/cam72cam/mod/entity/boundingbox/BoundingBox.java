@@ -81,7 +81,8 @@ public class BoundingBox extends AxisAlignedBB {
 
     @Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
+        return super.intersects(minX, minY, minZ, maxX, maxY, maxZ) && // Fast check
+                internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ)); // Slow check
     }
 
     @Override
