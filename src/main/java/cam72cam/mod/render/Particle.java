@@ -22,9 +22,9 @@ public abstract class Particle {
     /** Used internally for multirendering */
     boolean canRender = true;
     /** Used internally for rendering */
-    double renderX;
-    double renderY;
-    double renderZ;
+    protected double renderX;
+    protected double renderY;
+    protected double renderZ;
 
     /** Simple registration */
     public static <P extends ParticleData> Consumer<P> register(Function<P, Particle> ctr) {
@@ -65,7 +65,7 @@ public abstract class Particle {
                         }
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, subp -> GL11.glTranslated(subp.renderX, subp.renderY, subp.renderZ), partialTicks);
+                            renderer.accept(particles, partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }
@@ -88,7 +88,7 @@ public abstract class Particle {
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
-        void accept(List<I> l, Consumer<I> c, float pt);
+        void accept(List<I> l, float pt);
     }
 
     /** Data to be stored for each particle (can be extended) */
