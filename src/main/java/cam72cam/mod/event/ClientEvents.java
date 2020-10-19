@@ -7,6 +7,7 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
+import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
@@ -29,6 +30,7 @@ public class ClientEvents {
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
+        World.registerClientEvnets();
     }
 
     /** Fires off a client resource reload event (UMC only).  Do not use directly */

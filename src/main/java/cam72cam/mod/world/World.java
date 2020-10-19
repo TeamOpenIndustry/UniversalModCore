@@ -1,5 +1,6 @@
 package cam72cam.mod.world;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -7,6 +8,7 @@ import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
@@ -90,6 +92,34 @@ public class World {
         CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.getDimension()));
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
+
+        CommonEvents.World.TICK.subscribe(world -> get(world).checkLoadedEntities());
+    }
+
+    public static void registerClientEvnets() {
+        ClientEvents.TICK.subscribe(() -> {
+            if (MinecraftClient.isReady()) {
+                MinecraftClient.getPlayer().getWorld().checkLoadedEntities();
+            }
+        });
+    }
+
+    private void checkLoadedEntities() {
+        // Once a second scan entities that may have de-sync'd with the UMC world
+        if (this.getTicks() % 20 == 0) {
+            for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
+                if (!this.entityByID.containsKey(entity.getEntityId())) {
+                    ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                    this.onEntityAdded(entity);
+                }
+            }
+            for (Entity entity : this.entityByID.values()) {
+                if (!this.internal.loadedEntityList.contains(entity.internal)) {
+                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                    this.onEntityRemoved(entity.internal);
+                }
+            }
+        }
     }
 
     /** Turn a MC world into a UMC world */
@@ -128,6 +158,11 @@ public class World {
      * Wiring from WorldEventListener
      */
     void onEntityAdded(net.minecraft.entity.Entity entityIn) {
+        if (entityByID.containsKey(entityIn.getEntityId())) {
+            // Dupe
+            return;
+        }
+
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
@@ -218,7 +253,7 @@ public class World {
     }
 
     /** Kill an entity */
-    public void removeEntity(cam72cam.mod.entity.Entity entity) {
+    public void removeEntity(Entity entity) {
         internal.removeEntity(entity.internal);
     }
 
@@ -244,7 +279,7 @@ public class World {
     /** Get all block entities of the given type */
     public <T extends BlockEntity> List<T> getBlockEntities(Class<T> cls) {
         return internal.loadedTileEntityList.stream()
-                .filter(x -> x instanceof cam72cam.mod.block.tile.TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
+                .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
                 .map(x -> (T) ((TileEntity) x).instance())
                 .collect(Collectors.toList());
     }
@@ -367,7 +402,7 @@ public class World {
 
     /** If this block is snow or snow layers */
     public boolean isSnow(Vec3i ph) {
-        net.minecraft.block.Block block = internal.getBlockState(ph.internal()).getBlock();
+        Block block = internal.getBlockState(ph.internal()).getBlock();
         return block == Blocks.SNOW || block == Blocks.SNOW_LAYER;
     }
 
