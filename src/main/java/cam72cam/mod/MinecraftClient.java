@@ -5,7 +5,6 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.math.RayTraceResult;
 
 /** Static Minecraft Client props, don't touch server side */
@@ -31,12 +30,6 @@ public class MinecraftClient {
     /** Hooks into the GUI profiler */
     public static void endProfiler() {
         Minecraft.getMinecraft().profiler.endSection();
-    }
-
-    /** Assume true... */
-    @Deprecated
-    public static boolean useVBO() {
-        return OpenGlHelper.useVbo();
     }
 
     /** Entity that you are currently looking at (distance limited) */
