@@ -42,7 +42,7 @@ public abstract class BlockTypeEntity extends BlockType {
     }
 
     /** Supply your custom BlockEntity constructor here */
-    public abstract BlockEntity constructBlockEntity();
+    protected abstract BlockEntity constructBlockEntity();
 
     @Override
     public final boolean isRedstoneProvider() {

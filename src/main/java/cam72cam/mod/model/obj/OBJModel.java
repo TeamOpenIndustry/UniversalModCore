@@ -40,7 +40,7 @@ public class OBJModel {
 
     public OBJModel(Identifier modelLoc, float darken, double scale) throws Exception {
         long hash = 0;
-        HashingInputStream input = new HashingInputStream(Hashing.sha256(), modelLoc.getResourceStream());
+        HashingInputStream input = new HashingInputStream(Hashing.sha256(), modelLoc.getLastResourceStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         this.darken = darken;
         this.modelLoc = modelLoc;
@@ -164,7 +164,7 @@ public class OBJModel {
 
             Material currentMTL = null;
 
-            input = new HashingInputStream(Hashing.sha256(), modelLoc.getRelative(materialPath).getResourceStream());
+            input = new HashingInputStream(Hashing.sha256(), modelLoc.getRelative(materialPath).getLastResourceStream());
             reader = new BufferedReader(new InputStreamReader(input));
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("#")) {

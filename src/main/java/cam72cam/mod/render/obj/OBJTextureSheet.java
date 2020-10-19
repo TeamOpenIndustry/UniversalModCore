@@ -299,9 +299,9 @@ public class OBJTextureSheet {
         SubTexture(Identifier tex, Identifier fallback) throws IOException {
             InputStream input;
             try {
-                input = tex.getResourceStream();
+                input = tex.getLastResourceStream();
             } catch (FileNotFoundException ex) {
-                input = fallback.getResourceStream();
+                input = fallback.getLastResourceStream();
             }
             HashingInputStream hashed = new HashingInputStream(Hashing.sha256(), input);
             BufferedImage image = TextureUtil.readBufferedImage(hashed);

@@ -85,7 +85,7 @@ class ModSoundManager {
                     }
                     public InputStream getInputStream() throws IOException
                     {
-                        return internal.getResourceStream();
+                        return internal.getLastResourceStream();
                     }
                 };
             }
