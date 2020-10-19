@@ -85,6 +85,12 @@ public class ItemStack {
         return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
     }
 
+
+    /** Compares: item, damage */
+    public boolean is(ItemStack stack) {
+        return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
+    }
+
     public boolean is(Fuzzy fuzzy) {
         return fuzzy.matches(this);
     }
