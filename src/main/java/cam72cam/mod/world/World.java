@@ -24,6 +24,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -409,8 +410,11 @@ public class World {
 
     /** Check if block at pos collides with a BB */
     public boolean doesBlockCollideWith(Vec3i bp, IBoundingBox bb) {
-        IBoundingBox bbb = IBoundingBox.from(internal.getBlockState(bp.internal()).getCollisionBoundingBox(internal, bp.internal()));
-        return bbb != null && bb.intersects(bbb);
+        AxisAlignedBB cbb = internal.getBlockState(bp.internal()).getCollisionBoundingBox(internal, bp.internal());
+        if (cbb == null) {
+           return false;
+        }
+        return bb.intersects(IBoundingBox.from(cbb.offset(bp.internal())));
     }
 
     /** Break block (with in-world drops) */
