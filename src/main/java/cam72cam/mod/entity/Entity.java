@@ -69,6 +69,17 @@ public class Entity {
     public void setRotationYaw(float yaw) {
         internal.prevRotationYaw = internal.rotationYaw;
         internal.rotationYaw = yaw;
+        double d0 = internal.prevRotationYaw - yaw;
+        if (d0 < -180.0D)
+        {
+            internal.prevRotationYaw += 360.0F;
+        }
+
+        if (d0 >= 180.0D)
+        {
+            internal.prevRotationYaw -= 360.0F;
+        }
+
     }
 
     public float getRotationPitch() {
