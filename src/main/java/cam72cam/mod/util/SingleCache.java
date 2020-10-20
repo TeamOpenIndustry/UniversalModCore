@@ -1,5 +1,6 @@
 package cam72cam.mod.util;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class SingleCache<K, V> {
@@ -12,7 +13,7 @@ public class SingleCache<K, V> {
     }
 
     public V get(K key) {
-        if (cacheK != key || cacheV == null) { //TODO .equals?
+        if (!(Objects.equals(cacheK, key)) || cacheV == null) {
             cacheK = key;
             cacheV = provider.apply(cacheK);
         }
