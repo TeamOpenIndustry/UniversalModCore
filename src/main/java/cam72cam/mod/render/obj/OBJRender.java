@@ -126,9 +126,7 @@ public class OBJRender {
             }
 
             for (int[] point : model.points(face)) {
-                Vec3d v = model.vertices(point[0]);
                 Vec2f vt = point[1] != -1 ? model.vertexTextures(point[1]) : null;
-                Vec3d vn = point[2] != -1 ? model.vertexNormals(point[2]) : null;
 
                 if (vt != null) {
                     vt = new Vec2f(
@@ -141,7 +139,17 @@ public class OBJRender {
                             texture.convertV(mtlName, 0)
                     );
                 }
-                vba.addPoint(v, vn, vt, r, g, b, a);
+
+                boolean hasVn = point[2] != -1;
+                vba.addPoint(
+                        model.vertex(point[0], OBJModel.Vert.X),
+                        model.vertex(point[0], OBJModel.Vert.Y),
+                        model.vertex(point[0], OBJModel.Vert.Z),
+                        hasVn,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.X) : 0,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.Y) : 0,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.Z) : 0,
+                        vt, r, g, b, a);
             }
         }
 

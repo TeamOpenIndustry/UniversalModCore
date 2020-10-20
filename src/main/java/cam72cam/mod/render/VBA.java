@@ -40,14 +40,14 @@ public class VBA {
     }
 
     /** Add a point to the VB */
-    public void addPoint(Vec3d v, Vec3d vn, Vec2f vt, float r, float g, float b, float a) {
-        vertexBuffer.put((float) (v.x));
-        vertexBuffer.put((float) (v.y));
-        vertexBuffer.put((float) (v.z));
-        if (vn != null) {
-            normalBuffer.put((float) (vn.x));
-            normalBuffer.put((float) (vn.y));
-            normalBuffer.put((float) (vn.z));
+    public void addPoint(float vX, float vY, float vZ, boolean hasVN, float vnX, float vnY, float vnZ, Vec2f vt, float r, float g, float b, float a) {
+        vertexBuffer.put(vX);
+        vertexBuffer.put(vY);
+        vertexBuffer.put(vZ);
+        if (hasVN) {
+            normalBuffer.put(vnX);
+            normalBuffer.put(vnY);
+            normalBuffer.put(vnZ);
         } else {
             has_vn = false;
         }
