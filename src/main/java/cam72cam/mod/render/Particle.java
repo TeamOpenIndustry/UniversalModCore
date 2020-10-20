@@ -51,9 +51,14 @@ public abstract class Particle {
                 }
 
                 @Override
+                public void onUpdate() {
+                    super.onUpdate();
+                    ip.pos = new Vec3d(posX, posY, posZ);
+                }
+
+                @Override
                 public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
                     ip.ticks = particleAge;
-                    ip.pos = new Vec3d(posX, posY, posZ);
                     ip.renderX = posX - interpPosX + this.motionX * partialTicks;
                     ip.renderY = posY - interpPosY + this.motionY * partialTicks;
                     ip.renderZ = posZ - interpPosZ + this.motionZ * partialTicks;
