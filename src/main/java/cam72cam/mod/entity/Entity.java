@@ -9,6 +9,7 @@ import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Explosion;
 
 import java.util.List;
@@ -39,13 +40,22 @@ public class Entity {
         return internal.getPersistentID();
     }
 
+    private final SingleCache<Vec3d, Vec3i> blockPosCache = new SingleCache<>(pos -> new Vec3i(internal.getPosition()));
     /* Position / Rotation */
     public Vec3i getBlockPosition() {
-        return new Vec3i(internal.getPosition());
+        return blockPosCache.get(getPosition());
     }
 
+    private Vec3d posCache;
     public Vec3d getPosition() {
-        return new Vec3d(internal.getPositionVector());
+        if (posCache == null || (
+                posCache.x != internal.posX ||
+                posCache.y != internal.posY ||
+                posCache.z != internal.posZ )
+        ) {
+            posCache = new Vec3d(internal.getPositionVector());
+        }
+        return posCache;
     }
 
     public void setPosition(Vec3d pos) {
