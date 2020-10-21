@@ -1,5 +1,6 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -12,10 +13,16 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/** Registry and Abstraction for Particles */
+/**
+ * Registry and Abstraction for Particles
+ *
+ * Try not to allocate anything for each render frame...
+ * */
 public abstract class Particle {
     /** Current position of the particle */
-    protected Vec3d pos;
+    protected double posX;
+    protected double posY;
+    protected double posZ;
 
     /** Current alive ticks of the particle */
     protected long ticks;
@@ -43,7 +50,9 @@ public abstract class Particle {
                     motionX = data.motion.x;
                     motionY = data.motion.y;
                     motionZ = data.motion.z;
-                    ip.pos = new Vec3d(posX, posY, posZ);
+                    ip.posX = posX;
+                    ip.posY = posY;
+                    ip.posZ = posZ;
                 }
 
                 @Override
@@ -54,7 +63,9 @@ public abstract class Particle {
                 @Override
                 public void onUpdate() {
                     super.onUpdate();
-                    ip.pos = new Vec3d(posX, posY, posZ);
+                    ip.posX = posX;
+                    ip.posY = posY;
+                    ip.posZ = posZ;
                 }
 
                 @Override
@@ -90,6 +101,15 @@ public abstract class Particle {
 
     /** Render this particle */
     protected abstract void render(float partialTicks);
+
+    protected void lookAtPlayer() {
+        Vec3d eyes = MinecraftClient.getPlayer().getPositionEyes();
+        double x = eyes.x - posX;
+        double y = eyes.y - posY;
+        double z = eyes.z - posZ;
+        GL11.glRotated(180 - Math.toDegrees(Math.atan2(-x, z)), 0, 1, 0);
+        GL11.glRotated(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y)) + 90, 1, 0, 0);
+    }
 
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
