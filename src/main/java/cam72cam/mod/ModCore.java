@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -37,29 +38,30 @@ public class ModCore {
     public static final String NAME = "UniversalModCore";
     public static final String VERSION = "0.1.0";
     public static ModCore instance;
-    static List<Supplier<Mod>> modCtrs = new ArrayList<>();
 
-    private final List<Mod> mods;
+    private List<Mod> mods = new ArrayList<>();
     private Logger logger;
 
     /** Register a mod, must happen before UMC is loaded! */
-    public static void register(Supplier<Mod> ctr) {
-        if (instance != null) {
-            throw new RuntimeException("Unable to register mods after UMC has been constructed");
-        }
-        modCtrs.add(ctr);
+    public static void register(Mod ctr) {
+        instance.mods.add(ctr);
     }
 
     /** Called during Mod Construction phase */
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
-        mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
+        ModCore.register(new Internal());
     }
 
     /** INIT Phase (Forge) */
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        // LOCK MODS
+        mods = Collections.unmodifiableList(mods);
+
+        proxy.event(ModEvent.CONSTRUCT);
+
         logger = event.getModLog();
         proxy.event(ModEvent.INITIALIZE);
     }
@@ -122,7 +124,6 @@ public class ModCore {
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
-            event(ModEvent.CONSTRUCT);
         }
 
         public void event(ModEvent event) {
@@ -144,10 +145,6 @@ public class ModCore {
         }
     }
 
-
-    static {
-        ModCore.register(Internal::new);
-    }
 
     public static class Internal extends Mod {
         public int skipN = 1;
