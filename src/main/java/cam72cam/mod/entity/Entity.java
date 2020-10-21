@@ -109,8 +109,16 @@ public class Entity {
         return internal.prevRotationPitch;
     }
 
-    public Vec3d getPositionEyes(float partialTicks) {
-        return new Vec3d(internal.getPositionEyes(partialTicks));
+    Vec3d eyeCache;
+    public Vec3d getPositionEyes() {
+        if (eyeCache == null || (
+                eyeCache.x != internal.posX ||
+                eyeCache.y != internal.posY + internal.getEyeHeight() ||
+                eyeCache.z != internal.posZ )
+        ) {
+            eyeCache = new Vec3d(internal.posX, internal.posY + internal.getEyeHeight(), internal.posZ);
+        }
+        return eyeCache;
     }
 
 
