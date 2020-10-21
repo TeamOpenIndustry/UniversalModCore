@@ -46,10 +46,10 @@ class ClientSound implements ISound {
 
     @Override
     public void play(Vec3d pos) {
+        stop();
+
         this.setPosition(pos);
         update();
-
-        sndSystem.get().stop(id);
 
         if (repeats || currentPos == null || !MinecraftClient.isReady()) {
             sndSystem.get().play(id);
