@@ -27,6 +27,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -450,6 +451,12 @@ public class World {
            return false;
         }
         return bb.intersects(IBoundingBox.from(cbb.offset(bp.internal())));
+    }
+
+    public List<Vec3i> blocksInBounds(IBoundingBox bb) {
+        return internal.getCollisionBoxes(null, BoundingBox.from(bb)).stream()
+                .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
+                .collect(Collectors.toList());
     }
 
     /** Break block (with in-world drops) */
