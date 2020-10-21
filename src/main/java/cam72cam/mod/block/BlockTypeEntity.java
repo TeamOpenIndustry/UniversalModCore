@@ -2,18 +2,21 @@ package cam72cam.mod.block;
 
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.UMCWorldAccessor;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -186,6 +189,15 @@ public abstract class BlockTypeEntity extends BlockType {
                 }
             }
             return super.getExtendedState(origState, access, pos);
+        }
+
+        @Override
+        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+            net.minecraft.tileentity.TileEntity te = source.getTileEntity(pos);
+            if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
+                return BoundingBox.from(((TileEntity) te).instance().getBoundingBox());
+            }
+            return Block.FULL_BLOCK_AABB;
         }
     }
 }
