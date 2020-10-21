@@ -49,6 +49,8 @@ class ClientSound implements ISound {
         this.setPosition(pos);
         update();
 
+        sndSystem.get().stop(id);
+
         if (repeats || currentPos == null || !MinecraftClient.isReady()) {
             sndSystem.get().play(id);
         } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
