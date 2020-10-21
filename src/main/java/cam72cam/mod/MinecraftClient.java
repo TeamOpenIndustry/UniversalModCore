@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.math.RayTraceResult;
 
 /** Static Minecraft Client props, don't touch server side */
@@ -14,12 +15,17 @@ public class MinecraftClient {
         return Minecraft.getMinecraft().player != null;
     }
 
+    private static Player playerCache;
     /** Hey, it's you! */
     public static Player getPlayer() {
-        if (Minecraft.getMinecraft().player == null) {
+        EntityPlayerSP internal = Minecraft.getMinecraft().player;
+        if (internal == null) {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
-        return new Player(Minecraft.getMinecraft().player);
+        if (playerCache == null || internal != playerCache.internal) {
+            playerCache = new Player(Minecraft.getMinecraft().player);
+        }
+        return playerCache;
     }
 
     /** Hooks into the GUI profiler */
