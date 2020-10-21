@@ -10,8 +10,9 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.oredict.OreIngredient;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
+/** Recipe registration */
 public class Recipes {
-    public static void register(ItemBase item, int width, Fuzzy... ingredients) {
+    public static void register(CustomItem item, int width, Fuzzy... ingredients) {
         register(new ItemStack(item, 1), width, ingredients);
     }
 

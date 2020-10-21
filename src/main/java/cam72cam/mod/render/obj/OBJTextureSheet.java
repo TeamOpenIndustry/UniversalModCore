@@ -24,6 +24,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Object texture sheet that contains all textures for a given model
+ *
+ * The fun part is it auto-expands entries in the sheet to support texture wrapping
+ */
 public class OBJTextureSheet {
     private static GLTexture empty;
 
@@ -294,9 +299,9 @@ public class OBJTextureSheet {
         SubTexture(Identifier tex, Identifier fallback) throws IOException {
             InputStream input;
             try {
-                input = tex.getResourceStream();
+                input = tex.getLastResourceStream();
             } catch (FileNotFoundException ex) {
-                input = fallback.getResourceStream();
+                input = fallback.getLastResourceStream();
             }
             HashingInputStream hashed = new HashingInputStream(Hashing.sha256(), input);
             BufferedImage image = TextureUtil.readBufferedImage(hashed);

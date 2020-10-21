@@ -12,6 +12,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
     public final net.minecraftforge.items.ItemStackHandler internal;
@@ -43,7 +44,7 @@ public class ItemStackHandler implements IInventory {
             @Override
             protected void onContentsChanged(int slot) {
                 super.onContentsChanged(slot);
-                ItemStackHandler.this.onContentsChanged(slot);
+                onChanged.forEach(f -> f.accept(slot));
             }
         };
     }
@@ -52,19 +53,17 @@ public class ItemStackHandler implements IInventory {
         this(1);
     }
 
+    /** Get notified any time a stack changes (which slot) */
     public void onChanged(Consumer<Integer> fn) {
         onChanged.add(fn);
     }
 
-    @Deprecated
-    protected void onContentsChanged(int slot) {
-        onChanged.forEach(f -> f.accept(slot));
-    }
-
+    /** Set slot limiter */
     public void setSlotLimit(Function<Integer, Integer> limiter) {
         slotLimit = limiter;
     }
 
+    /** Change the size of the inventory and return items that don't fit anymore */
     public List<ItemStack> setSize(int inventorySize) {
         if (inventorySize == getSlotCount()) {
             return Collections.emptyList();

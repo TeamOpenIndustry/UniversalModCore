@@ -2,12 +2,12 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
@@ -21,23 +21,25 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
 
     private static void registerClientEvents() {
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
-        Keyboard.registerClientEvents();
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
+        World.registerClientEvnets();
     }
 
+    /** Fires off a client resource reload event (UMC only).  Do not use directly */
     public static void fireReload() {
         RELOAD.execute(Runnable::run);
     }
 
     public static final Event<Runnable> TICK = new Event<>();
-    public static final Event<Function<Hand, Boolean>> CLICK = new Event<>();
+    public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
     public static final Event<Runnable> TEXTURE_STITCH = new Event<>();
@@ -65,7 +67,7 @@ public class ClientEvents {
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
 
             if ((event.getButton() == attackID || event.getButton() == useID) && event.isButtonstate()) {
-                Hand button = attackID == event.getButton() ? Hand.SECONDARY : Hand.PRIMARY;
+                Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
                 if (!CLICK.executeCancellable(x -> x.apply(button))) {
                     event.setCanceled(true);
                 }

@@ -9,6 +9,7 @@ import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.*;
 
+/** Internal, do not use directly */
 public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
     /*
      * This takes a similar approach to FTBUtilities
@@ -20,8 +21,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
      * This is used in internal onTick to force/unforce chunks
      */
 
-    private static final Map<Integer, Ticket> TICKETS = new HashMap<Integer, Ticket>();
-    private static final Map<ChunkPos, Integer> CHUNK_MAP = new HashMap<ChunkPos, Integer>();
+    private static final Map<Integer, Ticket> TICKETS = new HashMap<>();
+    private static final Map<ChunkPos, Integer> CHUNK_MAP = new HashMap<>();
 
 
     private static ChunkManager instance;
@@ -35,9 +36,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
             }
         });
 
-        CommonEvents.World.TICK.subscribe(world -> {
-            onWorldTick(world);
-        });
+        CommonEvents.World.TICK.subscribe(ChunkManager::onWorldTick);
     }
 
     private static Ticket ticketForWorld(World world) {
@@ -53,7 +52,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
             return;
         }
 
-        ChunkPos pos = new ChunkPos(world.internal, inPos.internal);
+        ChunkPos pos = new ChunkPos(world.internal, inPos.internal());
 
         int currTicks = 0;
 
@@ -66,7 +65,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         CHUNK_MAP.put(pos, Math.max(100, Math.min(10, currTicks)));
     }
 
-    public static void onWorldTick(World world) {
+    private static void onWorldTick(World world) {
         Ticket ticket;
         try {
             ticket = ticketForWorld(world);
@@ -78,8 +77,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         int dim = world.provider.getDimension();
         Set<ChunkPos> keys = CHUNK_MAP.keySet();
 
-        Set<ChunkPos> loaded = new HashSet<ChunkPos>();
-        Set<ChunkPos> unload = new HashSet<ChunkPos>();
+        Set<ChunkPos> loaded = new HashSet<>();
+        Set<ChunkPos> unload = new HashSet<>();
 
         for (ChunkPos pos : keys) {
             if (pos.dim != dim) {

@@ -5,7 +5,6 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.GuiRegistry;
-import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
@@ -31,6 +30,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
 public class ModCore {
     public static final String MODID = "universalmodcore";
@@ -39,50 +39,66 @@ public class ModCore {
     public static ModCore instance;
     static List<Supplier<Mod>> modCtrs = new ArrayList<>();
 
-    private List<Mod> mods;
+    private final List<Mod> mods;
     private Logger logger;
 
+    /** Register a mod, must happen before UMC is loaded! */
     public static void register(Supplier<Mod> ctr) {
+        if (instance != null) {
+            throw new RuntimeException("Unable to register mods after UMC has been constructed");
+        }
         modCtrs.add(ctr);
     }
 
+    /** Called during Mod Construction phase */
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
         mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
     }
 
+    /** INIT Phase (Forge) */
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         logger = event.getModLog();
         proxy.event(ModEvent.INITIALIZE);
     }
 
+    /** SETUP Phase (Forge) */
     @EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.event(ModEvent.SETUP);
     }
 
+    /** FINALIZE Phase (Forge) */
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
     }
 
+    /** START Phase (Forge) */
     @EventHandler
     public void serverStarting(FMLServerStartedEvent event) {
         proxy.event(ModEvent.START);
     }
 
+    /** Implement this to create a UMC mod */
     public static abstract class Mod {
         public abstract String modID();
 
+        /** Called both server and client side with a given event */
         public abstract void commonEvent(ModEvent event);
+        /** Called client side with a given event */
         public abstract void clientEvent(ModEvent event);
+        /** Called server side with a given event */
         public abstract void serverEvent(ModEvent event);
 
+        /** Get config file for filename */
         public final Path getConfig(String fname) {
             return Paths.get(Loader.instance().getConfigDir().toString(), fname);
         }
+
+        /* Standard logging functions */
 
         public static void debug(String msg, Object...params) {
             ModCore.debug(msg, params);
@@ -103,6 +119,7 @@ public class ModCore {
 
     @SidedProxy(serverSide = "cam72cam.mod.ModCore$ServerProxy", clientSide = "cam72cam.mod.ModCore$ClientProxy", modId = ModCore.MODID)
     private static Proxy proxy;
+    /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
             event(ModEvent.CONSTRUCT);
@@ -145,7 +162,6 @@ public class ModCore {
             switch (event) {
                 case CONSTRUCT:
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
-                    Packet.register(Keyboard.MovementPacket::new, PacketDirection.ClientToServer);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());

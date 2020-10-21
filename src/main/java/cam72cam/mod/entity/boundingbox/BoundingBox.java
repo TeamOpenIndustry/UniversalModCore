@@ -6,15 +6,22 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 
 public class BoundingBox extends AxisAlignedBB {
-    private final IBoundingBox internal;
+    public final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
         super(constructorParams[0], constructorParams[1], constructorParams[2], constructorParams[3], constructorParams[4], constructorParams[5]);
         this.internal = internal;
     }
 
-    public BoundingBox(IBoundingBox internal) {
+    private BoundingBox(IBoundingBox internal) {
         this(internal, hack(internal));
+    }
+
+    public static AxisAlignedBB from(IBoundingBox internal) {
+        if (internal instanceof DefaultBoundingBox) {
+            return ((DefaultBoundingBox) internal).internal;
+        }
+        return new BoundingBox(internal);
     }
 
     private static double[] hack(IBoundingBox internal) {
@@ -81,7 +88,8 @@ public class BoundingBox extends AxisAlignedBB {
 
     @Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
+        return super.intersects(minX, minY, minZ, maxX, maxY, maxZ) && // Fast check
+                internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ)); // Slow check
     }
 
     @Override
@@ -101,7 +109,7 @@ public class BoundingBox extends AxisAlignedBB {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.x + xDelta * step, vecA.y + yDelta * step, vecA.z + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new RayTraceResult(stepPos.internal, EnumFacing.UP);
+                return new RayTraceResult(stepPos.internal(), EnumFacing.UP);
             }
         }
         return null;

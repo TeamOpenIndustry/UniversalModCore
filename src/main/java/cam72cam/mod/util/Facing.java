@@ -3,6 +3,9 @@ package cam72cam.mod.util;
 import cam72cam.mod.math.Rotation;
 import net.minecraft.util.EnumFacing;
 
+/**
+ * Wrap MC's EnumFacing enum, provide some helpers
+ */
 public enum Facing {
     DOWN(EnumFacing.DOWN),
     UP(EnumFacing.UP),
@@ -12,6 +15,7 @@ public enum Facing {
     EAST(EnumFacing.EAST),
     ;
 
+    // Note to self: Do not call Arrays.randomize on this, weird shit happens (as would be expected)
     public static final Facing[] HORIZONTALS = {
             NORTH, SOUTH, EAST, WEST
     };
@@ -43,11 +47,13 @@ public enum Facing {
         }
     }
 
+    /** Older versions of MC used a single byte to represent facing */
     @Deprecated
     public static Facing from(byte facing) {
         return from(net.minecraft.util.EnumFacing.byIndex(facing));
     }
 
+    /** 0 is SOUTH, 90 is WEST */
     public static Facing fromAngle(float v) {
         return from(EnumFacing.fromAngle(v));
     }
@@ -75,11 +81,27 @@ public enum Facing {
         return Facing.from(rot.internal.rotate(this.internal));
     }
 
-    public float getHorizontalAngle() {
+    public float getAngle() {
         return internal.getHorizontalAngle();
     }
 
+    /** Axis that this facing lies upon */
     public Axis getAxis() {
         return Axis.from(internal.getAxis());
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getXMultiplier() {
+        return internal.getXOffset();
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getYMultiplier() {
+        return internal.getYOffset();
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getZMultiplier() {
+        return internal.getZOffset();
     }
 }

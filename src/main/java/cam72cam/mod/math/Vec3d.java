@@ -1,21 +1,22 @@
 package cam72cam.mod.math;
 
+/** Custom Vec3d that is equivalent to MC's Vec3d */
 public class Vec3d {
     public static final Vec3d ZERO = new Vec3d(net.minecraft.util.math.Vec3d.ZERO);
-    public final net.minecraft.util.math.Vec3d internal;
     public final double x;
     public final double y;
     public final double z;
-
-    public Vec3d(net.minecraft.util.math.Vec3d internal) {
-        this.internal = internal;
-        this.x = internal.x;
-        this.y = internal.y;
-        this.z = internal.z;
-    }
+    private net.minecraft.util.math.Vec3d internal = null;
 
     public Vec3d(double x, double y, double z) {
-        this(new net.minecraft.util.math.Vec3d(x, y, z));
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    public Vec3d(net.minecraft.util.math.Vec3d internal) {
+        this(internal.x, internal.y, internal.z);
+        this.internal = internal;
     }
 
     public Vec3d(Vec3i pos) {
@@ -23,43 +24,50 @@ public class Vec3d {
     }
 
     public Vec3d add(double x, double y, double z) {
-        return new Vec3d(internal.add(x, y, z));
+        return new Vec3d(this.x + x, this.y + y, this.z + z);
     }
 
     public Vec3d add(Vec3i offset) {
-        return new Vec3d(internal.add(offset.x, offset.y, offset.z));
+        return add(offset.x, offset.y, offset.z);
     }
 
     public Vec3d add(Vec3d other) {
-        return new Vec3d(internal.add(other.internal));
+        return add(other.x, other.y, other.z);
     }
 
     public Vec3d subtract(Vec3d other) {
-        return new Vec3d(internal.subtract(other.internal));
+        return subtract(other.x, other.y, other.z);
     }
 
     public Vec3d subtract(Vec3i offset) {
-        return new Vec3d(internal.subtract(offset.x, offset.y, offset.z));
+        return subtract(offset.x, offset.y, offset.z);
     }
 
     public Vec3d subtract(double x, double y, double z) {
-        return new Vec3d(internal.subtract(x, y, z));
+        return new Vec3d(this.x - x, this.y - y, this.z - z);
+    }
+
+    private static double length(double x, double y, double z) {
+        return Math.sqrt(x * x + y * y + z * z);
     }
 
     public double length() {
-        return internal.length();
+        return length(x, y, z);
     }
 
     public double distanceTo(Vec3d other) {
-        return internal.distanceTo(other.internal);
+        // optimized by inlining the subtract (removes 1 allocation)
+        //return this.subtract(other).length();
+        return length(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     public Vec3d scale(double scale) {
-        return new Vec3d(internal.scale(scale));
+        return new Vec3d(x * scale, y * scale, z * scale);
     }
 
     public Vec3d normalize() {
-        return new Vec3d(internal.normalize());
+        double length = length();
+        return length < 1.0E-4D ? ZERO : scale(1/length);
     }
 
     public Vec3d min(Vec3d other) {
@@ -72,7 +80,7 @@ public class Vec3d {
 
     @Override
     public String toString() {
-        return internal.toString();
+        return String.format("(%s, %s, %s)", this.x, this.y, this.z);
     }
 
     public Vec3d rotateMinecraftYaw(float angleDegrees) {
@@ -91,6 +99,17 @@ public class Vec3d {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Vec3d && internal.equals(((Vec3d) other).internal);
+        if (other instanceof Vec3d) {
+            Vec3d ov = (Vec3d) other;
+            return ov.x == this.x && ov.y == this.y && ov.z == this.z;
+        }
+        return false;
+    }
+
+    public net.minecraft.util.math.Vec3d internal() {
+        if (internal == null) {
+            internal = new net.minecraft.util.math.Vec3d(x, y, z);
+        }
+        return internal;
     }
 }
