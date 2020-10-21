@@ -43,6 +43,7 @@ public abstract class Particle {
                     motionX = data.motion.x;
                     motionY = data.motion.y;
                     motionZ = data.motion.z;
+                    ip.pos = new Vec3d(posX, posY, posZ);
                 }
 
                 @Override
