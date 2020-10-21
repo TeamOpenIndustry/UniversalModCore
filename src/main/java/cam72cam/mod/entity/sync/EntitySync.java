@@ -18,15 +18,12 @@ public class EntitySync extends TagCompound {
     private final CustomEntity entity;
     // Previous entry (for calculating diff / needs update)
     private TagCompound old;
-    // Cached version of old for faster needs update checking
-    private String oldString;
 
     /** Track properties on entity */
     public EntitySync(CustomEntity entity) {
         super();
         this.entity = entity;
         this.old = new TagCompound();
-        this.oldString = old.toString();
     }
 
     /** Perform synchronization */
@@ -36,12 +33,6 @@ public class EntitySync extends TagCompound {
         }
 
         TagSerializer.serialize(this, entity, TagSync.class);
-
-        // Is this faster than the below check?
-        // Could also put a bool tracker in TagCompound
-        if (oldString.equals(this.toString())) {
-            return;
-        }
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
@@ -72,7 +63,6 @@ public class EntitySync extends TagCompound {
 
         if (sync.internal.getKeySet().size() != 0) {
             old = new TagCompound(this.internal.copy());
-            oldString = old.toString();
 
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
