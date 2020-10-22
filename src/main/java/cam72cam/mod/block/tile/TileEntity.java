@@ -149,7 +149,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void readFromNBT(NBTTagCompound compound) {
+    public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
 
         TagCompound data = new TagCompound(compound);
@@ -184,7 +184,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
 
         TagCompound data = new TagCompound(compound);
