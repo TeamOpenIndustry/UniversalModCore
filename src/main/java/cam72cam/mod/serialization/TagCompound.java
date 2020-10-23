@@ -307,4 +307,8 @@ public class TagCompound {
             set(key, ted);
         });
     }
+
+    public boolean isEmpty() {
+        return internal.isEmpty();
+    }
 }
