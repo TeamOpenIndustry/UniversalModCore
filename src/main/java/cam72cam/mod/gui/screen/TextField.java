@@ -46,5 +46,6 @@ public class TextField {
     /** Change visibility */
     public void setVisible(Boolean visible) {
         textfield.setVisible(visible);
+        textfield.setEnabled(visible);
     }
 }
