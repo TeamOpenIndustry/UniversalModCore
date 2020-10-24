@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -41,9 +42,19 @@ public class GlobalRender {
                 public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
                     renderFuncs.forEach(r -> r.accept(partialTicks));
                 }
+
+                @Override
+                public boolean isGlobalRenderer(GlobalRenderHelper te) {
+                    return true;
+                }
             });
         });
-        ClientEvents.TICK.subscribe(() -> Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList));
+        ClientEvents.TICK.subscribe(() -> {
+            Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList);
+            if (Minecraft.getMinecraft().player != null) {  // May be able to get away with running this every N ticks?
+                grhList.get(0).setPos(new BlockPos(Minecraft.getMinecraft().player.getPositionEyes(0)));
+            }
+        });
 
 
         // Nice to have GPU info in F3
@@ -125,6 +136,11 @@ public class GlobalRender {
 
         public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
+        }
+
+        @Override
+        public double getMaxRenderDistanceSquared() {
+            return Double.POSITIVE_INFINITY;
         }
 
         public double getDistanceSq(double x, double y, double z) {
