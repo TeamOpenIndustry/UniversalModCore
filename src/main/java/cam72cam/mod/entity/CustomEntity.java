@@ -65,6 +65,16 @@ public class CustomEntity extends Entity {
     }
 
     @Override
+    public void addPassenger(cam72cam.mod.entity.Entity passenger) {
+        if (passenger.getRiding() instanceof CustomEntity) {
+            // If they are already riding a custom passenger, don't fire the dismount handler directly
+            ((ModdedEntity)passenger.getRiding().internal).moveRiderTo(passenger, internal);
+        } else {
+            super.addPassenger(passenger);
+        }
+    }
+
+    @Override
     public boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
         return internal.isPassenger(passenger);
     }

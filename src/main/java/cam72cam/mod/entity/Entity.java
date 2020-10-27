@@ -170,8 +170,8 @@ public class Entity {
         return internal.getPassengers().size();
     }
 
-    public final void addPassenger(cam72cam.mod.entity.Entity entity) {
-        entity.internal.startRiding(internal);
+    public void addPassenger(cam72cam.mod.entity.Entity passenger) {
+        passenger.internal.startRiding(internal);
     }
 
     public boolean isPassenger(cam72cam.mod.entity.Entity passenger) {

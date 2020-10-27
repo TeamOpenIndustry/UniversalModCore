@@ -349,6 +349,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return getActualPassengers().stream().anyMatch(p -> p.getUUID().equals(passenger.getUUID()));
     }
 
+    public void moveRiderTo(cam72cam.mod.entity.Entity entity, ModdedEntity other) {
+        SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
+        this.seats.remove(seat);
+        seat.moveTo(other);
+        other.seats.add(seat);
+        other.passengerPositions.remove(entity.getUUID());
+    }
+
     /**
      * @see IRidable#onDismountPassenger
      * @see SeatEntity#removePassenger

@@ -103,6 +103,10 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         this.passenger = passenger.getUniqueID();
     }
 
+    public void moveTo(ModdedEntity moddedEntity) {
+        this.parent = moddedEntity.getUniqueID();
+    }
+
     public cam72cam.mod.entity.Entity getParent() {
         cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
