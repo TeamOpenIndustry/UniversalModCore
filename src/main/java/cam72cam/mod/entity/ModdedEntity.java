@@ -349,12 +349,17 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return getActualPassengers().stream().anyMatch(p -> p.getUUID().equals(passenger.getUUID()));
     }
 
-    public void moveRiderTo(cam72cam.mod.entity.Entity entity, ModdedEntity other) {
-        SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
-        this.seats.remove(seat);
-        seat.moveTo(other);
-        other.seats.add(seat);
-        other.passengerPositions.remove(entity.getUUID());
+    public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
+        if (iRidable.canFitPassenger(entity)) {
+            SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
+            this.seats.remove(seat);
+            seat.moveTo(other.internal);
+            other.internal.seats.add(seat);
+            other.internal.passengerPositions.remove(entity.getUUID());
+            if (!world.isRemote) {
+                new PassengerSeatPacket(other, entity).sendToObserving(self);
+            }
+        }
     }
 
     /**
@@ -494,6 +499,26 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 ModdedEntity target = (ModdedEntity) this.target.internal;
                 target.passengerPositions = this.passengerPositions;
             }
+        }
+    }
+
+    public static class PassengerSeatPacket extends Packet {
+        @TagField
+        private CustomEntity target;
+        @TagField
+        private cam72cam.mod.entity.Entity rider;
+
+        public PassengerSeatPacket() {}
+
+        public PassengerSeatPacket(CustomEntity target, cam72cam.mod.entity.Entity rider) {
+            this.target = target;
+            this.rider = rider;
+        }
+
+
+        @Override
+        protected void handle() {
+            target.addPassenger(rider);
         }
     }
 

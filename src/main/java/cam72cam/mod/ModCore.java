@@ -160,6 +160,7 @@ public class ModCore {
                 case CONSTRUCT:
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
