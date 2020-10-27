@@ -27,7 +27,7 @@ public class BlockInfo {
                         }
                         d.set(fieldName, new TagCompound(NBTUtil.writeBlockState(new NBTTagCompound(), o.internal)));
                     },
-                    info -> new BlockInfo(NBTUtil.readBlockState(info.internal))
+                    info -> new BlockInfo(NBTUtil.readBlockState(info.get(fieldName).internal))
             );
         }
     }
