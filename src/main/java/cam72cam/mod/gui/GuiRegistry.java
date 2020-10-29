@@ -81,7 +81,7 @@ public class GuiRegistry {
             if (event.isServer) {
                 return null;
             }
-            return new ScreenBuilder(ctr.get());
+            return new ScreenBuilder(ctr.get(), () -> true);
         });
         return (player) -> player.internal.openGui(ModCore.instance, id, player.getWorld().internal, 0, 0, 0);
     }
@@ -102,7 +102,7 @@ public class GuiRegistry {
                 return null;
             }
 
-            return new ScreenBuilder(screen);
+            return new ScreenBuilder(screen, () -> event.player.getWorld().getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls) == entity);
         });
         return (player, pos) -> player.internal.openGui(ModCore.instance, id, player.getWorld().internal, pos.x, pos.y, pos.z);
     }
@@ -119,7 +119,7 @@ public class GuiRegistry {
             if (event.isServer) {
                 return server;
             }
-            return new ClientContainerBuilder(server);
+            return new ClientContainerBuilder(server, () -> event.player.getWorld().getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls) == entity);
         });
         return (player, pos) -> player.internal.openGui(ModCore.instance, id, player.getWorld().internal, pos.x, pos.y, pos.z);
     }
@@ -140,7 +140,7 @@ public class GuiRegistry {
                 return null;
             }
 
-            return new ScreenBuilder(screen);
+            return new ScreenBuilder(screen, () -> event.player.getWorld().getEntity(event.entityIDorX, cls) == entity);
         });
         return (player, ent) -> player.internal.openGui(ModCore.instance, id, player.getWorld().internal, ent.internal.getEntityId(), 0, 0);
     }
@@ -157,7 +157,7 @@ public class GuiRegistry {
             if (event.isServer) {
                 return server;
             }
-            return new ClientContainerBuilder(server);
+            return new ClientContainerBuilder(server, () -> event.player.getWorld().getEntity(event.entityIDorX, cls) == entity);
         });
         return (player, ent) -> player.internal.openGui(ModCore.instance, id, player.getWorld().internal, ent.internal.getEntityId(), 0, 0);
     }

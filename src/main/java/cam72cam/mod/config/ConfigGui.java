@@ -29,7 +29,7 @@ public class ConfigGui implements IScreen {
             widgets.add(screen -> new Button(screen, 0 - 100,  finalI * 20, 200, 20, type.getSimpleName()) {
                 @Override
                 public void onClick(Player.Hand hand) {
-                    Minecraft.getMinecraft().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci)));
+                    Minecraft.getMinecraft().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci), () -> true));
                 }
             });
             i++;
@@ -56,7 +56,7 @@ public class ConfigGui implements IScreen {
                     Button btn = new Button(screen, 0 - 100, offsetI * 20, 200, 20, property.getName()) {
                         @Override
                         public void onClick(Player.Hand hand) {
-                            Minecraft.getMinecraft().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci)));
+                            Minecraft.getMinecraft().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci), () -> true));
                         }
                     };
                     onPage.accept(finalI, btn::setVisible);

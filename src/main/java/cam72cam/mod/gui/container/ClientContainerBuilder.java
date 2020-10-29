@@ -12,6 +12,8 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
 
+import java.util.function.Supplier;
+
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
 /** GUI Container wrapper for the client side, Do not use directly */
@@ -27,14 +29,16 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     private static final int midBarOffset = 4;
     private static final int midBarHeight = 4;
     private final ServerContainerBuilder server;
+    private final Supplier<Boolean> valid;
     private int centerX;
     private int centerY;
 
-    public ClientContainerBuilder(ServerContainerBuilder serverContainer) {
+    public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
         this.server = serverContainer;
         this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.ySize = 114 + serverContainer.slotsY * slotSize;
+        this.valid = valid;
     }
 
     @Override
@@ -44,6 +48,17 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
             this.centerX = (this.width - this.xSize) / 2;
             this.centerY = (this.height - this.ySize) / 2;
             server.draw.accept(this);
+        }
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (!valid.get()) {
+            this.mc.displayGuiScreen(null);
+            if (this.mc.currentScreen == null) {
+                this.mc.setIngameFocus();
+            }
         }
     }
 

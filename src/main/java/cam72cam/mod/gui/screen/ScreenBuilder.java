@@ -13,14 +13,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
     private final Map<GuiButton, Button> buttonMap = new HashMap<>();
     private final List<GuiTextField> textFields = new ArrayList<>();
+    private final Supplier<Boolean> valid;
 
-    public ScreenBuilder(IScreen screen) {
+    public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         this.screen = screen;
+        this.valid = valid;
+    }
+    
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (!valid.get()) {
+            this.close();
+        }
     }
 
     // IScreenBuilder
