@@ -59,6 +59,9 @@ public class ModCore {
     public void preInit(FMLPreInitializationEvent event) {
         // LOCK MODS
         mods = Collections.unmodifiableList(mods);
+
+        proxy.event(ModEvent.CONSTRUCT);
+
         logger = event.getModLog();
         proxy.event(ModEvent.INITIALIZE);
     }
@@ -146,15 +149,6 @@ public class ModCore {
     public static class Internal extends Mod {
         public int skipN = 2;
 
-        public Internal() {
-            Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
-            Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
-            Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
-            Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
-            Command.register(new ModCoreCommand());
-            ConfigFile.sync(Config.class);
-        }
-
         @Override
         public String modID() {
             return "universalmodcoreinternal";
@@ -163,6 +157,14 @@ public class ModCore {
         @Override
         public void commonEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
+                    Command.register(new ModCoreCommand());
+                    ConfigFile.sync(Config.class);
+                    break;
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
