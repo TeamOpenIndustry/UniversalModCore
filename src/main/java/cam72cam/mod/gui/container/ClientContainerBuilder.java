@@ -224,4 +224,11 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
             super.drawTexturedModalRect(x, y, sprite, 16, 16);
         }
     }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks)
+    {
+        super.drawScreen(mouseX, mouseY, partialTicks);
+        this.renderHoveredToolTip(mouseX, mouseY);
+    }
 }
