@@ -20,7 +20,6 @@ public class CommonEvents {
     private static void registerEvents() {
         cam72cam.mod.world.World.registerEvents();
         cam72cam.mod.entity.EntityRegistry.registerEvents();
-        cam72cam.mod.world.ChunkManager.setup();
     }
 
     public static final class World {

@@ -171,6 +171,7 @@ public class ModCore {
                     break;
                 case FINALIZE:
                     ChunkManager.setup();
+                    break;
                 case START:
                     Command.registration();
                     break;
