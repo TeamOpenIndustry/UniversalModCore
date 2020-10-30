@@ -1,5 +1,6 @@
 package cam72cam.mod.serialization;
 
+/** Set's field to null if tag is missing */
 public class StrictTagMapper extends DefaultTagMapper {
     @Override
     public TagAccessor apply(Class type, String fieldName, TagField tag) throws SerializationException {

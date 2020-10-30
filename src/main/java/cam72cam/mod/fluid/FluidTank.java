@@ -1,16 +1,19 @@
 package cam72cam.mod.fluid;
 
-import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
+@TagMapped(FluidTank.Mapper.class)
 public class FluidTank implements ITank {
     // TODO clean up capacity crap.  Probably just want to implement my own fluid handler from scratch TBH
 
     public final net.minecraftforge.fluids.FluidTank internal;
     private Supplier<List<Fluid>> filter;
-    private Runnable onChange = () -> {};
+    private final Set<Runnable> onChange = new HashSet<>();
 
     private FluidTank() {
         // Serialization
@@ -21,20 +24,25 @@ public class FluidTank implements ITank {
         if (fluidStack == null) {
             internal = new net.minecraftforge.fluids.FluidTank(capacity) {
                 public void onContentsChanged() {
-                    FluidTank.this.onChange.run();
+                    onChange();
                 }
             };
         } else {
             internal = new net.minecraftforge.fluids.FluidTank(fluidStack.internal, capacity) {
                 public void onContentsChanged() {
-                    FluidTank.this.onChange.run();
+                    onChange();
                 }
             };
         }
     }
 
+    private void onChange() {
+        onChange.forEach(Runnable::run);
+    }
+
+    /** Add onChanged handler */
     public void onChanged(Runnable onChange) {
-        this.onChange = onChange;
+        this.onChange.add(onChange);
     }
 
     @Override
@@ -91,55 +99,23 @@ public class FluidTank implements ITank {
         internal.readFromNBT(tag.internal);
     }
 
-    public boolean tryDrain(ITank inputTank, int max, boolean simulate) {
-        int maxTransfer = this.fill(inputTank.getContents(), true);
-        maxTransfer = Math.min(maxTransfer, max);
-
-        if (maxTransfer == 0) {
-            // Out of room or limit too small
-            return false;
+    static class Mapper implements TagMapper<FluidTank> {
+        @Override
+        public TagAccessor<FluidTank> apply(Class<FluidTank> type, String fieldName, TagField tag) {
+            return new TagAccessor<>(
+                    ((d, o) -> {
+                        if (o == null) {
+                            d.remove(fieldName);
+                            return;
+                        }
+                        d.set(fieldName, o.write(new TagCompound()));
+                    }),
+                    d -> {
+                        FluidTank ft = new FluidTank(null, 0);
+                        ft.read(d.get(fieldName));
+                        return ft;
+                    }
+            );
         }
-
-        FluidStack attemptedDrain = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), true);
-
-        if (attemptedDrain == null || attemptedDrain.getAmount() != maxTransfer) {
-            // Can't transfer the full amount
-            return false;
-        }
-
-        // Either attempt or do fill
-        boolean ok = this.fill(attemptedDrain, simulate) == attemptedDrain.getAmount();
-
-        if (!simulate) {
-            // Drain input tank
-            inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), false);
-        }
-        return ok;
-    }
-
-    public boolean tryFill(ITank inputTank, int max, boolean simulate) {
-        int maxTransfer = inputTank.fill(this.getContents(), true);
-        maxTransfer = Math.min(maxTransfer, max);
-
-        if (maxTransfer == 0) {
-            // Out of room or limit too small
-            return false;
-        }
-
-        FluidStack attemptedDrain = this.drain(new FluidStack(this.getContents().getFluid(), maxTransfer), true);
-
-        if (attemptedDrain == null || attemptedDrain.getAmount() != maxTransfer) {
-            // Can't transfer the full amount
-            return false;
-        }
-
-        // Either attempt or do fill
-        boolean ok = inputTank.fill(attemptedDrain, simulate) == attemptedDrain.getAmount();
-
-        if (!simulate) {
-            // Drain input tank
-            this.drain(new FluidStack(this.getContents().getFluid(), maxTransfer), false);
-        }
-        return ok;
     }
 }

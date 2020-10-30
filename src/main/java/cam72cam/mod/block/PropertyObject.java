@@ -2,6 +2,11 @@ package cam72cam.mod.block;
 
 import net.minecraftforge.common.property.IUnlistedProperty;
 
+/**
+ * Hack the planet!<br/>
+ *
+ * More seriously, this is the property that allows us to pass the TE into the renderer
+ */
 public class PropertyObject implements IUnlistedProperty<Object> {
     private final String name;
 

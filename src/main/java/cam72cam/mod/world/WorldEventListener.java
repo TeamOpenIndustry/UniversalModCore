@@ -11,7 +11,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class WorldEventListener implements IWorldEventListener {
+/** Used for world event handling, internal */
+class WorldEventListener implements IWorldEventListener {
     private final cam72cam.mod.world.World world;
 
     public WorldEventListener(cam72cam.mod.world.World worldWrap) {

@@ -12,11 +12,11 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.function.Consumer;
 
+/** Registry of events that fire off on both client and server.  Do not use directly! */
 public class CommonEvents {
     private static void registerEvents() {
         cam72cam.mod.world.World.registerEvents();
         cam72cam.mod.entity.EntityRegistry.registerEvents();
-        cam72cam.mod.world.ChunkManager.registerEvents();
     }
 
     public static final class World {

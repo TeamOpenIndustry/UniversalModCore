@@ -21,17 +21,23 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Registry for block rendering (and internal implementation)
+ *
+ * Currently only supports TE's, not standard blocks
+ */
 public class BlockRender {
-    private static final List<BakedQuad> EMPTY = new ArrayList<>();
+    // Don't need to return a *new* array list for no result
+    private static final List<BakedQuad> EMPTY = Collections.emptyList();
+    // Block coloring (grass) hooks
     private static final List<Runnable> colors = new ArrayList<>();
+    // BlockEntity type -> BlockEntity Renderer
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
+    // Internal hack for globally rendered TE's
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
     static {
@@ -39,6 +45,11 @@ public class BlockRender {
             if (Minecraft.getMinecraft().world == null) {
                 return;
             }
+            /*
+            Find all UMC TEs
+            Create new array to prevent CME's with poorly behaving mods
+            TODO: Opt out of renderGlobal!
+             */
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getMinecraft().world.loadedTileEntityList).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
@@ -47,6 +58,7 @@ public class BlockRender {
         });
     }
 
+    /** Internal, do not use.  Is fired by UMC directly */
     public static void onPostColorSetup() {
         colors.forEach(Runnable::run);
 

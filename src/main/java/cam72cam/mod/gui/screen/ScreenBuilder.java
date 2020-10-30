@@ -1,26 +1,40 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.util.Hand;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+@SideOnly(Side.CLIENT)
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
-    private Map<GuiButton, Button> buttonMap = new HashMap<>();
-    private List<GuiTextField> textFields = new ArrayList<>();
+    private final Map<GuiButton, Button> buttonMap = new HashMap<>();
+    private final List<GuiTextField> textFields = new ArrayList<>();
+    private final Supplier<Boolean> valid;
 
-    public ScreenBuilder(IScreen screen) {
+    public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         this.screen = screen;
+        this.valid = valid;
+    }
+    
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (!valid.get()) {
+            this.close();
+        }
     }
 
     // IScreenBuilder
@@ -36,8 +50,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void addButton(Button btn) {
-        super.buttonList.add(btn.internal());
-        this.buttonMap.put(btn.internal(), btn);
+        super.buttonList.add(btn.button);
+        this.buttonMap.put(btn.button, btn);
     }
 
     @Override
@@ -56,7 +70,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     }
 
     @Override
-    public void drawTank(double x, int y, double width, double height, Fluid fluid, float fluidPercent, boolean background, int color) {
+    public void drawTank(int x, int y, int width, int height, Fluid fluid, float fluidPercent, boolean background, int color) {
         GUIHelpers.drawTankBlock(this.width / 2 + x, this.height / 4 + y, width, height, fluid, fluidPercent, background, color);
     }
 
@@ -72,7 +86,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void addTextField(TextField textField) {
-        this.textFields.add(textField.internal());
+        this.textFields.add(textField.textfield);
     }
 
     // GuiScreen
@@ -119,7 +133,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 //TODO 1.11.2 will this break anything? this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
-                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Hand.PRIMARY : Hand.SECONDARY);
+                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
             }
         }
 

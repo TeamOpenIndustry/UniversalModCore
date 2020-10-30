@@ -6,7 +6,7 @@ import cam72cam.mod.entity.Entity;
 public interface IKillable {
     IKillable NOP = new IKillable() {
         @Override
-        public void onDamage(DamageType type, Entity source, float amount) {
+        public void onDamage(DamageType type, Entity source, float amount, boolean bypassesArmor) {
 
         }
 
@@ -23,7 +23,9 @@ public interface IKillable {
         return NOP;
     }
 
-    void onDamage(DamageType type, Entity source, float amount);
+    /** Called when damage is attempted at this entity */
+    void onDamage(DamageType type, Entity source, float amount, boolean bypassesArmor);
 
+    /** Called when the entity is killed and removed from the world */
     void onRemoved();
 }

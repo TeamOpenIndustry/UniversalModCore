@@ -2,49 +2,61 @@ package cam72cam.mod.block;
 
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.UMCWorldAccessor;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Extension to BlockType that integrates with BlockEntities.
+ *
+ * Most if not all of the functions exposed are now redirected to the block entity (break/pick/etc...)
+ */
 public abstract class BlockTypeEntity extends BlockType {
+    /** This is a crappy hack that allows us to pass the block entity instance into the renderer */
     public static final PropertyObject BLOCK_DATA = new PropertyObject("BLOCK_DATA");
-    protected final Identifier id;
+
+    // Cached from ctr
+    private final boolean isRedstoneProvider;
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
-        id = new Identifier(modID, name);
         TileEntity.register(this::constructBlockEntity, id);
-        constructBlockEntity().supplier(id).register();
+        this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
+
+        // Force supplier load (may trigger static blocks like TE registration)
+        constructBlockEntity().supplier(id);
     }
 
-    public abstract BlockEntity constructBlockEntity();
+    /** Supply your custom BlockEntity constructor here */
+    protected abstract BlockEntity constructBlockEntity();
 
     @Override
     public final boolean isRedstoneProvider() {
-        return constructBlockEntity() instanceof IRedstoneProvider;
+        return isRedstoneProvider;
     }
 
-    // Hack for initializing a "fake" te
+    /** Hack for initializing a "fake" te */
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
-        te.hasTileData = true;
-        te.setWorld(world);
-        te.setPos(pos);
+        te.setWorld(world.internal);
+        te.setPos(pos.internal());
         return te.instance();
     }
 
@@ -90,7 +102,7 @@ public abstract class BlockTypeEntity extends BlockType {
     }
 
     @Override
-    public final boolean onClick(World world, Vec3i pos, Player player, Hand hand, Facing facing, Vec3d hit) {
+    public final boolean onClick(World world, Vec3i pos, Player player, Player.Hand hand, Facing facing, Vec3d hit) {
         BlockEntity instance = getInstance(world, pos);
         if (instance != null) {
             return instance.onClick(player, hand, facing, hit);
@@ -115,12 +127,13 @@ public abstract class BlockTypeEntity extends BlockType {
         }
     }
 
-    public final double getHeight(World world, Vec3i pos) {
+    @Override
+    public IBoundingBox getBoundingBox(World world, Vec3i pos) {
         BlockEntity instance = getInstance(world, pos);
         if (instance != null) {
-            return instance.getHeight();
+            return instance.getBoundingBox();
         }
-        return 1;
+        return super.getBoundingBox(world, pos);
     }
 
     @Override
@@ -179,23 +192,12 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, net.minecraft.world.World source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
-            if (entity == null) {
-                return super.getCollisionBoundingBox(state, source, pos);
-            }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 1.0F);
-        }
-
-        @Override
         public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(pos);
-            if (entity == null) {
-                return super.getBoundingBox(state, source, pos);
+            net.minecraft.tileentity.TileEntity te = source.getTileEntity(pos);
+            if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
+                return BoundingBox.from(((TileEntity) te).instance().getBoundingBox());
             }
-            return new AxisAlignedBB(0.0F, 0.0F, 0.0F, 1.0F, Math.max(BlockTypeEntity.this.getHeight(World.get(entity.getWorld()), new Vec3i(pos)), 0.25), 1.0F);
+            return Block.FULL_BLOCK_AABB;
         }
     }
-
-
 }
