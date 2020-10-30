@@ -14,14 +14,21 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.UUID;
 
+/** Seat construct to make multiple riders actually work */
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
+    // What it's a part of
     private UUID parent;
+    // What is in the seat
     private UUID passenger;
+    // If we should try to render the rider as standing or sitting (partial support!)
     boolean shouldSit = true;
+    // If a passenger has mounted and then dismounted (if so, we can go away)
     private boolean hasHadPassenger = false;
+    // ticks alive?
     private int ticks = 0;
 
+    /** MC reflection */
     public SeatEntity(net.minecraft.world.World worldIn) {
         super(worldIn);
     }
@@ -94,6 +101,10 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         this.parent = moddedEntity.getUniqueID();
         this.setPosition(moddedEntity.posX, moddedEntity.posY, moddedEntity.posZ);
         this.passenger = passenger.getUniqueID();
+    }
+
+    public void moveTo(ModdedEntity moddedEntity) {
+        this.parent = moddedEntity.getUniqueID();
     }
 
     public cam72cam.mod.entity.Entity getParent() {

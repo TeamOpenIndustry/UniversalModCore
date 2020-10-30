@@ -2,6 +2,9 @@ package cam72cam.mod.util;
 
 import net.minecraft.util.EnumFacing;
 
+/**
+ * Wrap MC's Axis construct
+ */
 public enum Axis {
     X(EnumFacing.Axis.X),
     Y(EnumFacing.Axis.Y),

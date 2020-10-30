@@ -38,13 +38,18 @@ public interface IRidable {
         return NOP;
     }
 
+    /** Called before riding is allowed */
     boolean canFitPassenger(Entity passenger);
 
+    /** Allows player animation to be set to sitting (WARNING: not supported on all versions) */
     boolean shouldRiderSit(Entity passenger);
 
+    /** Rider position offset from center of entity */
     Vec3d getMountOffset(Entity passenger, Vec3d offset);
 
+    /** Called per passenger per tick */
     Vec3d onPassengerUpdate(Entity passenger, Vec3d offset);
 
+    /** Calculate offset from center of entity during dismount */
     Vec3d onDismountPassenger(Entity passenger, Vec3d offset);
 }

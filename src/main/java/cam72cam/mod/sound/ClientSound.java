@@ -13,20 +13,20 @@ import paulscode.sound.SoundSystem;
 import java.net.URL;
 import java.util.function.Supplier;
 
-public class ClientSound implements ISound {
+class ClientSound implements ISound {
     private final static float dopplerScale = 0.05f;
     private String id;
-    private Supplier<SoundSystem> sndSystem;
-    private URL resource;
-    private boolean repeats;
-    private Identifier oggLocation;
-    private float attenuationDistance;
+    private final Supplier<SoundSystem> sndSystem;
+    private final URL resource;
+    private final boolean repeats;
+    private final Identifier oggLocation;
+    private final float attenuationDistance;
     private Vec3d currentPos;
     private Vec3d velocity;
     private float currentPitch = 1;
     private float currentVolume = 1;
     private float baseSoundMultiplier;
-    private float scale;
+    private final float scale;
     private boolean disposable = false;
 
     ClientSound(Supplier<SoundSystem> soundSystem, Identifier oggLocation, URL resource, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
@@ -39,17 +39,19 @@ public class ClientSound implements ISound {
         this.scale = scale;
     }
 
-    public void init() {
+    void init() {
         id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
         sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
     }
 
     @Override
     public void play(Vec3d pos) {
+        stop();
+
         this.setPosition(pos);
         update();
 
-        if (repeats || currentPos == null || MinecraftClient.getPlayer() == null) {
+        if (repeats || currentPos == null || !MinecraftClient.isReady()) {
             sndSystem.get().play(id);
         } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
             sndSystem.get().play(id);

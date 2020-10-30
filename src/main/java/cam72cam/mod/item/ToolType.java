@@ -1,6 +1,9 @@
 package cam72cam.mod.item;
 
+/** What class a tool fits into */
 public enum ToolType {
+    PICKAXE("pickaxe"),
+    AXE("axe"),
     SHOVEL("shovel"),
     ;
     private final String internal;
