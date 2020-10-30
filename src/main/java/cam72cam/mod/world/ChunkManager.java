@@ -28,14 +28,11 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
     private static ChunkManager instance;
 
 
-    public static void registerEvents() {
-        CommonEvents.World.LOAD.subscribe(world -> {
-            if (instance == null) {
-                instance = new ChunkManager();
-                instance.init();
-            }
-        });
-
+    public static void setup() {
+        if (instance == null) {
+            instance = new ChunkManager();
+            instance.init();
+        }
         CommonEvents.World.TICK.subscribe(ChunkManager::onWorldTick);
     }
 

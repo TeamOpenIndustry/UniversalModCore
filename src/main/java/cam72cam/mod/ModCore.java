@@ -11,6 +11,7 @@ import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
+import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
@@ -28,8 +29,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
@@ -170,6 +169,8 @@ public class ModCore {
 
                     GuiRegistry.registration();
                     break;
+                case FINALIZE:
+                    ChunkManager.setup();
                 case START:
                     Command.registration();
                     break;
