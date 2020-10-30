@@ -44,13 +44,13 @@ public class ModCore {
     /** Register a mod, must happen before UMC is loaded! */
     public static void register(Mod ctr) {
         instance.mods.add(ctr);
+        proxy.event(ModEvent.CONSTRUCT, ctr);
     }
 
     /** Called during Mod Construction phase */
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
-        ModCore.register(new Internal());
     }
 
     /** INIT Phase (Forge) */
@@ -58,8 +58,6 @@ public class ModCore {
     public void preInit(FMLPreInitializationEvent event) {
         // LOCK MODS
         mods = Collections.unmodifiableList(mods);
-
-        proxy.event(ModEvent.CONSTRUCT);
 
         logger = event.getModLog();
         proxy.event(ModEvent.INITIALIZE);
@@ -123,24 +121,29 @@ public class ModCore {
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
+            proxy = this;
+            ModCore.register(new Internal());
         }
 
         public void event(ModEvent event) {
-            instance.mods.forEach(m -> m.commonEvent(event));
+            instance.mods.forEach(m -> event(event, m));
+        }
+        public void event(ModEvent event, Mod m) {
+            m.commonEvent(event);
         }
     }
 
     public static class ClientProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.clientEvent(event));
+        public void event(ModEvent event, Mod m) {
+            super.event(event, m);
+            m.clientEvent(event);
         }
     }
 
     public static class ServerProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.serverEvent(event));
+        public void event(ModEvent event, Mod m) {
+            super.event(event, m);
+            m.serverEvent(event);
         }
     }
 
