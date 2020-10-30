@@ -8,6 +8,7 @@ import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
@@ -214,6 +215,8 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
+            // Reset the state manager color
+            GlStateManager.color(1,1,1,1);
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
