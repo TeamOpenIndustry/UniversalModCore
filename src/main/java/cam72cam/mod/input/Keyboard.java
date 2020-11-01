@@ -1,26 +1,12 @@
 package cam72cam.mod.input;
 
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.net.Packet;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import cam72cam.mod.serialization.TagField;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
 
-import java.util.*;
-
 public class Keyboard {
-    private static Map<UUID, Vec3d> vecs = new HashMap<>();
-
-    public static Vec3d getMovement(Player player) {
-        return vecs.getOrDefault(player.getUUID(), Vec3d.ZERO);
-    }
-
     public enum KeyCode {
         ESCAPE(org.lwjgl.input.Keyboard.KEY_ESCAPE),
         NUM1(org.lwjgl.input.Keyboard.KEY_1),
@@ -138,6 +124,7 @@ public class Keyboard {
         }
     }
 
+    /** Registers a keybind */
     @SideOnly(Side.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         KeyBinding key = new KeyBinding(name, keyCode.code, category);
@@ -147,42 +134,5 @@ public class Keyboard {
                 handler.run();
             }
         });
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static void registerClientEvents() {
-        ClientEvents.TICK.subscribe(Keyboard::doRegisteration);
-    }
-    @SideOnly(Side.CLIENT)
-    private static void doRegisteration() {
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) {
-            return;
-        }
-        new MovementPacket(
-                player.getUniqueID(),
-                new Vec3d(player.moveStrafing, 0, player.moveForward).scale(player.isSprinting() ? 0.4 : 0.2)
-        ).sendToServer();
-    }
-
-
-    public static class MovementPacket extends Packet {
-        @TagField
-        private UUID id;
-        @TagField
-        private Vec3d move;
-
-        public MovementPacket() {}
-
-        public MovementPacket(UUID id, Vec3d move) {
-            this.id = id;
-            this.move = move;
-            vecs.put(id, move);
-        }
-
-        @Override
-        protected void handle() {
-            vecs.put(id, move);
-        }
     }
 }

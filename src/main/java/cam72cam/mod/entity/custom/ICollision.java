@@ -4,7 +4,7 @@ import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import net.minecraft.util.AxisAlignedBB;
 
 public interface ICollision {
-    ICollision NOP = () -> IBoundingBox.from(AxisAlignedBB.getBoundingBox(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D));
+    ICollision NOP = () -> IBoundingBox.ORIGIN;
 
     static ICollision get(Object o) {
         if (o instanceof ICollision) {
@@ -13,5 +13,6 @@ public interface ICollision {
         return NOP;
     }
 
+    /** Collision Bounding Box */
     IBoundingBox getCollision();
 }

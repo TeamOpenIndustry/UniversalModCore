@@ -1,16 +1,24 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.net.Packet;
+import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldSettings;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/** Wrapper around EntityPlayer */
 public class Player extends Entity {
     public final EntityPlayer internal;
 
@@ -56,9 +64,60 @@ public class Player extends Entity {
         return IInventory.from(internal.inventory);
     }
 
+    /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
         net.minecraft.item.ItemStack stack = getHeldItem(hand).internal;
         return ClickResult.from(stack.getItem()
                 .onItemUse(stack, internal, getWorld().internal, pos.x, pos.y, pos.z, Facing.DOWN.internal.ordinal(), (float) hit.x, (float) hit.y, (float) hit.z));
+    }
+
+    private static final Map<UUID, Vec3d> serverMovement = new HashMap<>();
+    /** What direction the player is trying to move and how fast */
+    public Vec3d getMovementInput() {
+        return !internal.worldObj.isRemote && serverMovement.containsKey(getUUID()) ?
+                serverMovement.get(getUUID()) :
+                new Vec3d(internal.moveStrafing, internal.motionY, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+    }
+
+    public enum Hand {
+        PRIMARY,
+        SECONDARY,
+        ;
+    }
+
+
+
+    private static Vec3d posCache;
+    /** Internal registration, do not use */
+    public static void registerClientEvents() {
+        ClientEvents.TICK.subscribe(() -> {
+            if (MinecraftClient.isReady()) {
+                Vec3d movement = MinecraftClient.getPlayer().getMovementInput();
+                if (!movement.equals(posCache)) {
+                    posCache = movement;
+                    new MovementSync(movement).sendToServer();
+                }
+            }
+        });
+    }
+
+
+    /** 1.7.10 does not track player movement server side */
+    public static class MovementSync extends Packet {
+        @TagField
+        private Vec3d movement;
+
+        public MovementSync() {
+            // Reflection
+        }
+
+        public MovementSync(Vec3d movement) {
+            this.movement = movement;
+        }
+
+        @Override
+        protected void handle() {
+            serverMovement.put(this.getPlayer().getUUID(), movement);
+        }
     }
 }

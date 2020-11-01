@@ -10,7 +10,8 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import org.lwjgl.opengl.GL11;
 
-public class ItemButton extends GuiButton {
+/** Internal item button class */
+class ItemButton extends GuiButton {
 
     public ItemStack stack;
 
@@ -22,6 +23,7 @@ public class ItemButton extends GuiButton {
     @Override
     public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         Gui.drawRect(xPosition, yPosition, xPosition + 32, yPosition + 32, 0xFFFFFFFF);
+        // Pollutes global state...
         RenderHelper.enableStandardItemLighting();
 
         FontRenderer font = mc.fontRendererObj;
@@ -32,6 +34,9 @@ public class ItemButton extends GuiButton {
             RenderItem.getInstance().renderItemAndEffectIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
             RenderItem.getInstance().renderItemOverlayIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
         }
+
+        // Pollutes global state...
+        RenderHelper.disableStandardItemLighting();
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {

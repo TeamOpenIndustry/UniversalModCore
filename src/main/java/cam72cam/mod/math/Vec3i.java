@@ -50,15 +50,28 @@ public class Vec3i {
     public final int y;
     public final int z;
 
-    public Vec3i(int posX, int posY, int  posZ) {
-        this.x = posX;
-        this.y = posY;
-        this.z = posZ;
+    public Vec3i(int x, int y, int z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    public Vec3i(double x, double y, double z) {
+        int xi = (int) x;
+        int yi = (int) y;
+        int zi = (int) z;
+        if (xi > x) { xi -= 1; }
+        if (yi > y) { yi -= 1; }
+        if (zi > z) { zi -= 1; }
+        this.x = xi;
+        this.y = yi;
+        this.z = zi;
     }
 
     public Vec3i(Vec3d pos) {
-        this((int)Math.floor(pos.x), (int)Math.floor(pos.y), (int)Math.floor(pos.z));
+        this(pos.x, pos.y, pos.z);
     }
+
 
     @Deprecated
     public Vec3i(long serialized) {
@@ -67,17 +80,15 @@ public class Vec3i {
         z = (int)(serialized << 64 - NUM_Z_BITS >> 64 - NUM_Z_BITS);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof Vec3i) {
-            Vec3i p = (Vec3i) o;
-            return x == p.x && y == p.y && z == p.z;
+    public Vec3i offset(Facing facing, int offset) {
+        if (offset == 0) {
+            return this;
         }
-        return false;
-    }
-
-    public Vec3i offset(Facing facing, int n) {
-        return n == 0 ? this : new Vec3i(this.x + facing.internal.getFrontOffsetX() * n, this.y + facing.internal.getFrontOffsetY() * n, this.z + facing.internal.getFrontOffsetZ() * n);
+        return new Vec3i(
+                this.x + facing.getXMultiplier() * offset,
+                this.y + facing.getYMultiplier() * offset,
+                this.z + facing.getZMultiplier() * offset
+        );
     }
 
     public Vec3i offset(Facing facing) {
@@ -132,20 +143,20 @@ public class Vec3i {
         return offset(Facing.WEST, offset);
     }
 
+    public Vec3i add(int x, int y, int z) {
+        return new Vec3i(this.x + x, this.y + y, this.z + z);
+    }
+
     public Vec3i add(Vec3i other) {
         return add(other.x, other.y, other.z);
     }
 
-    public Vec3i add(int x, int y, int z) {
-        return new Vec3i(x + this.x, y + this.y, z + this.z);
+    public Vec3i subtract(int x, int y, int z) {
+        return add(-x, -y, -z);
     }
 
     public Vec3i subtract(Vec3i other) {
         return subtract(other.x, other.y, other.z);
-    }
-
-    public Vec3i subtract(int x, int y, int z) {
-        return add(-x, -y, -z);
     }
 
     @Deprecated
@@ -169,13 +180,22 @@ public class Vec3i {
     }
 
     @Override
+    public boolean equals(Object other) {
+        if (other instanceof Vec3i) {
+            Vec3i ov = (Vec3i) other;
+            return ov.x == this.x && ov.y == this.y && ov.z == this.z;
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
-        return String.format("Vec3i: (%d, %d %d)", x, y, z);
+        return String.format("(%s, %s, %s)", this.x, this.y, this.z);
     }
 
     @Override
     public int hashCode() {
-        return (y + z * 31) * 31 + x;
+        return (this.y + this.z * 31) * 31 + this.x;
     }
 
     public Vec3d toChunkMin() {

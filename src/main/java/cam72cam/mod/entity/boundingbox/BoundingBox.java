@@ -7,15 +7,22 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
 public class BoundingBox extends AxisAlignedBB {
-    private final IBoundingBox internal;
+    public final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
         super(constructorParams[0], constructorParams[1], constructorParams[2], constructorParams[3], constructorParams[4], constructorParams[5]);
         this.internal = internal;
     }
 
-    public BoundingBox(IBoundingBox internal) {
+    private BoundingBox(IBoundingBox internal) {
         this(internal, hack(internal));
+    }
+
+    public static AxisAlignedBB from(IBoundingBox internal) {
+        if (internal instanceof DefaultBoundingBox) {
+            return ((DefaultBoundingBox) internal).internal;
+        }
+        return new BoundingBox(internal);
     }
 
     private static double[] hack(IBoundingBox internal) {
@@ -75,7 +82,8 @@ public class BoundingBox extends AxisAlignedBB {
 
     @Override
     public boolean intersectsWith(AxisAlignedBB other) {
-        return internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ));
+        return super.intersectsWith(other) && // Fast check
+            internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ)); // Slow check
     }
 
     @Override
@@ -95,7 +103,7 @@ public class BoundingBox extends AxisAlignedBB {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.xCoord + xDelta * step, vecA.yCoord + yDelta * step, vecA.zCoord + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new MovingObjectPosition(0, 0, 0, EnumFacing.UP.ordinal(), stepPos.internal);
+                return new MovingObjectPosition(0, 0, 0, EnumFacing.UP.ordinal(), stepPos.internal());
             }
         }
         return null;

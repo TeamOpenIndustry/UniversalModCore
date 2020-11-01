@@ -1,14 +1,14 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
-import cam72cam.mod.util.Hand;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
@@ -16,26 +16,29 @@ import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
 
     private static void registerClientEvents() {
-        EntityRegistry.registerClientEvents();
+        //EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
-        Keyboard.registerClientEvents();
+        Player.registerClientEvents();
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
+        World.registerClientEvnets();
 
         MODEL_CREATE.execute(Runnable::run);
         REGISTER_ENTITY.execute(Runnable::run);
     }
 
+    /** Fires off a client resource reload event (UMC only).  Do not use directly */
     public static void fireReload() {
         RELOAD.execute(Runnable::run);
     }
 
     public static final Event<Runnable> TICK = new Event<>();
-    public static final Event<Function<Hand, Boolean>> CLICK = new Event<>();
+    public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     //public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
     public static final Event<Runnable> TEXTURE_STITCH = new Event<>();
@@ -62,7 +65,7 @@ public class ClientEvents {
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
 
             if ((event.button == attackID || event.button == useID) && event.buttonstate) {
-                Hand button = attackID == event.button ? Hand.SECONDARY : Hand.PRIMARY;
+                Player.Hand button = attackID == event.button ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
                 if (!CLICK.executeCancellable(x -> x.apply(button))) {
                     event.setCanceled(true);
                 }

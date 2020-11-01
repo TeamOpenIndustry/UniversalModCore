@@ -12,26 +12,24 @@ import paulscode.sound.SoundSystem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class ModSoundManager {
-    private static ModSoundManager soundManager;
-    private SoundManager manager;
+/** We have our own sound manager that wraps the minecraft internal sound manager to fix some bugs/limitations */
+class ModSoundManager {
+    private final SoundManager manager;
     private Supplier<SoundSystem> soundSystem;
-    private List<ISound> sounds = new ArrayList<ISound>();
+    private List<ISound> sounds = new ArrayList<>();
     private float lastSoundLevel;
-    private SoundCategory category = SoundCategory.AMBIENT;
+    private final SoundCategory category = SoundCategory.AMBIENT;
     private SoundSystem cachedSnd;
 
-    public ModSoundManager(SoundManager manager) {
+    ModSoundManager(SoundManager manager) {
         this.manager = manager;
 
         initSoundSystem();
@@ -39,7 +37,7 @@ public class ModSoundManager {
         lastSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category.internal());
     }
 
-    private final void initSoundSystem() {
+    private void initSoundSystem() {
         for (String fname : new String[]{"field_148620_e", "sndSystem"}) {
             try {
                 Field sndSystemField = SoundManager.class.getDeclaredField(fname);
@@ -58,12 +56,11 @@ public class ModSoundManager {
                 return;
             } catch (Exception e) {
                 ModCore.catching(e);
-                continue;
             }
         }
     }
 
-    public ISound createSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
+    ISound createSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
         SoundSystem sndSystem = this.soundSystem.get();
         if (sndSystem == null) {
             return null;
@@ -85,12 +82,11 @@ public class ModSoundManager {
             {
                 return new URLConnection(p_openConnection_1_)
                 {
-                    public void connect() throws IOException
-                    {
+                    public void connect() {
                     }
                     public InputStream getInputStream() throws IOException
                     {
-                        return internal.getResourceStream();
+                        return internal.getLastResourceStream();
                     }
                 };
             }
@@ -98,7 +94,7 @@ public class ModSoundManager {
 
         try
         {
-            return new URL((URL)null, s, urlstreamhandler);
+            return new URL(null, s, urlstreamhandler);
         }
         catch (MalformedURLException var4)
         {
@@ -106,7 +102,8 @@ public class ModSoundManager {
         }
     }
 
-    public void tick() {
+    /** Called by modcore every tick to update all known sounds */
+    void tick() {
         float dampenLevel = 1;
         if (MinecraftClient.getPlayer().getRiding() != null) {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
@@ -124,7 +121,7 @@ public class ModSoundManager {
         if (MinecraftClient.getPlayer().getTickCount() % 20 == 0) {
             // Clean up disposed sounds
 
-            List<ISound> toRemove = new ArrayList<ISound>();
+            List<ISound> toRemove = new ArrayList<>();
             for (ISound sound : this.sounds) {
                 if (sound.isDisposable() && !sound.isPlaying()) {
                     toRemove.add(sound);
@@ -139,19 +136,19 @@ public class ModSoundManager {
         }
     }
 
-    public boolean hasSounds() {
+    boolean hasSounds() {
         return this.sounds.size() != 0;
     }
 
-    public void stop() {
+    void stop() {
         for (ISound sound : this.sounds) {
             sound.stop();
             sound.terminate();
         }
-        this.sounds = new ArrayList<ISound>();
+        this.sounds = new ArrayList<>();
     }
 
-    public void handleReload(boolean soft) {
+    void handleReload(boolean soft) {
         if (soft) {
             for (ISound sound : this.sounds) {
                 sound.stop();

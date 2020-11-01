@@ -3,7 +3,6 @@ package cam72cam.mod.item;
 import net.minecraft.inventory.IInvBasic;
 import net.minecraft.inventory.InventoryBasic;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import cam72cam.mod.serialization.*;
 
@@ -15,6 +14,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
     public ExposedItemStackHandler internal;
@@ -35,7 +35,7 @@ public class ItemStackHandler implements IInventory {
         }
 
         @Override
-        public void setInventorySlotContents(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+        public void setInventorySlotContents(int slot, net.minecraft.item.ItemStack stack) {
             if (checkSlot.test(slot, new ItemStack(stack))) {
                 if (stack != null && stack.stackSize <= 0) {
                     stack = null;
@@ -56,10 +56,15 @@ public class ItemStackHandler implements IInventory {
             return res;
         }
 
+        private void onContentsChanged(int slot) {
+            onChanged.forEach(f -> f.accept(slot));
+        }
+
         @Override
         public void onInventoryChanged(InventoryBasic p_76316_1_) {
             for (int slot = 0; slot < super.getSizeInventory(); slot++) {
-                onContentsChanged(slot);
+                int finalSlot = slot;
+                onChanged.forEach(f -> f.accept(finalSlot));
             }
         }
     }
@@ -72,19 +77,17 @@ public class ItemStackHandler implements IInventory {
         this(1);
     }
 
+    /** Get notified any time a stack changes (which slot) */
     public void onChanged(Consumer<Integer> fn) {
         onChanged.add(fn);
     }
 
-    @Deprecated
-    protected void onContentsChanged(int slot) {
-        onChanged.forEach(f -> f.accept(slot));
-    }
-
+    /** Set slot limiter */
     public void setSlotLimit(Function<Integer, Integer> limiter) {
         slotLimit = limiter;
     }
 
+    /** Change the size of the inventory and return items that don't fit anymore */
     public List<ItemStack> setSize(int inventorySize) {
         if (inventorySize == getSlotCount()) {
             return Collections.emptyList();
@@ -176,7 +179,7 @@ public class ItemStackHandler implements IInventory {
                     (d, w) -> {
                         try {
                             ItemStackHandler o = ctr.newInstance();
-                            o.load(d);
+                            o.load(d.get(fieldName));
                             return o;
                         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                             throw new SerializationException("Unable to construct item stack handler " + type, e);

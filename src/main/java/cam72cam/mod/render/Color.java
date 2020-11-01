@@ -1,5 +1,7 @@
 package cam72cam.mod.render;
 
+
+/** Wrapper for MC's Colors */
 public enum Color {
     WHITE(15),
     ORANGE(14),
@@ -19,6 +21,7 @@ public enum Color {
     BLACK(0),
     ;
 
+    /** Internal, do not use */
     public final int internal;
 
     Color(int internal) {

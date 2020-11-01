@@ -2,15 +2,16 @@ package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
@@ -24,16 +25,22 @@ import cpw.mods.fml.relauncher.SideOnly;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/** Internal class which extends MC's Entity.  Do not use directly */
 public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
-    private cam72cam.mod.entity.Entity self;
+    // Reference to the entity that this is representing
+    private CustomEntity self;
 
+    // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
 
-    private List<SeatEntity> seats = new ArrayList<>();
+    // All of the known seats attached to this entity
+    private final List<SeatEntity> seats = new ArrayList<>();
 
-    private EntitySettings settings;
+    // Registry name of self
     private String type;
+
+    // Views of self that implement different interfaces
     private IWorldData iWorldData;
     private ITickable iTickable;
     private IClickable iClickable;
@@ -41,6 +48,19 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private IRidable iRidable;
     private ICollision iCollision;
 
+    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedCollisionBB = new SingleCache<>(BoundingBox::from);
+    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedRenderBB = new SingleCache<>(internal -> {
+        AxisAlignedBB bb = BoundingBox.from(internal);
+        /*
+         So why do we wrap this with a new AABB here instead of passing the BB straight through?
+         Good question
+         Certain mods (like IR) use custom bounding boxes that do some really funky shit to break
+         the axis constraint.  We don't care about that when rendering, just want a worst-case sized BB
+        */
+        return AxisAlignedBB.getBoundingBox(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+    });
+
+    /** Standard forge constructor */
     public ModdedEntity(World world) {
         super(world);
 
@@ -51,17 +71,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     protected final void entityInit() {
     }
 
-    /* Init Self Wrapper */
-
-    protected final void init(String type) {
+    /** Setup self if we have not done so already.  This happens during entity data load. */
+    protected final void initSelf(String type) {
         if (self == null) {
             this.type = type;
             self = EntityRegistry.create(type, this);
 
-            EntitySettings settings = EntityRegistry.getSettings(type);
-            super.isImmuneToFire = settings.immuneToFire;
-            super.entityCollisionReduction = settings.entityCollisionReduction;
-            this.settings = settings;
+            super.isImmuneToFire = self.isImmuneToFire();
+            super.entityCollisionReduction = self.getCollisionReduction();
 
             iWorldData = IWorldData.get(self);
             iTickable = ITickable.get(self);
@@ -72,7 +89,23 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
-    private final void loadSelf(TagCompound data) {
+    public CustomEntity getSelf() {
+        return self;
+    }
+
+    /* IWorldData */
+
+    /** @see #load */
+    @Override
+    protected final void readEntityFromNBT(NBTTagCompound compound) {
+        load(new TagCompound(compound));
+    }
+
+    /**
+     * Deserializes data into this, self, and calls self.load.
+     * @see IWorldData
+     */
+    private void load(TagCompound data) {
         String type = data.getString("custom_mob_type");
         if (type == null) {
             // Legacy...
@@ -81,53 +114,64 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (type == null) {
             throw new RuntimeException("Invalid entity data: " + data);
         }
-        init(type);
-    }
+        // Setup self construct (if not done so already)
+        initSelf(type);
 
-    private final void saveSelf(TagCompound data) {
-        data.setString("custom_mob_type", type);
-    }
-
-    public cam72cam.mod.entity.Entity getSelf() {
-        return self;
-    }
-
-    /* IWorldData */
-
-    @Override
-    protected final void readEntityFromNBT(NBTTagCompound compound) {
-        load(new TagCompound(compound));
-    }
-
-    private final void load(TagCompound data) {
-        loadSelf(data);
+        // Deserialize data into this using annotations
         try {
             TagSerializer.deserialize(data, this);
-            TagSerializer.deserialize(data, self);
         } catch (SerializationException e) {
-            ModCore.catching(e, "Error during entity load: %s - %s", self, data);
+            ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
-        iWorldData.load(data);
+
+        TagCompound selfData = data.get("selfData");
+        if (selfData == null) {
+            // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
+            selfData = data;
+        }
+
+        // Deserialize self
+        try {
+            TagSerializer.deserialize(selfData, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Error during entity load: %s - %s", self, selfData);
+        }
+        iWorldData.load(selfData);
     }
 
+    /** @see #save */
     @Override
     protected final void writeEntityToNBT(NBTTagCompound compound) {
         save(new TagCompound(compound));
     }
 
-    private final void save(TagCompound data) {
+    /**
+     * Inverse of load
+     * @see IWorldData
+     * @see #load
+     */
+    private void save(TagCompound data) {
+        data.setString("custom_mob_type", type);
         try {
-            TagSerializer.serialize(data, self);
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
-            ModCore.catching(e, "Error during entity save: %s - %s", this, self);
+            ModCore.catching(e, "Error during entity save: %s", this);
         }
-        iWorldData.save(data);
-        saveSelf(data);
+
+        TagCompound selfData = new TagCompound();
+        try {
+            TagSerializer.serialize(selfData, self);
+        } catch (SerializationException e) {
+            ModCore.catching(e, "Error during entity save: %s", self);
+        }
+        iWorldData.save(selfData);
+
+        data.set("selfData", selfData);
     }
 
     /* ISpawnData */
 
+    /** @see #load */
     @Override
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
@@ -151,6 +195,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ITickable */
 
+    /**
+     * Hooks into #ITickable and runs server/client data synchronization.  Also does some seat management.
+     *
+     * @see ITickable
+     */
     @Override
     public void onEntityUpdate() {
         iTickable.onTick();
@@ -161,7 +210,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         //TODO 1.7.10
-        super.boundingBox.setBB(new BoundingBox(iCollision.getCollision()));
+        super.boundingBox.setBB(BoundingBox.from(iCollision.getCollision()));
 
         if (this.riddenByEntity != null) {
             addPassenger(this.riddenByEntity);
@@ -174,30 +223,36 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     /* Player Interact */
-
+    /** @see IClickable */
     @Override
     public final boolean interactFirst(EntityPlayer player) {
-        return iClickable.onClick(new Player(player), Hand.PRIMARY) == ClickResult.ACCEPTED;
+        return iClickable.onClick(new Player(player), Player.Hand.PRIMARY).internal;
     }
 
     /* Death */
 
+    /** @see IKillable */
     @Override
     public final boolean attackEntityFrom(DamageSource damagesource, float amount) {
-        cam72cam.mod.entity.Entity wrapEnt = new cam72cam.mod.entity.Entity(damagesource.getSourceOfDamage());
+        cam72cam.mod.entity.Entity wrapEnt = damagesource.getSourceOfDamage() != null ? self.getWorld().getEntity(damagesource.getSourceOfDamage()) : null;
         DamageType type;
-        if (damagesource.isExplosion() && !(damagesource.getSourceOfDamage() instanceof EntityMob)) {
+        if (damagesource.isExplosion()) {
             type = DamageType.EXPLOSION;
-        } else if (damagesource.getSourceOfDamage() instanceof EntityPlayer) {
-            type = damagesource.isProjectile() ? DamageType.PROJECTILE : DamageType.PLAYER;
+        } else if (damagesource.isProjectile()) {
+            type = DamageType.PROJECTILE;
+        } else if (damagesource.isFireDamage()) {
+            type = DamageType.FIRE;
+        } else if (damagesource.isMagicDamage()) {
+            type = DamageType.MAGIC;
         } else {
             type = DamageType.OTHER;
         }
-        iKillable.onDamage(type, wrapEnt, amount);
+        iKillable.onDamage(type, wrapEnt, amount, damagesource.isUnblockable());
 
         return false;
     }
 
+    /** @see IKillable */
     @Override
     public final void setDead() {
         if (!this.isDead) {
@@ -208,26 +263,37 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* Ridable */
 
+    /** @see IRidable#canFitPassenger */
     /* TODO 1.7.10
     @Override
     public boolean canFitPassenger(Entity passenger) {
-        return iRidable.canFitPassenger(new cam72cam.mod.entity.Entity(passenger));
+        return iRidable.canFitPassenger(self.getWorld().getEntity(passenger));
     }
     */
 
+    /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
         return passenger.getPosition().subtract(self.getPosition()).rotateMinecraftYaw(-self.getRotationYaw());
     }
 
+    /** Rotate offset around entity center by entity yaw and add entity center */
     private Vec3d calculatePassengerPosition(Vec3d offset) {
         return offset.rotateMinecraftYaw(-self.getRotationYaw()).add(self.getPosition());
     }
 
+    /**
+     * Don't actually add passengers to the Entity, add a seat which follows the entity instead.
+     *
+     * Only functions on the server.
+     *
+     * @see IRidable#getMountOffset
+     */
+    // 1.7.10 @Override
     public final void addPassenger(Entity entity) {
         if (!worldObj.isRemote) {
             entity.mountEntity(null);
             ModCore.debug("New Seat");
-            SeatEntity seat = new SeatEntity(this.worldObj);
+            SeatEntity seat = new SeatEntity(worldObj);
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
@@ -235,12 +301,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             entity.mountEntity(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
             worldObj.spawnEntityInWorld(seat);
-            self.sendToObserving(new PassengerPositionsPacket(this));
+            new PassengerPositionsPacket(this).sendToObserving(self);
         } else {
             ModCore.debug("skip");
         }
     }
 
+    /**
+     * Returns passengers that are riding via seats
+     * @see CustomEntity#getPassengers
+     */
     List<cam72cam.mod.entity.Entity> getActualPassengers() {
         return seats.stream()
                 .map(SeatEntity::getEntityPassenger)
@@ -248,6 +318,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Helper function that updates a seat's position and it's rider's position
+     * 
+     * @see SeatEntity#updatePassenger 
+     */
     void updateSeat(SeatEntity seat) {
         if (!seats.contains(seat)) {
             seats.add(seat);
@@ -288,26 +363,47 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
+    /** @see CustomEntity#isPassenger */
     boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
         return getActualPassengers().stream().anyMatch(p -> p.getUUID().equals(passenger.getUUID()));
     }
 
+    public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
+        if (iRidable.canFitPassenger(entity)) {
+            SeatEntity seat = (SeatEntity) entity.internal.ridingEntity;
+            this.seats.remove(seat);
+            seat.moveTo(other.internal);
+            other.internal.seats.add(seat);
+            other.internal.passengerPositions.remove(entity.getUUID());
+            if (!worldObj.isRemote) {
+                new PassengerSeatPacket(other, entity).sendToObserving(self);
+            }
+        }
+    }
+
+    /**
+     * @see IRidable#onDismountPassenger
+     * @see SeatEntity#removePassenger
+     */
     void removeSeat(SeatEntity seat) {
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
         if (passenger != null) {
             Vec3d offset = passengerPositions.get(passenger.getUUID());
             if (offset != null) {
                 offset = iRidable.onDismountPassenger(passenger, offset);
-                if (passenger instanceof Player) {
-                    offset.add(0, 1.5, 0);
+                Vec3d pos = calculatePassengerPosition(offset);
+
+                while (!(self.getWorld().isAir(new Vec3i(pos)) && self.getWorld().isAir(new Vec3i(pos).up()))) {
+                    pos = pos.add(0, 1, 0);
                 }
-                passenger.setPosition(calculatePassengerPosition(offset));
+                passenger.setPosition(pos);
             }
             passengerPositions.remove(passenger.getUUID());
         }
         seats.remove(seat);
     }
 
+    /** @see CustomEntity#removePassenger */
     void removePassenger(cam72cam.mod.entity.Entity passenger) {
         for (SeatEntity seat : this.seats) {
             cam72cam.mod.entity.Entity seatPass = seat.getEntityPassenger();
@@ -318,6 +414,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
+    // TODO
     @Override
     public boolean canRiderInteract() {
         return false;
@@ -327,55 +424,72 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return seats.size();
     }
 
-    /* ICollision */
+    /* ICollision NOTE: set width/height if implementing LivingEntity */
+    /** @see #getEntityBoundingBox() */
     @Override
     public AxisAlignedBB getCollisionBox(Entity collider) {
+        // TODO 1.7.10 getBoundingBox?
         return null;
     }
 
+    /**
+     * Only generates a new BB object when the underlying self.getCollision() changes
+     *
+     * @see ICollision
+     */
     @Override
     public AxisAlignedBB getBoundingBox() {
-        return new BoundingBox(iCollision.getCollision());
+        return cachedCollisionBB.get(iCollision.getCollision());
     }
 
-    /* TODO 1.7.10
+    /**
+     * Only generates a new BB object when the underlying self.getCollision() changes
+     * TODO provide a way of specifying a render bounding box without a collision bounding box
+     * @see ICollision
+     */
+    /* 1.7.10
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        AxisAlignedBB bb = this.getEntityBoundingBox();
-        return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
-    }
-    */
+        return cachedRenderBB.get(iCollision.getCollision());
+    }*/
 
     /* Hacks */
+    /** Needed for right click, probably a forge or MC bug */
     @Override
     public boolean canBeCollidedWith() {
-        // Needed for right click, probably a forge or MC bug
         return true;
     }
 
     @Override
     public boolean canBePushed() {
-        return settings.canBePushed;
+        return self.canBePushed();
     }
 
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotation2(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
-        if (settings.defaultMovement) {
+        if (self.allowsDefaultMovement()) {
             super.setPositionAndRotation2(x, y, z, yaw, pitch, posRotationIncrements);
         }
     }
 
     @Override
     public void setVelocity(double x, double y, double z) {
-        if (settings.defaultMovement) {
+        if (self.allowsDefaultMovement()) {
             super.setVelocity(x, y, z);
         }
     }
 
     /*
-     * Disable standard entity sync
+    // TODO 1.7.10 getEntityString?
+    @Override
      */
+    public String getName() {
+        return this.type;
+    }
 
+    /*
+    Passenger helpers
+     */
 
     private static class PassengerMapper implements TagMapper<Map<UUID, Vec3d>> {
         @Override
@@ -410,8 +524,24 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
-    public String getName() {
-        return this.type;
+    public static class PassengerSeatPacket extends Packet {
+        @TagField
+        private CustomEntity target;
+        @TagField
+        private cam72cam.mod.entity.Entity rider;
+
+        public PassengerSeatPacket() {}
+
+        public PassengerSeatPacket(CustomEntity target, cam72cam.mod.entity.Entity rider) {
+            this.target = target;
+            this.rider = rider;
+        }
+
+
+        @Override
+        protected void handle() {
+            target.addPassenger(rider);
+        }
     }
 
     /*

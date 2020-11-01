@@ -12,28 +12,33 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
 
+import java.util.function.Supplier;
+
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
+/** GUI Container wrapper for the client side, Do not use directly */
 public class ClientContainerBuilder extends GuiContainer implements IContainerBuilder {
-    public static final int slotSize = 18;
-    public static final int topOffset = 17;
-    public static final int bottomOffset = 7;
-    public static final int textureHeight = 222;
-    public static final int paddingRight = 7;
-    public static final int paddingLeft = 7;
-    public static final int stdUiHorizSlots = 9;
-    public static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
+    private static final int slotSize = 18;
+    private static final int topOffset = 17;
+    private static final int bottomOffset = 7;
+    private static final int textureHeight = 222;
+    private static final int paddingRight = 7;
+    private static final int paddingLeft = 7;
+    private static final int stdUiHorizSlots = 9;
+    private static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
     private static final int midBarOffset = 4;
     private static final int midBarHeight = 4;
     private final ServerContainerBuilder server;
+    private final Supplier<Boolean> valid;
     private int centerX;
     private int centerY;
 
-    public ClientContainerBuilder(ServerContainerBuilder serverContainer) {
+    public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
         this.server = serverContainer;
         this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.ySize = 2 * (114 + serverContainer.slotsY * slotSize);
+        this.valid = valid;
     }
 
     @Override
@@ -43,6 +48,17 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
             this.centerX = (this.width - this.xSize) / 2;
             this.centerY = (this.height - this.ySize) / 2;
             server.draw.accept(this);
+        }
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (!valid.get()) {
+            this.mc.displayGuiScreen(null);
+            if (this.mc.currentScreen == null) {
+                this.mc.setIngameFocus();
+            }
         }
     }
 
@@ -191,6 +207,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         ) {
             Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
         }
+        OpenGL.color(1, 1, 1, 1);
     }
 
     @Override
@@ -200,6 +217,8 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
+            // Reset the state manager color
+            OpenGL.color(1, 1, 1, 1);
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId.replace("minecraft:blocks/", ""));
@@ -209,5 +228,6 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         ) {
             super.drawTexturedModelRectFromIcon(x, y, sprite, 16, 16);
         }
+        OpenGL.color(1, 1, 1, 1);
     }
 }

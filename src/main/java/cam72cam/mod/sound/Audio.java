@@ -16,13 +16,14 @@ public class Audio {
     @SideOnly(Side.CLIENT)
     private static ModSoundManager soundManager;
 
+    /** Used to wire up event handlers, do not use directly */
     @SideOnly(Side.CLIENT)
     public static void registerClientCallbacks() {
         ClientEvents.TICK.subscribe(() -> {
-            Player player = MinecraftClient.getPlayer();
             World world = null;
-            if (player != null) {
-                world = player.getWorld();
+            // This can fire while in the main menu, we need to be careful about that
+            if (MinecraftClient.isReady()) {
+                world = MinecraftClient.getPlayer().getWorld();
                 soundManager.tick();
             }
 
@@ -44,18 +45,22 @@ public class Audio {
         CommonEvents.World.UNLOAD.subscribe(world -> soundManager.stop());
     }
 
+    /** Play a built-in sound (Client side only) */
     public static void playSound(World world, Vec3d pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
         world.internal.playSound(pos.x, pos.y, pos.z, sound.event, volume, pitch, false);
     }
 
+    /** Play a built-in sound (Client side only) */
     public static void playSound(World world, Vec3i pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
         playSound(world, new Vec3d(pos), sound, category, volume, pitch);
     }
 
+    /** Create a custom sound */
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
         return soundManager.createSound(oggLocation, repeats, attenuationDistance, scale);
     }
 
+    /** Hack to increase the number of sounds that can be played at a time */
     public static void setSoundChannels(int max) {
         SoundSystemConfig.setNumberNormalChannels(Math.max(SoundSystemConfig.getNumberNormalChannels(), max));
     }

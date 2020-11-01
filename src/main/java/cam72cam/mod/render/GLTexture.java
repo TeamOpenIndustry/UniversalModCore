@@ -18,11 +18,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
+/** Internal(ish) class for representing a GL texture */
 public class GLTexture {
-    private static LinkedBlockingQueue queue = new LinkedBlockingQueue<>(1);
-    private static ExecutorService saveImage = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, queue);
-    private static ExecutorService readImage = Executors.newFixedThreadPool(1);
-    private static Map<String, GLTexture> textures = new HashMap<>();
+    // Thread Pools for reading and saving textures
+    private static final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(1);
+    private static final ExecutorService saveImage = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, queue);
+    private static final ExecutorService readImage = Executors.newFixedThreadPool(1);
+    // All currently known textures
+    private static final Map<String, GLTexture> textures = new HashMap<>();
+    
     private final File texLoc;
     private final int cacheSeconds;
     private int width;
@@ -44,6 +48,7 @@ public class GLTexture {
     }
 
     static {
+        // free unused textures
         ClientEvents.TICK.subscribe(() -> {
             for (GLTexture texture : textures.values()) {
                 if (texture.state == TextureState.ALLOCATED && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000) {
@@ -53,6 +58,7 @@ public class GLTexture {
         });
     }
 
+    /** Get a file for name in the UMC cache dir */
     public static File cacheFile(String name) {
         File cacheDir = Paths.get(Loader.instance().getConfigDir().getParentFile().getPath(), "cache", "universalmodcore").toFile();
         cacheDir.mkdirs();
@@ -162,10 +168,12 @@ public class GLTexture {
         return textureID;
     }
 
+    /** Can this texture be bound? */
     public boolean isLoaded() {
         return state == TextureState.ALLOCATED;
     }
 
+    /** Try to read and then upload the texture */
     public boolean tryUpload() {
         switch (this.state) {
             case NEW:
@@ -199,6 +207,7 @@ public class GLTexture {
         throw new RuntimeException(this.state.toString());
     }
 
+    /** Bind the texture, force waiting if specified */
     public OpenGL.With bind(boolean force) {
         lastUsed = System.currentTimeMillis();
 
@@ -223,6 +232,7 @@ public class GLTexture {
         return OpenGL.texture(glTexID);
     }
 
+    /** Completely free this texture */
     public void freeGL() {
         textures.remove(this.texLoc.toString());
 
@@ -234,14 +244,11 @@ public class GLTexture {
         }
     }
 
+    /** free this texture from the GPU */
     public void dealloc() {
         if (this.state == TextureState.ALLOCATED) {
             GL11.glDeleteTextures(this.glTexID);
             transition(TextureState.UNALLOCATED);
         }
-    }
-
-    public String info() {
-        return this.texLoc.toString();
     }
 }

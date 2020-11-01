@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
     private List<Consumer<RenderInfo>> models = new ArrayList<>();
     private class RenderInfo {
@@ -38,6 +39,7 @@ public class StandardModel {
 
     private RenderBlocks renderBlocks = new RenderBlocks();
 
+    /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
         int meta = stack.internal.getMetadata();
@@ -47,16 +49,19 @@ public class StandardModel {
         return Pair.of(block, meta);
     }
 
+    /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        addItemBlock(new ItemStack(Blocks.wool, 1, color.internal), translate, scale);
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.wool, 1, color.internal)), translate, scale);
         return this;
     }
 
+    /** Add snow layers */
     public StandardModel addSnow(int layers, Vec3d translate) {
-        addItemBlock(new ItemStack(Blocks.snow), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
         return this;
     }
 
+    /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack stack, Vec3d translate, Vec3d scale) {
         if (stack.isEmpty()) {
             return this;
@@ -75,6 +80,7 @@ public class StandardModel {
         return this;
     }
 
+    /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
         if (stack.isEmpty()) {
             return this;
@@ -98,47 +104,50 @@ public class StandardModel {
         return this;
     }
 
+    /** Do whatever you want here! */
     public StandardModel addCustom(Runnable fn) {
         this.custom.add(pt -> fn.run());
         return this;
     }
 
+    /** Do whatever you want here! (aware of partialTicks) */
     public StandardModel addCustom(Consumer<Float> fn) {
         this.custom.add(fn);
         return this;
     }
 
+    /** Render this entire model */
     public void render() {
         render(0);
     }
 
+    /** Render this entire model (partial tick aware) */
     public void render(float partialTicks) {
         renderCustom(partialTicks);
-        GL11.glPushMatrix();
-        {
-            GLBoolTracker tex = new GLBoolTracker(GL11.GL_TEXTURE_2D, true);
+        try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
             GL11.glTranslated(0, -255, 0);
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
             Tessellator.instance.startDrawingQuads();
             renderQuads(Minecraft.getMinecraft().theWorld, 0, 255, 0);
             Tessellator.instance.draw();
-            tex.restore();
         }
-        GL11.glPopMatrix();
     }
 
     public void renderQuads(IBlockAccess world, int x, int y, int z) {
         models.forEach(a -> a.accept(new RenderInfo(world, x, y, z)));
     }
 
+    /** Render the OpenGL parts directly */
     public void renderCustom() {
         renderCustom(0);
     }
 
+    /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(float partialTicks) {
         custom.forEach(cons -> cons.accept(partialTicks));
     }
 
+    /** Is there anything that's not MC standard in this model? */
     public boolean hasCustom() {
         return !custom.isEmpty();
     }

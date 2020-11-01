@@ -18,16 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/** Match ClientContainerBuilder spacing as closely as possible */
 @ChestContainer
 public class ServerContainerBuilder extends net.minecraft.inventory.Container implements IContainerBuilder {
     // server padding overrides
-    public static final int slotSize = 18;
-    public static final int topOffset = 18;
-    public static final int bottomOffset = 7;
-    public static final int textureHeight = 222;
-    public static final int paddingRight = 7;
-    public static final int paddingLeft = 8;
-    public static final int stdUiHorizSlots = 9;
+    private static final int slotSize = 18;
+    private static final int topOffset = 18;
+    private static final int bottomOffset = 7;
+    private static final int paddingRight = 7;
+    private static final int paddingLeft = 8;
+    private static final int stdUiHorizSlots = 9;
     public static final int playerXSize = paddingLeft + stdUiHorizSlots * slotSize + paddingRight;
     private static final int midBarHeight = 4;
     final Consumer<IContainerBuilder> draw;
@@ -35,7 +35,6 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     final int slotsY;
     private final IInventory playerInventory;
     Map<ContainerSection, List<Slot>> slotRefs = new HashMap<>();
-    private int rowSlots = 9;
 
     public ServerContainerBuilder(IInventory playerInventory, IContainer container) {
         this.playerInventory = playerInventory;
@@ -54,7 +53,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     @ChestContainer.RowSizeCallback
     @Optional.Method(modid = "inventorytweaks")
     public int rowSize() {
-        return rowSlots;
+        return this.slotsX;
     }
 
     @ContainerSectionCallback
@@ -201,8 +200,17 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
                 if (!this.mergeItemStack(itemstack1, numSlots, this.inventorySlots.size(), true)) {
                     return null;
                 }
-            } else if (!this.mergeItemStack(itemstack1, 0, numSlots, false)) {
-                return null;
+            } else {
+                boolean h = true;
+                for (int i = 0; i < numSlots; i++) {
+                    if (this.getSlot(i).isItemValid(itemstack1) && this.mergeItemStack(itemstack1, i, i+1, true)) {
+                        h = false;
+                        break;
+                    }
+                }
+                if (h) {
+                    return null;
+                }
             }
 
             if (itemstack1.stackSize == 0) {
@@ -210,6 +218,10 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
             } else {
                 slot.onSlotChanged();
             }
+
+            if (itemstack1.stackSize == itemstack.stackSize)
+                return null;
+            slot.onPickupFromSlot(playerIn, itemstack1);
         }
 
         return itemstack;

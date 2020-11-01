@@ -1,5 +1,7 @@
 package cam72cam.mod.serialization;
 
+import cam72cam.mod.block.BlockEntity;
+import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
@@ -11,6 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.UUID;
 
+/** Default Serializer / Deserailizers for TagCompound */
 class DefaultTagMapper implements TagMapper {
     @Override
     public TagAccessor apply(Class type, String fieldName, TagField tag) throws SerializationException {
@@ -75,6 +78,9 @@ class DefaultTagMapper implements TagMapper {
         }
         if (TagCompound.class.isAssignableFrom(type)) {
             return new TagAccessor<>((d, o) -> d.set(fieldName, o), d -> d.get(fieldName));
+        }
+        if (BlockEntity.class.isAssignableFrom(type)) {
+            return new TagAccessor<BlockEntity>((d, o) -> d.setTile(fieldName, o), (d, w) -> d.getTile(fieldName, w.isClient));
         }
         if (Object.class.isAssignableFrom(type)) {
             try {

@@ -4,7 +4,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.IWorldAccess;
 
+/** Used for world event handling, internal */
 public class WorldEventListener implements IWorldAccess {
+
     private final cam72cam.mod.world.World world;
 
     public WorldEventListener(cam72cam.mod.world.World worldWrap) {

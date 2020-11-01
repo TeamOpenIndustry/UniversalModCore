@@ -5,6 +5,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 
+/**
+ * Wrap MC's EnumFacing enum, provide some helpers
+ */
 public enum Facing {
     DOWN(EnumFacing.DOWN),
     UP(EnumFacing.UP),
@@ -14,6 +17,7 @@ public enum Facing {
     EAST(EnumFacing.EAST),
     ;
 
+    // Note to self: Do not call Arrays.randomize on this, weird shit happens (as would be expected)
     public static final Facing[] HORIZONTALS = {
             NORTH, SOUTH, EAST, WEST
     };
@@ -44,27 +48,6 @@ public enum Facing {
                 return null;
         }
     }
-
-    @Deprecated
-    public static Facing from(byte facing) {
-        return from(net.minecraft.util.EnumFacing.getFront(facing));
-    }
-
-    public static Facing fromAngle(float angle) {
-        switch (MathHelper.floor_double(angle / 90.0D + 0.5D) & 3) {
-            case 0:
-                return SOUTH;
-            case 1:
-                return WEST;
-            case 2:
-                return NORTH;
-            case 3:
-                return EAST;
-            default:
-                return NORTH;
-        }
-    }
-
     public static Facing from(ForgeDirection dir) {
         switch (dir) {
             case DOWN:
@@ -100,6 +83,28 @@ public enum Facing {
                 return ForgeDirection.EAST;
             default:
                 return null;
+        }
+    }
+
+    /** Older versions of MC used a single byte to represent facing */
+    @Deprecated
+    public static Facing from(byte facing) {
+        return from(net.minecraft.util.EnumFacing.getFront(facing));
+    }
+
+    /** 0 is SOUTH, 90 is WEST */
+    public static Facing fromAngle(float v) {
+        switch (MathHelper.floor_double(v / 90.0D + 0.5D) & 3) {
+            case 0:
+                return SOUTH;
+            case 1:
+                return WEST;
+            case 2:
+                return NORTH;
+            case 3:
+                return EAST;
+            default:
+                return NORTH;
         }
     }
 
@@ -146,7 +151,7 @@ public enum Facing {
         return this;
     }
 
-    public float getHorizontalAngle() {
+    public float getAngle() {
         int horizontalIndex = -1;
         switch (this) {
             case NORTH:
@@ -165,6 +170,7 @@ public enum Facing {
         return (float)((horizontalIndex & 3) * 90);
     }
 
+    /** Axis that this facing lies upon */
     public Axis getAxis() {
         switch (this) {
             case DOWN:
@@ -178,5 +184,20 @@ public enum Facing {
                 return Axis.Z;
         }
         return Axis.Y;
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getXMultiplier() {
+        return internal.getFrontOffsetX();
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getYMultiplier() {
+        return internal.getFrontOffsetY();
+    }
+
+    /** @see cam72cam.mod.math.Vec3i#offset */
+    public int getZMultiplier() {
+        return internal.getFrontOffsetZ();
     }
 }

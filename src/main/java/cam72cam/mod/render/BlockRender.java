@@ -21,9 +21,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Registry for block rendering (and internal implementation)
+ *
+ * Currently only supports TE's, not standard blocks
+ */
 public class BlockRender {
     private static final List<Runnable> colors = new ArrayList<>();
+    // BlockEntity type -> BlockEntity Renderer
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
+    // Internal hack for globally rendered TE's
     private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
 
     static {
@@ -31,6 +38,11 @@ public class BlockRender {
             if (Minecraft.getMinecraft().theWorld == null) {
                 return;
             }
+            /*
+            Find all UMC TEs
+            Create new array to prevent CME's with poorly behaving mods
+            TODO: Opt out of renderGlobal!
+             */
             List tes = (List) new ArrayList(Minecraft.getMinecraft().theWorld.loadedTileEntityList).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
@@ -40,6 +52,7 @@ public class BlockRender {
         });
     }
 
+    /** Internal, do not use.  Is fired by UMC directly */
     public static void onPostColorSetup() {
         colors.forEach(Runnable::run);
 

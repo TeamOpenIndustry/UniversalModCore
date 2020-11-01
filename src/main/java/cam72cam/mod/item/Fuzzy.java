@@ -10,7 +10,9 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/** OreDict / Tag abstraction.  Use for item equivalence */
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood");
     public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood");
@@ -37,18 +39,19 @@ public class Fuzzy {
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
     public static final Fuzzy CONCRETE = new Fuzzy("concrete");
     public static final Fuzzy DIRT = new Fuzzy("dirt");
-    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(Blocks.stained_hardened_clay, 1, OreDictionary.WILDCARD_VALUE));
+    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, OreDictionary.WILDCARD_VALUE)));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
     public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.paper);
     public static final Fuzzy BOOK = new Fuzzy("book").add(Items.book);
-    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE));
-    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(Items.bucket, 1));
+    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE)));
+    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(new net.minecraft.item.ItemStack(Items.bucket, 1)));
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald");
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.redstone_torch);
     public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");
 
     private static boolean isPostItemRegistration = false;
 
+    /** Setup ore dict *after* items have been registered */
     private static void postItemRegistration(Runnable fn) {
         if(isPostItemRegistration) {
             fn.run();
@@ -64,22 +67,29 @@ public class Fuzzy {
 
     private final String ident;
 
+    /** Create fuzzy with this name */
     public Fuzzy(String ident) {
         this.ident = ident;
     }
 
+    /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
         return new ArrayList<>(OreDictionary.getOres(ident)).stream().anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false));
     }
 
+    /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
         List<ItemStack> results = new ArrayList<>();
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
             if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
-                for (int i = 0; i < 16; i++) {
-                    // This is terrible
-                    results.add(new ItemStack(stack.getItem(), 1, i));
+                List<net.minecraft.item.ItemStack> temp = new ArrayList<>();
+                try {
+                    stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
+                } catch (NoSuchMethodError e) {
+                    // This function does not exist serverside, FML
+                    temp.add(new net.minecraft.item.ItemStack(stack.getItem()));
                 }
+                results.addAll(temp.stream().map(ItemStack::new).collect(Collectors.toList()));
             } else {
                 results.add(new ItemStack(stack));
             }
@@ -87,34 +97,41 @@ public class Fuzzy {
         return results;
     }
 
+    /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
         return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
     }
 
+    /** Use to register an itemstack */
     public Fuzzy add(ItemStack item) {
         postItemRegistration(() -> OreDictionary.registerOre(ident, item.internal));
         return this;
     }
 
+    /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Block block) {
         postItemRegistration(() -> OreDictionary.registerOre(ident, block));
         return this;
     }
 
+    /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
         postItemRegistration(() -> OreDictionary.registerOre(ident, item));
         return this;
     }
 
-    public void add(ItemBase item) {
+    /** Use to register an item */
+    public void add(CustomItem item) {
         add(item.internal);
     }
 
+    /** Copy all from this other fuzzy into this one.  Does not track updates to other */
     public Fuzzy addAll(Fuzzy other) {
         return addAll(other.ident);
     }
 
+    /** Copy all from this other fuzzy into this one.  Does not track updates to other.  Do not use directly */
     public Fuzzy addAll(String other) {
         postItemRegistration(() -> new ArrayList<>(OreDictionary.getOres(other)).stream().map(ItemStack::new).forEach(this::add));
         return this;

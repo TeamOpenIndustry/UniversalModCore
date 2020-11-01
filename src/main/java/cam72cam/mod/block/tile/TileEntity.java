@@ -13,6 +13,7 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import cofh.api.energy.IEnergyConnection;
 import cofh.api.energy.IEnergyHandler;
@@ -24,6 +25,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -34,85 +36,208 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+/**
+ * TileEntity is an internal class that should only be extended when you need to implement
+ * an interface.
+ *
+ * If you need to create a standard tile entity and wound up here, take a look at BlockEntity instead.
+ *
+ * @see BlockEntity
+ */
 public class TileEntity extends net.minecraft.tileentity.TileEntity implements IEnergyHandler, IEnergyConnection, IFluidHandler, ISidedInventory {
+    static {
+        registerTileEntity(TileEntity.class, new Identifier(ModCore.MODID, "hack"));
+    }
+
+    // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
-    public boolean hasTileData;
+
+    // Set before initialization, used to lookup supplier
     private String instanceId;
-
-    /*
-    Tile registration
-    */
+    // Set during initialization
     private BlockEntity instance;
-    private TagCompound deferredLoad;
-    private World world;
+    public TagCompound deferredLoad;
 
+    // Cached
+    private Vec3i umcPos;
+    private World umcWorld;
+
+    /**
+     * Used only be Forge's reflection.
+     * <ul>
+     *     <li>Must be implemented in subclasses.</li>
+     *     <li>Do not use directly.</li>
+     * </ul>
+     */
     public TileEntity() {
-        // Forge reflection
         super();
     }
 
+    /**
+     * Used only by BlockEntity to construct an instance to register.
+     * <ul>
+     *     <li>Must be implemented in subclasses.</li>
+     *     <li>Do not use directly.</li>
+     * </ul>
+     *
+     * @see BlockEntity
+     * @param id Block Entity ID
+     */
     public TileEntity(Identifier id) {
         this();
         instanceId = id.toString();
     }
 
+    /**
+     * Allows us to construct a BlockEntity from an identifier.  Do not use directly.
+     * @param instance constructor
+     * @param id Block Entity ID
+     */
     public static void register(Supplier<BlockEntity> instance, Identifier id) {
         registry.put(id.toString(), instance);
     }
 
-    public final void register() {
+    /**
+     * Registers a tile entity class with forge.  Only use when implementing a new TileEntity directly.
+     * @param cls TileEntity class to register
+     * @param name Internal (forge) name
+     */
+    public static void registerTileEntity(Class<? extends TileEntity> cls, Identifier name) {
         try {
-            TileEntity.addMapping(this.getClass(), this.getName().internal.toString());
+            TileEntity.addMapping(cls, name.toString());
         } catch (IllegalArgumentException ex) {
             //pass
         }
     }
 
-    public Identifier getName() {
-        return new Identifier(ModCore.MODID, "hack");
+    /** Wrap getPos() in a cached UMC Vec3i */
+    public Vec3i getUMCPos() {
+        if (umcPos == null || umcPos.x != xCoord || umcPos.y != yCoord || umcPos.z != zCoord) {
+            umcPos = new Vec3i(xCoord, yCoord, zCoord);
+        }
+        return umcPos;
     }
 
+    /** Wrap getWorld in cached UMC World */
+    public World getUMCWorld() {
+        if (umcWorld == null || umcWorld.internal != worldObj) {
+            umcWorld = World.get(worldObj);
+        }
+        return umcWorld;
+    }
 
     /*
     Standard Tile function overrides
     */
 
+    /**
+     * Initialize instance (if possible), deserialize into the instance and call the load method (explicit load)
+     * @see TagSerializer
+     */
     @Override
-    public void setWorldObj(net.minecraft.world.World world) {
-        super.setWorldObj(world);
-        this.world = World.get(world);
+    public void readFromNBT(NBTTagCompound compound) {
+        super.readFromNBT(compound);
+
+        TagCompound data = new TagCompound(compound);
+
+        if (instanceId == null) {
+            // If this fails something is really wrong
+            instanceId = data.getString("instanceId");
+            if (instanceId == null) {
+                throw new RuntimeException("Unable to load instanceid with " + data.toString());
+            }
+        }
+
+        TagCompound instanceData = data.get("instanceData");
+        if (instanceData == null) {
+            // Legacy fallback
+            instanceData = data;
+        }
+
+        if (instance(instanceData) != null) {
+            try {
+                TagSerializer.deserialize(instanceData, instance());
+                instance().load(instanceData);
+            } catch (SerializationException e) {
+                // TODO how should we handle this?
+                throw new RuntimeException(e);
+            }
+        } else {
+            deferredLoad = instanceData;
+        }
     }
 
-
+    /**
+     * Serialize into the instance and call the save method (explicit save)
+     * @see TagSerializer
+     */
     @Override
-    public final void readFromNBT(NBTTagCompound compound) {
-        hasTileData = true;
-        load(new TagCompound(compound));
+    public void writeToNBT(NBTTagCompound compound) {
+        super.writeToNBT(compound);
+
+        TagCompound data = new TagCompound(compound);
+
+        data.setString("instanceId", instanceId);
+        if (instance() != null) {
+            TagCompound instanceData = new TagCompound();
+            try {
+                TagSerializer.serialize(instanceData, instance());
+                instance().save(instanceData);
+            } catch (SerializationException e) {
+                // TODO how should we handle this?
+                throw new RuntimeException(e);
+            }
+            data.set("instanceData", instanceData);
+        }
     }
 
-    @Override
-    public final void writeToNBT(NBTTagCompound compound) {
-        save(new TagCompound(compound));
-    }
-
+    /** Active Synchronization from markDirty */
     @Override
     public Packet getDescriptionPacket() {
-        TagCompound nbt = new TagCompound();
-        this.writeToNBT(nbt.internal);
-        this.writeUpdate(nbt);
-
-        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 6, nbt.internal);
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 6, getUpdateTag());
     }
 
+    /** Active Synchronization from markDirty */
     @Override
     public final void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
-        hasTileData = true;
-        this.readFromNBT(pkt.getNbtCompound());
-        this.readUpdate(new TagCompound(pkt.getNbtCompound()));
-        super.onDataPacket(net, pkt);
+        handleUpdateTag(pkt.getNbtCompound());
+    }
+
+    /** Active Synchronization from markDirty */
+    // 1.7.10 @Override
+    public final NBTTagCompound getUpdateTag() {
+        NBTTagCompound tag = new NBTTagCompound();
+        if (this.isLoaded()) {
+            this.writeToNBT(tag);
+            try {
+                instance().writeUpdate(new TagCompound(tag));
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
+        }
+        return tag;
+    }
+
+    /** Active Synchronization from markDirty */
+    // 1.7.10 @Override
+    public final void handleUpdateTag(NBTTagCompound tag) {
+        try {
+            this.readFromNBT(tag);
+            if (instance(new TagCompound(tag)) != null) {
+                try {
+                    instance().readUpdate(new TagCompound(tag));
+                } catch (SerializationException e) {
+                    ModCore.catching(e);
+                }
+            }
+        } catch (Exception ex) {
+            ModCore.error("IN UPDATE: %s", tag);
+            ModCore.catching(ex);
+        }
         worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
     }
 
+    /** Fire off update packet if on server, re-render if on client */
     @Override
     public void markDirty() {
         super.markDirty();
@@ -125,97 +250,60 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
 
     /* Forge Overrides */
 
+    private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
+            new SingleCache<>(internal -> BoundingBox.from(internal).offset(xCoord, yCoord, zCoord));
+    /**
+     * @return Instance's bounding box
+     * @see BlockEntity
+     */
+    @Override
     public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
         if (instance() != null) {
-            IBoundingBox bb = instance().getBoundingBox();
-            if (bb != null) {
-                return new BoundingBox(bb);
-            }
+            return bbCache.get(instance().getRenderBoundingBox());
         }
         return INFINITE_EXTENT_AABB;
     }
 
+    /**
+     * @return Instance's render distance
+     * @see BlockEntity
+     */
+    @Override
     public double getMaxRenderDistanceSquared() {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
-    }
-
-    /*
-    Wrapped functionality
-    */
-
-    public void setWorld(World world) {
-        this.world = world;
-        super.setWorldObj(world.internal);
-    }
-
-    public void load(TagCompound data) {
-        super.readFromNBT(data.internal);
-
-        if (instanceId == null) {
-            // If this fails something is really wrong
-            instanceId = data.getString("instanceId");
-            if (instanceId == null) {
-                throw new RuntimeException("Unable to load instanceid with " + data.toString());
-            }
-        }
-
-        if (instance() != null) {
-            try {
-                TagSerializer.deserialize(data, instance());
-                instance().load(data);
-            } catch (SerializationException e) {
-                // TODO how should we handle this?
-                throw new RuntimeException(e);
-            }
-        } else {
-            deferredLoad = data;
-        }
-    }
-
-    public void save(TagCompound data) {
-        super.writeToNBT(data.internal);
-        data.setString("instanceId", instanceId);
-        if (instance() != null) {
-            try {
-                TagSerializer.serialize(data, instance());
-                instance().save(data);
-            } catch (SerializationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public void writeUpdate(TagCompound nbt) {
-        if (instance() != null) {
-            try {
-                instance().writeUpdate(nbt);
-            } catch (SerializationException e) {
-                ModCore.catching(e);
-            }
-        }
-    }
-
-    public void readUpdate(TagCompound nbt) {
-        if (instance() != null) {
-            try {
-                instance().readUpdate(nbt);
-            } catch (SerializationException e) {
-                ModCore.catching(e);
-            }
-        }
     }
 
     /*
     New Functionality
     */
 
+    /** @return If the BlockEntity instance is loaded */
     public boolean isLoaded() {
-        return this.hasWorldObj() && (world.isServer || hasTileData);
+        return instance() != null;
     }
 
+    /** @return The instance of the BlockEntity if possible */
     public BlockEntity instance() {
+        return instance(deferredLoad);
+    }
+
+    /**
+     * So this is a fun one...<br>
+     * <br>
+     * First we require the world object to have been set.  Without that we can't do much at all.<br>
+     * Secondly we need to see if we are on the client or server.  Server side is easy, if a TE has been created
+     * server side, it's no problem to load the instance as there's no waiting for packets.  Client side is a bit more
+     * interesting.  There's a few paths into it, but the idea is that we can only load the TE once the client has
+     * received a copy of the tile data from the server.<br>
+     *<br>
+     * If there are bugs in loading / synchronizing / faking TE's look here first...
+     *
+     * @param data
+     * @return The instance of the BlockEntity if possible
+     */
+    private BlockEntity instance(TagCompound data) {
         if (this.instance == null) {
-            if (isLoaded()) {
+            if (hasWorldObj() && (!worldObj.isRemote || data != null)) {
                 if (this.instanceId == null) {
                     ModCore.debug("WAT NULL");
                 }
@@ -224,20 +312,14 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
                 }
                 this.instance = registry.get(this.instanceId).get();
                 this.instance.internal = this;
-                this.instance.world = World.get(worldObj);
-                this.instance.pos = new Vec3i(xCoord, yCoord, zCoord);
-                if (deferredLoad != null) {
+                this.deferredLoad = null;
+                if (data != null) {
                     try {
-                        TagSerializer.deserialize(deferredLoad, this.instance);
-                        this.instance.load(deferredLoad);
+                        TagSerializer.deserialize(data, this.instance);
+                        this.instance.load(data);
                     } catch (SerializationException e) {
                         throw new RuntimeException(e);
                     }
-                }
-                this.deferredLoad = null;
-                if (worldObj.isRemote) {
-                    worldObj.notifyBlockChange(xCoord, yCoord, zCoord, this.getBlockType());
-                    worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
                 }
             }
         }

@@ -3,15 +3,15 @@ package cam72cam.mod.input;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
-import cam72cam.mod.util.Hand;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 
+/** Only used for MC bugfixes, don't use directly */
 public class Mouse {
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
@@ -41,13 +41,13 @@ public class Mouse {
 
     public static class MousePressPacket extends Packet {
         @TagField
-        private Hand hand;
+        private Player.Hand hand;
         @TagField
         private Entity target;
 
         public MousePressPacket() {}
 
-        MousePressPacket(Hand hand, Entity target) {
+        MousePressPacket(Player.Hand hand, Entity target) {
             this.hand = hand;
             this.target = target;
         }

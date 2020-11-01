@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/** Internal, do not use directly */
 class Data {
     @SidedProxy(clientSide = "cam72cam.mod.resource.Data$ClientProxy", serverSide = "cam72cam.mod.resource.Data$ServerProxy", modId = ModCore.MODID)
     public static DataProxy proxy;
@@ -27,10 +28,12 @@ class Data {
 
         public abstract List<InputStream> getResourceStreamAll(Identifier identifier) throws IOException;
 
-        public InputStream getResourceStream(Identifier location) throws IOException {
+        private InputStream getResourceStream(Identifier location, boolean reverse) throws IOException {
             InputStream chosen = null;
             List<InputStream> resources = getResourceStreamAll(location);
-            Collections.reverse(resources);
+            if (reverse) {
+                Collections.reverse(resources);
+            }
             for (InputStream strm : resources) {
                 if (chosen == null) {
                     chosen = strm;
@@ -42,6 +45,13 @@ class Data {
                 throw new java.io.FileNotFoundException(location.toString());
             }
             return chosen;
+        }
+
+        public InputStream getResourceStream(Identifier location) throws IOException {
+            return getResourceStream(location, true);
+        }
+        public InputStream getLastResourceStream(Identifier location) throws IOException {
+            return getResourceStream(location, false);
         }
 
         String pathString(Identifier location, boolean startingSlash) {

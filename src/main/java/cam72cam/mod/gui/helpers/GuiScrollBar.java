@@ -4,8 +4,8 @@ import net.minecraft.client.Minecraft;
 import cpw.mods.fml.client.config.GuiSlider;
 import org.lwjgl.opengl.GL11;
 
-public class GuiScrollBar extends GuiSlider {
-
+/** Internal scrollbar class */
+class GuiScrollBar extends GuiSlider {
 
     public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, ISlider par) {
         super(id, xPos, yPos, width, height, displayStr, displayStr, minVal, maxVal, currentVal, true, false, par);

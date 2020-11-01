@@ -5,6 +5,7 @@ import cam72cam.mod.ModCore;
 import cpw.mods.fml.common.SidedProxy;
 import net.minecraft.client.resources.I18n;
 
+/** Client side translation utility */
 @SuppressWarnings("deprecation")
 public class TextUtil {
     public static String translate(String name) {

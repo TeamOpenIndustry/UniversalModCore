@@ -5,7 +5,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
-import cam72cam.mod.item.ItemBase;
+import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
@@ -21,26 +21,33 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/** Item Render Registry (Here be dragons...) */
 public class ItemRender {
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
-    private static Map<ItemBase, String> icons = new HashMap<>();
+    private static Map<CustomItem, String> icons = new HashMap<>();
 
-    public static String getIcon(ItemBase itemBase) {
+    public static String getIcon(CustomItem itemBase) {
         return icons.get(itemBase);
     }
 
-    public static void register(ItemBase item, Identifier tex) {
+    /** Register a simple image for an item */
+    public static void register(CustomItem item, Identifier tex) {
         icons.put(item, tex.toString());
     }
 
-    public static void register(ItemBase item, IItemModel model) {
+    /** Register a complex model for an item */
+    public static void register(CustomItem item, IItemModel model) {
+        // Link Item to Item Registry Name
         ClientEvents.MODEL_CREATE.subscribe(() ->
                 MinecraftForgeClient.registerItemRenderer(item.internal, new BakedItemModel(model))
         );
 
+        // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel) {
             ClientEvents.RELOAD.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
@@ -55,6 +62,7 @@ public class ItemRender {
         }
     }
 
+    /** Different contexts in which an item can be rendered */
     public enum ItemRenderType {
         NONE(null),
         THIRD_PERSON_LEFT_HAND(null),
@@ -86,9 +94,13 @@ public class ItemRender {
         }
     }
 
+    /** Custom Item Model */
     @FunctionalInterface
     public interface IItemModel {
+        /** Provide a model to render */
         StandardModel getModel(World world, ItemStack stack);
+
+        /** Apply GL transformations based on the render context */
         default void applyTransform(ItemRenderType type) {
             defaultTransform(type);
         }
@@ -96,6 +108,7 @@ public class ItemRender {
             switch (type) {
                 case FRAME:
                     GL11.glRotated(90, 0, 1, 0);
+                    GL11.glTranslated(-0.9, 0, 0);
                     break;
                 case HEAD:
                     GL11.glTranslated(-0.5, 1, 0);
@@ -105,12 +118,15 @@ public class ItemRender {
         }
     }
 
+    /** Support for turning a custom model into a sprite */
     public interface ISpriteItemModel extends IItemModel {
+        /** Unique string to represent this stack */
         String getSpriteKey(ItemStack stack);
+        /** Model that should be rendered as a sprite */
         StandardModel getSpriteModel(ItemStack stack);
     }
 
-
+    /** Internal method to render a model to a framebuffer and drop it in the texture sheet */
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
@@ -164,7 +180,9 @@ public class ItemRender {
         }
     }
 
+    /** Custom Model where we can hack into the MC/Forge render system */
     static class BakedItemModel implements IItemRenderer {
+        private ItemStack stack;
         private final IItemModel model;
 
         BakedItemModel(IItemModel model) {
