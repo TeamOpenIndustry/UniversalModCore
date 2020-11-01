@@ -103,7 +103,7 @@ public class ItemStack {
 
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
-        return internal == stack.internal || internal != null && internal.isItemEqual(stack.internal);
+        return internal == stack.internal || internal != null && stack.internal != null && internal.isItemEqual(stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
