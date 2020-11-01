@@ -8,6 +8,7 @@ import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
@@ -196,8 +197,11 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        itemRender.zLevel = this.zLevel+1;
-        itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
+        /*
+        1.7.10 disabled due to polluting GL state...
+            itemRender.zLevel = this.zLevel + 1;
+            itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
+         */
 
         try (
                 OpenGL.With color = OpenGL.color(1, 1, 1, 1);
@@ -207,7 +211,6 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         ) {
             Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
         }
-        OpenGL.color(1, 1, 1, 1);
     }
 
     @Override
@@ -218,7 +221,6 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
-            OpenGL.color(1, 1, 1, 1);
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId.replace("minecraft:blocks/", ""));
@@ -228,6 +230,5 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         ) {
             super.drawTexturedModelRectFromIcon(x, y, sprite, 16, 16);
         }
-        OpenGL.color(1, 1, 1, 1);
     }
 }
