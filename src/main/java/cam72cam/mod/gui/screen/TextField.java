@@ -20,6 +20,15 @@ public class TextField {
                     super.setText(text);
                 }
             }
+
+            @Override
+            public void writeText(String p_writeText_1_) {
+                String orig = this.getText();
+                super.writeText(p_writeText_1_);
+                if (!validator.test(getText())) {
+                    setText(orig);
+                }
+            }
         };
         builder.addTextField(this);
     }
@@ -32,7 +41,7 @@ public class TextField {
 
     /** Validator that can block a string from being entered */
     public void setValidator(Predicate<String> filter) {
-        this.validator = validator;
+        this.validator = filter;
     }
 
     /** Move cursor to this text field */
