@@ -16,7 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.UMCWorldAccessor;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -177,11 +176,9 @@ public abstract class BlockTypeEntity extends BlockType {
 
         @Override
         public IBlockState getExtendedState(IBlockState origState, IBlockAccess access, BlockPos pos) {
-            // Try to get the "real" world object
-            net.minecraft.tileentity.TileEntity teorig = access.getTileEntity(pos);
-            if (teorig != null && teorig.hasWorld()) {
-
-                Object te = World.get(teorig.getWorld()).getBlockEntity(new Vec3i(pos), cam72cam.mod.block.BlockEntity.class);
+            World world = getWorldOrNull(access, pos);
+            if (world != null) {
+                BlockEntity te = world.getBlockEntity(new Vec3i(pos), BlockEntity.class);
                 if (te != null) {
                     IExtendedBlockState state = (IExtendedBlockState) origState;
                     state = state.withProperty(BLOCK_DATA, te);
@@ -192,12 +189,15 @@ public abstract class BlockTypeEntity extends BlockType {
         }
 
         @Override
-        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        protected World getWorldOrNull(IBlockAccess source, BlockPos pos) {
+            if (source instanceof net.minecraft.world.World) {
+                return World.get((net.minecraft.world.World) source);
+            }
             net.minecraft.tileentity.TileEntity te = source.getTileEntity(pos);
             if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
-                return BoundingBox.from(((TileEntity) te).instance().getBoundingBox());
+                return ((TileEntity) te).getUMCWorld();
             }
-            return Block.FULL_BLOCK_AABB;
+            return null;
         }
     }
 }
