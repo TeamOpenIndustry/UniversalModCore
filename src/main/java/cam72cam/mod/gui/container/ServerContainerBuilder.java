@@ -33,6 +33,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     final Consumer<IContainerBuilder> draw;
     final int slotsX;
     final int slotsY;
+    int ySize = 0;
     private final IInventory playerInventory;
     Map<ContainerSection, List<Slot>> slotRefs = new HashMap<>();
 
@@ -89,6 +90,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
         for (int slotID = start; slotID < start + cols; slotID++) {
             drawSlot(handler, slotID, x + (slotID - start) * slotSize, y);
         }
+        this.ySize = Math.max(ySize, y + slotSize);
         return y + slotSize;
     }
 
@@ -102,21 +104,25 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
         for (int slotID = start; slotID < (handler != null ? handler.getSlotCount() : cols); slotID += cols) {
             y = drawSlotRow(handler, slotID, cols, x, y);
         }
+        this.ySize = Math.max(ySize, y);
         return y;
     }
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
+        this.ySize = Math.max(ySize, y + bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
+        this.ySize = Math.max(ySize, y + bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
+        this.ySize = Math.max(ySize, y + midBarHeight);
         return y + midBarHeight;
     }
 
@@ -178,6 +184,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
         slotRefs.put(ContainerSection.INVENTORY_NOT_HOTBAR, inventorySlots.subList(offset + 0, offset + 27));
         slotRefs.put(ContainerSection.INVENTORY_HOTBAR, inventorySlots.subList(offset + 27, offset + 36));
 
+        this.ySize = Math.max(ySize, currY);
         return currY;
     }
 

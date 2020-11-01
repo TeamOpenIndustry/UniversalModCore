@@ -38,7 +38,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         super(serverContainer);
         this.server = serverContainer;
         this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
-        this.ySize = (114 + serverContainer.slotsY * slotSize);
+        this.ySize = server.ySize;
         this.valid = valid;
     }
 
