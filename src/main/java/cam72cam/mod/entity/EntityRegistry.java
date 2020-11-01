@@ -77,6 +77,7 @@ public class EntityRegistry {
         });
     }
 
+    /*
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
@@ -88,5 +89,5 @@ public class EntityRegistry {
                 missingResources = null;
             }
         });
-    }
+    }*/
 }
