@@ -191,8 +191,11 @@ public abstract class BlockType {
         }
 
         @Override
-        public void onNeighborChange(IBlockAccess world, int posX, int posY, int posZ, int neighborX, int neighborY, int neighborZ) {
-            BlockType.this.onNeighborChange(World.get((net.minecraft.world.World) world), new Vec3i(posX, posY, posZ), new Vec3i(neighborX, neighborY, neighborZ));
+        public void onNeighborChange(IBlockAccess blockAccess, int posX, int posY, int posZ, int neighborX, int neighborY, int neighborZ) {
+            World world = getWorldOrNull(blockAccess, posX, posY, posZ);
+            if (world != null) {
+                BlockType.this.onNeighborChange(world, new Vec3i(posX, posY, posZ), new Vec3i(neighborX, neighborY, neighborZ));
+            }
         }
 
         /*
@@ -222,6 +225,10 @@ public abstract class BlockType {
             return false;
         }
 
+        protected World getWorldOrNull(IBlockAccess source, int posX, int posY, int posZ) {
+            return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World)source) : null;
+        }
+
         private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
         @Override
         public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
@@ -233,8 +240,9 @@ public abstract class BlockType {
         }
 
         public void setBlockBoundsBasedOnState(IBlockAccess p_149719_1_, int p_149719_2_, int p_149719_3_, int p_149719_4_) {
-            if (p_149719_1_ instanceof net.minecraft.world.World) {
-                IBoundingBox box = getBoundingBox(World.get((net.minecraft.world.World) p_149719_1_), new Vec3i(p_149719_2_, p_149719_3_, p_149719_4_));
+            World world = getWorldOrNull(p_149719_1_, p_149719_2_, p_149719_3_, p_149719_4_);
+            if (world != null) {
+                IBoundingBox box = getBoundingBox(world, new Vec3i(p_149719_2_, p_149719_3_, p_149719_4_));
                 minX = box.min().x;
                 minY = box.min().y;
                 minZ = box.min().z;
@@ -280,13 +288,21 @@ public abstract class BlockType {
         @Override
         public int isProvidingWeakPower(IBlockAccess blockAccess, int posX, int posY, int posZ, int side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            World world = getWorldOrNull(blockAccess, posX, posY, posZ);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(world, new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            }
+            return 0;
         }
 
         @Override
         public int isProvidingStrongPower(IBlockAccess blockAccess, int posX, int posY, int posZ, int side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            World world = getWorldOrNull(blockAccess, posX, posY, posZ);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(world, new Vec3i(posX, posY, posZ), Facing.from((byte) side)) : 0;
+            }
+            return 0;
         }
 
         @Override

@@ -165,29 +165,16 @@ public abstract class BlockTypeEntity extends BlockType {
             return constructBlockEntity().supplier(id);
         }
 
-        public void setBlockBoundsBasedOnState(IBlockAccess source, int posX, int posY, int posZ) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(posX, posY, posZ);
-            if (entity == null) {
-                super.setBlockBoundsBasedOnState(source, posX, posY, posZ);
-            }
-
-            IBoundingBox box = getBoundingBox(World.get(entity.getWorld()), new Vec3i(posX, posY, posZ));
-            minX = box.min().x;
-            minY = box.min().y;
-            minZ = box.min().z;
-            maxX = box.max().x;
-            maxY = box.max().y;
-            maxZ = box.max().z;
-        }
-
-        private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
         @Override
-        public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
-            net.minecraft.tileentity.TileEntity entity = source.getTileEntity(posX, posY, posZ);
-            if (entity == null) {
-                return super.getCollisionBoundingBoxFromPool(source, posX, posY, posZ);
+        protected World getWorldOrNull(IBlockAccess source, int posX, int posY, int posZ) {
+            if (source instanceof net.minecraft.world.World) {
+                return World.get((net.minecraft.world.World) source);
             }
-            return bbCache.get(getBoundingBox(World.get(entity.getWorld()), new Vec3i(posX, posY, posZ)));
+            net.minecraft.tileentity.TileEntity te = source.getTileEntity(posX, posY, posZ);
+            if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
+                return ((TileEntity) te).getUMCWorld();
+            }
+            return null;
         }
     }
 }
