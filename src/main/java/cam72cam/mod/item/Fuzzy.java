@@ -38,7 +38,7 @@ public class Fuzzy {
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.brick_block);
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
     public static final Fuzzy CONCRETE = new Fuzzy("concrete").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.hardened_clay, 1, OreDictionary.WILDCARD_VALUE)));
-    public static final Fuzzy DIRT = new Fuzzy("dirt");
+    public static final Fuzzy DIRT = new Fuzzy("dirt").add(Blocks.dirt);
     public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, OreDictionary.WILDCARD_VALUE)));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
     public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.paper);
