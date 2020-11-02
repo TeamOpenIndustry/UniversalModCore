@@ -229,11 +229,11 @@ public abstract class BlockType {
             return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World)source) : null;
         }
 
-        private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
+        /*private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
         @Override
         public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
-            return bbCache.get(getBoundingBox(World.get(source), new Vec3i(posX, posY, posZ)));
-        }
+            return bbCache.get(getBoundingBox(World.get(source), new Vec3i(posX, posY, posZ)).offset(new Vec3d(posX, posY, posZ)));
+        }*/
 
         public void addCollisionBoxesToList(net.minecraft.world.World source, int posX, int posY, int posZ, AxisAlignedBB other, List list, Entity ent) {
             super.addCollisionBoxesToList(source, posX, posY, posZ, other, list, ent);
@@ -252,10 +252,11 @@ public abstract class BlockType {
             }
         }
 
+        /*
         @Override
         public AxisAlignedBB getSelectedBoundingBoxFromPool(net.minecraft.world.World worldIn, int posX, int posY, int posZ) {
             return getCollisionBoundingBoxFromPool(worldIn, posX, posY, posZ);
-        }
+        }*/
 
         /* Removed 1.7.10
         @Override

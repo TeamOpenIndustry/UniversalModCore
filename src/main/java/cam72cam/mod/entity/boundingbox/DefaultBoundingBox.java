@@ -46,7 +46,7 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public IBoundingBox offset(Vec3d vec3d) {
-        return IBoundingBox.from(internal.offset(vec3d.x, vec3d.y, vec3d.z));
+        return IBoundingBox.from(internal.copy().offset(vec3d.x, vec3d.y, vec3d.z));
     }
 
     @Override
