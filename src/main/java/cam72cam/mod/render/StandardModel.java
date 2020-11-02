@@ -51,7 +51,7 @@ public class StandardModel {
 
     /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.wool, 1, color.internal)), translate, scale);
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), translate, scale);
         return this;
     }
 
