@@ -230,9 +230,9 @@ public class ItemRender {
             switch (type) {
                 case GUI:
                     GL11.glRotated(180, 1, 0, 0);
-                    GL11.glRotated(180, 0, 1, 0);
-                    GL11.glScaled(16, 16, 16);
-                    GL11.glTranslated(-1, -1, 0);
+                    //GL11.glRotated(180, 0, 1, 0);
+                    GL11.glScaled(16, 16, -16);
+                    GL11.glTranslated(0, -1, 0);
                     break;
                 case FIRST_PERSON_RIGHT_HAND:
                     GL11.glRotated(90, 0, 1, 0);
