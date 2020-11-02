@@ -25,6 +25,6 @@ public enum Color {
     public final int internal;
 
     Color(int internal) {
-        this.internal = internal;
+        this.internal = 15-internal;
     }
 }
