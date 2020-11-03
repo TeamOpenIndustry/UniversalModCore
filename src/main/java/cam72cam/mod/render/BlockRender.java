@@ -43,12 +43,13 @@ public class BlockRender {
             Create new array to prevent CME's with poorly behaving mods
             TODO: Opt out of renderGlobal!
              */
-            List tes = (List) new ArrayList(Minecraft.getMinecraft().theWorld.loadedTileEntityList).stream()
+            /*List tes = (List) new ArrayList(Minecraft.getMinecraft().theWorld.loadedTileEntityList).stream()
+                    .filter()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
             Minecraft.getMinecraft().renderGlobal.tileEntities.removeAll(prev);
             Minecraft.getMinecraft().renderGlobal.tileEntities.addAll(tes);
-            prev = tes;
+            prev = tes;*/
         });
     }
 
