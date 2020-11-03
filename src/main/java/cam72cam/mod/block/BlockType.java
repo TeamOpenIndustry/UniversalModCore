@@ -229,14 +229,15 @@ public abstract class BlockType {
             return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World)source) : null;
         }
 
-        /*private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache = new SingleCache<>(BoundingBox::from);
-        @Override
-        public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World source, int posX, int posY, int posZ) {
-            return bbCache.get(getBoundingBox(World.get(source), new Vec3i(posX, posY, posZ)).offset(new Vec3d(posX, posY, posZ)));
-        }*/
 
-        public void addCollisionBoxesToList(net.minecraft.world.World source, int posX, int posY, int posZ, AxisAlignedBB other, List list, Entity ent) {
-            super.addCollisionBoxesToList(source, posX, posY, posZ, other, list, ent);
+        @Override
+        public AxisAlignedBB getCollisionBoundingBoxFromPool(net.minecraft.world.World p_149668_1_, int p_149668_2_, int p_149668_3_, int p_149668_4_) {
+            World world = getWorldOrNull(p_149668_1_, p_149668_2_, p_149668_3_, p_149668_4_);
+            if (world != null) {
+                IBoundingBox box = getBoundingBox(world, new Vec3i(p_149668_2_, p_149668_3_, p_149668_4_));
+                return BoundingBox.from(box).copy().offset(p_149668_2_, p_149668_3_, p_149668_4_);
+            }
+            return super.getCollisionBoundingBoxFromPool(p_149668_1_, p_149668_2_, p_149668_3_, p_149668_4_);
         }
 
         public void setBlockBoundsBasedOnState(IBlockAccess p_149719_1_, int p_149719_2_, int p_149719_3_, int p_149719_4_) {

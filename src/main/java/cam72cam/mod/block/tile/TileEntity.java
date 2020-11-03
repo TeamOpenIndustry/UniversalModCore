@@ -251,7 +251,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     /* Forge Overrides */
 
     private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
-            new SingleCache<>(internal -> BoundingBox.from(internal).offset(xCoord, yCoord, zCoord));
+            new SingleCache<>(internal -> BoundingBox.from(internal).copy().offset(xCoord, yCoord, zCoord));
     /**
      * @return Instance's bounding box
      * @see BlockEntity
