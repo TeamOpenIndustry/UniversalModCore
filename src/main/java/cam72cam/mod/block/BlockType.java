@@ -235,7 +235,7 @@ public abstract class BlockType {
             World world = getWorldOrNull(p_149668_1_, p_149668_2_, p_149668_3_, p_149668_4_);
             if (world != null) {
                 IBoundingBox box = getBoundingBox(world, new Vec3i(p_149668_2_, p_149668_3_, p_149668_4_));
-                return BoundingBox.from(box).copy().offset(p_149668_2_, p_149668_3_, p_149668_4_);
+                return BoundingBox.from(box).getOffsetBoundingBox(p_149668_2_, p_149668_3_, p_149668_4_);
             }
             return super.getCollisionBoundingBoxFromPool(p_149668_1_, p_149668_2_, p_149668_3_, p_149668_4_);
         }

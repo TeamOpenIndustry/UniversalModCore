@@ -64,6 +64,11 @@ public class BoundingBox extends AxisAlignedBB {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
+    @Override
+    public AxisAlignedBB getOffsetBoundingBox(double x, double y, double z) {
+        return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
+    }
+
     /* Interactions */
     @Override
     public double calculateXOffset(AxisAlignedBB other, double offsetX) {
