@@ -114,6 +114,7 @@ public class BlockRender {
                             }
                         }
                     }
+                    return true;
                 } else {
                     // TODO
                 }
