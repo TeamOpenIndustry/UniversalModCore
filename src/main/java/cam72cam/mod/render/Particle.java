@@ -53,6 +53,7 @@ public abstract class Particle {
                     ip.posX = posX;
                     ip.posY = posY;
                     ip.posZ = posZ;
+                    this.noClip = true;
                 }
 
                 /*1.7.10 @Override
