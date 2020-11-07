@@ -439,7 +439,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public AxisAlignedBB getBoundingBox() {
-        return cachedCollisionBB.get(iCollision.getCollision());
+        return cachedCollisionBB.get(iCollision.getCollision()).copy();
     }
 
     /**
