@@ -6,13 +6,12 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
-import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockRayTraceResult;
 
+/** Wrapper around EntityPlayer */
 public class Player extends Entity {
     public final PlayerEntity internal;
 
@@ -58,7 +57,36 @@ public class Player extends Entity {
         return IInventory.from(internal.inventory);
     }
 
+    /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.onItemUse(new ItemUseContext(internal, hand.internal, new BlockRayTraceResult(hit.internal, Direction.DOWN, pos.internal, false))));
+        return ClickResult.from(getHeldItem(hand).internal.onItemUse(new ItemUseContext(internal, hand.internal, new BlockRayTraceResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
+    }
+
+    /** What direction the player is trying to move and how fast */
+    public Vec3d getMovementInput() {
+        return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+    }
+
+    public enum Hand {
+        PRIMARY(net.minecraft.util.Hand.MAIN_HAND),
+        SECONDARY(net.minecraft.util.Hand.OFF_HAND),
+        ;
+
+        public final net.minecraft.util.Hand internal;
+
+        Hand(net.minecraft.util.Hand internal) {
+            this.internal = internal;
+        }
+
+        public static Hand from(net.minecraft.util.Hand hand) {
+            switch (hand) {
+                case MAIN_HAND:
+                    return PRIMARY;
+                case OFF_HAND:
+                    return SECONDARY;
+                default:
+                    return null;
+            }
+        }
     }
 }

@@ -3,8 +3,11 @@ package cam72cam.mod.item;
 import net.minecraft.util.ActionResultType;
 
 public enum ClickResult {
+    /** Handled */
     ACCEPTED(ActionResultType.SUCCESS),
+    /** Unhandled */
     PASS(ActionResultType.PASS),
+    /** Handled, but cancelled */
     REJECTED(ActionResultType.FAIL),
     ;
 

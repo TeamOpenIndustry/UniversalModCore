@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class EntityRegistry {
-    private static final Map<Class<? extends Entity>, EntityType<?>> registered = new HashMap<>();
+    private static final Map<Class<? extends CustomEntity>, EntityType<?>> registered = new HashMap<>();
 
     private static String missingResources;
 
@@ -29,20 +29,20 @@ public class EntityRegistry {
 
     }
 
-    public static void register(ModCore.Mod mod, Supplier<Entity> ctr, EntitySettings settings, int distance) {
-        Entity tmp = ctr.get();
-        Class<? extends Entity> type = tmp.getClass();
+    public static void register(ModCore.Mod mod, Supplier<CustomEntity> ctr, int distance) {
+        CustomEntity tmp = ctr.get();
+        Class<? extends CustomEntity> type = tmp.getClass();
         Identifier id = new Identifier(mod.modID(), type.getSimpleName());
 
         // TODO expose updateFreq and vecUpdates
 
         CommonEvents.Entity.REGISTER.subscribe(() -> {
-            EntityType.Builder<net.minecraft.entity.Entity> builder = EntityType.Builder.create((et, world) -> new ModdedEntity(et, world, ctr, settings), EntityClassification.MISC)
+            EntityType.Builder<net.minecraft.entity.Entity> builder = EntityType.Builder.create((et, world) -> new ModdedEntity(et, world, ctr), EntityClassification.MISC)
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
                     .setUpdateInterval(20)
-                    .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr, settings));
-            if (settings.immuneToFire) {
+                    .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr));
+            if (ctr.get().isImmuneToFire()) {
                 builder = builder.immuneToFire();
             }
             EntityType<net.minecraft.entity.Entity> et = builder.build(id.toString());
@@ -52,8 +52,10 @@ public class EntityRegistry {
         });
     }
 
-    public static Entity create(World world, Class<? extends Entity> cls) {
-        return ((ModdedEntity)registered.get(cls).create(world.internal)).getSelf();
+    public static CustomEntity create(World world, Class<? extends Entity> cls) {
+        //TODO null checks
+        ModdedEntity ent = (ModdedEntity) registered.get(cls).create(world.internal);
+        return ent.getSelf();
     }
 
     public static void registerEvents() {

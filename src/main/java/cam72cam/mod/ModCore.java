@@ -6,13 +6,13 @@ import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
-import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
+import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.profiler.IProfiler;
@@ -38,12 +38,15 @@ import org.apache.logging.log4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+
+/** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(ModCore.MODID)
 public class ModCore {
     public static final String MODID = "universalmodcore";
@@ -51,20 +54,23 @@ public class ModCore {
     public static final String VERSION = "0.1.0";
     public static ModCore instance;
     public static boolean hasResources;
-    static List<Supplier<Mod>> modCtrs = new ArrayList<>();
     private static boolean isInReload;
 
-    private List<Mod> mods;
+    private static List<Mod> mods = new ArrayList<>();
     private Logger logger;
 
-    public static void register(Supplier<Mod> ctr) {
-        modCtrs.add(ctr);
+    /** Register a mod, must happen before UMC is loaded! */
+    public static void register(Mod ctr) {
+        mods.add(ctr);
     }
 
+    /** Called during Mod Construction phase */
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
-        mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
+
+        ModCore.register(new Internal());
+
         proxy.event(ModEvent.CONSTRUCT);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
@@ -76,16 +82,19 @@ public class ModCore {
         MinecraftForge.EVENT_BUS.register(this);
     }
 
+    /** INIT Phase (Forge) */
     public void preInit(FMLCommonSetupEvent event) {
         logger = LogManager.getLogger();
         proxy.event(ModEvent.INITIALIZE);
         hasResources = true;
     }
 
+    /** SETUP Phase (Forge) */
     public void init(InterModEnqueueEvent event) {
         proxy.event(ModEvent.SETUP);
     }
 
+    /** FINALIZE Phase (Forge) */
     public void postInit(FMLLoadCompleteEvent event) {
         proxy.event(ModEvent.FINALIZE);
     }
@@ -94,20 +103,28 @@ public class ModCore {
         Command.registration(event.getCommandDispatcher());
     }
 
+    /** START Phase (Forge) */
     public void serverStarted(FMLServerStartedEvent event) {
         proxy.event(ModEvent.START);
     }
 
+    /** Implement this to create a UMC mod */
     public static abstract class Mod {
         public abstract String modID();
 
+        /** Called both server and client side with a given event */
         public abstract void commonEvent(ModEvent event);
+        /** Called client side with a given event */
         public abstract void clientEvent(ModEvent event);
+        /** Called server side with a given event */
         public abstract void serverEvent(ModEvent event);
 
+        /** Get config file for filename */
         public final Path getConfig(String fname) {
             return Paths.get(FMLPaths.CONFIGDIR.get().toString(), fname);
         }
+
+        /* Standard logging functions */
 
         public static void debug(String msg, Object...params) {
             ModCore.debug(msg, params);
@@ -127,26 +144,31 @@ public class ModCore {
     }
 
     private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+    /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
+            proxy = this;
         }
 
         public void event(ModEvent event) {
-            instance.mods.forEach(m -> m.commonEvent(event));
+            instance.mods.forEach(m -> event(event, m));
+        }
+        public void event(ModEvent event, Mod m) {
+            m.commonEvent(event);
         }
     }
 
     public static class ClientProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.clientEvent(event));
+        public void event(ModEvent event, Mod m) {
+            super.event(event, m);
+            m.clientEvent(event);
         }
     }
 
     public static class ServerProxy extends Proxy {
-        public void event(ModEvent event) {
-            super.event(event);
-            instance.mods.forEach(m -> m.serverEvent(event));
+        public void event(ModEvent event, Mod m) {
+            super.event(event, m);
+            m.serverEvent(event);
         }
     }
 
@@ -154,10 +176,6 @@ public class ModCore {
         return isInReload;
     }
 
-
-    static {
-        ModCore.register(Internal::new);
-    }
 
     public static class Internal extends Mod {
         public int skipN = 0;
@@ -172,14 +190,17 @@ public class ModCore {
             switch (event) {
                 case CONSTRUCT:
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
-                    Packet.register(Keyboard.MovementPacket::new, PacketDirection.ClientToServer);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
                 case SETUP:
-                    //World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
+                    CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
+                    break;
+                case FINALIZE:
+                    ChunkManager.setup();
                     break;
                 case START:
                     break;

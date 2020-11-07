@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/** OreDict / Tag abstraction.  Use for item equivalence */
 public class Fuzzy {
     static Map<String, Fuzzy> tags = new HashMap<>();
 
@@ -98,6 +99,7 @@ public class Fuzzy {
     private List<Item> customItems = new ArrayList<>();
     private List<Fuzzy> subTags = new ArrayList<>();
 
+    /** Create fuzzy with this name */
     public Fuzzy(String ident) {
         this.ident = ident;
         if (tags.containsKey(ident)) {
@@ -120,38 +122,46 @@ public class Fuzzy {
         return values;
     }
 
+    /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
         return values().stream().anyMatch(potential -> potential == stack.internal.getItem());
     }
 
+    /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return values().stream().map(ItemStack::new).collect(Collectors.toList());
+        return values().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
     }
 
+    /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
         return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
     }
 
+    /** Use to register an itemstack */
     public Fuzzy add(ItemStack item) {
         add(item.internal.getItem());
         return this;
     }
 
+    /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Block block) {
         add(block.asItem());
         return this;
     }
 
+    /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
         customItems.add(item);
         return this;
     }
 
-    public void add(ItemBase item) {
+    /** Use to register an item */
+    public void add(CustomItem item) {
         add(item.internal);
     }
 
+    /** Copy all from this other fuzzy into this one.  Does not track updates to other */
     public Fuzzy addAll(Fuzzy other) {
         if (!other.ident.equals(this.ident)) {
             subTags.add(other);

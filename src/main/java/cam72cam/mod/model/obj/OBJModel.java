@@ -7,7 +7,6 @@ import com.google.common.hash.HashingInputStream;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -31,8 +30,20 @@ public class OBJModel {
 
     public final long hash;
 
-    private Map<String, Vec3d> mins = new HashMap<>();
-    private Map<String, Vec3d> maxs = new HashMap<>();
+    private final Map<String, Vec3d> mins = new HashMap<>();
+    private final Map<String, Vec3d> maxs = new HashMap<>();
+
+    public enum Vert {
+        X(0),
+        Y(1),
+        Z(2);
+
+        private final int pt;
+
+        Vert(int i) {
+            this.pt = i;
+        }
+    }
 
     public OBJModel(Identifier modelLoc, float darken) throws Exception {
         this(modelLoc, darken, 1);
@@ -40,7 +51,7 @@ public class OBJModel {
 
     public OBJModel(Identifier modelLoc, float darken, double scale) throws Exception {
         long hash = 0;
-        HashingInputStream input = new HashingInputStream(Hashing.sha256(), modelLoc.getResourceStream());
+        HashingInputStream input = new HashingInputStream(Hashing.sha256(), modelLoc.getLastResourceStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         this.darken = darken;
         this.modelLoc = modelLoc;
@@ -164,7 +175,7 @@ public class OBJModel {
 
             Material currentMTL = null;
 
-            input = new HashingInputStream(Hashing.sha256(), modelLoc.getRelative(materialPath).getResourceStream());
+            input = new HashingInputStream(Hashing.sha256(), modelLoc.getRelative(materialPath).getLastResourceStream());
             reader = new BufferedReader(new InputStreamReader(input));
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("#")) {
@@ -250,34 +261,50 @@ public class OBJModel {
         }
 
         for (String group : groups()) {
-            Vec3d min = null;
+            float minX = 0;
+            float minY = 0;
+            float minZ = 0;
+            boolean init = true;
             int[] faces = groups.get(group);
             for (int face : faces) {
                 for (int[] point : points(face)) {
-                    Vec3d v = vertices(point[0]);
-                    if (min == null) {
-                        min = v;
-                    } else {
-                        min = min.min(v);
+                    if (init) {
+                        init = false;
+                        minX = vertex(point[0], Vert.X);
+                        minY = vertex(point[0], Vert.Y);
+                        minZ = vertex(point[0], Vert.Z);
+                        continue;
                     }
+
+                    minX = Math.min(minX, vertex(point[0], Vert.X));
+                    minY = Math.min(minY, vertex(point[0], Vert.Y));
+                    minZ = Math.min(minZ, vertex(point[0], Vert.Z));
                 }
             }
-            mins.put(group, min);
+            mins.put(group, new Vec3d(minX, minY, minZ));
         }
         for (String group : groups()) {
-            Vec3d max = null;
+            float maxX = 0;
+            float maxY = 0;
+            float maxZ = 0;
+            boolean init = true;
             int[] faces = groups.get(group);
             for (int face : faces) {
                 for (int[] point : points(face)) {
-                    Vec3d v = vertices(point[0]);
-                    if (max == null) {
-                        max = v;
-                    } else {
-                        max = max.max(v);
+                    if (init) {
+                        init = false;
+                        maxX = vertex(point[0], Vert.X);
+                        maxY = vertex(point[0], Vert.Y);
+                        maxZ = vertex(point[0], Vert.Z);
+                        continue;
                     }
+
+                    maxX = Math.max(maxX, vertex(point[0], Vert.X));
+                    maxY = Math.max(maxY, vertex(point[0], Vert.Y));
+                    maxZ = Math.max(maxZ, vertex(point[0], Vert.Z));
                 }
             }
-            maxs.put(group, max);
+            maxs.put(group, new Vec3d(maxX, maxY, maxZ));
         }
         this.hash = hash;
     }
@@ -347,12 +374,12 @@ public class OBJModel {
         return max.z - min.z;
     }
 
-    public Vec3d vertices(int i) {
-        return new Vec3d(vertices[i * 3 + 0], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+    public float vertex(int i, Vert comp) {
+        return vertices[i * 3 + comp.pt];
     }
 
-    public Vec3d vertexNormals(int i) {
-        return new Vec3d(vertexNormals[i * 3 + 0], vertexNormals[i * 3 + 1], vertexNormals[i * 3 + 2]);
+    public float vertexNormal(int i, Vert comp) {
+        return vertexNormals[i * 3 + comp.pt];
     }
 
     public Vec2f vertexTextures(int i) {

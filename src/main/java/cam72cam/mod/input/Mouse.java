@@ -3,14 +3,15 @@ package cam72cam.mod.input;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
-import cam72cam.mod.util.Hand;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/** Only used for MC bugfixes, don't use directly */
 public class Mouse {
     @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
@@ -20,7 +21,7 @@ public class Mouse {
             // We need to override that distance because train centers are further away
             // than 36m.
 
-            if (Minecraft.getInstance().objectMouseOver == null || MinecraftClient.getPlayer() == null || Minecraft.getInstance().currentScreen != null) {
+            if (Minecraft.getInstance().objectMouseOver == null || !MinecraftClient.isReady() || Minecraft.getInstance().currentScreen != null) {
                 return true;
             }
 
@@ -40,20 +41,22 @@ public class Mouse {
 
     public static class MousePressPacket extends Packet {
         @TagField
-        private Hand hand;
+        private Player.Hand hand;
         @TagField
         private Entity target;
 
         public MousePressPacket() {}
 
-        MousePressPacket(Hand hand, Entity target) {
+        MousePressPacket(Player.Hand hand, Entity target) {
             this.hand = hand;
             this.target = target;
+            System.out.println("SENDING " + target.getUUID());
         }
 
         @Override
         public void handle() {
             if (target != null) {
+                System.out.println("GOT " + target.getUUID());
                 switch (hand) {
                     case PRIMARY:
                         getPlayer().internal.interactOn(target.internal, hand.internal);
@@ -62,6 +65,8 @@ public class Mouse {
                         getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);
                         break;
                 }
+            } else {
+                System.out.println("NULL " + getWorld());
             }
         }
     }

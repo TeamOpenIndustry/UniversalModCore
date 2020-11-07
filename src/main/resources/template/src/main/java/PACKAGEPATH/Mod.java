@@ -8,7 +8,7 @@ public class Mod {
 
     static {
         try {
-            ModCore.register(#PACKAGE#.#CLASS#::new);
+            ModCore.register(new #PACKAGE#.#CLASS#());
         } catch (Exception e) {
             throw new RuntimeException("Could not load mod " + MODID, e);
         }

@@ -8,6 +8,7 @@ import net.minecraft.util.SoundCategory;
 import java.util.ArrayList;
 import java.util.List;
 
+/** We have our own sound manager that wraps the minecraft internal sound manager to fix some bugs/limitations */
 public class ModSoundManager {
     private List<ISound> sounds = new ArrayList<ISound>();
     private float lastSoundLevel;
@@ -23,6 +24,7 @@ public class ModSoundManager {
         return snd;
     }
 
+    /** Called by modcore every tick to update all known sounds */
     public void tick() {
         float dampenLevel = 1;
         if (MinecraftClient.getPlayer().getRiding() != null) {
@@ -41,7 +43,7 @@ public class ModSoundManager {
         if (MinecraftClient.getPlayer().getTickCount() % 20 == 0) {
             // Clean up disposed sounds
 
-            List<ISound> toRemove = new ArrayList<ISound>();
+            List<ISound> toRemove = new ArrayList<>();
             for (ISound sound : this.sounds) {
                 if (sound.isDisposable() && !sound.isPlaying()) {
                     toRemove.add(sound);
@@ -56,19 +58,19 @@ public class ModSoundManager {
         }
     }
 
-    public boolean hasSounds() {
+    boolean hasSounds() {
         return this.sounds.size() != 0;
     }
 
-    public void stop() {
+    void stop() {
         for (ISound sound : this.sounds) {
             sound.stop();
             sound.terminate();
         }
-        this.sounds = new ArrayList<ISound>();
+        this.sounds = new ArrayList<>();
     }
 
-    public void handleReload(boolean soft) {
+    void handleReload(boolean soft) {
         if (soft) {
             for (ISound sound : this.sounds) {
                 sound.stop();

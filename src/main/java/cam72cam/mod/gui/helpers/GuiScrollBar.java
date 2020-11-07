@@ -2,8 +2,8 @@ package cam72cam.mod.gui.helpers;
 
 import net.minecraftforge.fml.client.config.GuiSlider;
 
-public class GuiScrollBar extends GuiSlider {
-
+/** Internal scrollbar class */
+class GuiScrollBar extends GuiSlider {
 
     public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, IPressable par) {
         super(xPos, yPos, width, height, displayStr, displayStr, minVal, maxVal, currentVal, true, false, par);

@@ -1,7 +1,9 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.util.Hand;
 
+import cam72cam.mod.entity.Player;
+
+/** Basic checkbox */
 public abstract class CheckBox extends Button {
     public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
         super(builder, x-25, y, 200, 20, (enabled ? "X" : "█") + " " + text);
@@ -12,7 +14,7 @@ public abstract class CheckBox extends Button {
     }
 
     @Override
-    protected void onClickInternal(Hand hand) {
+    protected void onClickInternal(Player.Hand hand) {
         this.setChecked(!this.isChecked());
         super.onClickInternal(hand);
     }
