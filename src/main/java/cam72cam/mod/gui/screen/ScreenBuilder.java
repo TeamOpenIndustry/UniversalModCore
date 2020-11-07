@@ -23,6 +23,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final Map<GuiButton, Button> buttonMap = new HashMap<>();
     private final List<GuiTextField> textFields = new ArrayList<>();
     private final Supplier<Boolean> valid;
+    private GuiButton selectedButton;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         this.screen = screen;
@@ -131,13 +132,21 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             GuiButton guibutton = super.buttonList.get(i);
 
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
-                //TODO 1.11.2 will this break anything? this.selectedButton = guibutton;
+                this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
                 buttonMap.get(guibutton).onClick(mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
             }
         }
 
         this.textFields.forEach(x -> x.mouseClicked(mouseX, mouseY, mouseButton));
+    }
+
+    protected void mouseReleased(int p_mouseReleased_1_, int p_mouseReleased_2_, int p_mouseReleased_3_) {
+        if (this.selectedButton != null && p_mouseReleased_3_ == 0) {
+            this.selectedButton.mouseReleased(p_mouseReleased_1_, p_mouseReleased_2_);
+            this.selectedButton = null;
+        }
+
     }
 
     // Default overrides
