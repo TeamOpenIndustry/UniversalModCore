@@ -74,7 +74,7 @@ public class Player extends Entity {
     private static final Map<UUID, Vec3d> serverMovement = new HashMap<>();
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
-        return !internal.worldObj.isRemote && serverMovement.containsKey(getUUID()) ?
+        return serverMovement.containsKey(getUUID()) ?
                 serverMovement.get(getUUID()) :
                 new Vec3d(internal.moveStrafing, internal.motionY, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
     }
@@ -92,6 +92,9 @@ public class Player extends Entity {
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
             if (MinecraftClient.isReady()) {
+                // The following line is the wrong way to do this
+                serverMovement.remove(MinecraftClient.getPlayer().getUUID());
+
                 Vec3d movement = MinecraftClient.getPlayer().getMovementInput();
                 if (!movement.equals(posCache)) {
                     posCache = movement;
@@ -118,6 +121,30 @@ public class Player extends Entity {
         @Override
         protected void handle() {
             serverMovement.put(this.getPlayer().getUUID(), movement);
+            new MovementSync2EB(this.getPlayer().getUUID(), movement).sendToAll();
+        }
+    }
+
+    public static class MovementSync2EB extends Packet {
+        @TagField
+        private Vec3d movement;
+        @TagField
+        private UUID player;
+
+        public MovementSync2EB() {
+            // Reflection
+        }
+
+        public MovementSync2EB(UUID player, Vec3d movement) {
+            this.player = player;
+            this.movement = movement;
+        }
+
+        @Override
+        protected void handle() {
+            if (!MinecraftClient.getPlayer().getUUID().equals(player)) {
+                serverMovement.put(player, movement);
+            }
         }
     }
 }

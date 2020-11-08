@@ -180,6 +180,7 @@ public class ModCore {
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Packet.register(Player.MovementSync::new, PacketDirection.ClientToServer);
+                    Packet.register(Player.MovementSync2EB::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
