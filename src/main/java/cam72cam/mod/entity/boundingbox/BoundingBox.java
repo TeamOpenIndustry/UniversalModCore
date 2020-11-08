@@ -60,6 +60,11 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
+    public AxisAlignedBB contract(double x, double y, double z) {
+        return new BoundingBox(internal.grow(new Vec3d(-x, -y, -z)));
+    }
+
+    @Override
     public BoundingBox offset(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
@@ -88,7 +93,7 @@ public class BoundingBox extends AxisAlignedBB {
     @Override
     public boolean intersectsWith(AxisAlignedBB other) {
         return super.intersectsWith(other) && // Fast check
-            internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ)); // Slow check
+                internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ)); // Slow check
     }
 
     @Override
@@ -112,5 +117,10 @@ public class BoundingBox extends AxisAlignedBB {
             }
         }
         return null;
+    }
+
+    public AxisAlignedBB copy() {
+        //System.out.println("Shake hands with danger");
+        return this;
     }
 }

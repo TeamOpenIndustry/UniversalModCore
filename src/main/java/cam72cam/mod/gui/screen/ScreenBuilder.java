@@ -140,6 +140,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         this.textFields.forEach(x -> x.mouseClicked(mouseX, mouseY, mouseButton));
     }
 
+
+    @Override
     protected void mouseReleased(int p_mouseReleased_1_, int p_mouseReleased_2_, int p_mouseReleased_3_) {
         if (this.selectedButton != null && p_mouseReleased_3_ == 0) {
             this.selectedButton.mouseReleased(p_mouseReleased_1_, p_mouseReleased_2_);
