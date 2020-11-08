@@ -13,6 +13,9 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
+import net.minecraftforge.common.crafting.ConditionalRecipe;
+import net.minecraftforge.common.crafting.conditions.ItemExistsCondition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +66,6 @@ public class Recipes extends RecipeProvider {
             builder.patternLine(line);
         }
         System.out.println("ADDED BUILDER!");
-        registry.add(builder::build);
+        registry.add(o -> ConditionalRecipe.builder().addCondition(new ItemExistsCondition("forge:ingots/steel")).addRecipe(builder::build).build(o, Registry.ITEM.getKey(result.internal.getItem())));
     }
 }
