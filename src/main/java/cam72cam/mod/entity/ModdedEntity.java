@@ -505,7 +505,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
         @Override
         protected void handle() {
-            target.addPassenger(rider);
+            if (target != null) {
+                target.addPassenger(rider);
+            }
         }
     }
 

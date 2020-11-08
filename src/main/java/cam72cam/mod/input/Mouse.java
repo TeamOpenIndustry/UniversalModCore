@@ -50,13 +50,11 @@ public class Mouse {
         MousePressPacket(Player.Hand hand, Entity target) {
             this.hand = hand;
             this.target = target;
-            System.out.println("SENDING " + target.getUUID());
         }
 
         @Override
         public void handle() {
-            if (target != null) {
-                System.out.println("GOT " + target.getUUID());
+            if (target != null && getPlayer() != null) {
                 switch (hand) {
                     case PRIMARY:
                         getPlayer().internal.interactOn(target.internal, hand.internal);
@@ -65,8 +63,6 @@ public class Mouse {
                         getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);
                         break;
                 }
-            } else {
-                System.out.println("NULL " + getWorld());
             }
         }
     }
