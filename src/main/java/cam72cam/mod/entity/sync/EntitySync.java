@@ -44,7 +44,7 @@ public class EntitySync extends TagCompound {
             NBTBase newVal = internal.getTag(key);
             if (old.internal.hasKey(key)) {
                 NBTBase oldVal = old.internal.getTag(key);
-                if (newVal.equals(oldVal)) {
+                if (newVal.toString().equals(oldVal.toString())) {
                     continue;
                 }
             }
