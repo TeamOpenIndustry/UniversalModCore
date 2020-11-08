@@ -53,8 +53,8 @@ public class GuiRegistry {
 
     /** Handle to a Entity GUI that can be opened both client and server side */
     @FunctionalInterface
-    public interface EntityGUI {
-        void open(Player player, Entity entity);
+    public interface EntityGUI<T extends Entity> {
+        void open(Player player, T entity);
     }
 
     /** Handle to a Block GUI that can be opened both client and server side */
@@ -122,7 +122,7 @@ public class GuiRegistry {
     }
 
     /** Register a Entity based GUI */
-    public static <T extends Entity> EntityGUI registerEntity(Class<T> cls, Function<T, IScreen> ctr) {
+    public static <T extends Entity> EntityGUI<T> registerEntity(Class<T> cls, Function<T, IScreen> ctr) {
         int id = intFromName(cls.toString());
         registry.put(id, event -> {
             if (event.isServer) {
@@ -143,7 +143,7 @@ public class GuiRegistry {
     }
 
     /** Register a Entity based Container */
-    public static <T extends Entity> EntityGUI registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
+    public static <T extends Entity> EntityGUI<T> registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
         int id = intFromName(("container" + cls.toString()));
         registry.put(id, event -> {
             T entity = event.player.getWorld().getEntity(event.entityIDorX, cls);
