@@ -19,7 +19,7 @@ public class Event<T> {
     public void post(Runnable callback) {
         post.add(callback);
     }
-    void execute(Consumer<T> handler) {
+    public void execute(Consumer<T> handler) {
         pre.forEach(Runnable::run);
         callbacks.forEach(handler);
         post.forEach(Runnable::run);

@@ -42,17 +42,22 @@ public class GlobalRender {
     public static void registerClientEvents() {
         // Beacon like hack for always running a single global render during the TE render phase
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntityRenderer<GlobalRenderHelper>() {
-                @Override
-                public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
-                    renderFuncs.forEach(r -> r.accept(partialTicks));
-                }
+            try {
+                ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntityRenderer<GlobalRenderHelper>() {
+                    @Override
+                    public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
+                        renderFuncs.forEach(r -> r.accept(partialTicks));
+                    }
 
-                @Override
-                public boolean isGlobalRenderer(GlobalRenderHelper te) {
-                    return true;
-                }
-            });
+                    @Override
+                    public boolean isGlobalRenderer(GlobalRenderHelper te) {
+                        return true;
+                    }
+                });
+            } catch (ExceptionInInitializerError ex) {
+                // data generator pass
+                System.out.println("Shake hands with danger");
+            }
         });
         ClientEvents.TICK.subscribe(() -> {
             Minecraft.getInstance().worldRenderer.updateTileEntities(grhList, grhList);

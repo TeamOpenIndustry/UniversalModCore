@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
@@ -119,11 +118,6 @@ public class CommonEvents {
         public static void registerItems(RegistryEvent.Register<net.minecraft.item.Item> event) {
             Item.REGISTER.execute(Runnable::run);
         }
-
-        /*@SubscribeEvent
-        public static void registerRecipes(RegistryEvent.Register<IRecipe> event) {
-            Recipe.REGISTER.execute(Runnable::run);
-        }*/
 
         @SubscribeEvent
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {

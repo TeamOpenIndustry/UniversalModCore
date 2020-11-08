@@ -1,6 +1,8 @@
 package cam72cam.mod.input;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.event.ClientEvents;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -128,6 +130,10 @@ public class Keyboard {
     @OnlyIn(Dist.CLIENT)
     /** Registers a keybind */
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
+        if (Minecraft.getInstance() == null) {
+            System.out.println("Shake hands with danger!");
+            return;
+        }
         KeyBinding key = new KeyBinding(name, keyCode.code, category);
         ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
