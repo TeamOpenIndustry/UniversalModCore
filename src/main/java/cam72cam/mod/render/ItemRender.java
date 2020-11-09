@@ -348,6 +348,7 @@ public class ItemRender {
                 if (!ModCore.isInReload()) {
                     RenderType.getSolid().setupRenderState();
                     GL11.glPushMatrix();
+                    RenderSystem.multMatrix(mat.getLast().getMatrix());
                     model.applyTransform(type);
                     //std.renderCustom();
                     std.render();

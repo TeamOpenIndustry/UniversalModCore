@@ -73,10 +73,11 @@ public abstract class Particle {
 
                 @Override
                 public void renderParticle(IVertexBuilder buffer, ActiveRenderInfo renderInfo, float partialTicks) {
+                    net.minecraft.util.math.Vec3d vec3d = renderInfo.getProjectedView();
                     ip.ticks = age;
-                    ip.renderX = posX - prevPosX + this.motionX * partialTicks;
-                    ip.renderY = posY - prevPosY + this.motionY * partialTicks;
-                    ip.renderZ = posZ - prevPosZ + this.motionZ * partialTicks;
+                    ip.renderX = posX + posX - prevPosX + this.motionX * partialTicks - vec3d.x;
+                    ip.renderY = posY + posY - prevPosY + this.motionY * partialTicks - vec3d.y;
+                    ip.renderZ = posZ + posZ - prevPosZ + this.motionZ * partialTicks - vec3d.z;
 
                     if (renderer == null) {
                         try (OpenGL.With c = OpenGL.matrix()) {
