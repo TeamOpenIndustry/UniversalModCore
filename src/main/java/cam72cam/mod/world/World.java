@@ -35,6 +35,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -116,22 +117,32 @@ public class World {
         });
     }
 
+    @OnlyIn(Dist.CLIENT)
+    private Iterable<net.minecraft.entity.Entity> clientEntities() {
+        return internal instanceof ClientWorld ? ((ClientWorld) internal).getAllEntities() : ((ServerWorld) internal).getEntities()::iterator;
+    }
+
+    @OnlyIn(Dist.DEDICATED_SERVER)
+    private Iterable<net.minecraft.entity.Entity> serverEntities() {
+        return ((ServerWorld) internal).getEntities()::iterator;
+    }
+
     private void checkLoadedEntities() {
         Iterable<net.minecraft.entity.Entity> internalEntities = DistExecutor.runForDist(
-                () -> ((ClientWorld) internal)::getAllEntities,
-                () -> () -> ((ServerWorld) internal).getEntities()::iterator
+                () -> this::clientEntities,
+                () -> this::serverEntities
         );
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.entity.Entity entity : internalEntities) {
             if (!this.entityByID.containsKey(entity.getEntityId())) {
-                ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
                 this.onEntityAdded(entity);
             }
         }
         for (Entity entity : new ArrayList<>(this.entityByID.values())) {
             if (internal.getEntityByID(entity.getId()) == null) {
-                ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                ModCore.debug("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                 this.onEntityRemoved(entity.internal);
             }
         }
