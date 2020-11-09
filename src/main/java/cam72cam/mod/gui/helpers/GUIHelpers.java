@@ -4,6 +4,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -27,14 +28,14 @@ public class GUIHelpers {
             OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, false);
             OpenGL.With blend = OpenGL.bool(GL11.GL_BLEND, true)
         ) {
-            AbstractGui.fill(x, y, x + width, y + height, color);
+            AbstractGui.fill(new MatrixStack(), x, y, x + width, y + height, color);
         }
     }
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
         try (OpenGL.With t = OpenGL.texture(tex)) {
-            AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
+            AbstractGui.blit(new MatrixStack(), x, y, 0, 0, 1, 1, width, height, 1, 1);
         }
     }
 
@@ -99,7 +100,7 @@ public class GUIHelpers {
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
-            Minecraft.getInstance().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getInstance().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+            Minecraft.getInstance().fontRenderer.drawStringWithShadow(new MatrixStack(), text, (float) (x - Minecraft.getInstance().fontRenderer.getStringWidth(text) / 2), (float) y, color);
         }
     }
 

@@ -51,7 +51,7 @@ class BakedScaledModel implements IBakedModel {
                     newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
                 }
 
-                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.func_187508_a(), quad.shouldApplyDiffuseLighting()));
+                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.applyDiffuseLighting()));
             }
         }
 
@@ -69,7 +69,7 @@ class BakedScaledModel implements IBakedModel {
     }
 
     @Override
-    public boolean func_230044_c_() {
+    public boolean isSideLit() {
         return false;
     }
 

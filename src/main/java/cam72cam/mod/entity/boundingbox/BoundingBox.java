@@ -2,6 +2,7 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.vector.Vector3d;
 
 import java.util.Optional;
 
@@ -93,7 +94,7 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public Optional<net.minecraft.util.math.Vec3d> rayTrace(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
+    public Optional<Vector3d> rayTrace(Vector3d vecA, Vector3d vecB) {
         int steps = 10;
         double xDist = vecB.x - vecA.x;
         double yDist = vecB.y - vecA.y;

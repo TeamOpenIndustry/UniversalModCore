@@ -17,7 +17,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.*;
 import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
@@ -26,6 +25,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.ItemStackTileEntityRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Direction;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -59,7 +59,7 @@ public class ItemRender {
         SimpleModelTransform foo = new SimpleModelTransform(ImmutableMap.of());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                new Material(AtlasTexture.LOCATION_BLOCKS_TEXTURE, tex.internal)
+                new RenderMaterial(AtlasTexture.LOCATION_BLOCKS_TEXTURE, tex.internal)
         )).bake(new IModelConfiguration() {
             @Nullable
             @Override
@@ -78,7 +78,7 @@ public class ItemRender {
             }
 
             @Override
-            public Material resolveTexture(String name) {
+            public RenderMaterial resolveTexture(String name) {
                 return null;
             }
 
@@ -297,7 +297,7 @@ public class ItemRender {
         }
 
         @Override
-        public boolean func_230044_c_() {
+        public boolean isSideLit() {
             return false;
         }
 
@@ -367,7 +367,7 @@ public class ItemRender {
             }
 
             @Override
-            public IBakedModel getModelWithOverrides(IBakedModel model, net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, @Nullable LivingEntity entityIn) {
+            public IBakedModel getOverrideModel(IBakedModel model, net.minecraft.item.ItemStack stack, @Nullable ClientWorld worldIn, @Nullable LivingEntity entityIn) {
                 BakedItemModel.this.stack = new ItemStack(stack);
                 return BakedItemModel.this;
             }

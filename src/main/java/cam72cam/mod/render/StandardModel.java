@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ILightReader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -34,8 +33,8 @@ public class StandardModel {
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
         BlockState gravelState = block.getDefaultState();//.getStateFromMeta(stack.internal.getMetadata());
-        if (block instanceof LogBlock) {
-            gravelState = gravelState.with(LogBlock.AXIS, Direction.Axis.Z);
+        if (block instanceof RotatedPillarBlock) {
+            gravelState = gravelState.with(RotatedPillarBlock.AXIS, Direction.Axis.Z);
         }
         return gravelState;
     }
@@ -45,7 +44,7 @@ public class StandardModel {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
                 .map(x -> Block.getBlockFromItem(x.internal.getItem()))
-                .filter(x -> x.getMaterialColor(null, null, null) == color.internal.getMapColor())
+                .filter(x -> x.getMaterialColor() == color.internal.getMapColor())
                 .map(Block::getDefaultState)
                 .findFirst().get();
 

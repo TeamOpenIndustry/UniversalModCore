@@ -166,7 +166,7 @@ public class BlockRender {
                 }
 
                 @Override
-                public boolean func_230044_c_() {
+                public boolean isSideLit() {
                     return false;
                 }
 
@@ -177,7 +177,7 @@ public class BlockRender {
 
                 @Override
                 public TextureAtlasSprite getParticleTexture() {
-                    if (block.internal.getMaterial(null) == Material.IRON) {
+                    if (block.internal.getMaterialColor() == Material.IRON.getColor()) {
                         return Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(Blocks.IRON_BLOCK.getDefaultState()).getParticleTexture();
                     }
                     return Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(Blocks.STONE.getDefaultState()).getParticleTexture();

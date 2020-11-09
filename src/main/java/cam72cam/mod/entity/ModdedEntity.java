@@ -16,6 +16,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import cam72cam.mod.util.SingleCache;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
@@ -193,8 +194,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Player Interact */
     /** @see IClickable */
     @Override
-    public final boolean processInitialInteract(PlayerEntity player, net.minecraft.util.Hand hand) {
-        return iClickable.onClick(new Player(player), Player.Hand.from(hand)) == ClickResult.ACCEPTED;
+    public final ActionResultType processInitialInteract(PlayerEntity player, net.minecraft.util.Hand hand) {
+        return iClickable.onClick(new Player(player), Player.Hand.from(hand)).internal;
     }
 
     /* Death */
@@ -389,10 +390,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /* ICollision NOTE: set width/height if implementing LivingEntity */
     /** @see #getEntityBoundingBox() */
+    /* Removed 1.16
     @Override
     public AxisAlignedBB getCollisionBoundingBox() {
         return getBoundingBox();
-    }
+    }*/
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes

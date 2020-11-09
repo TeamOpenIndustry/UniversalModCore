@@ -3,10 +3,12 @@ package cam72cam.mod.item;
 import cam72cam.mod.config.ConfigFile;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.ItemTagsProvider;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
@@ -30,8 +32,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold");
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(new ItemTags.Wrapper(new ResourceLocation("forge", "ingots/steel")), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(new ItemTags.Wrapper(new ResourceLocation("forge", "storage_blocks/steel")), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron");
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -93,7 +95,7 @@ public class Fuzzy {
 
     static Map<String, Fuzzy> registered;
     private final String ident;
-    final Tag<Item> tag;
+    final ITag.INamedTag<Item> tag;
     private final List<Item> customItems;
     private final Set<Fuzzy> includes;
 
@@ -110,13 +112,13 @@ public class Fuzzy {
 
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
-        this(new ItemTags.Wrapper(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
-                        new ResourceLocation("forge", ident.toLowerCase())
+        this(ItemTags.makeWrapperTag(
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()).toString() :
+                        new ResourceLocation("forge", ident.toLowerCase()).toString()
         ), ident);
     }
 
-    private Fuzzy(Tag<Item> tag, String ident) {
+    private Fuzzy(ITag.INamedTag<Item> tag, String ident) {
         if (registered == null) {
             registered = new HashMap<>();
         }
@@ -184,17 +186,19 @@ public class Fuzzy {
     }
 
     public static void register(DataGenerator gen) {
-        gen.addProvider(new ItemTagsProvider(gen) {
+        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen);
+        gen.addProvider(blocktagsprovider);
+        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider) {
             @Override
             protected void registerTags() {
                 for (Fuzzy value : registered.values()) {
                     if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        Tag.Builder<Item> builder = getBuilder(value.tag);
+                        Builder<Item> builder = getOrCreateBuilder(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
                         }
                         for (Fuzzy include : value.includes) {
-                            builder.add(include.tag);
+                            builder.addTag(include.tag);
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 
+import net.minecraft.advancements.criterion.EntityPredicate;
 import net.minecraft.advancements.criterion.InventoryChangeTrigger;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.advancements.criterion.MinMaxBounds;
@@ -61,6 +62,7 @@ public class Recipes extends RecipeProvider {
                         builder.addCriterion(
                                 "has" + ingredient.toString() + idx,
                                 new InventoryChangeTrigger.Instance(
+                                        EntityPredicate.AndPredicate.ANY_AND,
                                         MinMaxBounds.IntBound.UNBOUNDED,
                                         MinMaxBounds.IntBound.UNBOUNDED,
                                         MinMaxBounds.IntBound.UNBOUNDED,
@@ -78,10 +80,10 @@ public class Recipes extends RecipeProvider {
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
                     ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();
                     for (Fuzzy dependency : dependencies) {
-                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.getId())));
+                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.getName())));
                     }
                     for (Fuzzy conflict : conflicts) {
-                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getId()));
+                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getName()));
                     }
                     conditions.addRecipe(builder::build).build(out, name);
                 } else {

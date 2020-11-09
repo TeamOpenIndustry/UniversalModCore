@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
 
@@ -47,7 +48,7 @@ public abstract class Particle {
 
         return data -> {
             I ip = ctr.apply(data);
-            net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
+            net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle((ClientWorld)data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
                     maxAge = data.lifespan;
                     motionX = data.motion.x;

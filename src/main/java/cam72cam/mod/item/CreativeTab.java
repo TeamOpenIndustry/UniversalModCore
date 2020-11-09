@@ -2,6 +2,10 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.text.TextUtil;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.function.Supplier;
 
@@ -18,10 +22,12 @@ public class CreativeTab {
             public net.minecraft.item.ItemStack createIcon() {
                 return stack.get().internal;
             }
-            @Override
-            public String getTranslationKey() {
-                return TextUtil.translate(super.getTranslationKey());
+
+            @OnlyIn(Dist.CLIENT)
+            public ITextComponent getGroupName() {
+                return new StringTextComponent(TextUtil.translate("itemGroup." + label));
             }
+
         };
     }
 

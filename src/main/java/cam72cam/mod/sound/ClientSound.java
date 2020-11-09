@@ -37,7 +37,7 @@ class ClientSound implements ISound {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
             AudioFormat fmt = stream.getAudioFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
-            ByteBuffer buffer = stream.func_216455_a(sizeBytes);
+            ByteBuffer buffer = stream.readOggSoundWithCapacity(sizeBytes);
             AudioStreamBuffer sound = new AudioStreamBuffer(buffer, fmt);
             for (int i = 0; i< 4; i++) {
                 sound.getUntrackedBuffer().ifPresent(bufferId -> {

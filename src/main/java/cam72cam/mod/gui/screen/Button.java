@@ -5,6 +5,7 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
 
 import cam72cam.mod.entity.Player;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.function.Consumer;
 
@@ -17,7 +18,7 @@ public abstract class Button {
         private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalButton(int xIn, int yIn, int widthIn, int heightIn, String msg) {
-            super(xIn, yIn, widthIn, heightIn, msg);
+            super(xIn, yIn, widthIn, heightIn, new StringTextComponent(msg));
         }
 
         @Override
@@ -68,12 +69,12 @@ public abstract class Button {
 
     /** Currently displayed text */
     public String getText() {
-        return button.getMessage();
+        return button.getMessage().getUnformattedComponentText();
     }
 
     /** Override current text */
     public void setText(String text) {
-        button.setMessage(text);
+        button.setMessage(new StringTextComponent(text));
     }
 
     protected void onClickInternal(Player.Hand hand) {

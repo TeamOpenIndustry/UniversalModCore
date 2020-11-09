@@ -51,7 +51,7 @@ public class Entity {
                 posCache.y != internal.getPosY() ||
                 posCache.z != internal.getPosZ() )
         ) {
-            posCache = new Vec3d(internal.getPositionVector());
+            posCache = new Vec3d(internal.getPositionVec());
         }
         return posCache;
     }

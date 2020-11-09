@@ -1,6 +1,7 @@
 package cam72cam.mod.gui.helpers;
 
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.widget.Slider;
 
 
@@ -8,7 +9,7 @@ import net.minecraftforge.fml.client.gui.widget.Slider;
 class GuiScrollBar extends Slider {
 
     public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, Button.IPressable par) {
-        super(xPos, yPos, width, height, displayStr, displayStr, minVal, maxVal, currentVal, true, false, par);
+        super(xPos, yPos, width, height, new StringTextComponent(displayStr), new StringTextComponent(displayStr), minVal, maxVal, currentVal, true, false, par);
     }
 
     /* TODO

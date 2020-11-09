@@ -59,12 +59,12 @@ public class CommonEvents {
         // World
         @SubscribeEvent
         public static void onWorldLoad(WorldEvent.Load event) {
-            World.LOAD.execute(x -> x.accept(event.getWorld().getWorld()));
+            World.LOAD.execute(x -> x.accept((net.minecraft.world.World)event.getWorld()));
         }
 
         @SubscribeEvent
         public static void onWorldUnload(WorldEvent.Unload event) {
-            World.UNLOAD.execute(x -> x.accept(event.getWorld().getWorld()));
+            World.UNLOAD.execute(x -> x.accept((net.minecraft.world.World)event.getWorld()));
         }
 
         @SubscribeEvent
@@ -91,7 +91,7 @@ public class CommonEvents {
         }
         @SubscribeEvent
         public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
-            if (!Block.BROKEN.executeCancellable(x -> x.onBroken(event.getWorld().getWorld(), event.getPos(), event.getPlayer()))) {
+            if (!Block.BROKEN.executeCancellable(x -> x.onBroken((net.minecraft.world.World)event.getWorld(), event.getPos(), event.getPlayer()))) {
                 event.setCanceled(true);
             }
         }

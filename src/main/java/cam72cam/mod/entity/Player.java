@@ -9,6 +9,7 @@ import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockRayTraceResult;
 
 /** Wrapper around EntityPlayer */
@@ -25,7 +26,7 @@ public class Player extends Entity {
     }
 
     public void sendMessage(PlayerMessage o) {
-        internal.sendMessage(o.internal);
+        internal.sendMessage(o.internal, Util.DUMMY_UUID);
     }
 
     public boolean isCrouching() {

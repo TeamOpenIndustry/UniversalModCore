@@ -105,7 +105,7 @@ public class ModCore {
     }
 
     public void serverStarting(FMLServerStartingEvent event) {
-        Command.registration(event.getCommandDispatcher());
+        Command.registration(null);
     }
 
     /** START Phase (Forge) */

@@ -92,13 +92,13 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.getDimension().getType())), new Message(this));
+        net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.getDimensionKey())), new Message(this));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
         net.minecraft.entity.Entity internal = entity.internal;
-        int syncDist = entity.internal.getType().getTrackingRange();
+        int syncDist = entity.internal.getType().func_233602_m_();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
 

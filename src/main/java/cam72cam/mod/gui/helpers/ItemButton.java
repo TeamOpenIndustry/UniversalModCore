@@ -2,11 +2,13 @@ package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.widget.button.AbstractButton;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.util.text.StringTextComponent;
 import org.lwjgl.opengl.GL11;
 
 /** Internal item button class */
@@ -14,13 +16,13 @@ public abstract class ItemButton extends AbstractButton {
     public ItemStack stack;
 
     public ItemButton(ItemStack stack, int x, int y) {
-        super(x, y, 32, 32, "");
+        super(x, y, 32, 32, new StringTextComponent(""));
         this.stack = stack;
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        AbstractGui.fill(x, y, x + 32, y + 32, 0xFFFFFFFF);
+    public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
+        AbstractGui.fill(ms, x, y, x + 32, y + 32, 0xFFFFFFFF);
         // Pollutes global state...
         RenderHelper.enableStandardItemLighting();
         Minecraft mc = Minecraft.getInstance();

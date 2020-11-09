@@ -37,7 +37,7 @@ minecraft {
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
     // TODO Stable my ass! mappings channel: 'stable', version: '60-1.15'
-    mappings channel: 'snapshot', version: '20201108-1.15.1'
+    mappings channel: 'snapshot', version: '20201028-1.16.3'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -98,7 +98,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.15.2-31.2.45'
+    minecraft 'net.minecraftforge:forge:1.16.4-35.0.7'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"

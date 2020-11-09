@@ -19,6 +19,7 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
@@ -131,8 +132,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void read(CompoundNBT compound) {
-        super.read(compound);
+    public final void read(BlockState state, CompoundNBT compound) {
+        super.read(state, compound);
         hasTileData = true;
 
         TagCompound data = new TagCompound(compound);
@@ -184,7 +185,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     /** Active Synchronization from markDirty */
     @Override
     public final void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        handleUpdateTag(pkt.getNbtCompound());
+        handleUpdateTag(world.getBlockState(pos), pkt.getNbtCompound());
     }
 
     /** Active Synchronization from markDirty */
@@ -204,9 +205,9 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void handleUpdateTag(CompoundNBT tag) {
+    public final void handleUpdateTag(BlockState state, CompoundNBT tag) {
         try {
-            this.read(tag);
+            this.read(state, tag);
             if (instance() != null) {
                 try {
                     instance().readUpdate(new TagCompound(tag));

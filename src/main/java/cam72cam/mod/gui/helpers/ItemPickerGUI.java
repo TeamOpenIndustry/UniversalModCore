@@ -1,11 +1,12 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.StringTextComponent;
 
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class ItemPickerGUI {
 
     /** Internal screen that actually renders and chooses the items */
     private class ItemPickerScreen extends Screen {
-        private Map<Widget, Vec3i> buttonCoordList = new HashMap<>();
+        private Map<Widget, Vector3i> buttonCoordList = new HashMap<>();
         private GuiScrollBar scrollBar;
 
         protected ItemPickerScreen() {
@@ -59,9 +60,9 @@ public class ItemPickerGUI {
         }
 
         @Override
-        public void render(int mouseX, int mouseY, float partialTicks) {
-            this.renderBackground();
-            super.render(mouseX, mouseY, partialTicks);
+        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+            this.renderBackground(matrixStack);
+            super.render(matrixStack, mouseX, mouseY, partialTicks);
 
             for (Widget button : this.buttons) {
                 if (button instanceof GuiScrollBar) continue;
@@ -69,7 +70,7 @@ public class ItemPickerGUI {
                     button.y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                    this.renderTooltip(((ItemButton) button).stack.internal, mouseX, mouseY);
+                    this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
                 }
             }
         }
@@ -104,7 +105,7 @@ public class ItemPickerGUI {
                         onExit.accept(stack);
                     }
                 });
-                this.buttonCoordList.put(this.buttons.get(this.buttons.size()-1), new Vec3i(startX + col * 32, startY + row * 32, 0));
+                this.buttonCoordList.put(this.buttons.get(this.buttons.size()-1), new Vector3i(startX + col * 32, startY + row * 32, 0));
             }
             int rows = i / stacksX + 2;
             if (stacksY < rows) {

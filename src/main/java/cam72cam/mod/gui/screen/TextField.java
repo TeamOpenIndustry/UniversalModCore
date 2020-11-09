@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.function.Predicate;
 
@@ -12,7 +13,7 @@ public class TextField extends Button {
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         super(
                 builder,
-                new TextFieldWidget(Minecraft.getInstance().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, "")
+                new TextFieldWidget(Minecraft.getInstance().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, new StringTextComponent(""))
         );
     }
 

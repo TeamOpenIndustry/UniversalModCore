@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.text.StringTextComponent;
@@ -17,6 +18,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
     private Map<Widget, Button> buttonMap = new HashMap<>();
     private final Supplier<Boolean> valid;
+    private MatrixStack stack;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         super(new StringTextComponent(""));
@@ -77,7 +79,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void drawCenteredString(String str, int x, int y, int color) {
-        super.drawCenteredString(this.font, str, this.width / 2 + x, this.height / 4 + y, color);
+        super.drawCenteredString(stack, this.font, str, this.width / 2 + x, this.height / 4 + y, color);
     }
 
     @Override
@@ -98,7 +100,8 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks) {
+        this.stack = stack;
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
@@ -106,7 +109,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         screen.draw(this);
 
         // draw buttons
-        super.render(mouseX, mouseY, partialTicks);
+        super.render(stack, mouseX, mouseY, partialTicks);
     }
 
     @Override

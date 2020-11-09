@@ -10,8 +10,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.MultiplayerScreen;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -85,8 +87,8 @@ public class EntityRegistry {
             if (missingResources != null && !Minecraft.getInstance().isSingleplayer() && Minecraft.getInstance().getConnection() != null) {
                 ModCore.error(missingResources);
                 Minecraft.getInstance().getConnection().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
-                Minecraft.getInstance().loadWorld(null);
-                Minecraft.getInstance().displayGuiScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
+                Minecraft.getInstance().loadWorld((ClientWorld)null); // TODO 1.16
+                Minecraft.getInstance().displayGuiScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), new TranslationTextComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

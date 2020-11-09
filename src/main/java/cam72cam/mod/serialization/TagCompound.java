@@ -175,7 +175,7 @@ public class TagCompound {
         return setter(key, entity, () -> {
             TagCompound data = new TagCompound();
             data.setUUID("id", entity.getUUID());
-            data.setInteger("world", entity.getWorld().getId());
+            data.setString("world", entity.getWorld().getId());
             set(key, data);
         });
     }
@@ -269,11 +269,11 @@ public class TagCompound {
     }
 
     public World getWorld(String key, boolean isClient) {
-        return getter(key, () -> World.get(getInteger(key), isClient));
+        return getter(key, () -> World.get(getString(key), isClient));
     }
 
     public TagCompound setWorld(String key, World world) {
-        return setter(key, world, () -> setInteger(key, world.getId()));
+        return setter(key, world, () -> setString(key, world.getId()));
     }
 
     public <T extends BlockEntity> T getTile(String key, boolean isClient) {
@@ -289,7 +289,7 @@ public class TagCompound {
                 return null;
             }
 
-            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(ted.get("data").internal);
+            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.readTileEntity(null, ted.get("data").internal);
             te.setWorldAndPos(world.internal, te.getPos());
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();

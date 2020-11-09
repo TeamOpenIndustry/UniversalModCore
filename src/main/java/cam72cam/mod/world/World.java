@@ -28,6 +28,7 @@ import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.chunk.Chunk;
@@ -49,8 +50,8 @@ import java.util.stream.Collectors;
 public class World {
 
     /* Static access to loaded worlds */
-    private static final Map<Integer, World> clientWorlds = new HashMap<>();
-    private static final Map<Integer, World> serverWorlds = new HashMap<>();
+    private static final Map<String, World> clientWorlds = new HashMap<>();
+    private static final Map<String, World> serverWorlds = new HashMap<>();
     private static final List<Consumer<World>> onTicks = new ArrayList<>();
 
     /** Internal, do not use */
@@ -73,12 +74,12 @@ public class World {
     }
 
     /** Helper function to get a world map (client or server) */
-    private static Map<Integer, World> getWorldMap(net.minecraft.world.World world) {
+    private static Map<String, World> getWorldMap(net.minecraft.world.World world) {
         return world.isRemote ? clientWorlds : serverWorlds;
     }
     /** Helper function to get a world in it's respective map */
     private static World getWorld(net.minecraft.world.World world){
-        return getWorldMap(world).get(world.getDimension().getType().getId());
+        return getWorldMap(world).get(world.getDimensionKey());
     }
 
     /** Load world hander, sets up maps and internal handlers */
@@ -98,7 +99,7 @@ public class World {
 
         CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.getDimension().getType().getId()));
+        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.getDimensionKey()));
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 
@@ -141,15 +142,15 @@ public class World {
         if (getWorld(world) == null) {
             // WTF forge
             // I should NOT need to do this
-            loadWorld(world.getWorld());
+            loadWorld(world);
         }
 
         return getWorld(world);
     }
 
     /** Based on dim/isRemote get the corresponding UMC world.  Not recommended for general use. */
-    public static World get(int dimID, boolean isClient) {
-        return (isClient ? clientWorlds : serverWorlds).get(dimID);
+    public static World get(String registryKey, boolean isClient) {
+        return (isClient ? clientWorlds : serverWorlds).get(registryKey);
     }
 
     /** Add tick handler */
@@ -158,8 +159,8 @@ public class World {
     }
 
     /** World's internal ID, Not recommended for general use. */
-    public int getId() {
-        return internal.getDimension().getType().getId();
+    public String getId() {
+        return internal.getDimensionKey().getRegistryName().toString();
     }
 
     /* Event Methods */
@@ -323,7 +324,8 @@ public class World {
      * @see BlockEntity#getData
      */
     public BlockEntity reconstituteBlockEntity(TagCompound data) {
-        TileEntity te = (TileEntity) TileEntity.create(data.internal);
+        // TODO 1.16 null state
+        TileEntity te = (TileEntity) TileEntity.readTileEntity(null, data.internal);
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
@@ -495,7 +497,7 @@ public class World {
 
     /** Is the top of the block solid?  Based on some AABB nonsense */
     public boolean isTopSolid(Vec3i pos) {
-        return Block.hasSolidSide(internal.getBlockState(pos.internal()), internal, pos.internal(), Direction.UP);
+        return Block.hasSolidSideOnTop(internal, pos.internal());
     }
 
     /** Get max redstone power surrounding this block */
