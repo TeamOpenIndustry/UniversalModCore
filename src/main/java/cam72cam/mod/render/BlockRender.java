@@ -126,6 +126,9 @@ public class BlockRender {
                 public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData properties) {
                     if (block instanceof BlockTypeEntity) {
                         TileEntity data = properties.getData(TileEntity.TE_PROPERTY);
+                        if (data == null) {
+                            return EMPTY;
+                        }
                         if (!cls.isInstance(data.instance())) {
                             return EMPTY;
                         }
