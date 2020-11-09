@@ -275,5 +275,15 @@ public abstract class BlockType {
         public boolean isTransparent(BlockState state) {
             return true;
         }
+
+        @Override
+        public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
+            return true;
+        }
+
+        @Override
+        public VoxelShape getRenderShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
+            return VoxelShapes.empty();
+        }
     }
 }
