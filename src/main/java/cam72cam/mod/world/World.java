@@ -28,14 +28,17 @@ import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.biome.Biome;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -114,9 +117,10 @@ public class World {
     }
 
     private void checkLoadedEntities() {
-        Iterable<net.minecraft.entity.Entity> internalEntities = internal instanceof ClientWorld ?
-                ((ClientWorld) internal).getAllEntities() :
-                () -> ((ServerWorld) internal).getEntities().iterator();
+        Iterable<net.minecraft.entity.Entity> internalEntities = DistExecutor.runForDist(
+                () -> ((ClientWorld) internal)::getAllEntities,
+                () -> () -> ((ServerWorld) internal).getEntities()::iterator
+        );
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.entity.Entity entity : internalEntities) {
@@ -328,6 +332,7 @@ public class World {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
+        te.setWorld(internal);
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
@@ -463,7 +468,9 @@ public class World {
 
     public List<Vec3i> blocksInBounds(IBoundingBox bb) {
         return internal.getCollisionShapes(null, BoundingBox.from(bb))
-                .map(blockBox -> new Vec3i(blockBox.getStart(Direction.Axis.X), blockBox.getStart(Direction.Axis.Y), blockBox.getStart(Direction.Axis.Z)))
+                .map(VoxelShape::getBoundingBox)
+                .filter(blockBox -> bb.intersects(IBoundingBox.from(blockBox)))
+                .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
                 .collect(Collectors.toList());
     }
 
