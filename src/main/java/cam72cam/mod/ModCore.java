@@ -23,6 +23,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -76,8 +77,8 @@ public class ModCore {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::postInit);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
 
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -104,11 +105,13 @@ public class ModCore {
         proxy.event(ModEvent.FINALIZE);
     }
 
+    @SubscribeEvent
     public void serverStarting(FMLServerStartingEvent event) {
         Command.registration(null);
     }
 
     /** START Phase (Forge) */
+    @SubscribeEvent
     public void serverStarted(FMLServerStartedEvent event) {
         proxy.event(ModEvent.START);
     }
