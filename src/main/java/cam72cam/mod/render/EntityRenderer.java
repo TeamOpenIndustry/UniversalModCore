@@ -9,6 +9,10 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.OpenGL.With;
+import cam72cam.mod.world.World;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -18,6 +22,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Entity Rendering Registry */
 public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client.renderer.entity.EntityRenderer<T> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
@@ -27,12 +32,14 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }*/
 
     public static void registerClientEvents() {
+        // Hook in our entity renderer which will dispatch to the IEntityRenderers
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
             renderers.forEach((cls, renderer) -> {
                 RenderingRegistry.registerEntityRenderingHandler(EntityRegistry.type(cls), EntityRenderer::new);
             });
         });
 
+        // Don't render seat entities
         ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.TYPE, manager -> new net.minecraft.client.renderer.entity.EntityRenderer<SeatEntity>(manager) {
             @Nullable
             @Override
@@ -42,15 +49,24 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         }));
     }
 
+    /** Internal, do not use */
     public EntityRenderer(EntityRendererManager factory) {
         super(factory);
     }
 
+    /** This is how you register your entities renderer */
     public static void register(Class<? extends Entity> type, IEntityRender render) {
         renderers.put(type, render);
     }
 
-    /* Fixed in 1.15?
+    /** Fixed in 1.15?
+     * Sooo this is a fun one...
+     *
+     * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
+     * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
+     * We try to detect entities in this edge case and render them here to prevent the issue.
+     */
+    /*
     private static void renderLargeEntities(float partialTicks) {
         if (GlobalRender.isTransparentPass()) {
             return;
@@ -68,12 +84,12 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             }
 
             // Duplicate forge logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
-            double yoff = Math.floor(entity.getPosition().y / 16f);
+            double yoff = ((int)entity.getPosition().y) >> 4 << 4;
             Vec3d min = entity.getBlockPosition().toChunkMin();
             min = new Vec3d(min.x, yoff, min.z);
             Vec3d max = entity.getBlockPosition().toChunkMax();
             max = new Vec3d(max.x, yoff + 16, max.z);
-            AxisAlignedBB chunk = new AxisAlignedBB(min.internal, max.internal);
+            AxisAlignedBB chunk = new AxisAlignedBB(min.internal(), max.internal());
             if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
                 Minecraft.getInstance().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
             }
@@ -88,9 +104,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderType.getCutout().setupRenderState();
 
-
-        GL11.glPushMatrix();
-        {
+        try (With c = OpenGL.matrix()) {
             //TODO 1.15 lerp xyz
             RenderSystem.multMatrix(p_225623_4_.getLast().getMatrix());
             GL11.glRotatef(180 - entityYaw, 0, 1, 0);
@@ -98,10 +112,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             GL11.glRotatef(-90, 0, 1, 0);
             renderers.get(self.getClass()).render(self, partialTicks);
         }
-        GL11.glPopMatrix();
 
         RenderType.getCutout().clearRenderState();
-
     }
 
     @Nullable

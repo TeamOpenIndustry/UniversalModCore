@@ -6,6 +6,7 @@ import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.Vec2f;
 import cam72cam.mod.render.GLTexture;
 import cam72cam.mod.render.GPUInfo;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
@@ -23,6 +24,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Object texture sheet that contains all textures for a given model
+ *
+ * The fun part is it auto-expands entries in the sheet to support texture wrapping
+ */
 public class OBJTextureSheet {
     private static GLTexture empty;
 
@@ -251,7 +257,7 @@ public class OBJTextureSheet {
         icon.dealloc();
     }
 
-    int bind() {
+    OpenGL.With bind() {
         if (!texture.isLoaded()) {
             icon.tryUpload(); //hit the queue first
         }
@@ -263,7 +269,7 @@ public class OBJTextureSheet {
         return bindIcon();
     }
 
-    int bindIcon() {
+    OpenGL.With bindIcon() {
         if (!icon.tryUpload()) {
             if (empty == null) {
                 BufferedImage ei = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
@@ -293,9 +299,9 @@ public class OBJTextureSheet {
         SubTexture(Identifier tex, Identifier fallback) throws IOException {
             InputStream input;
             try {
-                input = tex.getResourceStream();
+                input = tex.getLastResourceStream();
             } catch (FileNotFoundException ex) {
-                input = fallback.getResourceStream();
+                input = fallback.getLastResourceStream();
             }
             HashingInputStream hashed = new HashingInputStream(Hashing.sha256(), input);
             BufferedImage image = ImageIO.read(hashed);

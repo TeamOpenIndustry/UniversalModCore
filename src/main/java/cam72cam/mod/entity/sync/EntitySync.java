@@ -1,35 +1,38 @@
 package cam72cam.mod.entity.sync;
 
-import cam72cam.mod.entity.Entity;
+import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.CustomEntity;
 import cam72cam.mod.net.Packet;
-import cam72cam.mod.util.TagCompound;
 import net.minecraft.nbt.INBT;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/** TagCompound that auto-serializes an entity's @TagSync fields from server to client */
 public class EntitySync extends TagCompound {
-    private final Entity entity;
+    // Entity to synchronize
+    private final CustomEntity entity;
+    // Previous entry (for calculating diff / needs update)
     private TagCompound old;
-    private String oldString;
 
-    public EntitySync(Entity entity) {
+    /** Track properties on entity */
+    public EntitySync(CustomEntity entity) {
         super();
         this.entity = entity;
         this.old = new TagCompound();
-        this.oldString = old.toString();
     }
 
-    public void send() {
+    /** Perform synchronization */
+    public void send() throws SerializationException {
         if (entity.getWorld().isClient) {
             return;
         }
 
-        // Is this faster than the below check?
-        // Could also put a bool tracker in TagCompound
-        if (oldString.equals(this.toString())) {
-            return;
-        }
+        TagSerializer.serialize(this, entity, TagSync.class);
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
@@ -60,13 +63,13 @@ public class EntitySync extends TagCompound {
 
         if (sync.internal.keySet().size() != 0) {
             old = new TagCompound(this.internal.copy());
-            oldString = old.toString();
 
-            entity.sendToObserving(new EntitySyncPacket(entity, sync));
+            new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
     }
 
-    public void receive(TagCompound sync) {
+    /** Receive update (should only be called from packets) */
+    public void receive(TagCompound sync) throws SerializationException {
         for (String key : sync.internal.keySet()) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
@@ -76,24 +79,30 @@ public class EntitySync extends TagCompound {
                 internal.put(key, sync.internal.get(key));
             }
         }
-        old = this;
+        TagSerializer.deserialize(this, entity, entity.getWorld(), TagSync.class);
     }
 
     public static class EntitySyncPacket extends Packet {
-        public EntitySyncPacket() {
-            // Reflection
-        }
+        @TagField
+        CustomEntity target;
+        @TagField
+        private TagCompound info;
 
-        public EntitySyncPacket(Entity entity, TagCompound sync) {
-            data.setEntity("target", entity);
-            data.set("info", sync);
+        public EntitySyncPacket() {}
+
+        public EntitySyncPacket(CustomEntity entity, TagCompound sync) {
+            this.target = entity;
+            this.info = sync;
         }
 
         @Override
         public void handle() {
-            Entity stock = data.getEntity("target", getWorld(), Entity.class);
-            if (stock != null) {
-                stock.sync.receive(data.get("info"));
+            if (target != null) {
+                try {
+                    target.sync.receive(info);
+                } catch (SerializationException e) {
+                    ModCore.catching(e, "Invalid sync payload for %s: %s", target, info);
+                }
             }
         }
     }

@@ -11,17 +11,17 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ClientSound implements ISound {
+class ClientSound implements ISound {
     private final static float dopplerScale = 0.05f;
-    private boolean repeats;
-    private Identifier oggLocation;
-    private float attenuationDistance;
+    private final boolean repeats;
+    private final Identifier oggLocation;
+    private final float attenuationDistance;
     private Vec3d currentPos;
     private Vec3d velocity;
     private float currentPitch = 1;
     private float currentVolume = 1;
     private float baseSoundMultiplier;
-    private float scale;
+    private final float scale;
     private boolean disposable = false;
     private final int id;
 
@@ -35,12 +35,12 @@ public class ClientSound implements ISound {
         id = AL10.alGenSources();
         try {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
-            AudioFormat fmt = stream.func_216454_a();
+            AudioFormat fmt = stream.getAudioFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.func_216455_a(sizeBytes);
             AudioStreamBuffer sound = new AudioStreamBuffer(buffer, fmt);
             for (int i = 0; i< 4; i++) {
-                sound.func_216472_c().ifPresent(bufferId -> {
+                sound.getUntrackedBuffer().ifPresent(bufferId -> {
                     AL10.alSourceQueueBuffers(id, bufferId);
                 });
             }
@@ -56,10 +56,12 @@ public class ClientSound implements ISound {
 
     @Override
     public void play(Vec3d pos) {
+        stop();
+
         this.setPosition(pos);
         update();
 
-        if (repeats || currentPos == null || MinecraftClient.getPlayer() == null) {
+        if (repeats || currentPos == null || !MinecraftClient.isReady()) {
             AL10.alSourcePlay(id);
         } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
             AL10.alSourcePlay(id);

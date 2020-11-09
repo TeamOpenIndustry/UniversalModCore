@@ -1,17 +1,20 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.util.Hand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
 
+import cam72cam.mod.entity.Player;
+
 import java.util.function.Consumer;
 
+/** Base interactable GUI element */
 public abstract class Button {
-    final Widget button;
+    protected final Widget button;
 
+    /** Internal MC obj */
     private static class InternalButton extends AbstractButton {
-        private Consumer<Hand> clicker = hand -> {};
+        private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalButton(int xIn, int yIn, int widthIn, int heightIn, String msg) {
             super(xIn, yIn, widthIn, heightIn, msg);
@@ -29,7 +32,7 @@ public abstract class Button {
                     boolean flag = this.clicked(p_mouseClicked_1_, p_mouseClicked_3_);
                     if (flag) {
                         this.playDownSound(Minecraft.getInstance().getSoundHandler());
-                        clicker.accept(p_mouseClicked_5_ == 0 ? Hand.PRIMARY : Hand.SECONDARY);
+                        clicker.accept(p_mouseClicked_5_ == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
                         return true;
                     }
                 }
@@ -42,52 +45,64 @@ public abstract class Button {
 
         @Override
         public void onPress() {
-            clicker.accept(Hand.PRIMARY);
+            clicker.accept(Player.Hand.PRIMARY);
         }
     }
 
+    /** Default width/height */
     public Button(IScreenBuilder builder, int x, int y, String text) {
         this(builder, x, y, 200, 20, text);
     }
 
+    /** Custom width/height */
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
         this(builder, new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
         ((InternalButton)this.button).clicker = this::onClickInternal;
     }
 
+    /** Internal ctr */
     Button(IScreenBuilder builder, Widget button) {
         this.button = button;
         builder.addButton(this);
     }
 
+    /** Currently displayed text */
     public String getText() {
         return button.getMessage();
     }
+
+    /** Override current text */
     public void setText(String text) {
         button.setMessage(text);
     }
 
-    protected void onClickInternal(Hand hand) {
+    protected void onClickInternal(Player.Hand hand) {
         onClick(hand);
     }
-    public abstract void onClick(Hand hand);
 
     Widget internal() {
         return button;
     }
 
+    /** Click handler that must be implemented */
+    public abstract void onClick(Player.Hand hand);
+
+    /** Called every screen draw */
     public void onUpdate() {
 
     }
 
+    /** Override the text color */
     public void setTextColor(int i) {
         button.setFGColor(i);
     }
 
+    /** Set the button visible or not */
     public void setVisible(boolean b) {
         button.visible = b;
     }
 
+    /** enable or disable the button */
     public void setEnabled(boolean b) {
         button.active = b;
     }

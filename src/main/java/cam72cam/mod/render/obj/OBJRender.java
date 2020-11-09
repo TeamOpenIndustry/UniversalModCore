@@ -5,16 +5,18 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.Material;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.Vec2f;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.render.VBA;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
+/**
+ * VBA/VBO Backed object renderer
+ */
 public class OBJRender {
     public OBJModel model;
     public Map<String, OBJTextureSheet> textures = new HashMap<>();
-    private int prevTexture = -1;
     private VBA vba;
 
     public OBJRender(OBJModel model) {
@@ -35,19 +37,19 @@ public class OBJRender {
         }
     }
 
-    public void bindTexture() {
-        bindTexture(null);
+    public OpenGL.With bindTexture() {
+        return bindTexture(null);
     }
 
-    public void bindTexture(boolean icon) {
-        bindTexture(null, icon);
+    public OpenGL.With bindTexture(boolean icon) {
+        return bindTexture(null, icon);
     }
 
-    public void bindTexture(String texName) {
-        bindTexture(texName, false);
+    public OpenGL.With bindTexture(String texName) {
+        return bindTexture(texName, false);
     }
 
-    public void bindTexture(String texName, boolean icon) {
+    public OpenGL.With bindTexture(String texName, boolean icon) {
         if (this.textures.get(texName) == null) {
             texName = null; // Default
         }
@@ -55,16 +57,9 @@ public class OBJRender {
         OBJTextureSheet tex = this.textures.get(texName);
 
         if (icon) {
-            this.prevTexture = tex.bindIcon();
+            return tex.bindIcon();
         } else {
-            this.prevTexture = tex.bind();
-        }
-    }
-
-    public void restoreTexture() {
-        if (prevTexture != -1) {
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, prevTexture);
-            prevTexture = -1;
+            return tex.bind();
         }
     }
 
@@ -131,9 +126,7 @@ public class OBJRender {
             }
 
             for (int[] point : model.points(face)) {
-                Vec3d v = model.vertices(point[0]);
                 Vec2f vt = point[1] != -1 ? model.vertexTextures(point[1]) : null;
-                Vec3d vn = point[2] != -1 ? model.vertexNormals(point[2]) : null;
 
                 if (vt != null) {
                     vt = new Vec2f(
@@ -146,7 +139,17 @@ public class OBJRender {
                             texture.convertV(mtlName, 0)
                     );
                 }
-                vba.addPoint(v, vn, vt, r, g, b, a);
+
+                boolean hasVn = point[2] != -1;
+                vba.addPoint(
+                        model.vertex(point[0], OBJModel.Vert.X),
+                        model.vertex(point[0], OBJModel.Vert.Y),
+                        model.vertex(point[0], OBJModel.Vert.Z),
+                        hasVn,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.X) : 0,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.Y) : 0,
+                        hasVn ? model.vertexNormal(point[2], OBJModel.Vert.Z) : 0,
+                        vt, r, g, b, a);
             }
         }
 
@@ -155,6 +158,7 @@ public class OBJRender {
         model.offsetU = null;
         model.offsetV = null;
         model.faceMTLs = null;
+        model.faceVerts = null;
         model.vertices = null;
 
         return vba;

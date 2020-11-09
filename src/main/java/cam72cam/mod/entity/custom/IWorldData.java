@@ -1,6 +1,6 @@
 package cam72cam.mod.entity.custom;
 
-import cam72cam.mod.util.TagCompound;
+import cam72cam.mod.serialization.TagCompound;
 
 public interface IWorldData {
     IWorldData NOP = new IWorldData() {
@@ -22,7 +22,9 @@ public interface IWorldData {
         return IWorldData.NOP;
     }
 
+    /** World Load */
     void load(TagCompound data);
 
+    /** World Save */
     void save(TagCompound data);
 }

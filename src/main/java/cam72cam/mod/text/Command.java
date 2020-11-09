@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** API not finalized use at your own risk */
 public abstract class Command {
     private static final List<Command> commands = new ArrayList<>();
 

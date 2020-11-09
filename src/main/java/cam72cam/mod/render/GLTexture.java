@@ -18,11 +18,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
+/** Internal(ish) class for representing a GL texture */
 public class GLTexture {
-    private static LinkedBlockingQueue queue = new LinkedBlockingQueue<>(1);
-    private static ExecutorService saveImage = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, queue);
-    private static ExecutorService readImage = Executors.newFixedThreadPool(1);
-    private static Map<String, GLTexture> textures = new HashMap<>();
+    // Thread Pools for reading and saving textures
+    private static final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(1);
+    private static final ExecutorService saveImage = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, queue);
+    private static final ExecutorService readImage = Executors.newFixedThreadPool(1);
+    // All currently known textures
+    private static final Map<String, GLTexture> textures = new HashMap<>();
+    
     private final File texLoc;
     private final int cacheSeconds;
     private int width;
@@ -44,6 +48,7 @@ public class GLTexture {
     }
 
     static {
+        // free unused textures
         ClientEvents.TICK.subscribe(() -> {
             for (GLTexture texture : textures.values()) {
                 if (texture.state == TextureState.ALLOCATED && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000) {
@@ -53,6 +58,7 @@ public class GLTexture {
         });
     }
 
+    /** Get a file for name in the UMC cache dir */
     public static File cacheFile(String name) {
         File cacheDir = Paths.get(FMLPaths.CONFIGDIR.get().toFile().getParentFile().getPath(), "cache", "universalmodcore").toFile();
         cacheDir.mkdirs();
@@ -77,6 +83,7 @@ public class GLTexture {
                 } catch (IOException e) {
                     internalError = new RuntimeException(e);
                     transition(TextureState.ERROR);
+                    texLoc.delete();
                     throw internalError;
                 }
                 transition(TextureState.UNALLOCATED);
@@ -100,6 +107,7 @@ public class GLTexture {
                     } catch (IOException e) {
                         internalError = new RuntimeException("Unable to save image " + texLoc, e);
                         transition(TextureState.ERROR);
+                        texLoc.delete();
                         throw internalError;
                     }
                 });
@@ -145,24 +153,27 @@ public class GLTexture {
     private int uploadTexture() {
         this.lastUsed = System.currentTimeMillis();
         int textureID = GL11.glGenTextures();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
-        TextureUtil.prepareImage(textureID, width, height);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        try (OpenGL.With tex = OpenGL.texture(textureID)) {
+            TextureUtil.prepareImage(textureID, width, height);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-        //GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-        pixels = null;
-        transition(TextureState.ALLOCATED);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+            //GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+            pixels = null;
+            transition(TextureState.ALLOCATED);
+        }
         return textureID;
     }
 
+    /** Can this texture be bound? */
     public boolean isLoaded() {
         return state == TextureState.ALLOCATED;
     }
 
+    /** Try to read and then upload the texture */
     public boolean tryUpload() {
         switch (this.state) {
             case NEW:
@@ -181,8 +192,10 @@ public class GLTexture {
                         this.pixels = imageToPixels(ImageIO.read(texLoc));
                         transition(TextureState.READ);
                     } catch (Exception e) {
+                        ModCore.warn("Unable to read file " + texLoc.toString() + ".  The cache file has been removed.  Please try launching again.  If this error happens multiple times, try removing your .minecraft/cache/ directory.");
                         transition(TextureState.ERROR);
                         internalError = new RuntimeException(texLoc.toString(), e);
+                        texLoc.delete();
                         throw internalError;
                     }
                 });
@@ -194,9 +207,9 @@ public class GLTexture {
         throw new RuntimeException(this.state.toString());
     }
 
-    public int bind(boolean force) {
+    /** Bind the texture, force waiting if specified */
+    public OpenGL.With bind(boolean force) {
         lastUsed = System.currentTimeMillis();
-        int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 
         if (force) {
             // Wait up to 1 second for texture to load
@@ -214,15 +227,12 @@ public class GLTexture {
         }
 
         if (!tryUpload()) {
-            return -1;
+            return () -> {};
         }
-        if (glTexID == currentTexture) {
-            return -1; //NOP
-        }
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexID);
-        return currentTexture;
+        return OpenGL.texture(glTexID);
     }
 
+    /** Completely free this texture */
     public void freeGL() {
         textures.remove(this.texLoc.toString());
 
@@ -234,14 +244,11 @@ public class GLTexture {
         }
     }
 
+    /** free this texture from the GPU */
     public void dealloc() {
         if (this.state == TextureState.ALLOCATED) {
             GL11.glDeleteTextures(this.glTexID);
             transition(TextureState.UNALLOCATED);
         }
-    }
-
-    public String info() {
-        return this.texLoc.toString();
     }
 }

@@ -1,7 +1,7 @@
 package cam72cam.mod.config;
 
-import cam72cam.mod.gui.*;
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.screen.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -28,8 +28,8 @@ public class ConfigGui implements IScreen {
             ci.read();
             widgets.add(screen -> new Button(screen, 0 - 100,  finalI * 20, 200, 20, type.getSimpleName()) {
                 @Override
-                public void onClick(Hand hand) {
-                    Minecraft.getInstance().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci)));
+                public void onClick(Player.Hand hand) {
+                    Minecraft.getInstance().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci), () -> true));
                 }
             });
             i++;
@@ -55,8 +55,8 @@ public class ConfigGui implements IScreen {
                 widgets.add(screen -> {
                     Button btn = new Button(screen, 0 - 100, offsetI * 20, 200, 20, property.getName()) {
                         @Override
-                        public void onClick(Hand hand) {
-                            Minecraft.getInstance().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci)));
+                        public void onClick(Player.Hand hand) {
+                            Minecraft.getInstance().displayGuiScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci), () -> true));
                         }
                     };
                     onPage.accept(finalI, btn::setVisible);
@@ -88,7 +88,7 @@ public class ConfigGui implements IScreen {
                         widgets.add(screen -> {
                             Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString()) {
                                 @Override
-                                public void onClick(Hand hand) {
+                                public void onClick(Player.Hand hand) {
                                     Boolean value = !Boolean.parseBoolean(this.getText());
                                     this.setText(value.toString());
                                     try {
@@ -109,7 +109,7 @@ public class ConfigGui implements IScreen {
                             Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString()) {
                                 Enum curr = val;
                                 @Override
-                                public void onClick(Hand hand) {
+                                public void onClick(Player.Hand hand) {
                                     curr = arry[(curr.ordinal()+1) % arry.length];
                                     this.setText(curr.toString());
                                     try {
@@ -184,7 +184,7 @@ public class ConfigGui implements IScreen {
                 widgets.add(screen -> {
                     Button btn = new Button(screen, -200, offsetI * 20, 200, 20, property.getName()) {
                         @Override
-                        public void onClick(Hand hand) {
+                        public void onClick(Player.Hand hand) {
 
                         }
                     };
@@ -202,7 +202,7 @@ public class ConfigGui implements IScreen {
             int i = 0;
 
             @Override
-            public void onClick(Hand hand) {
+            public void onClick(Player.Hand hand) {
                 i++;
                 if (i >= pages) {
                     i = 0;

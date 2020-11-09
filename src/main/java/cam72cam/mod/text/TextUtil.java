@@ -1,6 +1,7 @@
 package cam72cam.mod.text;
 
-@SuppressWarnings("deprecation")
+
+/** Client side translation utility */
 public class TextUtil {
     //TODO this breaks server side ...
     public static String translate(String name) {

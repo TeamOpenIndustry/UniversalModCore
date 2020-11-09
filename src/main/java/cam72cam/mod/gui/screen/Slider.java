@@ -1,7 +1,8 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.entity.Player;
 
+/** Standard slider */
 public abstract class Slider extends Button {
 
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
@@ -11,10 +12,11 @@ public abstract class Slider extends Button {
     }
 
     @Override
-    public void onClick(Hand hand) {
+    public void onClick(Player.Hand hand) {
 
     }
 
+    /** Called when the slider value is changed */
     public abstract void onSlider();
 
     public int getValueInt() {

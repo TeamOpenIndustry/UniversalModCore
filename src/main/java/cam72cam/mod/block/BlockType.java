@@ -1,12 +1,15 @@
 package cam72cam.mod.block;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -14,7 +17,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -26,17 +28,12 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraftforge.registries.ForgeRegistries;
 
+/** A standard block with no attached entity */
 public abstract class BlockType {
-    public final net.minecraft.block.Block internal;
-    protected final BlockSettings settings;
-
-    public BlockType(BlockSettings settings) {
-        this.settings = settings;
-
-        internal = getBlock();
-
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
-
+    /*
+    Hook into the Block Broken event (not specific per block)
+     */
+    static {
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
             if (block instanceof BlockInternal) {
@@ -46,60 +43,136 @@ public abstract class BlockType {
         });
     }
 
-    public String getName() {
-        return settings.name;
+    /** Wraps the minecraft construct, do not use directly. */
+    public final net.minecraft.block.Block internal;
+
+    /** Mod/name of the block */
+    public final Identifier id;
+
+    /**
+     * Construct a new BlockType (backed by a std minecraft block)<br>
+     * <br>
+     * Should be called during ModEvent.CONSTRUCT
+     */
+    public BlockType(String modID, String name) {
+        this.id = new Identifier(modID, name);
+        internal = getBlock();
+        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
     }
 
+    /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
     protected BlockInternal getBlock() {
         return new BlockInternal();
     }
 
+    /** @return false if the in-progress break should be cancelled */
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
+
+    /*
+    Properties
+     */
+
+    public Material getMaterial() {
+        return Material.METAL;
+    }
+    public float getHardness() {
+        return 1.0f;
+    }
+    public float getExplosionResistance() {
+        return getHardness() * 5;
+    }
+
+    /** @return if fencing / glass should connect to it */
+    public boolean isConnectable() {
+        return true;
+    }
+    /** @return true if redstone functions below should be wired in */
+    public boolean isRedstoneProvider() {
+        return false;
+    }
+
 
     /*
     Public functionality
      */
 
+    /** Called when the block is broken */
     public abstract void onBreak(World world, Vec3i pos);
 
-    public abstract boolean onClick(World world, Vec3i pos, Player player, Hand hand, Facing facing, Vec3d hit);
+    /**
+     * Called when a player right-clicks a block.
+     * @return true if this accepts the click (stop processing it after this call)
+     */
+    public abstract boolean onClick(World world, Vec3i pos, Player player, Player.Hand hand, Facing facing, Vec3d hit);
 
+    /**
+     * Called when a player performs the pick operation on this block.
+     * @return An ItemStack representing this block.  Must NOT be null, return ItemStack.EMPTY instead.
+     */
     public abstract ItemStack onPick(World world, Vec3i pos);
 
+    /**
+     * Called when a neighboring block has changed state
+     */
     public abstract void onNeighborChange(World world, Vec3i pos, Vec3i neighbor);
 
-    public double getHeight() {
-        return 1;
+    /**
+     * Shape of the block.
+     */
+    protected static final IBoundingBox defaultBox = IBoundingBox.from(new AxisAlignedBB(0, 0, 0, 1, 1, 1));
+    public IBoundingBox getBoundingBox(World world, Vec3i pos) {
+        return defaultBox;
     }
 
+    /**
+     * Only applicable if isRedstoneProvider returns true
+     * @return strong redstone power
+     */
     public int getStrongPower(World world, Vec3i vec3i, Facing from) {
         return 0;
     }
 
+    /**
+     * Only applicable if isRedstoneProvider returns true
+     * @return strong redstone power
+     */
     public int getWeakPower(World world, Vec3i vec3i, Facing from) {
         return 0;
     }
 
+    /**
+     * BlockInternal is an internal class that should only be extended when you need to implement
+     * an interface.
+     */
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(Block.Properties.create(settings.material.internal).sound(settings.material.soundType).hardnessAndResistance(settings.hardness).variableOpacity().notSolid());
-            setRegistryName(new ResourceLocation(settings.modID, settings.name));
+            super(Block.Properties.create(BlockType.this.getMaterial().internal)
+                    .sound(BlockType.this.getMaterial().soundType)
+                    .hardnessAndResistance(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .variableOpacity());
+            setRegistryName(BlockType.this.id.internal);
         }
 
+        /** Called server side at the end of the block break call chain as cleanup */
         @Override
         public void onReplaced(BlockState state, net.minecraft.world.World world, BlockPos pos, BlockState newState, boolean isMoving) {
             BlockType.this.onBreak(World.get(world), new Vec3i(pos));
             super.onReplaced(state, world, pos, newState, isMoving);
         }
 
+        /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
         public ActionResultType onBlockActivated(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec())) ? ActionResultType.SUCCESS : ActionResultType.PASS;
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec())) ? ActionResultType.SUCCESS : ActionResultType.PASS;
         }
 
         @Override
-        public final net.minecraft.item.ItemStack getPickBlock(BlockState state, RayTraceResult target, IBlockReader world, BlockPos pos, PlayerEntity player) {
-            return BlockType.this.onPick(World.get((net.minecraft.world.IWorld)world), new Vec3i(pos)).internal;
+        public final net.minecraft.item.ItemStack getPickBlock(BlockState state, RayTraceResult target, IBlockReader worldIn, BlockPos pos, PlayerEntity player) {
+            World world = getWorldOrNull(worldIn, pos);
+            if (world != null) {
+                return BlockType.this.onPick(world, new Vec3i(pos)).internal;
+            }
+            return net.minecraft.item.ItemStack.EMPTY;
         }
 
         @Override
@@ -115,11 +188,6 @@ public abstract class BlockType {
         /*
         Overrides
          */
-        @Override
-        public float getExplosionResistance() {
-            return settings.resistance;
-        }
-
 
         @Override
         public BlockRenderType getRenderType(BlockState state) {
@@ -127,46 +195,73 @@ public abstract class BlockType {
             return BlockRenderType.MODEL;
         }
 
-        @Override
-        public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-            return VoxelShapes.create(new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1));
+        protected World getWorldOrNull(IBlockReader source, BlockPos pos) {
+            return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World) source) : null;
         }
 
+        private final SingleCache<IBoundingBox, VoxelShape> bbCache = new SingleCache<>((IBoundingBox box) -> VoxelShapes.create(BoundingBox.from(box)));
+        @Override
+        public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+            World world = getWorldOrNull(worldIn, pos);
+            if (world != null) {
+                return bbCache.get(BlockType.this.getBoundingBox(world, new Vec3i(pos)));
+            }
+            return super.getShape(state, worldIn, pos, context);
+        }
+/*
         @Override
         public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-            return VoxelShapes.create(new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1));
+            World world = getWorldOrNull(worldIn, pos);
+            if (world != null) {
+                return VoxelShapes.create(BoundingBox.from(BlockType.this.getBoundingBox(world, new Vec3i(pos))));
+            }
+            return super.getCollisionShape(state, worldIn, pos, context);
         }
 
         @Override
         public VoxelShape getRenderShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
             return VoxelShapes.create(new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1));
-        }
+        }*/
 
         /*
          * Fence, glass override
          */
         //TODO 1.14.4
 
-        public boolean tryBreak(net.minecraft.world.IWorld world, BlockPos pos, PlayerEntity player) {
-            return BlockType.this.tryBreak(World.get(world), new Vec3i(pos), new Player(player));
+        public boolean tryBreak(net.minecraft.world.IWorld worldIn, BlockPos pos, PlayerEntity player) {
+            World world = getWorldOrNull(worldIn, pos);
+            if (world != null) {
+                return BlockType.this.tryBreak(world, new Vec3i(pos), new Player(player));
+            }
+            return true;
         }
 
         /* Redstone */
 
         @Override
-        public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
-            return settings.redstoneProvider ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+        public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        {
+            World world = getWorldOrNull(blockAccess, pos);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(world, new Vec3i(pos), Facing.from(side)) : 0;
+            }
+            return 0;
         }
 
         @Override
-        public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
-            return settings.redstoneProvider ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+        public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        {
+            World world = getWorldOrNull(blockAccess, pos);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(world, new Vec3i(pos), Facing.from(side)) : 0;
+            }
+            return 0;
         }
 
         @Override
         public boolean canProvidePower(BlockState state)
         {
-            return settings.redstoneProvider;
+            return BlockType.this.isRedstoneProvider();
         }
 
         /* TODO 1.15.2

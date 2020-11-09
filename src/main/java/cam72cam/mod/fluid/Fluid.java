@@ -9,10 +9,14 @@ import java.util.Map;
 
 public class Fluid {
     public static final int BUCKET_VOLUME = 1000;
-    private static Map<String, Fluid> registryCache = new HashMap<>();
+    private static final Map<String, Fluid> registryCache = new HashMap<>();
     public static final Fluid WATER = getFluid("water");
     public static final Fluid LAVA = getFluid("lava");
+
+    // Fluid Name/Ident
     public final String ident;
+
+    // Reference to internal forge fluid
     public final net.minecraft.fluid.Fluid internal;
 
 

@@ -5,21 +5,36 @@ import net.minecraft.util.math.BlockPos;
 
 public class Vec3i {
     public static final Vec3i ZERO = new Vec3i(BlockPos.ZERO);
-    public final BlockPos internal;
+    private BlockPos internal = null;
     public final int x;
     public final int y;
     public final int z;
 
-    public Vec3i(BlockPos pos) {
-        this.internal = pos;
-
-        this.x = pos.getX();
-        this.y = pos.getY();
-        this.z = pos.getZ();
+    public Vec3i(int x, int y, int z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
-    public Vec3i(int x, int y, int z) {
-        this(new BlockPos(x, y, z));
+    public Vec3i(double x, double y, double z) {
+        int xi = (int) x;
+        int yi = (int) y;
+        int zi = (int) z;
+        if (xi > x) { xi -= 1; }
+        if (yi > y) { yi -= 1; }
+        if (zi > z) { zi -= 1; }
+        this.x = xi;
+        this.y = yi;
+        this.z = zi;
+    }
+
+    public Vec3i(BlockPos pos) {
+        this(pos.getX(), pos.getY(), pos.getZ());
+        internal = pos;
+    }
+
+    public Vec3i(Vec3d pos) {
+        this(pos.x, pos.y, pos.z);
     }
 
     @Deprecated
@@ -27,17 +42,15 @@ public class Vec3i {
         this(BlockPos.fromLong(serialized));
     }
 
-    public Vec3i(Vec3d pos) {
-        this(new BlockPos(pos.internal));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Vec3i && ((Vec3i) o).internal.equals(this.internal);
-    }
-
     public Vec3i offset(Facing facing, int offset) {
-        return new Vec3i(internal.offset(facing.internal, offset));
+        if (offset == 0) {
+            return this;
+        }
+        return new Vec3i(
+                this.x + facing.getXMultiplier() * offset,
+                this.y + facing.getYMultiplier() * offset,
+                this.z + facing.getZMultiplier() * offset
+        );
     }
 
     public Vec3i offset(Facing facing) {
@@ -92,39 +105,66 @@ public class Vec3i {
         return offset(Facing.WEST, offset);
     }
 
-    public Vec3i add(Vec3i other) {
-        return new Vec3i(internal.add(other.internal));
-    }
-
     public Vec3i add(int x, int y, int z) {
-        return new Vec3i(internal.add(x, y, z));
+        return new Vec3i(this.x + x, this.y + y, this.z + z);
     }
 
-    public Vec3i subtract(Vec3i other) {
-        return new Vec3i(internal.subtract(other.internal));
+    public Vec3i add(Vec3i other) {
+        return add(other.x, other.y, other.z);
     }
 
     public Vec3i subtract(int x, int y, int z) {
         return add(-x, -y, -z);
     }
 
+    public Vec3i subtract(Vec3i other) {
+        return subtract(other.x, other.y, other.z);
+    }
+
     @Deprecated
     public long toLong() {
-        return internal.toLong();
+        return internal().toLong();
     }
 
     public Vec3i rotate(Rotation rotation) {
-        return new Vec3i(internal.rotate(rotation.internal));
+        switch (rotation)
+        {
+            case NONE:
+            default:
+                return this;
+            case CLOCKWISE_90:
+                return new Vec3i(-z, y, x);
+            case CLOCKWISE_180:
+                return new Vec3i(-x, y, -z);
+            case COUNTERCLOCKWISE_90:
+                return new Vec3i(z, y, -x);
+        }
+    }
+
+    public BlockPos internal() {
+        if (internal == null) {
+            internal = new BlockPos(x, y, z);
+        }
+        return internal;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Vec3i) {
+            Vec3i ov = (Vec3i) other;
+            return ov.x == this.x && ov.y == this.y && ov.z == this.z;
+        }
+        return false;
     }
 
     @Override
     public String toString() {
-        return internal.toString();
+        return String.format("(%s, %s, %s)", this.x, this.y, this.z);
     }
 
     @Override
     public int hashCode() {
-        return internal.hashCode();
+        return (this.y + this.z * 31) * 31 + this.x;
     }
 
     public Vec3d toChunkMin() {

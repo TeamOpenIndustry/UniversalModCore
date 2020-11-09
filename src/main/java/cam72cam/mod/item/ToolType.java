@@ -1,6 +1,9 @@
 package cam72cam.mod.item;
 
+/** What class a tool fits into */
 public enum ToolType {
+    PICKAXE(net.minecraftforge.common.ToolType.PICKAXE),
+    AXE(net.minecraftforge.common.ToolType.AXE),
     SHOVEL(net.minecraftforge.common.ToolType.SHOVEL),
     ;
     final net.minecraftforge.common.ToolType internal;

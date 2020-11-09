@@ -1,57 +1,39 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.util.TagCompound;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
+import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.registries.ForgeRegistries;
 
+/** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
     public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
 
     public final net.minecraft.item.ItemStack internal;
-    private final Item item;
 
+    /** Wrap Minecraft ItemStack.  Do not use directly */
     public ItemStack(net.minecraft.item.ItemStack internal) {
         this.internal = internal;
-        this.item = internal.getItem();
     }
 
-    public ItemStack(Item item, int count) {
-        this(new net.minecraft.item.ItemStack(item, count));
+    /** Deserialize from tag */
+    public ItemStack(TagCompound nbt) {
+        this(net.minecraft.item.ItemStack.read(nbt.internal));
     }
 
-    public ItemStack(TagCompound bedItem) {
-        this(net.minecraft.item.ItemStack.read(bedItem.internal));
+    /** Construct from customItem */
+    public ItemStack(CustomItem item, int i) {
+        this(new net.minecraft.item.ItemStack(item.internal, i));
     }
 
-    public ItemStack(Item item, int count, int meta) {
-        this(new net.minecraft.item.ItemStack(item, count));
-    }
-
-    public ItemStack(Block block) {
-        this(new net.minecraft.item.ItemStack(block));
-    }
-
-    public ItemStack(Block block, int count, int meta) {
-        this(new net.minecraft.item.ItemStack(block, count));
-    }
-
-    public ItemStack(Item item) {
-        this(new net.minecraft.item.ItemStack(item));
-    }
-
-    public ItemStack(ItemBase item, int count) {
-        this(item.internal, count);
-    }
-
+    @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(ForgeRegistries.ITEMS.getValue(new ResourceLocation(item)), i, meta);
+        this(new net.minecraft.item.ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(item)), i));
     }
 
+    /** Tag attached to this stack */
     public TagCompound getTagCompound() {
         if (internal.getTag() == null) {
             internal.setTag(new TagCompound().internal);
@@ -59,6 +41,7 @@ public class ItemStack {
         return new TagCompound(internal.getTag());
     }
 
+    /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
         internal.setTag(data.internal);
     }
@@ -67,60 +50,79 @@ public class ItemStack {
         return new ItemStack(internal.copy());
     }
 
+    /** Serialize */
     public TagCompound toTag() {
         return new TagCompound(internal.serializeNBT());
     }
 
+    /** Items in this stack */
     public int getCount() {
         return internal.getCount();
     }
 
+    /** Set the items in this stack */
     public void setCount(int count) {
         internal.setCount(count);
     }
 
+    /** Human readable name */
     public String getDisplayName() {
         return internal.getDisplayName().getString();
     }
 
+    /** Is count zero? */
     public boolean isEmpty() {
         return internal.isEmpty();
     }
 
+    /** Reduce stack size by i */
     public void shrink(int i) {
         internal.shrink(i);
     }
 
-    public boolean equals(ItemStack other) {
-        return internal.isItemEqual(other.internal);
+    /** Compares: item, count, damage, data */
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
+    }
+
+
+    /** Compares: item, damage */
+    public boolean is(ItemStack stack) {
+        return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
         return fuzzy.matches(this);
     }
 
-    public boolean is(ItemBase item) {
-        return item.internal == this.item;
+    public boolean is(CustomItem item) {
+        return item.internal == this.internal.getItem();
     }
 
+    /** Is a bucket or similar item */
     public boolean isFluidContainer() {
         return FluidUtil.getFluidHandler(internal).isPresent();
     }
 
+    /** Can be burnt in a furnace */
     public boolean isFlammable() {
         return getBurnTime() != 0;
     }
 
+    /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
         return AbstractFurnaceTileEntity.getBurnTimes().getOrDefault(internal.getItem(), 0);
     }
 
+    /** Max count of the stack */
     public int getLimit() {
         return internal.getMaxStackSize();
     }
 
+    /** Is the item this type of tool? */
     public boolean isValidTool(ToolType tool) {
-        return item.getToolTypes(internal).contains(tool.internal);
+        return internal.getItem().getToolTypes(internal).contains(tool.internal);
     }
 
     @Override
@@ -128,10 +130,12 @@ public class ItemStack {
         return internal.toString();
     }
 
+    /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
         internal.damageItem(i, player.internal, (s) -> {});
     }
 
+    /** Completely null out the tag compound */
     public void clearTagCompound() {
         internal.setTag(null);
     }
