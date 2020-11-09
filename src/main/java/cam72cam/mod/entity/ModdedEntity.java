@@ -220,6 +220,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
         }
+
+        if (this.ticksExisted % 20 == 0 && this.getPassengerCount() > 0) {
+            new PassengerPositionsPacket(this).sendToObserving(self);
+        }
     }
 
     /* Player Interact */
