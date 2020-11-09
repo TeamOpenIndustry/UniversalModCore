@@ -12,10 +12,7 @@ import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /** OreDict / Tag abstraction.  Use for item equivalence */
@@ -91,60 +88,59 @@ public class Fuzzy {
     public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass");
 
     static {
-        ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::new);
+        ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
     }
 
-    static Map<String, Fuzzy> tags;
+    static Map<String, Fuzzy> registered;
     private final String ident;
     final Tag<Item> tag;
     private final List<Item> customItems;
+    private final Set<Fuzzy> includes;
 
-    /** Create fuzzy with this name */
-    public Fuzzy(String ident) {
-        if (tags == null) {
-            tags = new HashMap<>();
+    public static Fuzzy get(String ident) {
+        if (registered == null) {
+            registered = new HashMap<>();
         }
-
-        this.ident = ident;
-        if (tags.containsKey(ident)) {
-            this.tag = tags.get(ident).tag;
-            this.customItems = tags.get(ident).customItems;
-        } else {
-            this.tag = new ItemTags.Wrapper(
-                    ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
-                    new ResourceLocation("forge", ident.toLowerCase())
-            );
-            this.customItems = new ArrayList<>();
-            tags.put(ident, this);
+        if (!registered.containsKey(ident)) {
+            registered.put(ident, new Fuzzy(ident));
         }
+        return registered.get(ident);
     }
 
-    public Fuzzy(Tag<Item> tag, String ident) {
-        if (tags == null) {
-            tags = new HashMap<>();
+
+    /** Create fuzzy with this name */
+    private Fuzzy(String ident) {
+        this(new ItemTags.Wrapper(
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
+                        new ResourceLocation("forge", ident.toLowerCase())
+        ), ident);
+    }
+
+    private Fuzzy(Tag<Item> tag, String ident) {
+        if (registered == null) {
+            registered = new HashMap<>();
         }
 
         this.ident = ident;
         this.tag = tag;
         this.customItems = new ArrayList<>();
-        tags.put(ident, this);
-    }
-
-    private List<Item> values() {
-        List<Item> values = new ArrayList<>(customItems);
-        // TODO dedup?
-        values.addAll(tag.getAllElements());
-        return values;
+        includes = new HashSet<>();
+        registered.put(ident, this);
     }
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return values().stream().anyMatch(potential -> potential == stack.internal.getItem());
+        return tag.getAllElements().stream().anyMatch(potential -> potential == stack.internal.getItem());
+    }
+
+    /** Do any items exist in this fuzzy */
+    public boolean isEmpty() {
+        return enumerate().isEmpty();
     }
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return values().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        return tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
     }
 
     /** Grab the first example of a item in this fuzzy */
@@ -172,16 +168,13 @@ public class Fuzzy {
     }
 
     /** Use to register an item */
-    public void add(CustomItem item) {
-        add(item.internal);
+    public Fuzzy add(CustomItem item) {
+        return add(item.internal);
     }
 
-    /** Copy all from this other fuzzy into this one.  Does not track updates to other */
-    public Fuzzy addAll(Fuzzy other) {
-        if (!other.ident.equals(this.ident)) {
-            customItems.addAll(other.values());
-            // TODO registration below with subtag!
-        }
+    /** Pull other fuzzy into this one */
+    public Fuzzy include(Fuzzy other) {
+        includes.add(other);
         return this;
     }
 
@@ -194,11 +187,14 @@ public class Fuzzy {
         gen.addProvider(new ItemTagsProvider(gen) {
             @Override
             protected void registerTags() {
-                for (Fuzzy value : tags.values()) {
-                    if (!value.customItems.isEmpty()) {
+                for (Fuzzy value : registered.values()) {
+                    if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
                         Tag.Builder<Item> builder = getBuilder(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
+                        }
+                        for (Fuzzy include : value.includes) {
+                            builder.add(include.tag);
                         }
                     }
                 }

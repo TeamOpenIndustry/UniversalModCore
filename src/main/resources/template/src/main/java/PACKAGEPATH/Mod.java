@@ -24,6 +24,6 @@ public class Mod {
     public static void registerRecipes(GatherDataEvent event) {
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
         event.getGenerator().addProvider(new Recipes(event.getGenerator()));
-        Fuzzy.register(gen);
+        Fuzzy.register(event.getGenerator());
     }
 }

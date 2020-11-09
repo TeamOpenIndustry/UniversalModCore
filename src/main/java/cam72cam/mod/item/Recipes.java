@@ -7,17 +7,15 @@ import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
-import net.minecraft.data.ShapedRecipeBuilder;
-import net.minecraft.item.Item;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraftforge.common.crafting.ConditionalRecipe;
 import net.minecraftforge.common.crafting.conditions.ItemExistsCondition;
+import net.minecraftforge.common.crafting.conditions.NotCondition;
+import net.minecraftforge.common.crafting.conditions.TagEmptyCondition;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -34,38 +32,72 @@ public class Recipes extends RecipeProvider {
         registry.forEach(fn -> fn.accept(consumer));
     }
 
-    public static void register(CustomItem item, int width, Fuzzy... ingredients) {
-        register(new ItemStack(item, 1), width, ingredients);
+    public static ShapedRecipeBuilder shapedRecipe(CustomItem item, int width, Fuzzy... ingredients) {
+        return new ShapedRecipeBuilder(new ItemStack(item, 1), width, ingredients);
     }
 
-    public static void register(ItemStack result, int width, Fuzzy... ingredients) {
-        ShapedRecipeBuilder builder = new ShapedRecipeBuilder(result.internal.getItem(), result.getCount());
+    public static ShapedRecipeBuilder shapedRecipe(ItemStack item, int width, Fuzzy... ingredients) {
+        return new ShapedRecipeBuilder(item, width, ingredients);
+    }
 
-        int height = ingredients.length / width;
+    public static class ShapedRecipeBuilder {
+        private List<Fuzzy> dependencies = new ArrayList<>();
+        private List<Fuzzy> conflicts = new ArrayList<>();
 
-        for (int h = 0; h < height; h++) {
-            String line = "";
-            for (int w = 0; w < width; w++) {
-                int idx = h * width + w;
-                Fuzzy ingredient = ingredients[idx];
-                line += ingredient == null ? " " : idx + "";
-                if (ingredient != null) {
-                    // TODO tags
-                    builder.key((idx + "").charAt(0), ingredient.tag);
-                    builder.addCriterion(
-                            "has" + ingredient.toString() + idx,
-                            new InventoryChangeTrigger.Instance(
-                                    MinMaxBounds.IntBound.UNBOUNDED,
-                                    MinMaxBounds.IntBound.UNBOUNDED,
-                                    MinMaxBounds.IntBound.UNBOUNDED,
-                                    new ItemPredicate[] {ItemPredicate.Builder.create().tag(ingredient.tag).build()}
-                            )
-                    );
+        private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
+            net.minecraft.data.ShapedRecipeBuilder builder = new net.minecraft.data.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+
+            int height = ingredients.length / width;
+
+            for (int h = 0; h < height; h++) {
+                String line = "";
+                for (int w = 0; w < width; w++) {
+                    int idx = h * width + w;
+                    Fuzzy ingredient = ingredients[idx];
+                    line += ingredient == null ? " " : idx + "";
+                    if (ingredient != null) {
+                        // TODO tags
+                        builder.key((idx + "").charAt(0), ingredient.tag);
+                        builder.addCriterion(
+                                "has" + ingredient.toString() + idx,
+                                new InventoryChangeTrigger.Instance(
+                                        MinMaxBounds.IntBound.UNBOUNDED,
+                                        MinMaxBounds.IntBound.UNBOUNDED,
+                                        MinMaxBounds.IntBound.UNBOUNDED,
+                                        new ItemPredicate[]{ItemPredicate.Builder.create().tag(ingredient.tag).build()}
+                                )
+                        );
+                    }
                 }
+                builder.patternLine(line);
             }
-            builder.patternLine(line);
+            registry.add(out -> {
+                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+                ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
+
+                if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
+                    ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();
+                    for (Fuzzy dependency : dependencies) {
+                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.getId())));
+                    }
+                    for (Fuzzy conflict : conflicts) {
+                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getId()));
+                    }
+                    conditions.addRecipe(builder::build).build(out, name);
+                } else {
+                    builder.build(out, name);
+                }
+            });
         }
-        System.out.println("ADDED BUILDER!");
-        registry.add(o -> ConditionalRecipe.builder().addCondition(new ItemExistsCondition("forge:ingots/steel")).addRecipe(builder::build).build(o, Registry.ITEM.getKey(result.internal.getItem())));
+
+        public ShapedRecipeBuilder require(Fuzzy ...dependencies) {
+            this.dependencies.addAll(Arrays.asList(dependencies));
+            return this;
+        }
+
+        public ShapedRecipeBuilder conflicts(Fuzzy ...conflicts) {
+            this.conflicts.addAll(Arrays.asList(conflicts));
+            return this;
+        }
     }
 }
