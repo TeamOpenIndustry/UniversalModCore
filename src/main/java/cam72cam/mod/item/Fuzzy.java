@@ -192,7 +192,7 @@ public class Fuzzy {
             @Override
             protected void registerTags() {
                 for (Fuzzy value : registered.values()) {
-                    if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
+                    //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
                         Builder<Item> builder = getOrCreateBuilder(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
@@ -200,7 +200,7 @@ public class Fuzzy {
                         for (Fuzzy include : value.includes) {
                             builder.addTag(include.tag);
                         }
-                    }
+                    //}
                 }
             }
         });

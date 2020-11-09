@@ -46,34 +46,34 @@ public class Recipes extends RecipeProvider {
         private List<Fuzzy> conflicts = new ArrayList<>();
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
-            net.minecraft.data.ShapedRecipeBuilder builder = new net.minecraft.data.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
-
-            int height = ingredients.length / width;
-
-            for (int h = 0; h < height; h++) {
-                String line = "";
-                for (int w = 0; w < width; w++) {
-                    int idx = h * width + w;
-                    Fuzzy ingredient = ingredients[idx];
-                    line += ingredient == null ? " " : idx + "";
-                    if (ingredient != null) {
-                        // TODO tags
-                        builder.key((idx + "").charAt(0), ingredient.tag);
-                        builder.addCriterion(
-                                "has" + ingredient.toString() + idx,
-                                new InventoryChangeTrigger.Instance(
-                                        EntityPredicate.AndPredicate.ANY_AND,
-                                        MinMaxBounds.IntBound.UNBOUNDED,
-                                        MinMaxBounds.IntBound.UNBOUNDED,
-                                        MinMaxBounds.IntBound.UNBOUNDED,
-                                        new ItemPredicate[]{ItemPredicate.Builder.create().tag(ingredient.tag).build()}
-                                )
-                        );
-                    }
-                }
-                builder.patternLine(line);
-            }
             registry.add(out -> {
+                net.minecraft.data.ShapedRecipeBuilder builder = new net.minecraft.data.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+
+                int height = ingredients.length / width;
+
+                for (int h = 0; h < height; h++) {
+                    String line = "";
+                    for (int w = 0; w < width; w++) {
+                        int idx = h * width + w;
+                        Fuzzy ingredient = ingredients[idx];
+                        line += ingredient == null ? " " : idx + "";
+                        if (ingredient != null) {
+                            // TODO tags
+                            builder.key((idx + "").charAt(0), ingredient.tag);
+                            builder.addCriterion(
+                                    "has" + ingredient.toString() + idx,
+                                    new InventoryChangeTrigger.Instance(
+                                            EntityPredicate.AndPredicate.ANY_AND,
+                                            MinMaxBounds.IntBound.UNBOUNDED,
+                                            MinMaxBounds.IntBound.UNBOUNDED,
+                                            MinMaxBounds.IntBound.UNBOUNDED,
+                                            new ItemPredicate[]{ItemPredicate.Builder.create().tag(ingredient.tag).build()}
+                                    )
+                            );
+                        }
+                    }
+                    builder.patternLine(line);
+                }
                 ResourceLocation itemName = item.internal.getItem().getRegistryName();
                 ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
 

@@ -79,7 +79,7 @@ public class World {
     }
     /** Helper function to get a world in it's respective map */
     private static World getWorld(net.minecraft.world.World world){
-        return getWorldMap(world).get(world.getDimensionKey());
+        return getWorldMap(world).get(world.getDimensionKey().getRegistryName().toString());
     }
 
     /** Load world hander, sets up maps and internal handlers */
@@ -99,7 +99,7 @@ public class World {
 
         CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.getDimensionKey()));
+        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.getDimensionKey().getRegistryName().toString()));
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 

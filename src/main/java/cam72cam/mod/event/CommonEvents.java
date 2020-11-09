@@ -69,7 +69,7 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void onWorldTick(TickEvent.WorldTickEvent event) {
-            if (event.phase == TickEvent.Phase.START) {
+            if (event.phase == TickEvent.Phase.START && event.world != null) {
                 World.TICK.execute(x -> x.accept(event.world));
             }
         }

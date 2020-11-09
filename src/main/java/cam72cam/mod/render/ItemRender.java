@@ -30,10 +30,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Direction;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.model.IModelConfiguration;
-import net.minecraftforge.client.model.ItemLayerModel;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.SimpleModelTransform;
+import net.minecraftforge.client.model.*;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
@@ -99,12 +96,12 @@ public class ItemRender {
 
             @Override
             public ItemCameraTransforms getCameraTransforms() {
-                return null;
+                return ItemCameraTransforms.DEFAULT;
             }
 
             @Override
             public IModelTransform getCombinedTransform() {
-                return null;
+                return new SimpleModelTransform(PerspectiveMapWrapper.getTransforms(getCameraTransforms()));
             }
         }, event.getModelLoader(), ModelLoader.defaultTextureGetter(), foo, ItemOverrideList.EMPTY, tex.internal)));
 

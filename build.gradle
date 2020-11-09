@@ -23,7 +23,7 @@ configurations {
     compile.extendsFrom shade
 }
 
-version = "0.1.0-1.15.2-forge"
+version = "0.1.0-1.16.4-forge"
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
