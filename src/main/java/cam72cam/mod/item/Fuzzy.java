@@ -8,8 +8,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /** OreDict / Tag abstraction.  Use for item equivalence */
@@ -62,19 +61,43 @@ public class Fuzzy {
 
     static {
         CommonEvents.Item.REGISTER.post(() -> isPostItemRegistration = true);
-        ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::new);
+        ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
     }
 
     private final String ident;
+    private final Set<Fuzzy> includes;
+
+    private static Map<String, Fuzzy> registered;
+
+    public static Fuzzy get(String ident) {
+        if (registered == null) {
+            registered = new HashMap<>();
+        }
+        if (!registered.containsKey(ident)) {
+            registered.put(ident, new Fuzzy(ident));
+        }
+        return registered.get(ident);
+    }
 
     /** Create fuzzy with this name */
-    public Fuzzy(String ident) {
+    private Fuzzy(String ident) {
+        if (registered == null) {
+            registered = new HashMap<>();
+        }
         this.ident = ident;
+        this.includes = new HashSet<>();
     }
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return new ArrayList<>(OreDictionary.getOres(ident)).stream().anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false));
+        return OreDictionary.getOres(ident).stream()
+                        .anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false)) ||
+                        includes.stream().anyMatch(f -> f.matches(stack));
+    }
+
+    /** Do any items exist in this fuzzy */
+    public boolean isEmpty() {
+        return enumerate().isEmpty();
     }
 
     /** List all possible itemstacks */
@@ -93,6 +116,9 @@ public class Fuzzy {
             } else {
                 results.add(new ItemStack(stack));
             }
+        }
+        for (Fuzzy include : includes) {
+            results.addAll(include.enumerate());
         }
         return results;
     }
@@ -122,18 +148,13 @@ public class Fuzzy {
     }
 
     /** Use to register an item */
-    public void add(CustomItem item) {
-        add(item.internal);
+    public Fuzzy add(CustomItem item) {
+        return add(item.internal);
     }
 
-    /** Copy all from this other fuzzy into this one.  Does not track updates to other */
-    public Fuzzy addAll(Fuzzy other) {
-        return addAll(other.ident);
-    }
-
-    /** Copy all from this other fuzzy into this one.  Does not track updates to other.  Do not use directly */
-    public Fuzzy addAll(String other) {
-        postItemRegistration(() -> new ArrayList<>(OreDictionary.getOres(other)).stream().map(ItemStack::new).forEach(this::add));
+    /** Pull other fuzzy into this one */
+    public Fuzzy include(Fuzzy other) {
+        includes.add(other);
         return this;
     }
 
