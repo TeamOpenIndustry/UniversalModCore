@@ -34,7 +34,10 @@ public class GUIHelpers {
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
         try (OpenGL.With t = OpenGL.texture(tex)) {
-            AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
+            // X Y, U V, UW VH, W H, TW TH
+            // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
+            // X Y, W H, U V, UW VH, TW TH
+            AbstractGui.blit(x, y, width, height, 0, 0, 1, 1, 1, 1);
         }
     }
 
