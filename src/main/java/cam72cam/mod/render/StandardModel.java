@@ -7,6 +7,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.block.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
@@ -77,7 +78,17 @@ public class StandardModel {
             try (OpenGL.With matrix = OpenGL.matrix()) {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                Minecraft.getInstance().getItemRenderer().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE, 0, 0, new MatrixStack(), Minecraft.getInstance().getRenderTypeBuffers().getBufferSource());
+                boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
+                IRenderTypeBuffer.Impl buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+                buffer.finish();
+                if (oldState) {
+                    GL11.glEnable(GL11.GL_BLEND);
+                } else {
+                    GL11.glDisable(GL11.GL_BLEND);
+                }
+
+                Minecraft.getInstance().getItemRenderer().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new MatrixStack(), buffer);
+                buffer.finish();
             }
         });
         return this;
