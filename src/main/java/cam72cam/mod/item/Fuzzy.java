@@ -130,7 +130,7 @@ public class Fuzzy {
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return tag.getAllElements().stream().anyMatch(potential -> potential == stack.internal.getItem());
+        return enumerate().stream().anyMatch(potential -> potential.internal.getItem() == stack.internal.getItem());
     }
 
     /** Do any items exist in this fuzzy */
@@ -140,7 +140,9 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        List<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        customItems.forEach(item -> items.add(new ItemStack(new net.minecraft.item.ItemStack(item))));
+        return items;
     }
 
     /** Grab the first example of a item in this fuzzy */

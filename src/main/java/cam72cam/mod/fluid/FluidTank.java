@@ -83,7 +83,7 @@ public class FluidTank implements ITank {
     @Override
     public FluidStack drain(FluidStack fluidStack, boolean simulate) {
         if (!allows(fluidStack.getFluid())) {
-            return null;
+            return new FluidStack(net.minecraftforge.fluids.FluidStack.EMPTY);
         }
         return new FluidStack(internal.drain(fluidStack.internal, simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE));
     }

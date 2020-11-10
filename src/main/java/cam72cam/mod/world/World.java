@@ -28,14 +28,18 @@ import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.biome.Biome;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -113,21 +117,32 @@ public class World {
         });
     }
 
+    @OnlyIn(Dist.CLIENT)
+    private Iterable<net.minecraft.entity.Entity> clientEntities() {
+        return internal instanceof ClientWorld ? ((ClientWorld) internal).getAllEntities() : ((ServerWorld) internal).getEntities()::iterator;
+    }
+
+    @OnlyIn(Dist.DEDICATED_SERVER)
+    private Iterable<net.minecraft.entity.Entity> serverEntities() {
+        return ((ServerWorld) internal).getEntities()::iterator;
+    }
+
     private void checkLoadedEntities() {
-        Iterable<net.minecraft.entity.Entity> internalEntities = internal instanceof ClientWorld ?
-                ((ClientWorld) internal).getAllEntities() :
-                () -> ((ServerWorld) internal).getEntities().iterator();
+        Iterable<net.minecraft.entity.Entity> internalEntities = DistExecutor.runForDist(
+                () -> this::clientEntities,
+                () -> this::serverEntities
+        );
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.entity.Entity entity : internalEntities) {
             if (!this.entityByID.containsKey(entity.getEntityId())) {
-                ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
                 this.onEntityAdded(entity);
             }
         }
         for (Entity entity : new ArrayList<>(this.entityByID.values())) {
             if (internal.getEntityByID(entity.getId()) == null) {
-                ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                ModCore.debug("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                 this.onEntityRemoved(entity.internal);
             }
         }
@@ -328,6 +343,7 @@ public class World {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
+        te.setWorld(internal);
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
@@ -463,7 +479,9 @@ public class World {
 
     public List<Vec3i> blocksInBounds(IBoundingBox bb) {
         return internal.getCollisionShapes(null, BoundingBox.from(bb))
-                .map(blockBox -> new Vec3i(blockBox.getStart(Direction.Axis.X), blockBox.getStart(Direction.Axis.Y), blockBox.getStart(Direction.Axis.Z)))
+                .map(VoxelShape::getBoundingBox)
+                .filter(blockBox -> bb.intersects(IBoundingBox.from(blockBox)))
+                .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
                 .collect(Collectors.toList());
     }
 
