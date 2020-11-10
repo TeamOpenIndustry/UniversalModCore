@@ -356,7 +356,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                     if (target.getContents().internal == null) {
                         return null;
                     }
-                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), doDrain).internal;
+                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), !doDrain).internal;
                 }
             });
         }
