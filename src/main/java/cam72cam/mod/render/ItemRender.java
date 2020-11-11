@@ -260,6 +260,7 @@ public class ItemRender {
         return () -> new ItemStackTileEntityRenderer() {
             public void render(net.minecraft.item.ItemStack itemStackIn, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
                 try (OpenGL.With matrix = OpenGL.matrix()) {
+                    // TODO 1.15+ do we need to set lightmap coords here?
                     RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
                     doRender.run();
                 }
@@ -348,6 +349,7 @@ public class ItemRender {
                 if (!ModCore.isInReload()) {
                     RenderType.getSolid().setupRenderState();
                     GL11.glPushMatrix();
+                    // TODO 1.15+ do we need to set lightmap coords here?
                     RenderSystem.multMatrix(mat.getLast().getMatrix());
                     model.applyTransform(type);
                     //std.renderCustom();
