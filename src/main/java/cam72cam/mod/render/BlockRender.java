@@ -14,6 +14,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
@@ -30,6 +31,7 @@ import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -76,7 +78,7 @@ public class BlockRender {
         renderers.forEach((type, render) -> {
             ClientRegistry.bindTileEntityRenderer(TileEntity.getType(type), (ted) -> new TileEntityRenderer<TileEntity>(ted) {
                 @Override
-                public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int var5, int var6) {
+                public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int combinedLightIn, int var6) {
                     if (ModCore.isInReload()) {
                         return;
                     }
@@ -96,6 +98,14 @@ public class BlockRender {
                     }
 
                     RenderType.getSolid().setupRenderState();
+
+                    RenderHelper.enableStandardItemLighting();
+
+                    Minecraft.getInstance().gameRenderer.getLightTexture().enableLightmap();
+
+                    int j = combinedLightIn % 65536;
+                    int k = combinedLightIn / 65536;
+                    GL13.glMultiTexCoord2f(33986, (float)j, (float)k);
 
                     try (OpenGL.With matrix = OpenGL.matrix()) {
                         //TODO 1.15 lerp xyz

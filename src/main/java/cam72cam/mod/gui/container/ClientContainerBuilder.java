@@ -223,7 +223,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         y += centerY + 1;
 
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
-            drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
+            fill(new MatrixStack(), x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
             GlStateManager.color4f(1,1,1,1);
         }

@@ -26,7 +26,7 @@ public class Fuzzy {
     public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW_BLOCK);
     public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
 
-    public static final Fuzzy STONE_SLAB = new Fuzzy(ItemTags.SLABS, "slabStone");
+    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Items.STONE_SLAB);
     public static final Fuzzy STONE_BRICK = new Fuzzy(ItemTags.STONE_BRICKS, "brickStone");
     public static final Fuzzy SAND = new Fuzzy(Tags.Items.SAND, "sand");
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
@@ -132,7 +132,7 @@ public class Fuzzy {
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return tag.getAllElements().stream().anyMatch(potential -> potential == stack.internal.getItem());
+        return enumerate().stream().anyMatch(potential -> potential.internal.getItem() == stack.internal.getItem());
     }
 
     /** Do any items exist in this fuzzy */
@@ -142,7 +142,9 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        List<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        customItems.forEach(item -> items.add(new ItemStack(new net.minecraft.item.ItemStack(item))));
+        return items;
     }
 
     /** Grab the first example of a item in this fuzzy */

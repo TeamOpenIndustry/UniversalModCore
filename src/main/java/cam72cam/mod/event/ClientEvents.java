@@ -90,6 +90,7 @@ public class ClientEvents {
             RenderType.getCutout().setupRenderState();
             GL11.glPushMatrix();
             RenderSystem.multMatrix(event.getMatrix().getLast().getMatrix());
+            // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
             GL11.glPopMatrix();
             RenderType.getCutout().clearRenderState();

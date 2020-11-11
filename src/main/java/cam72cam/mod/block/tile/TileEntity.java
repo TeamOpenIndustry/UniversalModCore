@@ -290,22 +290,22 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
                 @Override
                 public int fill(FluidStack resource, FluidAction action) {
-                    return target.fill(new cam72cam.mod.fluid.FluidStack(resource), action.execute());
+                    return target.fill(new cam72cam.mod.fluid.FluidStack(resource), action.simulate());
                 }
 
                 @Nonnull
                 @Override
                 public FluidStack drain(FluidStack resource, FluidAction action) {
-                    return target.drain(new cam72cam.mod.fluid.FluidStack(resource), action.execute()).internal;
+                    return target.drain(new cam72cam.mod.fluid.FluidStack(resource), action.simulate()).internal;
                 }
 
                 @Nonnull
                 @Override
                 public FluidStack drain(int maxDrain, FluidAction action) {
-                    if (target.getContents().internal == null) {
+                    if (target.getContents().internal.isEmpty()) {
                         return FluidStack.EMPTY;
                     }
-                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), action.execute()).internal;
+                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), action.simulate()).internal;
                 }
             }).cast();
         }

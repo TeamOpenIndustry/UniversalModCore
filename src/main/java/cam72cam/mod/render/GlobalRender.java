@@ -50,6 +50,7 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
                         RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+                        // TODO 1.15+ do we need to set lightmap coords here?
                         renderFuncs.forEach(r -> r.accept(partialTicks));
                     }
 
