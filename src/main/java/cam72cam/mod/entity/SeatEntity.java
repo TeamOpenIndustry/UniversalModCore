@@ -6,10 +6,12 @@ import cam72cam.mod.world.World;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.network.NetworkHooks;
@@ -159,6 +161,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
             ((ModdedEntity) linked.internal).removeSeat(this);
         }
         super.removePassenger(passenger);
+    }
+
+
+    @Override
+    public Vector3d func_230268_c_(LivingEntity livingEntity) {
+        return livingEntity.getPositionVec();
     }
 
     @Override
