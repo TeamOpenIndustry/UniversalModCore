@@ -255,10 +255,11 @@ public class ItemRender {
     static Runnable doRender = () -> {};
     public static Callable<ItemStackTileEntityRenderer> ISTER() {
         return () -> new ItemStackTileEntityRenderer() {
-            public void render(net.minecraft.item.ItemStack itemStackIn, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+            @Override
+            public void func_239207_a_(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
                 try (OpenGL.With matrix = OpenGL.matrix()) {
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    RenderSystem.multMatrix(matrixStackIn.getLast().getMatrix());
+                    RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
                     doRender.run();
                 }
             }
