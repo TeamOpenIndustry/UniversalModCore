@@ -428,6 +428,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return true;
     }
 
+    public boolean func_241845_aY() {
+        return true;
+    }
+
     @Override
     public boolean canBePushed() {
         return self.canBePushed();
