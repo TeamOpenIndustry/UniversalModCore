@@ -150,7 +150,6 @@ public class BlockRender {
                         }
                         StandardModel out = model.apply(cls.cast(data.instance()));
                         if (out == null) {
-                            System.out.println(model);
                             return EMPTY;
                         }
                         return out.getQuads(side, rand);
