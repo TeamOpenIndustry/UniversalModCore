@@ -26,6 +26,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
@@ -42,7 +43,10 @@ public abstract class CustomItem {
     public CustomItem(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        internal = new ItemInternal(new Item.Properties().maxStackSize(getStackSize()).group(getCreativeTabs().get(0).internal).setISTER(ItemRender::ISTER)); // .setTEISR()
+        Item.Properties props = new Item.Properties().maxStackSize(getStackSize()).group(getCreativeTabs().get(0).internal);
+        Item.Properties propsWithRender = DistExecutor.unsafeRunForDist(() -> () -> props.setISTER(ItemRender::ISTER), () -> () -> props);
+
+        internal = new ItemInternal(propsWithRender);
         internal.setRegistryName(identifier);
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
