@@ -1,19 +1,18 @@
 package cam72cam.mod;
 
-import cam72cam.mod.block.tile.BlockEntityUpdatePacket;
-import cam72cam.mod.entity.CustomSpawnPacket;
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.entity.CustomSpawnPacket;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
-import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
+import cam72cam.mod.world.ChunkManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.server.ServerStartCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -26,31 +25,32 @@ import org.apache.logging.log4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/** UMC Mod, do not touch... */
 public class ModCore implements ModInitializer {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
     public static final String VERSION = "0.1.0";
     public static ModCore instance;
-    static List<Supplier<Mod>> modCtrs = new ArrayList<>();
 
-    List<Mod> mods;
+    static List<Mod> mods = new ArrayList<>();
     private Logger logger;
 
-    public static void register(Supplier<Mod> ctr) {
-        modCtrs.add(ctr);
+    /** Register a mod, must happen before UMC is loaded! */
+    public static void register(Mod ctr) {
+        mods.add(ctr);
+        proxy.event(ModEvent.CONSTRUCT, ctr);
     }
 
+    /** Called during Mod Construction phase */
     public ModCore() {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
 
-        mods = modCtrs.stream().map(Supplier::get).collect(Collectors.toList());
-
-        proxy.event(ModEvent.CONSTRUCT);
         logger = LogManager.getLogger("universalmodcore");
     }
 
@@ -65,6 +65,7 @@ public class ModCore implements ModInitializer {
     }
 
     public void preInit() {
+        mods = Collections.unmodifiableList(mods);
         proxy.event(ModEvent.INITIALIZE);
     }
 
@@ -74,19 +75,26 @@ public class ModCore implements ModInitializer {
     }
 
     public static List<String> modIDs() {
-        return instance.mods.stream().filter(m -> !(m instanceof Internal)).map(Mod::modID).collect(Collectors.toList());
+        return mods.stream().filter(m -> !(m instanceof Internal)).map(Mod::modID).collect(Collectors.toList());
     }
 
+    /** Implement this to create a UMC mod */
     public static abstract class Mod {
         public abstract String modID();
 
+        /** Called both server and client side with a given event */
         public abstract void commonEvent(ModEvent event);
+        /** Called client side with a given event */
         public abstract void clientEvent(ModEvent event);
+        /** Called server side with a given event */
         public abstract void serverEvent(ModEvent event);
 
+        /** Get config file for filename */
         public final Path getConfig(String fname) {
             return Paths.get(FabricLoader.getInstance().getConfigDirectory().toString(), fname);
         }
+
+        /* Standard logging functions */
 
         public static void debug(String msg, Object...params) {
             ModCore.debug(msg, params);
@@ -106,36 +114,40 @@ public class ModCore implements ModInitializer {
     }
 
     static Proxy proxy = new Proxy();
+    /** Hooked into fabric's proxy system and fires off corresponding events */
     public static class Proxy {
         private boolean isServer;
         private boolean isClient;
 
         public Proxy() {
+            proxy = this;
+            ModCore.register(new Internal());
         }
 
         public void enableClient() {
             this.isClient = true;
         }
 
+        public void event(ModEvent event) {
+            mods.forEach(m -> event(event, m));
+        }
+        public void event(ModEvent event, Mod m) {
+            System.out.println(String.format("%s : %s", event.name(), m.modID()));
+            m.commonEvent(event);
+            if (event != ModEvent.CONSTRUCT) {
+                if (isClient) {
+                    m.clientEvent(event);
+                }
+                if (isServer) {
+                    m.serverEvent(event);
+                }
+            }
+        }
+
         public void enableServer() {
             this.isServer = true;
         }
 
-        public void event(ModEvent event) {
-            instance.mods.forEach(m -> m.commonEvent(event));
-            if (event != ModEvent.CONSTRUCT) {
-                if (isClient) {
-                    instance.mods.forEach(m -> m.clientEvent(event));
-                }
-                if (isServer) {
-                    instance.mods.forEach(m -> m.serverEvent(event));
-                }
-            }
-        }
-    }
-
-    static {
-        ModCore.register(Internal::new);
     }
 
     public static class Internal extends Mod {
@@ -151,11 +163,10 @@ public class ModCore implements ModInitializer {
             switch (event) {
                 case CONSTRUCT:
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
-                    Packet.register(Keyboard.MovementPacket::new, PacketDirection.ClientToServer);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
-                    Packet.register(BlockEntityUpdatePacket::new, PacketDirection.ServerToClient);
                     Packet.register(CustomSpawnPacket::new, PacketDirection.ServerToClient);
                     Packet.register(GuiRegistry.OpenGuiPacket::new, PacketDirection.ServerToClient);
+                    Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
@@ -167,6 +178,9 @@ public class ModCore implements ModInitializer {
                     //World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     //GuiRegistry.registration();
+                    break;
+                case FINALIZE:
+                    ChunkManager.setup();
                     break;
                 case START:
                     Command.registration();
@@ -186,7 +200,7 @@ public class ModCore implements ModInitializer {
                             skipN--;
                             return;
                         }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                        mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
                         ClientEvents.fireReload();
                     });
                     BlockRender.onPostColorSetup();
@@ -251,5 +265,29 @@ public class ModCore implements ModInitializer {
         }
 
         instance.logger.catching(ex);
+    }
+
+    public static <T> T runOn(Supplier<Supplier<T>> client, Supplier<Supplier<T>> server) {
+        switch (FabricLoader.getInstance().getEnvironmentType()) {
+            case CLIENT:
+                return client.get().get();
+            case SERVER:
+                return server.get().get();
+            default:
+                throw new RuntimeException("Invalid");
+        }
+    }
+
+    public static void execOn(Supplier<Runnable> client, Supplier<Runnable> server) {
+        switch (FabricLoader.getInstance().getEnvironmentType()) {
+            case CLIENT:
+                client.get().run();
+                break;
+            case SERVER:
+                server.get().run();
+                break;
+            default:
+                throw new RuntimeException("Invalid");
+        }
     }
 }

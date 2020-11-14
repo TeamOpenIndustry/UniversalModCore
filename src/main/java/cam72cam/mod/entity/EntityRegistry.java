@@ -10,6 +10,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.entity.FabricEntityTypeBuilder;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DisconnectedScreen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.registry.Registry;
@@ -19,30 +22,30 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class EntityRegistry {
-    private static Map<Class<? extends Entity>, EntityType<ModdedEntity>> registered = new HashMap<>();
+    private static Map<Class<? extends CustomEntity>, EntityType<ModdedEntity>> registered = new HashMap<>();
+
     private static String missingResources;
 
     private EntityRegistry() {
 
     }
 
-    public static void register(ModCore.Mod mod, Supplier<Entity> ctr, EntitySettings settings, int distance) {
-
-        Entity tmp = ctr.get();
-        Class<? extends Entity> type = tmp.getClass();
+    public static void register(ModCore.Mod mod, Supplier<CustomEntity> ctr, int distance) {
+        CustomEntity tmp = ctr.get();
+        Class<? extends CustomEntity> type = tmp.getClass();
         Identifier id = new Identifier(mod.modID(), type.getSimpleName().toLowerCase());
 
-        EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr, settings);
+        EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr);
         FabricEntityTypeBuilder<ModdedEntity> builder = FabricEntityTypeBuilder.create(EntityCategory.MISC, factory)
                 .trackable(distance, 20, false);
-        if (settings.immuneToFire) {
+        if (tmp.isImmuneToFire()) {
             builder = builder.setImmuneToFire();
         }
         EntityType<ModdedEntity> oet = Registry.register(Registry.ENTITY_TYPE, id.internal, builder.build());
         registered.put(type, oet);
     }
 
-    public static Entity create(World world, Class<? extends Entity> cls) {
+    public static CustomEntity create(World world, Class<? extends Entity> cls) {
         return registered.get(cls).create(world.internal).getSelf();
     }
 
@@ -69,8 +72,8 @@ public class EntityRegistry {
             if (missingResources != null && !MinecraftClient.getInstance().isInSingleplayer() && MinecraftClient.getInstance().getNetworkHandler() != null) {
                 ModCore.error(missingResources);
                 MinecraftClient.getInstance().getNetworkHandler().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
-                //MinecraftClient.getInstance().loadWorld(null);
-                //MinecraftClient.getInstance().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
+                MinecraftClient.getInstance().joinWorld(null);
+                MinecraftClient.getInstance().openScreen(new DisconnectedScreen(new MultiplayerScreen(new TitleScreen()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

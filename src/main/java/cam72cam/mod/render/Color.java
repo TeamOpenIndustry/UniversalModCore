@@ -3,6 +3,7 @@ package cam72cam.mod.render;
 
 import net.minecraft.util.DyeColor;
 
+/** Wrapper for MC's Colors */
 public enum Color {
     WHITE(DyeColor.WHITE),
     ORANGE(DyeColor.ORANGE),
@@ -22,6 +23,7 @@ public enum Color {
     BLACK(DyeColor.BLACK),
     ;
 
+    /** Internal, do not use */
     public final DyeColor internal;
 
     Color(DyeColor internal) {

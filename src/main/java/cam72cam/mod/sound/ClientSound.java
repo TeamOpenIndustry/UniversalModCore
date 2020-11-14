@@ -11,7 +11,7 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ClientSound implements ISound {
+class ClientSound implements ISound {
     private final static float dopplerScale = 0.05f;
     private boolean repeats;
     private Identifier oggLocation;
@@ -21,7 +21,7 @@ public class ClientSound implements ISound {
     private float currentPitch = 1;
     private float currentVolume = 1;
     private float baseSoundMultiplier;
-    private float scale;
+    private final float scale;
     private boolean disposable = false;
     private final int id;
 
@@ -56,10 +56,12 @@ public class ClientSound implements ISound {
 
     @Override
     public void play(Vec3d pos) {
+        stop();
+
         this.setPosition(pos);
         update();
 
-        if (repeats || currentPos == null || MinecraftClient.getPlayer() == null) {
+        if (repeats || currentPos == null || !MinecraftClient.isReady()) {
             AL10.alSourcePlay(id);
         } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
             AL10.alSourcePlay(id);

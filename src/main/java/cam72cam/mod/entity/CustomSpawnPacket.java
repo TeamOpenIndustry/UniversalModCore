@@ -58,7 +58,7 @@ public class CustomSpawnPacket extends Packet {
         entity.setUuid(uuid);
         entity.updatePosition(pos.x, pos.y, pos.z);
         entity.updateTrackedPosition(pos.x, pos.y, pos.z);
-        entity.setVelocity(vel.internal);
+        entity.setVelocity(vel.internal());
 
         if (entity instanceof IAdditionalSpawnData) {
             ((IAdditionalSpawnData)entity).readSpawnData(entData, yaw, pitch);

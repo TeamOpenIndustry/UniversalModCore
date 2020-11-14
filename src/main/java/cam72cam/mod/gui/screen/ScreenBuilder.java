@@ -1,4 +1,4 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
@@ -6,17 +6,29 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.text.LiteralText;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
-    private Map<AbstractButtonWidget, Button> buttonMap = new HashMap<>();
+    private final Map<AbstractButtonWidget, Button> buttonMap = new HashMap<>();
+    private final Supplier<Boolean> valid;
 
-    public ScreenBuilder(IScreen screen) {
+    public ScreenBuilder(Pair<IScreen, Supplier<Boolean>> params) {
         super(new LiteralText(""));
-        this.screen = screen;
+        this.screen = params.getLeft();
+        this.valid = params.getRight();
+    }
+    
+    @Override
+    public void tick() {
+        super.tick();
+        if (!valid.get()) {
+            this.close();
+        }
     }
 
     // IScreenBuilder
@@ -55,7 +67,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
-    public void drawTank(double x, int y, double width, double height, Fluid fluid, float fluidPercent, boolean background, int color) {
+    public void drawTank(int x, int y, int width, int height, Fluid fluid, float fluidPercent, boolean background, int color) {
         GUIHelpers.drawTankBlock(this.width / 2 + x, this.height / 4 + y, width, height, fluid, fluidPercent, background, color);
     }
 

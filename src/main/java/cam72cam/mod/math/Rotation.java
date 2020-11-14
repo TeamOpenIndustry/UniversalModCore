@@ -3,6 +3,7 @@ package cam72cam.mod.math;
 import cam72cam.mod.util.Facing;
 import net.minecraft.util.BlockRotation;
 
+/** Represents a rotation around the Y axis */
 public enum Rotation {
     NONE(BlockRotation.NONE),
     CLOCKWISE_90(BlockRotation.CLOCKWISE_90),

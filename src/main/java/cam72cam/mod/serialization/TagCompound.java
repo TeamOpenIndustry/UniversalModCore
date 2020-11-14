@@ -15,9 +15,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/** Wraps MC's tag object */
 public class TagCompound {
+    /** Internal, do not use */
     public final CompoundTag internal;
 
+    /** Wraps MC object, do not use */
     public TagCompound(CompoundTag data) {
         this.internal = data;
     }
@@ -295,7 +298,7 @@ public class TagCompound {
     public <T extends BlockEntity> TagCompound setTile(String key, T tile) {
         return setter(key, tile, () -> {
             TagCompound ted = new TagCompound();
-            ted.setWorld("world", tile.world);
+            ted.setWorld("world", tile.getWorld());
 
             TagCompound data = new TagCompound();
             tile.internal.toTag(data.internal);
@@ -303,5 +306,9 @@ public class TagCompound {
 
             set(key, ted);
         });
+    }
+
+    public boolean isEmpty() {
+        return internal.isEmpty();
     }
 }

@@ -16,6 +16,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
     public ItemInv internal;
@@ -29,7 +30,7 @@ public class ItemStackHandler implements IInventory {
             super(invSize);
 
             this.addListener((inv, slot, previous, current) -> {
-                onContentsChanged(slot);
+                onChanged.forEach(f -> f.accept(slot));
             }, () -> {});
         }
 
@@ -57,19 +58,17 @@ public class ItemStackHandler implements IInventory {
         this(1);
     }
 
+    /** Get notified any time a stack changes (which slot) */
     public void onChanged(Consumer<Integer> fn) {
         onChanged.add(fn);
     }
 
-    @Deprecated
-    protected void onContentsChanged(int slot) {
-        onChanged.forEach(f -> f.accept(slot));
-    }
-
+    /** Set slot limiter */
     public void setSlotLimit(Function<Integer, Integer> limiter) {
         slotLimit = limiter;
     }
 
+    /** Change the size of the inventory and return items that don't fit anymore */
     public List<ItemStack> setSize(int inventorySize) {
         if (inventorySize == getSlotCount()) {
             return Collections.emptyList();

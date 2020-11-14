@@ -6,6 +6,8 @@ import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import cam72cam.mod.render.OpenGL;
 import org.lwjgl.opengl.GL11;
 
+
+/** Internal item button class */
 public class ItemButton extends AbstractButtonWidget {
 
     public ItemStack stack;
@@ -18,7 +20,6 @@ public class ItemButton extends AbstractButtonWidget {
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
         GUIHelpers.drawRect(x, y, 32, 32, 0xFFFFFFFF);
-        //RenderHelper.enableStandardItemLighting();
 
         MinecraftClient mc = MinecraftClient.getInstance();
 

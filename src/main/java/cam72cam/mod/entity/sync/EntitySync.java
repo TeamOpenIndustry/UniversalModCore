@@ -1,7 +1,7 @@
 package cam72cam.mod.entity.sync;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.entity.Entity;
+import cam72cam.mod.entity.CustomEntity;
 import cam72cam.mod.net.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -13,30 +13,27 @@ import cam72cam.mod.serialization.TagSerializer;
 import java.util.ArrayList;
 import java.util.List;
 
+/** TagCompound that auto-serializes an entity's @TagSync fields from server to client */
 public class EntitySync extends TagCompound {
-    private final Entity entity;
+    // Entity to synchronize
+    private final CustomEntity entity;
+    // Previous entry (for calculating diff / needs update)
     private TagCompound old;
-    private String oldString;
 
-    public EntitySync(Entity entity) {
+    /** Track properties on entity */
+    public EntitySync(CustomEntity entity) {
         super();
         this.entity = entity;
         this.old = new TagCompound();
-        this.oldString = old.toString();
     }
 
+    /** Perform synchronization */
     public void send() throws SerializationException {
         if (entity.getWorld().isClient) {
             return;
         }
 
         TagSerializer.serialize(this, entity, TagSync.class);
-
-        // Is this faster than the below check?
-        // Could also put a bool tracker in TagCompound
-        if (oldString.equals(this.toString())) {
-            return;
-        }
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
@@ -66,13 +63,13 @@ public class EntitySync extends TagCompound {
         }
 
         if (sync.internal.getKeys().size() != 0) {
-            old = new TagCompound((CompoundTag) this.internal.copy());
-            oldString = old.toString();
+            old = new TagCompound(this.internal.copy());
 
-            entity.sendToObserving(new EntitySyncPacket(entity, sync));
+            new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
     }
 
+    /** Receive update (should only be called from packets) */
     public void receive(TagCompound sync) throws SerializationException {
         for (String key : sync.internal.getKeys()) {
             if (key.equals("sync_internal_removed")) {
@@ -88,13 +85,13 @@ public class EntitySync extends TagCompound {
 
     public static class EntitySyncPacket extends Packet {
         @TagField
-        Entity target;
+        CustomEntity target;
         @TagField
         private TagCompound info;
 
         public EntitySyncPacket() {}
 
-        public EntitySyncPacket(Entity entity, TagCompound sync) {
+        public EntitySyncPacket(CustomEntity entity, TagCompound sync) {
             this.target = entity;
             this.info = sync;
         }

@@ -32,13 +32,15 @@ public class ModCoreClient implements ClientModInitializer {
             return res;
         });
 
-        ModCore.instance.mods.forEach(m -> m.clientEvent(ModEvent.CONSTRUCT));
+        ModCore.mods.forEach(m -> m.clientEvent(ModEvent.CONSTRUCT));
     }
 
     @Override
     public void onInitializeClient() {
         //ModCore.instance.actualInit();
         ClientEvents.registerClientEvents();
+
+        System.out.println("CRAPPPPP");
 
         REGISTER_ENTITY.execute(Runnable::run);
         MODEL_BAKE.execute(Runnable::run);

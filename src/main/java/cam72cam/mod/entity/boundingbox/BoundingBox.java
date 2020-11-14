@@ -7,15 +7,22 @@ import net.minecraft.util.math.Box;
 import java.util.Optional;
 
 public class BoundingBox extends Box {
-    private final IBoundingBox internal;
+    public final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
         super(constructorParams[0], constructorParams[1], constructorParams[2], constructorParams[3], constructorParams[4], constructorParams[5]);
         this.internal = internal;
     }
 
-    public BoundingBox(IBoundingBox internal) {
+    private BoundingBox(IBoundingBox internal) {
         this(internal, hack(internal));
+    }
+
+    public static Box from(IBoundingBox internal) {
+        if (internal instanceof DefaultBoundingBox) {
+            return ((DefaultBoundingBox) internal).internal;
+        }
+        return new BoundingBox(internal);
     }
 
     private static double[] hack(IBoundingBox internal) {
@@ -65,7 +72,8 @@ public class BoundingBox extends Box {
 
     @Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ));
+        return super.intersects(minX, minY, minZ, maxX, maxY, maxZ) && // Fast check
+                internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ)); // Slow check
     }
 
     @Override
@@ -85,7 +93,7 @@ public class BoundingBox extends Box {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.x + xDelta * step, vecA.y + yDelta * step, vecA.z + zDelta * step);
             if (internal.contains(stepPos)) {
-                return Optional.of(stepPos.internal);
+                return Optional.of(stepPos.internal());
             }
         }
         return Optional.empty();

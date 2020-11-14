@@ -22,7 +22,7 @@ public class ModCoreServer implements DedicatedServerModInitializer {
             streams.add(this.getClass().getResourceAsStream(Data.pathString(location, true)));
             return streams;
         });
-        ModCore.instance.mods.forEach(m -> m.serverEvent(ModEvent.CONSTRUCT));
+        ModCore.mods.forEach(m -> m.serverEvent(ModEvent.CONSTRUCT));
     }
     @Override
     public void onInitializeServer() {

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/** Internal, do not use directly */
 public class Data {
     public static String pathString(Identifier location, boolean startingSlash) {
         return (startingSlash ? "/" : "") + "assets/" + location.getDomain() + "/" + location.getPath();

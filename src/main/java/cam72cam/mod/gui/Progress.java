@@ -1,28 +1,21 @@
 package cam72cam.mod.gui;
 
+/** Wrapper around game loading bar, only functional on certain MC versions / loaders */
 public class Progress {
+    /** Add a new bar to the stack */
     public static Bar push(String name, int steps) {
-        //return new Bar(ProgressManager.push(name, steps));
         return new Bar(name, steps);
     }
 
+    /** Remove a particular bar from the stack */
     public static void pop(Bar bar) {
-        //ProgressManager.pop(bar.bar);
     }
 
+    /** Remove the current bar from the stack */
     public static void pop() {
-        /*
-        ProgressBar origBar = null;
-        Iterator<ProgressBar> itr = ProgressManager.barIterator();
-        while (itr.hasNext()) {
-            origBar = itr.next();
-        }
-
-        //This is terrible, I am sorry
-        ProgressManager.pop(origBar);
-        */
     }
 
+    /** Get from push() and step() to increment progress */
     public static class Bar {
         private final String name;
         private final int steps;
@@ -34,18 +27,9 @@ public class Progress {
             this.at=0;
             System.out.println(name+ " 0%");
         }
-
-        /*
-                private final ProgressBar bar;
-
-                public Bar(ProgressBar bar) {
-                    this.bar = bar;
-                }
-                */
         public void step(String name) {
             at+=1;
             System.out.println(this.name + " " + (at*100/steps) + "% : " + name);
-            //bar.step(name);
         }
     }
 }

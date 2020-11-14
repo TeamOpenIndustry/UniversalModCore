@@ -1,12 +1,15 @@
 package cam72cam.mod.block;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.util.Hand;
+import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.fabricmc.fabric.api.block.FabricBlockSettings;
 import net.minecraft.block.Block;
@@ -14,30 +17,22 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
+
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 
+/** A standard block with no attached entity */
 public abstract class BlockType {
-    public final net.minecraft.block.Block internal;
-    public final Identifier identifier;
-    private final String name;
-    private final String modID;
-
-    public BlockType(String modID, String name) {
-        this.modID = modID;
-        this.name = name;
-
-        internal = getBlock();
-
-        identifier = new Identifier(modID, name);
-
-        CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, identifier, internal));
-
+    /*
+    Hook into the Block Broken event (not specific per block)
+     */
+    static {
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
             if (block instanceof BlockInternal) {
@@ -47,19 +42,35 @@ public abstract class BlockType {
         });
     }
 
-    public final String getName() {
-        return name;
+    /** Wraps the minecraft construct, do not use directly. */
+    public final net.minecraft.block.Block internal;
+
+    /** Mod/name of the block */
+    public final Identifier id;
+
+    /**
+     * Construct a new BlockType (backed by a std minecraft block)<br>
+     * <br>
+     * Should be called during ModEvent.CONSTRUCT
+     */
+    public BlockType(String modID, String name) {
+        this.id = new Identifier(modID, name);
+        internal = getBlock();
+        CommonEvents.Block.REGISTER.subscribe(() -> Registry.register(Registry.BLOCK, id.internal, internal));
     }
 
+    /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
     protected BlockInternal getBlock() {
         return new BlockInternal();
     }
 
+    /** @return false if the in-progress break should be cancelled */
     public abstract boolean tryBreak(World world, Vec3i pos, Player player);
 
     /*
     Properties
      */
+
     public Material getMaterial() {
         return Material.METAL;
     }
@@ -69,9 +80,12 @@ public abstract class BlockType {
     public float getExplosionResistance() {
         return getHardness() * 5;
     }
+
+    /** @return if fencing / glass should connect to it */
     public boolean isConnectable() {
         return true;
     }
+    /** @return true if redstone functions below should be wired in */
     public boolean isRedstoneProvider() {
         return false;
     }
@@ -81,26 +95,54 @@ public abstract class BlockType {
     Public functionality
      */
 
+    /** Called when the block is broken */
     public abstract void onBreak(World world, Vec3i pos);
 
-    public abstract boolean onClick(World world, Vec3i pos, Player player, Hand hand, Facing facing, Vec3d hit);
+    /**
+     * Called when a player right-clicks a block.
+     * @return true if this accepts the click (stop processing it after this call)
+     */
+    public abstract boolean onClick(World world, Vec3i pos, Player player, Player.Hand hand, Facing facing, Vec3d hit);
 
+    /**
+     * Called when a player performs the pick operation on this block.
+     * @return An ItemStack representing this block.  Must NOT be null, return ItemStack.EMPTY instead.
+     */
     public abstract ItemStack onPick(World world, Vec3i pos);
 
+    /**
+     * Called when a neighboring block has changed state
+     */
     public abstract void onNeighborChange(World world, Vec3i pos, Vec3i neighbor);
 
-    public double getHeight() {
-        return 1;
+    /**
+     * Shape of the block.
+     */
+    protected static final IBoundingBox defaultBox = IBoundingBox.from(new Box(0, 0, 0, 1, 1, 1));
+    public IBoundingBox getBoundingBox(World world, Vec3i pos) {
+        return defaultBox;
     }
 
+    /**
+     * Only applicable if isRedstoneProvider returns true
+     * @return strong redstone power
+     */
     public int getStrongPower(World world, Vec3i vec3i, Facing from) {
         return 0;
     }
 
+    /**
+     * Only applicable if isRedstoneProvider returns true
+     * @return strong redstone power
+     */
     public int getWeakPower(World world, Vec3i vec3i, Facing from) {
         return 0;
     }
 
+    /**
+     * BlockInternal is an internal class that should only be extended when you need to implement
+     * an interface.
+     */
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
             super(FabricBlockSettings
@@ -112,6 +154,7 @@ public abstract class BlockType {
                     .build());
         }
 
+        /** Called server side at the end of the block break call chain as cleanup */
         @Override
         public void onBlockRemoved(BlockState blockState_1, net.minecraft.world.World world, BlockPos pos, BlockState blockState_2, boolean boolean_1) {
             BlockType.this.onBreak(World.get(world), new Vec3i(pos));
@@ -120,7 +163,7 @@ public abstract class BlockType {
 
         @Override
         public boolean activate(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockHitResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos()));
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos()));
         }
 
         @Override
@@ -143,25 +186,24 @@ public abstract class BlockType {
             return BlockRenderType.MODEL;
         }
 
+        protected World getWorldOrNull(BlockView source, BlockPos pos) {
+            return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World) source) : null;
+        }
+
 
         @Override
         public boolean isOpaque(BlockState blockState_1) {
             return false;
         }
 
+        private final SingleCache<IBoundingBox, VoxelShape> bbCache = new SingleCache<>((IBoundingBox box) -> VoxelShapes.cuboid(BoundingBox.from(box)));
         @Override
-        public VoxelShape getCollisionShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1, EntityContext entityContext_1) {
-            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
-        }
-
-        @Override
-        public VoxelShape getRayTraceShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1) {
-            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
-        }
-
-        @Override
-        public VoxelShape getOutlineShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1, EntityContext entityContext_1) {
-            return Block.createCuboidShape(0, 0, 0, 16, BlockType.this.getHeight()*16, 16);
+        public VoxelShape getOutlineShape(BlockState state, BlockView worldIn, BlockPos pos, EntityContext context) {
+            World world = getWorldOrNull(worldIn, pos);
+            if (world != null) {
+                return bbCache.get(BlockType.this.getBoundingBox(world, new Vec3i(pos)));
+            }
+            return super.getOutlineShape(state, worldIn, pos, context);
         }
 
         /*
@@ -183,13 +225,21 @@ public abstract class BlockType {
         @Override
         public int getWeakRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            World world = getWorldOrNull(blockAccess, pos);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getWeakPower(world, new Vec3i(pos), Facing.from(side)) : 0;
+            }
+            return 0;
         }
 
         @Override
         public int getStrongRedstonePower(BlockState blockState, BlockView blockAccess, BlockPos pos, Direction side)
         {
-            return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(World.get((net.minecraft.world.World)blockAccess), new Vec3i(pos), Facing.from(side)) : 0;
+            World world = getWorldOrNull(blockAccess, pos);
+            if (world != null) {
+                return BlockType.this.isRedstoneProvider() ? BlockType.this.getStrongPower(world, new Vec3i(pos), Facing.from(side)) : 0;
+            }
+            return 0;
         }
 
         @Override
@@ -205,5 +255,19 @@ public abstract class BlockType {
         }
         */
 
+        @Override
+        public boolean hasSidedTransparency(BlockState state) {
+            return true;
+        }
+
+        @Override
+        public boolean isTranslucent(BlockState state, BlockView view, BlockPos pos) {
+            return true;
+        }
+
+        @Override
+        public VoxelShape getCullingShape(BlockState state, BlockView view, BlockPos pos) {
+            return VoxelShapes.empty();
+        }
     }
 }

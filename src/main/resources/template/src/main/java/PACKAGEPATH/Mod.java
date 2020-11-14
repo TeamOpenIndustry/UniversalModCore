@@ -9,11 +9,10 @@ public class Mod implements ModInitializer {
     public static final String VERSION = "#VERSION#";
 
     static {
-        ModCore.register(#PACKAGE#.#CLASS#::new);
+        ModCore.register(new #PACKAGE#.#CLASS#());
     }
 
     @Override
     public void onInitialize() {
-
     }
 }

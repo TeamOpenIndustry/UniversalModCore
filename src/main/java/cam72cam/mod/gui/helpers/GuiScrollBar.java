@@ -1,7 +1,8 @@
 package cam72cam.mod.gui.helpers;
 
-import cam72cam.mod.gui.Slider;
+import cam72cam.mod.gui.screen.Slider;
 
+/** Internal scrollbar class */
 public class GuiScrollBar extends Slider.HookedSliderWidget {
     private final double min;
     private final double max;

@@ -9,11 +9,15 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/** Creates/Registers a creative tab for custom items */
 public class CreativeTab {
     public ItemGroup internal;
 
     List<Consumer<List<net.minecraft.item.ItemStack>>> items = new ArrayList<>();
 
+    // TODO expose existing creative tabs as constants to be used by mods
+
+    /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         internal = FabricItemGroupBuilder
                 .create(new Identifier(label.split("\\.", 2)[0], label.split("\\.",2)[1]))
@@ -22,11 +26,13 @@ public class CreativeTab {
     }
 
 
+    /** Wraps minecraft's tabs, don't use directly */
     public CreativeTab(ItemGroup tab) {
         this.internal = tab;
     }
 
-    public boolean equals(CreativeTab tab) {
-        return tab.internal == this.internal;
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof CreativeTab && ((CreativeTab)o).internal == this.internal;
     }
 }

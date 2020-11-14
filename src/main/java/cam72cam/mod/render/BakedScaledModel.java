@@ -11,13 +11,18 @@ import net.minecraft.util.math.Direction;
 
 import java.util.*;
 
-public class BakedScaledModel implements BakedModel {
+/**
+ * Internal class to scale an existing Baked Model
+ *
+ * Do not use directly
+ */
+class BakedScaledModel implements BakedModel {
     // I know this is evil and I love it :D
 
     private final Vec3d scale;
     private final Vec3d transform;
-    private BakedModel source;
-    private Map<Direction, List<BakedQuad>> quadCache = new HashMap<>();
+    private final BakedModel source;
+    private final Map<Direction, List<BakedQuad>> quadCache = new HashMap<>();
 
     public BakedScaledModel(BakedModel source, Vec3d scale, Vec3d transform) {
         this.source = source;

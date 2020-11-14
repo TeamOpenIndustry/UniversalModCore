@@ -1,28 +1,15 @@
 package cam72cam.mod.input;
 
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.net.Packet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
 import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
-import cam72cam.mod.serialization.TagField;
-
-import java.util.*;
 
 public class Keyboard {
-    private static Map<UUID, Vec3d> vecs = new HashMap<>();
-
-    public static Vec3d getMovement(Player player) {
-        return vecs.getOrDefault(player.getUUID(), Vec3d.ZERO);
-    }
-
     public enum KeyCode {
         ESCAPE(GLFW.GLFW_KEY_ESCAPE),
         NUM1(GLFW.GLFW_KEY_1),
@@ -140,6 +127,7 @@ public class Keyboard {
         }
     }
 
+    /** Registers a keybind */
     @Environment(EnvType.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         FabricKeyBinding key = FabricKeyBinding.Builder.create(new Identifier(name), InputUtil.Type.KEYSYM, keyCode.code, category).build();
@@ -149,39 +137,5 @@ public class Keyboard {
                 handler.run();
             }
         });
-    }
-
-    @Environment(EnvType.CLIENT)
-    public static void registerClientEvents() {
-        ClientEvents.TICK.subscribe(() -> {
-            ClientPlayerEntity player = net.minecraft.client.MinecraftClient.getInstance().player;
-            if (player == null) {
-                return;
-            }
-            new MovementPacket(
-                    player.getUuid(),
-                    new Vec3d(player.input.movementSideways, 0, player.input.movementForward).scale(player.isSprinting() ? 0.4 : 0.2)
-            ).sendToServer();
-        });
-    }
-
-    public static class MovementPacket extends Packet {
-        @TagField
-        private UUID id;
-        @TagField
-        private Vec3d move;
-
-        public MovementPacket() {}
-
-        public MovementPacket(UUID id, Vec3d move) {
-            this.id = id;
-            this.move = move;
-            vecs.put(id, move);
-        }
-
-        @Override
-        protected void handle() {
-            vecs.put(id, move);
-        }
     }
 }

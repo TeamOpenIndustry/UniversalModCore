@@ -5,6 +5,7 @@ import alexiil.mc.lib.attributes.item.FixedItemInv;
 import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper;
 
 public interface IInventory {
+    /** Wraps MC construct.  Do not use */
     static IInventory from(FixedItemInv inv) {
         if (inv == null) {
             return null;
@@ -43,22 +44,30 @@ public interface IInventory {
         };
     }
 
+    /** Wraps MC construct.  Do not use */
     static IInventory from(net.minecraft.inventory.Inventory inventory) {
         return from(new FixedInventoryVanillaWrapper(inventory));
     }
 
+    /** Total size of this inventory */
     int getSlotCount();
 
+    /** Stack in the slot (usually not a copy) */
     ItemStack get(int slot);
 
+    /** Set the stack in this slot to the given stack */
     void set(int slot, ItemStack itemStack);
 
+    /** Insert as much of itemStack as possible into slot, return remainder */
     ItemStack insert(int slot, ItemStack itemStack, boolean simulate);
 
+    /** Extract as much of slot as possible, up to amount */
     ItemStack extract(int slot, int amount, boolean simulate);
 
+    /** Max size of stack in slot */
     int getLimit(int slot);
 
+    /** Try to move all items in this inventory into another inventory */
     default void transferAllTo(IInventory to) {
         for (int fromSlot = 0; fromSlot < this.getSlotCount(); fromSlot++) {
             ItemStack stack = this.get(fromSlot);
@@ -81,6 +90,7 @@ public interface IInventory {
         }
     }
 
+    /** Try to move all items from another inventory into this inventory */
     default void transferAllFrom(IInventory from) {
         from.transferAllTo(this);
     }

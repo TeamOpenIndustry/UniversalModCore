@@ -11,15 +11,23 @@ import net.minecraft.util.Identifier;
 
 import java.util.UUID;
 
+/** Seat construct to make multiple riders actually work */
 public class SeatEntity extends Entity implements IAdditionalSpawnData {
     public static EntityType<SeatEntity> TYPE;
     static final Identifier ID = new Identifier(ModCore.MODID, "seat");
+
+    // What it's a part of
     private UUID parent;
+    // What is in the seat
     private UUID passenger;
+    // If we should try to render the rider as standing or sitting (partial support!)
     boolean shouldSit = true;
+    // If a passenger has mounted and then dismounted (if so, we can go away)
     private boolean hasHadPassenger = false;
+    // ticks alive?
     private int ticks = 0;
 
+    /** MC reflection */
     public SeatEntity(EntityType<SeatEntity> type, net.minecraft.world.World worldIn) {
         super(type, worldIn);
     }
@@ -92,6 +100,10 @@ public class SeatEntity extends Entity implements IAdditionalSpawnData {
         this.parent = moddedEntity.getUuid();
         this.updatePosition(moddedEntity.x, moddedEntity.y, moddedEntity.z);
         this.passenger = passenger.getUuid();
+    }
+
+    public void moveTo(ModdedEntity moddedEntity) {
+        this.parent = moddedEntity.getUuid();
     }
 
     public cam72cam.mod.entity.Entity getParent() {

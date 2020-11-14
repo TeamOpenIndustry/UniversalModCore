@@ -9,6 +9,7 @@
     "WorldMixin"
   ],
   "client": [
+    "ClientPlayNetworkHandlerMixin",
     "LanguageMixin",
     "TranslationStorageMixin",
     "DebugHudMixin",

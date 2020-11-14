@@ -12,12 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/** GUI that presents a standard item chooser */
 public class ItemPickerGUI {
     private final ItemPickerScreen screen;
     public ItemStack choosenItem;
     private List<ItemStack> items;
-    private Consumer<ItemStack> onExit;
+    private final Consumer<ItemStack> onExit;
 
+    /** Construct with a list of all available items and an exit (chosen or null) handler */
     public ItemPickerGUI(List<ItemStack> items, Consumer<ItemStack> onExit) {
         this.items = new ArrayList<>();
         this.items.addAll(items);
@@ -25,17 +27,19 @@ public class ItemPickerGUI {
         this.screen = new ItemPickerScreen();
     }
 
-
+    /** Update items displayed */
     public void setItems(List<ItemStack> items) {
         this.items = new ArrayList<>();
         this.items.addAll(items);
         screen.init();
     }
 
+    /** Has at least one option to choose */
     public boolean hasOptions() {
         return this.items.size() != 0;
     }
 
+    /** Show this UI as the current screen */
     public void show() {
         if (this.items.size() == 1) {
             onExit.accept(this.items.get(0));
@@ -44,8 +48,9 @@ public class ItemPickerGUI {
         net.minecraft.client.MinecraftClient.getInstance().openScreen(screen);
     }
 
+    /** Internal screen that actually renders and chooses the items */
     private class ItemPickerScreen extends Screen {
-        private Map<AbstractButtonWidget, Vec3i> buttonCoordList = new HashMap<>();
+        private final Map<AbstractButtonWidget, Vec3i> buttonCoordList = new HashMap<>();
         private GuiScrollBar scrollBar;
 
         protected ItemPickerScreen() {

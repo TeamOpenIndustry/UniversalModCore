@@ -9,31 +9,37 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+/** Match ClientContainerBuilder spacing as closely as possible */
 public class ServerContainerBuilder extends net.minecraft.container.Container implements IContainerBuilder {
     // server padding overrides
-    public static final int slotSize = 18;
-    public static final int topOffset = 18;
-    public static final int bottomOffset = 7;
-    public static final int textureHeight = 222;
-    public static final int paddingRight = 7;
-    public static final int paddingLeft = 8;
-    public static final int stdUiHorizSlots = 9;
+    private static final int slotSize = 18;
+    private static final int topOffset = 18;
+    private static final int bottomOffset = 7;
+    private static final int paddingRight = 7;
+    private static final int paddingLeft = 8;
+    private static final int stdUiHorizSlots = 9;
     public static final int playerXSize = paddingLeft + stdUiHorizSlots * slotSize + paddingRight;
     private static final int midBarHeight = 4;
     final Consumer<IContainerBuilder> draw;
     final int slotsX;
     final int slotsY;
+
     final PlayerInventory playerInventory;
+    final Supplier<Boolean> valid;
     private int rowSlots = 9;
     private int totalSlots;
+    int ySize = 0;
 
-    public ServerContainerBuilder(PlayerInventory playerInventory, IContainer container, int syncId) {
+    public ServerContainerBuilder(PlayerInventory playerInventory, IContainer container, int syncId, Supplier<Boolean> valid) {
         super(null, syncId);
         this.playerInventory = playerInventory;
 
         this.slotsX = container.getSlotsX();
         this.slotsY = container.getSlotsY();
+
+        this.valid = valid;
 
         this.draw = container::draw;
         draw.accept(this);
@@ -61,6 +67,7 @@ public class ServerContainerBuilder extends net.minecraft.container.Container im
         for (int slotID = start; slotID < start + cols; slotID++) {
             drawSlot(handler, slotID, x + (slotID - start) * slotSize, y);
         }
+        this.ySize = Math.max(ySize, y + slotSize);
         return y + slotSize;
     }
 
@@ -74,21 +81,25 @@ public class ServerContainerBuilder extends net.minecraft.container.Container im
         for (int slotID = start; slotID < (handler != null ? handler.getSlotCount() : cols); slotID += cols) {
             y = drawSlotRow(handler, slotID, cols, x, y);
         }
+        this.ySize = Math.max(ySize, y);
         return y;
     }
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
+        this.ySize = Math.max(ySize, y + bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
+        this.ySize = Math.max(ySize, y + bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
+        this.ySize = Math.max(ySize, y + midBarHeight);
         return y + midBarHeight;
     }
 
@@ -146,6 +157,7 @@ public class ServerContainerBuilder extends net.minecraft.container.Container im
         }
         currY += slotSize;
 
+        this.ySize = Math.max(ySize, currY);
         return currY;
     }
 

@@ -25,15 +25,18 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
+/** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
-    private List<Consumer<Float>> custom = new ArrayList<>();
+    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
+    private final List<Consumer<Float>> custom = new ArrayList<>();
 
+    /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
         return block.getDefaultState();
     }
 
+    /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
@@ -46,6 +49,7 @@ public class StandardModel {
         return this;
     }
 
+    /** Add snow layers */
     public StandardModel addSnow(int layers, Vec3d translate) {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, layers);
@@ -54,6 +58,7 @@ public class StandardModel {
         return this;
     }
 
+    /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
         BlockState state = itemToBlockState(bed);
         BakedModel model = MinecraftClient.getInstance().getBlockRenderManager().getModel(state);
@@ -61,6 +66,7 @@ public class StandardModel {
         return this;
     }
 
+    /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
         custom.add((pt) -> {
             try (OpenGL.With matrix = OpenGL.matrix()) {
@@ -72,16 +78,19 @@ public class StandardModel {
         return this;
     }
 
+    /** Do whatever you want here! */
     public StandardModel addCustom(Runnable fn) {
         this.custom.add(pt -> fn.run());
         return this;
     }
 
+    /** Do whatever you want here! (aware of partialTicks) */
     public StandardModel addCustom(Consumer<Float> fn) {
         this.custom.add(fn);
         return this;
     }
 
+    /** Get the quads for the MC standard rendering */
     List<BakedQuad> getQuads(Direction side, Random rand) {
         List<BakedQuad> quads = new ArrayList<>();
         for (Pair<BlockState, BakedModel> model : models) {
@@ -91,15 +100,18 @@ public class StandardModel {
         return quads;
     }
 
+    /** Render this entire model */
     public void render() {
         render(0);
     }
 
+    /** Render this entire model (partial tick aware) */
     public void render(float partialTicks) {
         renderCustom(partialTicks);
         renderQuads();
     }
 
+    /** Render only the MC quads in this model */
     public void renderQuads() {
         List<BakedQuad> quads = new ArrayList<>();
         for (Pair<BlockState, BakedModel> model : models) {
@@ -137,14 +149,17 @@ public class StandardModel {
         new BufferRenderer().draw(worldRenderer);
     }
 
+    /** Render the OpenGL parts directly */
     public void renderCustom() {
         renderCustom(0);
     }
 
+    /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(float partialTicks) {
         custom.forEach(cons -> cons.accept(partialTicks));
     }
 
+    /** Is there anything that's not MC standard in this model? */
     public boolean hasCustom() {
         return !custom.isEmpty();
     }

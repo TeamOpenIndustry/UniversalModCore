@@ -3,12 +3,10 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.item.ItemBase;
+import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.util.CollectionUtil;
-import cam72cam.mod.util.Hand;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.render.BlockEntityRendererRegistry;
@@ -20,18 +18,24 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.util.math.BlockPos;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** Global Render Registry and helper functions */
 public class GlobalRender {
-    private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
+    // Fire these off every tick
+    private static final List<Consumer<Float>> renderFuncs = new ArrayList<>();
 
+    /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
+        // Beacon like hack for always running a single global render during the TE render phase
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
             BlockEntityRendererRegistry.INSTANCE.register(GlobalRenderHelper.class, new BlockEntityRenderer<GlobalRenderHelper>() {
                 @Override
@@ -47,7 +51,16 @@ public class GlobalRender {
             });
         });
 
-        List<BlockEntity> grhList = CollectionUtil.listOf(new GlobalRenderHelper(null));
+        List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
+
+        ClientEvents.TICK.subscribe(() -> {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            mc.worldRenderer.updateNoCullingBlockEntities(grhList, grhList);
+            if (MinecraftClient.isReady()) {  // May be able to get away with running this every N ticks?
+                grhList.get(0).setPos(new BlockPos(MinecraftClient.getPlayer().getPositionEyes().internal()));
+            }
+        });
+
         ClientEvents.TICK.subscribe(() -> net.minecraft.client.MinecraftClient.getInstance().worldRenderer.updateNoCullingBlockEntities(grhList, grhList));
 
         ClientEvents.RENDER_DEBUG.subscribe(right -> {
@@ -63,46 +76,47 @@ public class GlobalRender {
         });
     }
 
+    /** Register a function that is called (with partial ticks) during the Block Entity render phase */
     public static void registerRender(Consumer<Float> func) {
         renderFuncs.add(func);
     }
 
+    /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(Consumer<Float> func) {
         // InGameHud
         ClientEvents.RENDER_OVERLAY.subscribe(func::accept);
     }
 
-    public static void registerItemMouseover(ItemBase item, MouseoverEvent fn) {
+    /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
+    public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
-                if (item.internal == player.getHeldItem(Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), partialTicks);
+                if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), partialTicks);
                 }
             }
         });
     }
 
+    /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
         net.minecraft.entity.Entity playerrRender = net.minecraft.client.MinecraftClient.getInstance().cameraEntity;
         return new Vec3d(playerrRender.getCameraPosVec(partialTicks));
     }
 
+    /** Internal camera helper */
     static Camera getCamera(float partialTicks) {
         return new Camera() {
             {
-                setPos(getCameraPos(partialTicks).internal);
+                setPos(getCameraPos(partialTicks).internal());
             }
         };
     }
 
-    public static boolean isInRenderDistance(Vec3d pos) {
-        // max rail length is 100, 50 is center
-        return net.minecraft.client.MinecraftClient.getInstance().player.getPos().distanceTo(pos.internal) < ((net.minecraft.client.MinecraftClient.getInstance().options.viewDistance + 1) * 16 + 50);
-    }
-
-    public static void mulMatrix(FloatBuffer fbm) {
-        GL11.glMultMatrixf(fbm);
+    /** Return the render distance in meters */
+    public static int getRenderDistance() {
+        return net.minecraft.client.MinecraftClient.getInstance().options.viewDistance * 16;
     }
 
     @FunctionalInterface
@@ -111,8 +125,13 @@ public class GlobalRender {
     }
 
     public static class GlobalRenderHelper extends net.minecraft.block.entity.BlockEntity {
-        public GlobalRenderHelper(BlockEntityType<?> blockEntityType_1) {
-            super(blockEntityType_1);
+        public GlobalRenderHelper() {
+            super(new BlockEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
+                @Override
+                public boolean supports(Block block_1) {
+                    return true;
+                }
+            });
         }
 
         @Override
@@ -120,19 +139,9 @@ public class GlobalRender {
             return true;
         }
 
-        public BlockEntityType<?> getType() {
-            return new BlockEntityType<GlobalRenderHelper>(() -> new GlobalRenderHelper(null), new HashSet<>(), null) {
-                @Override
-                public boolean supports(Block block_1) {
-                    return true;
-                }
-            };
-        }
-
         public BlockState getCachedState() {
             return Blocks.AIR.getDefaultState();
         }
-
 
         @Environment(EnvType.CLIENT)
         public double getSquaredRenderDistance() {

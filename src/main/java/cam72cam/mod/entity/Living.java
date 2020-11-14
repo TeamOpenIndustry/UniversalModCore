@@ -2,6 +2,7 @@ package cam72cam.mod.entity;
 
 import net.minecraft.entity.mob.MobEntity;
 
+/** Wrapper around EntityLiving */
 public class Living extends Entity {
     private final MobEntity living;
 

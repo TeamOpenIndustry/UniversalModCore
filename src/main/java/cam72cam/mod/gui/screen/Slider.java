@@ -1,8 +1,9 @@
-package cam72cam.mod.gui;
+package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.util.Hand;
 import net.minecraft.client.gui.widget.SliderWidget;
+import cam72cam.mod.entity.Player;
 
+/** Standard slider */
 public abstract class Slider extends Button {
 
     private final double min;
@@ -41,10 +42,11 @@ public abstract class Slider extends Button {
     }
 
     @Override
-    public void onClick(Hand hand) {
+    public void onClick(Player.Hand hand) {
 
     }
 
+    /** Called when the slider value is changed */
     public abstract void onSlider();
 
     public int getValueInt() {

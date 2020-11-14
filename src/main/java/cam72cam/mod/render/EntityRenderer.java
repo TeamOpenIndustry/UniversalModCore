@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Entity Rendering Registry */
 public class EntityRenderer extends net.minecraft.client.render.entity.EntityRenderer<ModdedEntity> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
@@ -28,8 +29,10 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
     }
 
     public static void registerClientEvents() {
+        // Hook in our entity renderer which will dispatch to the IEntityRenderers
         ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(ModdedEntity.class, EntityRenderer::new));
 
+        // Don't render seat entities
         ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRendererRegistry.INSTANCE.register(SeatEntity.class, (manager, ctx) -> new net.minecraft.client.render.entity.EntityRenderer<SeatEntity>(manager) {
             @Nullable
             @Override
@@ -39,14 +42,23 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
         }));
     }
 
+    /** Internal, do not use */
     public EntityRenderer(EntityRenderDispatcher entityRenderDispatcher, EntityRendererRegistry.Context context) {
         super(entityRenderDispatcher);
     }
 
+    /** This is how you register your entities renderer */
     public static void register(Class<? extends Entity> type, IEntityRender render) {
         renderers.put(type, render);
     }
 
+    /**
+     * Sooo this is a fun one...
+     *
+     * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
+     * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
+     * We try to detect entities in this edge case and render them here to prevent the issue.
+     */
     private static void renderLargeEntities(float partialTicks) {
         net.minecraft.client.MinecraftClient.getInstance().getProfiler().push("large_entity_helper");
 
@@ -65,8 +77,14 @@ public class EntityRenderer extends net.minecraft.client.render.entity.EntityRen
             if (!(entity.internal instanceof ModdedEntity)) {
                 continue;
             }
+
             // Duplicate minecraft logic and render entity if the chunk is not rendered but entity is visible (MC entitysize issues/optimization)
-            Box chunk = new Box(entity.getBlockPosition().toChunkMin().internal, entity.getBlockPosition().toChunkMax().internal);
+            double yoff = ((int)entity.getPosition().y) >> 4 << 4;
+            Vec3d min = entity.getBlockPosition().toChunkMin();
+            min = new Vec3d(min.x, yoff, min.z);
+            Vec3d max = entity.getBlockPosition().toChunkMax();
+            max = new Vec3d(max.x, yoff + 16, max.z);
+            Box chunk = new Box(min.internal(), max.internal());
             if (!visibleRegion_1.intersects(chunk) && visibleRegion_1.intersects(entity.internal.getVisibilityBoundingBox())) {
                 net.minecraft.client.MinecraftClient.getInstance().getEntityRenderManager().render(entity.internal, partialTicks, true);
             }

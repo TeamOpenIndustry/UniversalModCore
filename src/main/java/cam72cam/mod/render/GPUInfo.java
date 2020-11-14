@@ -2,6 +2,7 @@ package cam72cam.mod.render;
 
 import org.lwjgl.opengl.*;
 
+/** GPU info helper */
 public class GPUInfo {
     public static boolean hasGPUInfo() {
         GLCapabilities capabilities = GL.getCapabilities();

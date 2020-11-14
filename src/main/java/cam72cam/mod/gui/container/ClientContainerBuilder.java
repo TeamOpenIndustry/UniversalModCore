@@ -16,21 +16,25 @@ import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
 import org.lwjgl.opengl.GL11;
 
+import java.util.function.Supplier;
+
 import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 
 @Environment(EnvType.CLIENT)
+/** GUI Container wrapper for the client side, Do not use directly */
 public class ClientContainerBuilder extends ContainerScreen implements IContainerBuilder {
-    public static final int slotSize = 18;
-    public static final int topOffset = 17;
-    public static final int bottomOffset = 7;
-    public static final int textureHeight = 222;
-    public static final int paddingRight = 7;
-    public static final int paddingLeft = 7;
-    public static final int stdUiHorizSlots = 9;
-    public static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
+    private static final int slotSize = 18;
+    private static final int topOffset = 17;
+    private static final int bottomOffset = 7;
+    private static final int textureHeight = 222;
+    private static final int paddingRight = 7;
+    private static final int paddingLeft = 7;
+    private static final int stdUiHorizSlots = 9;
+    private static final int playerXSize = paddingRight + stdUiHorizSlots * slotSize + paddingLeft;
     private static final int midBarOffset = 4;
     private static final int midBarHeight = 4;
     private final ServerContainerBuilder server;
+    private final Supplier<Boolean> valid;
     private int centerX;
     private int centerY;
 
@@ -38,7 +42,8 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
         super(serverContainer, serverContainer.playerInventory, new LiteralText(""));
         this.server = serverContainer;
         this.containerWidth = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
-        this.containerHeight = 114 + serverContainer.slotsY * slotSize;
+        this.containerHeight = server.ySize;
+        this.valid = serverContainer.valid;
     }
 
     @Override
@@ -48,6 +53,17 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
             this.centerX = (this.width - this.containerWidth) / 2;
             this.centerY = (this.height - this.containerHeight) / 2;
             server.draw.accept(this);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!valid.get()) {
+            this.minecraft.openScreen(null);
+            if (this.minecraft.currentScreen == null) {
+                this.minecraft.onWindowFocusChanged(true);
+            }
         }
     }
 
@@ -201,19 +217,30 @@ public class ClientContainerBuilder extends ContainerScreen implements IContaine
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
+        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
+            fill(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
+            // Reset the state manager color
+            GlStateManager.color4f(1,1,1,1);
+        }
+
         // TODO better sprite map, but this kinda sucks between versions.  maybe add an enum...
         if (spriteId.equals("minecraft:blocks/fire_layer_1")) {
             spriteId = "minecraft:block/fire_1";
         }
-
-        GUIHelpers.drawRect(x, y + (int) (16 - 16 * height), 16, 16 * height, color);
 
         Sprite sprite = minecraft.getSpriteAtlas().getSprite(spriteId);
         try (
                 OpenGL.With color_ = OpenGL.color(1,1,1,1);
                 OpenGL.With tex = OpenGL.texture(new Identifier(SpriteAtlasTexture.BLOCK_ATLAS_TEX))
         ) {
-            DrawableHelper.blit(x, y, 0, 16, 16, sprite);
+            blit(x, y, 0, 16, 16, sprite);
         }
+    }
+
+    @Override
+    public void render(int mouseX, int mouseY, float partialTicks)
+    {
+        super.render(mouseX, mouseY, partialTicks);
+        this.drawMouseoverTooltip(mouseX, mouseY);
     }
 }

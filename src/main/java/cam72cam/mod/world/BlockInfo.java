@@ -2,11 +2,11 @@ package cam72cam.mod.world;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtHelper;
-import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 
+/** Represents a Block in-world and all of it's data (not counting TE) */
 @TagMapped(BlockInfo.TagMapper.class)
 public class BlockInfo {
     final BlockState internal;
@@ -17,7 +17,7 @@ public class BlockInfo {
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<BlockInfo> {
         @Override
-        public TagAccessor<BlockInfo> apply(Class<BlockInfo> type, String fieldName, TagField tag) throws SerializationException {
+        public TagAccessor<BlockInfo> apply(Class<BlockInfo> type, String fieldName, TagField tag) {
             return new TagAccessor<>(
                     (d, o) -> {
                         if (o == null) {
@@ -26,7 +26,7 @@ public class BlockInfo {
                         }
                         d.set(fieldName, new TagCompound(NbtHelper.fromBlockState(o.internal)));
                     },
-                    info -> new BlockInfo(NbtHelper.toBlockState(info.internal))
+                    info -> new BlockInfo(NbtHelper.toBlockState(info.get(fieldName).internal))
             );
         }
     }
