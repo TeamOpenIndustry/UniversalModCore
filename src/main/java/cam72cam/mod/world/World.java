@@ -126,21 +126,18 @@ public class World {
                 () -> this::serverEntities
         );
 
-        synchronized (this.entityByID) {
-
-            // Once a second scan entities that may have de-sync'd with the UMC world
-            if (this.getTicks() % 20 == 0) {
-                for (net.minecraft.entity.Entity entity : internalEntities) {
-                    if (!this.entityByID.containsKey(entity.getEntityId())) {
-                        ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUuid(), entity);
-                        this.onEntityAdded(entity);
-                    }
+        // Once a second scan entities that may have de-sync'd with the UMC world
+        if (this.getTicks() % 20 == 0) {
+            for (net.minecraft.entity.Entity entity : internalEntities) {
+                if (!this.entityByID.containsKey(entity.getEntityId())) {
+                    ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUuid(), entity);
+                    this.onEntityAdded(entity);
                 }
-                for (Entity entity : this.entityByID.values()) {
-                    if (internal.getEntityById(entity.internal.getEntityId()) == null) {
-                        ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
-                        this.onEntityRemoved(entity.internal);
-                    }
+            }
+            for (Entity entity : new ArrayList<>(this.entityByID.values())) {
+                if (internal.getEntityById(entity.internal.getEntityId()) == null) {
+                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                    this.onEntityRemoved(entity.internal);
                 }
             }
         }
@@ -197,12 +194,10 @@ public class World {
         } else {
             entity = new Entity(entityIn);
         }
-        synchronized (this.entityByID) {
-            entitiesByClass.putIfAbsent(entity.getClass(), new ArrayList<>());
-            entitiesByClass.get(entity.getClass()).add(entity);
-            entityByID.put(entityIn.getEntityId(), entity);
-            entityByUUID.put(entity.getUUID(), entity);
-        }
+        entitiesByClass.putIfAbsent(entity.getClass(), new ArrayList<>());
+        entitiesByClass.get(entity.getClass()).add(entity);
+        entityByID.put(entityIn.getEntityId(), entity);
+        entityByUUID.put(entity.getUUID(), entity);
     }
 
     /**
@@ -210,13 +205,11 @@ public class World {
      * Wiring from WorldEventListener
      */
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
-        synchronized (this.entityByID) {
-            for (List<Entity> value : entitiesByClass.values()) {
-                value.removeIf(inner -> inner.getUUID().equals(entity.getUuid()));
-            }
-            entityByID.remove(entity.getEntityId());
-            entityByUUID.remove(entity.getUuid());
+        for (List<Entity> value : entitiesByClass.values()) {
+            value.removeIf(inner -> inner.getUUID().equals(entity.getUuid()));
         }
+        entityByID.remove(entity.getEntityId());
+        entityByUUID.remove(entity.getUuid());
     }
 
     /* Entity Methods */
