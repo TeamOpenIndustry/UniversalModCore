@@ -9,9 +9,8 @@
     "WorldMixin"
   ],
   "client": [
+    "ReloadableResourceManagerImplMixin",
     "ClientPlayNetworkHandlerMixin",
-    "LanguageMixin",
-    "TranslationStorageMixin",
     "DebugHudMixin",
     "InGameHudMixin",
     "MinecraftClientMixin",
