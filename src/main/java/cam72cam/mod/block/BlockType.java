@@ -163,7 +163,7 @@ public abstract class BlockType {
 
         @Override
         public boolean activate(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockHitResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos()));
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getSide()), new Vec3d(hit.getPos()).subtract(new Vec3i(pos)));
         }
 
         @Override
