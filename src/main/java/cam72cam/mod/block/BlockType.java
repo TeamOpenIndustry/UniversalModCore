@@ -164,7 +164,7 @@ public abstract class BlockType {
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
         public boolean onBlockActivated(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec()));
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec()).subtract(new Vec3i(pos)));
         }
 
         @Override
