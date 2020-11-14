@@ -11,10 +11,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.block.BlockModelRenderer;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.apache.commons.lang3.tuple.Pair;
@@ -111,39 +113,22 @@ public class StandardModel {
         renderQuads();
     }
 
+    private final BufferBuilder worldRenderer = new BufferBuilder(2048);
     /** Render only the MC quads in this model */
     public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<BlockState, BakedModel> model : models) {
-            quads.addAll(model.getRight().getQuads(null, null, new Random()));
-            for (Direction facing : Direction.values()) {
-                quads.addAll(model.getRight().getQuads(null, facing, new Random()));
-            }
-
-        }
-        if (quads.isEmpty()) {
+        if (models.isEmpty()) {
             return;
         }
 
         MinecraftClient.getInstance().getTextureManager().bindTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEX);
+        GL11.glColor3f(1, 1, 1);
 
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
-        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
+        worldRenderer.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR_UV_LMAP);
 
-        for (BakedQuad quad : quads) {
-            worldRenderer.putVertexData(quad.getVertexData());
-            /* TODO
-            if (quad.hasColor()) {
-                MinecraftClient.getInstance().getBlockColorMap().getColorMultiplier(state, null, null, 0)
-                worldRenderer.setQuadColor(float_2 * float_1, float_3 * float_1, float_4 * float_1);
-            } else {
-                worldRenderer.setQuadColor(float_1, float_1, float_1);
-            }
-            */
-            worldRenderer.setQuadColor(1, 1, 1);
+        BlockModelRenderer blockRenderer = new BlockModelRenderer(MinecraftClient.getInstance().getBlockColorMap());
 
-            Vec3i vec3i_1 = quad.getFace().getVector();
-            worldRenderer.postNormal((float)vec3i_1.getX(), (float)vec3i_1.getY(), (float)vec3i_1.getZ());
+        for (Pair<BlockState, BakedModel> model : models) {
+            blockRenderer.tesselate(MinecraftClient.getInstance().world, model.getRight(), model.getLeft(), BlockPos.ORIGIN, worldRenderer, false, new Random(), 0);
         }
         worldRenderer.end();
         new BufferRenderer().draw(worldRenderer);
