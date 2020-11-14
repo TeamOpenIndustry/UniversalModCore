@@ -162,12 +162,12 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         TagCompound tag = new TagCompound();
         if (this.isLoaded()) {
             this.toTag(tag.internal);
-            /*tag.setBoolean("isUpdate", true);
+            tag.setBoolean("isUpdate", true);
             try {
                 instance().writeUpdate(tag);
             } catch (SerializationException e) {
                 ModCore.catching(e);
-            }*/
+            }
         }
         return tag.internal;
     }
