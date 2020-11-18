@@ -27,6 +27,7 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class BlockRender {
     // Don't need to return a *new* array list for no result
     private static final List<BakedQuad> EMPTY = Collections.emptyList();
     // Block coloring (grass) hooks
-    private static final List<Runnable> colors = new ArrayList<>();
+    private static final List<Consumer<BlockColors>> colors = new ArrayList<>();
     // BlockEntity type -> BlockEntity Renderer
     private static final Map<Class<? extends BlockEntity>, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     // Internal hack for globally rendered TE's
@@ -63,9 +64,10 @@ public class BlockRender {
         });
     }
 
-    /** Internal, do not use.  Is fired by UMC directly */
-    public static void onPostColorSetup() {
-        colors.forEach(Runnable::run);
+    /** Internal, do not use.  Is fired by UMC directly
+     * @param blockColors*/
+    public static void onPostColorSetup(BlockColors blockColors) {
+        colors.forEach(r -> r.accept(blockColors));
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntity.class, new TileEntityRenderer<TileEntity>() {
             @Override
@@ -115,8 +117,7 @@ public class BlockRender {
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
         renderers.put(cls, (te) -> model.apply(cls.cast(te)));
 
-        colors.add(() -> {
-            BlockColors blockColors = Minecraft.getInstance().getBlockColors();
+        colors.add((blockColors) -> {
             blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.get(0.5D, 1.0D), block.internal);
         });
 

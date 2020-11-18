@@ -231,7 +231,7 @@ public class ModCore {
                         ClientEvents.fireReload();
                     });
                     */
-                    BlockRender.onPostColorSetup();
+                    //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
                     break;
             }
