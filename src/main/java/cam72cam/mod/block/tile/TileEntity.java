@@ -118,8 +118,8 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         try {
             TagSerializer.deserialize(instanceData, instance);
             instance.load(instanceData);
-            if (compound.getBoolean("isUpdate")) {
-                instance.readUpdate(new TagCompound(compound));
+            if (compound.contains("umcUpdate")) {
+                instance.readUpdate(new TagCompound(compound).get("umcUpdate"));
             }
         } catch (SerializationException e) {
             // TODO how should we handle this?
@@ -162,12 +162,13 @@ public class TileEntity extends net.minecraft.block.entity.BlockEntity {
         TagCompound tag = new TagCompound();
         if (this.isLoaded()) {
             this.toTag(tag.internal);
-            tag.setBoolean("isUpdate", true);
+            TagCompound umcUpdate = new TagCompound();
             try {
-                instance().writeUpdate(tag);
+                instance().writeUpdate(umcUpdate);
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
+            tag.set("umcUpdate", umcUpdate);
         }
         return tag.internal;
     }
