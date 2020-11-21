@@ -27,8 +27,18 @@ public class Mouse {
 
             Entity entity = MinecraftClient.getEntityMouseOver();
             if (entity != null && entity.internal instanceof ModdedEntity) {
-                new MousePressPacket(button, entity).sendToServer();
-                return false;
+                boolean flag = MinecraftClient.getPlayer().internal.canEntityBeSeen(entity.internal);
+                double d0 = 36.0D;
+                if (!flag) {
+                    d0 = 9.0D;
+                }
+
+                // Invert MC's built in logic for entity distance (assumes small entities)
+                if (MinecraftClient.getPlayer().internal.getDistanceSq(entity.internal) >= d0) {
+                    new MousePressPacket(button, entity).sendToServer();
+                    return false;
+                }
+                return true;
             }
             Entity riding = MinecraftClient.getPlayer().getRiding();
             if (riding != null && riding.internal instanceof ModdedEntity) {

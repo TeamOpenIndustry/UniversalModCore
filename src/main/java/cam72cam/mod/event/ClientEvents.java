@@ -5,6 +5,7 @@ import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
@@ -116,6 +117,11 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onModelBakeEvent(ModelBakeEvent event) {
             MODEL_BAKE.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void onColorSetup(ColorHandlerEvent.Block event) {
+            BlockRender.onPostColorSetup(event.getBlockColors());
         }
 
         @SubscribeEvent

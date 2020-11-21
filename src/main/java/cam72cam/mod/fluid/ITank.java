@@ -40,7 +40,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return internal.isFluidValid(0, new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
+                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(0, new net.minecraftforge.fluids.FluidStack(f, 1)));
             }
 
             @Override
@@ -78,7 +78,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return internal.isFluidValid(i, new net.minecraftforge.fluids.FluidStack(fluid.internal, 1));
+                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(i, new net.minecraftforge.fluids.FluidStack(f, 1)));
             }
 
             @Override

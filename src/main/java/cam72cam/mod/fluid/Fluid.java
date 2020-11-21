@@ -1,10 +1,11 @@
 package cam72cam.mod.fluid;
 
-import cam72cam.mod.resource.Identifier;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Fluid {
@@ -17,35 +18,39 @@ public class Fluid {
     public final String ident;
 
     // Reference to internal forge fluid
-    public final net.minecraft.fluid.Fluid internal;
+    public final List<net.minecraft.fluid.Fluid> internal;
 
 
-    private Fluid(String ident, net.minecraft.fluid.Fluid fluid) {
+    private Fluid(String ident, List<net.minecraft.fluid.Fluid> fluid) {
         this.ident = ident;
         this.internal = fluid;
     }
 
     public static Fluid getFluid(String type) {
-        type = new Identifier(type).toString();
         if (!registryCache.containsKey(type)) {
-            net.minecraft.fluid.Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(type));
-            if (fluid == null) {
+            List<net.minecraft.fluid.Fluid> fluids = new ArrayList<>();
+            for (ResourceLocation key : ForgeRegistries.FLUIDS.getKeys()) {
+                if (key.getPath().equals(type)) {
+                    fluids.add(ForgeRegistries.FLUIDS.getValue(key));
+                }
+            }
+            if (fluids.isEmpty()) {
                 return null;
             }
-            registryCache.put(type, new Fluid(type, fluid));
+            registryCache.put(type, new Fluid(type, fluids));
         }
         return registryCache.get(type);
     }
 
     public static Fluid getFluid(net.minecraft.fluid.Fluid fluid) {
-        return getFluid(fluid.getRegistryName().toString());
+        return getFluid(fluid.getRegistryName().getPath());
     }
 
     public int getDensity() {
-        return internal.getAttributes().getDensity();
+        return internal.get(0).getAttributes().getDensity();
     }
 
     public String toString() {
-        return ident + " : " + internal.toString() + " : " + super.toString();
+        return ident + " : " + internal.get(0).toString() + " : " + super.toString();
     }
 }

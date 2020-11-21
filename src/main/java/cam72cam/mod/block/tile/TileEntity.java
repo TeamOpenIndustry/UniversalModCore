@@ -194,11 +194,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         CompoundNBT tag = super.getUpdateTag();
         if (this.isLoaded()) {
             this.write(tag);
+            TagCompound umcUpdate = new TagCompound();
             try {
-                instance().writeUpdate(new TagCompound(tag));
+                instance().writeUpdate(umcUpdate);
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
+            tag.put("umcUpdate", umcUpdate.internal);
         }
         return tag;
     }
@@ -210,7 +212,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             this.read(state, tag);
             if (instance() != null) {
                 try {
-                    instance().readUpdate(new TagCompound(tag));
+                    instance().readUpdate(new TagCompound(tag.getCompound("umcUpdate")));
                 } catch (SerializationException e) {
                     ModCore.catching(e);
                 }
