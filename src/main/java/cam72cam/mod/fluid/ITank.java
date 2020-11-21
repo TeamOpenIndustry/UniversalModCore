@@ -49,7 +49,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return inv.getInsertionFilter().matches(fluid.internal);
+                return fluid.internal.stream().anyMatch(inv.getInsertionFilter()::matches);
             }
 
             @Override
@@ -93,7 +93,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return internal.getTank(i).isValid(fluid.internal);
+                return fluid.internal.stream().anyMatch(internal.getTank(i)::isValid);
             }
 
             @Override

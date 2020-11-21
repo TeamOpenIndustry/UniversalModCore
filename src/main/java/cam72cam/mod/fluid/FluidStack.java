@@ -12,7 +12,7 @@ public class FluidStack {
     }
 
     public FluidStack(Fluid fluid, int amount) {
-        this.internal = fluid != null && fluid.internal != null ? fluid.internal.withAmount(amount) : null;
+        this.internal = fluid != null && fluid.internal != null ? fluid.internal.get(0).withAmount(amount) : null;
     }
 
     public Fluid getFluid() {

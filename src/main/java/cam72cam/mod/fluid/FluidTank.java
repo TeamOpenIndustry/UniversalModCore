@@ -65,7 +65,7 @@ public class FluidTank implements ITank {
 
     @Override
     public boolean allows(Fluid fluid) {
-        return (filter == null || filter.get() == null || filter.get().contains(fluid)) && internal.isFluidValidForTank(0, fluid.internal);
+        return (filter == null || filter.get() == null || filter.get().contains(fluid)) && fluid.internal.stream().anyMatch(f -> internal.isFluidValidForTank(0, f));
     }
 
     @Override

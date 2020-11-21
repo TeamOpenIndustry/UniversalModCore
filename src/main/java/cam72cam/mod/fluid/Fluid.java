@@ -6,7 +6,9 @@ import alexiil.mc.lib.attributes.fluid.volume.FluidVolume;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Fluid {
@@ -20,22 +22,26 @@ public class Fluid {
     public final String ident;
 
     // Reference to internal fluid
-    public final FluidKey internal;
+    public final List<FluidKey> internal;
 
 
-    private Fluid(String ident, FluidKey fluid) {
+    private Fluid(String ident, List<FluidKey> fluid) {
         this.ident = ident;
         this.internal = fluid;
     }
 
     public static Fluid getFluid(String type) {
-        type = new Identifier(type).toString();
         if (!registryCache.containsKey(type)) {
-            FluidKey fluid = FluidKeys.get(Registry.FLUID.get(new Identifier(type)));
-            if (fluid == null) {
-                return null;
+            List<FluidKey> fluids = new ArrayList<>();
+            for (Identifier key : Registry.FLUID.getIds()) {
+                if (key.getPath().equals(type)) {
+                    FluidKey fluid = FluidKeys.get(Registry.FLUID.get(key));
+                    if (fluid != null && !Registry.FLUID.getDefaultId().equals(Registry.FLUID.get(key))) {
+                        fluids.add(fluid);
+                    }
+                }
             }
-            registryCache.put(type, new Fluid(type, fluid));
+            registryCache.put(type, new Fluid(type, fluids));
         }
         return registryCache.get(type);
     }

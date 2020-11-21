@@ -40,8 +40,8 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        Sprite sprite = MinecraftClient.getInstance().getSpriteAtlas().getSprite(fluid.internal.spriteId);
-        drawSprite(sprite, fluid.internal.renderColor, x, y, width, height);
+        Sprite sprite = MinecraftClient.getInstance().getSpriteAtlas().getSprite(fluid.internal.get(0).spriteId);
+        drawSprite(sprite, fluid.internal.get(0).renderColor, x, y, width, height);
     }
 
     /** Draw a texture sprite at coords, tinted with col  */
