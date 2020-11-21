@@ -13,6 +13,7 @@ jobs:
                 echo "::set-env name=ref::$ref"
               env:
                 github_ref: ${{ github.ref }}
+                ACTIONS_ALLOW_UNSECURE_COMMANDS: true
             - name: Gradle build
               run: ./gradlew build
             - uses: actions/upload-artifact@v2-preview
