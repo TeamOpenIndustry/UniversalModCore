@@ -31,7 +31,10 @@ public class Fluid {
             List<net.minecraft.fluid.Fluid> fluids = new ArrayList<>();
             for (ResourceLocation key : ForgeRegistries.FLUIDS.getKeys()) {
                 if (key.getPath().equals(type)) {
-                    fluids.add(ForgeRegistries.FLUIDS.getValue(key));
+                    net.minecraft.fluid.Fluid fluid = ForgeRegistries.FLUIDS.getValue(key);
+                    if (fluid != null && !ForgeRegistries.FLUIDS.getDefaultKey().equals(fluid.getRegistryName())) {
+                        fluids.add(fluid);
+                    }
                 }
             }
             if (fluids.isEmpty()) {

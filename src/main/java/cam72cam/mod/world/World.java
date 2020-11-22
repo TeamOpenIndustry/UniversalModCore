@@ -290,12 +290,7 @@ public class World {
 
     /** Internal, do not use */
     public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
-        return getTileEntity(pos, cls, true);
-    }
-
-    /** Internal, do not use */
-    public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls, boolean create) {
-        net.minecraft.tileentity.TileEntity ent = internal.getChunkAt(pos.internal()).getTileEntity(pos.internal(), create ? Chunk.CreateEntityType.IMMEDIATE : Chunk.CreateEntityType.CHECK);
+        net.minecraft.tileentity.TileEntity ent = internal.getTileEntity(pos.internal());
         if (cls.isInstance(ent)) {
             return (T) ent;
         }
