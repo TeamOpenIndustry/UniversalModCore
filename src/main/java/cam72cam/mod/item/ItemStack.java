@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -112,7 +113,7 @@ public class ItemStack {
 
     /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
-        return AbstractFurnaceTileEntity.getBurnTimes().getOrDefault(internal.getItem(), 0);
+        return ForgeHooks.getBurnTime(internal);
     }
 
     /** Max count of the stack */
