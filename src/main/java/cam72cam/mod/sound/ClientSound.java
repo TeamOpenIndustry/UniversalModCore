@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.audio.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.lwjgl.openal.AL10;
 
 import javax.sound.sampled.AudioFormat;
@@ -23,7 +24,9 @@ class ClientSound implements ISound {
     private float baseSoundMultiplier;
     private final float scale;
     private boolean disposable = false;
-    private final int id;
+    private int id;
+    private AudioStreamBuffer sound;
+    private int lastUsed = 0;
 
     ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.baseSoundMultiplier = baseSoundMultiplier;
@@ -32,16 +35,29 @@ class ClientSound implements ISound {
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
+        id = -1;
+    }
+
+    private void checkErr() {
+        int i = AL10.alGetError();
+        if (i != 0) {
+            System.out.println("OpenAL Error " + i + " : " + ExceptionUtils.getStackTrace(new Throwable()));
+        }
+    }
+
+    private void init() {
         id = AL10.alGenSources();
+        checkErr();
         try {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
             AudioFormat fmt = stream.getAudioFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.func_216455_a(sizeBytes);
-            AudioStreamBuffer sound = new AudioStreamBuffer(buffer, fmt);
+            sound = new AudioStreamBuffer(buffer, fmt);
             for (int i = 0; i< 4; i++) {
                 sound.getUntrackedBuffer().ifPresent(bufferId -> {
                     AL10.alSourceQueueBuffers(id, bufferId);
+                    checkErr();
                 });
             }
             stream.close();
@@ -51,12 +67,18 @@ class ClientSound implements ISound {
 
         if (repeats) {
             AL10.alSourcei(id, AL10.AL_LOOPING, 1);
+            checkErr();
         }
     }
+
 
     @Override
     public void play(Vec3d pos) {
         stop();
+
+        if (id == -1) {
+            init();
+        }
 
         this.setPosition(pos);
         update();
@@ -70,17 +92,39 @@ class ClientSound implements ISound {
 
     @Override
     public void stop() {
-        if (isPlaying()) {
+        if (id != -1) {
             AL10.alSourceStop(id);
         }
     }
 
     @Override
     public void terminate() {
-        stop();
-        AL10.alSourceUnqueueBuffers(id);
-        //TODO?AL10.alDeleteBuffers(bufferId);
+        if (id == -1) {
+            return;
+        }
+
+        // Force stop
+        AL10.alSourceStop(id);
+        checkErr();
+
+        // Dealloc buffer (todo keep around?)
+        sound.deleteBuffer();
+
+        // Is this the same as the above call? net.minecraft.client.audio.SoundSource#func_216427_k
+        int i = AL10.alGetSourcei(id, AL10.AL_BUFFERS_PROCESSED);
+        if (i > 0) {
+            int[] aint = new int[i];
+            AL10.alSourceUnqueueBuffers(id, aint);
+            checkErr();
+            AL10.alDeleteBuffers(aint);
+            checkErr();
+        }
+
+        // Actually delete the buffer
         AL10.alDeleteSources(id);
+
+        checkErr();
+        id = -1;
     }
 
     Vec3d lastPos;
@@ -90,6 +134,9 @@ class ClientSound implements ISound {
     public void update() {
         MinecraftClient.startProfiler("irSound");
         //(float)Math.sqrt(Math.sqrt(scale()))
+        if (!isPlaying()) {
+            return;
+        }
 
         float vol = currentVolume * baseSoundMultiplier * scale;
         vol *= 1-Math.min(0.99, Math.max(0.01, currentPos.subtract(MinecraftClient.getPlayer().getPosition()).length() / attenuationDistance));
@@ -160,18 +207,29 @@ class ClientSound implements ISound {
 
     @Override
     public boolean isPlaying() {
-        return AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING;
+        return id != -1 && AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING;
     }
 
     @Override
     public void reload() {
-        // Force re-create sound
-        // TODO 1.14.4
+        terminate();
     }
 
     @Override
     public void disposable() {
         disposable = true;
+    }
+
+    void tick() {
+        lastUsed -= 1;
+
+        if (isPlaying()) {
+            lastUsed = 20;
+        }
+
+        if (lastUsed == 0) {
+            terminate();
+        }
     }
 
     @Override
