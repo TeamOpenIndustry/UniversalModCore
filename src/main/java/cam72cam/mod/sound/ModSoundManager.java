@@ -39,21 +39,21 @@ public class ModSoundManager {
             }
         }
 
-
         if (MinecraftClient.getPlayer().getTickCount() % 20 == 0) {
             // Clean up disposed sounds
 
-            List<ISound> toRemove = new ArrayList<>();
-            for (ISound sound : this.sounds) {
+            for (ISound sound : new ArrayList<>(this.sounds)) {
                 if (sound.isDisposable() && !sound.isPlaying()) {
-                    toRemove.add(sound);
+                    sounds.remove(sound);
+                    sound.stop();
+                    sound.terminate();
                 }
             }
+        }
 
-            for (ISound sound : toRemove) {
-                sounds.remove(sound);
-                sound.stop();
-                sound.terminate();
+        for (ISound sound : this.sounds) {
+            if (sound instanceof ClientSound) {
+                ((ClientSound) sound).tick();
             }
         }
     }

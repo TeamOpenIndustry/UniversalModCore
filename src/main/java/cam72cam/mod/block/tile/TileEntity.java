@@ -179,7 +179,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     /** Active Synchronization from markDirty */
     @Override
     public final SUpdateTileEntityPacket getUpdatePacket() {
-        return new SUpdateTileEntityPacket(this.getPos(), 1, getUpdateTag());
+        return new SUpdateTileEntityPacket(this.getPos(), 1, getUpdateTag(true));
     }
 
     /** Active Synchronization from markDirty */
@@ -191,14 +191,19 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     /** Active Synchronization from markDirty */
     @Override
     public final CompoundNBT getUpdateTag() {
+        return getUpdateTag(false);
+    }
+    public final CompoundNBT getUpdateTag(boolean writeUpdate) {
         CompoundNBT tag = super.getUpdateTag();
         if (this.isLoaded()) {
             this.write(tag);
             TagCompound umcUpdate = new TagCompound();
-            try {
-                instance().writeUpdate(umcUpdate);
-            } catch (SerializationException e) {
-                ModCore.catching(e);
+            if (writeUpdate) {
+                try {
+                    instance().writeUpdate(umcUpdate);
+                } catch (SerializationException e) {
+                    ModCore.catching(e);
+                }
             }
             tag.put("umcUpdate", umcUpdate.internal);
         }
@@ -211,10 +216,12 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         try {
             this.read(state, tag);
             if (instance() != null) {
-                try {
-                    instance().readUpdate(new TagCompound(tag.getCompound("umcUpdate")));
-                } catch (SerializationException e) {
-                    ModCore.catching(e);
+                if (tag.contains("umcUpdate")) {
+                    try {
+                        instance().readUpdate(new TagCompound(tag.getCompound("umcUpdate")));
+                    } catch (SerializationException e) {
+                        ModCore.catching(e);
+                    }
                 }
             }
         } catch (Exception ex) {
