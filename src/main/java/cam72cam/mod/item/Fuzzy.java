@@ -1,5 +1,6 @@
 package cam72cam.mod.item;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -142,8 +143,14 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        List<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
-        customItems.forEach(item -> items.add(new ItemStack(new net.minecraft.item.ItemStack(item))));
+        List<ItemStack> items;
+        try {
+            items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+        } catch (IllegalStateException e) {
+            ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
+            items = new ArrayList<>();
+        }
+        items.addAll(customItems.stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList()));
         return items;
     }
 
