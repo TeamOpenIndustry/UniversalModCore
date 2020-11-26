@@ -79,8 +79,7 @@ public class StandardModel {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
-                buffer.finish();
+                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(new BufferBuilder(2048));
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
