@@ -31,6 +31,8 @@ public class StandardModel {
     private List<Pair<BlockState, IBakedModel>> models = new ArrayList<>();
     private List<Consumer<Float>> custom = new ArrayList<>();
 
+    BufferBuilder worldRenderer = new BufferBuilder(2048);
+
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
@@ -79,7 +81,7 @@ public class StandardModel {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(new BufferBuilder(2048));
+                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(worldRenderer);
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
@@ -131,9 +133,7 @@ public class StandardModel {
         if (models.isEmpty()) {
             return;
         }
-
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 
         for (Pair<BlockState, IBakedModel> model : models) {
