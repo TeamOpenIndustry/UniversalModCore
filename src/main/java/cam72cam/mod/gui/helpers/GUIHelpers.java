@@ -108,12 +108,12 @@ public class GUIHelpers {
 
     /** Screen Width in pixels (std coords) */
     public static int getScreenWidth() {
-        return Minecraft.getInstance().getMainWindow().getFramebufferWidth()/2;
+        return Minecraft.getInstance().getMainWindow().getScaledWidth();
     }
 
     /** Screen Height in pixels (std coords) */
     public static int getScreenHeight() {
-        return Minecraft.getInstance().getMainWindow().getFramebufferHeight()/2;
+        return Minecraft.getInstance().getMainWindow().getScaledHeight();
     }
 
     /** Draw a Item at the given coords */
