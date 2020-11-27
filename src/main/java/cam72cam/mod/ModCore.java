@@ -268,6 +268,10 @@ public class ModCore {
                 event.getGenerator().getOutputFolder().getParent().getParent().toString(),
                 "main", "resources", "assets", MODID, "lang");
         for (File path : langPath.toFile().listFiles()) {
+            if (!path.getPath().endsWith(".lang")) {
+                continue;
+            }
+
             Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase().replace(".lang", ".json"));
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
