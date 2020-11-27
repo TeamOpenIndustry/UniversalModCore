@@ -7,6 +7,8 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
+import cam72cam.mod.item.Fuzzy;
+import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
@@ -24,10 +26,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.event.lifecycle.*;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -35,8 +34,8 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -257,6 +256,43 @@ public class ModCore {
             ModCore.isInReload = false;
         }
         i++;
+    }
+
+    public static void genData(String MODID, GatherDataEvent event) {
+        // src/main/resources/assets/immersiverailroading/
+        Path langPath = Paths.get(
+                event.getGenerator().getOutputFolder().getParent().getParent().toString(),
+                "main", "resources", "assets", MODID, "lang");
+        for (File path : langPath.toFile().listFiles()) {
+            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase().replace(".lang", ".json"));
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
+                List<String> translations = new ArrayList<>();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] splits = line.split("=", 2);
+                    if (splits.length == 2) {
+                        String key = splits[0];
+                        String value = splits[1];
+
+                        translations.add(String.format("\"%s\": \"%s\"", key, value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                    }
+                }
+                String output = "{" + String.join(",", translations) + "}";
+                System.out.println(outPath);
+                System.out.println(output);
+                Files.write(outPath, output.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        CommonEvents.Recipe.REGISTER.execute(Runnable::run);
+        event.getGenerator().addProvider(new Recipes(event.getGenerator()));
+        Fuzzy.register(event.getGenerator());
     }
 
     public static void debug(String msg, Object... params) {
