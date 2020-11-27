@@ -12,6 +12,8 @@ import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -111,6 +113,10 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ModCore.warn("Warning, trying to send %s client side!");
+            return;
+        }
         net.send(PacketDistributor.ALL.noArg(), new Message(this));
     }
 
