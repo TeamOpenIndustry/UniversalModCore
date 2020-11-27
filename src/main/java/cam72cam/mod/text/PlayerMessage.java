@@ -2,6 +2,7 @@ package cam72cam.mod.text;
 
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.ForgeHooks;
 
 /** A message that can be sent to a player */
@@ -19,7 +20,7 @@ public class PlayerMessage {
 
     /** Translated */
     public static PlayerMessage translate(String msg, Object... objects) {
-        return new PlayerMessage(new StringTextComponent(TextUtil.translate(msg, objects)));
+        return new PlayerMessage(new TranslationTextComponent(msg, objects));
     }
 
     /** URL Formatted (clickable) */

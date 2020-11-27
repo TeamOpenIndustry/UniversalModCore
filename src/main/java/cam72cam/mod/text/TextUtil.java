@@ -1,6 +1,8 @@
 package cam72cam.mod.text;
 
 
+import net.minecraft.util.text.translation.LanguageMap;
+
 /** Client side translation utility */
 public class TextUtil {
     //TODO this breaks server side ...
@@ -9,6 +11,6 @@ public class TextUtil {
     }
 
     public static String translate(String name, Object[] objects) {
-        return String.format(CustomTranslations.getTranslations().getOrDefault(name, name), objects);
+        return String.format(LanguageMap.getInstance().translateKey(name), objects);
     }
 }

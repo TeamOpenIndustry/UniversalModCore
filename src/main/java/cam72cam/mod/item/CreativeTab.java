@@ -18,10 +18,10 @@ public class CreativeTab {
             public net.minecraft.item.ItemStack createIcon() {
                 return stack.get().internal;
             }
-            @Override
+            /*@Override
             public String getTranslationKey() {
                 return TextUtil.translate(super.getTranslationKey());
-            }
+            }*/
         };
     }
 

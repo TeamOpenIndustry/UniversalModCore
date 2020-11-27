@@ -106,7 +106,8 @@ public abstract class CustomItem {
             if (custom != null) {
                 return new StringTextComponent(custom);
             }
-            return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
+            //return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
+            return super.getDisplayName(stack);
         }
 
         @Override
