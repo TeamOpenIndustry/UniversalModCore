@@ -36,7 +36,7 @@ sourceSets {
     }
 }
 
-version = "#VERSION#-1.15.2-forge"
+version = "#VERSION#-1.16.4-forge"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#CLASS#"
 
