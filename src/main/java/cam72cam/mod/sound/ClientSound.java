@@ -38,16 +38,21 @@ class ClientSound implements ISound {
         id = -1;
     }
 
-    private void checkErr() {
+    private boolean checkErr() {
         int i = AL10.alGetError();
-        if (i != 0) {
+        boolean err = i != 0;
+        if (err) {
             System.out.println("OpenAL Error " + i + " : " + ExceptionUtils.getStackTrace(new Throwable()));
         }
+        return err;
     }
 
     private void init() {
         id = AL10.alGenSources();
-        checkErr();
+        if (!checkErr()) {
+            id = -1;
+            return;
+        }
         try {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
             AudioFormat fmt = stream.func_216454_a();
@@ -78,6 +83,9 @@ class ClientSound implements ISound {
 
         if (id == -1) {
             init();
+        }
+        if (id == -1) {
+            return;
         }
 
         this.setPosition(pos);
