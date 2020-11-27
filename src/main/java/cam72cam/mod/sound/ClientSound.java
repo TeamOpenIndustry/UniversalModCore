@@ -49,7 +49,7 @@ class ClientSound implements ISound {
 
     private void init() {
         id = AL10.alGenSources();
-        if (!checkErr()) {
+        if (checkErr()) {
             id = -1;
             return;
         }
@@ -148,6 +148,7 @@ class ClientSound implements ISound {
 
         float vol = currentVolume * baseSoundMultiplier * scale;
         vol *= 1-Math.min(0.99, Math.max(0.01, currentPos.subtract(MinecraftClient.getPlayer().getPosition()).length() / attenuationDistance));
+        vol = Math.min(1, vol);
         AL10.alSourcef(this.id, AL10.AL_GAIN, vol);
 
         if (currentPos != null && !currentPos.equals(lastPos)) {
