@@ -53,6 +53,9 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     public void addButton(Button btn) {
         super.addButton(btn.internal());
         this.buttonMap.put(btn.internal(), btn);
+        if (btn instanceof TextField) {
+            this.setFocused(btn.internal());
+        }
     }
 
     @Override
