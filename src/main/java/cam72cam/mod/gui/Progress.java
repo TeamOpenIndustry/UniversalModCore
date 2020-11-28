@@ -1,5 +1,6 @@
 package cam72cam.mod.gui;
 
+import cam72cam.mod.ModCore;
 import net.minecraftforge.fml.StartupMessageManager;
 
 /** Wrapper around game loading bar, only functional on certain MC versions / loaders */
@@ -32,7 +33,9 @@ public class Progress {
 
         public void step(String name) {
             at += 1;
-            StartupMessageManager.addModMessage(this.name + " " + (at*100/steps) + "% : " + name);
+            String msg = this.name + " " + (at * 100 / steps) + "% : " + name;
+            StartupMessageManager.addModMessage(msg);
+            ModCore.info(msg);
         }
     }
 }
