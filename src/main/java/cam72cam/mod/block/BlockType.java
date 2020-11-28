@@ -249,11 +249,6 @@ public abstract class BlockType {
             if (BlockType.this.isConnectable()) {
                 return super.getBlockFaceShape(p_193383_1_, p_193383_2_, p_193383_3_, p_193383_4_);
             }
-
-            if (p_193383_4_ == EnumFacing.UP) {
-                // SNOW ONLY?
-                return BlockFaceShape.SOLID;
-            }
             return BlockFaceShape.UNDEFINED;
         }
 
