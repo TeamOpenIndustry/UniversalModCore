@@ -310,7 +310,11 @@ public class ModCore {
                 return;
             }
 
-            instance.logger.info(String.format(msg, params));
+            if (params.length != 0) {
+                instance.logger.info(String.format(msg, params));
+            } else {
+                instance.logger.info(msg);
+            }
         }
     }
 
@@ -319,8 +323,11 @@ public class ModCore {
             System.out.println("INFO: " + String.format(msg, params));
             return;
         }
-
-        instance.logger.info(String.format(msg, params));
+        if (params.length != 0) {
+            instance.logger.info(String.format(msg, params));
+        } else {
+            instance.logger.info(msg);
+        }
     }
 
     public static void warn(String msg, Object... params) {
@@ -329,7 +336,11 @@ public class ModCore {
             return;
         }
 
-        instance.logger.warn(String.format(msg, params));
+        if (params.length != 0) {
+            instance.logger.warn(String.format(msg, params));
+        } else {
+            instance.logger.warn(msg);
+        }
     }
 
     public static void error(String msg, Object... params) {
@@ -338,7 +349,11 @@ public class ModCore {
             return;
         }
 
-        instance.logger.error(String.format(msg, params));
+        if (params.length != 0) {
+            instance.logger.error(String.format(msg, params));
+        } else {
+            instance.logger.error(msg);
+        }
     }
 
     public static void catching(Throwable ex, String msg, Object... params) {
