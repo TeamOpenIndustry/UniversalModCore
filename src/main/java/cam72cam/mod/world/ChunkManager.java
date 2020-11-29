@@ -16,7 +16,6 @@ public class ChunkManager {
             return;
         }
 
-        world.internal.getChunkAt(inPos.internal());
         ChunkPos chunkpos = new ChunkPos(inPos.internal());
         ServerWorld server = (ServerWorld) world.internal;
         server.getChunkProvider().func_217228_a(UMCTICKET, chunkpos, 3, chunkpos);

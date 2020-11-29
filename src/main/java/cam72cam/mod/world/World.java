@@ -333,7 +333,11 @@ public class World {
      * @see BlockEntity#getData
      */
     public BlockEntity reconstituteBlockEntity(TagCompound data) {
-        TileEntity te = (TileEntity) TileEntity.create(data.internal);
+        net.minecraft.tileentity.TileEntity created = TileEntity.create(data.internal);
+        if (created instanceof TileEntity.LegacyTE)  {
+            created = TileEntity.legacyLoader(data.internal);
+        }
+        TileEntity te = (TileEntity) created;
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;

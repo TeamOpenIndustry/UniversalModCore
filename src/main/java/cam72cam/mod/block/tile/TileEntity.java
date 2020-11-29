@@ -2,6 +2,7 @@ package cam72cam.mod.block.tile;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
+import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.energy.IEnergy;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -23,8 +24,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -40,8 +43,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -56,6 +58,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     private static final Map<String, TileEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
+    private static final Map<String, BlockTypeEntity> blocks = HashBiMap.create();
 
     // Set during initialization
     private final BlockEntity instance;
@@ -81,15 +84,88 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         instance.internal = this;
     }
 
+    public static TileEntity legacyLoader(CompoundNBT data) {
+        String instanceId = data.getString("instanceId");
+        TileEntity instance = registry.get(instanceId).get().supplier(new Identifier(instanceId));
+        instance.read(data);
+        return instance;
+    }
+
+    static List<Runnable> onNextTick = new ArrayList<>();
+
+    static {
+        World.onTick(world -> {
+            List<Runnable> copy = new ArrayList<>(onNextTick);
+            onNextTick.clear();
+            copy.forEach(Runnable::run);
+        });
+    }
+
+    public static class LegacyTE extends net.minecraft.tileentity.TileEntity implements ITickableTileEntity {
+        private CompoundNBT data;
+        private boolean hasSet = false;
+
+        public LegacyTE(TileEntityType<?> tileEntityTypeIn) {
+            super(tileEntityTypeIn);
+        }
+
+        @Override
+        public void read(CompoundNBT compound) {
+            super.read(compound);
+            this.data = compound;
+
+            onNextTick.add(this::tick);
+        }
+
+        @Override
+        public void tick() {
+            if (world != null && pos != null && !world.isRemote && !hasSet) {
+                if (world.getServer().getExecutionThread() != Thread.currentThread()) {
+                    return;
+                }
+                String instanceId = data.getString("instanceId");
+                TileEntity instance = registry.get(instanceId).get().supplier(new Identifier(instanceId));
+                instance.read(data);
+                this.remove();
+                world.setBlockState(this.pos, blocks.get(instanceId).internal.getDefaultState(), 0);
+                world.setTileEntity(this.pos, instance);
+                hasSet = true;
+            }
+        }
+    }
+    private static Map<String, TileEntityType<LegacyTE>> legacy = new HashMap<>();
+    protected static void registerLegacyTE(Identifier legacyID) {
+        CommonEvents.Tile.REGISTER.subscribe(() -> {
+            TileEntityType<LegacyTE> type = new TileEntityType<>(() -> new LegacyTE(legacy.get(legacyID.toString())), new HashSet<Block>() {
+                public boolean contains(Object var1) {
+                    // WHYYYYYYYYYYYYYYYY
+                    return true;
+                }
+            }, null);
+            type.setRegistryName(legacyID.internal);
+            legacy.put(legacyID.toString(), type);
+            ForgeRegistries.TILE_ENTITIES.register(type);
+        });
+    }
+    static {
+        registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
+    }
+
     /**
      * Allows us to construct a BlockEntity from an identifier.  Do not use directly.
      * @param instance constructor
      * @param id Block Entity ID
      */
-    public static void register(Supplier<BlockEntity> instance, Identifier id) {
+    public static void register(Supplier<BlockEntity> instance, Identifier id, BlockTypeEntity blockType) {
         registry.put(id.toString(), instance);
+        blocks.put(id.toString(), blockType);
+
+        BlockEntity example = instance.get();
+
+        // Force legacy registration
+        example.supplier(id);
+
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntity example = instance.get();
             TileEntityType<TileEntity> type = new TileEntityType<>(() -> example.supplier(id), new HashSet<Block>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
@@ -128,7 +204,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void read(CompoundNBT compound) {
+    public void read(CompoundNBT compound) {
         super.read(compound);
         hasTileData = true;
 
@@ -153,7 +229,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT write(CompoundNBT compound) {
         super.write(compound);
 
         TagCompound data = new TagCompound(compound);

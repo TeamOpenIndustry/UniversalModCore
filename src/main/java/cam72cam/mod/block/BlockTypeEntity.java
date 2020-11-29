@@ -24,7 +24,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
-        TileEntity.register(this::constructBlockEntity, id);
+        TileEntity.register(this::constructBlockEntity, id, this);
         this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
 
         // Force supplier load (may trigger static blocks like TE registration)
