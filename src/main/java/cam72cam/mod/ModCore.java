@@ -225,7 +225,11 @@ public class ModCore {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case SETUP:
-                    Minecraft.getInstance().populateSearchTreeManager();
+                    try {
+                        Minecraft.getInstance().populateSearchTreeManager();
+                    } catch (Exception ex) {
+                        ModCore.catching(ex);
+                    }
                     /*
                     ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((SynchronousResourceReloadListener)resourceManager -> {
                         if (skipN > 0) {
