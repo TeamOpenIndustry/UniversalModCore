@@ -209,25 +209,6 @@ public abstract class BlockType {
             }
             return super.getShape(state, worldIn, pos, context);
         }
-/*
-        @Override
-        public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-            World world = getWorldOrNull(worldIn, pos);
-            if (world != null) {
-                return VoxelShapes.create(BoundingBox.from(BlockType.this.getBoundingBox(world, new Vec3i(pos))));
-            }
-            return super.getCollisionShape(state, worldIn, pos, context);
-        }
-
-        @Override
-        public VoxelShape getRenderShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
-            return VoxelShapes.create(new AxisAlignedBB(0, 0, 0, 1, BlockType.this.getHeight(), 1));
-        }*/
-
-        /*
-         * Fence, glass override
-         */
-        //TODO 1.14.4
 
         public boolean tryBreak(net.minecraft.world.IWorld worldIn, BlockPos pos, PlayerEntity player) {
             World world = getWorldOrNull(worldIn, pos);
@@ -235,6 +216,7 @@ public abstract class BlockType {
                 return BlockType.this.tryBreak(world, new Vec3i(pos), new Player(player));
             }
             return true;
+
         }
 
         /* Redstone */
