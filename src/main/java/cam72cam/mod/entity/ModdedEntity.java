@@ -18,12 +18,14 @@ import net.minecraft.network.PacketBuffer;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
 /** Internal class which extends MC's Entity.  Do not use directly */
 public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Reference to the entity that this is representing
-    private final CustomEntity self;
+    private CustomEntity self;
 
     // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
@@ -42,12 +44,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     private final List<SeatEntity> seats = new ArrayList<>();
 
     // Views of self that implement different interfaces
-    private final IWorldData iWorldData;
-    private final ITickable iTickable;
-    private final IClickable iClickable;
-    private final IKillable iKillable;
-    private final IRidable iRidable;
-    private final ICollision iCollision;
+    private IWorldData iWorldData;
+    private ITickable iTickable;
+    private IClickable iClickable;
+    private IKillable iKillable;
+    private IRidable iRidable;
+    private ICollision iCollision;
+    private String legacyId;
 
     /** Standard forge constructor */
     public ModdedEntity(EntityType type, World world, Supplier<CustomEntity> ctr) {
@@ -106,6 +109,21 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (selfData == null) {
             // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
             selfData = data;
+        }
+
+        if (data.hasKey("custom_mob_type")) {
+            legacyId = data.getString("custom_mob_type");
+            self = EntityRegistry.create(legacyId, this);
+            self.setup(this);
+
+            iWorldData = IWorldData.get(self);
+            iTickable = ITickable.get(self);
+            iClickable = IClickable.get(self);
+            iKillable = IKillable.get(self);
+            iRidable = IRidable.get(self);
+            iCollision = ICollision.get(self);
+
+            data.setString("id", legacyId);
         }
 
         // Deserialize self
@@ -167,6 +185,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         data.set("sync", self.sync);
         save(data);
         buffer.writeCompoundTag(data.internal);
+    }
+
+    @Override
+    public EntityType<?> getType() {
+        return legacyId == null ? super.getType() : ForgeRegistries.ENTITIES.getValue(new ResourceLocation(legacyId));
     }
 
     /* ITickable */

@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 public class EntityRegistry {
     private static final Map<Class<? extends CustomEntity>, EntityType<? extends ModdedEntity>> registered = new HashMap<>();
+    private static final Map<String, Supplier<CustomEntity>> constructors = new HashMap<>();
 
     private static String missingResources;
 
@@ -53,6 +54,8 @@ public class EntityRegistry {
             ForgeRegistries.ENTITIES.register(et);
             registered.put(type, et);
         });
+
+        constructors.put(id.toString(), ctr);
     }
 
     public static EntityType<? extends ModdedEntity> type(Class<? extends Entity> cls) {
@@ -92,5 +95,9 @@ public class EntityRegistry {
                 missingResources = null;
             }
         });
+    }
+
+    static CustomEntity create(String custom_mob_type, ModdedEntity base) {
+        return constructors.get(custom_mob_type).get().setup(base);
     }
 }
