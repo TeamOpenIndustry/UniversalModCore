@@ -5,10 +5,12 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -28,6 +30,7 @@ public class CommonEvents {
         public static final Event<Consumer<net.minecraft.world.World>> LOAD = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> UNLOAD = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> TICK = new Event<>();
+        public static final Event<Consumer<IChunk>> LOAD_CHUNK = new Event<>();
     }
 
     public static final class Block {
@@ -60,6 +63,11 @@ public class CommonEvents {
         @SubscribeEvent
         public static void onWorldLoad(WorldEvent.Load event) {
             World.LOAD.execute(x -> x.accept(event.getWorld().getWorld()));
+        }
+
+        @SubscribeEvent
+        public static void onWorldLoad(ChunkEvent.Load event) {
+            World.LOAD_CHUNK.execute(x -> x.accept(event.getChunk()));
         }
 
         @SubscribeEvent

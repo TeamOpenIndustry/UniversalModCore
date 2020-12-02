@@ -2,6 +2,7 @@ package cam72cam.mod.block.tile;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
+import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.energy.IEnergy;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -12,19 +13,21 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -40,8 +43,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -56,6 +59,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     private static final Map<String, TileEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
+    private static final Map<String, BlockTypeEntity> blocks = HashBiMap.create();
 
     // Set during initialization
     private final BlockEntity instance;
@@ -81,15 +85,65 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         instance.internal = this;
     }
 
+    public static TagCompound legacyConverter(TagCompound data) {
+        for (Function<CompoundNBT, BlockState> migration : migrations) {
+            if (migration.apply(data.internal) != null) {
+                break;
+            }
+        }
+        return data;
+    }
+
+    private static final List<Function<CompoundNBT, BlockState>> migrations = new ArrayList<>();
+    public static void registerLegacyTE(Identifier legacyID) {
+        registerLegacyTE(legacyID, null);
+    }
+    public static void registerLegacyTE(Identifier legacyID, BlockState state) {
+        migrations.add(data -> {
+            if (data != null && legacyID.toString().equals(data.getString("id"))) {
+                BlockState myState = state;
+                if (myState == null) {
+                    myState = blocks.get(data.getString("instanceId")).internal.getDefaultState();
+                }
+                data.putString("id", myState.getBlock().createTileEntity(null, null).getType().getRegistryName().toString());
+                return myState;
+            }
+            return null;
+        });
+    }
+    static {
+        registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
+
+        CommonEvents.World.LOAD_CHUNK.subscribe(chunk -> {
+            for (BlockPos pos : chunk.getTileEntitiesPos()) {
+                CompoundNBT data = chunk.getDeferredTileEntity(pos);
+                for (Function<CompoundNBT, BlockState> migration : migrations) {
+                    BlockState state = migration.apply(data);
+                    if (state != null) {
+                        // Usually this is a ChunkPrimer which does not propagate changes
+                        chunk.setBlockState(pos, state, false);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
     /**
      * Allows us to construct a BlockEntity from an identifier.  Do not use directly.
      * @param instance constructor
      * @param id Block Entity ID
      */
-    public static void register(Supplier<BlockEntity> instance, Identifier id) {
+    public static void register(Supplier<BlockEntity> instance, Identifier id, BlockTypeEntity blockType) {
         registry.put(id.toString(), instance);
+        blocks.put(id.toString(), blockType);
+
+        BlockEntity example = instance.get();
+
+        // Force legacy registration
+        example.supplier(id);
+
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntity example = instance.get();
             TileEntityType<TileEntity> type = new TileEntityType<>(() -> example.supplier(id), new HashSet<Block>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
@@ -131,7 +185,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void read(CompoundNBT compound) {
+    public void read(CompoundNBT compound) {
         super.read(compound);
         hasTileData = true;
 
@@ -156,7 +210,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT write(CompoundNBT compound) {
         super.write(compound);
 
         TagCompound data = new TagCompound(compound);

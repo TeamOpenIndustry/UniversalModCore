@@ -15,6 +15,10 @@ import net.minecraft.tileentity.ITickableTileEntity;
  * @see BlockEntityTickable
  */
 public class TileEntityTickable extends TileEntity implements ITickableTileEntity {
+    static {
+        registerLegacyTE(new Identifier(ModCore.MODID, "hack_tickable"));
+    }
+
     /**
      * Used only by BlockEntity to construct an instance to register.
      * <ul>

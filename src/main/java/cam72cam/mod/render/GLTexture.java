@@ -36,6 +36,9 @@ public class GLTexture {
     private IntBuffer pixels;
     private TextureState state;
     private RuntimeException internalError;
+    static {
+        ImageIO.setUseCache(false);
+    }
 
     private enum TextureState {
         NEW,

@@ -48,6 +48,10 @@ class ClientSound implements ISound {
     }
 
     private void init() {
+        if (oggLocation == null) {
+            return;
+        }
+
         id = AL10.alGenSources();
         if (checkErr()) {
             id = -1;
