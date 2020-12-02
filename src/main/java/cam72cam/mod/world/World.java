@@ -31,7 +31,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.biome.Biome;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
@@ -291,6 +292,7 @@ public class World {
     /** Internal, do not use */
     public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
         net.minecraft.tileentity.TileEntity ent = internal.getTileEntity(pos.internal());
+
         if (cls.isInstance(ent)) {
             return (T) ent;
         }
@@ -332,11 +334,9 @@ public class World {
      *
      * @see BlockEntity#getData
      */
-    public BlockEntity reconstituteBlockEntity(TagCompound data) {
+    public BlockEntity reconstituteBlockEntity(TagCompound datain) {
+        TagCompound data = TileEntity.legacyConverter(datain);
         net.minecraft.tileentity.TileEntity created = TileEntity.create(data.internal);
-        if (created instanceof TileEntity.LegacyTE)  {
-            created = TileEntity.legacyLoader(data.internal);
-        }
         TileEntity te = (TileEntity) created;
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
@@ -467,7 +467,9 @@ public class World {
 
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i parent) {
-        return internal.isBlockLoaded(parent.internal());
+        IChunk chunk = internal.getChunkProvider().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
+        return (chunk != null && chunk.getStatus() == ChunkStatus.FULL)
+                && internal.isBlockPresent(parent.internal()) && internal.isBlockLoaded(parent.internal());
     }
 
     /** Check if block at pos collides with a BB */

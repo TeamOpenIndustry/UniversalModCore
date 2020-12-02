@@ -13,18 +13,18 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
-import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
-import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -44,6 +44,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -84,71 +85,48 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         instance.internal = this;
     }
 
-    public static TileEntity legacyLoader(CompoundNBT data) {
-        String instanceId = data.getString("instanceId");
-        TileEntity instance = registry.get(instanceId).get().supplier(new Identifier(instanceId));
-        instance.read(data);
-        return instance;
-    }
-
-    static List<Runnable> onNextTick = new ArrayList<>();
-
-    static {
-        World.onTick(world -> {
-            List<Runnable> copy = new ArrayList<>(onNextTick);
-            onNextTick.clear();
-            copy.forEach(Runnable::run);
-        });
-    }
-
-    public static class LegacyTE extends net.minecraft.tileentity.TileEntity implements ITickableTileEntity {
-        private CompoundNBT data;
-        private boolean hasSet = false;
-
-        public LegacyTE(TileEntityType<?> tileEntityTypeIn) {
-            super(tileEntityTypeIn);
-        }
-
-        @Override
-        public void read(CompoundNBT compound) {
-            super.read(compound);
-            this.data = compound;
-
-            onNextTick.add(this::tick);
-        }
-
-        @Override
-        public void tick() {
-            if (world != null && pos != null && !world.isRemote && !hasSet) {
-                if (world.getServer().getExecutionThread() != Thread.currentThread()) {
-                    return;
-                }
-                String instanceId = data.getString("instanceId");
-                TileEntity instance = registry.get(instanceId).get().supplier(new Identifier(instanceId));
-                instance.read(data);
-                this.remove();
-                world.setBlockState(this.pos, blocks.get(instanceId).internal.getDefaultState(), 0);
-                world.setTileEntity(this.pos, instance);
-                hasSet = true;
+    public static TagCompound legacyConverter(TagCompound data) {
+        for (Function<CompoundNBT, BlockState> migration : migrations) {
+            if (migration.apply(data.internal) != null) {
+                break;
             }
         }
+        return data;
     }
-    private static Map<String, TileEntityType<LegacyTE>> legacy = new HashMap<>();
-    protected static void registerLegacyTE(Identifier legacyID) {
-        CommonEvents.Tile.REGISTER.subscribe(() -> {
-            TileEntityType<LegacyTE> type = new TileEntityType<>(() -> new LegacyTE(legacy.get(legacyID.toString())), new HashSet<Block>() {
-                public boolean contains(Object var1) {
-                    // WHYYYYYYYYYYYYYYYY
-                    return true;
+
+    private static final List<Function<CompoundNBT, BlockState>> migrations = new ArrayList<>();
+    public static void registerLegacyTE(Identifier legacyID) {
+        registerLegacyTE(legacyID, null);
+    }
+    public static void registerLegacyTE(Identifier legacyID, BlockState state) {
+        migrations.add(data -> {
+            if (data != null && legacyID.toString().equals(data.getString("id"))) {
+                BlockState myState = state;
+                if (myState == null) {
+                    myState = blocks.get(data.getString("instanceId")).internal.getDefaultState();
                 }
-            }, null);
-            type.setRegistryName(legacyID.internal);
-            legacy.put(legacyID.toString(), type);
-            ForgeRegistries.TILE_ENTITIES.register(type);
+                data.putString("id", myState.getBlock().createTileEntity(null, null).getType().getRegistryName().toString());
+                return myState;
+            }
+            return null;
         });
     }
     static {
         registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
+
+        CommonEvents.World.LOAD_CHUNK.subscribe(chunk -> {
+            for (BlockPos pos : chunk.getTileEntitiesPos()) {
+                CompoundNBT data = chunk.getDeferredTileEntity(pos);
+                for (Function<CompoundNBT, BlockState> migration : migrations) {
+                    BlockState state = migration.apply(data);
+                    if (state != null) {
+                        // Usually this is a ChunkPrimer which does not propagate changes
+                        chunk.setBlockState(pos, state, false);
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     /**
