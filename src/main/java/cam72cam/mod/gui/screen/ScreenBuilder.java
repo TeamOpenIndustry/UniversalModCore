@@ -42,12 +42,12 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         }
         screen.onClose();
     }
-
+/*
     @Override
     public void onClose() {
         screen.onClose();
         super.onClose();
-    }
+    }*/
 
     @Override
     public void addButton(Button btn) {
@@ -114,11 +114,12 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public boolean keyPressed(int typedChar, int keyCode, int mods) {
-        if (super.keyPressed(typedChar, keyCode, mods)) {
+        if (typedChar == 256 && this.shouldCloseOnEsc()) {
+            close();
             return true;
         }
-        if (keyCode == 1) {
-            close();
+        if (super.keyPressed(typedChar, keyCode, mods)) {
+            return true;
         }
 
         // Enter
