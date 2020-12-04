@@ -10,6 +10,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -66,7 +67,7 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void onWorldLoad(ChunkEvent.Load event) {
+        public static void onWorldLoad(ChunkDataEvent.Load event) {
             World.LOAD_CHUNK.execute(x -> x.accept(event.getChunk()));
         }
 

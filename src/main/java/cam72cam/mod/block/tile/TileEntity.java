@@ -28,6 +28,7 @@ import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -115,6 +116,9 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
 
         CommonEvents.World.LOAD_CHUNK.subscribe(chunk -> {
+            if(chunk instanceof Chunk) {
+                return;
+            }
             for (BlockPos pos : chunk.getTileEntitiesPos()) {
                 CompoundNBT data = chunk.getDeferredTileEntity(pos);
                 for (Function<CompoundNBT, BlockState> migration : migrations) {
