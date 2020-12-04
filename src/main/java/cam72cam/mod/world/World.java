@@ -546,7 +546,7 @@ public class World {
         if (internal.getBlockState(pos.internal()).getMaterial().isReplaceable()) {
             return true;
         }
-        if (block instanceof IGrowable && !(block instanceof GrassBlock)) {
+        if (block instanceof BushBlock) {
             return true;
         }
         if (block instanceof IPlantable) {
