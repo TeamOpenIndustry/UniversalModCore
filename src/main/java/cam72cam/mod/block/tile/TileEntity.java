@@ -209,11 +209,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
         NBTTagCompound tag = new NBTTagCompound();
         if (this.isLoaded()) {
             this.writeToNBT(tag);
+            TagCompound umcUpdate = new TagCompound();
             try {
-                instance().writeUpdate(new TagCompound(tag));
+                instance().writeUpdate(umcUpdate);
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
+            tag.setTag("umcUpdate", umcUpdate.internal);
         }
         return tag;
     }
@@ -225,7 +227,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
             this.readFromNBT(tag);
             if (instance(new TagCompound(tag)) != null) {
                 try {
-                    instance().readUpdate(new TagCompound(tag));
+                    instance().readUpdate(new TagCompound(tag.getCompoundTag("umcUpdate")));
                 } catch (SerializationException e) {
                     ModCore.catching(e);
                 }

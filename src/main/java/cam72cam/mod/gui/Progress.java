@@ -1,5 +1,6 @@
 package cam72cam.mod.gui;
 
+import cam72cam.mod.ModCore;
 import cpw.mods.fml.common.ProgressManager;
 import cpw.mods.fml.common.ProgressManager.ProgressBar;
 
@@ -41,6 +42,7 @@ public class Progress {
 
         public void step(String name) {
             bar.step(name);
+            ModCore.info(name);
         }
     }
 }
