@@ -25,7 +25,7 @@ public class Recipes {
         private List<Fuzzy> dependencies = new ArrayList<>();
         private List<Fuzzy> conflicts = new ArrayList<>();
 
-        private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
+        private ShapedRecipeBuilder(ItemStack result, int width, Fuzzy... ingredients) {
             CommonEvents.Recipe.REGISTER.subscribe(() -> {
                 for (Fuzzy dependency : dependencies) {
                     if (dependency.enumerate().isEmpty()) {
@@ -55,10 +55,10 @@ public class Recipes {
                     }
                 }
                 for (int i = 0; i < ingredientSet.size(); i++) {
-                    data[rows + i * 2] = ("" + i).charAt(0);
+                    data[rows + i * 2] = (""+i).charAt(0);
                     data[rows + i * 2 + 1] = ingredientSet.get(i).toString();
                 }
-                GameRegistry.addRecipe(new ShapedOreRecipe(item.internal, data));
+                GameRegistry.addRecipe(new ShapedOreRecipe(result.internal, data));
             });
         }
 

@@ -276,9 +276,7 @@ public abstract class BlockType {
             if (BlockType.this.isConnectable()) {
                 return super.isSideSolid(world, posX, posY, posZ, side);
             }
-
-            // SNOW ONLY?
-            return side == ForgeDirection.UP;
+            return false;
         }
 
         public boolean tryBreak(net.minecraft.world.World world, int posX, int posY, int posZ, EntityPlayer player) {

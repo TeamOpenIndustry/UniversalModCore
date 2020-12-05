@@ -5,7 +5,6 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.util.MathHelper;
 import paulscode.sound.CommandObject;
 import paulscode.sound.SoundSystem;
 
@@ -41,7 +40,11 @@ class ClientSound implements ISound {
         this.scale = scale;
     }
 
-    public void init() {
+    void init() {
+        if (oggLocation == null) {
+            return;
+        }
+
         Random rand = MinecraftClient.getPlayer().internal.worldObj.rand;
         long i = rand.nextLong() & -61441L | 16384L;
         long j = rand.nextLong() & 4611686018427387903L | Long.MIN_VALUE;
