@@ -127,8 +127,6 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             max = new Vec3d(max.x, yoff + 16, max.z);
             AxisAlignedBB chunk = new AxisAlignedBB(min.internal(), max.internal());
             if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
-                System.out.println(entity);
-
                 net.minecraft.entity.Entity entityIn = entity.internal;
                 double d0 = MathHelper.lerp(partialTicks, entityIn.lastTickPosX, entityIn.getPosX());
                 double d1 = MathHelper.lerp(partialTicks, entityIn.lastTickPosY, entityIn.getPosY());
