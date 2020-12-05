@@ -406,7 +406,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
 
     @Override
     public ItemStack getStackInSlot(int slot) {
-        //System.out.println("GET " + slot);
         return getInventory(null) == null ? null : getInventory(null).get(slot).internal;
     }
 
@@ -425,7 +424,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity implements I
     public void setInventorySlotContents(int slot, ItemStack stack) {
         IInventory inv = getInventory(null);
         if (inv != null) {
-            System.out.println("SET " + slot + " " + stack);
             inv.set(slot, new cam72cam.mod.item.ItemStack(stack));
         }
     }
