@@ -69,7 +69,9 @@ public interface IInventory {
                     if (!inventory.isItemValidForSlot(slot, itemStack.internal)) {
                         return itemStack;
                     }
-                    set(slot, itemStack);
+                    if (!simulate) {
+                        set(slot, itemStack);
+                    }
                     return ItemStack.EMPTY;
                 }
 
