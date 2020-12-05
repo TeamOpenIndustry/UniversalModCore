@@ -54,7 +54,7 @@ public class Mouse {
 
         @Override
         public void handle() {
-            if (target != null) {
+            if (target != null && getPlayer() != null) {
                 switch (hand) {
                     case PRIMARY:
                         getPlayer().internal.interactOn(target.internal, hand.internal);

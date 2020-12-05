@@ -28,6 +28,7 @@ class ClientSound implements ISound {
     private float baseSoundMultiplier;
     private final float scale;
     private boolean disposable = false;
+    private int lastUsed = 0;
 
     ClientSound(Supplier<SoundSystem> soundSystem, Identifier oggLocation, URL resource, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.sndSystem = soundSystem;
@@ -40,6 +41,9 @@ class ClientSound implements ISound {
     }
 
     void init() {
+        if (oggLocation == null) {
+            return;
+        }
         id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
         sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
     }
@@ -47,6 +51,10 @@ class ClientSound implements ISound {
     @Override
     public void play(Vec3d pos) {
         stop();
+
+        if (id == null) {
+            init();
+        }
 
         this.setPosition(pos);
         update();
@@ -163,6 +171,18 @@ class ClientSound implements ISound {
     @Override
     public void disposable() {
         disposable = true;
+    }
+
+    void tick() {
+        lastUsed -= 1;
+
+        if (isPlaying()) {
+            lastUsed = 20;
+        }
+
+        if (lastUsed == 0) {
+            terminate();
+        }
     }
 
     @Override

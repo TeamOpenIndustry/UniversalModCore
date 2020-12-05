@@ -1,5 +1,6 @@
 package cam72cam.mod.fluid;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -122,61 +123,44 @@ public interface ITank {
      * Attempt to drain the inputTank into this tank
      * @return if anything was transferred
      */
-    default boolean drain(ITank inputTank, int max, boolean simulate) {
-        int maxTransfer = fill(inputTank.getContents(), true);
+    default int drain(ITank inputTank, int max, boolean simulate) {
+        // Calculate max transfer into this tank
+        int maxTransfer = this.fill(inputTank.getContents(), true);
         maxTransfer = Math.min(maxTransfer, max);
 
         if (maxTransfer == 0) {
-            // Out of room or limit too small
-            return false;
+            // Out of room or empty
+            return 0;
         }
 
-        FluidStack attemptedDrain = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), true);
+        // See if the other tank can hold this amount
+        FluidStack allowedTransfer = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), true);
 
-        if (attemptedDrain == null || attemptedDrain.getAmount() != maxTransfer) {
-            // Can't transfer the full amount
-            return false;
+        if (allowedTransfer == null || allowedTransfer.getAmount() == 0) {
+            // Can't transfer anything
+            return 0;
         }
 
         // Either attempt or do fill
-        boolean ok = this.fill(attemptedDrain, simulate) == attemptedDrain.getAmount();
+        int transferred = this.fill(allowedTransfer, simulate);
 
-        if (!simulate) {
-            // Drain input tank
-            inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), false);
+        FluidStack check = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), simulate);
+        if (check.getAmount() != transferred) {
+            try {
+                throw new Exception("Invalid fluid transfer!");
+            } catch (Exception e) {
+                ModCore.catching(e);
+            }
         }
-        return ok;
+
+        return transferred;
     }
 
     /**
-     * Attempt to drain the inputTank into this tank
+     * Attempt to drain this tank into the inputTank
      * @return if anything was transferred
      */
-    default boolean fill(ITank inputTank, int max, boolean simulate) {
-        int maxTransfer = inputTank.fill(this.getContents(), true);
-        maxTransfer = Math.min(maxTransfer, max);
-
-        if (maxTransfer == 0) {
-            // Out of room or limit too small
-            return false;
-        }
-
-        FluidStack attemptedDrain = this.drain(new FluidStack(this.getContents().getFluid(), maxTransfer), true);
-
-        if (attemptedDrain == null || attemptedDrain.getAmount() != maxTransfer) {
-            // Can't transfer the full amount
-            return false;
-        }
-
-        // Either attempt or do fill
-        boolean ok = inputTank.fill(attemptedDrain, simulate) == attemptedDrain.getAmount();
-
-        if (!simulate) {
-            // Drain input tank
-            this.drain(new FluidStack(this.getContents().getFluid(), maxTransfer), false);
-        }
-        return ok;
+    default int fill(ITank inputTank, int max, boolean simulate) {
+        return inputTank.drain(this, max, simulate);
     }
-
-
 }
