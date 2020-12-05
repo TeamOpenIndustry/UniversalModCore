@@ -59,14 +59,19 @@ public interface IInventory {
 
             @Override
             public ItemStack insert(int slot, ItemStack itemStack, boolean simulate) {
+                if (itemStack.isEmpty()) {
+                    return itemStack;
+                }
+
                 net.minecraft.item.ItemStack current = inventory.getStackInSlot(slot);
 
                 if (current.isEmpty()) {
-                    set(slot, itemStack);
-                    return ItemStack.EMPTY;
-                }
-
-                if (itemStack.isEmpty()) {
+                    if (!inventory.isItemValidForSlot(slot, itemStack.internal)) {
+                        return itemStack;
+                    }
+                    if (!simulate) {
+                        set(slot, itemStack);
+                    }
                     return ItemStack.EMPTY;
                 }
 
