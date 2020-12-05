@@ -248,9 +248,7 @@ public abstract class BlockType {
             if (BlockType.this.isConnectable()) {
                 return super.isSideSolid(base_state, world, pos, side);
             }
-
-            // SNOW ONLY?
-            return side == EnumFacing.UP;
+            return false;
         }
 
         public boolean tryBreak(net.minecraft.world.World world, BlockPos pos, EntityPlayer player) {

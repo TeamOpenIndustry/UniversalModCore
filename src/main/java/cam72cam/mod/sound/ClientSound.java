@@ -40,7 +40,10 @@ class ClientSound implements ISound {
         this.scale = scale;
     }
 
-    public void init() {
+    void init() {
+        if (oggLocation == null) {
+            return;
+        }
         id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
         sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
     }
