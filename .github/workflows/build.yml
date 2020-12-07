@@ -14,11 +14,17 @@ jobs:
               env:
                 github_ref: ${{ github.ref }}
                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-            - name: Gradle build
-              run: ./gradlew build
+            - name: keyscan
+              run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
+            - name: secrets
+              env:
+                MAVENCI: ${{ secrets.MAVENCI }}
+              run: echo "${MAVENCI}" >> publish_key
+            - name: Gradle uploadArchives
+              run: ./gradlew uploadArchives
+            - name: cleanup
+              run: rm publish_key
             - uses: actions/upload-artifact@v2-preview
               with:
                 name: UniversalModCore-${{ env.ref }}
                 path: build/libs/UniversalModCore-*.jar
-
-
