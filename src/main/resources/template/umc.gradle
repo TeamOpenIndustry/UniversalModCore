@@ -6,22 +6,11 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-        maven { url "https://plugins.gradle.org/m2/" }
     }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
-    }
+	dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+	}
 }
-
-apply plugin: net.minecraftforge.gradle.user.patch.ForgeUserPlugin
-
-apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
-
 
 configurations {
     shade
@@ -30,6 +19,8 @@ configurations {
 
 
 #UMC_REPO#
+
+apply plugin: 'maven'
 
 
 version = "#VERSION#-1.7.10-forge"
