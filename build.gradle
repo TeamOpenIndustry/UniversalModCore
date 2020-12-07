@@ -9,14 +9,10 @@ buildscript {
 	}
 }
 
-plugins {
-    id "com.wynprice.cursemaven" version "2.1.1"
-}
-
 apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
-//apply plugin: 'maven-publish'
+apply plugin: 'maven'
 
 configurations {
     shade
@@ -144,3 +140,23 @@ test {
     useJUnit()
     maxHeapSize = '1G'
 }
+
+task deployJar(type: Jar)
+
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        configuration = configurations.deployerJars
+        repository(url: "scp://teamopenindustry.cc/var/www/html/maven/") {
+            authentication(userName: "mavenci", privateKey: "publish_key")
+        }
+    }
+}
+

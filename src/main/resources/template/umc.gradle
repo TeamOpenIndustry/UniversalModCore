@@ -7,7 +7,6 @@ buildscript {
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
 	}
 }
 
@@ -15,8 +14,6 @@ apply plugin: net.minecraftforge.gradle.userdev.UserDevPlugin
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 //apply plugin: 'maven-publish'
-
-apply plugin: com.wynprice.cursemaven.CurseMavenPlugin
 
 
 configurations {
