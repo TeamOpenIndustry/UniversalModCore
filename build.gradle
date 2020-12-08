@@ -1,4 +1,5 @@
 import cam72cam.universalmodcore.CurseForge;
+import cam72cam.universalmodcore.Util;
 
 buildscript {
     repositories {
@@ -8,7 +9,7 @@ buildscript {
     }
 	dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
-        classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.2'
+        classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.3'
 	}
 }
 
@@ -20,7 +21,11 @@ configurations {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'maven'
 
-version = "0.1.0-1.10.2-forge"
+String umcVersion = "0.1.0"
+if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
+    umcVersion += "-" + Util.GitRevision()
+}
+version = "1.10.2-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
