@@ -25,7 +25,7 @@ configurations {
 apply plugin: 'maven'
 
 
-version = "#VERSION#-1.7.10-forge"
+version = "1.7.10-forge-#VERSION#"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#CLASS#"
 
