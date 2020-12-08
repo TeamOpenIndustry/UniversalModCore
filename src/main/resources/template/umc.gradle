@@ -8,9 +8,11 @@ buildscript {
         }
     }
 	dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
 	}
 }
+
+apply plugin: net.minecraftforge.gradle.user.patch.ForgeUserPlugin
 
 configurations {
     shade
