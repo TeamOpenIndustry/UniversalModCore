@@ -21,7 +21,7 @@ apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 apply plugin: 'maven'
 
 
-version = "#VERSION#-1.11.2-forge"
+version = "1.11.2-forge-#VERSION#"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#CLASS#"
 
