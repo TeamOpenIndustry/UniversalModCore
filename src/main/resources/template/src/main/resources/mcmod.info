@@ -1,0 +1,16 @@
+[
+{
+  "modid": "#ID#",
+  "name": "#NAME#",
+  "description": "",
+  "version": "#VERSION#",
+  "mcversion": "1.11.2",
+  "url": "",
+  "updateUrl": "",
+  "authorList": [],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
