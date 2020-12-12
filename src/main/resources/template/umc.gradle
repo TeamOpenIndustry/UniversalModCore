@@ -105,6 +105,11 @@ minecraft {
     }
 }
 
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
 #UMC_REPO#
 
 dependencies {
