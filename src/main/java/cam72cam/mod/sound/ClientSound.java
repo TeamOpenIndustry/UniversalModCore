@@ -83,6 +83,7 @@ class ClientSound implements ISound {
             return;
         }
         sndSystem.get().removeSource(id);
+        id = null;
     }
 
     @Override
