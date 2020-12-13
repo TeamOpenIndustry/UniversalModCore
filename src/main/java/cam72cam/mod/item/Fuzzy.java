@@ -90,9 +90,12 @@ public class Fuzzy {
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return OreDictionary.getOres(ident).stream()
-                        .anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false)) ||
-                        includes.stream().anyMatch(f -> f.matches(stack));
+        for (net.minecraft.item.ItemStack potential : OreDictionary.getOres(ident)) {
+            if (OreDictionary.itemMatches(potential, stack.internal, false)) {
+                return true;
+            }
+        }
+        return includes.stream().anyMatch(f -> f.matches(stack));
     }
 
     /** Do any items exist in this fuzzy */
