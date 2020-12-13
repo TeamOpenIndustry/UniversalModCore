@@ -3,6 +3,7 @@ package cam72cam.mod.item;
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -107,7 +108,12 @@ public class Fuzzy {
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
             if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
                 NonNullList<net.minecraft.item.ItemStack> temp = NonNullList.create();
-                stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
+                try {
+                    stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);
+                } catch (NoSuchMethodError e) {
+                    // This function does not exist serverside, FML
+                    temp.add(new net.minecraft.item.ItemStack(stack.getItem()));
+                }
                 results.addAll(temp.stream().map(ItemStack::new).collect(Collectors.toList()));
             } else {
                 results.add(new ItemStack(stack));
