@@ -120,8 +120,10 @@ public class Player extends Entity {
 
         @Override
         protected void handle() {
-            serverMovement.put(this.getPlayer().getUUID(), movement);
-            new MovementSync2EB(this.getPlayer().getUUID(), movement).sendToAll();
+            if (this.getPlayer() != null) {
+                serverMovement.put(this.getPlayer().getUUID(), movement);
+                new MovementSync2EB(this.getPlayer().getUUID(), movement).sendToAll();
+            }
         }
     }
 

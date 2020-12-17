@@ -11,9 +11,8 @@ public class ChunkPos {
 
     public ChunkPos(World world, Vec3i pos) {
         dim = world.provider.dimensionId;
-        Chunk chunk = world.getChunkFromBlockCoords(pos.x, pos.z);
-        chunkX = chunk.xPosition;
-        chunkZ = chunk.zPosition;
+        chunkX = pos.x >> 4;
+        chunkZ = pos.z >> 4;
     }
 
     @Override

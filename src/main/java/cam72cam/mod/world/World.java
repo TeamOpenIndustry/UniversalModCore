@@ -29,6 +29,7 @@ import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -280,13 +281,15 @@ public class World {
 
     /** Internal, do not use */
     public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls, boolean create) {
-        net.minecraft.tileentity.TileEntity ent;
-        ent = internal.getChunkFromBlockCoords(pos.x, pos.z).getTileEntityUnsafe(pos.x, pos.y, pos.z);
-        if (ent == null && create) {
-            ent = internal.getTileEntity(pos.x, pos.y, pos.z);
-        }
-        if (cls.isInstance(ent)) {
-            return (T) ent;
+        Chunk chunk = internal.getChunkFromBlockCoords(pos.x, pos.z);
+        if (chunk != null) {
+            net.minecraft.tileentity.TileEntity ent = chunk.getTileEntityUnsafe(pos.x, pos.y, pos.z);
+            if (ent == null && create) {
+                ent = internal.getTileEntity(pos.x, pos.y, pos.z);
+            }
+            if (cls.isInstance(ent)) {
+                return (T) ent;
+            }
         }
         return null;
     }
@@ -452,7 +455,7 @@ public class World {
 
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i pos) {
-        return internal.getChunkProvider().chunkExists(pos.x >> 4, pos.z >> 4);
+        return internal.getChunkProvider() != null && internal.getChunkProvider().chunkExists(pos.x >> 4, pos.z >> 4);
     }
 
     /** Check if block at pos collides with a BB */
