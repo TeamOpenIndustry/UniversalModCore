@@ -112,7 +112,7 @@ public class World {
                     this.onEntityAdded(entity);
                 }
             }
-            for (Entity entity : this.entityByID.values()) {
+            for (Entity entity : new ArrayList<>(this.entityByID.values())) {
                 if (!this.internal.loadedEntityList.contains(entity.internal)) {
                     ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                     this.onEntityRemoved(entity.internal);
