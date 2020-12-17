@@ -116,7 +116,7 @@ public class GuiRegistry {
                     return;
                 }
 
-                openScreen(screen, () -> player.getWorld().getBlockEntity(pos, cls) == entity);
+                openScreen(screen, () -> !entity.internal.isRemoved());
             });
         };
     }
@@ -130,7 +130,7 @@ public class GuiRegistry {
             if (entity == null) {
                 return null;
             }
-            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> entity == World.get(event.inv.player.world).getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls));
+            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> !entity.internal.isRemoved());
         });
         return (player, pos) -> {
             if (!(player.internal instanceof ServerPlayerEntity)) {
