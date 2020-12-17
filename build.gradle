@@ -26,7 +26,7 @@ configurations {
 
 apply plugin: 'maven'
 
-String umcVersion = "1.0.0"
+String umcVersion = "1.0.1"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     umcVersion += "-" + Util.GitRevision()
 }
