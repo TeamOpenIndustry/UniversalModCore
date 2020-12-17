@@ -21,11 +21,13 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -158,6 +160,14 @@ public class GlobalRender {
         public boolean hasWorld() {
             return true;
         }
+
+        @Nullable
+        @Override
+        public World getWorld() {
+            return Minecraft.getInstance().world;
+        }
+
+
 
         public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
