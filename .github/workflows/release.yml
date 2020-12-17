@@ -1,4 +1,4 @@
-name: Universal Mod Core CI
+name: Universal Mod Core Release
 
 on: [workflow_dispatch]
 
