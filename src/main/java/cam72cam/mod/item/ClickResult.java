@@ -20,6 +20,7 @@ public enum ClickResult {
     public static ClickResult from(ActionResultType ear) {
         switch (ear) {
             case SUCCESS:
+            case CONSUME:
                 return ACCEPTED;
             case PASS:
                 return PASS;
