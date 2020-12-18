@@ -1,0 +1,30 @@
+name: Universal Mod Core Release
+
+on: [workflow_dispatch]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - run: |
+                ref=`echo ${github_ref} | sed -e 's,refs/heads/,,' | tr '/' '-'`
+                echo $ref
+                echo "::set-env name=ref::$ref"
+              env:
+                github_ref: ${{ github.ref }}
+                ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+            - name: keyscan
+              run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
+            - name: secrets
+              env:
+                MAVENCI: ${{ secrets.MAVENCI }}
+              run: echo "${MAVENCI}" >> publish_key
+            - name: Gradle uploadArchives
+              run: ./gradlew uploadArchives -Dtarget=release
+            - name: cleanup
+              run: rm publish_key
+            - uses: actions/upload-artifact@v2-preview
+              with:
+                name: UniversalModCore-${{ env.ref }}
+                path: build/libs/UniversalModCore-*.jar
