@@ -65,6 +65,11 @@ dependencies {
 	shade 'curse.maven:InventoryTweaks:2482482'
 
     testCompile('junit:junit:4.13')
+
+    /*shade ("io.gitlab.friedrichlp:renderlib:0.9.4") {
+        exclude group: "*"
+    }*/
+    shade (files("RenderLib-0.9.5.jar"))
 }
 
 jar {

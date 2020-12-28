@@ -27,7 +27,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
     static {
-        GlobalRender.registerRender(EntityRenderer::renderLargeEntities);
+        GlobalRender.registerBlockRender(EntityRenderer::renderLargeEntities);
     }
 
     public static void registerClientEvents() {
@@ -97,11 +97,11 @@ public class EntityRenderer extends Render<ModdedEntity> {
         Entity self = stock.getSelf();
 
         try (With c = OpenGL.matrix()) {
-                GL11.glTranslated(x, y, z);
-                GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-                GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-                GL11.glRotatef(-90, 0, 1, 0);
-                renderers.get(self.getClass()).render(self, partialTicks);
+            GL11.glTranslated(x, y, z);
+            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
+            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
+            GL11.glRotatef(-90, 0, 1, 0);
+            renderers.get(self.getClass()).render(self, partialTicks);
         }
     }
 

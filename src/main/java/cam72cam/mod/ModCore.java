@@ -9,9 +9,11 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.render.RenderLibInit;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
+import friedrichlp.renderlib.tracking.RenderManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
@@ -56,23 +58,36 @@ public class ModCore {
     /** INIT Phase (Forge) */
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        try {
+            Class.forName("net.minecraft.client.Minecraft");
+        } catch (ClassNotFoundException e) {
+            RenderManager.setServer();
+        }
+        RenderLibInit.initRenderLib(Loader.instance().getConfigDir());
+
         // LOCK MODS
         mods = Collections.unmodifiableList(mods);
 
         logger = event.getModLog();
         proxy.event(ModEvent.INITIALIZE);
+
+        RenderManager.update();
     }
 
     /** SETUP Phase (Forge) */
     @EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.event(ModEvent.SETUP);
+
+        RenderManager.update();
     }
 
     /** FINALIZE Phase (Forge) */
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
+
+        RenderManager.update();
     }
 
     /** START Phase (Forge) */

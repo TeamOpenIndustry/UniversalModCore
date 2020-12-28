@@ -66,6 +66,10 @@ public class Player extends Entity {
         return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
     }
 
+    public Vec3d getViewDirection() {
+        return new Vec3d(internal.getLookVec());
+    }
+
     public enum Hand {
         PRIMARY(EnumHand.MAIN_HAND),
         SECONDARY(EnumHand.OFF_HAND),
