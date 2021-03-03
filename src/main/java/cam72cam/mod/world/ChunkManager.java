@@ -149,8 +149,9 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
 
     private static void saveChunks(World world) {
         Ticket ticket = ticketForWorld(world);
+        int dim = cam72cam.mod.world.World.get(world).getId();
         TagCompound data = new TagCompound(ticket.getModData());
-        data.setList("chunks", new ArrayList<>(CHUNK_MAP.keySet()), cm -> {
+        data.setList("chunks", CHUNK_MAP.keySet().stream().filter(x -> x.dim == dim).collect(Collectors.toList()), cm -> {
             TagCompound chunk = new TagCompound();
             chunk.setInteger("cx", cm.chunkX);
             chunk.setInteger("cz", cm.chunkZ);
