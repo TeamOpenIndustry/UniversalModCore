@@ -6,6 +6,8 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
@@ -118,6 +120,12 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                 ModCore.debug("UNLOADED CHUNK %s %s", chunk.x, chunk.z);
                 try {
                     ForgeChunkManager.unforceChunk(ticket, chunk);
+                    if (world instanceof WorldServer) {
+                        Chunk current = world.getChunkProvider().getLoadedChunk(chunk.x, chunk.z);
+                        if (current != null) {
+                            ((WorldServer) world).getChunkProvider().queueUnload(current);
+                        }
+                    }
                 } catch (Exception ex) {
                     ModCore.catching(ex);
                 }
