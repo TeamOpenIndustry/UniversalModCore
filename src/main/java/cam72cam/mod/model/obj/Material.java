@@ -1,15 +1,30 @@
 package cam72cam.mod.model.obj;
 
-import cam72cam.mod.resource.Identifier;
-
-import java.nio.FloatBuffer;
-
 public class Material {
-    public String name;
+    public final String name;
 
-    public Identifier texKd;
+    public final String texKd;
 
-    public FloatBuffer Ka;
-    public FloatBuffer Kd;
-    public FloatBuffer Ks;
+    public final float KdR;
+    public final float KdG;
+    public final float KdB;
+    public final float KdA;
+
+    public int copiesU;
+    public int copiesV;
+
+    public Material(String name, String texKd, Float kdR, Float kdG, Float kdB, Float kdA) {
+        this.name = name;
+        this.texKd = texKd;
+        KdR = kdR == null ? 1 : kdR;
+        KdG = kdG == null ? 1 : kdG;
+        KdB = kdB == null ? 1 : kdB;
+        KdA = kdA == null ? 1 : kdA;
+        copiesU = 1;
+        copiesV = 1;
+    }
+
+    public boolean hasTexture() {
+        return texKd != null;
+    }
 }
