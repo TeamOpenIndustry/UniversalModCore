@@ -1,20 +1,27 @@
 package cam72cam.mod.text;
 
-import cam72cam.mod.world.World;
-import net.minecraft.command.*;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+
+import cam72cam.mod.entity.Player;
+import cam72cam.mod.world.World;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.CommandHandler;
+import net.minecraft.command.ICommand;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /** API not finalized use at your own risk */
 public abstract class Command {
     private static final List<Command> commands = new ArrayList<>();
 
     private final ICommand internal;
-
+	private Player player = null;
 
     protected Command() {
         this.internal = new CommandBase() {
@@ -30,14 +37,25 @@ public abstract class Command {
 
             @Override
             public int getRequiredPermissionLevel() {
-                return opRequired() ? 2 : 4;
+				return Command.this.getRequiredPermissionLevel();
             }
 
             @Override
-            public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+            public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+				if (getRequiredPermissionLevel() == PermissionLevel.NONE)
+					return true;
+				return sender.canUseCommand(getRequiredPermissionLevel(), getName());
+            }
+            
+            @Override
+			public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+				if (sender instanceof EntityPlayer) {
+					player = new Player((EntityPlayer) sender);
+				}
                 if (!Command.this.execute(World.get(sender.getEntityWorld()), m -> sender.sendMessage(m.internal), args)) {
                     throw new CommandException(getUsage(sender));
                 }
+				player = null;
             }
         };
     }
@@ -57,7 +75,53 @@ public abstract class Command {
 
     public abstract String getUsage();
 
-    public abstract boolean opRequired();
+	/**
+	 * <pre>
+	 * Returns internally OP-Level 2 (false) and 4 (true)
+	 * </pre>
+	 * 
+	 * @deprecated see getRequiredPermissionLevel()
+	 */
+	@Deprecated
+	public boolean opRequired() {
+		return true;
+	}
 
+	/**
+	 * <pre>
+	 * Executes opRequired()
+	 * See <b>Command.PermissionLevel</b> for further information.
+	 * </pre>
+	 */
+	public int getRequiredPermissionLevel() {
+		return this.opRequired() ? PermissionLevel.LEVEL4 : PermissionLevel.LEVEL2;
+	}
+
+	/** Executed only on server-side */
     public abstract boolean execute(World world, Consumer<PlayerMessage> sender, String[] args);
+
+	/**
+	 * <pre>
+	 * 	Returns the player that executed this command.
+	 *  Returns Optional.empty() if command was executed by console.
+	 *  Only available on execute();
+	 * </pre>
+	 */
+	public Optional<Player> getPlayer() {
+		return Optional.ofNullable(player);
+    }
+
+	public static class PermissionLevel {
+		/** Everyone has this level */
+		public static final int NONE = 0;
+		/** OP-Level 1 */
+		public static final int LEVEL1 = 1;
+		/** OP-Level 2 */
+		public static final int LEVEL2 = 2;
+		/** OP-Level 3 */
+		public static final int LEVEL3 = 3;
+		/** OP-Level 4 */
+		public static final int LEVEL4 = 4;
+	}
+
 }
