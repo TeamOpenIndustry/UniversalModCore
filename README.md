@@ -21,14 +21,3 @@ In the past UMC has been packaged directly with ImmersiveRailroading as it is wa
 
 TODO once beta is ready
 
-## Changes made by @Danielxs01
-
-=> Will be removed for Pull Request 
-
-[![wakatime](https://wakatime.com/badge/github/LandOfRails/UniversalModCore.svg)](https://wakatime.com/badge/github/LandOfRails/UniversalModCore)
-
-CHANGELOG:
- - Added [Packet].sendToPlayer([Player]) in Packet.java
- - Added [Command].getPlayer(): Optional<Player> in Command.java
- - Added [Command].getRequiredPermissionLevel() in Command.java
- - Added Command.PermissionLevel 0 - 4 for the above method in Command.java
