@@ -23,6 +23,8 @@ TODO once beta is ready
 
 ## Changes made by @Danielxs01
 
+=> Will be removed for Pull Request 
+
 [![wakatime](https://wakatime.com/badge/github/LandOfRails/UniversalModCore.svg)](https://wakatime.com/badge/github/LandOfRails/UniversalModCore)
 
 CHANGELOG:
