@@ -20,4 +20,3 @@ In the past UMC has been packaged directly with ImmersiveRailroading as it is wa
 ## Developer Guide
 
 TODO once beta is ready
-
