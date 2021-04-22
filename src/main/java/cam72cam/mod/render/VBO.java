@@ -106,7 +106,7 @@ public class VBO {
                 sorted.sort(Comparator.naturalOrder());
                 int start = -1;
                 int stop = -1;
-                for (String group : groups) {
+                for (String group : sorted) {
                     OBJGroup info = model.groups.get(group);
                     if (start == stop) {
                         start = info.faceStart;
@@ -213,7 +213,9 @@ public class VBO {
         public VBO build() {
             float[] out = new float[builtIdx];
             System.arraycopy(built, 0, out, 0, builtIdx);
-            return new VBO(out, model.hasVertexNormals);
+            VBO vbo = new VBO(out, model.hasVertexNormals);
+            vbo.model = model;
+            return vbo;
         }
     }
 }
