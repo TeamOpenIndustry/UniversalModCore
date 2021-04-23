@@ -1,11 +1,12 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.Config;
+
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -241,6 +242,9 @@ public class OBJTexturePacker {
 
         for (String variant : variants) {
             image = new BufferedImage(rootNode.getFullWidth(), rootNode.getFullHeight(), BufferedImage.TYPE_INT_ARGB);
+            if (image.getWidth() > Config.MaxTextureSize || image.getHeight() > Config.MaxTextureSize) {
+                image = scaleImage(image);
+            }
             graphics = image.createGraphics();
             rootNode.draw(0, 0, variant);
             int[] argb = new int[image.getWidth() * image.getHeight()];
@@ -257,6 +261,16 @@ public class OBJTexturePacker {
             }
             textures.put(variant, rgba);
         }
+    }
+    private static BufferedImage scaleImage(BufferedImage image) {
+        double scale = Config.MaxTextureSize / (double)Math.max(image.getWidth(), image.getHeight());
+        int x = (int)Math.floor(image.getWidth() * scale);
+        int y = (int)Math.floor(image.getHeight() * scale);
+        BufferedImage target = new BufferedImage(x, y, image.getType());
+        Graphics2D g = target.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(image, 0, 0, x, y, 0, 0, image.getWidth(), image.getHeight(), null);
+        return target;
     }
 
     public int getWidth() {
