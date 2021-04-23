@@ -46,7 +46,7 @@ public class OBJRender {
         OBJTextureSheet tex = this.textures.get(texName);
 
         if (icon) {
-            return tex.bindIcon();
+            return tex.bind(); //TODO do we want to bind a smaller texture here?
         } else {
             return tex.bind();
         }
