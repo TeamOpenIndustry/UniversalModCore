@@ -101,7 +101,7 @@ public class ResourceCache<T> implements Closeable {
             try (FileChannel channel = new FileOutputStream(file).getChannel()) {
                 GenericByteBuffer in = converter.apply(intermediary);
                 LZ4Factory factory = LZ4Factory.fastestInstance();
-                LZ4Compressor compressor = factory.fastCompressor();
+                LZ4Compressor compressor = factory.highCompressor(2);
                 // Could be faster
                 byte[] output = compressor.compress(in.buffer.array());
                 ByteBuffer prefix = ByteBuffer.wrap(new byte[Integer.BYTES]);
