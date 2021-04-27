@@ -1,5 +1,16 @@
 package cam72cam.mod.serialization;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Entity;
@@ -8,12 +19,6 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
 import net.minecraft.nbt.CompoundNBT;
-
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /** Wraps MC's tag object */
 public class TagCompound {
@@ -264,7 +269,8 @@ public class TagCompound {
         return setter(key, stack, () -> internal.put(key, stack.toTag().internal));
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         return internal.toString();
     }
 
@@ -310,6 +316,6 @@ public class TagCompound {
     }
 
     public boolean isEmpty() {
-        return internal.isEmpty();
+		return internal.isEmpty();
     }
 }

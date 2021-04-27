@@ -1,5 +1,19 @@
 package cam72cam.mod.render;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
+import org.lwjgl.opengl.GL11;
+
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
@@ -13,6 +27,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -23,13 +38,6 @@ import net.minecraft.world.biome.BiomeColors;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Registry for block rendering (and internal implementation)
@@ -102,7 +110,8 @@ public class BlockRender {
                 }
             }
 
-            public boolean isGlobalRenderer(TileEntity te) {
+            @Override
+			public boolean isGlobalRenderer(TileEntity te) {
                 return true;
             }
         });
@@ -176,6 +185,9 @@ public class BlockRender {
                 public ItemOverrideList getOverrides() {
                     return null;
                 }
+
+                @Override
+				public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
             });
         });
     }

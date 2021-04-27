@@ -1,9 +1,21 @@
 package cam72cam.mod.render;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Consumer;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
+
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.LogBlock;
+import net.minecraft.block.SnowBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -14,13 +26,6 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
 import net.minecraftforge.client.model.pipeline.LightUtil;
-import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Consumer;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
@@ -115,7 +120,7 @@ public class StandardModel {
 
     /** Render only the MC quads in this model */
     public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
+		List<BakedQuad> quads = new ArrayList<>();
         for (Pair<BlockState, IBakedModel> model : models) {
             quads.addAll(model.getRight().getQuads(null, null, new Random()));
             for (Direction facing : Direction.values()) {
@@ -129,7 +134,7 @@ public class StandardModel {
 
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
+		BufferBuilder worldRenderer = new BufferBuilder(2048);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
         worldRenderer.finishDrawing();

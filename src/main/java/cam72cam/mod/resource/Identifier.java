@@ -1,12 +1,12 @@
 package cam72cam.mod.resource;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.loading.moddiscovery.ExplodedDirectoryLocator;
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import org.apache.commons.io.FilenameUtils;
+
+import net.minecraft.util.ResourceLocation;
 
 /** Pair(domain, path).  Used to reference registry entries and resource pack contents alike */
 public class Identifier {
@@ -34,11 +34,11 @@ public class Identifier {
     }
 
     public String getDomain() {
-        return internal.getNamespace();
+		return internal.getNamespace();
     }
 
     public String getPath() {
-        return internal.getPath();
+		return internal.getPath();
     }
 
     /**

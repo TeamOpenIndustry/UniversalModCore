@@ -1,15 +1,21 @@
 package cam72cam.mod.render;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
-
-import java.util.*;
 
 /**
  * Internal class to scale an existing Baked Model
@@ -79,6 +85,9 @@ class BakedScaledModel implements IBakedModel {
     public TextureAtlasSprite getParticleTexture() {
         return source.getParticleTexture();
     }
+
+    @Override
+	public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
 
     @Override
     public ItemOverrideList getOverrides() {

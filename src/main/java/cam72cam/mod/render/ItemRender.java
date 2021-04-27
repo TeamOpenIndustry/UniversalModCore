@@ -33,7 +33,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Matrix4f;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -275,10 +274,13 @@ public class ItemRender {
             return new ItemOverrideListHack();
         }
 
-        @Override
-        public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
-            this.type = ItemRenderType.from(cameraTransformType);
-            return ForgeHooksClient.handlePerspective(this, cameraTransformType);
+        public ItemCameraTransforms getItemCameraTransforms() {
+            return new ItemCameraTransforms(ItemCameraTransforms.DEFAULT) {
+                public ItemTransformVec3f getTransform(ItemCameraTransforms.TransformType type) {
+                    BakedItemModel.this.type = ItemRenderType.from(type);
+                    return super.getTransform(type);
+                }
+            };
         }
 
         class ItemOverrideListHack extends ItemOverrideList {

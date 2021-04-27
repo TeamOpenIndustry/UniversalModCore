@@ -64,7 +64,7 @@ public class Player extends Entity {
 
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
-        return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+		return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
     }
 
     public enum Hand {

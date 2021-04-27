@@ -92,16 +92,16 @@ public enum Facing {
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getXMultiplier() {
-        return internal.getXOffset();
+		return internal.getXOffset();
     }
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getYMultiplier() {
-        return internal.getYOffset();
+		return internal.getYOffset();
     }
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getZMultiplier() {
-        return internal.getZOffset();
+		return internal.getZOffset();
     }
 }
