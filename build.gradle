@@ -3,7 +3,7 @@ import cam72cam.universalmodcore.Util;
 
 buildscript {
     repositories {
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url = "https://maven.minecraftforge.net/" }
         maven { url = "https://teamopenindustry.cc/maven" }
         jcenter()
 		mavenCentral()
@@ -25,6 +25,13 @@ configurations {
 }
 
 apply plugin: 'maven'
+
+repositories {
+    removeIf { it.url.host == 'files.minecraftforge.net' }
+    maven {
+        url "https://maven.minecraftforge.net/"
+    }
+}
 
 String umcVersion = "1.0.1"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {

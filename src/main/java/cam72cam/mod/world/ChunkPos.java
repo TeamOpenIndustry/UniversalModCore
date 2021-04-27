@@ -20,6 +20,12 @@ public class ChunkPos {
         this(entity.getEntityWorld(), entity.getPosition());
     }
 
+    public ChunkPos(World world, Integer cx, Integer cz) {
+        dim = world.getDimension().getType().getId();
+        chunkX = cx;
+        chunkZ = cz;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ChunkPos) {
