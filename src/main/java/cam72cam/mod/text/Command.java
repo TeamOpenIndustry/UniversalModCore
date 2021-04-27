@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.world.World;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandHandler;
@@ -21,7 +20,6 @@ public abstract class Command {
     private static final List<Command> commands = new ArrayList<>();
 
     private final ICommand internal;
-	private Player player = null;
 
     protected Command() {
         this.internal = new CommandBase() {
@@ -49,13 +47,13 @@ public abstract class Command {
             
             @Override
 			public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+				Optional<Player> player = Optional.empty();
 				if (sender instanceof EntityPlayer) {
-					player = new Player((EntityPlayer) sender);
+					player = Optional.of(new Player((EntityPlayer) sender));
 				}
-                if (!Command.this.execute(World.get(sender.getEntityWorld()), m -> sender.sendMessage(m.internal), args)) {
+				if (!Command.this.execute(m -> sender.sendMessage(m.internal), player, args)) {
                     throw new CommandException(getUsage(sender));
                 }
-				player = null;
             }
         };
     }
@@ -75,41 +73,20 @@ public abstract class Command {
 
     public abstract String getUsage();
 
-	/**
-	 * <pre>
-	 * Returns internally OP-Level 2 (false) and 4 (true)
-	 * </pre>
-	 * 
-	 * @deprecated see getRequiredPermissionLevel()
-	 */
-	@Deprecated
-	public boolean opRequired() {
-		return true;
-	}
 
 	/**
 	 * <pre>
-	 * Executes opRequired()
-	 * See <b>Command.PermissionLevel</b> for further information.
+	 * Returns <code>PermissionLevel.LEVEL4</code> by default.
+	 * opRequired() returned 4 when true 2 when false.
+	 * See {@link cam72cam.mod.text.Command.PermissionLevel PermissionLevel} for possible return values.
 	 * </pre>
 	 */
 	public int getRequiredPermissionLevel() {
-		return this.opRequired() ? PermissionLevel.LEVEL4 : PermissionLevel.LEVEL2;
+		return PermissionLevel.LEVEL4;
 	}
 
 	/** Executed only on server-side */
-    public abstract boolean execute(World world, Consumer<PlayerMessage> sender, String[] args);
-
-	/**
-	 * <pre>
-	 * 	Returns the player that executed this command.
-	 *  Returns Optional.empty() if command was executed by console.
-	 *  Only available on execute();
-	 * </pre>
-	 */
-	public Optional<Player> getPlayer() {
-		return Optional.ofNullable(player);
-    }
+	public abstract boolean execute(Consumer<PlayerMessage> sender, Optional<Player> player, String[] args);
 
 	public static class PermissionLevel {
 		/** Everyone has this level */
