@@ -4,11 +4,8 @@ import cam72cam.universalmodcore.Util;
 buildscript {
     repositories {
         mavenCentral()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
         maven { url = "https://teamopenindustry.cc/maven" }
+        maven { url = 'https://repo.eclipse.org/content/groups/eclipse' }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
@@ -37,7 +34,7 @@ sourceCompatibility = targetCompatibility = 1.8
 apply plugin: 'java'
 
 minecraft {
-    version = "1.7.10-10.13.4.1558-1.7.10"
+    version = "1.7.10-10.13.4.9999-1.7.10"
     runDir = "run"
 
     // the mappings can be changed at any time, and must be in the following format.

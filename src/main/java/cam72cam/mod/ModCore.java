@@ -186,6 +186,7 @@ public class ModCore {
                     break;
                 case INITIALIZE:
                     addHandler(new CommonEvents.EventBus());
+                    ChunkManager.setup();
                     break;
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
@@ -193,7 +194,6 @@ public class ModCore {
                     GuiRegistry.registration();
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     Command.registration();
