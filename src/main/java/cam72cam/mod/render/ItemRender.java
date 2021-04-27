@@ -1,5 +1,23 @@
 package cam72cam.mod.render;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import javax.annotation.Nullable;
+import javax.vecmath.Matrix4f;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import cam72cam.mod.Config;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
@@ -10,14 +28,13 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.model.*;
+import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.model.ItemOverrideList;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
@@ -28,19 +45,6 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.SimpleModelState;
-import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -274,13 +278,10 @@ public class ItemRender {
             return new ItemOverrideListHack();
         }
 
-        public ItemCameraTransforms getItemCameraTransforms() {
-            return new ItemCameraTransforms(ItemCameraTransforms.DEFAULT) {
-                public ItemTransformVec3f getTransform(ItemCameraTransforms.TransformType type) {
-                    BakedItemModel.this.type = ItemRenderType.from(type);
-                    return super.getTransform(type);
-                }
-            };
+		@Override
+		public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+			this.type = ItemRenderType.from(cameraTransformType);
+			return ForgeHooksClient.handlePerspective(this, cameraTransformType);
         }
 
         class ItemOverrideListHack extends ItemOverrideList {

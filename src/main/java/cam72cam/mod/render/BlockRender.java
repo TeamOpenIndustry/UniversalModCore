@@ -27,7 +27,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -185,9 +184,6 @@ public class BlockRender {
                 public ItemOverrideList getOverrides() {
                     return null;
                 }
-
-                @Override
-				public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
             });
         });
     }

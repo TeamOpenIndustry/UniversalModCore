@@ -11,7 +11,6 @@ import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
@@ -85,9 +84,6 @@ class BakedScaledModel implements IBakedModel {
     public TextureAtlasSprite getParticleTexture() {
         return source.getParticleTexture();
     }
-
-    @Override
-	public ItemCameraTransforms getItemCameraTransforms() { return ItemCameraTransforms.DEFAULT; }
 
     @Override
     public ItemOverrideList getOverrides() {
