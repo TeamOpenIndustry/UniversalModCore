@@ -16,6 +16,12 @@ public class ChunkPos {
         chunkZ = chunk.zPosition;
     }
 
+    public ChunkPos(World world, Integer cx, Integer cz) {
+        dim = world.provider.dimensionId;
+        chunkX = cx;
+        chunkZ = cz;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ChunkPos) {
