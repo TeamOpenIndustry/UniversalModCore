@@ -34,6 +34,9 @@ repositories {
 }
 
 String umcVersion = "1.0.1"
+if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
+    umcVersion += "-" + Util.GitRevision()
+}
 version = "1.14.4-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
