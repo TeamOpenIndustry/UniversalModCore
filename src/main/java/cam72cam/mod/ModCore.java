@@ -203,6 +203,8 @@ public class ModCore {
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
+                case INITIALIZE:
+                    break;
                 case SETUP:
                     CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
                     break;
