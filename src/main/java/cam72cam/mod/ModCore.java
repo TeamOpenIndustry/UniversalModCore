@@ -168,13 +168,15 @@ public class ModCore {
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
+                case INITIALIZE:
+                    ChunkManager.setup();
+                    break;
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     GuiRegistry.registration();
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     Command.registration();
