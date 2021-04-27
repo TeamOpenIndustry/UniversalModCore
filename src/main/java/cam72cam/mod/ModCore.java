@@ -195,11 +195,13 @@ public class ModCore {
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
+                case INITIALIZE:
+                    ChunkManager.setup();
+                    break;
                 case SETUP:
                     CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     break;
