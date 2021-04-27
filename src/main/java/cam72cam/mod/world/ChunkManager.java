@@ -3,14 +3,19 @@ package cam72cam.mod.world;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.serialization.TagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /** Internal, do not use directly */
-public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChunkManager.OrderedLoadingCallback {
+public class ChunkManager implements ForgeChunkManager.LoadingCallback {
     /*
      * This takes a similar approach to FTBUtilities
      * One massive ticket for each dim
@@ -29,11 +34,12 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
 
 
     public static void setup() {
+        ModCore.debug("Setting up chunk loading...");
         if (instance == null) {
             instance = new ChunkManager();
-            instance.init();
+            CommonEvents.World.TICK.subscribe(ChunkManager::onWorldTick);
+            CommonEvents.World.UNLOAD.subscribe(ChunkManager::saveChunks);
         }
-        CommonEvents.World.TICK.subscribe(ChunkManager::onWorldTick);
     }
 
     private static Ticket ticketForWorld(World world) {
@@ -114,6 +120,12 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
                 ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                 try {
                     ForgeChunkManager.unforceChunk(ticket, chunk);
+                    if (world instanceof WorldServer) {
+                        Chunk current = world.getChunkProvider().getLoadedChunk(chunk.chunkXPos, chunk.chunkZPos);
+                        if (current != null) {
+                            ((WorldServer) world).getChunkProvider().unload(current);
+                        }
+                    }
                 } catch (Exception ex) {
                     ModCore.catching(ex);
                 }
@@ -128,9 +140,13 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
                 ModCore.catching(ex);
             }
         }
+        if (world.getTotalWorldTime() % 100 == 0) {
+            ModCore.debug("Tracking %s loaded chunks", ticket.getChunkList().size());
+            saveChunks(world);
+        }
     }
 
-    private void init() {
+    private ChunkManager() {
         if (!ForgeChunkManager.getConfig().hasCategory(ModCore.MODID)) {
             ForgeChunkManager.getConfig().get(ModCore.MODID, "maximumChunksPerTicket", 1000000).setMinValue(0);
             ForgeChunkManager.getConfig().save();
@@ -139,18 +155,38 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback, ForgeChu
         ForgeChunkManager.setForcedChunkLoadingCallback(ModCore.instance, this);
     }
 
-    @Override
-    public List<Ticket> ticketsLoaded(List<Ticket> loaded_tickets, World world, int maxTicketCount) {
-        return Collections.emptyList();
+    private static void saveChunks(World world) {
+        Ticket ticket = ticketForWorld(world);
+        int dim = cam72cam.mod.world.World.get(world).getId();
+        TagCompound data = new TagCompound(ticket.getModData());
+        data.setList("chunks", CHUNK_MAP.keySet().stream().filter(x -> x.dim == dim).collect(Collectors.toList()), cm -> {
+            TagCompound chunk = new TagCompound();
+            chunk.setInteger("cx", cm.chunkX);
+            chunk.setInteger("cz", cm.chunkZ);
+            return chunk;
+        });
     }
+
 
     @Override
     public void ticketsLoaded(List<Ticket> tickets, World world) {
         int dim = world.provider.getDimension();
-        TICKETS.remove(dim);
+        ModCore.debug("Loading chunks for %s (%s tickets)", dim, tickets.size());
 
+        CHUNK_MAP.keySet().stream().filter(x -> x.dim == dim).collect(Collectors.toList()).forEach(CHUNK_MAP::remove);
+
+        TICKETS.remove(dim);
         if (tickets.size() == 1) {
             TICKETS.put(dim, tickets.get(0));
+            TagCompound data = new TagCompound(tickets.get(0).getModData());
+            if (data.hasKey("chunks")) {
+                for (TagCompound chunk : data.getList("chunks", x -> x)) {
+                    ModCore.debug("%s", chunk);
+                    CHUNK_MAP.put(new ChunkPos(world, chunk.getInteger("cx"), chunk.getInteger("cz")), 100);
+                }
+            }
+        } else {
+            ModCore.warn("Got extra tickets!  Ignoring chunk ticket data");
         }
     }
 }
