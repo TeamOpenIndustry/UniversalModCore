@@ -23,45 +23,6 @@ import net.minecraft.util.text.StringTextComponent;
 public abstract class Command implements com.mojang.brigadier.Command<CommandSource> {
     private static final List<Command> commands = new ArrayList<>();
 
-//    private final ICommand internal;
-//
-//    protected Command() {
-//        this.internal = new CommandBase() {
-//            @Override
-//            public String getName() {
-//                return Command.this.getPrefix();
-//            }
-//
-//            @Override
-//            public String getUsage(ICommandSender sender) {
-//                return Command.this.getUsage();
-//            }
-//
-//            @Override
-//            public int getRequiredPermissionLevel() {
-//				return Command.this.getRequiredPermissionLevel();
-//            }
-//
-//            @Override
-//            public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-//				if (getRequiredPermissionLevel() == PermissionLevel.NONE)
-//					return true;
-//				return sender.canUseCommand(getRequiredPermissionLevel(), getName());
-//            }
-//            
-//            @Override
-//			public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-//				Optional<Player> player = Optional.empty();
-//				if (sender instanceof EntityPlayer) {
-//					player = Optional.of(new Player((EntityPlayer) sender));
-//				}
-//				if (!Command.this.execute(m -> sender.sendMessage(m.internal), player, args)) {
-//                    throw new CommandException(getUsage(sender));
-//                }
-//            }
-//        };
-//    }
-
     public static void register(Command cmd) {
         commands.add(cmd);
     }
