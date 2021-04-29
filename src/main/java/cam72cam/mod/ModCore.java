@@ -1,48 +1,50 @@
 package cam72cam.mod;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.SimpleReloadableResourceManager;
 import net.minecraft.util.Unit;
-import net.minecraft.util.Util;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.event.lifecycle.*;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.*;
-import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 
 /** UMC Mod, do not touch... */
@@ -98,6 +100,7 @@ public class ModCore {
         proxy.event(ModEvent.FINALIZE);
     }
 
+	@SubscribeEvent
     public void serverStarting(FMLServerStartingEvent event) {
         Command.registration(event.getCommandDispatcher());
     }
@@ -158,14 +161,16 @@ public class ModCore {
     }
 
     public static class ClientProxy extends Proxy {
-        public void event(ModEvent event, Mod m) {
+        @Override
+		public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
         }
     }
 
     public static class ServerProxy extends Proxy {
-        public void event(ModEvent event, Mod m) {
+        @Override
+		public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.serverEvent(event);
         }
@@ -209,7 +214,8 @@ public class ModCore {
         }
 
         public interface SynchronousResourceReloadListener extends IFutureReloadListener {
-            default CompletableFuture<Void> reload(IFutureReloadListener.IStage stage, IResourceManager resourceManager, IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
+            @Override
+			default CompletableFuture<Void> reload(IFutureReloadListener.IStage stage, IResourceManager resourceManager, IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
                 return stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRunAsync(() -> {
                     this.apply(resourceManager);
                 }, backgroundExecutor);
