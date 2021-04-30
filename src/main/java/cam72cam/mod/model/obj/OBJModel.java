@@ -29,13 +29,11 @@ public class OBJModel {
 
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
         Supplier<String> hashProvider;
-        try (ResourceCache<OBJBuilder> cache = new ResourceCache<>(modelLoc, String.format("%s-%s-%s", scale, darken, String.join(":" + variants).hashCode()), provider -> {
-            try {
-                return new OBJBuilder(modelLoc, provider, (float)scale, darken, variants);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        })) {
+        try (ResourceCache<OBJBuilder> cache = new ResourceCache<>(
+                modelLoc,
+                String.format("%s-%s-%s", scale, darken, String.join(":" + variants).hashCode()),
+                provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants))
+        ) {
             hashProvider = cache.getHashProvider();
 
             this.vbo = cache.getResource(

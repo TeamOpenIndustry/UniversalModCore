@@ -2,6 +2,7 @@ package cam72cam.mod.serialization;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.ThrowingFunction;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -85,7 +86,7 @@ public class ResourceCache<T> implements Closeable {
     private final T intermediary;
     private boolean isClosed;
 
-    public ResourceCache(Identifier id, String prefix, Function<ResourceProvider, T> constructor) throws IOException {
+    public ResourceCache(Identifier id, String prefix, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
         dir = ModCore.cacheFile(String.format("%s-%s", prefix, hasher.hashString(id.toString(), Charset.defaultCharset()).toString()));
         dir.mkdirs();
         meta = new File(dir, "meta.nbt");
