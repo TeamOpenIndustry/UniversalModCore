@@ -42,6 +42,9 @@ public class OBJBuilder {
         for (String materialName : faceMaterials) {
             if (materialName != null) {
                 Material material = materialLookup.get(materialName);
+                if (material == null) {
+                    throw new IOException(String.format("Unknown material: %s", materialName));
+                }
 
                 float vminU = 0;
                 float vminV = 0;

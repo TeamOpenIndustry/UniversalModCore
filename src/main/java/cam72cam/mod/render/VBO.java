@@ -48,7 +48,6 @@ public class VBO {
 
     public class BoundVBO implements OpenGL.With {
         private final int prev;
-        private final OpenGL.With color;
 
         private BoundVBO() {
             prev = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
@@ -63,7 +62,7 @@ public class VBO {
                 GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
             }
 
-            color = OpenGL.color(1, 1, 1, 1);
+            GL11.glColor4f(1, 1, 1, 1);
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
 
@@ -80,7 +79,7 @@ public class VBO {
         public void restore() {
             GL11.glPopClientAttrib();
 
-            color.restore();
+            GL11.glColor4f(1, 1, 1, 1);
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, prev);
         }
 
