@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
+
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class OBJTexturePacker {
     private Function<String, InputStream> lookup;
@@ -242,23 +244,13 @@ public class OBJTexturePacker {
 
         for (String variant : variants) {
             image = new BufferedImage(rootNode.getFullWidth(), rootNode.getFullHeight(), BufferedImage.TYPE_INT_ARGB);
-            if (image.getWidth() > Config.MaxTextureSize || image.getHeight() > Config.MaxTextureSize) {
-                image = scaleImage(image);
-            }
             graphics = image.createGraphics();
             rootNode.draw(0, 0, variant);
+            if (image.getWidth() > Config.MaxTextureSize || image.getHeight() > Config.MaxTextureSize) {
+                image = scaleImage(image, Config.MaxTextureSize);
+            }
             textures.put(variant, image);
         }
-    }
-    private static BufferedImage scaleImage(BufferedImage image) {
-        double scale = Config.MaxTextureSize / (double)Math.max(image.getWidth(), image.getHeight());
-        int x = (int)Math.floor(image.getWidth() * scale);
-        int y = (int)Math.floor(image.getHeight() * scale);
-        BufferedImage target = new BufferedImage(x, y, image.getType());
-        Graphics2D g = target.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g.drawImage(image, 0, 0, x, y, 0, 0, image.getWidth(), image.getHeight(), null);
-        return target;
     }
 
     public int getWidth() {

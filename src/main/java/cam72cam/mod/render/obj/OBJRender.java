@@ -1,12 +1,16 @@
 package cam72cam.mod.render.obj;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.render.VBO;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import static cam72cam.mod.model.obj.ImageUtils.scaleSize;
 
 /**
  * VBA/VBO Backed object renderer
@@ -14,6 +18,7 @@ import java.util.Map;
 public class OBJRender {
     public OBJModel model;
     public Map<String, OBJTextureSheet> textures = new HashMap<>();
+    public Map<String, OBJTextureSheet> icons = new HashMap<>();
     private VBO vbo;
 
     public OBJRender(OBJModel model) {
@@ -23,6 +28,8 @@ public class OBJRender {
         this.model = model;
         for (String name : model.textures.keySet()) {
             this.textures.put(name, new OBJTextureSheet(model.textureWidth, model.textureHeight, model.textures.get(name), cacheSeconds));
+            Pair<Integer, Integer> size = scaleSize(model.textureWidth, model.textureHeight, Config.MaxTextureSize/8);
+            this.icons.put(name, new OBJTextureSheet(size.getLeft(), size.getRight(), model.icons.get(name), cacheSeconds));
         }
     }
 
@@ -43,11 +50,11 @@ public class OBJRender {
             texName = ""; // Default
         }
 
-        OBJTextureSheet tex = this.textures.get(texName);
-
         if (icon) {
-            return tex.bind(); //TODO do we want to bind a smaller texture here?
+            OBJTextureSheet tex = this.icons.get(texName);
+            return tex.bind();
         } else {
+            OBJTextureSheet tex = this.textures.get(texName);
             return tex.bind();
         }
     }
@@ -78,6 +85,9 @@ public class OBJRender {
 
     public void free() {
         for (OBJTextureSheet texture : textures.values()) {
+            texture.freeGL();
+        }
+        for (OBJTextureSheet texture : icons.values()) {
             texture.freeGL();
         }
         if (vbo != null) {

@@ -1,5 +1,6 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
@@ -8,17 +9,20 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
+import static cam72cam.mod.model.obj.ImageUtils.toRGBA;
 
 public class OBJModel {
     public final Supplier<VertexBuffer> vbo;
     public final int textureWidth;
     public final int textureHeight;
     public final Map<String, Supplier<GenericByteBuffer>> textures = new HashMap<>();
+    public final Map<String, Supplier<GenericByteBuffer>> icons = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
 
     public String hash;
@@ -31,7 +35,7 @@ public class OBJModel {
         Supplier<String> hashProvider;
         try (ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
-                String.format("%s-%s-%s", scale, darken, String.join(":" + variants).hashCode()),
+                String.format("%s-%s-%s-%s", scale, darken, String.join(":" + variants).hashCode(), Config.MaxTextureSize),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants))
         ) {
             hashProvider = cache.getHashProvider();
@@ -71,6 +75,7 @@ public class OBJModel {
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
                 this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
+                this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.MaxTextureSize/8)))));
             }
 
             this.groups = meta.getList("groups", v -> {
@@ -87,22 +92,6 @@ public class OBJModel {
         }
 
         this.hash = hashProvider.get();
-    }
-
-    private int[] toRGBA(BufferedImage image) {
-        int[] argb = new int[image.getWidth() * image.getHeight()];
-        int[] rgba = new int[image.getWidth() * image.getHeight()];
-        image.getRGB(0, 0, image.getWidth(), image.getHeight(), argb, 0, image.getWidth());
-        for (int i = 0; i < rgba.length; i++) {
-            int c_argb = argb[i];
-            int a = c_argb >> 24 & 255;
-            int r = c_argb >> 16 & 255;
-            int g = c_argb >> 8 & 255;
-            int b = c_argb >> 0 & 255;
-            int c_rgba = (r << 24) | (g << 16) | (b << 8) | a;
-            rgba[i] = c_rgba;
-        }
-        return rgba;
     }
 
     public Set<String> groups() {
