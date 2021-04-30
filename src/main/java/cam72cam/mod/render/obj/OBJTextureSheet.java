@@ -48,7 +48,6 @@ public class OBJTextureSheet {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
-            System.out.println("UPLOAD");
             textureID = GL11.glGenTextures();
 
             try (OpenGL.With tex = OpenGL.texture(textureID)) {
@@ -71,7 +70,6 @@ public class OBJTextureSheet {
 
     public void dealloc() {
         if (this.textureID != null) {
-            System.out.println("FREE");
             GL11.glDeleteTextures(this.textureID);
             this.textureID = null;
         }
