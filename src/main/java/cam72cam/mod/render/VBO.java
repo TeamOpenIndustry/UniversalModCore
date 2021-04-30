@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class VBO {
-    private OBJModel model;
+    private final OBJModel model;
     private final int vbo;
     private final int length;
     private final boolean hasVN;
@@ -24,12 +24,11 @@ public class VBO {
      * Create a buffer with number of verts
      */
     public VBO(OBJModel model) {
-        this(model.vbo.get().floats(), model.hasVertexNormals);
-        this.model = model;
+        this(model, model.vbo.get().floats(), model.hasVertexNormals);
     }
 
-    private VBO(float[] floats, boolean hasVN) {
-        this.model = null;
+    private VBO(OBJModel model, float[] floats, boolean hasVN) {
+        this.model = model;
         this.hasVN = hasVN;
         this.length = floats.length / (hasVN ? 12 : 9);
         ByteBuffer buffer = ByteBuffer.allocateDirect(floats.length * Float.BYTES).order(ByteOrder.nativeOrder());
@@ -213,9 +212,7 @@ public class VBO {
         public VBO build() {
             float[] out = new float[builtIdx];
             System.arraycopy(built, 0, out, 0, builtIdx);
-            VBO vbo = new VBO(out, model.hasVertexNormals);
-            vbo.model = model;
-            return vbo;
+            return new VBO(model, out, model.hasVertexNormals);
         }
     }
 }
