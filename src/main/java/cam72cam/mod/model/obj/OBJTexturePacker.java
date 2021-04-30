@@ -21,7 +21,7 @@ public class OBJTexturePacker {
     private Graphics2D graphics;
 
     public final Map<String, UVConverter> converters = new HashMap<>();
-    public final Map<String, int[]> textures = new HashMap<>();
+    public final Map<String, BufferedImage> textures = new HashMap<>();
 
     class Node {
         final List<Material> materials;
@@ -247,19 +247,7 @@ public class OBJTexturePacker {
             }
             graphics = image.createGraphics();
             rootNode.draw(0, 0, variant);
-            int[] argb = new int[image.getWidth() * image.getHeight()];
-            int[] rgba = new int[image.getWidth() * image.getHeight()];
-            image.getRGB(0, 0, image.getWidth(), image.getHeight(), argb, 0, image.getWidth());
-            for (int i = 0; i < rgba.length; i++) {
-                int c_argb = argb[i];
-                int a = c_argb >> 24 & 255;
-                int r = c_argb >> 16 & 255;
-                int g = c_argb >> 8 & 255;
-                int b = c_argb >> 0 & 255;
-                int c_rgba = (r << 24) | (g << 16) | (b << 8) | a;
-                rgba[i] = c_rgba;
-            }
-            textures.put(variant, rgba);
+            textures.put(variant, image);
         }
     }
     private static BufferedImage scaleImage(BufferedImage image) {

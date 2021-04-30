@@ -3,6 +3,7 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
@@ -12,7 +13,7 @@ public class OBJBuilder {
 
     private final VertexBuffer vbo;
     private final List<OBJGroup> groups;
-    private final Map<String, int[]> textures;
+    private final Map<String, BufferedImage> textures;
     private final int textureWidth;
     private final int textureHeight;
 
@@ -121,7 +122,7 @@ public class OBJBuilder {
     public VertexBuffer vertexBufferObject() {
         return vbo;
     }
-    public Map<String, int[]> getTextures() {
+    public Map<String, BufferedImage> getTextures() {
         return textures;
     }
     public List<OBJGroup> getGroups() {
