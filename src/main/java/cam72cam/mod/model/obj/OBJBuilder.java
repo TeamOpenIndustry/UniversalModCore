@@ -48,7 +48,7 @@ public class OBJBuilder {
                 float vmaxV = 0;
 
                 for (int point = 0; point < 3; point++) {
-                    int pointOffset = point * vbo.floatStride;
+                    int pointOffset = point * vbo.stride;
 
                     vbo.data[colorOffset + pointOffset + 0] = material.hasTexture() ? material.KdR * mult : 1;
                     vbo.data[colorOffset + pointOffset + 1] = material.hasTexture() ? material.KdG * mult : 1;
@@ -76,7 +76,7 @@ public class OBJBuilder {
                     int offsetV = (int) Math.floor(vminV);
                     // "Normalize" uv coordinates to start between 0 and 1 and repeat into positive integer space
                     for (int point = 0; point < 3; point++) {
-                        int pointOffset = point * vbo.floatStride;
+                        int pointOffset = point * vbo.stride;
                         vbo.data[textureOffset + pointOffset + 0] -= offsetU;
                         vbo.data[textureOffset + pointOffset + 1] -= offsetV;
                     }
@@ -85,14 +85,14 @@ public class OBJBuilder {
                     material.copiesV = Math.max(material.copiesV, (int) Math.ceil(vmaxV - offsetV));
                 } else {
                     for (int point = 0; point < 3; point++) {
-                        int pointOffset = point * vbo.floatStride;
+                        int pointOffset = point * vbo.stride;
                         vbo.data[textureOffset + pointOffset + 0] = 0.5f;
                         vbo.data[textureOffset + pointOffset + 1] = 0.5f;
                     }
                 }
             }
-            colorOffset += vbo.floatStride * 3;
-            textureOffset += vbo.floatStride * 3;
+            colorOffset += vbo.stride * 3;
+            textureOffset += vbo.stride * 3;
         }
 
         OBJTexturePacker packer = new OBJTexturePacker(
@@ -106,13 +106,13 @@ public class OBJBuilder {
             if (materialName != null) {
                 OBJTexturePacker.UVConverter converter = packer.converters.get(materialName);
                 for (int point = 0; point < 3; point++) {
-                    int pointOffset = point * vbo.floatStride;
+                    int pointOffset = point * vbo.stride;
                     vbo.data[textureOffset + pointOffset + 0] = converter.convertU(vbo.data[textureOffset + pointOffset + 0]);
                     // This is where we flip V
                     vbo.data[textureOffset + pointOffset + 1] = converter.convertV(vbo.data[textureOffset + pointOffset + 1]);
                 }
             }
-            textureOffset += vbo.floatStride * 3;
+            textureOffset += vbo.stride * 3;
         }
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();

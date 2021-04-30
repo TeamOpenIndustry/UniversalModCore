@@ -14,12 +14,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OBJModel {
-    public final Supplier<GenericByteBuffer> vbo;
+    public final Supplier<VertexBuffer> vbo;
     public final int textureWidth;
     public final int textureHeight;
     public final Map<String, Supplier<GenericByteBuffer>> textures = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
-    public final boolean hasVertexNormals;
 
     public String hash;
 
@@ -36,7 +35,7 @@ public class OBJModel {
         ) {
             hashProvider = cache.getHashProvider();
 
-            this.vbo = cache.getResource(
+            Supplier<GenericByteBuffer> vboData = cache.getResource(
                     "model.bin",
                     builder -> new GenericByteBuffer(builder.vertexBufferObject().data)
             );
@@ -65,7 +64,7 @@ public class OBJModel {
                     }
             ).get().bytes());
 
-            this.hasVertexNormals = meta.getBoolean("hasVertexNormals");
+            boolean hasVertexNormals = meta.getBoolean("hasVertexNormals");
             this.textureWidth = meta.getInteger("textureWidth");
             this.textureHeight = meta.getInteger("textureHeight");
 
@@ -82,6 +81,8 @@ public class OBJModel {
                     throw new RuntimeException(e);
                 }
             }).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
+
+            this.vbo = () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals);
         }
 
         this.hash = hashProvider.get();

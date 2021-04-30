@@ -131,21 +131,21 @@ public class OBJParser {
                     buffer.data[vertexOffset+0] = x;
                     buffer.data[vertexOffset+1] = y;
                     buffer.data[vertexOffset+2] = z;
-                    vertexOffset += buffer.floatStride;
+                    vertexOffset += buffer.stride;
 
                     int texture = faceVerts[faceVertexIdx+1] * 2;
                     if (texture >= 0) {
                         buffer.data[textureOffset+0] = vertexTextures[texture+0];
                         buffer.data[textureOffset+1] = vertexTextures[texture+1];
                     }
-                    textureOffset += buffer.floatStride;
+                    textureOffset += buffer.stride;
 
                     if (hasNormals) {
                         int normal = faceVerts[faceVertexIdx+2] * 3;
                         buffer.data[normalOffset+0] = vertexNormals[normal+0];
                         buffer.data[normalOffset+1] = vertexNormals[normal+1];
                         buffer.data[normalOffset+2] = vertexNormals[normal+2];
-                        normalOffset += buffer.floatStride;
+                        normalOffset += buffer.stride;
                     }
 
                     if (point == 0 && faceCount == startFace) {

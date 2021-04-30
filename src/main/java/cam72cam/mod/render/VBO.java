@@ -2,6 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
+import cam72cam.mod.model.obj.VertexBuffer;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.util.vector.Vector3f;
@@ -18,21 +19,21 @@ public class VBO {
     private final OBJModel model;
     private final int vbo;
     private final int length;
-    private final boolean hasVN;
+    private final VertexBuffer vbInfo;
 
     /**
      * Create a buffer with number of verts
      */
     public VBO(OBJModel model) {
-        this(model, model.vbo.get().floats(), model.hasVertexNormals);
+        this(model, model.vbo.get());
     }
 
-    private VBO(OBJModel model, float[] floats, boolean hasVN) {
+    private VBO(OBJModel model, VertexBuffer vb) {
         this.model = model;
-        this.hasVN = hasVN;
-        this.length = floats.length / (hasVN ? 12 : 9);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(floats.length * Float.BYTES).order(ByteOrder.nativeOrder());
-        buffer.asFloatBuffer().put(floats);
+        this.length = vb.data.length / (vb.stride);
+        this.vbInfo = new VertexBuffer(0, vb.hasNormals);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(vb.data.length * Float.BYTES).order(ByteOrder.nativeOrder());
+        buffer.asFloatBuffer().put(vb.data);
 
         int prev = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
         vbo = GL15.glGenBuffers();
@@ -56,7 +57,7 @@ public class VBO {
             GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            if (hasVN) {
+            if (vbInfo.hasNormals) {
                 GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
             } else {
                 GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
@@ -66,12 +67,12 @@ public class VBO {
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
 
-            int stride = (hasVN ? 12 : 9) * Float.BYTES;
-            GL11.glVertexPointer(3, GL11.GL_FLOAT, stride, (0) * Float.BYTES);
-            GL11.glTexCoordPointer(2, GL11.GL_FLOAT, stride, (3) * Float.BYTES);
-            GL11.glColorPointer(4, GL11.GL_FLOAT, stride, (3 + 2) * Float.BYTES);
-            if (hasVN) {
-                GL11.glNormalPointer(GL11.GL_FLOAT, stride, (3 + 2 + 4) * Float.BYTES);
+            int stride = vbInfo.stride * Float.BYTES;
+            GL11.glVertexPointer(3, GL11.GL_FLOAT, stride, vbInfo.vertexOffset * Float.BYTES);
+            GL11.glTexCoordPointer(2, GL11.GL_FLOAT, stride, vbInfo.textureOffset * Float.BYTES);
+            GL11.glColorPointer(4, GL11.GL_FLOAT, stride, vbInfo.colorOffset * Float.BYTES);
+            if (vbInfo.hasNormals) {
+                GL11.glNormalPointer(GL11.GL_FLOAT, stride, vbInfo.normalOffset * Float.BYTES);
             }
         }
 
@@ -134,16 +135,14 @@ public class VBO {
 
     public static class Builder {
         private final OBJModel model;
-        private final float[] data;
-        private final int stride;
+        private final VertexBuffer vb;
         private float[] built;
         private int builtIdx;
 
         public Builder(OBJModel model) {
             this.model = model;
-            this.data = model.vbo.get().floats();
-            this.built = new float[this.data.length];
-            this.stride = (model.hasVertexNormals ? 12 : 9);
+            this.vb = model.vbo.get();
+            this.built = new float[vb.data.length];
             this.builtIdx = 0;
 
         }
@@ -159,7 +158,7 @@ public class VBO {
             require(buff.length);
 
             if (m != null) {
-                for (int i = 0; i < buff.length; i += stride) {
+                for (int i = 0; i < buff.length; i += vb.stride) {
                     float x = buff[i+0];
                     float y = buff[i+1];
                     float z = buff[i+2];
@@ -180,10 +179,10 @@ public class VBO {
 
         public void draw(Matrix4 m) {
             if (m == null) {
-                add(data, null);
+                add(vb.data, null);
             } else {
-                float[] buff = new float[data.length];
-                System.arraycopy(data, 0, buff, 0, data.length);
+                float[] buff = new float[vb.data.length];
+                System.arraycopy(vb.data, 0, buff, 0, vb.data.length);
                 add(buff, m);
             }
         }
@@ -196,15 +195,11 @@ public class VBO {
             for (String group : groups) {
                 OBJGroup info = model.groups.get(group);
 
-                int faceStart = info.faceStart;
-                int faceStop = info.faceStop + 1;
-                int pointStart = faceStart * 3;
-                int pointStop = faceStop * 3;
-                int start = pointStart * stride;
-                int stop = pointStop * stride;
+                int start = info.faceStart * vb.vertsPerFace * vb.stride;
+                int stop = (info.faceStop + 1) * vb.vertsPerFace * vb.stride;
 
                 float[] buff = new float[stop - start];
-                System.arraycopy(data, start, buff, 0, stop - start);
+                System.arraycopy(vb.data, start, buff, 0, stop - start);
                 add(buff, m);
             }
         }
@@ -212,7 +207,7 @@ public class VBO {
         public VBO build() {
             float[] out = new float[builtIdx];
             System.arraycopy(built, 0, out, 0, builtIdx);
-            return new VBO(model, out, model.hasVertexNormals);
+            return new VBO(model, new VertexBuffer(out, vb.hasNormals));
         }
     }
 }

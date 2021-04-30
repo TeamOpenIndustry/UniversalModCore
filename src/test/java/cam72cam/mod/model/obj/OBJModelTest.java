@@ -6,22 +6,20 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
 
-//@RunWith(Parameterized.class)
 public class OBJModelTest {
+    @BeforeClass
+    public static void setup() throws Exception {
+        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
+    }
 
-    private static Identifier objId;
-    private static Identifier objId2;
-    private static final int vertsPerGroup = 1000;
-    private static final int facesPerGroup = 1000;
-    private static final int nGroups = 100;
-    private static OBJModel model;
 
-    static class FakeIdentifier extends Identifier {
+    private static class FakeIdentifier extends Identifier {
         @FunctionalInterface
         interface IOFunction {
             InputStream get(Identifier id) throws IOException;
@@ -45,63 +43,6 @@ public class OBJModelTest {
         }
     }
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
-/*
-        File testObj = File.createTempFile("temp", "obj");
-        testObj.deleteOnExit();
-
-        List<String> lines = new ArrayList<>();
-        lines.add("# Test File");
-
-        for (int g = 1; g <= nGroups; g++) {
-            lines.add(String.format("o group_%d", g));
-            for (int v = 1; v <= vertsPerGroup; v++) {
-                lines.add(String.format("v %s %s %s", (v + 0.1f)/g, (v + 0.2f)/g, (v + 0.3f)/g));
-            }
-            for (int vn = 1; vn <= vertsPerGroup; vn++) {
-                lines.add(String.format("vn %s %s %s", (vn + 0.1f)/g, (vn + 0.2f)/g, (vn + 0.3f)/g));
-            }
-            for (int vt = 1; vt <= vertsPerGroup; vt++) {
-                lines.add(String.format("vt %s %s", (vt + 0.1f)/g, (vt + 0.2f)/g));
-            }
-            for (int f = 1; f < facesPerGroup; f++) {
-                lines.add(String.format("f %1$s/%1$s/%1$s %1$s/%1$s/%1$s %1$s/%1$s/%1$s", f*g));
-            }
-        }
-        System.out.println(lines.size());
-
-        Files.write(testObj.toPath(), lines, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-*/
-        objId = new FakeIdentifier(
-                "immersiverailroading:models/rolling_stock/locomotives/emd_sw1500/emd_sw1500.obj",
-                loc -> new FileInputStream("/home/cmesh/Games/Minecraft/ImmersiveRailroading/github/ImmersiveRailroading/src/main/resources/assets/" + loc.getDomain() + "/" + loc.getPath())
-        );
-       // model = new OBJModel(objId, 1.0f, 1.0, Arrays.asList("", "blackwhitestriped", "blackred", "blueblack", "yellowblack", "greenblack"));
-
-        objId2 = new FakeIdentifier(
-                "immersiverailroading:models/rolling_stock/locomotives/big_boy/big_boy2.obj",
-                loc -> new FileInputStream("/home/cmesh/Games/Minecraft/ImmersiveRailroading/github/ImmersiveRailroading/src/main/resources/assets/" + loc.getDomain() + "/" + loc.getPath())
-        );
-        //model = new OBJModel(objId2, 1.0f, 1.0, Collections.singletonList(""));
-    }
-
-    //@Parameterized.Parameters
-    public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][] {{}, {}, {}, {}});
-    }
-/*
-    @Test
-    public void saveObjModelOther() throws Exception {
-        for (int i = 0; i < 100; i++) {
-            model = new OBJModel(objId, 1.0f, 1.0, Arrays.asList("", "blackwhitestriped", "blackred", "blueblack", "yellowblack", "greenblack"));
-            model.vbo.get();
-            model.textures.get("").get();
-        }
-    }*/
-
-
     @Test
     public void testVertexObject() throws Exception {
         StringBuilder objData = new StringBuilder();
@@ -116,12 +57,12 @@ public class OBJModelTest {
             }
         }
         String finalObjData = objData.toString();
-        objId = new FakeIdentifier(
+        FakeIdentifier objId = new FakeIdentifier(
                 "umc:simplev.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().floats();
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
+        float[] data = model.vbo.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;
@@ -150,12 +91,12 @@ public class OBJModelTest {
             }
         }
         String finalObjData = objData.toString();
-        objId = new FakeIdentifier(
+        FakeIdentifier objId = new FakeIdentifier(
                 "umc:simplevvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().floats();
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
+        float[] data = model.vbo.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;
@@ -196,12 +137,12 @@ public class OBJModelTest {
             }
         }
         String finalObjData = objData.toString();
-        objId = new FakeIdentifier(
+        FakeIdentifier objId = new FakeIdentifier(
                 "umc:simplevvtvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().floats();
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
+        float[] data = model.vbo.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;
