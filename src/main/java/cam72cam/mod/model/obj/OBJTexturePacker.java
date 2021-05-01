@@ -1,6 +1,8 @@
 package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
+import cam72cam.mod.ModCore;
+import cam72cam.mod.resource.Identifier;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -18,6 +20,7 @@ import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class OBJTexturePacker {
+    private Function<String, Identifier> paths;
     private Function<String, InputStream> lookup;
     private BufferedImage image;
     private Graphics2D graphics;
@@ -26,24 +29,27 @@ public class OBJTexturePacker {
     public final Map<String, BufferedImage> textures = new HashMap<>();
 
     class Node {
-        final List<Material> materials;
-        final int width;
-        final int height;
+        List<Material> materials;
+        String texKd;
+        int width;
+        int height;
         Node down;
         Node right;
 
         public Node(List<Material> materials) {
             this.materials = materials;
+            this.width = this.height = 8;
+            this.texKd = null; // Textured images will be color only if the image fails to load.
+
             if (materials.get(0).hasTexture()) {
                 try {
-                    Dimension size = getImageDimension(lookup.apply(materials.get(0).texKd));
+                    Dimension size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
                     this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
                     this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    this.texKd = materials.get(0).texKd;
+                } catch (Exception e) {
+                    ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
                 }
-            } else {
-                this.width = this.height = 8;
             }
         }
 
@@ -113,12 +119,10 @@ public class OBJTexturePacker {
                 return;
             }
 
-            Material mat = materials.get(0);
-
             BufferedImage image;
-            if (mat.hasTexture()) {
+            if (texKd != null) {
                 try {
-                    String path = mat.texKd;
+                    String path = texKd;
                     if (variant != null && !variant.isEmpty()) {
                         String[] sp = path.split("/");
                         String fname = sp[sp.length - 1];
@@ -128,13 +132,14 @@ public class OBJTexturePacker {
                 } catch (Exception e) {
                     //Fallback
                     try {
-                        image = ImageIO.read(lookup.apply(mat.texKd));
+                        image = ImageIO.read(lookup.apply(texKd));
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                         throw new RuntimeException(e);
                     }
                 }
             } else {
+                Material mat = materials.get(0);
                 int r = (int) (Math.max(0, mat.KdR) * 255);
                 int g = (int) (Math.max(0, mat.KdG) * 255);
                 int b = (int) (Math.max(0, mat.KdB) * 255);
@@ -210,11 +215,12 @@ public class OBJTexturePacker {
         }
     }
 
-    public OBJTexturePacker(Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
+    public OBJTexturePacker(Function<String, Identifier> paths, Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
         if (materials.isEmpty()) {
             return;
         }
 
+        this.paths = paths;
         this.lookup = lookup;
 
         List<Node> inputNodes = materials.stream()
@@ -261,7 +267,7 @@ public class OBJTexturePacker {
         return image == null ? 0 : image.getHeight();
     }
 
-    private static Dimension getImageDimension(InputStream imgFile) throws IOException {
+    private static Dimension getImageDimension(InputStream imgFile, String texKd) throws IOException {
         try(ImageInputStream in = ImageIO.createImageInputStream(imgFile)){
             final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
             if (readers.hasNext()) {

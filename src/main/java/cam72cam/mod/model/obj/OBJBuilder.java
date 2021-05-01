@@ -1,5 +1,6 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 
@@ -43,7 +44,8 @@ public class OBJBuilder {
             if (materialName != null) {
                 Material material = materialLookup.get(materialName);
                 if (material == null) {
-                    throw new IOException(String.format("Unknown material: %s", materialName));
+                    ModCore.warn("Unknown material '%s' in %s", materialName, modelLoc);
+                    continue;
                 }
                 material.used = true;
 
@@ -101,6 +103,7 @@ public class OBJBuilder {
         }
 
         OBJTexturePacker packer = new OBJTexturePacker(
+                modelLoc::getRelative,
                 path -> new ByteArrayInputStream(input.apply(modelLoc.getRelative(path))),
                 materialLookup.values(),
                 variants
@@ -110,11 +113,13 @@ public class OBJBuilder {
         for (String materialName : faceMaterials) {
             if (materialName != null) {
                 OBJTexturePacker.UVConverter converter = packer.converters.get(materialName);
-                for (int point = 0; point < 3; point++) {
-                    int pointOffset = point * vbo.stride;
-                    vbo.data[textureOffset + pointOffset + 0] = converter.convertU(vbo.data[textureOffset + pointOffset + 0]);
-                    // This is where we flip V
-                    vbo.data[textureOffset + pointOffset + 1] = converter.convertV(vbo.data[textureOffset + pointOffset + 1]);
+                if (converter != null) {
+                    for (int point = 0; point < 3; point++) {
+                        int pointOffset = point * vbo.stride;
+                        vbo.data[textureOffset + pointOffset + 0] = converter.convertU(vbo.data[textureOffset + pointOffset + 0]);
+                        // This is where we flip V
+                        vbo.data[textureOffset + pointOffset + 1] = converter.convertV(vbo.data[textureOffset + pointOffset + 1]);
+                    }
                 }
             }
             textureOffset += vbo.stride * 3;
