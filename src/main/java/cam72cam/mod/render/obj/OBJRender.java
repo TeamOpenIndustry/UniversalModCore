@@ -3,7 +3,7 @@ package cam72cam.mod.render.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.render.OpenGL;
-import cam72cam.mod.render.VBO;
+import cam72cam.mod.render.obj.OBJVBO.BoundOBJVBO;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
@@ -19,7 +19,7 @@ public class OBJRender {
     public OBJModel model;
     public Map<String, OBJTextureSheet> textures = new HashMap<>();
     public Map<String, OBJTextureSheet> icons = new HashMap<>();
-    private VBO vbo;
+    private OBJVBO vbo;
 
     public OBJRender(OBJModel model) {
         this(model, 30);
@@ -59,27 +59,27 @@ public class OBJRender {
         }
     }
 
-    public VBO.BoundVBO bind() {
+    public BoundOBJVBO bind() {
         return getVBO().bind();
     }
 
     public void draw() {
-        try (VBO.BoundVBO vbo = bind()) {
+        try (BoundOBJVBO vbo = bind()) {
             vbo.draw();
         }
     }
 
     public void drawGroups(Collection<String> groups) {
-        try (VBO.BoundVBO vbo = bind()) {
+        try (BoundOBJVBO vbo = bind()) {
             vbo.draw(groups);
         }
     }
 
-    public VBO getVBO() {
+    public OBJVBO getVBO() {
         if (vbo != null) {
             return vbo;
         }
-        vbo = new VBO(model);
+        vbo = new OBJVBO(model);
         return vbo;
     }
 
