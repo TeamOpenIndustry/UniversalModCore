@@ -218,6 +218,7 @@ public class OBJTexturePacker {
         this.lookup = lookup;
 
         List<Node> inputNodes = materials.stream()
+                .filter(m -> m.used)
                 .collect(Collectors.groupingBy(k -> k.texKd == null ? k.name : k.texKd)).values().stream()
                 .map(Node::new)
                 .sorted(Comparator.comparingInt(x -> -10000 * x.height + x.width))

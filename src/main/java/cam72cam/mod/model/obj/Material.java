@@ -9,6 +9,7 @@ public class Material {
     public final float KdG;
     public final float KdB;
     public final float KdA;
+    public boolean used;
 
     public int copiesU;
     public int copiesV;
@@ -22,6 +23,7 @@ public class Material {
         KdA = kdA == null ? 1 : kdA;
         copiesU = 1;
         copiesV = 1;
+        used = false;
     }
 
     public boolean hasTexture() {

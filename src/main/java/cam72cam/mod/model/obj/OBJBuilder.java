@@ -45,6 +45,7 @@ public class OBJBuilder {
                 if (material == null) {
                     throw new IOException(String.format("Unknown material: %s", materialName));
                 }
+                material.used = true;
 
                 float vminU = 0;
                 float vminV = 0;
