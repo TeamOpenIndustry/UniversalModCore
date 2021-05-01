@@ -101,10 +101,17 @@ public class ResourceCache<T> implements Closeable {
         if (intermediary != null) {
             try (FileChannel channel = new FileOutputStream(file).getChannel()) {
                 GenericByteBuffer in = converter.apply(intermediary);
-                LZ4Factory factory = LZ4Factory.fastestInstance();
-                LZ4Compressor compressor = factory.highCompressor(2);
-                // Could be faster
-                byte[] output = compressor.compress(in.buffer.array());
+                byte[] output;
+                /*
+                Multiple threads on windows make me nervous.  The following NPE should be impossible...
+                    ex: NPE at net.jpountz.lz4.LZ4HCJavaUnsafeCompressor$HashTable.next(LZ4HCJavaUnsafeCompressor.java:62) ~[LZ4HCJavaUnsafeCompressor$HashTable.class:?]
+                */
+                synchronized (ResourceCache.class) {
+                    LZ4Factory factory = LZ4Factory.fastestInstance();
+                    LZ4Compressor compressor = factory.highCompressor(2);
+                    // Could be faster
+                    output = compressor.compress(in.buffer.array());
+                }
                 ByteBuffer prefix = ByteBuffer.wrap(new byte[Integer.BYTES]);
                 prefix.asIntBuffer().put(in.buffer.capacity());
                 channel.write(prefix);
