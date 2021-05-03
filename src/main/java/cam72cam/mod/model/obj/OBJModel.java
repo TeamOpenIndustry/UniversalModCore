@@ -32,66 +32,63 @@ public class OBJModel {
     }
 
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
-        Supplier<String> hashProvider;
-        try (ResourceCache<OBJBuilder> cache = new ResourceCache<>(
+        ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
                 String.format("%s-%s-%s-%s", scale, darken, String.join(":" + variants).hashCode(), Config.MaxTextureSize),
-                provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants))
-        ) {
-            hashProvider = cache.getHashProvider();
+                provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
+        );
 
-            Supplier<GenericByteBuffer> vboData = cache.getResource(
-                    "model.bin",
-                    builder -> new GenericByteBuffer(builder.vertexBufferObject().data)
-            );
-            TagCompound meta = new TagCompound(cache.getResource(
-                    "meta.nbt",
-                    builder -> {
-                        TagCompound data = new TagCompound();
-                        data.setBoolean("hasVertexNormals", builder.vertexBufferObject().hasNormals);
-                        data.setInteger("textureWidth", builder.getTextureWidth());
-                        data.setInteger("textureHeight", builder.getTextureHeight());
-                        data.setList("variants", new ArrayList<>(builder.getTextures().keySet()), k -> new TagCompound().setString("variant", k));
-                        data.setList("groups", builder.getGroups(), v -> {
-                            try {
-                                TagCompound tag = new TagCompound();
-                                TagSerializer.serialize(tag, v);
-                                return tag;
-                            } catch (SerializationException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+        Supplier<GenericByteBuffer> vboData = cache.getResource(
+                "model.bin",
+                builder -> new GenericByteBuffer(builder.vertexBufferObject().data)
+        );
+        TagCompound meta = new TagCompound(cache.getResource(
+                "meta.nbt",
+                builder -> {
+                    TagCompound data = new TagCompound();
+                    data.setBoolean("hasVertexNormals", builder.vertexBufferObject().hasNormals);
+                    data.setInteger("textureWidth", builder.getTextureWidth());
+                    data.setInteger("textureHeight", builder.getTextureHeight());
+                    data.setList("variants", new ArrayList<>(builder.getTextures().keySet()), k -> new TagCompound().setString("variant", k));
+                    data.setList("groups", builder.getGroups(), v -> {
                         try {
-                            return new GenericByteBuffer(data.toBytes());
-                        } catch (IOException e) {
+                            TagCompound tag = new TagCompound();
+                            TagSerializer.serialize(tag, v);
+                            return tag;
+                        } catch (SerializationException e) {
                             throw new RuntimeException(e);
                         }
+                    });
+                    try {
+                        return new GenericByteBuffer(data.toBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-            ).get().bytes());
-
-            boolean hasVertexNormals = meta.getBoolean("hasVertexNormals");
-            this.textureWidth = meta.getInteger("textureWidth");
-            this.textureHeight = meta.getInteger("textureHeight");
-
-            for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-                this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
-                this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.MaxTextureSize/8)))));
-            }
-
-            this.groups = meta.getList("groups", v -> {
-                try {
-                    OBJGroup group = new OBJGroup();
-                    TagSerializer.deserialize(v, group);
-                    return group;
-                } catch (SerializationException e) {
-                    throw new RuntimeException(e);
                 }
-            }).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
+        ).get().bytes());
 
-            this.vbo = () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals);
+        boolean hasVertexNormals = meta.getBoolean("hasVertexNormals");
+        this.textureWidth = meta.getInteger("textureWidth");
+        this.textureHeight = meta.getInteger("textureHeight");
+
+        for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
+            this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
+            this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.MaxTextureSize/8)))));
         }
 
-        this.hash = hashProvider.get();
+        this.groups = meta.getList("groups", v -> {
+            try {
+                OBJGroup group = new OBJGroup();
+                TagSerializer.deserialize(v, group);
+                return group;
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
+        }).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
+
+        this.vbo = () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals);
+
+        this.hash = cache.close();
     }
 
     public Set<String> groups() {

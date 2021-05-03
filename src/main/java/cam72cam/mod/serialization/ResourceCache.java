@@ -24,7 +24,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @SuppressWarnings("UnstableApiUsage")
-public class ResourceCache<T> implements Closeable {
+public class ResourceCache<T> {
     private static final HashFunction hasher = Hashing.murmur3_128();
 
     public static class ResourceProvider implements Function<Identifier, byte[]> {
@@ -129,25 +129,12 @@ public class ResourceCache<T> implements Closeable {
         };
     }
 
-    @Override
-    public void close() throws IOException {
+    public String close() throws IOException {
         if (provider != null) {
             Files.write(meta.toPath(), provider.toTag().toBytes());
         }
         isClosed = true;
-    }
-
-    public Supplier<String> getHashProvider() {
-        return () -> {
-            if (!isClosed) {
-                throw new RuntimeException("Can not access hash until cache is fully realized (closed)");
-            }
-            try {
-                return hasher.hashBytes(Files.readAllBytes(meta.toPath())).toString();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        return hasher.hashBytes(Files.readAllBytes(meta.toPath())).toString();
     }
 
     public static class GenericByteBuffer {
