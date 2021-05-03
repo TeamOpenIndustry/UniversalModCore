@@ -99,19 +99,26 @@ public class ResourceCache<T> {
     public Supplier<GenericByteBuffer> getResource(String name, Function<T, GenericByteBuffer> converter) throws IOException {
         File file = new File(dir, name + ".lz4");
         if (intermediary != null) {
-            try (FileChannel channel = new FileOutputStream(file).getChannel()) {
-                GenericByteBuffer in = converter.apply(intermediary);
-                LZ4Factory factory = LZ4Factory.fastestInstance();
-                LZ4Compressor compressor = factory.highCompressor(2);
-                // Could be faster
-                byte[] output = compressor.compress(in.buffer.array());
-                ByteBuffer prefix = ByteBuffer.wrap(new byte[Integer.BYTES]);
-                prefix.asIntBuffer().put(in.buffer.capacity());
-                channel.write(prefix);
-                channel.write(ByteBuffer.wrap(output));
-            } catch (NullPointerException e) {
-                ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
-                throw e;
+            NullPointerException ex = null;
+            for (int retry = 0; retry < 10; retry++) {
+                try (FileChannel channel = new FileOutputStream(file).getChannel()) {
+                    GenericByteBuffer in = converter.apply(intermediary);
+                    LZ4Factory factory = LZ4Factory.fastestInstance();
+                    LZ4Compressor compressor = factory.highCompressor(2);
+                    // Could be faster
+                    byte[] output = compressor.compress(in.buffer.array());
+                    ByteBuffer prefix = ByteBuffer.wrap(new byte[Integer.BYTES]);
+                    prefix.asIntBuffer().put(in.buffer.capacity());
+                    channel.write(prefix);
+                    channel.write(ByteBuffer.wrap(output));
+                    break;
+                } catch (NullPointerException e) {
+                    ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
+                    ex = e;
+                }
+            }
+            if (ex != null) {
+                throw ex;
             }
         }
         return () -> {
