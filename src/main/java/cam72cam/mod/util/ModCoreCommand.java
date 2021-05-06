@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.apache.commons.lang3.StringUtils;
-
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
@@ -50,16 +48,11 @@ public class ModCoreCommand extends Command {
 
 			if (args.length == 3 && "entity".equals(args[0]) && "list".equals(args[1])) {
 
-				if (StringUtils.isNumeric(args[2])) {
-					Integer dimId = Integer.parseInt(args[2]);
-					World world = World.get(dimId, false);
-					if (world == null) {
-						sender.accept(PlayerMessage.direct("Dimension '" + dimId + "' is not loaded or does not exist."));
-					} else {
-						sendWorldEntities(world, sender);
-					}
+				World world = World.get(args[2], false);
+				if (world == null) {
+					sender.accept(PlayerMessage.direct("Dimension '" + args[2] + "' is not loaded or does not exist."));
 				} else {
-					sender.accept(PlayerMessage.direct("Dimension must be a number!"));
+					sendWorldEntities(world, sender);
 				}
 
 
