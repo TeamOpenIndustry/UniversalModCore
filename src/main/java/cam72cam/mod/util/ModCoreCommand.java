@@ -58,7 +58,7 @@ public class ModCoreCommand extends Command {
 
 			} else {
 
-				sender.accept(PlayerMessage.direct(getUsage() + " [dim]"));
+				sender.accept(PlayerMessage.direct(getUsage() + " [world]"));
 
 			}
 
