@@ -174,6 +174,7 @@ public class ItemRender {
                         Files.write(sprite.toPath(), data);
                     } catch (IOException e) {
                         ModCore.catching(e);
+                        sprite.delete();
                     }
                 }
             }

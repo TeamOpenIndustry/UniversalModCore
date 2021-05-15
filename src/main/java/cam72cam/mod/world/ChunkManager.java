@@ -117,11 +117,14 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                 // Leave chunk loaded
                 //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
             } else {
-                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                 try {
+                    ModCore.debug("UNFORCED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                     if (world instanceof WorldServer) {
-                        ((ChunkProviderServer) world.getChunkProvider()).dropChunk(chunk.chunkXPos, chunk.chunkZPos);
+                        if (!((WorldServer)world).getPlayerManager().func_152621_a(chunk.chunkXPos, chunk.chunkZPos)) {
+                            ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+                            ((ChunkProviderServer)world.getChunkProvider()).dropChunk(chunk.chunkXPos, chunk.chunkZPos);
+                        }
                     }
                 } catch (Exception ex) {
                     ModCore.catching(ex);
@@ -130,7 +133,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
         }
 
         for (ChunkPos pos : loaded) {
-            ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
+            ModCore.debug("FORCED CHUNK %s %s", pos.chunkX, pos.chunkZ);
             try {
                 ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(pos.chunkX, pos.chunkZ));
             } catch (Exception ex) {

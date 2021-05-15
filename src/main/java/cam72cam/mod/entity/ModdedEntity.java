@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
-import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
@@ -21,6 +20,7 @@ import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,6 +59,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         */
         return AxisAlignedBB.getBoundingBox(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     });
+
+    Pair<String, TagCompound> refusedToJoin = null;
 
     /** Standard forge constructor */
     public ModdedEntity(World world) {
@@ -136,7 +138,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", self, selfData);
         }
-        iWorldData.load(selfData);
+        String error = self.tryJoinWorld();
+        if (error != null) {
+            refusedToJoin = Pair.of(error, selfData);
+        } else {
+            iWorldData.load(selfData);
+        }
     }
 
     /** @see #save */
@@ -158,13 +165,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity save: %s", this);
         }
 
-        TagCompound selfData = new TagCompound();
-        try {
-            TagSerializer.serialize(selfData, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e, "Error during entity save: %s", self);
+        TagCompound selfData;
+        if (refusedToJoin == null) {
+            selfData = new TagCompound();
+            try {
+                TagSerializer.serialize(selfData, self);
+            } catch (SerializationException e) {
+                ModCore.catching(e, "Error during entity save: %s", self);
+            }
+            iWorldData.save(selfData);
+        } else {
+            selfData = refusedToJoin.getValue();
         }
-        iWorldData.save(selfData);
 
         data.set("selfData", selfData);
     }
@@ -443,7 +455,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public AxisAlignedBB getBoundingBox() {
-        return cachedCollisionBB.get(iCollision.getCollision()).copy();
+        if (refusedToJoin != null) {
+            // Entity is added to a chunk but not world (yay minecraft)
+            return super.getBoundingBox();
+        }
+        return cachedCollisionBB.get(iCollision.getCollision());
     }
 
     /**
