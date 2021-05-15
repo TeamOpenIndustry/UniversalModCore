@@ -27,14 +27,22 @@ public class OBJModel {
 
     public String hash;
 
+    public OBJModel(Identifier modelLoc, float darken) throws Exception {
+        this(modelLoc, darken, 1, null);
+    }
+
     public OBJModel(Identifier modelLoc, float darken, Collection<String> variants) throws Exception {
         this(modelLoc, darken, 1, variants);
+    }
+
+    public OBJModel(Identifier modelLoc, float darken, double scale) throws Exception {
+        this(modelLoc, darken, scale, null);
     }
 
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
-                String.format("%s-%s-%s-%s", scale, darken, String.join(":" + variants).hashCode(), Config.MaxTextureSize),
+                String.format("%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.MaxTextureSize),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
         );
 
