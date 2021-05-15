@@ -36,7 +36,7 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 			ch.register(
 				Commands.literal(command.getPrefix())
 				// Check if player has permission 
-				.requires(source -> source.hasPermissionLevel(command.getRequiredPermissionLevel()))
+				.requires(source -> source.hasPermission(command.getRequiredPermissionLevel()))
 				.then(
 						// Execute command with arguments
 						Commands.argument("arguments", MessageArgument.message()).executes(command)
@@ -54,13 +54,13 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 	public int run(CommandContext<CommandSource> context) throws CommandSyntaxException {
 		Optional<Player> player = Optional.empty();
 		try {
-			ServerPlayerEntity serverPlayer = context.getSource().asPlayer();
+			ServerPlayerEntity serverPlayer = context.getSource().getPlayerOrException();
 			player = Optional.of(new Player(serverPlayer));
 		} catch (CommandSyntaxException e) {
 			// Is the console ?
 		}
 
-		Consumer<PlayerMessage> pm = m -> context.getSource().sendFeedback(m.internal, false);
+		Consumer<PlayerMessage> pm = m -> context.getSource().sendSuccess(m.internal, false);
 		String[] args = context.getInput().split(" ");
 		// Remove command from arguments
 		args = Arrays.copyOfRange(args, 1, args.length);
@@ -69,7 +69,7 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 
 
 		if (!ok) {
-			context.getSource().sendErrorMessage(new StringTextComponent(getUsage()));
+			context.getSource().sendFailure(new StringTextComponent(getUsage()));
 			return -1;
 		}
 

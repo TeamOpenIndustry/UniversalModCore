@@ -51,13 +51,13 @@ public class GlobalRender {
                 ClientRegistry.bindTileEntityRenderer(grhtype, (ted) -> new TileEntityRenderer<GlobalRenderHelper>(ted) {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
-                        RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+                        RenderSystem.multMatrix(matrixStack.last().pose());
                         // TODO 1.15+ do we need to set lightmap coords here?
                         renderFuncs.forEach(r -> r.accept(partialTicks));
                     }
 
                     @Override
-                    public boolean isGlobalRenderer(GlobalRenderHelper te) {
+                    public boolean shouldRenderOffScreen(GlobalRenderHelper te) {
                         return true;
                     }
                 });
@@ -67,15 +67,15 @@ public class GlobalRender {
             }
         });
         ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getInstance().worldRenderer.updateTileEntities(grhList, grhList);
+            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setPos(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+                grhList.get(0).setPosition(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
             }
         });
 
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
-            if (Minecraft.getInstance().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
+            if (Minecraft.getInstance().options.renderDebug && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.getRight().size(); i++) {
                     if (event.getRight().get(i).startsWith("Display: ")) {
@@ -121,7 +121,7 @@ public class GlobalRender {
 
     /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
-        return new Vec3d(Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView());
+        return new Vec3d(Minecraft.getInstance().gameRenderer.getMainCamera().getPosition());
     }
 
     /** Internal camera helper */
@@ -135,7 +135,7 @@ public class GlobalRender {
 
     /** Return the render distance in meters */
     public static int getRenderDistance() {
-        return Minecraft.getInstance().gameSettings.renderDistanceChunks * 16;
+        return Minecraft.getInstance().options.renderDistance * 16;
     }
 
     @FunctionalInterface
@@ -145,7 +145,7 @@ public class GlobalRender {
 
     static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
         @Override
-        public boolean isValidBlock(Block block_1) {
+        public boolean isValid(Block block_1) {
             return true;
         }
     };
@@ -157,14 +157,14 @@ public class GlobalRender {
         }
 
         @Override
-        public boolean hasWorld() {
+        public boolean hasLevel() {
             return true;
         }
 
         @Nullable
         @Override
-        public World getWorld() {
-            return Minecraft.getInstance().world;
+        public World getLevel() {
+            return Minecraft.getInstance().level;
         }
 
 
@@ -174,7 +174,7 @@ public class GlobalRender {
         }
 
         @Override
-        public double getMaxRenderDistanceSquared() {
+        public double getViewDistance() {
             return Double.POSITIVE_INFINITY;
         }
 
@@ -183,7 +183,7 @@ public class GlobalRender {
         }
 
         public BlockState getBlockState() {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
     }
 }

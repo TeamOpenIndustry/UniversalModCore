@@ -66,8 +66,8 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onClick(InputEvent.MouseInputEvent event) {
-            int attackID = Minecraft.getInstance().gameSettings.keyBindAttack.getKey().getKeyCode();
-            int useID = Minecraft.getInstance().gameSettings.keyBindUseItem.getKey().getKeyCode();
+            int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
+            int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
 
             if ((event.getButton() == attackID || event.getButton() == useID) && event.getAction() == 1) {
                 Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
@@ -89,13 +89,13 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onRenderMouseover(DrawHighlightEvent.HighlightBlock event) {
-            RenderType.getCutout().setupRenderState();
+            RenderType.cutout().setupRenderState();
             GL11.glPushMatrix();
-            RenderSystem.multMatrix(event.getMatrix().getLast().getMatrix());
+            RenderSystem.multMatrix(event.getMatrix().last().pose());
             // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
             GL11.glPopMatrix();
-            RenderType.getCutout().clearRenderState();
+            RenderType.cutout().clearRenderState();
         }
 
         @SubscribeEvent

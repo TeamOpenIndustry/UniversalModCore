@@ -57,7 +57,7 @@ public class GuiRegistry {
     /** Internal event registration, do not use */
     @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> ScreenManager.registerFactory(TYPE, ClientContainerBuilder::new));
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> ScreenManager.register(TYPE, ClientContainerBuilder::new));
     }
 
     public GuiRegistry() {
@@ -91,7 +91,7 @@ public class GuiRegistry {
 
     @OnlyIn(Dist.CLIENT)
     private static void openScreen(IScreen screen, Supplier<Boolean> valid) {
-        Minecraft.getInstance().displayGuiScreen(new ScreenBuilder(screen, valid));
+        Minecraft.getInstance().setScreen(new ScreenBuilder(screen, valid));
     }
 
     /** Register a standalone GUI */
@@ -126,7 +126,7 @@ public class GuiRegistry {
         int id = intFromName(("container" + cls.toString()));
 
         registry.put(id, event -> {
-            T entity = World.get(event.inv.player.world).getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
+            T entity = World.get(event.inv.player.level).getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
             if (entity == null) {
                 return null;
             }
@@ -180,11 +180,11 @@ public class GuiRegistry {
     public static <T extends Entity> EntityGUI<T> registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
         int id = intFromName(("container" + cls.toString()));
         registry.put(id, event -> {
-            T entity = World.get(event.inv.player.world).getEntity(event.entityIDorX, cls);
+            T entity = World.get(event.inv.player.level).getEntity(event.entityIDorX, cls);
             if (entity == null) {
                 return null;
             }
-            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> entity == World.get(event.inv.player.world).getEntity(event.entityIDorX, cls));
+            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> entity == World.get(event.inv.player.level).getEntity(event.entityIDorX, cls));
         });
 
         return (player, ent) -> {

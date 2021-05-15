@@ -43,7 +43,7 @@ public abstract class CustomItem {
     public CustomItem(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        Item.Properties props = new Item.Properties().maxStackSize(getStackSize()).group(getCreativeTabs().get(0).internal);
+        Item.Properties props = new Item.Properties().stacksTo(getStackSize()).tab(getCreativeTabs().get(0).internal);
         Item.Properties propsWithRender = DistExecutor.unsafeRunForDist(() -> () -> props.setISTER(ItemRender::ISTER), () -> () -> props);
 
         internal = new ItemInternal(propsWithRender);
@@ -63,7 +63,7 @@ public abstract class CustomItem {
     /** Return variants of this itemstack to add to this particular creative tab */
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
         List<ItemStack> res = new ArrayList<>();
-        if (creativeTab == null || creativeTab.internal == internal.getGroup()) {
+        if (creativeTab == null || creativeTab.internal == internal.getItemCategory()) {
             res.add(new ItemStack(new net.minecraft.item.ItemStack(internal, 1)));
         }
         return res;
@@ -106,25 +106,25 @@ public abstract class CustomItem {
         }
 
         @Override
-        public ITextComponent getDisplayName(net.minecraft.item.ItemStack stack) {
+        public ITextComponent getName(net.minecraft.item.ItemStack stack) {
             String custom = getCustomName(new ItemStack(stack));
             if (custom != null) {
                 return new StringTextComponent(custom);
             }
             //return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
-            return super.getDisplayName(stack);
+            return super.getName(stack);
         }
 
         @Override
-        public void fillItemGroup(ItemGroup tab, NonNullList<net.minecraft.item.ItemStack> items) {
-            CreativeTab myTab = tab != ItemGroup.SEARCH ? new CreativeTab(tab) : null;
+        public void fillItemCategory(ItemGroup tab, NonNullList<net.minecraft.item.ItemStack> items) {
+            CreativeTab myTab = tab != ItemGroup.TAB_SEARCH ? new CreativeTab(tab) : null;
             if (ModCore.hasResources) {
                 items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
             }
         }
 
         @Override
-        public String getTranslationKey(net.minecraft.item.ItemStack stack) {
+        public String getDescriptionId(net.minecraft.item.ItemStack stack) {
             String cn = getCustomName(new ItemStack(stack));
             if (cn != null) {
                 return cn;
@@ -134,22 +134,22 @@ public abstract class CustomItem {
 
         @Override
         @OnlyIn(Dist.CLIENT)
-        public final void addInformation(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-            super.addInformation(stack, worldIn, tooltip, flagIn);
+        public final void appendHoverText(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+            super.appendHoverText(stack, worldIn, tooltip, flagIn);
             if (ModCore.hasResources) {
                 tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(StringTextComponent::new).collect(Collectors.toList()));
             }
         }
 
         @Override
-        public ActionResultType onItemUse(ItemUseContext context) {
-            return CustomItem.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getWorld()), new Vec3i(context.getPos()), Player.Hand.from(context.getHand()), Facing.from(context.getFace()), new Vec3d(context.getHitVec().subtract(context.getPos().getX(), context.getPos().getY(), context.getPos().getZ()))).internal;
+        public ActionResultType useOn(ItemUseContext context) {
+            return CustomItem.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getLevel()), new Vec3i(context.getClickedPos()), Player.Hand.from(context.getHand()), Facing.from(context.getClickedFace()), new Vec3d(context.getClickLocation().subtract(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()))).internal;
         }
 
         @Override
-        public ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.world.World world, PlayerEntity player, net.minecraft.util.Hand hand) {
+        public ActionResult<net.minecraft.item.ItemStack> use(net.minecraft.world.World world, PlayerEntity player, net.minecraft.util.Hand hand) {
             onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
-            return super.onItemRightClick(world, player, hand);
+            return super.use(world, player, hand);
         }
     }
     /**

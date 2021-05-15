@@ -33,8 +33,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold");
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron");
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -113,7 +113,7 @@ public class Fuzzy {
 
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
-        this(ItemTags.makeWrapperTag(
+        this(ItemTags.bind(
                 ident.contains(":") ? new ResourceLocation(ident.toLowerCase()).toString() :
                         new ResourceLocation("forge", ident.toLowerCase()).toString()
         ), ident);
@@ -145,7 +145,7 @@ public class Fuzzy {
     public List<ItemStack> enumerate() {
         List<ItemStack> items;
         try {
-            items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
         } catch (IllegalStateException e) {
             ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
             items = new ArrayList<>();
@@ -199,10 +199,10 @@ public class Fuzzy {
         gen.addProvider(blocktagsprovider);
         gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider) {
             @Override
-            protected void registerTags() {
+            protected void addTags() {
                 for (Fuzzy value : registered.values()) {
                     //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        Builder<Item> builder = getOrCreateBuilder(value.tag);
+                        Builder<Item> builder = tag(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
                         }

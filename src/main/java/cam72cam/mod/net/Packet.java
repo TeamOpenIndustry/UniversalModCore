@@ -44,7 +44,7 @@ public abstract class Packet {
         net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
             ctx.get().enqueueWork(() -> {
                 msg.packet.ctx = ctx.get();
-                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().world);
+                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level);
                 try {
                     TagSerializer.deserialize(msg.packet.data, msg.packet, world);
                 } catch (SerializationException e) {
@@ -95,13 +95,13 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.getDimensionKey())), new Message(this));
+        net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.dimension())), new Message(this));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
         net.minecraft.entity.Entity internal = entity.internal;
-        int syncDist = entity.internal.getType().func_233602_m_();
+        int syncDist = entity.internal.getType().clientTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
 
@@ -139,7 +139,7 @@ public abstract class Packet {
         }
 
         public void fromBytes(PacketBuffer buf) {
-            TagCompound data = new TagCompound(buf.readCompoundTag());
+            TagCompound data = new TagCompound(buf.readNbt());
             String cls = data.getString("cam72cam.mod.pktid");
             packet = types.get(cls).get();
             packet.data = data;
@@ -153,7 +153,7 @@ public abstract class Packet {
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
-            buf.writeCompoundTag(packet.data.internal);
+            buf.writeNbt(packet.data.internal);
         }
     }
 }

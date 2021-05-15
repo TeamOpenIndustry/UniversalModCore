@@ -43,13 +43,13 @@ public class EntityRegistry {
 
         CommonEvents.Entity.REGISTER.subscribe(() -> {
             EntityType.IFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr);
-            EntityType.Builder<ModdedEntity> builder = EntityType.Builder.create(factory, EntityClassification.MISC)
+            EntityType.Builder<ModdedEntity> builder = EntityType.Builder.of(factory, EntityClassification.MISC)
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
                     .setUpdateInterval(20)
                     .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr));
             if (ctr.get().isImmuneToFire()) {
-                builder = builder.immuneToFire();
+                builder = builder.fireImmune();
             }
             EntityType<? extends ModdedEntity> et = builder.build(id.toString());
             et.setRegistryName(id.internal);
@@ -89,11 +89,11 @@ public class EntityRegistry {
     @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
-            if (missingResources != null && !Minecraft.getInstance().isSingleplayer() && Minecraft.getInstance().getConnection() != null) {
+            if (missingResources != null && !Minecraft.getInstance().hasSingleplayerServer() && Minecraft.getInstance().getConnection() != null) {
                 ModCore.error(missingResources);
-                Minecraft.getInstance().getConnection().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
-                Minecraft.getInstance().loadWorld((ClientWorld)null); // TODO 1.16
-                Minecraft.getInstance().displayGuiScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), new TranslationTextComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
+                Minecraft.getInstance().getConnection().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
+                Minecraft.getInstance().clearLevel();
+                Minecraft.getInstance().setScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), new TranslationTextComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

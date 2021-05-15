@@ -42,7 +42,7 @@ public abstract class BlockTypeEntity extends BlockType {
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
         TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
         te.hasTileData = true;
-        te.setWorldAndPos(world.internal, pos.internal());
+        te.setLevelAndPosition(world.internal, pos.internal());
         return te.instance();
     }
 
@@ -160,7 +160,7 @@ public abstract class BlockTypeEntity extends BlockType {
             if (source instanceof net.minecraft.world.World) {
                 return World.get((net.minecraft.world.World) source);
             }
-            net.minecraft.tileentity.TileEntity te = source.getTileEntity(pos);
+            net.minecraft.tileentity.TileEntity te = source.getBlockEntity(pos);
             if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
                 return ((TileEntity) te).getUMCWorld();
             }

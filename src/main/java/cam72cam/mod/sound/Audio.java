@@ -50,7 +50,7 @@ public class Audio {
 
     /** Play a built-in sound (Client side only) */
     public static void playSound(World world, Vec3d pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
-        world.internal.playSound(pos.x, pos.y, pos.z, sound.event, category.category, volume, pitch, false);
+        world.internal.playLocalSound(pos.x, pos.y, pos.z, sound.event, category.category, volume, pitch, false);
     }
 
     /** Play a built-in sound (Client side only) */

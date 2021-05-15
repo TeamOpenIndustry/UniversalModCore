@@ -11,7 +11,7 @@ public abstract class CheckBox extends Button {
     }
 
     public boolean isChecked() {
-        return button.getMessage().getUnformattedComponentText().contains("X");
+        return button.getMessage().getString().contains("X");
     }
 
     @Override
@@ -22,9 +22,9 @@ public abstract class CheckBox extends Button {
 
     public void setChecked(boolean val) {
         if (val) {
-            button.setMessage(new StringTextComponent(button.getMessage().getUnformattedComponentText().replace("█", "X")));
+            button.setMessage(new StringTextComponent(button.getMessage().getString().replace("█", "X")));
         } else {
-            button.setMessage(new StringTextComponent(button.getMessage().getUnformattedComponentText().replace("X", "█")));
+            button.setMessage(new StringTextComponent(button.getMessage().getString().replace("X", "█")));
         }
     }
 }

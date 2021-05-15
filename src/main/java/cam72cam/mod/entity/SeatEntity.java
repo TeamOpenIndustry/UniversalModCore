@@ -31,12 +31,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     private static EntityType<SeatEntity> makeType() {
         EntityType.IFactory<SeatEntity> ctr = SeatEntity::new;
-        EntityType<SeatEntity> et = EntityType.Builder.create(ctr, EntityClassification.MISC)
+        EntityType<SeatEntity> et = EntityType.Builder.of(ctr, EntityClassification.MISC)
                 .setShouldReceiveVelocityUpdates(false)
                 .setTrackingRange(512)
                 .setUpdateInterval(20)
-                .immuneToFire()
-                .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.getByValue(msg.getTypeId()), world))
+                .fireImmune()
+                .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
                 .build(SeatEntity.ID.toString());
         et.setRegistryName(ID);
         return et;
@@ -76,7 +76,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void readAdditional(CompoundNBT compound) {
+    protected void readAdditionalSaveData(CompoundNBT compound) {
         TagCompound data = new TagCompound(compound);
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");
@@ -84,7 +84,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void writeAdditional(CompoundNBT compound) {
+    protected void addAdditionalSaveData(CompoundNBT compound) {
         TagCompound data = new TagCompound(compound);
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
@@ -92,7 +92,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void registerData() {
+    protected void defineSynchedData() {
 
     }
 
@@ -117,7 +117,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (getPassengers().isEmpty()) {
             if (this.ticks < 20) {
                 if (!hasHadPassenger) {
-                    cam72cam.mod.entity.Entity toRide = World.get(world).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                    cam72cam.mod.entity.Entity toRide = World.get(level).getEntity(passenger, cam72cam.mod.entity.Entity.class);
                     if (toRide != null) {
                         ModCore.debug("FORCE RIDER");
                         toRide.internal.startRiding(this, true);
@@ -140,17 +140,17 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public void setup(ModdedEntity moddedEntity, Entity passenger) {
-        this.parent = moddedEntity.getUniqueID();
-        this.setPosition(moddedEntity.getPosX(), moddedEntity.getPosY(), moddedEntity.getPosZ());
-        this.passenger = passenger.getUniqueID();
+        this.parent = moddedEntity.getUUID();
+        this.setPos(moddedEntity.getX(), moddedEntity.getY(), moddedEntity.getZ());
+        this.passenger = passenger.getUUID();
     }
 
     public void moveTo(ModdedEntity moddedEntity) {
-        this.parent = moddedEntity.getUniqueID();
+        this.parent = moddedEntity.getUUID();
     }
 
     public cam72cam.mod.entity.Entity getParent() {
-        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             return linked;
         }
@@ -158,7 +158,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public double getMountedYOffset() {
+    public double getPassengersRidingOffset() {
         return 0;
     }
 
@@ -167,7 +167,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void updatePassengerPreTick(net.minecraft.entity.Entity passenger) {
         if (lastUpdateTick != this.ticks) {
             lastUpdateTick = this.ticks;
-            cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+            cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
             if (linked != null && linked.internal instanceof ModdedEntity) {
                 ((ModdedEntity) linked.internal).updateSeat(this);
             }
@@ -181,7 +181,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void removePassenger(net.minecraft.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).removeSeat(this);
         }
@@ -190,12 +190,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
 
     @Override
-    public Vector3d func_230268_c_(LivingEntity livingEntity) {
-        return livingEntity.getPositionVec();
+    public Vector3d getDismountLocationForPassenger(LivingEntity livingEntity) {
+        return livingEntity.position();
     }
 
     @Override
-    public IPacket<?> createSpawnPacket() {
+    public IPacket<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -206,7 +206,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (this.getPassengers().size() == 0) {
             return null;
         }
-        return World.get(world).getEntity(getPassengers().get(0));
+        return World.get(level).getEntity(getPassengers().get(0));
     }
 
     @Override
@@ -214,18 +214,18 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         TagCompound data = new TagCompound();
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
-        buffer.writeCompoundTag(data.internal);
+        buffer.writeNbt(data.internal);
     }
 
     @Override
     public void readSpawnData(PacketBuffer additionalData) {
-        TagCompound data = new TagCompound(additionalData.readCompoundTag());
+        TagCompound data = new TagCompound(additionalData.readNbt());
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");
     }
 
     @Override
-    public boolean isInRangeToRenderDist(double distance) {
+    public boolean shouldRenderAtSqrDistance(double distance) {
         return false;
     }
 }

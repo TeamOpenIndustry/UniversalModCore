@@ -70,7 +70,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.TYPE, manager -> new net.minecraft.client.renderer.entity.EntityRenderer<SeatEntity>(manager) {
             @Nullable
             @Override
-            public ResourceLocation getEntityTexture(SeatEntity entity) {
+            public ResourceLocation getTextureLocation(SeatEntity entity) {
                 return null;
             }
         }));
@@ -99,19 +99,19 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             return;
         }
 
-        Minecraft.getInstance().getProfiler().startSection("large_entity_helper");
+        Minecraft.getInstance().getProfiler().push("large_entity_helper");
 
         float partialTicks = event.getPartialTicks();
-        EntityRendererManager renderManager = Minecraft.getInstance().getRenderManager();
+        EntityRendererManager renderManager = Minecraft.getInstance().getEntityRenderDispatcher();
 
         ActiveRenderInfo info = GlobalRender.getCamera(event.getPartialTicks());
-        Vector3d vec3d = info.getProjectedView();
-        double camX = vec3d.getX();
-        double camY = vec3d.getY();
-        double camZ = vec3d.getZ();
+        Vector3d vec3d = info.getPosition();
+        double camX = vec3d.x();
+        double camY = vec3d.y();
+        double camZ = vec3d.z();
 
-        ClippingHelper camera = new ClippingHelper(event.getMatrixStack().getLast().getMatrix(), event.getProjectionMatrix());
-        camera.setCameraPosition(camX, camY, camZ);
+        ClippingHelper camera = new ClippingHelper(event.getMatrixStack().last().pose(), event.getProjectionMatrix());
+        camera.prepare(camX, camY, camZ);
 
         World world = MinecraftClient.getPlayer().getWorld();
         List<Entity> entities = world.getEntities(Entity.class);
@@ -127,28 +127,28 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             Vec3d max = entity.getBlockPosition().toChunkMax();
             max = new Vec3d(max.x, yoff + 16, max.z);
             AxisAlignedBB chunk = new AxisAlignedBB(min.internal(), max.internal());
-            if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
+            if (!camera.isVisible(chunk) && camera.isVisible(entity.internal.getBoundingBoxForCulling())) {
                 net.minecraft.entity.Entity entityIn = entity.internal;
-                double d0 = MathHelper.lerp(partialTicks, entityIn.lastTickPosX, entityIn.getPosX());
-                double d1 = MathHelper.lerp(partialTicks, entityIn.lastTickPosY, entityIn.getPosY());
-                double d2 = MathHelper.lerp(partialTicks, entityIn.lastTickPosZ, entityIn.getPosZ());
-                float f = MathHelper.lerp(partialTicks, entityIn.prevRotationYaw, entityIn.rotationYaw);
-                renderManager.renderEntityStatic(entityIn, d0 - camX, d1 - camY, d2 - camZ, f, partialTicks, event.getMatrixStack(), Minecraft.getInstance().getRenderTypeBuffers().getBufferSource(), renderManager.getPackedLight(entityIn, partialTicks));
+                double d0 = MathHelper.lerp(partialTicks, entityIn.xo, entityIn.getX());
+                double d1 = MathHelper.lerp(partialTicks, entityIn.yo, entityIn.getY());
+                double d2 = MathHelper.lerp(partialTicks, entityIn.zo, entityIn.getZ());
+                float f = MathHelper.lerp(partialTicks, entityIn.yRotO, entityIn.yRot);
+                renderManager.render(entityIn, d0 - camX, d1 - camY, d2 - camZ, f, partialTicks, event.getMatrixStack(), Minecraft.getInstance().renderBuffers().bufferSource(), renderManager.getPackedLightCoords(entityIn, partialTicks));
             }
         }
 
-        Minecraft.getInstance().getProfiler().endSection();
+        Minecraft.getInstance().getProfiler().pop();
     }
 
     @Override
     public void render(T stock, float entityYaw, float partialTicks, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int i) {
         Entity self = stock.getSelf();
 
-        RenderType.getCutout().setupRenderState();
+        RenderType.cutout().setupRenderState();
 
-        RenderHelper.enableStandardItemLighting();
+        RenderHelper.turnBackOn();
 
-        Minecraft.getInstance().gameRenderer.getLightTexture().enableLightmap();
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 
         int j = i % 65536;
         int k = i / 65536;
@@ -156,19 +156,19 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         try (With c = OpenGL.matrix()) {
             //TODO 1.15 lerp xyz
-            RenderSystem.multMatrix(p_225623_4_.getLast().getMatrix());
+            RenderSystem.multMatrix(p_225623_4_.last().pose());
             GL11.glRotatef(180 - entityYaw, 0, 1, 0);
             GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
             GL11.glRotatef(-90, 0, 1, 0);
             renderers.get(self.getClass()).render(self, partialTicks);
         }
 
-        RenderType.getCutout().clearRenderState();
+        RenderType.cutout().clearRenderState();
     }
 
     @Nullable
     @Override
-    public ResourceLocation getEntityTexture(T entity) {
+    public ResourceLocation getTextureLocation(T entity) {
         return null;
     }
 }

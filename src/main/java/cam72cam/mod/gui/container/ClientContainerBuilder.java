@@ -43,17 +43,17 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, PlayerInventory p_create_2_, ITextComponent p_create_3_) {
         super(serverContainer, serverContainer.playerInventory, new StringTextComponent(""));
         this.server = serverContainer;
-        this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
-        this.ySize = server.ySize;
+        this.imageWidth = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
+        this.imageHeight = server.ySize;
         this.valid = serverContainer.valid;
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack stack, float partialTicks, int mouseX, int mouseY) {
+    protected void renderBg(MatrixStack stack, float partialTicks, int mouseX, int mouseY) {
         try (OpenGL.With color = OpenGL.color(1, 1, 1, 1)) {
             //this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
-            this.centerX = (this.width - this.xSize) / 2;
-            this.centerY = (this.height - this.ySize) / 2;
+            this.centerX = (this.width - this.imageWidth) / 2;
+            this.centerY = (this.height - this.imageHeight) / 2;
             server.draw.accept(this);
         }
     }
@@ -62,9 +62,9 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     public void tick() {
         super.tick();
         if (!valid.get()) {
-            this.minecraft.displayGuiScreen(null);
-            if (this.minecraft.currentScreen == null) {
-                this.minecraft.setGameFocused(true);
+            this.minecraft.setScreen(null);
+            if (this.minecraft.screen == null) {
+                this.minecraft.setWindowActive(true);
             }
         }
     }
@@ -195,7 +195,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(stack, this.font, text, x + centerX + this.xSize / 2, y + centerY, 14737632);
+        super.drawCenteredString(stack, this.font, text, x + centerX + this.imageWidth / 2, y + centerY, 14737632);
     }
 
     @Override
@@ -203,17 +203,17 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        this.minecraft.getItemRenderer().renderItemIntoGUI(stack.internal, x, y);
+        this.minecraft.getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
 
         try (
                 OpenGL.With color = OpenGL.color(1, 1, 1, 1);
                 OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
                 OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false)
         ) {
-            GlStateManager.enableAlphaTest();
-            GlStateManager.disableDepthTest();
+            GlStateManager._enableAlphaTest();
+            GlStateManager._disableDepthTest();
             drawRect(x, y, 16, 16, -2130706433);
-            GlStateManager.enableDepthTest();
+            GlStateManager._enableDepthTest();
         }
     }
 
@@ -225,7 +225,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
             fill(new MatrixStack(), x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
-            GlStateManager.color4f(1,1,1,1);
+            GlStateManager._color4f(1,1,1,1);
         }
 
 
@@ -234,10 +234,10 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
             spriteId = "minecraft:block/fire_1";
         }
 
-        TextureAtlasSprite sprite = minecraft.getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(new ResourceLocation(spriteId));
+        TextureAtlasSprite sprite = minecraft.getTextureAtlas(AtlasTexture.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
         try (
                 OpenGL.With color_ = OpenGL.color(1,1,1,1);
-                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS_TEXTURE))
+                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS))
         ) {
             blit(stack, x, y, 0, 16, 16, sprite);
         }
@@ -248,6 +248,6 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     {
         this.stack = stack;
         super.render(stack, mouseX, mouseY, partialTicks);
-        this.renderHoveredTooltip(stack, mouseX, mouseY);
+        this.renderTooltip(stack, mouseX, mouseY);
     }
 }

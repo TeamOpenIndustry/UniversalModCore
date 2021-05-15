@@ -30,15 +30,15 @@ public class Entity {
     }
 
     public World getWorld() {
-        return World.get(internal.world);
+        return World.get(internal.level);
     }
 
     /** UUID that persists across loads */
     public UUID getUUID() {
-        return internal.getUniqueID();
+        return internal.getUUID();
     }
 
-    private final SingleCache<Vec3d, Vec3i> blockPosCache = new SingleCache<>(pos -> new Vec3i(internal.getPosition()));
+    private final SingleCache<Vec3d, Vec3i> blockPosCache = new SingleCache<>(pos -> new Vec3i(internal.blockPosition()));
     /* Position / Rotation */
     public Vec3i getBlockPosition() {
         return blockPosCache.get(getPosition());
@@ -47,72 +47,72 @@ public class Entity {
     private Vec3d posCache;
     public Vec3d getPosition() {
         if (posCache == null || (
-                posCache.x != internal.getPosX() ||
-                posCache.y != internal.getPosY() ||
-                posCache.z != internal.getPosZ() )
+                posCache.x != internal.getX() ||
+                posCache.y != internal.getY() ||
+                posCache.z != internal.getZ() )
         ) {
-            posCache = new Vec3d(internal.getPositionVec());
+            posCache = new Vec3d(internal.position());
         }
         return posCache;
     }
 
     public void setPosition(Vec3d pos) {
-        internal.setPosition(pos.x, pos.y, pos.z);
+        internal.setPos(pos.x, pos.y, pos.z);
     }
 
     public Vec3d getVelocity() {
-        return new Vec3d(internal.getMotion());
+        return new Vec3d(internal.getDeltaMovement());
     }
 
     public void setVelocity(Vec3d motion) {
-        internal.setMotion(motion.internal());
+        internal.setDeltaMovement(motion.internal());
     }
 
     public float getRotationYaw() {
-        return internal.rotationYaw;
+        return internal.yRot;
     }
 
     public void setRotationYaw(float yaw) {
-        internal.prevRotationYaw = internal.rotationYaw;
-        internal.rotationYaw = yaw;
-        double d0 = internal.prevRotationYaw - yaw;
+        internal.yRotO = internal.yRot;
+        internal.yRot = yaw;
+        double d0 = internal.yRotO - yaw;
         if (d0 < -180.0D)
         {
-            internal.prevRotationYaw += 360.0F;
+            internal.yRotO += 360.0F;
         }
 
         if (d0 >= 180.0D)
         {
-            internal.prevRotationYaw -= 360.0F;
+            internal.yRotO -= 360.0F;
         }
 
     }
 
     public float getRotationPitch() {
-        return internal.rotationPitch;
+        return internal.xRot;
     }
 
     public void setRotationPitch(float pitch) {
-        internal.prevRotationPitch = internal.rotationPitch;
-        internal.rotationPitch = pitch;
+        internal.xRotO = internal.xRot;
+        internal.xRot = pitch;
     }
 
     public float getPrevRotationYaw() {
-        return internal.prevRotationYaw;
+        return internal.yRotO;
     }
 
     public float getPrevRotationPitch() {
-        return internal.prevRotationPitch;
+        return internal.xRotO;
     }
 
     Vec3d eyeCache;
     public Vec3d getPositionEyes() {
         if (eyeCache == null || (
-                eyeCache.x != internal.getPosX() ||
-                eyeCache.y != internal.getPosY() + internal.getEyeHeight() ||
-                eyeCache.z != internal.getPosZ() )
+                eyeCache.x != internal.getX() ||
+                eyeCache.y != internal.getY() + internal.getEyeHeight() ||
+                eyeCache.z != internal.getZ() )
         ) {
-            eyeCache = new Vec3d(internal.getPosX(), internal.getPosY() + internal.getEyeHeight(), internal.getPosZ());
+            eyeCache = new Vec3d(internal.getX(), internal.getY() + internal.getEyeHeight(), internal.getZ());
         }
         return eyeCache;
     }
@@ -158,7 +158,7 @@ public class Entity {
     }
 
     public int getTickCount() {
-        return internal.ticksExisted;
+        return internal.tickCount;
     }
 
     public int getPassengerCount() {
@@ -170,7 +170,7 @@ public class Entity {
     }
 
     public boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
-        return internal.isPassenger(passenger.internal);
+        return internal.hasPassenger(passenger.internal);
     }
 
     public void removePassenger(Entity entity) {
@@ -182,11 +182,11 @@ public class Entity {
     }
 
     public Entity getRiding() {
-        if (internal.getRidingEntity() != null) {
-            if (internal.getRidingEntity() instanceof SeatEntity) {
-                return ((SeatEntity)internal.getRidingEntity()).getParent();
+        if (internal.getVehicle() != null) {
+            if (internal.getVehicle() instanceof SeatEntity) {
+                return ((SeatEntity)internal.getVehicle()).getParent();
             }
-            return getWorld().getEntity(internal.getRidingEntity());
+            return getWorld().getEntity(internal.getVehicle());
         }
         return null;
     }
@@ -197,11 +197,11 @@ public class Entity {
     }
 
     public float getRotationYawHead() {
-        return internal.getRotationYawHead();
+        return internal.getYHeadRot();
     }
 
     public Vec3d getLastTickPos() {
-        return new Vec3d(internal.lastTickPosX, internal.lastTickPosY, internal.lastTickPosZ);
+        return new Vec3d(internal.xOld, internal.yOld, internal.zOld);
     }
 
     public void startRiding(Entity entity) {
@@ -215,18 +215,18 @@ public class Entity {
 
     /** Damage entity directly (bypassing armor) */
     public void directDamage(String msg, double damage) {
-        internal.attackEntityFrom((new DamageSource(msg)).setDamageBypassesArmor(), (float) damage);
+        internal.hurt((new DamageSource(msg)).bypassArmor(), (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
         Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
-        explosion.doExplosionA();
-        explosion.doExplosionB(true);
+        explosion.explode();
+        explosion.finalizeExplosion(true);
     }
 
     /** Non persistent ID.  Should use UUID instead */
     public int getId() {
-        return internal.getEntityId();
+        return internal.getId();
     }
 }

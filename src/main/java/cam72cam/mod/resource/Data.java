@@ -93,7 +93,7 @@ class Data {
         public List<InputStream> getResourceStreamAll(Identifier identifier) throws IOException {
             List<InputStream> res = new ArrayList<>();
             try {
-                for (IResource resource : Minecraft.getInstance().getResourceManager().getAllResources(identifier.internal)) {
+                for (IResource resource : Minecraft.getInstance().getResourceManager().getResources(identifier.internal)) {
                     res.add(resource.getInputStream());
                 }
             } catch (java.io.FileNotFoundException ex) {

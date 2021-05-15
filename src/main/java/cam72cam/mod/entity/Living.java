@@ -13,22 +13,22 @@ public class Living extends Entity {
     }
 
     public boolean isLeashedTo(Player player) {
-        return living instanceof MobEntity && ((MobEntity) living).getLeashed() && ((MobEntity) living).getLeashHolder().getUniqueID().equals(player.getUUID());
+        return living instanceof MobEntity && ((MobEntity) living).isLeashed() && ((MobEntity) living).getLeashHolder().getUUID().equals(player.getUUID());
     }
 
     public void unleash(Player player) {
         if (living instanceof MobEntity) {
-            ((MobEntity)living).clearLeashed(true, !player.isCreative());
+            ((MobEntity)living).dropLeash(true, !player.isCreative());
         }
     }
 
     public void setLeashHolder(Player player) {
         if (living instanceof MobEntity) {
-            ((MobEntity) living).setLeashHolder(player.internal, true);
+            ((MobEntity) living).setLeashedTo(player.internal, true);
         }
     }
 
     public boolean canBeLeashedTo(Player player) {
-        return living instanceof MobEntity && ((MobEntity)living).canBeLeashedTo(player.internal);
+        return living instanceof MobEntity && ((MobEntity)living).canBeLeashed(player.internal);
     }
 }

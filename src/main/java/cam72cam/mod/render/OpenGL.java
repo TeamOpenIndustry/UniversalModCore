@@ -70,9 +70,9 @@ public class OpenGL {
     public static With texture(Identifier identifier) {
         With t = bool(GL11.GL_TEXTURE_2D, true);
         int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        Minecraft.getInstance().getTextureManager().bindTexture(identifier.internal);
+        Minecraft.getInstance().getTextureManager().bind(identifier.internal);
         return () -> {
-            GlStateManager.bindTexture(currentTexture);
+            GlStateManager._bindTexture(currentTexture);
             t.restore();
         };
     }
