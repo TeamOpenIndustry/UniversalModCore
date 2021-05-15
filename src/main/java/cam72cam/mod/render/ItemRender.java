@@ -23,7 +23,6 @@ import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.ItemStackTileEntityRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
@@ -33,14 +32,12 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.*;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-import util.Matrix4;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -245,7 +242,8 @@ public class ItemRender {
                         buff.get(data);
                         Files.write(sprite.toPath(), data);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        ModCore.catching(e);
+                        sprite.delete();
                     }
                 }
             }

@@ -33,6 +33,16 @@ public class Identifier {
         return internal.toString();
     }
 
+    @Override
+    public int hashCode() {
+        return internal.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Identifier && internal.equals(((Identifier) o).internal);
+    }
+
     public String getDomain() {
         return internal.getNamespace();
     }

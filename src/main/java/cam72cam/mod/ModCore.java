@@ -394,4 +394,16 @@ public class ModCore {
 
         instance.logger.catching(ex);
     }
+
+    /** Get a file for name in the UMC cache dir */
+    public static File cacheFile(String name) {
+        Path configDir = FMLPaths.CONFIGDIR.get();
+        if (configDir == null) {
+            configDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
+        }
+        File cacheDir = Paths.get(configDir.getParent().toString(), "cache", "universalmodcore").toFile();
+        cacheDir.mkdirs();
+
+        return new File(cacheDir, name);
+    }
 }

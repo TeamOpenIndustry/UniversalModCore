@@ -136,6 +136,8 @@ dependencies {
 
     compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     testCompile('junit:junit:4.13')
+
+    shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
 jar {
