@@ -44,6 +44,16 @@ public class EntitySync extends TagCompound {
                 if (newVal.equals(oldVal)) {
                     continue;
                 }
+                if (oldVal.getId() == 5) {
+                    if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < 0.001) {
+                        continue;
+                    }
+                }
+                if (oldVal.getId() == 6) {
+                    if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < 0.00001) {
+                        continue;
+                    }
+                }
             }
             sync.internal.setTag(key, newVal);
         }
