@@ -10,10 +10,8 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.*;
@@ -38,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -194,7 +191,8 @@ public class ItemRender {
                         buff.get(data);
                         Files.write(sprite.toPath(), data);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        ModCore.catching(e);
+                        sprite.delete();
                     }
                 }
             }

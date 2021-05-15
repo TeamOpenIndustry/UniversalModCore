@@ -133,6 +133,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     testCompile('junit:junit:4.13')
+
+    shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
 jar {
