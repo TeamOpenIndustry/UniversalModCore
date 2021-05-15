@@ -1,6 +1,7 @@
 package cam72cam.mod.model.obj;
 
 import cam72cam.mod.resource.Identifier;
+import cpw.mods.modlauncher.Launcher;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -13,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 
@@ -20,6 +22,10 @@ public class OBJModelTest {
     @BeforeClass
     public static void setup() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
+
+        Constructor<Launcher> ctr = Launcher.class.getDeclaredConstructor();
+        ctr.setAccessible(true);
+        ctr.newInstance();
 
         Field dist = FMLLoader.class.getDeclaredField("dist");
         dist.setAccessible(true);
