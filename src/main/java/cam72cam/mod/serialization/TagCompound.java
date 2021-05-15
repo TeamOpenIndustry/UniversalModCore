@@ -7,8 +7,10 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
+import java.io.*;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -23,6 +25,12 @@ public class TagCompound {
     /** Wraps MC object, do not use */
     public TagCompound(NBTTagCompound data) {
         this.internal = data;
+    }
+
+    public TagCompound(byte[] data) throws IOException {
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(data))) {
+            internal = CompressedStreamTools.read(in);
+        }
     }
 
     public TagCompound() {
@@ -310,5 +318,13 @@ public class TagCompound {
 
     public boolean isEmpty() {
         return internal.hasNoTags();
+    }
+
+    public byte[] toBytes() throws IOException {
+        try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            CompressedStreamTools.write(internal, new DataOutputStream(out));
+            out.flush();
+            return out.toByteArray();
+        }
     }
 }

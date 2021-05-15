@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -117,13 +116,16 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                 // Leave chunk loaded
                 //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
             } else {
-                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                 try {
+                    ModCore.debug("UNFORCED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                     if (world instanceof WorldServer) {
-                        Chunk current = world.getChunkProvider().getLoadedChunk(chunk.chunkXPos, chunk.chunkZPos);
-                        if (current != null) {
-                            ((WorldServer) world).getChunkProvider().unload(current);
+                        if (!((WorldServer)world).getPlayerChunkMap().contains(chunk.chunkXPos, chunk.chunkZPos)) {
+                            Chunk current = world.getChunkProvider().getLoadedChunk(chunk.chunkXPos, chunk.chunkZPos);
+                            if (current != null) {
+                                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+                                ((WorldServer) world).getChunkProvider().unload(current);
+                            }
                         }
                     }
                 } catch (Exception ex) {
@@ -133,7 +135,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
         }
 
         for (ChunkPos pos : loaded) {
-            ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
+            ModCore.debug("FORCED CHUNK %s %s", pos.chunkX, pos.chunkZ);
             try {
                 ForgeChunkManager.forceChunk(ticket, new net.minecraft.util.math.ChunkPos(pos.chunkX, pos.chunkZ));
             } catch (Exception ex) {

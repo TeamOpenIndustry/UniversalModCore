@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -62,6 +63,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         */
         return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     });
+
+    Pair<String, TagCompound> refusedToJoin = null;
 
     /** Standard forge constructor */
     public ModdedEntity(World world) {
@@ -139,7 +142,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", self, selfData);
         }
-        iWorldData.load(selfData);
+        String error = self.tryJoinWorld();
+        if (error != null) {
+            refusedToJoin = Pair.of(error, selfData);
+        } else {
+            iWorldData.load(selfData);
+        }
     }
 
     /** @see #save */
@@ -161,13 +169,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity save: %s", this);
         }
 
-        TagCompound selfData = new TagCompound();
-        try {
-            TagSerializer.serialize(selfData, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e, "Error during entity save: %s", self);
+        TagCompound selfData;
+        if (refusedToJoin == null) {
+            selfData = new TagCompound();
+            try {
+                TagSerializer.serialize(selfData, self);
+            } catch (SerializationException e) {
+                ModCore.catching(e, "Error during entity save: %s", self);
+            }
+            iWorldData.save(selfData);
+        } else {
+            selfData = refusedToJoin.getValue();
         }
-        iWorldData.save(selfData);
 
         data.set("selfData", selfData);
     }
@@ -423,6 +436,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public AxisAlignedBB getEntityBoundingBox() {
+        if (refusedToJoin != null) {
+            // Entity is added to a chunk but not world (yay minecraft)
+            return super.getEntityBoundingBox();
+        }
         return cachedCollisionBB.get(iCollision.getCollision());
     }
 
