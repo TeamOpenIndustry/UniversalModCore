@@ -117,13 +117,16 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                 // Leave chunk loaded
                 //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
             } else {
-                ModCore.debug("UNLOADED CHUNK %s %s", chunk.x, chunk.z);
                 try {
+                    ModCore.debug("UNFORCED CHUNK %s %s", chunk.x, chunk.z);
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                     if (world instanceof WorldServer) {
-                        Chunk current = world.getChunkProvider().getLoadedChunk(chunk.x, chunk.z);
-                        if (current != null) {
-                            ((WorldServer) world).getChunkProvider().queueUnload(current);
+                        if (!((WorldServer)world).getPlayerChunkMap().contains(chunk.x, chunk.z)) {
+                            Chunk current = world.getChunkProvider().getLoadedChunk(chunk.x, chunk.z);
+                            if (current != null) {
+                                ModCore.debug("UNLOADED CHUNK %s %s", chunk.x, chunk.z);
+                                ((WorldServer) world).getChunkProvider().queueUnload(current);
+                            }
                         }
                     }
                 } catch (Exception ex) {
@@ -133,7 +136,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
         }
 
         for (ChunkPos pos : loaded) {
-            ModCore.debug("LOADED CHUNK %s %s", pos.chunkX, pos.chunkZ);
+            ModCore.debug("FORCED CHUNK %s %s", pos.chunkX, pos.chunkZ);
             try {
                 ForgeChunkManager.forceChunk(ticket, new net.minecraft.util.math.ChunkPos(pos.chunkX, pos.chunkZ));
             } catch (Exception ex) {

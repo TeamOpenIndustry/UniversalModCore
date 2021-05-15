@@ -25,6 +25,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -258,5 +259,17 @@ public class ModCore {
         }
 
         instance.logger.catching(ex);
+    }
+
+    /** Get a file for name in the UMC cache dir */
+    public static File cacheFile(String name) {
+        File configDir = Loader.instance().getConfigDir();
+        if (configDir == null) {
+            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
+        }
+        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        cacheDir.mkdirs();
+
+        return new File(cacheDir, name);
     }
 }
