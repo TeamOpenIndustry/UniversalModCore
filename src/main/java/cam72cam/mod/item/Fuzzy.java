@@ -195,7 +195,12 @@ public class Fuzzy {
     }
 
     public static void register(DataGenerator gen) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen);
+        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen) {
+            @Override
+            protected void addTags() {
+                //super.addTags();
+            }
+        };
         gen.addProvider(blocktagsprovider);
         gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider) {
             @Override
