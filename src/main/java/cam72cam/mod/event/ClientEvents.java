@@ -37,6 +37,7 @@ public class ClientEvents {
         Audio.registerClientCallbacks();
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
+        CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
     }
 
     /** Fires off a client resource reload event (UMC only).  Do not use directly */
@@ -142,7 +143,7 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
-            REGISTER_ENTITY.execute(Runnable::run);
+            //REGISTER_ENTITY.execute(Runnable::run);
         }
     }
 }
