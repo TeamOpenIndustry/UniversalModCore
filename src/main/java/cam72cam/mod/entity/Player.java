@@ -22,11 +22,11 @@ public class Player extends Entity {
     }
 
     public ItemStack getHeldItem(Hand hand) {
-        return new ItemStack(internal.getHeldItem(hand.internal));
+        return new ItemStack(internal.getItemInHand(hand.internal));
     }
 
     public void sendMessage(PlayerMessage o) {
-        internal.sendMessage(o.internal, Util.DUMMY_UUID);
+        internal.sendMessage(o.internal, Util.NIL_UUID);
     }
 
     public boolean isCrouching() {
@@ -39,19 +39,19 @@ public class Player extends Entity {
 
     @Deprecated
     public float getYawHead() {
-        return internal.rotationYawHead;
+        return internal.yHeadRot;
     }
 
     public void setHeldItem(Hand hand, ItemStack stack) {
-        internal.setHeldItem(hand.internal, stack.internal);
+        internal.setItemInHand(hand.internal, stack.internal);
     }
 
     public int getFoodLevel() {
-        return internal.getFoodStats().getFoodLevel() + (int)(internal.getFoodStats().getSaturationLevel());
+        return internal.getFoodData().getFoodLevel() + (int)(internal.getFoodData().getSaturationLevel());
     }
 
     public void useFood(int i) {
-        internal.addExhaustion(i);
+        internal.causeFoodExhaustion(i);
     }
 
     public IInventory getInventory() {
@@ -60,12 +60,12 @@ public class Player extends Entity {
 
     /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.onItemUse(new ItemUseContext(internal, hand.internal, new BlockRayTraceResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
+        return ClickResult.from(getHeldItem(hand).internal.useOn(new ItemUseContext(internal, hand.internal, new BlockRayTraceResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
     }
 
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
-        return new Vec3d(internal.moveStrafing, internal.moveVertical, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+        return new Vec3d(internal.xxa, internal.yya, internal.zza).scale(internal.isSprinting() ? 0.4 : 0.2);
     }
 
     public enum Hand {

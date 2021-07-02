@@ -119,8 +119,8 @@ public class TagCompound {
     }
 
     public UUID getUUID(String key) {
-        if (internal.hasUniqueId(key)) {
-            return internal.getUniqueId(key);
+        if (internal.hasUUID(key)) {
+            return internal.getUUID(key);
         }
         return getter(key, s -> UUID.fromString(getString(s)));
     }
@@ -131,7 +131,7 @@ public class TagCompound {
 
     public Vec3i getVec3i(String key) {
         return getter(key, () -> {
-            if (internal.getTagId(key) == 4) {
+            if (internal.getTagType(key) == 4) {
                 return new Vec3i(internal.getLong(key));
             }
             CompoundNBT tag = internal.getCompound(key);
@@ -246,7 +246,7 @@ public class TagCompound {
         return getter(key, () -> {
             Map<K, V> map = new HashMap<>();
             TagCompound data = get(key);
-            for (String item : data.internal.keySet()) {
+            for (String item : data.internal.getAllKeys()) {
                 map.put(keyFn.apply(item), valFn.apply(data.get(item)));
             }
             return map;
@@ -297,8 +297,8 @@ public class TagCompound {
                 return null;
             }
 
-            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.readTileEntity(null, ted.get("data").internal);
-            te.setWorldAndPos(world.internal, te.getPos());
+            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.loadStatic(null, ted.get("data").internal);
+            te.setLevelAndPosition(world.internal, te.getBlockPos());
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();
         });
@@ -310,7 +310,7 @@ public class TagCompound {
             ted.setWorld("world", tile.getWorld());
 
             TagCompound data = new TagCompound();
-            tile.internal.write(data.internal);
+            tile.internal.save(data.internal);
             ted.set("data", data);
 
             set(key, ted);

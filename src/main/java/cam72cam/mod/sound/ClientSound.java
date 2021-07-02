@@ -59,12 +59,12 @@ class ClientSound implements ISound {
         }
         try {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
-            AudioFormat fmt = stream.getAudioFormat();
+            AudioFormat fmt = stream.getFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
-            ByteBuffer buffer = stream.readOggSoundWithCapacity(sizeBytes);
+            ByteBuffer buffer = stream.read(sizeBytes);
             sound = new AudioStreamBuffer(buffer, fmt);
             for (int i = 0; i< 4; i++) {
-                sound.getUntrackedBuffer().ifPresent(bufferId -> {
+                sound.releaseAlBuffer().ifPresent(bufferId -> {
                     AL10.alSourceQueueBuffers(id, bufferId);
                     checkErr();
                 });
@@ -120,7 +120,7 @@ class ClientSound implements ISound {
         checkErr();
 
         // Dealloc buffer (todo keep around?)
-        sound.deleteBuffer();
+        sound.discardAlBuffer();
 
         // Is this the same as the above call? net.minecraft.client.audio.SoundSource#func_216427_k
         int i = AL10.alGetSourcei(id, AL10.AL_BUFFERS_PROCESSED);

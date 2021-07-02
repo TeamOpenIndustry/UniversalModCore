@@ -11,6 +11,6 @@ public class TextUtil {
     }
 
     public static String translate(String name, Object[] objects) {
-        return String.format(LanguageMap.getInstance().func_230503_a_(name), objects);
+        return String.format(LanguageMap.getInstance().getOrDefault(name), objects);
     }
 }

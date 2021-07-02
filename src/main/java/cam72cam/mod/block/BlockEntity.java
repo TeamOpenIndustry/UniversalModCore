@@ -95,13 +95,13 @@ public abstract class BlockEntity {
 
     /** Marks block for re-render on the client or sends an update packet on the server. */
     public void markDirty() {
-        internal.markDirty();
+        internal.setChanged();
     }
 
     /** @return the data that would be written to disk on world save */
     public TagCompound getData() {
         TagCompound data = new TagCompound();
-        internal.write(data.internal);
+        internal.save(data.internal);
         return data;
     }
 

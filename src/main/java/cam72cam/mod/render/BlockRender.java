@@ -56,7 +56,7 @@ public class BlockRender {
 
     static {
         ClientEvents.TICK.subscribe(() -> {
-            if (Minecraft.getInstance().world == null) {
+            if (Minecraft.getInstance().level == null) {
                 return;
             }
             /*
@@ -64,10 +64,10 @@ public class BlockRender {
             Create new array to prevent CME's with poorly behaving mods
             TODO: Opt out of renderGlobal!
              */
-            List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().world.loadedTileEntityList).stream()
+            List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
-            Minecraft.getInstance().worldRenderer.updateTileEntities(prev, tes);
+            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(prev, tes);
             prev = tes;
         });
     }
@@ -99,11 +99,11 @@ public class BlockRender {
                         return;
                     }
 
-                    RenderType.getSolid().setupRenderState();
+                    RenderType.solid().setupRenderState();
 
-                    RenderHelper.enableStandardItemLighting();
+                    RenderHelper.turnBackOn();
 
-                    Minecraft.getInstance().gameRenderer.getLightTexture().enableLightmap();
+                    Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
@@ -111,11 +111,11 @@ public class BlockRender {
 
                     try (OpenGL.With matrix = OpenGL.matrix()) {
                         //TODO 1.15 lerp xyz
-                        RenderSystem.multMatrix(var3.getLast().getMatrix());
+                        RenderSystem.multMatrix(var3.last().pose());
                         model.renderCustom(partialTicks);
                     }
 
-                    RenderType.getSolid().clearRenderState();
+                    RenderType.solid().clearRenderState();
                 }
 
                 public boolean isGlobalRenderer(TileEntity te) {
@@ -136,7 +136,7 @@ public class BlockRender {
         renderers.put(((BlockTypeEntity)block).id, (te) -> model.apply(cls.cast(te)));
 
         colors.add((blockColors) -> {
-            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getGrassColor(worldIn, pos) : GrassColors.get(0.5D, 1.0D), block.internal);
+            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getAverageGrassColor(worldIn, pos) : GrassColors.get(0.5D, 1.0D), block.internal);
         });
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
@@ -166,7 +166,7 @@ public class BlockRender {
                 }
 
                 @Override
-                public boolean isAmbientOcclusion() {
+                public boolean useAmbientOcclusion() {
                     return true;
                 }
 
@@ -176,21 +176,21 @@ public class BlockRender {
                 }
 
                 @Override
-                public boolean isSideLit() {
+                public boolean usesBlockLight() {
                     return false;
                 }
 
                 @Override
-                public boolean isBuiltInRenderer() {
+                public boolean isCustomRenderer() {
                     return false;
                 }
 
                 @Override
-                public TextureAtlasSprite getParticleTexture() {
-                    if (block.internal.getMaterialColor() == Material.IRON.getColor()) {
-                        return Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(Blocks.IRON_BLOCK.getDefaultState()).getParticleTexture();
+                public TextureAtlasSprite getParticleIcon() {
+                    if (block.internal.defaultMaterialColor() == Material.METAL.getColor()) {
+                        return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
                     }
-                    return Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(Blocks.STONE.getDefaultState()).getParticleTexture();
+                    return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.STONE.defaultBlockState()).getParticleIcon();
                 }
 
                 @Override

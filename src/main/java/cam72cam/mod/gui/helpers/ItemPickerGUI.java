@@ -47,7 +47,7 @@ public class ItemPickerGUI {
             onExit.accept(this.items.get(0));
             return;
         }
-        Minecraft.getInstance().displayGuiScreen(screen);
+        Minecraft.getInstance().setScreen(screen);
     }
 
     /** Internal screen that actually renders and chooses the items */

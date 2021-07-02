@@ -42,7 +42,7 @@ class BakedScaledModel implements IBakedModel {
             List<BakedQuad> quads = source.getQuads(state, side, rand);
             quadCache.put(side, new ArrayList<>());
             for (BakedQuad quad : quads) {
-                int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
+                int[] newData = Arrays.copyOf(quad.getVertices(), quad.getVertices().length);
 
                 for (int i = 0; i < 4; ++i) {
                     int j = 8 * i;
@@ -51,7 +51,7 @@ class BakedScaledModel implements IBakedModel {
                     newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
                 }
 
-                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.applyDiffuseLighting()));
+                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade()));
             }
         }
 
@@ -59,8 +59,8 @@ class BakedScaledModel implements IBakedModel {
     }
 
     @Override
-    public boolean isAmbientOcclusion() {
-        return source.isAmbientOcclusion();
+    public boolean useAmbientOcclusion() {
+        return source.useAmbientOcclusion();
     }
 
     @Override
@@ -69,18 +69,18 @@ class BakedScaledModel implements IBakedModel {
     }
 
     @Override
-    public boolean isSideLit() {
+    public boolean usesBlockLight() {
         return false;
     }
 
     @Override
-    public boolean isBuiltInRenderer() {
-        return source.isBuiltInRenderer();
+    public boolean isCustomRenderer() {
+        return source.isCustomRenderer();
     }
 
     @Override
-    public TextureAtlasSprite getParticleTexture() {
-        return source.getParticleTexture();
+    public TextureAtlasSprite getParticleIcon() {
+        return source.getParticleIcon();
     }
 
     @Override

@@ -38,9 +38,9 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void close() {
-        this.minecraft.displayGuiScreen(null);
-        if (this.minecraft.currentScreen == null) {
-            this.minecraft.setGameFocused(true);
+        this.minecraft.setScreen(null);
+        if (this.minecraft.screen == null) {
+            this.minecraft.setWindowActive(true);
         }
         screen.onClose();
     }
@@ -56,7 +56,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         super.addButton(btn.internal());
         this.buttonMap.put(btn.internal(), btn);
         if (btn instanceof TextField) {
-            this.setListener(btn.internal());
+            this.setFocused(btn.internal());
         }
     }
 
@@ -87,7 +87,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void show() {
-        this.minecraft.displayGuiScreen(this);
+        this.minecraft.setScreen(this);
     }
 
     @Override

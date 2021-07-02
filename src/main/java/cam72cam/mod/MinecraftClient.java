@@ -32,20 +32,20 @@ public class MinecraftClient {
 
     /** Hooks into the GUI profiler */
     public static void startProfiler(String section) {
-        Minecraft.getInstance().getProfiler().startSection(section);
+        Minecraft.getInstance().getProfiler().push(section);
     }
 
     /** Hooks into the GUI profiler */
     public static void endProfiler() {
-        Minecraft.getInstance().getProfiler().endSection();
+        Minecraft.getInstance().getProfiler().pop();
     }
 
     /** Entity that you are currently looking at (distance limited) */
     public static Entity getEntityMouseOver() {
-        if (Minecraft.getInstance().objectMouseOver instanceof EntityRayTraceResult) {
-            net.minecraft.entity.Entity ent = ((EntityRayTraceResult) Minecraft.getInstance().objectMouseOver).getEntity();
+        if (Minecraft.getInstance().hitResult instanceof EntityRayTraceResult) {
+            net.minecraft.entity.Entity ent = ((EntityRayTraceResult) Minecraft.getInstance().hitResult).getEntity();
             if (ent != null) {
-                return getPlayer().getWorld().getEntity(ent.getUniqueID(), Entity.class);
+                return getPlayer().getWorld().getEntity(ent.getUUID(), Entity.class);
             }
         }
         return null;
@@ -53,16 +53,16 @@ public class MinecraftClient {
 
     /** Block you are currently pointing at (distance limited) */
     public static Vec3i getBlockMouseOver() {
-        return Minecraft.getInstance().objectMouseOver != null && Minecraft.getInstance().objectMouseOver.getType() == RayTraceResult.Type.BLOCK ? new Vec3i(new Vec3d(Minecraft.getInstance().objectMouseOver.getHitVec())) : null;
+        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == RayTraceResult.Type.BLOCK ? new Vec3i(new Vec3d(Minecraft.getInstance().hitResult.getLocation())) : null;
     }
 
     /** Offset inside the block you are currently pointing at (distance limited) */
     public static Vec3d getPosMouseOver() {
-        return Minecraft.getInstance().objectMouseOver != null && Minecraft.getInstance().objectMouseOver.getType() == RayTraceResult.Type.BLOCK ? new Vec3d(Minecraft.getInstance().objectMouseOver.getHitVec()) : null;
+        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == RayTraceResult.Type.BLOCK ? new Vec3d(Minecraft.getInstance().hitResult.getLocation()) : null;
     }
 
     /** Is the game in the paused state? */
     public static boolean isPaused() {
-        return Minecraft.getInstance().isGamePaused();
+        return Minecraft.getInstance().isPaused();
     }
 }

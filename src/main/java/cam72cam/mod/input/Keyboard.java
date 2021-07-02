@@ -137,7 +137,7 @@ public class Keyboard {
         KeyBinding key = new KeyBinding(name, keyCode.code, category);
         ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
-            if (key.isKeyDown()) {
+            if (key.isDown()) {
                 handler.run();
             }
         });

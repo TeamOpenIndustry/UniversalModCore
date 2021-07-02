@@ -51,13 +51,13 @@ public abstract class Particle {
             I ip = ctr.apply(data);
             net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle((ClientWorld)data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
-                    maxAge = data.lifespan;
-                    motionX = data.motion.x;
-                    motionY = data.motion.y;
-                    motionZ = data.motion.z;
-                    ip.posX = posX;
-                    ip.posY = posY;
-                    ip.posZ = posZ;
+                    lifetime = data.lifespan;
+                    xd = data.motion.x;
+                    yd = data.motion.y;
+                    zd = data.motion.z;
+                    ip.posX = x;
+                    ip.posY = y;
+                    ip.posZ = z;
                 }
 
                 @Override
@@ -68,18 +68,18 @@ public abstract class Particle {
                 @Override
                 public void tick() {
                     super.tick();
-                    ip.posX = posX;
-                    ip.posY = posY;
-                    ip.posZ = posZ;
+                    ip.posX = x;
+                    ip.posY = y;
+                    ip.posZ = z;
                 }
 
                 @Override
-                public void renderParticle(IVertexBuilder buffer, ActiveRenderInfo renderInfo, float partialTicks) {
-                    Vector3d vec3d = renderInfo.getProjectedView();
+                public void render(IVertexBuilder buffer, ActiveRenderInfo renderInfo, float partialTicks) {
+                    Vector3d vec3d = renderInfo.getPosition();
                     ip.ticks = age;
-                    ip.renderX = posX + posX - prevPosX + this.motionX * partialTicks - vec3d.x;
-                    ip.renderY = posY + posY - prevPosY + this.motionY * partialTicks - vec3d.y;
-                    ip.renderZ = posZ + posZ - prevPosZ + this.motionZ * partialTicks - vec3d.z;
+                    ip.renderX = x + x - xo + this.xd * partialTicks - vec3d.x;
+                    ip.renderY = y + y - yo + this.yd * partialTicks - vec3d.y;
+                    ip.renderZ = z + z - zo + this.zd * partialTicks - vec3d.z;
 
                     if (renderer == null) {
                         try (OpenGL.With c = OpenGL.matrix()) {
@@ -99,7 +99,7 @@ public abstract class Particle {
 
             };
 
-            Minecraft.getInstance().particles.addEffect(p);
+            Minecraft.getInstance().particleEngine.add(p);
         };
     }
 

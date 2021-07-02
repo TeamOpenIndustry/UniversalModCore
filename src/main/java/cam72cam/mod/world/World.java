@@ -73,17 +73,17 @@ public class World {
 
     private World(net.minecraft.world.World world) {
         internal = world;
-        isClient = world.isRemote;
-        isServer = !world.isRemote;
+        isClient = world.isClientSide;
+        isServer = !world.isClientSide;
     }
 
     /** Helper function to get a world map (client or server) */
     private static Map<String, World> getWorldMap(net.minecraft.world.World world) {
-        return world.isRemote ? clientWorlds : serverWorlds;
+        return world.isClientSide ? clientWorlds : serverWorlds;
     }
     /** Helper function to get a world in it's respective map */
     private static World getWorld(net.minecraft.world.World world){
-        return getWorldMap(world).get(world.getDimensionKey().getLocation().toString());
+        return getWorldMap(world).get(world.dimension().location().toString());
     }
 
     /** Load world hander, sets up maps and internal handlers */
@@ -103,7 +103,7 @@ public class World {
 
         CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.getDimensionKey().getLocation().toString()));
+        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.dimension().location().toString()));
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 
@@ -120,7 +120,7 @@ public class World {
 
     @OnlyIn(Dist.CLIENT)
     private Iterable<net.minecraft.entity.Entity> clientEntities() {
-        return internal instanceof ClientWorld ? ((ClientWorld) internal).getAllEntities() : ((ServerWorld) internal).getEntities()::iterator;
+        return internal instanceof ClientWorld ? ((ClientWorld) internal).entitiesForRendering() : ((ServerWorld) internal).getEntities()::iterator;
     }
 
     @OnlyIn(Dist.DEDICATED_SERVER)
@@ -136,13 +136,13 @@ public class World {
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.entity.Entity entity : internalEntities) {
-            if (!this.entityByID.containsKey(entity.getEntityId())) {
-                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+            if (!this.entityByID.containsKey(entity.getId())) {
+                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getId(), entity);
                 this.onEntityAdded(entity);
             }
         }
         for (Entity entity : new ArrayList<>(this.entityByID.values())) {
-            if (internal.getEntityByID(entity.getId()) == null) {
+            if (internal.getEntity(entity.getId()) == null) {
                 ModCore.debug("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                 this.onEntityRemoved(entity.internal);
             }
@@ -175,7 +175,7 @@ public class World {
 
     /** World's internal ID, Not recommended for general use. */
     public String getId() {
-        return internal.getDimensionKey().getLocation().toString();
+        return internal.dimension().location().toString();
     }
 
     /* Event Methods */
@@ -185,7 +185,7 @@ public class World {
      * Wiring from WorldEventListener
      */
     void onEntityAdded(net.minecraft.entity.Entity entityIn) {
-        if (entityByID.containsKey(entityIn.getEntityId())) {
+        if (entityByID.containsKey(entityIn.getId())) {
             // Dupe
             return;
         }
@@ -202,7 +202,7 @@ public class World {
         }
         entitiesByClass.putIfAbsent(entity.getClass(), new ArrayList<>());
         entitiesByClass.get(entity.getClass()).add(entity);
-        entityByID.put(entityIn.getEntityId(), entity);
+        entityByID.put(entityIn.getId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
     }
 
@@ -212,17 +212,17 @@ public class World {
      */
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
         for (List<Entity> value : entitiesByClass.values()) {
-            value.removeIf(inner -> inner.getUUID().equals(entity.getUniqueID()));
+            value.removeIf(inner -> inner.getUUID().equals(entity.getUUID()));
         }
-        entityByID.remove(entity.getEntityId());
-        entityByUUID.remove(entity.getUniqueID());
+        entityByID.remove(entity.getId());
+        entityByUUID.remove(entity.getUUID());
     }
 
     /* Entity Methods */
 
     /** Find a UMC entity by MC entity */
     public Entity getEntity(net.minecraft.entity.Entity entity) {
-        return getEntity(entity.getUniqueID(), Entity.class);
+        return getEntity(entity.getUUID(), Entity.class);
     }
 
     /** Find a UMC entity by MC ID and Entity class */
@@ -276,7 +276,7 @@ public class World {
 
     /** Add a constructed entity to the world */
     public boolean spawnEntity(Entity ent) {
-        return internal.addEntity(ent.internal);
+        return internal.addFreshEntity(ent.internal);
     }
 
     /** Kill an entity */
@@ -291,7 +291,7 @@ public class World {
 
     /** Internal, do not use */
     public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
-        net.minecraft.tileentity.TileEntity ent = internal.getTileEntity(pos.internal());
+        net.minecraft.tileentity.TileEntity ent = internal.getBlockEntity(pos.internal());
 
         if (cls.isInstance(ent)) {
             return (T) ent;
@@ -301,7 +301,7 @@ public class World {
 
     /** Get all block entities of the given type */
     public <T extends BlockEntity> List<T> getBlockEntities(Class<T> cls) {
-        return internal.loadedTileEntityList.stream()
+        return internal.blockEntityList.stream()
                 .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
                 .map(x -> (T) ((TileEntity) x).instance())
                 .collect(Collectors.toList());
@@ -337,12 +337,12 @@ public class World {
     public BlockEntity reconstituteBlockEntity(TagCompound datain) {
         TagCompound data = TileEntity.legacyConverter(datain);
         // TODO 1.16 null state
-        TileEntity te = (TileEntity) TileEntity.readTileEntity(null, data.internal);
+        TileEntity te = (TileEntity) TileEntity.loadStatic(null, data.internal);
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
-        te.setWorldAndPos(internal, te.getPos());
+        te.setLevelAndPosition(internal, te.getBlockPos());
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
@@ -351,7 +351,7 @@ public class World {
 
     /** Set the block entity at pos to given entity */
     public void setBlockEntity(Vec3i pos, BlockEntity entity) {
-        internal.setTileEntity(pos.internal(), entity != null ? entity.internal : null);
+        internal.setBlockEntity(pos.internal(), entity != null ? entity.internal : null);
         if (entity != null) {
             entity.markDirty();
         }
@@ -373,7 +373,7 @@ public class World {
             return 20;
         }
 
-        long[] ttl = internal.getServer().tickTimeArray;
+        long[] ttl = internal.getServer().tickTimes;
 
         sampleSize = Math.min(sampleSize, ttl.length);
         double ttus = 0;
@@ -391,27 +391,27 @@ public class World {
 
     /** Height of the ground for precipitation purposes at the given block */
     public Vec3i getPrecipitationHeight(Vec3i pos) {
-        return new Vec3i(internal.getHeight(Heightmap.Type.WORLD_SURFACE, pos.internal()));
+        return new Vec3i(internal.getHeightmapPos(Heightmap.Type.WORLD_SURFACE, pos.internal()));
     }
 
     /** Set the given pos to air */
     public void setToAir(Vec3i pos) {
-        internal.removeTileEntity(pos.internal());
+        internal.removeBlockEntity(pos.internal());
         internal.removeBlock(pos.internal(), false);
     }
 
     /** If the block at pos is air */
     public boolean isAir(Vec3i ph) {
-        return internal.isAirBlock(ph.internal());
+        return internal.isEmptyBlock(ph.internal());
     }
 
     /** Set the snow level to the given depth (1-8) */
     public void setSnowLevel(Vec3i ph, int snowDown) {
         snowDown = Math.max(1, Math.min(8, snowDown));
         if (snowDown == 8) {
-            internal.setBlockState(ph.internal(), Blocks.SNOW_BLOCK.getDefaultState());
+            internal.setBlockAndUpdate(ph.internal(), Blocks.SNOW_BLOCK.defaultBlockState());
         } else {
-            internal.setBlockState(ph.internal(), Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, snowDown));
+            internal.setBlockAndUpdate(ph.internal(), Blocks.SNOW.defaultBlockState().setValue(SnowBlock.LAYERS, snowDown));
         }
     }
 
@@ -419,7 +419,7 @@ public class World {
     public int getSnowLevel(Vec3i ph) {
         BlockState state = internal.getBlockState(ph.internal());
         if (state.getBlock() == Blocks.SNOW) {
-            return state.get(SnowBlock.LAYERS);
+            return state.getValue(SnowBlock.LAYERS);
         }
         if (state.getBlock() == Blocks.SNOW_BLOCK) {
             return 8;
@@ -462,25 +462,25 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.addEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
+        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
     }
 
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i parent) {
-        IChunk chunk = internal.getChunkProvider().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
+        IChunk chunk = internal.getChunkSource().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
         return (chunk != null && chunk.getStatus() == ChunkStatus.FULL)
-                && internal.isBlockPresent(parent.internal()) && internal.isBlockLoaded(parent.internal());
+                && internal.isLoaded(parent.internal());
     }
 
     /** Check if block at pos collides with a BB */
     public boolean doesBlockCollideWith(Vec3i bp, IBoundingBox bb) {
-        IBoundingBox bbb = IBoundingBox.from(internal.getBlockState(bp.internal()).getShape(internal, bp.internal()).getBoundingBox().offset(bp.internal().down()));
+        IBoundingBox bbb = IBoundingBox.from(internal.getBlockState(bp.internal()).getShape(internal, bp.internal()).bounds().move(bp.internal().below()));
         return bb.intersects(bbb);
     }
 
     public List<Vec3i> blocksInBounds(IBoundingBox bb) {
-        return internal.getCollisionShapes(null, BoundingBox.from(bb))
-                .map(VoxelShape::getBoundingBox)
+        return internal.getBlockCollisions(null, BoundingBox.from(bb))
+                .map(VoxelShape::bounds)
                 .filter(blockBox -> bb.intersects(IBoundingBox.from(blockBox)))
                 .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
                 .collect(Collectors.toList());
@@ -503,32 +503,32 @@ public class World {
 
     /** Set block to a given block type */
     public void setBlock(Vec3i pos, BlockType block) {
-        internal.setBlockState(pos.internal(), block.internal.getDefaultState());
+        internal.setBlockAndUpdate(pos.internal(), block.internal.defaultBlockState());
     }
 
     /** Set a block to given stack (best guestimate) */
     public void setBlock(Vec3i pos, ItemStack stack) {
-        Block state = Block.getBlockFromItem(stack.internal.getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
-        internal.setBlockState(pos.internal(), state.getDefaultState());
+        Block state = Block.byItem(stack.internal.getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
+        internal.setBlockAndUpdate(pos.internal(), state.defaultBlockState());
     }
 
     /** Is the top of the block solid?  Based on some AABB nonsense */
     public boolean isTopSolid(Vec3i pos) {
-        return Block.hasSolidSideOnTop(internal, pos.internal());
+        return Block.canSupportCenter(internal, pos.internal(), Direction.UP);
     }
 
     /** Get max redstone power surrounding this block */
     public int getRedstone(Vec3i pos) {
         int power = 0;
         for (Facing facing : Facing.values()) {
-            power = Math.max(power, internal.getRedstonePower(pos.offset(facing).internal(), facing.internal));
+            power = Math.max(power, internal.getSignal(pos.offset(facing).internal(), facing.internal));
         }
         return power;
     }
 
     /** If the sky is visible at this position */
     public boolean canSeeSky(Vec3i position) {
-        return internal.canBlockSeeSky(position.internal());
+        return internal.canSeeSky(position.internal());
     }
 
     /**
@@ -579,7 +579,7 @@ public class World {
 
     /** Get the inventory at this block (accessed from given side) */
     public IInventory getInventory(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal());
+        net.minecraft.tileentity.TileEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).isPresent()) {
             IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).orElse(null);
@@ -603,7 +603,7 @@ public class World {
 
     /** Get the tank at this block (accessed from given side) */
     public List<ITank> getTank(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal());
+        net.minecraft.tileentity.TileEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).isPresent()) {
             IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).orElse(null);
@@ -618,7 +618,7 @@ public class World {
     public ItemStack getItemStack(Vec3i pos) {
         BlockState state = internal.getBlockState(pos.internal());
         try {
-            return new ItemStack(state.getBlock().getItem(internal, pos.internal(), state));
+            return new ItemStack(state.getBlock().getCloneItemStack(internal, pos.internal(), state));
         } catch (Exception ex) {
             return new ItemStack(new net.minecraft.item.ItemStack(state.getBlock()));
         }
@@ -626,7 +626,7 @@ public class World {
 
     /** Get dropped items within the given area */
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<ItemEntity> items = internal.getEntitiesWithinAABB(ItemEntity.class, BoundingBox.from(bb));
+        List<ItemEntity> items = internal.getEntitiesOfClass(ItemEntity.class, BoundingBox.from(bb));
         return items.stream().map((ItemEntity::getItem)).map(ItemStack::new).collect(Collectors.toList());
     }
 
@@ -637,8 +637,8 @@ public class World {
 
     /** Overwrite the block at pos from the given info */
     public void setBlock(Vec3i pos, BlockInfo info) {
-        internal.removeTileEntity(pos.internal());
-        internal.setBlockState(pos.internal(), info.internal);
+        internal.removeBlockEntity(pos.internal());
+        internal.setBlockAndUpdate(pos.internal(), info.internal);
     }
 
     /** Opt in collision overriding */

@@ -78,7 +78,6 @@ public class ModCore {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::postInit);
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::registerCommands);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
 
@@ -237,7 +236,7 @@ public class ModCore {
         public interface SynchronousResourceReloadListener extends IFutureReloadListener {
             @Override
 			default CompletableFuture<Void> reload(IFutureReloadListener.IStage stage, IResourceManager resourceManager, IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
-                return stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRunAsync(() -> {
+                return stage.wait(Unit.INSTANCE).thenRunAsync(() -> {
                     this.apply(resourceManager);
                 }, backgroundExecutor);
             }
@@ -250,7 +249,7 @@ public class ModCore {
             switch (event) {
                 case SETUP:
                     try {
-                        Minecraft.getInstance().populateSearchTreeManager();
+                        Minecraft.getInstance().createSearchTrees();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }

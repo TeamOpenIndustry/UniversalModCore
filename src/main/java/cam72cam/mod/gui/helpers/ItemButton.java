@@ -24,7 +24,7 @@ public abstract class ItemButton extends AbstractButton {
     public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
         AbstractGui.fill(ms, x, y, x + 32, y + 32, 0xFFFFFFFF);
         // Pollutes global state...
-        RenderHelper.enableStandardItemLighting();
+        RenderHelper.turnBackOn();
         Minecraft mc = Minecraft.getInstance();
 
         FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
@@ -33,12 +33,12 @@ public abstract class ItemButton extends AbstractButton {
         ) {
             GL11.glTranslated(x, y, 0);
             GL11.glScaled(2, 2, 1);
-            mc.getItemRenderer().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
-            mc.getItemRenderer().renderItemOverlays(font, stack.internal, 0, 0);
+            mc.getItemRenderer().renderAndDecorateItem(stack.internal, 0, 0);
+            mc.getItemRenderer().renderGuiItemDecorations(font, stack.internal, 0, 0);
         }
 
         // Pollutes global state...
-        RenderHelper.disableStandardItemLighting();
+        RenderHelper.turnOff();
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {

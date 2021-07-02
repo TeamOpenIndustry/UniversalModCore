@@ -8,8 +8,8 @@ import net.minecraft.block.SoundType;
  * TODO pull in the rest of the options here that are availible across all supported MC versions
  */
 public enum Material {
-    METAL(net.minecraft.block.material.Material.IRON, SoundType.METAL),
-    WOOL(net.minecraft.block.material.Material.CARPET, SoundType.CLOTH),
+    METAL(net.minecraft.block.material.Material.METAL, SoundType.METAL),
+    WOOL(net.minecraft.block.material.Material.CLOTH_DECORATION, SoundType.WOOL),
     ;
 
     protected final net.minecraft.block.material.Material internal;

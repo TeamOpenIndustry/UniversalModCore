@@ -53,7 +53,7 @@ public class ItemRender {
         SimpleModelTransform foo = new SimpleModelTransform(ImmutableMap.of());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                new RenderMaterial(AtlasTexture.LOCATION_BLOCKS_TEXTURE, tex.internal)
+                new RenderMaterial(AtlasTexture.LOCATION_BLOCKS, tex.internal)
         )).bake(new IModelConfiguration() {
             @Nullable
             @Override
@@ -93,7 +93,7 @@ public class ItemRender {
 
             @Override
             public ItemCameraTransforms getCameraTransforms() {
-                return ItemCameraTransforms.DEFAULT;
+                return ItemCameraTransforms.NO_TRANSFORMS;
             }
 
             @Override
@@ -104,13 +104,13 @@ public class ItemRender {
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
 
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelMesher().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */
     public static void register(CustomItem item, IItemModel model) {
         // Link Item to Item Registry Name
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelMesher().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
@@ -208,9 +208,9 @@ public class ItemRender {
         }
 
         Framebuffer fb = new Framebuffer(width, height, true, true);
-        fb.setFramebufferColor(0, 0, 0, 0);
-        fb.framebufferClear(Minecraft.IS_RUNNING_ON_MAC);
-        fb.bindFramebuffer(true);
+        fb.setClearColor(0, 0, 0, 0);
+        fb.clear(Minecraft.ON_OSX);
+        fb.bindWrite(true);
 
         try (With projection = OpenGL.matrix(GL11.GL_PROJECTION)) {
             GL11.glLoadIdentity();
@@ -226,13 +226,13 @@ public class ItemRender {
 
                     model.renderCustom();
 
-                    fb.bindFramebufferTexture();
+                    fb.bindRead();
                     ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
                     GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-                    fb.unbindFramebufferTexture();
+                    fb.unbindRead();
 
-                    fb.unbindFramebuffer();
-                    fb.deleteFramebuffer();
+                    fb.unbindWrite();
+                    fb.destroyBuffers();
                     GL11.glDepthFunc(oldDepth);
 
                     iconSheet.setSprite(id, buff);
@@ -254,10 +254,10 @@ public class ItemRender {
     public static Callable<ItemStackTileEntityRenderer> ISTER() {
         return () -> new ItemStackTileEntityRenderer() {
             @Override
-            public void func_239207_a_(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
+            public void renderByItem(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
                 try (OpenGL.With matrix = OpenGL.matrix()) {
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    RenderSystem.multMatrix(matrixStack.getLast().getMatrix());
+                    RenderSystem.multMatrix(matrixStack.last().pose());
                     doRender.run();
                 }
             }
@@ -284,7 +284,7 @@ public class ItemRender {
         }
 
         @Override
-        public boolean isAmbientOcclusion() {
+        public boolean useAmbientOcclusion() {
             return true;
         }
 
@@ -294,17 +294,17 @@ public class ItemRender {
         }
 
         @Override
-        public boolean isSideLit() {
+        public boolean usesBlockLight() {
             return false;
         }
 
         @Override
-        public boolean isBuiltInRenderer() {
+        public boolean isCustomRenderer() {
             return true;
         }
 
         @Override
-        public TextureAtlasSprite getParticleTexture() {
+        public TextureAtlasSprite getParticleIcon() {
             return null;
         }
 
@@ -343,15 +343,15 @@ public class ItemRender {
                  * before actually setting up the correct GL context.
                  */
                 if (!ModCore.isInReload()) {
-                    RenderType.getSolid().setupRenderState();
+                    RenderType.solid().setupRenderState();
                     GL11.glPushMatrix();
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    RenderSystem.multMatrix(mat.getLast().getMatrix());
+                    RenderSystem.multMatrix(mat.last().pose());
                     model.applyTransform(type);
                     //std.renderCustom();
                     std.render();
                     GL11.glPopMatrix();
-                    RenderType.getSolid().clearRenderState();
+                    RenderType.solid().clearRenderState();
                 }
                 // TODO return std.getQuads(side, rand);
             };
@@ -366,7 +366,7 @@ public class ItemRender {
             }
 
             @Override
-            public IBakedModel getOverrideModel(IBakedModel model, net.minecraft.item.ItemStack stack, @Nullable ClientWorld worldIn, @Nullable LivingEntity entityIn) {
+            public IBakedModel resolve(IBakedModel model, net.minecraft.item.ItemStack stack, @Nullable ClientWorld worldIn, @Nullable LivingEntity entityIn) {
                 BakedItemModel.this.stack = new ItemStack(stack);
                 return BakedItemModel.this;
             }

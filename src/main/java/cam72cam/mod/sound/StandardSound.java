@@ -5,8 +5,8 @@ import net.minecraft.util.SoundEvents;
 
 public enum StandardSound {
     // Partial list only
-    BLOCK_ANVIL_PLACE(SoundEvents.BLOCK_ANVIL_PLACE),
-    BLOCK_FIRE_EXTINGUISH(SoundEvents.BLOCK_FIRE_EXTINGUISH);
+    BLOCK_ANVIL_PLACE(SoundEvents.ANVIL_LAND),
+    BLOCK_FIRE_EXTINGUISH(SoundEvents.FIRE_EXTINGUISH);
 
     final SoundEvent event;
 

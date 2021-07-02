@@ -31,7 +31,7 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public IBoundingBox expand(Vec3d centered) {
-        return IBoundingBox.from(internal.expand(centered.x, centered.y, centered.z));
+        return IBoundingBox.from(internal.expandTowards(centered.x, centered.y, centered.z));
     }
 
     @Override
@@ -41,12 +41,12 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public IBoundingBox grow(Vec3d val) {
-        return IBoundingBox.from(internal.grow(val.x, val.y, val.z));
+        return IBoundingBox.from(internal.inflate(val.x, val.y, val.z));
     }
 
     @Override
     public IBoundingBox offset(Vec3d vec3d) {
-        return IBoundingBox.from(internal.offset(vec3d.internal()));
+        return IBoundingBox.from(internal.move(vec3d.internal()));
     }
 
     @Override
