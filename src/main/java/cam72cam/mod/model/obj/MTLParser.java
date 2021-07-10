@@ -33,6 +33,9 @@ public class MTLParser {
                             materials.add(new Material(materialName, map_Kd, KdR, KdG, KdB, KdA));
                         }
                         materialName = parts[1];
+                        for (int i = 2; i < parts.length; i++) {
+                            materialName += " " + parts[i];
+                        }
                         map_Kd = null;
                         KdR = null;
                         KdG = null;

@@ -53,7 +53,11 @@ public class OBJParser {
                         addMaterialLibrary(args[1]);
                         break;
                     case "usemtl":
-                        setCurrentMTL(args[1]);
+                        String mtlName = args[1];
+                        for (int i = 2; i < args.length; i++) {
+                            mtlName += " " + args[i];
+                        }
+                        setCurrentMTL(mtlName);
                         break;
                     case "o":
                     case "g":
