@@ -458,6 +458,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Hacks */
     /** Needed for right click, probably a forge or MC bug */
     @Override
+    public boolean isPickable() {
+        return true;
+    }
+    @Override
     public boolean canBeCollidedWith() {
         return true;
     }
