@@ -56,11 +56,13 @@ public class BoundingBox extends AxisAlignedBB {
         return new BoundingBox(internal.contract(new Vec3d(x, y, z)));
     }
 
-    public BoundingBox grow(double x, double y, double z) {
+    @Override
+    public BoundingBox inflate(double x, double y, double z) {
         return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
     }
 
-    public BoundingBox offset(double x, double y, double z) {
+    @Override
+    public BoundingBox move(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
