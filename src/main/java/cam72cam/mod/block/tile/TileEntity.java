@@ -190,7 +190,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      */
     @Override
     public final void load(BlockState state, CompoundNBT compound) {
-        super.deserializeNBT(state, compound);
+        super.load(state, compound);
         hasTileData = true;
 
         TagCompound data = new TagCompound(compound);
