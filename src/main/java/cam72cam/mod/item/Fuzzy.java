@@ -140,9 +140,14 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        List<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
-        customItems.forEach(item -> items.add(new ItemStack(new net.minecraft.item.ItemStack(item))));
-        return items;
+        Set<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toSet());
+        for (Item item : customItems) {
+            items.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
+        }
+        for (Fuzzy f : includes) {
+            items.addAll(f.enumerate());
+        }
+        return new ArrayList<>(items);
     }
 
     /** Grab the first example of a item in this fuzzy */
