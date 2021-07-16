@@ -112,6 +112,19 @@ public class OpenGL {
         };
     }
 
+    public static With alphaFunc(int func, float ref) {
+        int origfunc = GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC);
+        float origref = GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF);
+        GL11.glAlphaFunc(func, ref);
+        return () -> GL11.glAlphaFunc(origfunc, origref);
+    }
+
+    public static With depth(boolean state) {
+        boolean orig = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        GL11.glDepthMask(state);
+        return () -> GL11.glDepthMask(orig);
+    }
+
     @FunctionalInterface
     public interface With extends AutoCloseable {
         default void close() {
