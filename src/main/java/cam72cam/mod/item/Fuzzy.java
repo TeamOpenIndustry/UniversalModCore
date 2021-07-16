@@ -11,7 +11,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
@@ -144,15 +143,20 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        List<ItemStack> items;
+        Set<ItemStack> items;
         try {
-            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toSet());
         } catch (IllegalStateException e) {
             ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
-            items = new ArrayList<>();
+            items = new HashSet<>();
         }
-        items.addAll(customItems.stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList()));
-        return items;
+        for (Item item : customItems) {
+            items.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
+        }
+        for (Fuzzy f : includes) {
+            items.addAll(f.enumerate());
+        }
+        return new ArrayList<>(items);
     }
 
     /** Grab the first example of a item in this fuzzy */
