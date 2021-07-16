@@ -78,7 +78,7 @@ public class OBJBuilder {
                         vmaxV = Math.max(vmaxV, v);
                     }
                 }
-                if (material.hasTexture()) {
+                if (material.hasTexture() && vminU != OBJParser.UNSPECIFIED && vminV != OBJParser.UNSPECIFIED) {
                     int offsetU = (int) Math.floor(vminU);
                     int offsetV = (int) Math.floor(vminV);
                     // "Normalize" uv coordinates to start between 0 and 1 and repeat into positive integer space
