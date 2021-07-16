@@ -29,7 +29,7 @@ public class Mouse {
             if (entity != null && entity.internal instanceof ModdedEntity) {
                 double d0 = 36.0D;
                 // Invert MC's built in logic for entity distance (assumes small entities)
-                if (MinecraftClient.getPlayer().internal.distanceTo(entity.internal) >= d0) {
+                if (MinecraftClient.getPlayer().internal.distanceToSqr(entity.internal) >= d0) {
                     new MousePressPacket(button, entity).sendToServer();
                     return false;
                 }
