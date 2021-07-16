@@ -324,7 +324,7 @@ public class ModCore {
 
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
         event.getGenerator().addProvider(new Recipes(event.getGenerator()));
-        Fuzzy.register(event.getGenerator());
+        Fuzzy.register(event.getGenerator(), event.getExistingFileHelper());
     }
 
     public static void debug(String msg, Object... params) {

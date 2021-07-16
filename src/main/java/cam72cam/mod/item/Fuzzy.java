@@ -14,6 +14,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.data.ExistingFileHelper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -113,9 +114,9 @@ public class Fuzzy {
 
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
-        this(ItemTags.bind(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()).toString() :
-                        new ResourceLocation("forge", ident.toLowerCase()).toString()
+        this(ItemTags.createOptional(
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
+                        new ResourceLocation("forge", ident.toLowerCase())
         ), ident);
     }
 
@@ -194,15 +195,15 @@ public class Fuzzy {
         return ident;
     }
 
-    public static void register(DataGenerator gen) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen) {
+    public static void register(DataGenerator gen, ExistingFileHelper existingFileHelper) {
+        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen, ModCore.MODID, existingFileHelper) {
             @Override
             protected void addTags() {
                 //super.addTags();
             }
         };
         gen.addProvider(blocktagsprovider);
-        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider) {
+        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
             @Override
             protected void addTags() {
                 for (Fuzzy value : registered.values()) {
