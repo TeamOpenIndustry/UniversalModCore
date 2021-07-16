@@ -1,13 +1,18 @@
 package cam72cam.mod.render;
 
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Vector3f;
+
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
+import net.minecraftforge.client.model.QuadTransformer;
+import net.minecraftforge.common.model.TRSRTransformation;
 
 import java.util.*;
 
@@ -39,22 +44,14 @@ class BakedScaledModel implements IBakedModel {
     @Override
     public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand) {
         if (quadCache.get(side) == null) {
-            List<BakedQuad> quads = source.getQuads(state, side, rand);
-            quadCache.put(side, new ArrayList<>());
-            for (BakedQuad quad : quads) {
-                int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
-
-                VertexFormat format = quad.getFormat();
-
-                for (int i = 0; i < 4; ++i) {
-                    int j = format.getIntegerSize() * i;
-                    newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
-                    newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
-                    newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
-                }
-
-                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
-            }
+            Matrix4f mat = new Matrix4f();
+            mat.m00 = (float)scale.x;
+            mat.m11 = (float)scale.y;
+            mat.m22 = (float)scale.z;
+            mat.m33 = 1.0F;
+            mat.setTranslation(new Vector3f((float)transform.x, (float)transform.y, (float)transform.z));
+            QuadTransformer qt = new QuadTransformer(DefaultVertexFormats.BLOCK, new TRSRTransformation(mat));
+            quadCache.put(side, qt.processMany(source.getQuads(state, side, rand)));
         }
 
         return quadCache.get(side);
