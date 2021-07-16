@@ -81,19 +81,24 @@ public abstract class Particle {
                     ip.renderY = y + y - yo + this.yd * partialTicks - vec3d.y;
                     ip.renderZ = z + z - zo + this.zd * partialTicks - vec3d.z;
 
-                    if (renderer == null) {
-                        try (OpenGL.With c = OpenGL.matrix()) {
-                            GL11.glTranslated(ip.renderX, ip.renderY, ip.renderZ);
-                            ip.render(partialTicks);
+                    try (
+                            OpenGL.With depth = OpenGL.depth(false);
+                            OpenGL.With alpha = OpenGL.alphaFunc(516, 0.003921569F)
+                    ) {
+                        if (renderer == null) {
+                            try (OpenGL.With c = OpenGL.matrix()) {
+                                GL11.glTranslated(ip.renderX, ip.renderY, ip.renderZ);
+                                ip.render(partialTicks);
+                            }
+                        } else {
+                            if (!ip.canRender) {
+                                renderer.accept(particles, partialTicks);
+                                particles.forEach(p -> p.canRender = true);
+                                particles.clear();
+                            }
+                            particles.add(ip);
+                            ip.canRender = false;
                         }
-                    } else {
-                        if (!ip.canRender) {
-                            renderer.accept(particles, partialTicks);
-                            particles.forEach(p -> p.canRender = true);
-                            particles.clear();
-                        }
-                        particles.add(ip);
-                        ip.canRender = false;
                     }
                 }
 
