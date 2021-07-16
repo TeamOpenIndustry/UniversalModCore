@@ -42,7 +42,7 @@ public class OBJModel {
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
-                String.format("%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.MaxTextureSize),
+                String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.MaxTextureSize),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
         );
 
