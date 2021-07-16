@@ -67,7 +67,7 @@ public class ItemStack {
 
     /** Human readable name */
     public String getDisplayName() {
-        return internal.getDisplayName().getString();
+        return internal.getHoverName().getString();
     }
 
     /** Is count zero? */
