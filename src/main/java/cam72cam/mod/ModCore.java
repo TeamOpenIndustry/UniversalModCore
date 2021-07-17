@@ -301,7 +301,7 @@ public class ModCore implements ModInitializer {
     public static File cacheFile(String name) {
         Path gameDir = FabricLoader.getInstance().getGameDir();
         if (gameDir == null) {
-            gameDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
+            gameDir = Paths.get(System.getProperty("java.io.tmpdir"));
         }
         File cacheDir = Paths.get(gameDir.toString(), "cache", "universalmodcore").toFile();
         cacheDir.mkdirs();
