@@ -32,7 +32,7 @@ public class Data {
     static List<InputStream> getFileResourceStreamsThrower(Identifier location) throws IOException {
         List<InputStream> streams = new ArrayList<>();
 
-        File configDir = FabricLoader.getInstance().getConfigDirectory();
+        File configDir = FabricLoader.getInstance().getConfigDir().toFile();
         configDir.mkdir();
 
         File folder = new File(configDir + File.separator + location.getDomain());

@@ -11,7 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.fabricmc.fabric.api.block.FabricBlockSettings;
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -151,7 +151,7 @@ public abstract class BlockType {
                     .hardness(BlockType.this.getHardness())
                     .resistance(BlockType.this.getExplosionResistance())
                     .dynamicBounds()
-                    .build());
+                    );
         }
 
         /** Called server side at the end of the block break call chain as cleanup */

@@ -9,7 +9,7 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.entity.FabricEntityTypeBuilder;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -41,7 +41,7 @@ public class EntityRegistry {
         FabricEntityTypeBuilder<ModdedEntity> builder = FabricEntityTypeBuilder.create(EntityCategory.MISC, factory)
                 .trackable(distance, 20, false);
         if (tmp.isImmuneToFire()) {
-            builder = builder.setImmuneToFire();
+            builder = builder.fireImmune();
         }
         EntityType<ModdedEntity> oet = Registry.register(Registry.ENTITY_TYPE, id.internal, builder.build());
         registered.put(type, oet);

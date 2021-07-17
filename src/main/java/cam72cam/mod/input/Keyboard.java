@@ -3,10 +3,9 @@ package cam72cam.mod.input;
 import cam72cam.mod.event.ClientEvents;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
-import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class Keyboard {
@@ -130,8 +129,8 @@ public class Keyboard {
     /** Registers a keybind */
     @Environment(EnvType.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
-        FabricKeyBinding key = FabricKeyBinding.Builder.create(new Identifier(name), InputUtil.Type.KEYSYM, keyCode.code, category).build();
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> KeyBindingRegistry.INSTANCE.register(key));
+        KeyBinding key = new KeyBinding(name, InputUtil.Type.KEYSYM, keyCode.code, category);
+        KeyBindingHelper.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
             if (key.isPressed()) {
                 handler.run();

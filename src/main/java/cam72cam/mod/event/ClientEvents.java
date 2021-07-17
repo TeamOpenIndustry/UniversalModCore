@@ -4,7 +4,7 @@ import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
-import net.fabricmc.fabric.api.event.client.ClientTickCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import cam72cam.mod.world.World;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 /** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
     public static void registerClientEvents() {
-        ClientTickCallback.EVENT.register(client -> TICK.execute(Runnable::run));
+        ClientTickEvents.END_CLIENT_TICK.register(t -> TICK.execute(Runnable::run));
 
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();

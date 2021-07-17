@@ -1,9 +1,5 @@
 package cam72cam.mod.net;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
-
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
@@ -16,18 +12,17 @@ import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.fabric.api.event.server.ServerTickCallback;
-import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
-import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
-import net.fabricmc.fabric.api.server.PlayerStream;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
-import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
+
+import java.util.function.Supplier;
 
 /**
  * Packet abstraction and registration
@@ -36,8 +31,7 @@ import net.minecraft.util.PacketByteBuf;
 public abstract class Packet {
     private static MinecraftServer server;
     static {
-        // Probably should not do this...
-        ServerTickCallback.EVENT.register(server -> Packet.server = server);
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> Packet.server = server);
     }
 
     private TagCompound data;
@@ -58,36 +52,34 @@ public abstract class Packet {
         Identifier ident = sup.get().getIdent();
         switch (dir) {
             case ClientToServer:
-                ServerSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
+                ServerPlayNetworking.registerGlobalReceiver(ident, (server, player, handler, buffer, sender) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
-                    packet.player = new Player(ctx.getPlayer());
+                    packet.player = new Player(player);
                     packet.world = packet.player.getWorld();
                     try {
                         TagSerializer.deserialize(packet.data, packet, packet.world);
                     } catch (SerializationException e) {
                         ModCore.catching(e);
                     }
-                    ctx.getTaskQueue().execute(packet::handle);
+                    server.execute(packet::handle);
                 });
                 break;
             case ServerToClient:
                 if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
                     return;
                 }
-                ClientSidePacketRegistry.INSTANCE.register(ident, (ctx, buffer) -> {
+                ClientPlayNetworking.registerGlobalReceiver(ident, (client, handler, buffer, sender) -> {
                     Packet packet = sup.get();
                     packet.data = new TagCompound(buffer.readCompoundTag());
-                    if (ctx.getPlayer() != null) {
-                        packet.player = new Player(ctx.getPlayer());
-                    }
-                    packet.world = World.get(((ClientPlayNetworkHandler)ctx).getWorld());
+                    packet.player = new Player(client.player);
+                    packet.world = World.get(handler.getWorld());
                     try {
                         TagSerializer.deserialize(packet.data, packet, packet.world);
                     } catch (SerializationException e) {
                         ModCore.catching(e);
                     }
-                    ctx.getTaskQueue().execute(packet::handle);
+                    client.execute(packet::handle);
                 });
                 break;
         }
@@ -125,12 +117,14 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        PlayerStream.around(world.internal, pos.internal(), distance).forEach(x -> ((ServerPlayerEntity)x).networkHandler.sendPacket(new CustomPayloadS2CPacket(getIdent(), getBuffer())));
+        double distSq = distance * distance;
+        for (ServerPlayerEntity player : ((ServerWorld) world.internal).getPlayers(p -> p.squaredDistanceTo(pos.internal()) < distSq)) {
+            ServerPlayNetworking.send(player, getIdent(), getBuffer());
+        }
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
-        net.minecraft.entity.Entity internal = entity.internal;
         int syncDist = entity.internal.getType().getMaxTrackDistance();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
@@ -139,7 +133,7 @@ public abstract class Packet {
     public void sendToServer() {
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
-        ClientSidePacketRegistry.INSTANCE.sendToServer(new CustomPayloadC2SPacket(getIdent(), getBuffer()));
+        ClientPlayNetworking.send(getIdent(), getBuffer());
     }
 
     /** Broadcast to all players from server */
@@ -147,14 +141,13 @@ public abstract class Packet {
         if (server == null) {
             return;
         }
-        server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), getBuffer()));
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(player, getIdent(), getBuffer());
+        }
     }
 
 	/** Send from server to player */
 	public void sendToPlayer(Player player) {
-        if (server == null) {
-            return;
-        }
-        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player.internal, new CustomPayloadS2CPacket(getIdent(), getBuffer()));
+        ServerPlayNetworking.send((ServerPlayerEntity) player.internal, getIdent(), getBuffer());
     }
 }

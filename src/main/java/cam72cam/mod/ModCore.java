@@ -14,7 +14,7 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.server.ServerStartCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ReloadableResourceManager;
@@ -62,7 +62,7 @@ public class ModCore implements ModInitializer {
         CommonEvents.Item.REGISTER.execute(Runnable::run);
         CommonEvents.Entity.REGISTER.execute(Runnable::run);
 
-        ServerStartCallback.EVENT.register(server -> proxy.event(ModEvent.START));
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> proxy.event(ModEvent.START));
     }
 
     public void preInit() {
