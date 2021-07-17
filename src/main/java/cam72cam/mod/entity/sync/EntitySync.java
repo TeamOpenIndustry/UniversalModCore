@@ -3,7 +3,6 @@ package cam72cam.mod.entity.sync;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.CustomEntity;
 import cam72cam.mod.net.Packet;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
@@ -45,12 +44,12 @@ public class EntitySync extends TagCompound {
                 if (newVal.equals(oldVal)) {
                     continue;
                 }
-                if (oldVal.getId() == 5) {
+                if (oldVal.getType() == 5) {
                     if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < 0.001) {
                         continue;
                     }
                 }
-                if (oldVal.getId() == 6) {
+                if (oldVal.getType() == 6) {
                     if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < 0.00001) {
                         continue;
                     }
