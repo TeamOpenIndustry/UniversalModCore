@@ -12,9 +12,10 @@ buildscript {
 }
 
 plugins {
-	id 'fabric-loom' version '0.2.7-SNAPSHOT'
+	id 'fabric-loom' version '0.7-SNAPSHOT'
 	id 'maven-publish'
 	id 'maven'
+    id 'eclipse'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
