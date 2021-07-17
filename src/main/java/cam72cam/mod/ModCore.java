@@ -43,6 +43,9 @@ public class ModCore implements ModInitializer {
 
     /** Register a mod, must happen before UMC is loaded! */
     public static void register(Mod ctr) {
+        if (proxy == null) {
+            proxy = new Proxy();
+        }
         mods.add(ctr);
         proxy.event(ModEvent.CONSTRUCT, ctr);
     }
@@ -114,7 +117,7 @@ public class ModCore implements ModInitializer {
         }
     }
 
-    static Proxy proxy = new Proxy();
+    static Proxy proxy;
     /** Hooked into fabric's proxy system and fires off corresponding events */
     public static class Proxy {
         private boolean isServer;
@@ -296,11 +299,11 @@ public class ModCore implements ModInitializer {
 
     /** Get a file for name in the UMC cache dir */
     public static File cacheFile(String name) {
-        File configDir = FabricLoader.getInstance().getConfigDir().toFile().getParentFile();
-        if (configDir == null) {
-            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
+        Path gameDir = FabricLoader.getInstance().getGameDir();
+        if (gameDir == null) {
+            gameDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
         }
-        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        File cacheDir = Paths.get(gameDir.toString(), "cache", "universalmodcore").toFile();
         cacheDir.mkdirs();
 
         return new File(cacheDir, name);
