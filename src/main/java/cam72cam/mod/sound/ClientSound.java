@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.sound.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.lwjgl.openal.AL10;
 
 import javax.sound.sampled.AudioFormat;
@@ -13,9 +14,9 @@ import java.nio.ByteBuffer;
 
 class ClientSound implements ISound {
     private final static float dopplerScale = 0.05f;
-    private boolean repeats;
-    private Identifier oggLocation;
-    private float attenuationDistance;
+    private final boolean repeats;
+    private final Identifier oggLocation;
+    private final float attenuationDistance;
     private Vec3d currentPos;
     private Vec3d velocity;
     private float currentPitch = 1;
@@ -23,7 +24,9 @@ class ClientSound implements ISound {
     private float baseSoundMultiplier;
     private final float scale;
     private boolean disposable = false;
-    private final int id;
+    private int id;
+    private int lastUsed = 0;
+    private StaticSound sound;
 
     ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.baseSoundMultiplier = baseSoundMultiplier;
@@ -32,16 +35,38 @@ class ClientSound implements ISound {
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
+        id = -1;
+    }
+
+    private boolean checkErr() {
+        int i = AL10.alGetError();
+        boolean err = i != 0;
+        if (err) {
+            System.out.println("OpenAL Error " + i + " : " + ExceptionUtils.getStackTrace(new Throwable()));
+        }
+        return err;
+    }
+
+    private void init() {
+        if (oggLocation == null) {
+            return;
+        }
+
         id = AL10.alGenSources();
+        if (checkErr()) {
+            id = -1;
+            return;
+        }
         try {
             OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
             AudioFormat fmt = stream.getFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.method_19720(sizeBytes);
-            StaticSound sound = new StaticSound(buffer, fmt);
+            sound = new StaticSound(buffer, fmt);
             for (int i = 0; i< 4; i++) {
                 sound.takeStreamBufferPointer().ifPresent(bufferId -> {
                     AL10.alSourceQueueBuffers(id, bufferId);
+                    checkErr();
                 });
             }
             stream.close();
@@ -51,12 +76,17 @@ class ClientSound implements ISound {
 
         if (repeats) {
             AL10.alSourcei(id, AL10.AL_LOOPING, 1);
+            checkErr();
         }
     }
 
     @Override
     public void play(Vec3d pos) {
         stop();
+
+        if (id == -1) {
+            init();
+        }
 
         this.setPosition(pos);
         update();
@@ -70,17 +100,39 @@ class ClientSound implements ISound {
 
     @Override
     public void stop() {
-        if (isPlaying()) {
+        if (id != -1) {
             AL10.alSourceStop(id);
         }
     }
 
     @Override
     public void terminate() {
-        stop();
-        AL10.alSourceUnqueueBuffers(id);
-        //TODO?AL10.alDeleteBuffers(bufferId);
+        if (id == -1) {
+            return;
+        }
+
+        // Force stop
+        AL10.alSourceStop(id);
+        checkErr();
+
+        // Dealloc buffer (todo keep around?)
+        sound.close();
+
+        // Is this the same as the above call? net.minecraft.client.audio.SoundSource#func_216427_k
+        int i = AL10.alGetSourcei(id, AL10.AL_BUFFERS_PROCESSED);
+        if (i > 0) {
+            int[] aint = new int[i];
+            AL10.alSourceUnqueueBuffers(id, aint);
+            checkErr();
+            AL10.alDeleteBuffers(aint);
+            checkErr();
+        }
+
+        // Actually delete the buffer
         AL10.alDeleteSources(id);
+
+        checkErr();
+        id = -1;
     }
 
     Vec3d lastPos;
@@ -172,6 +224,18 @@ class ClientSound implements ISound {
     @Override
     public void disposable() {
         disposable = true;
+    }
+
+    void tick() {
+        lastUsed -= 1;
+
+        if (isPlaying()) {
+            lastUsed = 20;
+        }
+
+        if (lastUsed == 0) {
+            terminate();
+        }
     }
 
     @Override

@@ -1,5 +1,9 @@
 package cam72cam.mod.net;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
@@ -24,8 +28,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
-
-import java.util.function.Supplier;
 
 /**
  * Packet abstraction and registration
@@ -148,7 +150,8 @@ public abstract class Packet {
         server.getPlayerManager().sendToAll(new CustomPayloadS2CPacket(getIdent(), getBuffer()));
     }
 
-    public void sendToPlayer(Player player) {
+	/** Send from server to player */
+	public void sendToPlayer(Player player) {
         if (server == null) {
             return;
         }

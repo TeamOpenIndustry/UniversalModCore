@@ -22,6 +22,7 @@ import net.minecraft.resource.SynchronousResourceReloadListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 public class ModCore implements ModInitializer {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "1.0.1";
     public static ModCore instance;
 
     static List<Mod> mods = new ArrayList<>();
@@ -91,7 +92,7 @@ public class ModCore implements ModInitializer {
 
         /** Get config file for filename */
         public final Path getConfig(String fname) {
-            return Paths.get(FabricLoader.getInstance().getConfigDirectory().toString(), fname);
+            return Paths.get(FabricLoader.getInstance().getConfigDir().toString(), fname);
         }
 
         /* Standard logging functions */
@@ -170,6 +171,9 @@ public class ModCore implements ModInitializer {
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
+                case INITIALIZE:
+                    ChunkManager.setup();
+                    break;
                 case SETUP:
                     CommonEvents.registerEvents();
 
@@ -180,7 +184,6 @@ public class ModCore implements ModInitializer {
                     //GuiRegistry.registration();
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     Command.registration();
@@ -289,5 +292,17 @@ public class ModCore implements ModInitializer {
             default:
                 throw new RuntimeException("Invalid");
         }
+    }
+
+    /** Get a file for name in the UMC cache dir */
+    public static File cacheFile(String name) {
+        File configDir = FabricLoader.getInstance().getConfigDir().toFile().getParentFile();
+        if (configDir == null) {
+            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
+        }
+        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        cacheDir.mkdirs();
+
+        return new File(cacheDir, name);
     }
 }

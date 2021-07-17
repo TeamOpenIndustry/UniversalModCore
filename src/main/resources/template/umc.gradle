@@ -8,6 +8,7 @@ buildscript {
 		gradlePluginPortal()
 	}
 	dependencies {
+<<<<<<< HEAD
 		classpath 'net.fabricmc:fabric-loom:0.2.7-SNAPSHOT'
 		classpath "com.wynprice.cursemaven:CurseMaven:2.1.1"
 	}
@@ -20,6 +21,25 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 version = "#VERSION#-1.14.4-fabric"
+=======
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+	}
+}
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+//apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
+//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+
+apply plugin: 'maven'
+
+
+version = "1.12.2-forge-#VERSION#"
+>>>>>>> origin/1.12.2-forge
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#CLASS#"
 
@@ -48,6 +68,7 @@ repositories {
 #UMC_REPO#
 
 dependencies {
+<<<<<<< HEAD
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${minecraft_version}"
 	mappings "net.fabricmc:yarn:${yarn_mappings}"
@@ -55,6 +76,10 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modCompile "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+=======
+    compile #UMC_DEPENDENCY#
+}
+>>>>>>> origin/1.12.2-forge
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.

@@ -58,16 +58,8 @@ public class GLTexture {
         });
     }
 
-    /** Get a file for name in the UMC cache dir */
-    public static File cacheFile(String name) {
-        File cacheDir = Paths.get(FabricLoader.getInstance().getConfigDirectory().getParentFile().getPath(), "cache", "universalmodcore").toFile();
-        cacheDir.mkdirs();
-
-        return new File(cacheDir, name);
-    }
-
     public GLTexture(String name, BufferedImage image, int cacheSeconds, boolean upload) {
-        this.texLoc = cacheFile(name);
+        this.texLoc = ModCore.cacheFile(name);
         this.cacheSeconds = cacheSeconds;
 
         if (image != null) {

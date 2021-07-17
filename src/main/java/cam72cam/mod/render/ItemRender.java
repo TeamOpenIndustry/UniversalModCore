@@ -211,7 +211,8 @@ public class ItemRender {
                         buff.get(data);
                         Files.write(sprite.toPath(), data);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        ModCore.catching(e);
+                        sprite.delete();
                     }
                 }
             }

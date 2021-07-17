@@ -1,13 +1,32 @@
+
+import cam72cam.universalmodcore.CurseForge;
+import cam72cam.universalmodcore.Util;
+
+buildscript {
+	repositories {
+		maven { url = "https://teamopenindustry.cc/maven" }
+	}
+	dependencies {
+		classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.3'
+	}
+}
+
 plugins {
-	id 'fabric-loom' version '0.2.7-SNAPSHOT'
+	id 'fabric-loom' version '0.2.6-SNAPSHOT'
 	id 'maven-publish'
+	id 'maven'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
+String umcVersion = "1.0.1"
+if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
+	umcVersion += "-" + Util.GitRevision()
+}
+version = "1.14.4-forge-" + umcVersion
+
 archivesBaseName = project.archives_base_name
-version = project.mod_version
 group = project.maven_group
 
 minecraft {
@@ -48,6 +67,9 @@ dependencies {
 	include "io.github.cottonmc:cotton-energy:1.5.0+1.14.3-SNAPSHOT"
 
 	testCompile('junit:junit:4.13')
+
+	compile group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+	include group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
 processResources {
@@ -106,4 +128,23 @@ publishing {
 test {
 	useJUnit()
 	maxHeapSize = '1G'
+}
+
+task deployJar(type: Jar)
+
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        configuration = configurations.deployerJars
+        repository(url: "scp://teamopenindustry.cc/var/www/html/maven/") {
+            authentication(userName: "mavenci", privateKey: "publish_key")
+        }
+    }
 }

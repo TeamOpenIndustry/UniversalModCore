@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -74,6 +75,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
     });
 
     /* Init Self Wrapper */
+    Pair<String, TagCompound> refusedToJoin = null;
 
     public CustomEntity getSelf() {
         return self;
@@ -111,7 +113,12 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", self, selfData);
         }
-        iWorldData.load(selfData);
+        String error = self.tryJoinWorld();
+        if (error != null) {
+            refusedToJoin = Pair.of(error, selfData);
+        } else {
+            iWorldData.load(selfData);
+        }
     }
 
     /** @see #save */
@@ -132,13 +139,18 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
             ModCore.catching(e, "Error during entity save: %s", this);
         }
 
-        TagCompound selfData = new TagCompound();
-        try {
-            TagSerializer.serialize(selfData, self);
-        } catch (SerializationException e) {
-            ModCore.catching(e, "Error during entity save: %s", self);
+        TagCompound selfData;
+        if (refusedToJoin == null) {
+            selfData = new TagCompound();
+            try {
+                TagSerializer.serialize(selfData, self);
+            } catch (SerializationException e) {
+                ModCore.catching(e, "Error during entity save: %s", self);
+            }
+            iWorldData.save(selfData);
+        } else {
+            selfData = refusedToJoin.getValue();
         }
-        iWorldData.save(selfData);
 
         data.set("selfData", selfData);
     }
@@ -389,7 +401,7 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
     }
 
     /* ICollision NOTE: set width/height if implementing LivingEntity */
-    /** @see #getEntityBoundingBox() */
+    /** @see #getBoundingBox() */
     @Override
     public Box getCollisionBox() {
         return getBoundingBox();
@@ -402,6 +414,10 @@ public class ModdedEntity extends Entity implements IAdditionalSpawnData {
      */
     @Override
     public Box getBoundingBox() {
+        if (refusedToJoin != null) {
+            // Entity is added to a chunk but not world (yay minecraft)
+            return super.getBoundingBox();
+        }
         return cachedCollisionBB.get(iCollision.getCollision());
     }
 
