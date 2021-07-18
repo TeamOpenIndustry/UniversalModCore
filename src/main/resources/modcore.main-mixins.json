@@ -6,7 +6,8 @@
     "ServerPlayerInteractionManagerMixin",
     "ServerPlayNetworkHandlerMixin",
     "WorldChunkMixin",
-    "WorldMixin"
+    "WorldMixin",
+    "RecipeManagerMixin"
   ],
   "client": [
     "ReloadableResourceManagerImplMixin",

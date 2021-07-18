@@ -1,12 +1,17 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
-import cam72cam.mod.event.CommonEvents;
+import com.google.gson.JsonElement;
+import net.minecraft.advancement.criterion.InventoryChangedCriterion;
+import net.minecraft.data.server.recipe.ShapedRecipeJsonFactory;
+import net.minecraft.predicate.item.ItemPredicate;
+import net.minecraft.util.Identifier;
 
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /** Recipe registration */
 public class Recipes {
@@ -19,13 +24,17 @@ public class Recipes {
         return new ShapedRecipeBuilder(item, width, ingredients);
     }
 
+    private static final List<Consumer<Map<Identifier, JsonElement>>> actions = new ArrayList<>();
+    public static void apply(Map<Identifier, JsonElement> map) {
+        actions.forEach(c -> c.accept(map));
+    }
+
     public static class ShapedRecipeBuilder {
         private List<Fuzzy> dependencies = new ArrayList<>();
         private List<Fuzzy> conflicts = new ArrayList<>();
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
-            /*
-            CommonEvents.Recipe.REGISTER.subscribe(() -> {
+            actions.add(map -> {
                 for (Fuzzy dependency : dependencies) {
                     if (dependency.enumerate().isEmpty()) {
                         // Don't register recipe
@@ -39,21 +48,38 @@ public class Recipes {
                     }
                 }
 
-                CraftingHelper.ShapedPrimer primer = new CraftingHelper.ShapedPrimer();
-                primer.width = width;
-                primer.height = ingredients.length / width;
-                primer.mirrored = false;
-                primer.input = NonNullList.withSize(primer.width * primer.height, Ingredient.EMPTY);
+                ShapedRecipeJsonFactory builder = new ShapedRecipeJsonFactory(item.internal.getItem(), item.getCount());
 
-                for (int i = 0; i < ingredients.length; i++) {
-                    if (ingredients[i] != null) {
-                        primer.input.set(i, new OreIngredient(ingredients[i].toString()));
+                int height = ingredients.length / width;
+
+                for (int h = 0; h < height; h++) {
+                    String line = "";
+                    for (int w = 0; w < width; w++) {
+                        int idx = h * width + w;
+                        Fuzzy ingredient = ingredients[idx];
+                        line += ingredient == null ? " " : idx + "";
+                        if (ingredient != null) {
+                            // TODO tags
+                            builder.input((idx + "").charAt(0), ingredient.tag);
+                            builder.criterion(
+                                    "has" + ingredient.toString() + idx,
+                                    InventoryChangedCriterion.Conditions.items(
+                                            ItemPredicate.Builder.create().tag(ingredient.tag).build()
+                                    )
+                            );
+                        }
                     }
+                    builder.pattern(line);
                 }
-                ShapedOreRecipe sor = new ShapedOreRecipe(new ResourceLocation(ModCore.MODID, "recipes"), item.internal, primer);
-                sor.setRegistryName(item.internal.getItem().getRegistryName());
-                ForgeRegistries.RECIPES.register(sor);
-            });*/
+
+                Identifier itemName = new Identifier(item.internal.getItem().getTranslationKey());
+                Identifier name = new Identifier(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
+
+                builder.offerTo(x -> {
+                    map.put(name, x.toJson());
+                }, name);
+
+            });
         }
 
         public ShapedRecipeBuilder require(Fuzzy ...dependencies) {
