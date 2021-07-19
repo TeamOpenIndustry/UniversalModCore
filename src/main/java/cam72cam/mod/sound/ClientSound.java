@@ -78,6 +78,7 @@ class ClientSound implements ISound {
         if (id == null) {
             return;
         }
+        stop();
         sndSystem.get().removeSource(id);
         id = null;
     }

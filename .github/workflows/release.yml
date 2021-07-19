@@ -1,6 +1,6 @@
-name: Universal Mod Core CI
+name: Universal Mod Core Release
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
     build:
@@ -26,7 +26,7 @@ jobs:
                 MAVENCI: ${{ secrets.MAVENCI }}
               run: echo "${MAVENCI}" >> publish_key
             - name: Gradle uploadArchives
-              run: ./gradlew uploadArchives
+              run: ./gradlew uploadArchives -Dtarget=release
             - name: cleanup
               run: rm publish_key
             - uses: actions/upload-artifact@v2-preview

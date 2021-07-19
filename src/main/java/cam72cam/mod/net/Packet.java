@@ -1,5 +1,9 @@
 package cam72cam.mod.net;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
@@ -11,6 +15,7 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -20,10 +25,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.relauncher.Side;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Packet abstraction and registration
@@ -106,6 +107,11 @@ public abstract class Packet {
     public void sendToAll() {
         net.sendToAll(new Message(this));
     }
+
+	/** Send from server to player */
+	public void sendToPlayer(Player player) {
+		net.sendTo(new Message(this), (EntityPlayerMP) player.internal);
+	}
 
     /** Forge message construct.  Do not use directly */
     public static class Message implements IMessage {

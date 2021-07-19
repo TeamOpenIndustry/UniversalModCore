@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.List;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.0.1";
     public static ModCore instance;
 
     private List<Mod> mods = new ArrayList<>();
@@ -167,13 +168,15 @@ public class ModCore {
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
+                case INITIALIZE:
+                    ChunkManager.setup();
+                    break;
                 case SETUP:
                     World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     GuiRegistry.registration();
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     Command.registration();
@@ -255,5 +258,17 @@ public class ModCore {
         }
 
         instance.logger.catching(ex);
+    }
+
+    /** Get a file for name in the UMC cache dir */
+    public static File cacheFile(String name) {
+        File configDir = Loader.instance().getConfigDir();
+        if (configDir == null) {
+            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
+        }
+        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        cacheDir.mkdirs();
+
+        return new File(cacheDir, name);
     }
 }

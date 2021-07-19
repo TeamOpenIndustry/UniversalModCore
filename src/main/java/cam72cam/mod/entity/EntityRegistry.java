@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,9 +69,9 @@ public class EntityRegistry {
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {
                 if (World.get(world) != null) {
-                    String msg = ((ModdedEntity) entity).getSelf().tryJoinWorld();
+                    Pair<String, TagCompound> msg = ((ModdedEntity) entity).refusedToJoin;
                     if (msg != null) {
-                        missingResources = msg;
+                        missingResources = msg.getKey();
                         return false;
                     }
                 }
