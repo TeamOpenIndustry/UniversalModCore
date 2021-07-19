@@ -4,6 +4,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
+import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Living;
@@ -634,6 +635,19 @@ public class World {
         internal.spawnParticle(type.internal, position.x, position.y, position.z, velocity.x, velocity.y, velocity.z);
     }
 
+    /**
+     *
+     * Updates the blocks around the position.
+     * Value updateObservers will be ignored in older MC versions.
+     *
+     * @param pos
+     * @param block
+     * @param updateObservers
+     */
+    public void notifyNeighborsOfStateChange(Vec3i pos, BlockTypeEntity block, boolean updateObservers){
+        this.internal.notifyNeighborsOfStateChange(pos.internal(), block.internal);
+    }
+
     public enum ParticleType {
         SMOKE("smoke"),
         // Incomplete
@@ -645,4 +659,5 @@ public class World {
             this.internal = internal;
         }
     }
+
 }
