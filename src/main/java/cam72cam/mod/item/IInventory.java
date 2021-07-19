@@ -44,17 +44,17 @@ public interface IInventory {
         return new IInventory() {
             @Override
             public int getSlotCount() {
-                return inventory.getSizeInventory();
+                return inventory.getContainerSize();
             }
 
             @Override
             public ItemStack get(int slot) {
-                return new ItemStack(inventory.getStackInSlot(slot));
+                return new ItemStack(inventory.getItem(slot));
             }
 
             @Override
             public void set(int slot, ItemStack itemStack) {
-                inventory.setInventorySlotContents(slot, itemStack.internal);
+                inventory.setItem(slot, itemStack.internal);
             }
 
             @Override
@@ -63,10 +63,10 @@ public interface IInventory {
                     return itemStack;
                 }
 
-                net.minecraft.item.ItemStack current = inventory.getStackInSlot(slot);
+                net.minecraft.item.ItemStack current = inventory.getItem(slot);
 
                 if (current.isEmpty()) {
-                    if (!inventory.isItemValidForSlot(slot, itemStack.internal)) {
+                    if (!inventory.canPlaceItem(slot, itemStack.internal)) {
                         return itemStack;
                     }
                     if (!simulate) {
@@ -75,10 +75,10 @@ public interface IInventory {
                     return ItemStack.EMPTY;
                 }
 
-                if (!itemStack.internal.isItemEqual(current)) {
+                if (!itemStack.internal.sameItem(current)) {
                     return itemStack;
                 }
-                if (!net.minecraft.item.ItemStack.areItemStackTagsEqual(itemStack.internal, current)) {
+                if (!net.minecraft.item.ItemStack.tagMatches(itemStack.internal, current)) {
                     return itemStack;
                 }
 
@@ -101,10 +101,10 @@ public interface IInventory {
 
             @Override
             public ItemStack extract(int slot, int amount, boolean simulate) {
-                net.minecraft.item.ItemStack backup = inventory.getStackInSlot(slot).copy();
-                net.minecraft.item.ItemStack output = inventory.decrStackSize(slot, amount);
+                net.minecraft.item.ItemStack backup = inventory.getItem(slot).copy();
+                net.minecraft.item.ItemStack output = inventory.removeItem(slot, amount);
                 if (simulate) {
-                    inventory.setInventorySlotContents(slot, backup);
+                    inventory.setItem(slot, backup);
                 }
                 return new ItemStack(output);
             }

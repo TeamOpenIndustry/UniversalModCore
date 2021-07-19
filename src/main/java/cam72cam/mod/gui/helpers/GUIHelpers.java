@@ -44,7 +44,7 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(fluid.internal.get(0).getAttributes().getStillTexture());
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(AtlasTexture.LOCATION_BLOCKS).apply(fluid.internal.get(0).getAttributes().getStillTexture());
         drawSprite(sprite, fluid.internal.get(0).getAttributes().getColor(), x, y, width, height);
     }
 
@@ -53,32 +53,32 @@ public class GUIHelpers {
         double zLevel = 0;
 
         try (
-                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS_TEXTURE));
+                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS));
                 OpenGL.With color = OpenGL.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
         ) {
             int iW = sprite.getWidth();
             int iH = sprite.getHeight();
 
-            float minU = sprite.getMinU();
-            float minV = sprite.getMinV();
+            float minU = sprite.getU0();
+            float minV = sprite.getV0();
 
 
             Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.getBuffer();
+            BufferBuilder buffer = tessellator.getBuilder();
             buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
             for (int offY = 0; offY < height; offY += iH) {
                 double curHeight = Math.min(iH, height - offY);
-                float maxVScaled = sprite.getInterpolatedV(16.0 * curHeight / iH);
+                float maxVScaled = sprite.getV(16.0 * curHeight / iH);
                 for (int offX = 0; offX < width; offX += iW) {
                     double curWidth = Math.min(iW, width - offX);
-                    float maxUScaled = sprite.getInterpolatedU(16.0 * curWidth / iW);
-                    buffer.pos(x + offX, y + offY, zLevel).tex(minU, minV).endVertex();
-                    buffer.pos(x + offX, y + offY + curHeight, zLevel).tex(minU, maxVScaled).endVertex();
-                    buffer.pos(x + offX + curWidth, y + offY + curHeight, zLevel).tex(maxUScaled, maxVScaled).endVertex();
-                    buffer.pos(x + offX + curWidth, y + offY, zLevel).tex(maxUScaled, minV).endVertex();
+                    float maxUScaled = sprite.getU(16.0 * curWidth / iW);
+                    buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).endVertex();
+                    buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).endVertex();
+                    buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).endVertex();
+                    buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).endVertex();
                 }
             }
-            tessellator.draw();
+            tessellator.end();
         }
     }
 
@@ -103,18 +103,18 @@ public class GUIHelpers {
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
-            Minecraft.getInstance().fontRenderer.drawStringWithShadow(new MatrixStack(), text, (float) (x - Minecraft.getInstance().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+            Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         }
     }
 
     /** Screen Width in pixels (std coords) */
     public static int getScreenWidth() {
-        return Minecraft.getInstance().getMainWindow().getScaledWidth();
+        return Minecraft.getInstance().getWindow().getGuiScaledWidth();
     }
 
     /** Screen Height in pixels (std coords) */
     public static int getScreenHeight() {
-        return Minecraft.getInstance().getMainWindow().getScaledHeight();
+        return Minecraft.getInstance().getWindow().getGuiScaledHeight();
     }
 
     /** Draw a Item at the given coords */
@@ -125,7 +125,7 @@ public class GUIHelpers {
             OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
         ) {
-            Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.internal, x, y);
+            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
         }
     }
 }

@@ -11,9 +11,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.data.ExistingFileHelper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,8 +33,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold");
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.makeWrapperTag(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron");
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -113,9 +113,9 @@ public class Fuzzy {
 
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
-        this(ItemTags.makeWrapperTag(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()).toString() :
-                        new ResourceLocation("forge", ident.toLowerCase()).toString()
+        this(ItemTags.createOptional(
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
+                        new ResourceLocation("forge", ident.toLowerCase())
         ), ident);
     }
 
@@ -143,15 +143,20 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        List<ItemStack> items;
+        Set<ItemStack> items;
         try {
-            items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList());
+            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toSet());
         } catch (IllegalStateException e) {
             ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
-            items = new ArrayList<>();
+            items = new HashSet<>();
         }
-        items.addAll(customItems.stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toList()));
-        return items;
+        for (Item item : customItems) {
+            items.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
+        }
+        for (Fuzzy f : includes) {
+            items.addAll(f.enumerate());
+        }
+        return new ArrayList<>(items);
     }
 
     /** Grab the first example of a item in this fuzzy */
@@ -194,15 +199,20 @@ public class Fuzzy {
         return ident;
     }
 
-    public static void register(DataGenerator gen) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen);
-        gen.addProvider(blocktagsprovider);
-        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider) {
+    public static void register(DataGenerator gen, ExistingFileHelper existingFileHelper) {
+        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen, ModCore.MODID, existingFileHelper) {
             @Override
-            protected void registerTags() {
+            protected void addTags() {
+                //super.addTags();
+            }
+        };
+        gen.addProvider(blocktagsprovider);
+        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
+            @Override
+            protected void addTags() {
                 for (Fuzzy value : registered.values()) {
                     //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        Builder<Item> builder = getOrCreateBuilder(value.tag);
+                        Builder<Item> builder = tag(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
                         }

@@ -104,7 +104,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             if (data != null && legacyID.toString().equals(data.getString("id"))) {
                 BlockState myState = state;
                 if (myState == null) {
-                    myState = blocks.get(data.getString("instanceId")).internal.getDefaultState();
+                    myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
                 data.putString("id", myState.getBlock().createTileEntity(null, null).getType().getRegistryName().toString());
                 return myState;
@@ -119,8 +119,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             if(chunk instanceof Chunk) {
                 return;
             }
-            for (BlockPos pos : chunk.getTileEntitiesPos()) {
-                CompoundNBT data = chunk.getDeferredTileEntity(pos);
+            for (BlockPos pos : chunk.getBlockEntitiesPos()) {
+                CompoundNBT data = chunk.getBlockEntityNbt(pos);
                 for (Function<CompoundNBT, BlockState> migration : migrations) {
                     BlockState state = migration.apply(data);
                     if (state != null) {
@@ -166,16 +166,16 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Wrap getPos() in a cached UMC Vec3i */
     public Vec3i getUMCPos() {
-        if (umcPos == null || !umcPos.internal().equals(pos)) {
-            umcPos = new Vec3i(pos);
+        if (umcPos == null || !umcPos.internal().equals(worldPosition)) {
+            umcPos = new Vec3i(worldPosition);
         }
         return umcPos;
     }
 
     /** Wrap getWorld in cached UMC World */
     public World getUMCWorld() {
-        if (umcWorld == null || umcWorld.internal != world) {
-            umcWorld = World.get(world);
+        if (umcWorld == null || umcWorld.internal != level) {
+            umcWorld = World.get(level);
         }
         return umcWorld;
     }
@@ -189,8 +189,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void read(BlockState state, CompoundNBT compound) {
-        super.read(state, compound);
+    public final void load(BlockState state, CompoundNBT compound) {
+        super.load(state, compound);
         hasTileData = true;
 
         TagCompound data = new TagCompound(compound);
@@ -214,8 +214,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
+    public CompoundNBT save(CompoundNBT compound) {
+        super.save(compound);
 
         TagCompound data = new TagCompound(compound);
 
@@ -236,13 +236,13 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     /** Active Synchronization from markDirty */
     @Override
     public final SUpdateTileEntityPacket getUpdatePacket() {
-        return new SUpdateTileEntityPacket(this.getPos(), 1, getUpdateTag(true));
+        return new SUpdateTileEntityPacket(this.worldPosition, 1, getUpdateTag(true));
     }
 
     /** Active Synchronization from markDirty */
     @Override
     public final void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        handleUpdateTag(world.getBlockState(pos), pkt.getNbtCompound());
+        handleUpdateTag(level.getBlockState(worldPosition), pkt.getTag());
     }
 
     /** Active Synchronization from markDirty */
@@ -253,7 +253,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     public final CompoundNBT getUpdateTag(boolean writeUpdate) {
         CompoundNBT tag = super.getUpdateTag();
         if (this.isLoaded()) {
-            this.write(tag);
+            this.save(tag);
             TagCompound umcUpdate = new TagCompound();
             if (writeUpdate) {
                 try {
@@ -271,7 +271,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     @Override
     public final void handleUpdateTag(BlockState state, CompoundNBT tag) {
         try {
-            this.read(state, tag);
+            this.load(state, tag);
             if (instance() != null) {
                 if (tag.contains("umcUpdate")) {
                     try {
@@ -285,23 +285,23 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
         }
-        world.notifyBlockUpdate(super.pos, null, super.world.getBlockState(super.pos), 3);
+        level.sendBlockUpdated(super.worldPosition, null, super.level.getBlockState(super.worldPosition), 3);
     }
 
     /** Fire off update packet if on server, re-render if on client */
     @Override
-    public void markDirty() {
-        super.markDirty();
-        if (!world.isRemote) {
-            world.notifyBlockUpdate(getPos(), world.getBlockState(getPos()), world.getBlockState(getPos()), 1 + 2 + 8);
-            world.notifyNeighborsOfStateChange(pos, world.getBlockState(getPos()).getBlock());
+    public void setChanged() {
+        super.setChanged();
+        if (!level.isClientSide) {
+            level.sendBlockUpdated(getBlockPos(), level.getBlockState(getBlockPos()), level.getBlockState(getBlockPos()), 1 + 2 + 8);
+            level.updateNeighborsAt(worldPosition, level.getBlockState(getBlockPos()).getBlock());
         }
     }
 
     /* Forge Overrides */
 
     private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
-            new SingleCache<>(internal -> BoundingBox.from(internal).offset(pos.getX(), pos.getY(), pos.getZ()));
+            new SingleCache<>(internal -> BoundingBox.from(internal).move(getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ()));
     /**
      * @return Instance's bounding box
      * @see BlockEntity
@@ -319,7 +319,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see BlockEntity
      */
     @Override
-    public double getMaxRenderDistanceSquared() {
+    public double getViewDistance() {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
     }
 
@@ -466,7 +466,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** @return If the BlockEntity instance is loaded */
     public boolean isLoaded() {
-        return world != null && (!world.isRemote || hasTileData);
+        return level != null && (!level.isClientSide || hasTileData);
     }
 
     /** @return The instance of the BlockEntity if possible */

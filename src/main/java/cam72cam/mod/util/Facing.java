@@ -50,12 +50,12 @@ public enum Facing {
     /** Older versions of MC used a single byte to represent facing */
     @Deprecated
     public static Facing from(byte facing) {
-        return from(net.minecraft.util.Direction.byIndex(facing));
+        return from(net.minecraft.util.Direction.from3DDataValue(facing));
     }
 
     /** 0 is SOUTH, 90 is WEST */
     public static Facing fromAngle(float v) {
-        return from(Direction.fromAngle(v));
+        return from(Direction.fromYRot(v));
     }
 
     public Facing getOpposite() {
@@ -82,7 +82,7 @@ public enum Facing {
     }
 
     public float getAngle() {
-        return internal.getHorizontalAngle();
+        return internal.toYRot();
     }
 
     /** Axis that this facing lies upon */
@@ -92,16 +92,16 @@ public enum Facing {
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getXMultiplier() {
-        return internal.getXOffset();
+        return internal.getStepX();
     }
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getYMultiplier() {
-        return internal.getYOffset();
+        return internal.getStepY();
     }
 
     /** @see cam72cam.mod.math.Vec3i#offset */
     public int getZMultiplier() {
-        return internal.getZOffset();
+        return internal.getStepZ();
     }
 }

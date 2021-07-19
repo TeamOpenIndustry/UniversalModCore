@@ -70,9 +70,9 @@ public class OpenGL {
     public static With texture(Identifier identifier) {
         With t = bool(GL11.GL_TEXTURE_2D, true);
         int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        Minecraft.getInstance().getTextureManager().bindTexture(identifier.internal);
+        Minecraft.getInstance().getTextureManager().bind(identifier.internal);
         return () -> {
-            GlStateManager.bindTexture(currentTexture);
+            GlStateManager._bindTexture(currentTexture);
             t.restore();
         };
     }
@@ -110,6 +110,19 @@ public class OpenGL {
             GL14.glBlendColor(orig.get(0), orig.get(1), orig.get(2), orig.get(3));
             blend.restore();
         };
+    }
+
+    public static With alphaFunc(int func, float ref) {
+        int origfunc = GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC);
+        float origref = GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF);
+        GL11.glAlphaFunc(func, ref);
+        return () -> GL11.glAlphaFunc(origfunc, origref);
+    }
+
+    public static With depth(boolean state) {
+        boolean orig = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        GL11.glDepthMask(state);
+        return () -> GL11.glDepthMask(orig);
     }
 
     @FunctionalInterface

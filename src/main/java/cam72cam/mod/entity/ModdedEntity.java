@@ -59,7 +59,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public ModdedEntity(EntityType type, World world, Supplier<CustomEntity> ctr) {
         super(type, world);
 
-        super.preventEntitySpawning = true;
+        super.blocksBuilding = true;
 
         self = ctr.get();
         self.setup(this);
@@ -92,7 +92,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see #load */
     @Override
-    public final void readAdditional(CompoundNBT compound) {
+    public final void readAdditionalSaveData(CompoundNBT compound) {
         load(new TagCompound(compound));
     }
 
@@ -145,7 +145,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see #save */
     @Override
-    public void writeAdditional(CompoundNBT compound) {
+    public void addAdditionalSaveData(CompoundNBT compound) {
         save(new TagCompound(compound));
     }
 
@@ -183,7 +183,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see #load */
     @Override
     public final void readSpawnData(PacketBuffer additionalData) {
-        TagCompound data = new TagCompound(additionalData.readCompoundTag());
+        TagCompound data = new TagCompound(additionalData.readNbt());
         load(data);
         try {
             self.sync.receive(data.get("sync"));
@@ -197,7 +197,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         TagCompound data = new TagCompound();
         data.set("sync", self.sync);
         save(data);
-        buffer.writeCompoundTag(data.internal);
+        buffer.writeNbt(data.internal);
     }
 
     @Override
@@ -223,14 +223,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
-            seats.forEach(seat -> seat.setPosition(getPosX(), getPosY(), getPosZ()));
+            seats.forEach(seat -> seat.setPos(getX(), getY(), getZ()));
         }
     }
 
     /* Player Interact */
     /** @see IClickable */
     @Override
-    public final ActionResultType processInitialInteract(PlayerEntity player, net.minecraft.util.Hand hand) {
+    public final ActionResultType interact(PlayerEntity player, net.minecraft.util.Hand hand) {
         return iClickable.onClick(new Player(player), Player.Hand.from(hand)).internal;
     }
 
@@ -238,28 +238,28 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see IKillable */
     @Override
-    public final boolean attackEntityFrom(DamageSource damagesource, float amount) {
-        cam72cam.mod.entity.Entity wrapEnt = damagesource.getTrueSource() != null ? self.getWorld().getEntity(damagesource.getTrueSource()) : null;
+    public final boolean hurt(DamageSource damagesource, float amount) {
+        cam72cam.mod.entity.Entity wrapEnt = damagesource.getDirectEntity() != null ? self.getWorld().getEntity(damagesource.getDirectEntity()) : null;
         DamageType type;
         if (damagesource.isExplosion()) {
             type = DamageType.EXPLOSION;
         } else if (damagesource.isProjectile()) {
             type = DamageType.PROJECTILE;
-        } else if (damagesource.isFireDamage()) {
+        } else if (damagesource.isFire()) {
             type = DamageType.FIRE;
-        } else if (damagesource.isMagicDamage()) {
+        } else if (damagesource.isMagic()) {
             type = DamageType.MAGIC;
         } else {
             type = DamageType.OTHER;
         }
-        iKillable.onDamage(type, wrapEnt, amount, damagesource.isUnblockable());
+        iKillable.onDamage(type, wrapEnt, amount, damagesource.isBypassInvul());
 
         return false;
     }
 
     /** @see IKillable */
     @Override
-    protected void registerData() {
+    protected void defineSynchedData() {
 
     }
 
@@ -274,7 +274,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Ridable */
     /** @see IRidable#canFitPassenger */
     @Override
-    public boolean canFitPassenger(Entity passenger) {
+    public boolean canAddPassenger(Entity passenger) {
         return iRidable.canFitPassenger(self.getWorld().getEntity(passenger));
     }
 
@@ -297,14 +297,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void addPassenger(Entity entity) {
-        if (!world.isRemote) {
-            SeatEntity seat = new SeatEntity(SeatEntity.TYPE, world);
+        if (!level.isClientSide) {
+            SeatEntity seat = new SeatEntity(SeatEntity.TYPE, level);
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
-            passengerPositions.put(entity.getUniqueID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
+            passengerPositions.put(entity.getUUID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
-            world.addEntity(seat);
+            level.addFreshEntity(seat);
             new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
@@ -322,8 +322,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Helper function that updates a seat's position and it's rider's position
-     * 
-     * @see SeatEntity#updatePassenger 
      */
     void updateSeat(SeatEntity seat) {
         if (!seats.contains(seat)) {
@@ -340,7 +338,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             }
 
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            if (!seat.hasPassenger(passenger.internal)) {
                 return;
             }
 
@@ -349,10 +347,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             Vec3d pos = calculatePassengerPosition(offset);
 
             passenger.setPosition(pos);
-            passenger.setVelocity(new Vec3d(getMotion()));
+            passenger.setVelocity(new Vec3d(getDeltaMovement()));
 
-            float delta = rotationYaw - prevRotationYaw;
-            passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+            float delta = yRot - yRotO;
+            passenger.internal.yRot = passenger.internal.yRot + delta;
 
             seat.shouldSit = iRidable.shouldRiderSit(passenger);
         }
@@ -365,12 +363,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
         if (iRidable.canFitPassenger(entity)) {
-            SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
+            SeatEntity seat = (SeatEntity) entity.internal.getVehicle();
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
-            if (!world.isRemote) {
+            if (!level.isClientSide) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
             }
         }
@@ -389,7 +387,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(world.isAirBlock(new Vec3i(pos).internal()) && world.isAirBlock(new Vec3i(pos).up().internal()))) {
+                while (!(level.isEmptyBlock(new Vec3i(pos).internal()) && level.isEmptyBlock(new Vec3i(pos).up().internal()))) {
                     pos = pos.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);
@@ -448,43 +446,43 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * @see ICollision
      */
     @Override
-    public AxisAlignedBB getRenderBoundingBox() {
+    public AxisAlignedBB getBoundingBoxForCulling() {
         return cachedRenderBB.get(iCollision.getCollision());
     }
 
     @Override
-    public IPacket<?> createSpawnPacket() {
+    public IPacket<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     /* Hacks */
     /** Needed for right click, probably a forge or MC bug */
     @Override
+    public boolean isPickable() {
+        return true;
+    }
+    @Override
     public boolean canBeCollidedWith() {
         return true;
     }
 
-    public boolean func_241845_aY() {
-        return true;
-    }
-
     @Override
-    public boolean canBePushed() {
+    public boolean isPushable() {
         return self.canBePushed();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
         if (self.allowsDefaultMovement()) {
-            super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements, teleport);
         }
     }
 
     @Override
-    public void setVelocity(double x, double y, double z) {
+    public void setDeltaMovement(double x, double y, double z) {
         if (self.allowsDefaultMovement()) {
-            super.setVelocity(x, y, z);
+            super.setDeltaMovement(x, y, z);
         }
     }
 

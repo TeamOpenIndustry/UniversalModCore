@@ -38,7 +38,7 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public BoundingBox union(AxisAlignedBB other) {
+    public BoundingBox minmax(AxisAlignedBB other) {
         // Used by piston
         // Used by entityliving for BB stuff
         return this;
@@ -47,7 +47,7 @@ public class BoundingBox extends AxisAlignedBB {
     /* Modifiers */
 
     @Override
-    public BoundingBox expand(double x, double y, double z) {
+    public BoundingBox expandTowards(double x, double y, double z) {
         return new BoundingBox(internal.expand(new Vec3d(x, y, z)));
     }
 
@@ -56,11 +56,13 @@ public class BoundingBox extends AxisAlignedBB {
         return new BoundingBox(internal.contract(new Vec3d(x, y, z)));
     }
 
-    public BoundingBox grow(double x, double y, double z) {
+    @Override
+    public BoundingBox inflate(double x, double y, double z) {
         return new BoundingBox(internal.grow(new Vec3d(x, y, z)));
     }
 
-    public BoundingBox offset(double x, double y, double z) {
+    @Override
+    public BoundingBox move(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
@@ -94,7 +96,7 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public Optional<Vector3d> rayTrace(Vector3d vecA, Vector3d vecB) {
+    public Optional<Vector3d> clip(Vector3d vecA, Vector3d vecB) {
         int steps = 10;
         double xDist = vecB.x - vecA.x;
         double yDist = vecB.y - vecA.y;

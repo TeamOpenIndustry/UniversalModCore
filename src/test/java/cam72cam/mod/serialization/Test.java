@@ -253,7 +253,7 @@ public class Test {
 
         data = new TagCompound();
         t.uuidO = UUID.randomUUID();
-        data.internal.putUniqueId("uuidO", t.uuidO);
+        data.internal.putUUID("uuidO", t.uuidO);
         Assert.assertEquals(data.toString(), t.uuidO, data.getUUID("uuidO"));
     }
 

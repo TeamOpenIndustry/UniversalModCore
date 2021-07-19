@@ -21,20 +21,15 @@ public class Mouse {
             // We need to override that distance because train centers are further away
             // than 36m.
 
-            if (Minecraft.getInstance().objectMouseOver == null || !MinecraftClient.isReady() || Minecraft.getInstance().currentScreen != null) {
+            if (Minecraft.getInstance().hitResult == null || !MinecraftClient.isReady() || Minecraft.getInstance().screen != null) {
                 return true;
             }
 
             Entity entity = MinecraftClient.getEntityMouseOver();
             if (entity != null && entity.internal instanceof ModdedEntity) {
-                boolean flag = MinecraftClient.getPlayer().internal.canEntityBeSeen(entity.internal);
                 double d0 = 36.0D;
-                if (!flag) {
-                    d0 = 9.0D;
-                }
-
                 // Invert MC's built in logic for entity distance (assumes small entities)
-                if (MinecraftClient.getPlayer().internal.getDistanceSq(entity.internal) >= d0) {
+                if (MinecraftClient.getPlayer().internal.distanceToSqr(entity.internal) >= d0) {
                     new MousePressPacket(button, entity).sendToServer();
                     return false;
                 }
@@ -70,7 +65,7 @@ public class Mouse {
                         getPlayer().internal.interactOn(target.internal, hand.internal);
                         break;
                     case SECONDARY:
-                        getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);
+                        getPlayer().internal.attack(target.internal);
                         break;
                 }
             }

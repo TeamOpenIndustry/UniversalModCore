@@ -29,7 +29,7 @@ public class Recipes extends RecipeProvider {
     }
 
     @Override
-    protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
+    protected void buildShapelessRecipes(Consumer<IFinishedRecipe> consumer) {
         registry.forEach(fn -> fn.accept(consumer));
     }
 
@@ -59,20 +59,20 @@ public class Recipes extends RecipeProvider {
                         line += ingredient == null ? " " : idx + "";
                         if (ingredient != null) {
                             // TODO tags
-                            builder.key((idx + "").charAt(0), ingredient.tag);
-                            builder.addCriterion(
+                            builder.define((idx + "").charAt(0), ingredient.tag);
+                            builder.unlockedBy(
                                     "has" + ingredient.toString() + idx,
                                     new InventoryChangeTrigger.Instance(
-                                            EntityPredicate.AndPredicate.ANY_AND,
-                                            MinMaxBounds.IntBound.UNBOUNDED,
-                                            MinMaxBounds.IntBound.UNBOUNDED,
-                                            MinMaxBounds.IntBound.UNBOUNDED,
-                                            new ItemPredicate[]{ItemPredicate.Builder.create().tag(ingredient.tag).build()}
+                                            EntityPredicate.AndPredicate.ANY,
+                                            MinMaxBounds.IntBound.ANY,
+                                            MinMaxBounds.IntBound.ANY,
+                                            MinMaxBounds.IntBound.ANY,
+                                            new ItemPredicate[]{ItemPredicate.Builder.item().of(ingredient.tag).build()}
                                     )
                             );
                         }
                     }
-                    builder.patternLine(line);
+                    builder.pattern(line);
                 }
                 ResourceLocation itemName = item.internal.getItem().getRegistryName();
                 ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
@@ -85,9 +85,9 @@ public class Recipes extends RecipeProvider {
                     for (Fuzzy conflict : conflicts) {
                         conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getName()));
                     }
-                    conditions.addRecipe(builder::build).build(out, name);
+                    conditions.addRecipe(builder::save).build(out, name);
                 } else {
-                    builder.build(out, name);
+                    builder.save(out, name);
                 }
             });
         }

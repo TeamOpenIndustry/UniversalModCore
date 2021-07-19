@@ -39,7 +39,7 @@ public class Vec3i {
 
     @Deprecated
     public Vec3i(long serialized) {
-        this(BlockPos.fromLong(serialized));
+        this(BlockPos.of(serialized));
     }
 
     public Vec3i offset(Facing facing, int offset) {
@@ -123,7 +123,7 @@ public class Vec3i {
 
     @Deprecated
     public long toLong() {
-        return internal().toLong();
+        return internal().asLong();
     }
 
     public Vec3i rotate(Rotation rotation) {

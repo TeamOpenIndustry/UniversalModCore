@@ -146,24 +146,24 @@ public abstract class BlockType {
      */
     protected class BlockInternal extends net.minecraft.block.Block {
         public BlockInternal() {
-            super(Block.Properties.create(BlockType.this.getMaterial().internal)
+            super(Block.Properties.of(BlockType.this.getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
-                    .hardnessAndResistance(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
-                    .variableOpacity());
+                    .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .dynamicShape());
             setRegistryName(BlockType.this.id.internal);
         }
 
         /** Called server side at the end of the block break call chain as cleanup */
         @Override
-        public void onReplaced(BlockState state, net.minecraft.world.World world, BlockPos pos, BlockState newState, boolean isMoving) {
+        public void onRemove(BlockState state, net.minecraft.world.World world, BlockPos pos, BlockState newState, boolean isMoving) {
             BlockType.this.onBreak(World.get(world), new Vec3i(pos));
-            super.onReplaced(state, world, pos, newState, isMoving);
+            super.onRemove(state, world, pos, newState, isMoving);
         }
 
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
-        public ActionResultType onBlockActivated(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getFace()), new Vec3d(hit.getHitVec()).subtract(new Vec3i(pos))) ? ActionResultType.SUCCESS : ActionResultType.PASS;
+        public ActionResultType use(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? ActionResultType.SUCCESS : ActionResultType.PASS;
         }
 
         @Override
@@ -190,7 +190,7 @@ public abstract class BlockType {
          */
 
         @Override
-        public BlockRenderType getRenderType(BlockState state) {
+        public BlockRenderType getRenderShape(BlockState state) {
             // TESR Renderer TODO OPTIONAL!@!!!!
             return BlockRenderType.MODEL;
         }
@@ -221,7 +221,7 @@ public abstract class BlockType {
         /* Redstone */
 
         @Override
-        public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        public int getSignal(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
         {
             World world = getWorldOrNull(blockAccess, pos);
             if (world != null) {
@@ -231,7 +231,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        public int getDirectSignal(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
         {
             World world = getWorldOrNull(blockAccess, pos);
             if (world != null) {
@@ -241,7 +241,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public boolean canProvidePower(BlockState state)
+        public boolean isSignalSource(BlockState state)
         {
             return BlockType.this.isRedstoneProvider();
         }
@@ -254,7 +254,7 @@ public abstract class BlockType {
          */
 
         @Override
-        public boolean isTransparent(BlockState state) {
+        public boolean useShapeForLightOcclusion(BlockState state) {
             return true;
         }
 
@@ -264,7 +264,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public VoxelShape getRenderShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
+        public VoxelShape getOcclusionShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
             return VoxelShapes.empty();
         }
     }

@@ -32,7 +32,7 @@ public abstract class Button {
                 if (this.isValidClickButton(p_mouseClicked_5_)) {
                     boolean flag = this.clicked(p_mouseClicked_1_, p_mouseClicked_3_);
                     if (flag) {
-                        this.playDownSound(Minecraft.getInstance().getSoundHandler());
+                        this.playDownSound(Minecraft.getInstance().getSoundManager());
                         clicker.accept(p_mouseClicked_5_ == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
                         return true;
                     }
@@ -69,7 +69,7 @@ public abstract class Button {
 
     /** Currently displayed text */
     public String getText() {
-        return button.getMessage().getUnformattedComponentText();
+        return button.getMessage().getString();
     }
 
     /** Override current text */

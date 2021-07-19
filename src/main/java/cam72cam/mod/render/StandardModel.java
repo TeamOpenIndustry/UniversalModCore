@@ -34,10 +34,10 @@ public class StandardModel {
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
-        Block block = Block.getBlockFromItem(stack.internal.getItem());
-        BlockState gravelState = block.getDefaultState();//.getStateFromMeta(stack.internal.getMetadata());
+        Block block = Block.byItem(stack.internal.getItem());
+        BlockState gravelState = block.defaultBlockState();//.getStateFromMeta(stack.internal.getMetadata());
         if (block instanceof RotatedPillarBlock) {
-            gravelState = gravelState.with(RotatedPillarBlock.AXIS, Direction.Axis.Z);
+            gravelState = gravelState.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
         }
         return gravelState;
     }
@@ -46,12 +46,12 @@ public class StandardModel {
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
-                .map(x -> Block.getBlockFromItem(x.internal.getItem()))
-                .filter(x -> x.getMaterialColor() == color.internal.getMapColor())
-                .map(Block::getDefaultState)
+                .map(x -> Block.byItem(x.internal.getItem()))
+                .filter(x -> x.defaultMaterialColor() == color.internal.getMaterialColor())
+                .map(Block::defaultBlockState)
                 .findFirst().get();
 
-        IBakedModel model = Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(state);
+        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
         return this;
     }
@@ -59,8 +59,8 @@ public class StandardModel {
     /** Add snow layers */
     public StandardModel addSnow(int layers, Vec3d translate) {
         layers = Math.max(1, Math.min(8, layers));
-        BlockState state = Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, layers);
-        IBakedModel model = Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(state);
+        BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowBlock.LAYERS, layers);
+        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
         return this;
     }
@@ -68,7 +68,7 @@ public class StandardModel {
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
         BlockState state = itemToBlockState(bed);
-        IBakedModel model = Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelShapes().getModel(state);
+        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
         return this;
     }
@@ -80,15 +80,15 @@ public class StandardModel {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(worldRenderer);
+                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.immediate(worldRenderer);
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
                     GL11.glDisable(GL11.GL_BLEND);
                 }
 
-                Minecraft.getInstance().getItemRenderer().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new MatrixStack(), buffer);
-                buffer.finish();
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemCameraTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new MatrixStack(), buffer);
+                buffer.endBatch();
             }
         });
         return this;
@@ -132,7 +132,7 @@ public class StandardModel {
         if (models.isEmpty()) {
             return;
         }
-        Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        Minecraft.getInstance().getTextureManager().getTexture(AtlasTexture.LOCATION_BLOCKS);
         worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 
         for (Pair<BlockState, IBakedModel> model : models) {
@@ -148,11 +148,11 @@ public class StandardModel {
                 quads.addAll(model.getRight().getQuads(null, facing, new Random()));
             }
 
-            quads.forEach(quad -> worldRenderer.addQuad(new MatrixStack().getLast(), quad, f, f1, f2, 12 << 4, OverlayTexture.NO_OVERLAY));
+            quads.forEach(quad -> worldRenderer.addVertexData(new MatrixStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
         }
 
-        worldRenderer.finishDrawing();
-        WorldVertexBufferUploader.draw(worldRenderer);
+        worldRenderer.end();
+        WorldVertexBufferUploader.end(worldRenderer);
     }
 
     /** Render the OpenGL parts directly */

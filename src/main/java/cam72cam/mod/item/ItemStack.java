@@ -2,7 +2,6 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidUtil;
@@ -21,7 +20,7 @@ public class ItemStack {
 
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.item.ItemStack.read(nbt.internal));
+        this(net.minecraft.item.ItemStack.of(nbt.internal));
     }
 
     /** Construct from customItem */
@@ -68,7 +67,7 @@ public class ItemStack {
 
     /** Human readable name */
     public String getDisplayName() {
-        return internal.getDisplayName().getString();
+        return internal.getHoverName().getString();
     }
 
     /** Is count zero? */
@@ -84,13 +83,13 @@ public class ItemStack {
     /** Compares: item, count, damage, data */
     @Override
     public boolean equals(Object other) {
-        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
+        return other instanceof ItemStack && net.minecraft.item.ItemStack.matches(internal, ((ItemStack)other).internal);
     }
 
 
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
-        return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
+        return net.minecraft.item.ItemStack.isSame(internal, stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
@@ -133,7 +132,7 @@ public class ItemStack {
 
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
-        internal.damageItem(i, player.internal, (s) -> {});
+        internal.hurtAndBreak(i, player.internal, (s) -> {});
     }
 
     /** Completely null out the tag compound */

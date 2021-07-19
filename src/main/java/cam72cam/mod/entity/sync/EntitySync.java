@@ -37,7 +37,7 @@ public class EntitySync extends TagCompound {
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
 
-        for (String key : internal.keySet()) {
+        for (String key : internal.getAllKeys()) {
             INBT newVal = internal.get(key);
             if (old.internal.contains(key)) {
                 INBT oldVal = old.internal.get(key);
@@ -58,7 +58,7 @@ public class EntitySync extends TagCompound {
             sync.internal.put(key, newVal);
         }
 
-        for (String key : old.internal.keySet()) {
+        for (String key : old.internal.getAllKeys()) {
             if (!internal.contains(key)) {
                 removed.add(key);
             }
@@ -71,7 +71,7 @@ public class EntitySync extends TagCompound {
             });
         }
 
-        if (sync.internal.keySet().size() != 0) {
+        if (sync.internal.getAllKeys().size() != 0) {
             old = new TagCompound(this.internal.copy());
 
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
@@ -80,7 +80,7 @@ public class EntitySync extends TagCompound {
 
     /** Receive update (should only be called from packets) */
     public void receive(TagCompound sync) throws SerializationException {
-        for (String key : sync.internal.keySet()) {
+        for (String key : sync.internal.getAllKeys()) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
                     internal.remove(removed);

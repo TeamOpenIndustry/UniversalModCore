@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class OBJParser {
+    public static final float UNSPECIFIED = Float.MIN_VALUE;
+
     // 3 floats per vertex (x, y, z)
     private final FloatBuffer vertices = new FloatBuffer(1024);
     // 3 floats per normal (x, y, z)
@@ -53,7 +55,11 @@ public class OBJParser {
                         addMaterialLibrary(args[1]);
                         break;
                     case "usemtl":
-                        setCurrentMTL(args[1]);
+                        String mtlName = args[1];
+                        for (int i = 2; i < args.length; i++) {
+                            mtlName += " " + args[i];
+                        }
+                        setCurrentMTL(mtlName);
                         break;
                     case "o":
                     case "g":
@@ -137,6 +143,9 @@ public class OBJParser {
                     if (texture >= 0) {
                         buffer.data[textureOffset+0] = vertexTextures[texture+0];
                         buffer.data[textureOffset+1] = vertexTextures[texture+1];
+                    } else {
+                        buffer.data[textureOffset+0] = UNSPECIFIED;
+                        buffer.data[textureOffset+1] = UNSPECIFIED;
                     }
                     textureOffset += buffer.stride;
 

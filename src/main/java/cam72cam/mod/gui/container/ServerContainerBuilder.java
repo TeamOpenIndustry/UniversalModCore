@@ -139,7 +139,7 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
     public int drawPlayerInventory(int currY, int horizSlots) {
         currY += 9;
 
-        int offset = inventorySlots.size();
+        int offset = slots.size();
 
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft;
 
@@ -162,26 +162,26 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
 
 
     @Override
-    public final net.minecraft.item.ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+    public final net.minecraft.item.ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
         net.minecraft.item.ItemStack itemstack = net.minecraft.item.ItemStack.EMPTY;
-        Slot slot = this.inventorySlots.get(index);
+        Slot slot = this.slots.get(index);
         int numSlots = totalSlots;
 
-        if (slot != null && slot.getHasStack()) {
-            net.minecraft.item.ItemStack itemstack1 = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            net.minecraft.item.ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
             if (index < numSlots) {
-                if (!this.mergeItemStack(itemstack1, numSlots, this.inventorySlots.size(), true)) {
+                if (!this.moveItemStackTo(itemstack1, numSlots, this.slots.size(), true)) {
                     return net.minecraft.item.ItemStack.EMPTY;
                 }
-            } else if (!this.mergeItemStack(itemstack1, 0, numSlots, false)) {
+            } else if (!this.moveItemStackTo(itemstack1, 0, numSlots, false)) {
                 return net.minecraft.item.ItemStack.EMPTY;
             }
 
             if (itemstack1.isEmpty()) {
-                slot.putStack(net.minecraft.item.ItemStack.EMPTY);
+                slot.set(net.minecraft.item.ItemStack.EMPTY);
             } else {
-                slot.onSlotChanged();
+                slot.setChanged();
             }
         }
 
@@ -189,7 +189,7 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
     }
 
     @Override
-    public boolean canInteractWith(PlayerEntity playerIn) {
+    public boolean stillValid(PlayerEntity playerIn) {
         return true;
     }
 }

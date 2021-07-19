@@ -14,8 +14,8 @@ In the past UMC has been packaged directly with ImmersiveRailroading as it is wa
 [1.14.4-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.14.4-fabric) | ![Universal Mod Core 1.14.4-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.14.4-fabric)
 [1.15.2-forge](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.15.2-forge) | ![Universal Mod Core 1.15.2-forge](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.15.2-forge)
 [1.15.2-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.15.2-fabric) | ![Universal Mod Core 1.15.2-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.16.2-fabric)
-[1.16.4-forge](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.16.4-forge) | ![Universal Mod Core 1.16.4-forge](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.16.4-forge)
-[1.16.4-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.16.4-fabric) | ![Universal Mod Core 1.16.4-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.16.4-fabric)
+[1.16.5-forge](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.16.5-forge) | ![Universal Mod Core 1.16.5-forge](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.16.5-forge)
+[1.16.5-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/tree/1.16.5-fabric) | ![Universal Mod Core 1.16.5-fabric](https://github.com/TeamOpenIndustry/UniversalModCore/workflows/Universal%20Mod%20Core%20CI/badge.svg?branch=1.16.5-fabric)
 
 ## Developer Guide
 

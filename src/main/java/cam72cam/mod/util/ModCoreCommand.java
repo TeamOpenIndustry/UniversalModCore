@@ -83,4 +83,15 @@ public class ModCoreCommand extends Command {
 		counts.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.forEach(entry -> sender.accept(PlayerMessage.direct(entry.getValue() + " x " + entry.getKey())));
 	}
+
+	public Optional<Integer> parseInteger(String text) {
+
+		try {
+			return Optional.of(Integer.parseInt(text));
+		} catch (NumberFormatException e) {
+			return Optional.empty();
+		}
+
+	}
+
 }
