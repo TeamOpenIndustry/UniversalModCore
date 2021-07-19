@@ -664,7 +664,7 @@ public class World {
      * @param updateObservers
      */
     public void notifyNeighborsOfStateChange(Vec3i pos, BlockTypeEntity block, boolean updateObservers){
-        this.internal.notifyNeighborsOfStateChange(pos.internal(), block.internal, updateObservers);
+        this.internal.notifyNeighborsOfStateChange(pos.internal(), block.internal);
     }
 
     public enum ParticleType {
