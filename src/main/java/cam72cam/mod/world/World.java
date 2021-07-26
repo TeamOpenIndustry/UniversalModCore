@@ -636,7 +636,7 @@ public class World {
      * @param block
      * @param updateObservers
      */
-    public void notifyNeighborsOfStateChange(Vec3i pos, BlockTypeEntity block, boolean updateObservers){
+    public void notifyNeighborsOfStateChange(Vec3i pos, BlockType block, boolean updateObservers){
         this.internal.notifyNeighborsOfStateChange(pos.internal(), block.internal, updateObservers);
     }
 
