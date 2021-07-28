@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +20,7 @@ public interface ITank {
      */
     static ITank getTank(ItemStack stack, Consumer<ItemStack> onUpdate) {
 
-        IFluidHandlerItem internal = FluidUtil.getFluidHandler(stack.internal);
+        IFluidHandler internal = FluidUtil.getFluidHandler(stack.internal);
         if (internal == null) {
             return null;
         }
@@ -44,18 +43,20 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(stack.copy().internal);
+                ItemStack ic = stack.copy();
+                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
                 temp.fill(fluidStack.internal, true);
-                onUpdate.accept(new ItemStack(temp.getContainer()));
+                onUpdate.accept(ic);
 
                 return internal.fill(fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(stack.copy().internal);
+                ItemStack ic = stack.copy();
+                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
                 temp.drain(fluidStack.internal, true);
-                onUpdate.accept(new ItemStack(temp.getContainer()));
+                onUpdate.accept(ic);
 
                 return new FluidStack(internal.drain(fluidStack.internal, !simulate));
             }

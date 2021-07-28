@@ -28,7 +28,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -482,13 +481,17 @@ public class World {
 
     /** Set a block to given stack (best guestimate) */
     public void setBlock(Vec3i pos, ItemStack stack) {
-        IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
-        internal.setBlockState(pos.internal(), state);
+        if (stack.isEmpty()) {
+            internal.setBlockToAir(pos.internal());
+        } else {
+            IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
+            internal.setBlockState(pos.internal(), state);
+        }
     }
 
     /** Is the top of the block solid?  Based on some AABB nonsense */
     public boolean isTopSolid(Vec3i pos) {
-        return internal.getBlockState(pos.internal()).isTopSolid();
+        return internal.getBlockState(pos.internal()).isSideSolid(internal, pos.internal(), EnumFacing.UP);
     }
 
     /** Get max redstone power surrounding this block */
@@ -601,7 +604,7 @@ public class World {
     /** Get dropped items within the given area */
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
         List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, BoundingBox.from(bb));
-        return items.stream().map((EntityItem::getItem)).map(ItemStack::new).collect(Collectors.toList());
+        return items.stream().map((EntityItem::getEntityItem)).map(ItemStack::new).collect(Collectors.toList());
     }
 
     /** Get a BlockInfo that can be used to overwrite a block in the future.  Does not currently include TE data */
@@ -637,7 +640,7 @@ public class World {
      * @param updateObservers
      */
     public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
-        this.internal.notifyNeighborsOfStateChange(pos.internal(), blockType.internal, updateObservers);
+        this.internal.notifyNeighborsOfStateChange(pos.internal(), blockType.internal);
     }
 
     public enum ParticleType {

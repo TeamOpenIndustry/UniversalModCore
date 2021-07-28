@@ -13,6 +13,7 @@ import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
@@ -24,6 +25,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -230,7 +232,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Player Interact */
     /** @see IClickable */
     @Override
-    public final boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
+    public final boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack Stack, EnumHand hand) {
         return iClickable.onClick(new Player(player), Player.Hand.from(hand)) == ClickResult.ACCEPTED;
     }
 
@@ -239,7 +241,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see IKillable */
     @Override
     public final boolean attackEntityFrom(DamageSource damagesource, float amount) {
-        cam72cam.mod.entity.Entity wrapEnt = damagesource.getTrueSource() != null ? self.getWorld().getEntity(damagesource.getTrueSource()) : null;
+        cam72cam.mod.entity.Entity wrapEnt = damagesource.getSourceOfDamage() != null ? self.getWorld().getEntity(damagesource.getSourceOfDamage()) : null;
         DamageType type;
         if (damagesource.isExplosion()) {
             type = DamageType.EXPLOSION;
@@ -299,6 +301,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             entity.startRiding(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
+            updateSeat(seat);
             world.spawnEntity(seat);
             new PassengerPositionsPacket(this).sendToObserving(self);
         }

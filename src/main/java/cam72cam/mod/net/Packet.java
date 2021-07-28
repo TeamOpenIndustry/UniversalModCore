@@ -156,7 +156,7 @@ public abstract class Packet {
 
         private void handle(T message, MessageContext ctx) {
             message.packet.ctx = ctx;
-            World world = ctx.side == Side.CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.getServerHandler().player.world);
+            World world = ctx.side == Side.CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.getServerHandler().playerEntity.world);
             try {
                 TagSerializer.deserialize(message.packet.data, message.packet, world);
             } catch (SerializationException e) {

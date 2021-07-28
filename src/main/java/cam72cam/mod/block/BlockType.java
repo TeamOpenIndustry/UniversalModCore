@@ -11,6 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,6 +23,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+
+import javax.annotation.Nullable;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -158,7 +161,7 @@ public abstract class BlockType {
 
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
-        public final boolean onBlockActivated(net.minecraft.world.World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        public final boolean onBlockActivated(net.minecraft.world.World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable net.minecraft.item.ItemStack heldItem, EnumFacing facing, float hitX, float hitY, float hitZ) {
             return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ));
         }
 
@@ -168,8 +171,9 @@ public abstract class BlockType {
         }
 
         @Override
-        public void neighborChanged(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos, net.minecraft.block.Block blockIn, BlockPos fromPos) {
-            this.onNeighborChange(worldIn, pos, fromPos);
+        public void neighborChanged(IBlockState state, net.minecraft.world.World worldIn, BlockPos pos, Block blockIn) {
+            // TODO 1.10 this might have some interesting side effects
+            this.onNeighborChange(worldIn, pos, pos);
         }
 
         @Override
@@ -204,7 +208,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        public AxisAlignedBB getCollisionBoundingBox(IBlockState state, net.minecraft.world.World source, BlockPos pos) {
             return getBoundingBox(state, source, pos);
         }
 
@@ -237,10 +241,6 @@ public abstract class BlockType {
         /*
          * Fence, glass override
          */
-        @Override
-        public boolean canBeConnectedTo(IBlockAccess internal, BlockPos pos, EnumFacing facing) {
-            return BlockType.this.isConnectable();
-        }
 
         @Deprecated
         @Override

@@ -8,7 +8,7 @@ import net.minecraftforge.fluids.FluidUtil;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
-    public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
+    public static final ItemStack EMPTY = new ItemStack((net.minecraft.item.ItemStack)null);
 
     public final net.minecraft.item.ItemStack internal;
 
@@ -19,7 +19,7 @@ public class ItemStack {
 
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(new net.minecraft.item.ItemStack(nbt.internal));
+        this(net.minecraft.item.ItemStack.loadItemStackFromNBT(nbt.internal));
     }
 
     /** Construct from customItem */
@@ -34,6 +34,10 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
+        if (internal == null) {
+            return new TagCompound();
+        }
+
         if (internal.getTagCompound() == null) {
             internal.setTagCompound(new TagCompound().internal);
         }
@@ -42,41 +46,47 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
-        internal.setTagCompound(data.internal);
+        if (internal != null) {
+            internal.setTagCompound(data.internal);
+        }
     }
 
     public ItemStack copy() {
-        return new ItemStack(internal.copy());
+        return internal != null ? new ItemStack(internal.copy()) : EMPTY;
     }
 
     /** Serialize */
     public TagCompound toTag() {
-        return new TagCompound(internal.serializeNBT());
+        return internal != null ? new TagCompound(internal.serializeNBT()) : new TagCompound();
     }
 
     /** Items in this stack */
     public int getCount() {
-        return internal.getCount();
+        return internal != null ? internal.stackSize : 0;
     }
 
     /** Set the items in this stack */
     public void setCount(int count) {
-        internal.setCount(count);
+        if (internal != null) {
+            internal.stackSize = count;
+        }
     }
 
     /** Human readable name */
     public String getDisplayName() {
-        return internal.getDisplayName();
+        return internal != null ? internal.getDisplayName() : "Empty";
     }
 
     /** Is count zero? */
     public boolean isEmpty() {
-        return internal.isEmpty();
+        return internal == null || internal.stackSize == 0;
     }
 
     /** Reduce stack size by i */
     public void shrink(int i) {
-        internal.shrink(i);
+        if (internal != null) {
+            internal.stackSize -= i;
+        }
     }
 
     /** Compares: item, count, damage, data */
@@ -96,7 +106,7 @@ public class ItemStack {
     }
 
     public boolean is(CustomItem item) {
-        return item.internal == this.internal.getItem();
+        return internal != null && item != null && item.internal == this.internal.getItem();
     }
 
     /** Is a bucket or similar item */
@@ -116,22 +126,24 @@ public class ItemStack {
 
     /** Max count of the stack */
     public int getLimit() {
-        return internal.getMaxStackSize();
+        return internal != null ? internal.getMaxStackSize() : 64;
     }
 
     /** Is the item this type of tool? */
     public boolean isValidTool(ToolType tool) {
-        return internal.getItem().getToolClasses(internal).contains(tool.toString());
+        return internal != null && internal.getItem().getToolClasses(internal).contains(tool.toString());
     }
 
     @Override
     public String toString() {
-        return internal.toString();
+        return internal != null ? internal.toString() : "Empty";
     }
 
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
-        internal.damageItem(i, player.internal);
+        if (internal != null) {
+            internal.damageItem(i, player.internal);
+        }
     }
 
     /** Completely null out the tag compound */

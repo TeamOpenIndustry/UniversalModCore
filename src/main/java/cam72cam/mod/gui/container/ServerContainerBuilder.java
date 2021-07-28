@@ -191,7 +191,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
 
     @Override
     public final net.minecraft.item.ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
-        net.minecraft.item.ItemStack itemstack = net.minecraft.item.ItemStack.EMPTY;
+        net.minecraft.item.ItemStack itemstack = null;
         Slot slot = this.inventorySlots.get(index);
         int numSlots = slotRefs.get(ContainerSection.CHEST).size();
 
@@ -200,14 +200,14 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
             itemstack = itemstack1.copy();
             if (index < numSlots) {
                 if (!this.mergeItemStack(itemstack1, numSlots, this.inventorySlots.size(), true)) {
-                    return net.minecraft.item.ItemStack.EMPTY;
+                    return null;
                 }
             } else if (!this.mergeItemStack(itemstack1, 0, numSlots, false)) {
-                return net.minecraft.item.ItemStack.EMPTY;
+                return null;
             }
 
-            if (itemstack1.isEmpty()) {
-                slot.putStack(net.minecraft.item.ItemStack.EMPTY);
+            if (itemstack1.stackSize == 0) {
+                slot.putStack(null);
             } else {
                 slot.onSlotChanged();
             }

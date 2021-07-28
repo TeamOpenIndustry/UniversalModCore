@@ -7,6 +7,8 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@SideOnly(Side.CLIENT)
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
     private final Map<GuiButton, Button> buttonMap = new HashMap<>();
@@ -74,7 +77,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawCenteredString(String str, int x, int y, int color) {
-        super.drawCenteredString(this.fontRenderer, str, this.width / 2 + x, this.height / 4 + y, color);
+        super.drawCenteredString(this.fontRendererObj, str, this.width / 2 + x, this.height / 4 + y, color);
     }
 
     @Override

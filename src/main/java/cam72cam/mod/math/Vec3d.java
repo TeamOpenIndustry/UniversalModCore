@@ -15,7 +15,7 @@ public class Vec3d {
     }
 
     public Vec3d(net.minecraft.util.math.Vec3d internal) {
-        this(internal.x, internal.y, internal.z);
+        this(internal.xCoord, internal.yCoord, internal.zCoord);
         this.internal = internal;
     }
 

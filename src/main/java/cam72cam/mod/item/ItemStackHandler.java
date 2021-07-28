@@ -15,17 +15,31 @@ import java.util.function.Function;
 /** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
-    public final net.minecraftforge.items.ItemStackHandler internal;
+    public final ExposedItemStackHandler internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
     private final List<Consumer<Integer>> onChanged = new ArrayList<>();
     private Function<Integer, Integer> slotLimit = null;
 
 
+    private class ExposedItemStackHandler extends net.minecraftforge.items.ItemStackHandler {
+        public ExposedItemStackHandler(int size) {
+            super(size);
+        }
+
+        @Override
+        public int getStackLimit(int slot, net.minecraft.item.ItemStack stack) {
+            return super.getStackLimit(slot, stack);
+        }
+    }
+
     public ItemStackHandler(int size) {
-        this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
+        this.internal = new ExposedItemStackHandler(size) {
             @Override
-            public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            public void setStackInSlot(int slot, net.minecraft.item.ItemStack stack) {
                 if (checkSlot.test(slot, new ItemStack(stack))) {
+                    if (stack != null && stack.stackSize <= 0) {
+                        stack = null;
+                    }
                     super.setStackInSlot(slot, stack);
                 }
             }
@@ -34,11 +48,6 @@ public class ItemStackHandler implements IInventory {
             @Nonnull
             public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
                 return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
-            }
-
-            @Override
-            public int getSlotLimit(int slot) {
-                return slotLimit == null ? super.getSlotLimit(slot) : Math.min(super.getSlotLimit(slot), slotLimit.apply(slot));
             }
 
             @Override
@@ -95,7 +104,11 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public void set(int slot, ItemStack stack) {
-        internal.setStackInSlot(slot, stack.internal);
+        if (stack.internal != null) {
+            internal.setStackInSlot(slot, stack.internal);
+        } else if (internal.getStackInSlot(slot) != null){
+            internal.extractItem(slot, internal.getStackInSlot(slot).stackSize, false);
+        }
     }
 
     @Override
@@ -110,7 +123,7 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public int getLimit(int slot) {
-        return internal.getSlotLimit(slot);
+        return internal.getStackLimit(slot, internal.getStackInSlot(slot));
     }
 
     @Deprecated

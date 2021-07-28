@@ -8,6 +8,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
@@ -81,7 +82,11 @@ public class GlobalRender {
     public static void registerOverlay(Consumer<Float> func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+                int scale = new ScaledResolution(Minecraft.getMinecraft()).getScaleFactor();
+                GL11.glPushMatrix();
+                GL11.glScaled(scale, scale, scale);
                 func.accept(event.getPartialTicks());
+                GL11.glPopMatrix();
             }
         });
     }
@@ -91,7 +96,7 @@ public class GlobalRender {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
-                if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
+                if (!player.getHeldItem(Player.Hand.PRIMARY).isEmpty() && item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), partialTicks);
                 }
             }

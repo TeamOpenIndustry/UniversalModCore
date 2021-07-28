@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -106,7 +105,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
             boolean shouldChunkLoad = false;
 
             for (ChunkPos pos : loaded) {
-                if (chunk.x == pos.chunkX && chunk.z == pos.chunkZ) {
+                if (chunk.chunkXPos == pos.chunkX && chunk.chunkZPos == pos.chunkZ) {
                     shouldChunkLoad = true;
                     loaded.remove(pos);
                     break;
@@ -118,14 +117,14 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                 //System.out.println(String.format("NOP CHUNK %s %s", chunk.x, chunk.z));
             } else {
                 try {
-                    ModCore.debug("UNFORCED CHUNK %s %s", chunk.x, chunk.z);
+                    ModCore.debug("UNFORCED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                     if (world instanceof WorldServer) {
-                        if (!((WorldServer)world).getPlayerChunkMap().contains(chunk.x, chunk.z)) {
-                            Chunk current = world.getChunkProvider().getLoadedChunk(chunk.x, chunk.z);
+                        if (!((WorldServer)world).getPlayerChunkMap().contains(chunk.chunkXPos, chunk.chunkZPos)) {
+                            Chunk current = world.getChunkProvider().getLoadedChunk(chunk.chunkXPos, chunk.chunkZPos);
                             if (current != null) {
-                                ModCore.debug("UNLOADED CHUNK %s %s", chunk.x, chunk.z);
-                                ((WorldServer) world).getChunkProvider().queueUnload(current);
+                                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+                                ((WorldServer) world).getChunkProvider().unload(current);
                             }
                         }
                     }

@@ -1,6 +1,5 @@
 package cam72cam.mod.event;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
@@ -11,11 +10,9 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.function.Consumer;
@@ -25,7 +22,7 @@ import java.util.function.Function;
 public class ClientEvents {
 
     private static void registerClientEvents() {
-        EntityRegistry.registerClientEvents();
+        //EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
@@ -50,7 +47,7 @@ public class ClientEvents {
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
 
-    @Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
+    @Mod.EventBusSubscriber(value = Side.CLIENT)
     public static class ClientEventBus {
         static {
             registerClientEvents();
@@ -77,6 +74,7 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerModels(ModelRegistryEvent event) {
             MODEL_CREATE.execute(Runnable::run);
+            REGISTER_ENTITY.execute(Runnable::run);
         }
 
         @SubscribeEvent
@@ -87,11 +85,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
             TEXTURE_STITCH.execute(Runnable::run);
-        }
-
-        @SubscribeEvent
-        public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
-            REGISTER_ENTITY.execute(Runnable::run);
         }
 
         @SubscribeEvent

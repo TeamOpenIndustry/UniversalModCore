@@ -33,6 +33,7 @@ import net.minecraftforge.fml.common.registry.GameData;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -105,15 +106,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @param name Internal (forge) name
      */
     public static void registerTileEntity(Class<? extends TileEntity> cls, Identifier name) {
-        ResourceLocation currentName = TileEntity.getKey(cls);
-        if (currentName != null) {
-            if (!currentName.toString().equals(name.toString())) {
-                throw new RuntimeException(String.format("Duplicate TileEntity registration with different name: %s : %s", currentName, name));
-            } else {
-                throw new RuntimeException(String.format("TileEntity %s has already been registered", name));
-            }
+        try {
+            TileEntity.addMapping(cls, name.toString());
+        } catch (IllegalArgumentException ex) {
+            //pass
         }
-        GameData.getTileEntityRegistry().putObject(name.internal, cls);
     }
 
     /** Wrap getPos() in a cached UMC Vec3i */
@@ -260,7 +257,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         super.markDirty();
         if (!world.isRemote) {
             world.notifyBlockUpdate(getPos(), world.getBlockState(getPos()), world.getBlockState(getPos()), 1 + 2 + 8);
-            world.notifyNeighborsOfStateChange(pos, this.getBlockType(), true);
+            world.notifyNeighborsOfStateChange(pos, this.getBlockType());
         }
     }
 
@@ -369,7 +366,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             if (target == null) {
                 return null;
             }
-            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(new IItemHandlerModifiable() {
+            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(new ItemStackHandler(target.getSlotCount()) {
                 @Override
                 public int getSlots() {
                     return target.getSlotCount();
@@ -399,9 +396,11 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 }
 
                 @Override
-                public int getSlotLimit(int slot) {
+                protected int getStackLimit(int slot, ItemStack stack)
+                {
                     return target.getLimit(slot);
                 }
+
             });
         }
         if (capability == CapabilityEnergy.ENERGY) {

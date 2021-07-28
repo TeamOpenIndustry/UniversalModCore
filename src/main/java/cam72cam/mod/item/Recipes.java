@@ -39,9 +39,8 @@ public class Recipes {
                         return;
                     }
                 }
-
-                int rows = ingredients.length/width;
-                List<Fuzzy> ingredientSet = new ArrayList(Arrays.stream(ingredients).filter(Objects::nonNull).collect(Collectors.toSet()));
+                int rows = ingredients.length / width;
+                List<Fuzzy> ingredientSet = new ArrayList<>(Arrays.stream(ingredients).filter(Objects::nonNull).collect(Collectors.toSet()));
 
                 Object[] data = new Object[rows + ingredientSet.size() * 2];
                 for (int i = 0; i < rows; i++) {

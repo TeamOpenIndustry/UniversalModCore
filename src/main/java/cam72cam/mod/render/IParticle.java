@@ -39,7 +39,7 @@ public abstract class IParticle {
                 }
 
                 @Override
-                public boolean shouldDisableDepth() {
+                public boolean isTransparent() {
                     return !ip.depthTestEnabled();
                 }
 

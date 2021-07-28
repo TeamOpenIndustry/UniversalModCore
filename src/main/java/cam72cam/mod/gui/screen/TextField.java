@@ -13,7 +13,7 @@ public class TextField {
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         this(
                 builder,
-                new GuiTextField(-1, Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height)
+                new GuiTextField(-1, Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height)
         );
     }
 

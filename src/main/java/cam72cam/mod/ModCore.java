@@ -10,6 +10,8 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.render.EntityRenderer;
+import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
@@ -33,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 /** UMC Mod, do not touch... */
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.11,1.12)")
+@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";

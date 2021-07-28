@@ -4,7 +4,6 @@ import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.Vec3i;
 
 import java.io.IOException;
@@ -16,12 +15,12 @@ import java.util.function.Consumer;
 public class ItemPickerGUI {
     private final ItemPickerScreen screen;
     public ItemStack choosenItem;
-    private NonNullList<ItemStack> items;
-    private final Consumer<ItemStack> onExit;
+    private List<ItemStack> items;
+    private Consumer<ItemStack> onExit;
 
     /** Construct with a list of all available items and an exit (chosen or null) handler */
     public ItemPickerGUI(List<ItemStack> items, Consumer<ItemStack> onExit) {
-        this.items = NonNullList.create();
+        this.items = new ArrayList<>();
         this.items.addAll(items);
         this.onExit = onExit;
         this.screen = new ItemPickerScreen();
@@ -29,7 +28,7 @@ public class ItemPickerGUI {
 
     /** Update items displayed */
     public void setItems(List<ItemStack> items) {
-        this.items = NonNullList.create();
+        this.items = new ArrayList<>();
         this.items.addAll(items);
         screen.initGui();
     }
@@ -61,10 +60,16 @@ public class ItemPickerGUI {
             for (GuiButton button : this.buttonList) {
                 if (button instanceof GuiScrollBar) continue;
                 if (scrollBar != null) {
-                    button.y = buttonCoordList.get(button.id).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    button.yPosition = buttonCoordList.get(button.id).getY() - (int) Math.floor(scrollBar.getValue() * 32);
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                    this.renderToolTip(((ItemButton) button).stack.internal, mouseX, mouseY);
+                    if (((ItemButton) button).stack.internal != null) {
+                        this.renderToolTip(((ItemButton) button).stack.internal, mouseX, mouseY);
+                    } else {
+                        List<String> text = new ArrayList<>();
+                        text.add(((ItemButton) button).stack.getDisplayName());
+                        this.drawHoveringText(text, mouseX, mouseY, fontRendererObj);
+                    }
                 }
             }
         }

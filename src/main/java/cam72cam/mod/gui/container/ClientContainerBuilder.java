@@ -189,7 +189,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(this.fontRenderer, text, x + centerX + this.xSize / 2, y + centerY, 14737632);
+        super.drawCenteredString(this.fontRendererObj, text, x + centerX + this.xSize / 2, y + centerY, 14737632);
     }
 
     @Override

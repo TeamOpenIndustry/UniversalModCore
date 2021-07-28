@@ -56,7 +56,7 @@ public abstract class Particle {
                 }
 
                 @Override
-                public boolean shouldDisableDepth() {
+                public boolean isTransparent() {
                     return !ip.depthTestEnabled();
                 }
 

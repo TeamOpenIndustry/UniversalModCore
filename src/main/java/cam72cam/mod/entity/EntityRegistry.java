@@ -1,18 +1,10 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.TagCompound;
-import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiDisconnected;
-import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiMultiplayer;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
@@ -37,7 +29,7 @@ public class EntityRegistry {
 
             // This has back-compat for older entity names
             // TODO expose updateFreq and vecUpdates
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(id.internal, ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
+            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
 
             identifiers.put(type, id.toString());
             constructors.put(id.toString(), ctr);
@@ -60,10 +52,9 @@ public class EntityRegistry {
         return ent.getSelf();
     }
 
-
     public static void registerEvents() {
         CommonEvents.Entity.REGISTER.subscribe(() -> {
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.ID, SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 512, 20, false);
+            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 512, 20, false);
         });
 
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
@@ -79,7 +70,7 @@ public class EntityRegistry {
             return true;
         });
     }
-
+/*
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
@@ -91,5 +82,5 @@ public class EntityRegistry {
                 missingResources = null;
             }
         });
-    }
+    }*/
 }

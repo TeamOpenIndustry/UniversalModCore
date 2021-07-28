@@ -13,8 +13,8 @@ public class ChunkPos {
     public ChunkPos(World world, BlockPos pos) {
         dim = world.provider.getDimension();
         Chunk chunk = world.getChunkFromBlockCoords(pos);
-        chunkX = chunk.x;
-        chunkZ = chunk.z;
+        chunkX = chunk.xPosition;
+        chunkZ = chunk.zPosition;
     }
 
     public ChunkPos(Entity entity) {

@@ -14,7 +14,11 @@ public class CreativeTab {
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         internal = new CreativeTabs(label) {
             @Override
-            public net.minecraft.item.ItemStack getTabIconItem() {
+            public net.minecraft.item.Item getTabIconItem() {
+                return stack.get().internal.getItem();
+            }
+            @Override
+            public net.minecraft.item.ItemStack getIconItemStack() {
                 return stack.get().internal;
             }
         };

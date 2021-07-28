@@ -1,8 +1,6 @@
 package cam72cam.mod.event;
 
-import cam72cam.mod.ModCore;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -11,7 +9,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import java.util.function.Consumer;
 
@@ -46,7 +43,7 @@ public class CommonEvents {
         public static final Event<EventBus.EntityJoinEvent> JOIN = new Event<>();
     }
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID)
+    @Mod.EventBusSubscriber()
     public static final class EventBus {
         static {
             registerEvents();
@@ -89,10 +86,6 @@ public class CommonEvents {
         @SubscribeEvent
         public static void registerItems(RegistryEvent.Register<net.minecraft.item.Item> event) {
             Item.REGISTER.execute(Runnable::run);
-        }
-
-        @SubscribeEvent
-        public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
             Entity.REGISTER.execute(Runnable::run);
             Recipe.REGISTER.execute(Runnable::run);
         }

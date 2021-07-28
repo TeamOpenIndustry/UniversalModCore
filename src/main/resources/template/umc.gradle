@@ -21,7 +21,7 @@ apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 apply plugin: 'maven'
 
 
-version = "1.11.2-forge-#VERSION#"
+version = "1.10.2-forge-#VERSION#"
 group = "#PACKAGE#" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "#CLASS#"
 
@@ -31,7 +31,7 @@ compileJava {
 }
 
 minecraft {
-	version = "1.11.2-13.20.0.2315"
+    version = "1.10.2-12.18.3.2511"
     runDir = "run"
     
     // the mappings can be changed at any time, and must be in the following format.
@@ -39,7 +39,7 @@ minecraft {
     // stable_#            stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "stable_32"
+    mappings = "stable_29"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 

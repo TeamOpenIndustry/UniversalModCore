@@ -98,9 +98,8 @@ public abstract class CustomItem {
             return super.getItemStackDisplayName(stack);
         }
 
-        @Override
-        public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<net.minecraft.item.ItemStack> items) {
-            CreativeTab myTab = tab != CreativeTabs.SEARCH ? new CreativeTab(tab) : null;
+        public void getSubItems(Item itemIn, CreativeTabs tab, List<net.minecraft.item.ItemStack> items) {
+            CreativeTab myTab = tab != CreativeTabs.SEARCH && tab != null ? new CreativeTab(tab) : null;
             items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
 
@@ -112,14 +111,14 @@ public abstract class CustomItem {
         }
 
         @Override
-        public final EnumActionResult onItemUse(EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        public final EnumActionResult onItemUse(net.minecraft.item.ItemStack stack, EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
             return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Player.Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
         }
 
         @Override
-        public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
+        public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
             onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
-            return super.onItemRightClick(world, player, hand);
+            return super.onItemRightClick(stack, world, player, hand);
         }
 
         @Override

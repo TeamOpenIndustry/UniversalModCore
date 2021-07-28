@@ -103,7 +103,7 @@ public class GUIHelpers {
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
-            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+            Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), (float) y, color);
         }
     }
 
