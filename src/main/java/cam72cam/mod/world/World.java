@@ -4,7 +4,6 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
-import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
@@ -651,5 +650,4 @@ public class World {
             this.internal = internal;
         }
     }
-
 }
