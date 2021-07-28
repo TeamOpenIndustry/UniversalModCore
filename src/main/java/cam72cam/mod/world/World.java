@@ -630,7 +630,7 @@ public class World {
     /**
      *
      * Updates the blocks around the position.
-     * Value updateObservers will be ignored in older MC versions.
+     * Value updateObservers will be ignored in some MC versions.
      *
      * @param pos
      * @param blockType
