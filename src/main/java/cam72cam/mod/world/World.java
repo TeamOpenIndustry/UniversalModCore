@@ -630,14 +630,14 @@ public class World {
     /**
      *
      * Updates the blocks around the position.
-     * Value updateObservers will be ignored in older MC versions.
+     * Value updateObservers will be ignored in some MC versions.
      *
      * @param pos
-     * @param block
+     * @param blockType
      * @param updateObservers
      */
-    public void notifyNeighborsOfStateChange(Vec3i pos, BlockTypeEntity block, boolean updateObservers){
-        this.internal.notifyNeighborsOfStateChange(pos.internal(), block.internal, updateObservers);
+    public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
+        this.internal.notifyNeighborsOfStateChange(pos.internal(), blockType.internal, updateObservers);
     }
 
     public enum ParticleType {
