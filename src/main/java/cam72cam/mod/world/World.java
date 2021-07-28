@@ -633,7 +633,7 @@ public class World {
      * Value updateObservers will be ignored in older MC versions.
      *
      * @param pos
-     * @param block
+     * @param blockType
      * @param updateObservers
      */
     public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
