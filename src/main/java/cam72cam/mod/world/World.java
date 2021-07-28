@@ -629,6 +629,19 @@ public class World {
         internal.spawnParticle(type.internal, position.x, position.y, position.z, velocity.x, velocity.y, velocity.z);
     }
 
+    /**
+     *
+     * Updates the blocks around the position.
+     * Value updateObservers will be ignored in some MC versions.
+     *
+     * @param pos
+     * @param blockType
+     * @param updateObservers
+     */
+    public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
+        this.internal.notifyNeighborsOfStateChange(pos.internal(), blockType.internal, updateObservers);
+    }
+
     public enum ParticleType {
         SMOKE(EnumParticleTypes.SMOKE_NORMAL),
         // Incomplete
