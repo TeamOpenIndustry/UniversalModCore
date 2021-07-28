@@ -1,21 +1,45 @@
 package cam72cam.mod.sound;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 public enum SoundCategory {
-    MASTER(net.minecraft.util.SoundCategory.MASTER),
-    MUSIC(net.minecraft.util.SoundCategory.MUSIC),
-    RECORDS(net.minecraft.util.SoundCategory.RECORDS),
-    WEATHER(net.minecraft.util.SoundCategory.WEATHER),
-    BLOCKS(net.minecraft.util.SoundCategory.BLOCKS),
-    HOSTILE(net.minecraft.util.SoundCategory.HOSTILE),
-    NEUTRAL(net.minecraft.util.SoundCategory.NEUTRAL),
-    PLAYERS(net.minecraft.util.SoundCategory.PLAYERS),
-    AMBIENT(net.minecraft.util.SoundCategory.AMBIENT),
-    VOICE(net.minecraft.util.SoundCategory.VOICE),
+    MASTER,
+    MUSIC,
+    RECORDS,
+    WEATHER,
+    BLOCKS,
+    HOSTILE,
+    NEUTRAL,
+    PLAYERS,
+    AMBIENT,
+    VOICE,
     ;
 
-    final net.minecraft.util.SoundCategory category;
-
-    SoundCategory(net.minecraft.util.SoundCategory category) {
-        this.category = category;
+    @SideOnly(Side.CLIENT)
+    public net.minecraft.client.audio.SoundCategory internal() {
+        switch (this) {
+            case MASTER:
+                return net.minecraft.client.audio.SoundCategory.MASTER;
+            case MUSIC:
+                return net.minecraft.client.audio.SoundCategory.MUSIC;
+            case RECORDS:
+                return net.minecraft.client.audio.SoundCategory.RECORDS;
+            case WEATHER:
+                return net.minecraft.client.audio.SoundCategory.WEATHER;
+            case BLOCKS:
+                return net.minecraft.client.audio.SoundCategory.BLOCKS;
+            case HOSTILE:
+                return net.minecraft.client.audio.SoundCategory.PLAYERS;
+            case NEUTRAL:
+                return net.minecraft.client.audio.SoundCategory.PLAYERS;
+            case PLAYERS:
+                return net.minecraft.client.audio.SoundCategory.PLAYERS;
+            case AMBIENT:
+                return net.minecraft.client.audio.SoundCategory.AMBIENT;
+            case VOICE:
+                return net.minecraft.client.audio.SoundCategory.PLAYERS;
+        }
+        throw new RuntimeException("unreachable");
     }
 }

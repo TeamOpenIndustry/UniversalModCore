@@ -1,6 +1,7 @@
 package cam72cam.mod.block;
 
-import net.minecraft.block.SoundType;
+import net.minecraft.block.Block;
+import net.minecraft.block.Block.SoundType;
 
 /**
  * Wraps minecraft's material enum
@@ -8,8 +9,8 @@ import net.minecraft.block.SoundType;
  * TODO pull in the rest of the options here that are availible across all supported MC versions
  */
 public enum Material {
-    METAL(net.minecraft.block.material.Material.IRON, SoundType.METAL),
-    WOOL(net.minecraft.block.material.Material.CARPET, SoundType.CLOTH),
+    METAL(net.minecraft.block.material.Material.iron, Block.soundTypeMetal),
+    WOOL(net.minecraft.block.material.Material.carpet, Block.soundTypeCloth),
     ;
 
     protected final net.minecraft.block.material.Material internal;

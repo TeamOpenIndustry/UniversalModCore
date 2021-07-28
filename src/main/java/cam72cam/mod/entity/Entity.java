@@ -7,15 +7,13 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityVillager;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Explosion;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * The base entity abstraction that wraps MC entities.
@@ -32,7 +30,7 @@ public class Entity {
     }
 
     public World getWorld() {
-        return World.get(internal.world);
+        return World.get(internal.worldObj);
     }
 
     /** UUID that persists across loads */
@@ -40,7 +38,7 @@ public class Entity {
         return internal.getPersistentID();
     }
 
-    private final SingleCache<Vec3d, Vec3i> blockPosCache = new SingleCache<>(pos -> new Vec3i(internal.getPosition()));
+    private final SingleCache<Vec3d, Vec3i> blockPosCache = new SingleCache<>(pos -> new Vec3i(internal.posX, internal.posY, internal.posZ));
     /* Position / Rotation */
     public Vec3i getBlockPosition() {
         return blockPosCache.get(getPosition());
@@ -53,7 +51,7 @@ public class Entity {
                 posCache.y != internal.posY ||
                 posCache.z != internal.posZ )
         ) {
-            posCache = new Vec3d(internal.getPositionVector());
+            posCache = new Vec3d(internal.posX, internal.posY, internal.posZ);
         }
         return posCache;
     }
@@ -153,9 +151,8 @@ public class Entity {
         return this instanceof Living;
     }
 
-
     public void kill() {
-        internal.world.removeEntity(internal);
+        internal.worldObj.removeEntity(internal);
     }
 
     public final boolean isDead() {
@@ -167,38 +164,46 @@ public class Entity {
     }
 
     public int getPassengerCount() {
-        return internal.getPassengers().size();
+        return internal.riddenByEntity != null ? 1 : 0;
     }
 
     public void addPassenger(cam72cam.mod.entity.Entity passenger) {
-        passenger.internal.startRiding(internal);
+        passenger.internal.mountEntity(internal);
     }
 
     public boolean isPassenger(cam72cam.mod.entity.Entity passenger) {
-        return internal.isPassenger(passenger.internal);
+        return internal.ridingEntity != null && internal.ridingEntity.getPersistentID().equals(passenger.getUUID());
     }
 
     public void removePassenger(Entity entity) {
-        entity.internal.dismountRidingEntity();
+        entity.internal.mountEntity(null);
     }
 
     public List<Entity> getPassengers() {
-        return internal.getPassengers().stream().map(e -> getWorld().getEntity(e)).filter(Objects::nonNull).collect(Collectors.toList());
+        List<Entity> passengers = new ArrayList<>();
+        if (internal.riddenByEntity != null) {
+            Entity passenger = getWorld().getEntity(internal.riddenByEntity.getUniqueID(), Entity.class);
+            if (passenger != null) {
+                passengers.add(passenger);
+            }
+        }
+
+        return passengers;
     }
 
     public Entity getRiding() {
-        if (internal.getRidingEntity() != null) {
-            if (internal.getRidingEntity() instanceof SeatEntity) {
-                return ((SeatEntity)internal.getRidingEntity()).getParent();
+        if (internal.ridingEntity != null) {
+            if (internal.ridingEntity instanceof SeatEntity) {
+                return ((SeatEntity)internal.ridingEntity).getParent();
             }
-            return getWorld().getEntity(internal.getRidingEntity());
+            return getWorld().getEntity(internal.ridingEntity);
         }
         return null;
     }
 
     private final SingleCache<AxisAlignedBB, IBoundingBox> boundingBox = new SingleCache<>(IBoundingBox::from);
     public IBoundingBox getBounds() {
-        return boundingBox.get(internal.getEntityBoundingBox());
+        return boundingBox.get(internal.boundingBox);
     }
 
     public float getRotationYawHead() {
@@ -210,7 +215,7 @@ public class Entity {
     }
 
     public void startRiding(Entity entity) {
-        internal.startRiding(entity.internal);
+        entity.addPassenger(this);
     }
 
     /** If riding this entity, what modifier should be applied to the overall sound level */
@@ -224,7 +229,8 @@ public class Entity {
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain);
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size);
+        explosion.isFlaming = false;
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.doExplosionA();
         explosion.doExplosionB(true);

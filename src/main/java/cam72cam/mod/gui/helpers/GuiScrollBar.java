@@ -1,8 +1,8 @@
 package cam72cam.mod.gui.helpers;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraftforge.fml.client.config.GuiSlider;
+import cpw.mods.fml.client.config.GuiSlider;
+import org.lwjgl.opengl.GL11;
 
 /** Internal scrollbar class */
 class GuiScrollBar extends GuiSlider {
@@ -19,7 +19,7 @@ class GuiScrollBar extends GuiSlider {
                 updateSlider();
             }
 
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             this.drawTexturedModalRect(this.xPosition, this.yPosition + (int) (this.sliderValue * (float) (this.height - 8)), 0, 66, 20, 20);
         }
     }

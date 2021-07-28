@@ -1,7 +1,7 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.AxisAlignedBB;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
@@ -46,7 +46,7 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public IBoundingBox offset(Vec3d vec3d) {
-        return IBoundingBox.from(internal.offset(vec3d.x, vec3d.y, vec3d.z));
+        return IBoundingBox.from(internal.getOffsetBoundingBox(vec3d.x, vec3d.y, vec3d.z));
     }
 
     @Override
@@ -66,7 +66,7 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public boolean intersects(Vec3d min, Vec3d max) {
-        return internal.intersects(min.x, min.y, min.z, max.x, max.y, max.z);
+        return internal.intersectsWith(AxisAlignedBB.getBoundingBox(min.x, min.y, min.z, max.x, max.y, max.z));
     }
 
     @Override

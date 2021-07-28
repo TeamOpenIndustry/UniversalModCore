@@ -6,14 +6,13 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import cam72cam.mod.entity.Player;
+import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandHandler;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /** API not finalized use at your own risk */
 public abstract class Command {
@@ -24,12 +23,12 @@ public abstract class Command {
     protected Command() {
         this.internal = new CommandBase() {
             @Override
-            public String getName() {
+            public String getCommandName() {
                 return Command.this.getPrefix();
             }
 
             @Override
-            public String getUsage(ICommandSender sender) {
+            public String getCommandUsage(ICommandSender sender) {
                 return Command.this.getUsage();
             }
 
@@ -39,22 +38,23 @@ public abstract class Command {
             }
 
             @Override
-            public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-				if (getRequiredPermissionLevel() == PermissionLevel.NONE)
-					return true;
-				return sender.canUseCommand(getRequiredPermissionLevel(), getName());
-            }
-            
-            @Override
-			public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+            public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 				Optional<Player> player = Optional.empty();
 				if (sender instanceof EntityPlayer) {
 					player = Optional.of(new Player((EntityPlayer) sender));
 				}
-				if (!Command.this.execute(m -> sender.sendMessage(m.internal), player, args)) {
-                    throw new CommandException(getUsage(sender));
+				if (!Command.this.execute(m -> sender.addChatMessage(m.internal), player, args)) {
+					throw new CommandException(getUsage());
                 }
             }
+
+			@Override
+			public boolean canCommandSenderUseCommand(ICommandSender sender) {
+				if (getRequiredPermissionLevel() == PermissionLevel.NONE)
+					return true;
+				return super.canCommandSenderUseCommand(sender);
+			}
+
         };
     }
 

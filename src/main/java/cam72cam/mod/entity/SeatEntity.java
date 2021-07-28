@@ -3,14 +3,14 @@ package cam72cam.mod.entity;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.UUID;
 
@@ -55,9 +55,9 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void onUpdate() {
+    public void onEntityUpdate() {
         ticks ++;
-        if (world.isRemote || ticks < 5) {
+        if (ticks < 5) {
             return;
         }
 
@@ -72,17 +72,21 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
             return;
         }
 
-        if (getPassengers().isEmpty()) {
+        if (riddenByEntity == null) {
             if (this.ticks < 20) {
                 if (!hasHadPassenger) {
-                    cam72cam.mod.entity.Entity toRide = World.get(world).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                    cam72cam.mod.entity.Entity toRide = World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
                     if (toRide != null) {
                         ModCore.debug("FORCE RIDER");
-                        toRide.internal.startRiding(this, true);
+                        toRide.internal.mountEntity(this);
                         hasHadPassenger = true;
                     }
                 }
             } else {
+                cam72cam.mod.entity.Entity toRide = World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                if (toRide != null && !(toRide.internal.ridingEntity instanceof SeatEntity)) {
+                    removePassenger();
+                }
                 ModCore.debug("No passengers, goodbye");
                 this.setDead();
                 return;
@@ -108,7 +112,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public cam72cam.mod.entity.Entity getParent() {
-        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             return linked;
         }
@@ -120,11 +124,15 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return 0;
     }
 
+    private int lastUpdateTickId = -1;
     @Override
-    public final void updatePassenger(net.minecraft.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
-        if (linked != null && linked.internal instanceof ModdedEntity) {
-            ((ModdedEntity) linked.internal).updateSeat(this);
+    public void updateRiderPosition() {
+        if (this.ticksExisted != lastUpdateTickId) {
+            this.lastUpdateTickId = ticksExisted;
+            cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
+            if (linked != null && linked.internal instanceof ModdedEntity) {
+                ((ModdedEntity) linked.internal).updateSeat(this);
+            }
         }
     }
 
@@ -133,23 +141,25 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return shouldSit;
     }
 
-    @Override
-    public final void removePassenger(net.minecraft.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+    private final void removePassenger() {
+        cam72cam.mod.entity.Entity linked = World.get(worldObj).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).removeSeat(this);
         }
-        super.removePassenger(passenger);
     }
 
     public cam72cam.mod.entity.Entity getEntityPassenger() {
         if (this.isDead) {
             return null;
         }
-        if (this.getPassengers().size() == 0) {
+        if (riddenByEntity == null) {
+            if (passenger != null) {
+                ModCore.debug("FALLBACK UNMOUNT");
+                return World.get(worldObj).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+            }
             return null;
         }
-        return World.get(world).getEntity(getPassengers().get(0));
+        return World.get(worldObj).getEntity(riddenByEntity);
     }
 
     @Override
@@ -170,6 +180,6 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     @SideOnly(Side.CLIENT)
     public boolean isInRangeToRenderDist(double distance) {
-        return false;
+        return true;
     }
 }

@@ -1,19 +1,20 @@
 package cam72cam.mod.world;
 
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTUtil;
 
 /** Represents a Block in-world and all of it's data (not counting TE) */
 @TagMapped(BlockInfo.TagMapper.class)
 public class BlockInfo {
-    final IBlockState internal;
+    final Block internal;
+    final int internalMeta;
 
-    BlockInfo(IBlockState state) {
-        this.internal = state;
+    BlockInfo(Block block, int meta) {
+        internal = block;
+        internalMeta = meta;
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<BlockInfo> {
@@ -25,9 +26,19 @@ public class BlockInfo {
                             d.remove(fieldName);
                             return;
                         }
-                        d.set(fieldName, new TagCompound(NBTUtil.writeBlockState(new NBTTagCompound(), o.internal)));
+                        TagCompound data = new TagCompound();
+                        if (o.internal != null) {
+                            data.setString("block", Block.blockRegistry.getNameForObject(o.internal));
+                            data.setInteger("meta", o.internalMeta);
+                        }
+                        d.set(fieldName, data);
                     },
-                    info -> new BlockInfo(NBTUtil.readBlockState(info.get(fieldName).internal))
+                    info -> {
+                        if (!info.get(fieldName).hasKey("block")) {
+                            return new BlockInfo(Blocks.air, 0);
+                        }
+                        return new BlockInfo(Block.getBlockFromName(info.get(fieldName).getString("block")), info.get(fieldName).getInteger("meta"));
+                    }
             );
         }
     }

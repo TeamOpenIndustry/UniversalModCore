@@ -6,21 +6,19 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.ItemRender;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,11 +31,10 @@ public abstract class CustomItem {
     public CustomItem(String modID, String name) {
         internal = new ItemInternal();
         internal.setUnlocalizedName(modID + ":" + name);
-        internal.setRegistryName(new ResourceLocation(modID, name));
         internal.setMaxStackSize(getStackSize());
         internal.setCreativeTab(getCreativeTabs().get(0).internal);
 
-        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+        CommonEvents.Item.REGISTER.subscribe(() -> GameRegistry.registerItem(internal, name, modID));
     }
 
     /** Creative tabs that this should be shown under */
@@ -84,10 +81,10 @@ public abstract class CustomItem {
 
     /** Identifier of this item */
     public final Identifier getRegistryName() {
-        return new Identifier(internal.getRegistryName());
+        return new Identifier(internal.getUnlocalizedName());
     }
 
-    @Optional.Interface(iface = "mezz.jei.api.ingredients.ISlowRenderItem", modid = "jei")
+    // Removed 1.7.10 @Optional.Interface(iface = "mezz.jei.api.ingredients.ISlowRenderItem", modid = "jei")
     private class ItemInternal extends Item {
         @Override
         public String getItemStackDisplayName(net.minecraft.item.ItemStack stack) {
@@ -98,37 +95,60 @@ public abstract class CustomItem {
             return super.getItemStackDisplayName(stack);
         }
 
-        public void getSubItems(Item itemIn, CreativeTabs tab, List<net.minecraft.item.ItemStack> items) {
-            CreativeTab myTab = tab != CreativeTabs.SEARCH && tab != null ? new CreativeTab(tab) : null;
+        public void getSubItems(Item itemIn, CreativeTabs tab, List items) {
+            CreativeTab myTab = tab != CreativeTabs.tabAllSearch && tab != null ? new CreativeTab(tab) : null;
             items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
         }
 
         @Override
         @SideOnly(Side.CLIENT)
-        public final void addInformation(net.minecraft.item.ItemStack stack, EntityPlayer entityPlayer, List<String> tooltip, boolean flagIn) {
+        public final void addInformation(net.minecraft.item.ItemStack stack, EntityPlayer entityPlayer, List tooltip, boolean flagIn) {
             super.addInformation(stack, entityPlayer, tooltip, flagIn);
             tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)));
         }
 
         @Override
-        public final EnumActionResult onItemUse(net.minecraft.item.ItemStack stack, EntityPlayer player, net.minecraft.world.World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-            return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(pos), Player.Hand.from(hand), Facing.from(facing), new Vec3d(hitX, hitY, hitZ)).internal;
+        public final boolean onItemUse(net.minecraft.item.ItemStack stack, EntityPlayer player, net.minecraft.world.World worldIn, int posX, int posY, int posZ, int facing, float hitX, float hitY, float hitZ) {
+            return CustomItem.this.onClickBlock(new Player(player), World.get(worldIn), new Vec3i(posX, posY, posZ), Player.Hand.PRIMARY, Facing.from((byte)facing), new Vec3d(hitX, hitY, hitZ)).internal;
         }
 
         @Override
-        public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
-            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
-            return super.onItemRightClick(stack, world, player, hand);
+        public final net.minecraft.item.ItemStack onItemRightClick(net.minecraft.item.ItemStack stack, net.minecraft.world.World world, EntityPlayer player) {
+            onClickAir(new Player(player), World.get(world), Player.Hand.PRIMARY);
+            return super.onItemRightClick(stack, world, player);
         }
 
         @Override
-        public final boolean isValidArmor(net.minecraft.item.ItemStack stack, EntityEquipmentSlot armorType, net.minecraft.entity.Entity entity) {
-            return CustomItem.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), World.get(entity.world).getEntity(entity));
+        public final boolean isValidArmor(net.minecraft.item.ItemStack stack, int armorType, net.minecraft.entity.Entity entity) {
+            return CustomItem.this.isValidArmor(new ItemStack(stack), ArmorSlot.from(armorType), new Entity(entity));
         }
 
         @Override
         public final CreativeTabs[] getCreativeTabs() {
             return CustomItem.this.getCreativeTabs().stream().map((CreativeTab tab) -> tab.internal).toArray(CreativeTabs[]::new);
+        }
+
+        /*
+        @SideOnly(Side.CLIENT)
+        public IIcon getIconFromDamageForRenderPass(int p_77618_1_, int p_77618_2_)
+        {
+            return ItemRender.getIcon(ItemBase.this);
+        }
+
+        @SideOnly(Side.CLIENT)
+        public IIcon getIconFromDamage(int p_77617_1_) {
+            return ItemRender.getIcon(ItemBase.this);
+        }
+        */
+
+        @SideOnly(Side.CLIENT)
+        public void registerIcons(IIconRegister ir) {
+            String iconName = ItemRender.getIcon(CustomItem.this);
+            if (iconName != null) {
+                this.itemIcon = ir.registerIcon(iconName.replace(":items/", ":"));
+            } else {
+                super.registerIcons(ir);
+            }
         }
     }
 

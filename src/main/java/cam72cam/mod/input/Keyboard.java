@@ -1,10 +1,10 @@
 package cam72cam.mod.input;
 
 import cam72cam.mod.event.ClientEvents;
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Keyboard {
     public enum KeyCode {
@@ -130,7 +130,7 @@ public class Keyboard {
         KeyBinding key = new KeyBinding(name, keyCode.code, category);
         ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
-            if (key.isKeyDown()) {
+            if (key.getIsKeyPressed()) {
                 handler.run();
             }
         });

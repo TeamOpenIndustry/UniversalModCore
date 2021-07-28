@@ -8,8 +8,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
 import paulscode.sound.SoundSystemConfig;
 
 public class Audio {
@@ -34,7 +34,7 @@ public class Audio {
 
         ClientEvents.SOUND_LOAD.subscribe(event -> {
             if (soundManager == null) {
-                soundManager = new ModSoundManager(event.getManager());
+                soundManager = new ModSoundManager(event.manager);
             } else {
                 soundManager.handleReload(false);
             }
@@ -47,7 +47,7 @@ public class Audio {
 
     /** Play a built-in sound (Client side only) */
     public static void playSound(World world, Vec3d pos, StandardSound sound, SoundCategory category, float volume, float pitch) {
-        world.internal.playSound(pos.x, pos.y, pos.z, sound.event, category.category, volume, pitch, false);
+        world.internal.playSound(pos.x, pos.y, pos.z, sound.event, volume, pitch, false);
     }
 
     /** Play a built-in sound (Client side only) */

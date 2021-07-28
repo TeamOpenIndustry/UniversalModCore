@@ -2,7 +2,6 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
@@ -71,7 +70,7 @@ public class OpenGL {
         int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         Minecraft.getMinecraft().getTextureManager().bindTexture(identifier.internal);
         return () -> {
-            GlStateManager.bindTexture(currentTexture);
+            GL11.glBindTexture(3553, currentTexture);
             t.restore();
         };
     }

@@ -3,21 +3,15 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockColored;
-import net.minecraft.block.BlockLog;
-import net.minecraft.block.BlockSnow;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.model.pipeline.LightUtil;
+import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -27,53 +21,84 @@ import java.util.function.Consumer;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<IBlockState, IBakedModel>> models = new ArrayList<>();
-    private final List<Consumer<Float>> custom = new ArrayList<>();
+    private List<Consumer<RenderInfo>> models = new ArrayList<>();
+    private class RenderInfo {
+        IBlockAccess world;
+        int x;
+        int y;
+        int z;
+
+        public RenderInfo(IBlockAccess world, int x, int y, int z) {
+            this.world = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
+    private List<Consumer<Float>> custom = new ArrayList<>();
+
+    private RenderBlocks renderBlocks = new RenderBlocks();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
-    private static IBlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
+    private static Pair<Block, Integer> itemToBlockState(cam72cam.mod.item.ItemStack stack) {
         Block block = Block.getBlockFromItem(stack.internal.getItem());
-        @SuppressWarnings("deprecation")
-        IBlockState gravelState = block.getStateFromMeta(stack.internal.getMetadata());
-        if (block instanceof BlockLog) {
-            gravelState = gravelState.withProperty(BlockLog.LOG_AXIS, BlockLog.EnumAxis.Z);
+        int meta = stack.internal.getMetadata();
+        if (block instanceof BlockRotatedPillar) {
+            meta = 2;
         }
-        return gravelState;
+        return Pair.of(block, meta);
     }
 
     /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        IBlockState state = Blocks.STAINED_HARDENED_CLAY.getDefaultState();
-        state = state.withProperty(BlockColored.COLOR, color.internal);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), translate, scale);
         return this;
     }
 
     /** Add snow layers */
     public StandardModel addSnow(int layers, Vec3d translate) {
-        layers = Math.max(1, Math.min(8, layers));
-        IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
         return this;
     }
 
     /** Add item as a block (best effort) */
-    public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
-        IBlockState state = itemToBlockState(bed);
-        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+    public StandardModel addItemBlock(ItemStack stack, Vec3d translate, Vec3d scale) {
+        if (stack.isEmpty()) {
+            return this;
+        }
+        models.add((pt) -> {
+            Block block = Block.getBlockFromItem(stack.internal.getItem());
+            if (block != null) {
+                renderBlocks.blockAccess = pt.world;
+                renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
+                renderBlocks.lockBlockBounds = true;
+                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
+                renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
+                renderBlocks.lockBlockBounds = false;
+            }
+        });
         return this;
     }
 
     /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
+        if (stack.isEmpty()) {
+            return this;
+        }
         custom.add((pt) -> {
-            try (OpenGL.With matrix = OpenGL.matrix()) {
+            try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
-                Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
+                IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.ENTITY);
+                if (ir != null) {
+                    ir.renderItem(IItemRenderer.ItemRenderType.ENTITY, stack.internal);
+                } else {
+                    Block block = Block.getBlockFromItem(stack.internal.getItem());
+                    if (block != null) {
+                        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+                        renderBlocks.renderBlockAsItem(block, stack.internal.getMetadata(), 1.0f);
+                    }
+                }
             }
         });
         return this;
@@ -91,16 +116,6 @@ public class StandardModel {
         return this;
     }
 
-    /** Get the quads for the MC standard rendering */
-    List<BakedQuad> getQuads(EnumFacing side, long rand) {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
-            quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
-        }
-
-        return quads;
-    }
-
     /** Render this entire model */
     public void render() {
         render(0);
@@ -109,30 +124,17 @@ public class StandardModel {
     /** Render this entire model (partial tick aware) */
     public void render(float partialTicks) {
         renderCustom(partialTicks);
-        renderQuads();
+        try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
+            GL11.glTranslated(0, -255, 0);
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+            Tessellator.instance.startDrawingQuads();
+            renderQuads(Minecraft.getMinecraft().theWorld, 0, 255, 0);
+            Tessellator.instance.draw();
+        }
     }
 
-    /** Render only the MC quads in this model */
-    public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
-            quads.addAll(model.getRight().getQuads(null, null, 0));
-            for (EnumFacing facing : EnumFacing.values()) {
-                quads.addAll(model.getRight().getQuads(null, facing, 0));
-            }
-
-        }
-        if (quads.isEmpty()) {
-            return;
-        }
-
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-
-        VertexBuffer worldRenderer = new VertexBuffer(2048);
-        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
-        worldRenderer.finishDrawing();
-        new WorldVertexBufferUploader().draw(worldRenderer);
+    public void renderQuads(IBlockAccess world, int x, int y, int z) {
+        models.forEach(a -> a.accept(new RenderInfo(world, x, y, z)));
     }
 
     /** Render the OpenGL parts directly */

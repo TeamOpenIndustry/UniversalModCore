@@ -119,9 +119,6 @@ public class TagCompound {
     }
 
     public UUID getUUID(String key) {
-        if (internal.hasUniqueId(key)) {
-            return internal.getUniqueId(key);
-        }
         return getter(key, s -> UUID.fromString(getString(s)));
     }
 
@@ -246,7 +243,7 @@ public class TagCompound {
         return getter(key, () -> {
             Map<K, V> map = new HashMap<>();
             TagCompound data = get(key);
-            for (String item : data.internal.getKeySet()) {
+            for (String item : ((Set<String>)data.internal.getKeySet())) {
                 map.put(keyFn.apply(item), valFn.apply(data.get(item)));
             }
             return map;
@@ -297,7 +294,8 @@ public class TagCompound {
                 return null;
             }
 
-            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.create(world.internal, ted.get("data").internal);
+            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.createAndLoadEntity(ted.get("data").internal);
+            te.setWorldObj(world.internal);
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();
         });

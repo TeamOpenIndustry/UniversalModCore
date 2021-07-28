@@ -1,9 +1,8 @@
 package cam72cam.mod.item;
 
-import net.minecraftforge.items.IItemHandlerModifiable;
-
 public interface IInventory {
     /** Wraps MC construct.  Do not use */
+    /* TODO 1.7.10
     static IInventory from(IItemHandlerModifiable inv) {
         return new IInventory() {
             @Override
@@ -38,6 +37,7 @@ public interface IInventory {
 
         };
     }
+    */
 
     /** Wraps MC construct.  Do not use */
     static IInventory from(net.minecraft.inventory.IInventory inventory) {
@@ -84,18 +84,18 @@ public interface IInventory {
                 }
 
                 int space = current.getMaxStackSize() - current.stackSize;
-                if (space >= 0) {
+                if (space <= 0) {
                     return itemStack;
                 }
 
                 int toMove = Math.min(space, itemStack.getCount());
                 if (!simulate) {
                     ItemStack copy = itemStack.copy();
-                    copy.setCount(toMove);
+                    copy.setCount(toMove + current.stackSize);
                     set(slot, copy);
                 }
 
-                ItemStack remainder = new ItemStack(itemStack.internal);
+                ItemStack remainder = new ItemStack(itemStack.internal.copy());
                 remainder.setCount(itemStack.getCount() - toMove);
                 return remainder;
             }

@@ -24,6 +24,6 @@ public class Living extends Entity {
     }
 
     public boolean canBeLeashedTo(Player player) {
-        return living.canBeLeashedTo(player.internal);
+        return living.allowLeashing();
     }
 }

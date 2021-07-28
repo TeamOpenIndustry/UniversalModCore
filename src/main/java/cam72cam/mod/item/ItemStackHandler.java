@@ -1,11 +1,13 @@
 package cam72cam.mod.item;
 
+import net.minecraft.inventory.IInvBasic;
+import net.minecraft.inventory.InventoryBasic;
+
+import java.util.ArrayList;
 import cam72cam.mod.serialization.*;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -15,47 +17,60 @@ import java.util.function.Function;
 /** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
-    public final ExposedItemStackHandler internal;
+    public ExposedItemStackHandler internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
     private final List<Consumer<Integer>> onChanged = new ArrayList<>();
     private Function<Integer, Integer> slotLimit = null;
 
 
-    private class ExposedItemStackHandler extends net.minecraftforge.items.ItemStackHandler {
+    private class ExposedItemStackHandler extends InventoryBasic implements IInvBasic {
         public ExposedItemStackHandler(int size) {
-            super(size);
+            super("", false, size);
+        }
+
+        public void load(List<ItemStack> stacks) {
+            for (int i = 0; i < stacks.size(); i++) {
+                super.setInventorySlotContents(i, stacks.get(i).internal);
+            }
         }
 
         @Override
-        public int getStackLimit(int slot, net.minecraft.item.ItemStack stack) {
-            return super.getStackLimit(slot, stack);
+        public void setInventorySlotContents(int slot, net.minecraft.item.ItemStack stack) {
+            if (checkSlot.test(slot, new ItemStack(stack))) {
+                if (stack != null && stack.stackSize <= 0) {
+                    stack = null;
+                }
+                super.setInventorySlotContents(slot, stack);
+                onContentsChanged(slot);
+            }
+        }
+        @Override
+        public boolean isItemValidForSlot(int slot, net.minecraft.item.ItemStack stack) {
+            return checkSlot.test(slot, new ItemStack(stack));
+        }
+
+        @Override
+        public net.minecraft.item.ItemStack decrStackSize(int slot, int ammount) {
+            net.minecraft.item.ItemStack res = super.decrStackSize(slot, ammount);
+            onContentsChanged(slot);
+            return res;
+        }
+
+        private void onContentsChanged(int slot) {
+            onChanged.forEach(f -> f.accept(slot));
+        }
+
+        @Override
+        public void onInventoryChanged(InventoryBasic p_76316_1_) {
+            for (int slot = 0; slot < super.getSizeInventory(); slot++) {
+                int finalSlot = slot;
+                onChanged.forEach(f -> f.accept(finalSlot));
+            }
         }
     }
 
     public ItemStackHandler(int size) {
-        this.internal = new ExposedItemStackHandler(size) {
-            @Override
-            public void setStackInSlot(int slot, net.minecraft.item.ItemStack stack) {
-                if (checkSlot.test(slot, new ItemStack(stack))) {
-                    if (stack != null && stack.stackSize <= 0) {
-                        stack = null;
-                    }
-                    super.setStackInSlot(slot, stack);
-                }
-            }
-
-            @Override
-            @Nonnull
-            public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
-                return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
-            }
-
-            @Override
-            protected void onContentsChanged(int slot) {
-                super.onContentsChanged(slot);
-                onChanged.forEach(f -> f.accept(slot));
-            }
-        };
+        this.internal = new ExposedItemStackHandler(size);
     }
 
     public ItemStackHandler() {
@@ -80,21 +95,21 @@ public class ItemStackHandler implements IInventory {
 
         List<ItemStack> keep = new ArrayList<>();
         List<ItemStack> extra = new ArrayList<>();
-        if (internal.getSlots() > inventorySize) {
-            for (int i = 0; i < internal.getSlots(); i++) {
+        if (internal.getSizeInventory() > inventorySize) {
+            for (int i = 0; i < internal.getSizeInventory(); i++) {
                 (i < inventorySize ? keep : extra).add(get(i));
             }
         }
-        internal.setSize(inventorySize);
+        this.internal = new ExposedItemStackHandler(inventorySize);
         for (int i = 0; i < keep.size(); i++) {
-            internal.setStackInSlot(i, keep.get(i).internal);
+            internal.setInventorySlotContents(i, keep.get(i).internal);
         }
         return extra;
     }
 
     @Override
     public int getSlotCount() {
-        return internal.getSlots();
+        return internal.getSizeInventory();
     }
 
     @Override
@@ -104,36 +119,43 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public void set(int slot, ItemStack stack) {
-        if (stack.internal != null) {
-            internal.setStackInSlot(slot, stack.internal);
-        } else if (internal.getStackInSlot(slot) != null){
-            internal.extractItem(slot, internal.getStackInSlot(slot).stackSize, false);
-        }
+        internal.setInventorySlotContents(slot, stack.internal);
     }
 
     @Override
     public ItemStack insert(int slot, ItemStack stack, boolean simulate) {
-        return new ItemStack(internal.insertItem(slot, stack.internal, simulate));
+        return IInventory.from(internal).insert(slot, stack, simulate);
     }
 
     @Override
     public ItemStack extract(int slot, int amount, boolean simulate) {
-        return new ItemStack(internal.extractItem(slot, amount, simulate));
+        return IInventory.from(internal).extract(slot, amount, simulate);
     }
 
     @Override
     public int getLimit(int slot) {
-        return internal.getStackLimit(slot, internal.getStackInSlot(slot));
+        return IInventory.from(internal).getLimit(slot);
     }
 
     @Deprecated
     public TagCompound save() {
-        return new TagCompound(internal.serializeNBT());
+        List<ItemStack> stacks = new ArrayList<>();
+        for (int i = 0; i < getSlotCount(); i++) {
+            stacks.add(get(i));
+        }
+
+        TagCompound data = new TagCompound();
+        data.setList("Items", stacks, ItemStack::toTag);
+        return data;
     }
 
     @Deprecated
     public void load(TagCompound items) {
-        internal.deserializeNBT(items.internal);
+        if (items.hasKey("Items")) {
+            List<ItemStack> inv = items.getList("Items", ItemStack::new);
+            setSize(inv.size());
+            internal.load(inv);
+        }
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
@@ -152,12 +174,12 @@ public class ItemStackHandler implements IInventory {
                             d.remove(fieldName);
                             return;
                         }
-                        d.set(fieldName, new TagCompound(o.internal.serializeNBT()));
+                        d.set(fieldName, o.save());
                     },
                     (d, w) -> {
                         try {
                             ItemStackHandler o = ctr.newInstance();
-                            o.internal.deserializeNBT(d.get(fieldName).internal);
+                            o.load(d.get(fieldName));
                             return o;
                         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                             throw new SerializationException("Unable to construct item stack handler " + type, e);

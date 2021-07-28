@@ -1,12 +1,11 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.math.Vec3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.math.Vec3i;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,10 +56,10 @@ public class ItemPickerGUI {
             this.drawDefaultBackground();
             super.drawScreen(mouseX, mouseY, partialTicks);
 
-            for (GuiButton button : this.buttonList) {
+            for (GuiButton button : (List<GuiButton>)this.buttonList) {
                 if (button instanceof GuiScrollBar) continue;
                 if (scrollBar != null) {
-                    button.yPosition = buttonCoordList.get(button.id).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    button.yPosition = buttonCoordList.get(button.id).y - (int) Math.floor(scrollBar.getValue() * 32);
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
                     if (((ItemButton) button).stack.internal != null) {
@@ -108,8 +107,8 @@ public class ItemPickerGUI {
         }
 
         @Override
-        public void actionPerformed(GuiButton button) throws IOException {
-            for (GuiButton itemButton : this.buttonList) {
+        public void actionPerformed(GuiButton button) {
+            for (GuiButton itemButton : (List<GuiButton>)this.buttonList) {
                 if (itemButton == button && !(button instanceof GuiScrollBar)) {
                     choosenItem = ((ItemButton) button).stack;
                     onExit.accept(choosenItem);
@@ -119,14 +118,14 @@ public class ItemPickerGUI {
         }
 
         @Override
-        protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        protected void keyTyped(char typedChar, int keyCode) {
             if (keyCode == 1) {
                 onExit.accept(null);
             }
         }
 
         @Override
-        protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
             super.mouseClicked(mouseX, mouseY, mouseButton);
         }
     }

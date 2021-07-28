@@ -6,7 +6,10 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.*;
+import cam72cam.mod.entity.Entity;
+import cam72cam.mod.entity.Living;
+import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
@@ -19,22 +22,17 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.IFluidHandler;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -74,7 +72,7 @@ public class World {
     }
     /** Helper function to get a world in it's respective map */
     private static World getWorld(net.minecraft.world.World world){
-        return getWorldMap(world).get(world.provider.getDimension());
+        return getWorldMap(world).get(world.provider.dimensionId);
     }
 
     /** Load world hander, sets up maps and internal handlers */
@@ -82,7 +80,7 @@ public class World {
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
-            world.addEventListener(new WorldEventListener(worldWrap));
+            world.addWorldAccess(new WorldEventListener(worldWrap));
         }
     }
 
@@ -90,7 +88,7 @@ public class World {
     public static void registerEvents() {
         CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.getDimension()));
+        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.dimensionId));
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 
@@ -108,7 +106,8 @@ public class World {
     private void checkLoadedEntities() {
         // Once a second scan entities that may have de-sync'd with the UMC world
         if (this.getTicks() % 20 == 0) {
-            for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
+            for (Object entityObj : this.internal.loadedEntityList) {
+                net.minecraft.entity.Entity entity = (net.minecraft.entity.Entity) entityObj;
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
                     this.onEntityAdded(entity);
@@ -118,6 +117,17 @@ public class World {
                 if (!this.internal.loadedEntityList.contains(entity.internal)) {
                     ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                     this.onEntityRemoved(entity.internal);
+                }
+            }
+            for (Map.Entry<UUID, Entity> entry : new HashSet<>(this.entityByUUID.entrySet())) {
+                UUID uuid = entry.getKey();
+                Entity entity = entry.getValue();
+
+                // 1.7.10 desync's UUIDs between client and server.  We fix that in the entity, but need to update the mapping
+                if (!uuid.equals(entity.getUUID())) {
+                    ModCore.warn("1.7.10 UUID Desync.  Fixing...");
+                    this.entityByUUID.remove(uuid);
+                    this.entityByUUID.put(entity.getUUID(), entity);
                 }
             }
         }
@@ -149,7 +159,7 @@ public class World {
 
     /** World's internal ID, Not recommended for general use. */
     public int getId() {
-        return internal.provider.getDimension();
+        return internal.provider.dimensionId;
     }
 
     /* Event Methods */
@@ -178,6 +188,7 @@ public class World {
         entitiesByClass.get(entity.getClass()).add(entity);
         entityByID.put(entityIn.getEntityId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
+
     }
 
     /**
@@ -250,7 +261,7 @@ public class World {
 
     /** Add a constructed entity to the world */
     public boolean spawnEntity(Entity ent) {
-        return internal.spawnEntity(ent.internal);
+        return internal.spawnEntityInWorld(ent.internal);
     }
 
     /** Kill an entity */
@@ -270,7 +281,11 @@ public class World {
 
     /** Internal, do not use */
     public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls, boolean create) {
-        net.minecraft.tileentity.TileEntity ent = internal.getChunkFromBlockCoords(pos.internal()).getTileEntity(pos.internal(), create ? Chunk.EnumCreateEntityType.IMMEDIATE : Chunk.EnumCreateEntityType.CHECK);
+        net.minecraft.tileentity.TileEntity ent;
+        ent = internal.getChunkFromBlockCoords(pos.x, pos.z).getTileEntityUnsafe(pos.x, pos.y, pos.z);
+        if (ent == null && create) {
+            ent = internal.getTileEntity(pos.x, pos.y, pos.z);
+        }
         if (cls.isInstance(ent)) {
             return (T) ent;
         }
@@ -279,8 +294,8 @@ public class World {
 
     /** Get all block entities of the given type */
     public <T extends BlockEntity> List<T> getBlockEntities(Class<T> cls) {
-        return internal.loadedTileEntityList.stream()
-                .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
+        return ((List<net.minecraft.tileentity.TileEntity>)internal.loadedTileEntityList).stream()
+                .filter(x -> x instanceof cam72cam.mod.block.tile.TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
                 .map(x -> (T) ((TileEntity) x).instance())
                 .collect(Collectors.toList());
     }
@@ -313,11 +328,12 @@ public class World {
      * @see BlockEntity#getData
      */
     public BlockEntity reconstituteBlockEntity(TagCompound data) {
-        TileEntity te = (TileEntity) TileEntity.create(internal, data.internal);
+        TileEntity te = (TileEntity) TileEntity.createAndLoadEntity(data.internal);
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
+        te.setWorldObj(internal);
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
@@ -326,10 +342,8 @@ public class World {
 
     /** Set the block entity at pos to given entity */
     public void setBlockEntity(Vec3i pos, BlockEntity entity) {
-        internal.setTileEntity(pos.internal(), entity != null ? entity.internal : null);
-        if (entity != null) {
-            entity.markDirty();
-        }
+        internal.setTileEntity(pos.x, pos.y, pos.z, entity.internal);
+        entity.markDirty();
     }
 
     /** World time in ticks (Day/Night cycle time)*/
@@ -344,11 +358,12 @@ public class World {
 
     /** Ticks per second (with up to N samples) */
     public double getTPS(int sampleSize) {
-        if (internal.getMinecraftServer() == null) {
+
+        if (MinecraftServer.getServer() == null) {
             return 20;
         }
 
-        long[] ttl = internal.getMinecraftServer().tickTimeArray;
+        long[] ttl = MinecraftServer.getServer().worldTickTimes.get(internal.provider.dimensionId);
 
         sampleSize = Math.min(sampleSize, ttl.length);
         double ttus = 0;
@@ -364,47 +379,42 @@ public class World {
         return Math.min(1000.0 / ttms, 20);
     }
 
+
     /** Height of the ground for precipitation purposes at the given block */
     public Vec3i getPrecipitationHeight(Vec3i pos) {
-        return new Vec3i(internal.getPrecipitationHeight(pos.internal()));
+        return new Vec3i(pos.x, internal.getPrecipitationHeight(pos.x, pos.z), pos.z);
     }
 
     /** Set the given pos to air */
     public void setToAir(Vec3i pos) {
-        internal.setBlockToAir(pos.internal());
+        internal.setBlockToAir(pos.x, pos.y, pos.z);
     }
 
     /** If the block at pos is air */
     public boolean isAir(Vec3i ph) {
-        return internal.isAirBlock(ph.internal());
+        return internal.isAirBlock(ph.x, ph.y, ph.z);
     }
 
     /** Set the snow level to the given depth (1-8) */
     public void setSnowLevel(Vec3i ph, int snowDown) {
         snowDown = Math.max(1, Math.min(8, snowDown));
         if (snowDown == 8) {
-            internal.setBlockState(ph.internal(), Blocks.SNOW.getDefaultState());
+            internal.setBlock(ph.x, ph.y, ph.z, Blocks.snow, 0, 3);
         } else {
-            internal.setBlockState(ph.internal(), Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, snowDown));
+            internal.setBlock(ph.x, ph.y, ph.z, Blocks.snow_layer, snowDown, 3);
         }
     }
 
     /** Get the snow level (1-8) */
     public int getSnowLevel(Vec3i ph) {
-        IBlockState state = internal.getBlockState(ph.internal());
-        if (state.getBlock() == Blocks.SNOW_LAYER) {
-            return state.getValue(BlockSnow.LAYERS);
-        }
-        if (state.getBlock() == Blocks.SNOW) {
-            return 8;
-        }
-        return 0;
+        Block block = internal.getBlock(ph.x, ph.y, ph.z);
+        return block instanceof BlockSnow ? internal.getBlockMetadata(ph.x, ph.y, ph.z) & 7 : block instanceof BlockSnowBlock ? 8 : 0;
     }
 
     /** If this block is snow or snow layers */
     public boolean isSnow(Vec3i ph) {
-        Block block = internal.getBlockState(ph.internal()).getBlock();
-        return block == Blocks.SNOW || block == Blocks.SNOW_LAYER;
+        Block block = internal.getBlock(ph.x, ph.y, ph.z);
+        return block == Blocks.snow || block == Blocks.snow_layer;
     }
 
     /** If it is snowing or raining */
@@ -413,18 +423,18 @@ public class World {
     }
 
     /** If it is is raining */
-    public boolean isRaining(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).canRain();
+    public boolean isRaining(Vec3i pos) {
+        return isPrecipitating() && internal.getBiomeGenForCoords(pos.x, pos.z).canSpawnLightningBolt();
     }
 
     /** If it is snowing */
-    public boolean isSnowing(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).isSnowyBiome();
+    public boolean isSnowing(Vec3i pos) {
+        return isPrecipitating() && internal.getBiomeGenForCoords(pos.x, pos.z).getEnableSnow();
     }
 
     /** Temp in celsius */
     public float getTemperature(Vec3i pos) {
-        float mctemp = internal.getBiome(pos.internal()).getTemperature();
+        float mctemp = internal.getBiomeGenForCoords(pos.x, pos.z).temperature;
         //https://www.reddit.com/r/Minecraft/comments/3eh7yu/the_rl_temperature_of_minecraft_biomes_revealed/ctex050/
         return (13.6484805403f * mctemp) + 7.0879687222f;
     }
@@ -436,25 +446,27 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.spawnEntity(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
+        if (!stack.isEmpty()) {
+            internal.spawnEntityInWorld(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
+        }
     }
 
     /** Check if the block is currently in a loaded chunk */
-    public boolean isBlockLoaded(Vec3i parent) {
-        return internal.isBlockLoaded(parent.internal());
+    public boolean isBlockLoaded(Vec3i pos) {
+        return internal.getChunkProvider().chunkExists(pos.x >> 4, pos.z >> 4);
     }
 
     /** Check if block at pos collides with a BB */
     public boolean doesBlockCollideWith(Vec3i bp, IBoundingBox bb) {
-        AxisAlignedBB cbb = internal.getBlockState(bp.internal()).getCollisionBoundingBox(internal, bp.internal());
+        AxisAlignedBB cbb = internal.getBlock(bp.x, bp.y, bp.z).getCollisionBoundingBoxFromPool(internal, bp.x, bp.y, bp.z);
         if (cbb == null) {
            return false;
         }
-        return bb.intersects(IBoundingBox.from(cbb.offset(bp.internal())));
+        return bb.intersects(IBoundingBox.from(cbb));
     }
 
     public List<Vec3i> blocksInBounds(IBoundingBox bb) {
-        return internal.getCollisionBoxes(null, BoundingBox.from(bb)).stream()
+        return ((List<AxisAlignedBB>)internal.func_147461_a(BoundingBox.from(bb))).stream()
                 .map(blockBox -> new Vec3i(blockBox.minX, blockBox.minY, blockBox.minZ))
                 .collect(Collectors.toList());
     }
@@ -466,46 +478,41 @@ public class World {
 
     /** Break block with sound effecnts, particles and optional drops */
     public void breakBlock(Vec3i pos, boolean drop) {
-        internal.destroyBlock(pos.internal(), drop);
+        internal.breakBlock(pos.x, pos.y, pos.z, drop);
     }
 
     /** If block is the given type */
     public boolean isBlock(Vec3i pos, BlockType block) {
-        return internal.getBlockState(pos.internal()).getBlock() == block.internal;
+        return internal.getBlock(pos.x, pos.y, pos.z) == block.internal;
     }
 
     /** Set block to a given block type */
     public void setBlock(Vec3i pos, BlockType block) {
-        internal.setBlockState(pos.internal(), block.internal.getDefaultState());
+        internal.setBlock(pos.x, pos.y, pos.z, block.internal);
     }
 
     /** Set a block to given stack (best guestimate) */
     public void setBlock(Vec3i pos, ItemStack stack) {
         if (stack.isEmpty()) {
-            internal.setBlockToAir(pos.internal());
+            internal.setBlockToAir(pos.x, pos.y, pos.z);
         } else {
-            IBlockState state = Block.getBlockFromItem(stack.internal.getItem()).getStateFromMeta(stack.internal.getMetadata());
-            internal.setBlockState(pos.internal(), state);
+            internal.setBlock(pos.x, pos.y, pos.z, Block.getBlockFromItem(stack.internal.getItem()), stack.internal.getMetadata(), 3);
         }
     }
 
     /** Is the top of the block solid?  Based on some AABB nonsense */
     public boolean isTopSolid(Vec3i pos) {
-        return internal.getBlockState(pos.internal()).isSideSolid(internal, pos.internal(), EnumFacing.UP);
+        return internal.getBlock(pos.x, pos.y, pos.z).isSideSolid(internal, pos.x, pos.y, pos.z, ForgeDirection.UP);
     }
 
     /** Get max redstone power surrounding this block */
     public int getRedstone(Vec3i pos) {
-        int power = 0;
-        for (Facing facing : Facing.values()) {
-            power = Math.max(power, internal.getRedstonePower(pos.offset(facing).internal(), facing.internal));
-        }
-        return power;
+        return internal.getStrongestIndirectPower(pos.x, pos.y, pos.z);
     }
 
     /** If the sky is visible at this position */
-    public boolean canSeeSky(Vec3i position) {
-        return internal.canSeeSky(position.internal());
+    public boolean canSeeSky(Vec3i pos) {
+        return internal.canBlockSeeTheSky(pos.x, pos.y, pos.z);
     }
 
     /**
@@ -518,9 +525,9 @@ public class World {
             return true;
         }
 
-        Block block = internal.getBlockState(pos.internal()).getBlock();
+        Block block = internal.getBlock(pos.x, pos.y, pos.z);
 
-        if (block.isReplaceable(internal, pos.internal())) {
+        if (block.isReplaceable(internal, pos.x, pos.y, pos.z)) {
             return true;
         }
         if (block instanceof IGrowable && !(block instanceof BlockGrass)) {
@@ -551,18 +558,15 @@ public class World {
                 return inv;
             }
         }
-        return getInventory(offset, null);
+        return null;
     }
 
     /** Get the inventory at this block (accessed from given side) */
-    public IInventory getInventory(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal());
-        EnumFacing face = dir != null ? dir.internal : null;
-        if (te != null && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face)) {
-            IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face);
-            if (inv instanceof IItemHandlerModifiable) {
-                return IInventory.from((IItemHandlerModifiable) inv);
-            }
+    public IInventory getInventory(Vec3i pos, Facing dir) {
+        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(pos.x, pos.y, pos.z);
+        if (te instanceof ISidedInventory) {
+            // TODO getSlotsForFace
+            return IInventory.from((net.minecraft.inventory.IInventory) te);
         }
         return null;
     }
@@ -579,25 +583,22 @@ public class World {
     }
 
     /** Get the tank at this block (accessed from given side) */
-    public List<ITank> getTank(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(offset.internal());
-        EnumFacing face = dir != null ? dir.internal : null;
-        if (te != null && te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face)) {
-            IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face);
-            if (tank != null) {
-                return ITank.getTank(tank);
-            }
+    public List<ITank> getTank(Vec3i pos, Facing dir) {
+        net.minecraft.tileentity.TileEntity te = internal.getTileEntity(pos.x, pos.y, pos.z);
+        if (te instanceof IFluidHandler) {
+            return ITank.getTank((IFluidHandler) te, dir);
         }
         return null;
     }
 
     /** Get stack equiv of block at pos (Unreliable!) */
     public ItemStack getItemStack(Vec3i pos) {
-        IBlockState state = internal.getBlockState(pos.internal());
+        Block block = internal.getBlock(pos.x, pos.y, pos.z);
         try {
-            return new ItemStack(state.getBlock().getItem(internal, pos.internal(), state));
+            return new ItemStack(new net.minecraft.item.ItemStack(block, 1, block.damageDropped(internal.getBlockMetadata(pos.x, pos.y, pos.z))));
         } catch (Exception ex) {
-            return new ItemStack(new net.minecraft.item.ItemStack(state.getBlock(), 1, state.getBlock().damageDropped(state)));
+            ModCore.catching(ex);
+            return ItemStack.EMPTY;
         }
     }
 
@@ -609,20 +610,24 @@ public class World {
 
     /** Get a BlockInfo that can be used to overwrite a block in the future.  Does not currently include TE data */
     public BlockInfo getBlock(Vec3i pos) {
-        return new BlockInfo(internal.getBlockState(pos.internal()));
+        return new BlockInfo(internal.getBlock(pos.x, pos.y, pos.z), internal.getBlockMetadata(pos.x, pos.y, pos.z));
     }
 
     /** Overwrite the block at pos from the given info */
     public void setBlock(Vec3i pos, BlockInfo info) {
-        internal.removeTileEntity(pos.internal());
-        internal.setBlockState(pos.internal(), info.internal);
+        internal.removeTileEntity(pos.x, pos.y, pos.z);
+        if (info == null || info.internal == null) {
+            internal.setBlockToAir(pos.x, pos.y, pos.z);
+        } else {
+            internal.setBlock(pos.x, pos.y, pos.z, info.internal, info.internalMeta, 3);
+        }
     }
 
     /** Opt in collision overriding */
-    public boolean canEntityCollideWith(Vec3i bp, String damageType) {
-        Block block = internal.getBlockState(bp.internal()).getBlock();
-        return ! (block instanceof IConditionalCollision) ||
-                ((IConditionalCollision) block).canCollide(internal, bp.internal(), internal.getBlockState(bp.internal()), new DamageSource(damageType));
+    public boolean canEntityCollideWith(Vec3i pos, String damageType) {
+        Block block = internal.getBlock(pos.x, pos.y, pos.z);
+        return !(block instanceof IConditionalCollision) ||
+                ((IConditionalCollision) block).canCollide(internal, pos.x, pos.y, pos.z, new DamageSource(damageType));
     }
 
     /** Spawn a particle */
@@ -640,17 +645,17 @@ public class World {
      * @param updateObservers
      */
     public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
-        this.internal.notifyNeighborsOfStateChange(pos.internal(), blockType.internal);
+        this.internal.notifyBlocksOfNeighborChange(pos.x, pos.y, pos.z, blockType.internal);
     }
 
     public enum ParticleType {
-        SMOKE(EnumParticleTypes.SMOKE_NORMAL),
+        SMOKE("smoke"),
         // Incomplete
         ;
 
-        private final EnumParticleTypes internal;
+        private final String internal;
 
-        ParticleType(EnumParticleTypes internal) {
+        ParticleType(String internal) {
             this.internal = internal;
         }
     }

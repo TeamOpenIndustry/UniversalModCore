@@ -1,9 +1,10 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 
 public class BoundingBox extends AxisAlignedBB {
     public final IBoundingBox internal;
@@ -27,15 +28,17 @@ public class BoundingBox extends AxisAlignedBB {
     private static double[] hack(IBoundingBox internal) {
         Vec3d min = internal.min();
         Vec3d max = internal.max();
-        return new double[]{max.x, max.y, max.z, min.x, min.y, min.z};
+        return new double[]{min.x, min.y, min.z, max.x, max.y, max.z};
     }
 
     /* NOP */
+    /* Removed 1.7.10
     @Override
     public BoundingBox setMaxY(double y) {
         // Used by blockwall
         return this;
     }
+    */
 
     @Override
     public BoundingBox union(AxisAlignedBB other) {
@@ -57,7 +60,17 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
+    public AxisAlignedBB contract(double x, double y, double z) {
+        return new BoundingBox(internal.grow(new Vec3d(-x, -y, -z)));
+    }
+
+    @Override
     public BoundingBox offset(double x, double y, double z) {
+        return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
+    }
+
+    @Override
+    public AxisAlignedBB getOffsetBoundingBox(double x, double y, double z) {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
@@ -78,18 +91,18 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return super.intersects(minX, minY, minZ, maxX, maxY, maxZ) && // Fast check
-                internal.intersects(new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ)); // Slow check
+    public boolean intersectsWith(AxisAlignedBB other) {
+        return super.intersectsWith(other) && // Fast check
+                internal.intersects(new Vec3d(other.minX, other.minY, other.minZ), new Vec3d(other.maxX, other.maxY, other.maxZ)); // Slow check
     }
 
     @Override
-    public boolean isVecInside(net.minecraft.util.math.Vec3d vec) {
+    public boolean isVecInside(Vec3 vec) {
         return internal.contains(new Vec3d(vec));
     }
 
     @Override
-    public RayTraceResult calculateIntercept(net.minecraft.util.math.Vec3d vecA, net.minecraft.util.math.Vec3d vecB) {
+    public MovingObjectPosition calculateIntercept(Vec3 vecA, Vec3 vecB) {
         int steps = 10;
         double xDist = vecB.xCoord - vecA.xCoord;
         double yDist = vecB.yCoord - vecA.yCoord;
@@ -100,9 +113,14 @@ public class BoundingBox extends AxisAlignedBB {
         for (int step = 0; step < steps; step++) {
             Vec3d stepPos = new Vec3d(vecA.xCoord + xDelta * step, vecA.yCoord + yDelta * step, vecA.zCoord + zDelta * step);
             if (internal.contains(stepPos)) {
-                return new RayTraceResult(stepPos.internal(), EnumFacing.UP);
+                return new MovingObjectPosition(0, 0, 0, EnumFacing.UP.ordinal(), stepPos.internal());
             }
         }
         return null;
+    }
+
+    public AxisAlignedBB copy() {
+        //System.out.println("Shake hands with danger");
+        return this;
     }
 }

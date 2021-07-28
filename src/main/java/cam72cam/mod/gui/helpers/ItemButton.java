@@ -7,6 +7,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderItem;
 import org.lwjgl.opengl.GL11;
 
 /** Internal item button class */
@@ -30,8 +31,8 @@ class ItemButton extends GuiButton {
         try (OpenGL.With matrix = OpenGL.matrix()) {
             GL11.glTranslated(xPosition, yPosition, 0);
             GL11.glScaled(2, 2, 1);
-            mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
-            mc.getRenderItem().renderItemOverlays(font, stack.internal, 0, 0);
+            RenderItem.getInstance().renderItemAndEffectIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
+            RenderItem.getInstance().renderItemOverlayIntoGUI(font, mc.getTextureManager(), stack.internal, 0, 0);
         }
 
         // Pollutes global state...

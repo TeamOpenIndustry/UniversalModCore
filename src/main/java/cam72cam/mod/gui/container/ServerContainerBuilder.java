@@ -8,9 +8,9 @@ import invtweaks.api.container.ContainerSection;
 import invtweaks.api.container.ContainerSectionCallback;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.items.SlotItemHandler;
+import cpw.mods.fml.common.Optional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,8 +75,13 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
         x += paddingLeft;
         if (handler != null && handler.getSlotCount() > slotID) {
-            this.addSlotToContainer(new SlotItemHandler(handler.internal, slotID, x, y));
-            slotRefs.get(ContainerSection.CHEST).add(inventorySlots.get(inventorySlots.size() - 1));
+            this.addSlotToContainer(new Slot(handler.internal, slotID, x, y) {
+                @Override
+                public boolean isItemValid(net.minecraft.item.ItemStack p_75214_1_) {
+                    return ((InventoryBasic)handler.internal).isItemValidForSlot(slotID, p_75214_1_);
+                }
+            });
+            slotRefs.get(ContainerSection.CHEST).add((Slot) inventorySlots.get(inventorySlots.size() - 1));
         }
     }
 
@@ -192,7 +197,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
     @Override
     public final net.minecraft.item.ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
         net.minecraft.item.ItemStack itemstack = null;
-        Slot slot = this.inventorySlots.get(index);
+        Slot slot = (Slot) this.inventorySlots.get(index);
         int numSlots = slotRefs.get(ContainerSection.CHEST).size();
 
         if (slot != null && slot.getHasStack()) {
@@ -202,8 +207,17 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
                 if (!this.mergeItemStack(itemstack1, numSlots, this.inventorySlots.size(), true)) {
                     return null;
                 }
-            } else if (!this.mergeItemStack(itemstack1, 0, numSlots, false)) {
-                return null;
+            } else {
+                boolean h = true;
+                for (int i = 0; i < numSlots; i++) {
+                    if (this.getSlot(i).isItemValid(itemstack1) && this.mergeItemStack(itemstack1, i, i+1, true)) {
+                        h = false;
+                        break;
+                    }
+                }
+                if (h) {
+                    return null;
+                }
             }
 
             if (itemstack1.stackSize == 0) {
@@ -211,6 +225,10 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
             } else {
                 slot.onSlotChanged();
             }
+
+            if (itemstack1.stackSize == itemstack.stackSize)
+                return null;
+            slot.onPickupFromSlot(playerIn, itemstack1);
         }
 
         return itemstack;

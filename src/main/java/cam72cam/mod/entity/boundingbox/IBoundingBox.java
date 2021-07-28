@@ -3,13 +3,12 @@ package cam72cam.mod.entity.boundingbox;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.AxisAlignedBB;
 
 public interface IBoundingBox {
     IBoundingBox INFINITE = new DefaultBoundingBox(TileEntity.INFINITE_EXTENT_AABB);
-    IBoundingBox ORIGIN = new DefaultBoundingBox(new AxisAlignedBB(0,0,0,0,0,0));
-    IBoundingBox BLOCK = new DefaultBoundingBox(Block.FULL_BLOCK_AABB);
+    IBoundingBox ORIGIN = new DefaultBoundingBox(AxisAlignedBB.getBoundingBox(0,0,0,0,0,0));
+    IBoundingBox BLOCK = new DefaultBoundingBox(AxisAlignedBB.getBoundingBox(0,0,0,1,1,1));
 
     static IBoundingBox from(AxisAlignedBB internal) {
         if (internal == null) {
@@ -18,7 +17,7 @@ public interface IBoundingBox {
         if (internal instanceof BoundingBox) {
             return ((BoundingBox) internal).internal;
         }
-        if (internal == Block.FULL_BLOCK_AABB ||
+        if (
                 internal.minX == 0 && internal.minY == 0 && internal.minZ == 0 &&
                 internal.maxX == 1 && internal.maxY == 1 && internal.maxZ == 1
         ) {
@@ -29,7 +28,7 @@ public interface IBoundingBox {
 
     /** Create a new 0 size BB at pos */
     static IBoundingBox from(Vec3i pos) {
-        return from(new AxisAlignedBB(pos.internal()));
+        return from(AxisAlignedBB.getBoundingBox(pos.x, pos.y, pos.z, pos.x, pos.y, pos.z));
     }
 
     /** Smaller corner of the BB */

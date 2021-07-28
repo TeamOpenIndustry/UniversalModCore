@@ -13,10 +13,9 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.IGuiHandler;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.IGuiHandler;
+import cpw.mods.fml.common.network.NetworkRegistry;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -34,13 +33,11 @@ public class GuiRegistry {
     /** Internal event registration, do not use */
     public static void registration() {
         NetworkRegistry.INSTANCE.registerGuiHandler(ModCore.instance, new IGuiHandler() {
-            @Nullable
             @Override
             public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
                 return registry.get(ID).apply(new CreateEvent(true, new Player(player), x, y, z));
             }
 
-            @Nullable
             @Override
             public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
                 return registry.get(ID).apply(new CreateEvent(false, new Player(player), x, y, z));

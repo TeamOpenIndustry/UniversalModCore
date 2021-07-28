@@ -1,8 +1,6 @@
 package cam72cam.mod.world;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**
@@ -17,10 +15,9 @@ public interface IConditionalCollision {
      *
      * @param world        World the block is in.
      * @param pos          Position of the block.
-     * @param state        Block state of the block.
      * @param damageSource Damage source that would be used to collide with the block.
      * @return Whether or not to calculate actual collision.
      */
-    boolean canCollide(World world, BlockPos pos, IBlockState state, DamageSource damageSource);
+    boolean canCollide(World world, int posX, int posY, int posZ, DamageSource damageSource);
 
 }

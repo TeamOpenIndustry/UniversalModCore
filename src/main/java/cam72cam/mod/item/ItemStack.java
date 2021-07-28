@@ -4,7 +4,8 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidContainerRegistry;
+import net.minecraftforge.fluids.IFluidContainerItem;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
@@ -29,7 +30,7 @@ public class ItemStack {
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.item.ItemStack(Item.getByNameOrId(item), i, meta));
+        this(new net.minecraft.item.ItemStack((Item) Item.itemRegistry.getObject(item), i, meta));
     }
 
     /** Tag attached to this stack */
@@ -57,7 +58,11 @@ public class ItemStack {
 
     /** Serialize */
     public TagCompound toTag() {
-        return internal != null ? new TagCompound(internal.serializeNBT()) : new TagCompound();
+        TagCompound data = new TagCompound();
+        if (internal != null) {
+            internal.writeToNBT(data.internal);
+        }
+        return data;
     }
 
     /** Items in this stack */
@@ -98,7 +103,7 @@ public class ItemStack {
 
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
-        return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
+        return internal == stack.internal || internal != null && stack.internal != null && internal.isItemEqual(stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
@@ -111,7 +116,7 @@ public class ItemStack {
 
     /** Is a bucket or similar item */
     public boolean isFluidContainer() {
-        return FluidUtil.getFluidHandler(internal) != null;
+        return internal != null && (internal.getItem() instanceof IFluidContainerItem || FluidContainerRegistry.isContainer(internal));
     }
 
     /** Can be burnt in a furnace */

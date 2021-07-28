@@ -7,6 +7,11 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
@@ -39,7 +44,7 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.internal.getStill().toString());
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.internal.getStillIcon().getIconName());
         drawSprite(sprite, fluid.internal.getColor(), x, y, width, height);
     }
 
@@ -65,7 +70,7 @@ public class GUIHelpers {
         double zLevel = 0;
 
         try (
-                OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE));
+                OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.locationBlocksTexture));
                 OpenGL.With color = OpenGL.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
         ) {
             int iW = sprite.getIconWidth();
@@ -76,7 +81,7 @@ public class GUIHelpers {
                 for (int offX = 0; offX < width; offX += iW) {
                     double curWidth = Math.min(iW, width - offX);
                     GUIHelpers.sprite.setup(sprite, (int)curWidth, (int)curHeight);
-                    instance.drawTexturedModalRect(x + offX, y + offY, GUIHelpers.sprite, (int)curWidth, (int)curHeight);
+                    instance.drawTexturedModelRectFromIcon(x + offX, y + offY, GUIHelpers.sprite, (int)curWidth, (int)curHeight);
                 }
             }
         }
@@ -103,29 +108,36 @@ public class GUIHelpers {
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
-            Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), (float) y, color);
+            Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), y, color);
         }
     }
 
     /** Screen Width in pixels (std coords) */
     public static int getScreenWidth() {
-        return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+        Minecraft mc = Minecraft.getMinecraft();
+        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaledWidth();
     }
 
     /** Screen Height in pixels (std coords) */
     public static int getScreenHeight() {
-        return new ScaledResolution(Minecraft.getMinecraft()).getScaledHeight();
+        Minecraft mc = Minecraft.getMinecraft();
+        return new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaledHeight();
     }
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
+        IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
         try (
-            OpenGL.With c = OpenGL.color(1, 1, 1, 1);
-            OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
-            OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
+                OpenGL.With c = OpenGL.color(1, 1, 1, 1);
+                OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
+                OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
+                OpenGL.With mat = OpenGL.matrix()
         ) {
-            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
+            GL11.glPushMatrix();
+            GL11.glTranslated(x, y, 0);
+            ir.renderItem(IItemRenderer.ItemRenderType.INVENTORY, stack.internal);
+            GL11.glPopMatrix();
         }
     }
 }

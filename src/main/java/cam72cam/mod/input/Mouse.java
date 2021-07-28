@@ -7,9 +7,9 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** Only used for MC bugfixes, don't use directly */
 public class Mouse {
@@ -21,7 +21,7 @@ public class Mouse {
             // We need to override that distance because train centers are further away
             // than 36m.
 
-            if (Minecraft.getMinecraft().objectMouseOver == null) {
+            if (Minecraft.getMinecraft().objectMouseOver == null || Minecraft.getMinecraft().currentScreen != null) {
                 return true;
             }
 
@@ -57,7 +57,7 @@ public class Mouse {
             if (target != null && getPlayer() != null) {
                 switch (hand) {
                     case PRIMARY:
-                        getPlayer().internal.interact(target.internal, getPlayer().getHeldItem(hand).internal, hand.internal);
+                        getPlayer().internal.interactWith(target.internal);
                         break;
                     case SECONDARY:
                         getPlayer().internal.attackTargetEntityWithCurrentItem(target.internal);

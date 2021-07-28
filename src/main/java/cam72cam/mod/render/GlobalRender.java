@@ -7,17 +7,14 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.culling.ClippingHelperImpl;
-import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
 import java.nio.FloatBuffer;
@@ -38,37 +35,36 @@ public class GlobalRender {
     public static void registerClientEvents() {
         // Beacon like hack for always running a single global render during the TE render phase
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
+            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer() {
                 @Override
-                public void renderTileEntityAt(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
+                public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
                     renderFuncs.forEach(r -> r.accept(partialTicks));
-                }
-
-                @Override
-                public boolean isGlobalRenderer(GlobalRenderHelper te) {
-                    return true;
                 }
             });
         });
+        GlobalRenderHelper grh = new GlobalRenderHelper();
         ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getMinecraft().renderGlobal.updateTileEntities(grhList, grhList);
-            if (Minecraft.getMinecraft().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setPos(new BlockPos(Minecraft.getMinecraft().player.getPositionEyes(0)));
+            Minecraft.getMinecraft().renderGlobal.tileEntities.remove(grh);
+            Minecraft.getMinecraft().renderGlobal.tileEntities.add(grh);
+            if (Minecraft.getMinecraft().thePlayer != null) {  // May be able to get away with running this every N ticks?
+                Vec3i eyes = new Vec3i(MinecraftClient.getPlayer().getPositionEyes());
+                grhList.get(0).xCoord = eyes.x;
+                grhList.get(0).yCoord = eyes.y;
+                grhList.get(0).zCoord = eyes.z;
             }
         });
-
 
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
                 int i;
-                for (i = 0; i < event.getRight().size(); i++) {
-                    if (event.getRight().get(i).startsWith("Display: ")) {
+                for (i = 0; i < event.right.size(); i++) {
+                    if (event.right.get(i) != null && event.right.get(i).startsWith("Display: ")) {
                         i++;
                         break;
                     }
                 }
-                event.getRight().add(i, GPUInfo.debug());
+                event.right.add(i, GPUInfo.debug());
             }
         });
     }
@@ -81,12 +77,8 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(Consumer<Float> func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                int scale = new ScaledResolution(Minecraft.getMinecraft()).getScaleFactor();
-                GL11.glPushMatrix();
-                GL11.glScaled(scale, scale, scale);
-                func.accept(event.getPartialTicks());
-                GL11.glPopMatrix();
+            if (event.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
+                func.accept(event.partialTicks);
             }
         });
     }
@@ -110,7 +102,7 @@ public class GlobalRender {
 
     /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
-        net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().getRenderViewEntity();
+        net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().renderViewEntity;
         double d0 = playerrRender.lastTickPosX + (playerrRender.posX - playerrRender.lastTickPosX) * partialTicks;
         double d1 = playerrRender.lastTickPosY + (playerrRender.posY - playerrRender.lastTickPosY) * partialTicks;
         double d2 = playerrRender.lastTickPosZ + (playerrRender.posZ - playerrRender.lastTickPosZ) * partialTicks;
@@ -119,9 +111,7 @@ public class GlobalRender {
 
     /** Internal camera helper */
     static ICamera getCamera(float partialTicks) {
-        ClippingHelperImpl ch = new ClippingHelperImpl();
-        ch.init();
-        ICamera camera = new Frustum(ch); // Must be new instance per Johni0702 otherwise will be affected by weird global state!
+        ICamera camera = new Frustrum();
         Vec3d cameraPos = getCameraPos(partialTicks);
         camera.setPosition(cameraPos.x, cameraPos.y, cameraPos.z);
         return camera;
@@ -139,7 +129,8 @@ public class GlobalRender {
 
     public static class GlobalRenderHelper extends TileEntity {
 
-        public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        @Override
+        public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
         }
 
@@ -148,10 +139,12 @@ public class GlobalRender {
             return Double.POSITIVE_INFINITY;
         }
 
+        @Override
         public double getDistanceSq(double x, double y, double z) {
             return 1;
         }
 
+        @Override
         public boolean shouldRenderInPass(int pass) {
             return true;
         }

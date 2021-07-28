@@ -1,31 +1,21 @@
 package cam72cam.mod.item;
 
-import net.minecraft.util.EnumActionResult;
-
 public enum ClickResult {
     /** Handled */
-    ACCEPTED(EnumActionResult.SUCCESS),
+    ACCEPTED(true),
     /** Unhandled */
-    PASS(EnumActionResult.PASS),
+    PASS(false),
     /** Handled, but cancelled */
-    REJECTED(EnumActionResult.FAIL),
+    REJECTED(false),
     ;
 
-    public final EnumActionResult internal;
+    public final boolean internal;
 
-    ClickResult(EnumActionResult internal) {
+    ClickResult(boolean internal) {
         this.internal = internal;
     }
 
-    public static ClickResult from(EnumActionResult ear) {
-        switch (ear) {
-            case SUCCESS:
-                return ACCEPTED;
-            case PASS:
-                return PASS;
-            case FAIL:
-                return REJECTED;
-        }
-        return null;
+    public static ClickResult from(boolean ear) {
+        return ear ? ACCEPTED : PASS;
     }
 }

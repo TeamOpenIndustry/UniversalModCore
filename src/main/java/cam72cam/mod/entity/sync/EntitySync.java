@@ -8,6 +8,9 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+
+import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +40,11 @@ public class EntitySync extends TagCompound {
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
 
-        for (String key : internal.getKeySet()) {
+        for (String key : (Set<String>)internal.getKeySet()) {
             NBTBase newVal = internal.getTag(key);
             if (old.internal.hasKey(key)) {
                 NBTBase oldVal = old.internal.getTag(key);
-                if (newVal.equals(oldVal)) {
+                if (newVal.toString().equals(oldVal.toString())) {
                     continue;
                 }
                 if (oldVal.getId() == 5) {
@@ -58,7 +61,7 @@ public class EntitySync extends TagCompound {
             sync.internal.setTag(key, newVal);
         }
 
-        for (String key : old.internal.getKeySet()) {
+        for (String key : (Set<String>)old.internal.getKeySet()) {
             if (!internal.hasKey(key)) {
                 removed.add(key);
             }
@@ -72,7 +75,7 @@ public class EntitySync extends TagCompound {
         }
 
         if (sync.internal.getKeySet().size() != 0) {
-            old = new TagCompound(this.internal.copy());
+            old = new TagCompound((NBTTagCompound) this.internal.copy());
 
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
@@ -80,7 +83,7 @@ public class EntitySync extends TagCompound {
 
     /** Receive update (should only be called from packets) */
     public void receive(TagCompound sync) throws SerializationException {
-        for (String key : sync.internal.getKeySet()) {
+        for (String key : ((Set<String>)sync.internal.getKeySet())) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
                     internal.removeTag(removed);

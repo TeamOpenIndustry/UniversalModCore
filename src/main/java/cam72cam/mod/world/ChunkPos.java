@@ -1,7 +1,6 @@
 package cam72cam.mod.world;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
+import cam72cam.mod.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
@@ -10,19 +9,15 @@ public class ChunkPos {
     public final int chunkX;
     public final int chunkZ;
 
-    public ChunkPos(World world, BlockPos pos) {
-        dim = world.provider.getDimension();
-        Chunk chunk = world.getChunkFromBlockCoords(pos);
+    public ChunkPos(World world, Vec3i pos) {
+        dim = world.provider.dimensionId;
+        Chunk chunk = world.getChunkFromBlockCoords(pos.x, pos.z);
         chunkX = chunk.xPosition;
         chunkZ = chunk.zPosition;
     }
 
-    public ChunkPos(Entity entity) {
-        this(entity.getEntityWorld(), entity.getPosition());
-    }
-
     public ChunkPos(World world, Integer cx, Integer cz) {
-        dim = world.provider.getDimension();
+        dim = world.provider.dimensionId;
         chunkX = cx;
         chunkZ = cz;
     }

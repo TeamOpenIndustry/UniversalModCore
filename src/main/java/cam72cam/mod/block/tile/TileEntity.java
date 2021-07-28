@@ -5,7 +5,6 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.energy.IEnergy;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
-import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.math.Vec3i;
@@ -16,29 +15,26 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import cofh.api.energy.IEnergyConnection;
+import cofh.api.energy.IEnergyHandler;
 import com.google.common.collect.HashBiMap;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.common.registry.GameData;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /**
  * TileEntity is an internal class that should only be extended when you need to implement
@@ -48,7 +44,7 @@ import java.util.function.Supplier;
  *
  * @see BlockEntity
  */
-public class TileEntity extends net.minecraft.tileentity.TileEntity {
+public class TileEntity extends net.minecraft.tileentity.TileEntity implements IEnergyHandler, IEnergyConnection, IFluidHandler, ISidedInventory {
     static {
         registerTileEntity(TileEntity.class, new Identifier(ModCore.MODID, "hack"));
     }
@@ -60,6 +56,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     private String instanceId;
     // Set during initialization
     private BlockEntity instance;
+    public TagCompound deferredLoad;
 
     // Cached
     private Vec3i umcPos;
@@ -115,28 +112,18 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Wrap getPos() in a cached UMC Vec3i */
     public Vec3i getUMCPos() {
-        if (umcPos == null || !umcPos.internal().equals(pos)) {
-            umcPos = new Vec3i(pos);
+        if (umcPos == null || umcPos.x != xCoord || umcPos.y != yCoord || umcPos.z != zCoord) {
+            umcPos = new Vec3i(xCoord, yCoord, zCoord);
         }
         return umcPos;
     }
 
     /** Wrap getWorld in cached UMC World */
     public World getUMCWorld() {
-        if (umcWorld == null || umcWorld.internal != world) {
-            umcWorld = World.get(world);
+        if (umcWorld == null || umcWorld.internal != worldObj) {
+            umcWorld = World.get(worldObj);
         }
         return umcWorld;
-    }
-
-    /**
-     * So this get's called before readFromNBT and allows us to get a world object
-     *
-     * This allows us to set the world object and actually be in a position to load the instance
-     */
-    @Override
-    protected void setWorldCreate(net.minecraft.world.World worldIn) {
-        super.world = worldIn;
     }
 
     /*
@@ -175,6 +162,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 // TODO how should we handle this?
                 throw new RuntimeException(e);
             }
+        } else {
+            deferredLoad = instanceData;
         }
     }
 
@@ -183,7 +172,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    public void writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
 
         TagCompound data = new TagCompound(compound);
@@ -200,25 +189,24 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             }
             data.set("instanceData", instanceData);
         }
-        return compound;
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final SPacketUpdateTileEntity getUpdatePacket() {
-        return new SPacketUpdateTileEntity(this.getPos(), 1, getUpdateTag());
+    public Packet getDescriptionPacket() {
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 6, getUpdateTag());
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+    public final void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
         handleUpdateTag(pkt.getNbtCompound());
     }
 
     /** Active Synchronization from markDirty */
-    @Override
+    // 1.7.10 @Override
     public final NBTTagCompound getUpdateTag() {
-        NBTTagCompound tag = super.getUpdateTag();
+        NBTTagCompound tag = new NBTTagCompound();
         if (this.isLoaded()) {
             this.writeToNBT(tag);
             TagCompound umcUpdate = new TagCompound();
@@ -233,7 +221,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
     }
 
     /** Active Synchronization from markDirty */
-    @Override
+    // 1.7.10 @Override
     public final void handleUpdateTag(NBTTagCompound tag) {
         try {
             this.readFromNBT(tag);
@@ -248,29 +236,30 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
         }
-        world.markBlockRangeForRenderUpdate(getPos(), getPos());
+        worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord,xCoord, yCoord, zCoord);
     }
 
     /** Fire off update packet if on server, re-render if on client */
     @Override
     public void markDirty() {
         super.markDirty();
-        if (!world.isRemote) {
-            world.notifyBlockUpdate(getPos(), world.getBlockState(getPos()), world.getBlockState(getPos()), 1 + 2 + 8);
-            world.notifyNeighborsOfStateChange(pos, this.getBlockType());
+        if (!worldObj.isRemote) {
+            worldObj.notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, blockType, 1 + 2 + 8);
+            worldObj.notifyBlockChange(xCoord, yCoord, zCoord, this.getBlockType());
+            worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
         }
     }
 
     /* Forge Overrides */
 
     private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
-            new SingleCache<>(internal -> BoundingBox.from(internal).offset(pos.getX(), pos.getY(), pos.getZ()));
+            new SingleCache<>(internal -> BoundingBox.from(internal).getOffsetBoundingBox(xCoord, yCoord, zCoord));
     /**
      * @return Instance's bounding box
      * @see BlockEntity
      */
     @Override
-    public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+    public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
         if (instance() != null) {
             return bbCache.get(instance().getRenderBoundingBox());
         }
@@ -286,163 +275,6 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
     }
 
-    @Override
-    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing) {
-        //TODO more efficient
-        return getCapability(capability, facing) != null;
-    }
-
-    @Override
-    @Nullable
-    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.EnumFacing facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-            ITank target = getTank(Facing.from(facing));
-            if (target == null) {
-                return null;
-            }
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(new IFluidHandler() {
-                @Override
-                public IFluidTankProperties[] getTankProperties() {
-                    return new IFluidTankProperties[]{
-                            new IFluidTankProperties() {
-                                @Nullable
-                                @Override
-                                public FluidStack getContents() {
-                                    return target.getContents().internal;
-                                }
-
-                                @Override
-                                public int getCapacity() {
-                                    return target.getCapacity();
-                                }
-
-                                @Override
-                                public boolean canFill() {
-                                    return true;
-                                }
-
-                                @Override
-                                public boolean canDrain() {
-                                    return true;
-                                }
-
-                                @Override
-                                public boolean canFillFluidType(FluidStack fluidStack) {
-                                    return target.allows(Fluid.getFluid(fluidStack.getFluid()));
-                                }
-
-                                @Override
-                                public boolean canDrainFluidType(FluidStack fluidStack) {
-                                    return target.allows(Fluid.getFluid(fluidStack.getFluid()));
-                                }
-                            }
-                    };
-                }
-
-                @Override
-                public int fill(FluidStack resource, boolean doFill) {
-                    int res = target.fill(new cam72cam.mod.fluid.FluidStack(resource), !doFill);
-                    return res;
-                }
-
-                @Nullable
-                @Override
-                public FluidStack drain(FluidStack resource, boolean doDrain) {
-                    return target.drain(new cam72cam.mod.fluid.FluidStack(resource), !doDrain).internal;
-                }
-
-                @Nullable
-                @Override
-                public FluidStack drain(int maxDrain, boolean doDrain) {
-                    if (target.getContents().internal == null) {
-                        return null;
-                    }
-                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), !doDrain).internal;
-                }
-            });
-        }
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            IInventory target = getInventory(Facing.from(facing));
-            if (target == null) {
-                return null;
-            }
-            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(new ItemStackHandler(target.getSlotCount()) {
-                @Override
-                public int getSlots() {
-                    return target.getSlotCount();
-                }
-
-                @Override
-                public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-                    target.set(slot, new cam72cam.mod.item.ItemStack(stack));
-                }
-
-                @Nonnull
-                @Override
-                public ItemStack getStackInSlot(int slot) {
-                    return target.get(slot).internal;
-                }
-
-                @Nonnull
-                @Override
-                public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal;
-                }
-
-                @Nonnull
-                @Override
-                public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    return target.extract(slot, amount, simulate).internal;
-                }
-
-                @Override
-                protected int getStackLimit(int slot, ItemStack stack)
-                {
-                    return target.getLimit(slot);
-                }
-
-            });
-        }
-        if (capability == CapabilityEnergy.ENERGY) {
-            IEnergy target = getEnergy(Facing.from(facing));
-            if (target == null) {
-                return null;
-            }
-            return CapabilityEnergy.ENERGY.cast(new IEnergyStorage() {
-                @Override
-                public int receiveEnergy(int maxReceive, boolean simulate) {
-                    return target.receive(maxReceive, simulate);
-                }
-
-                @Override
-                public int extractEnergy(int maxExtract, boolean simulate) {
-                    return target.extract(maxExtract, simulate);
-                }
-
-                @Override
-                public int getEnergyStored() {
-                    return target.getCurrent();
-                }
-
-                @Override
-                public int getMaxEnergyStored() {
-                    return target.getMax();
-                }
-
-                @Override
-                public boolean canExtract() {
-                    return true;
-                }
-
-                @Override
-                public boolean canReceive() {
-                    return true;
-                }
-            });
-        }
-        return null;
-    }
-
     /*
     New Functionality
     */
@@ -454,7 +286,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** @return The instance of the BlockEntity if possible */
     public BlockEntity instance() {
-        return instance(null);
+        return instance(deferredLoad);
     }
 
     /**
@@ -473,7 +305,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      */
     private BlockEntity instance(TagCompound data) {
         if (this.instance == null) {
-            if (hasWorld() && (!world.isRemote || data != null)) {
+            if (hasWorldObj() && (!worldObj.isRemote || data != null)) {
                 if (this.instanceId == null) {
                     ModCore.debug("WAT NULL");
                 }
@@ -482,6 +314,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 }
                 this.instance = registry.get(this.instanceId).get();
                 this.instance.internal = this;
+                this.deferredLoad = null;
                 if (data != null) {
                     try {
                         TagSerializer.deserialize(data, this.instance);
@@ -507,5 +340,151 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     public IEnergy getEnergy(Facing side) {
         return instance() != null ? instance().getEnergy(side) : null;
+    }
+
+    @Override
+    public int receiveEnergy(ForgeDirection dir, int maxReceive, boolean simulate) {
+        return getEnergy(Facing.from(dir)) == null ? 0 : getEnergy(Facing.from(dir)).receive(maxReceive, simulate);
+    }
+
+    @Override
+    public int extractEnergy(ForgeDirection dir, int maxExtract, boolean simulate) {
+        return getEnergy(Facing.from(dir)) == null ? 0 : getEnergy(Facing.from(dir)).extract(maxExtract, simulate);
+    }
+
+    @Override
+    public int getEnergyStored(ForgeDirection dir) {
+        return getEnergy(Facing.from(dir)) == null ? 0 : getEnergy(Facing.from(dir)).getCurrent();
+    }
+
+    @Override
+    public int getMaxEnergyStored(ForgeDirection dir) {
+        return getEnergy(Facing.from(dir)) == null ? 0 : getEnergy(Facing.from(dir)).getMax();
+    }
+
+    @Override
+    public boolean canConnectEnergy(ForgeDirection dir) {
+        return getEnergy(Facing.from(dir)) != null;
+    }
+
+    @Override
+    public int[] getSlotsForFace(int side) {
+        return IntStream.range(0, getInventory(Facing.from((byte) side)) == null ? 0 : getInventory(Facing.from((byte) side)).getSlotCount()).toArray();
+    }
+
+    @Override
+    public boolean canInsertItem(int slot, ItemStack stack, int side) {
+        IInventory inv = getInventory(null);
+        return inv != null && stack != null && inv.insert(slot, new cam72cam.mod.item.ItemStack(stack), true).getCount() != stack.stackSize;
+    }
+
+    @Override
+    public boolean canExtractItem(int slot, ItemStack stack, int side) {
+        IInventory inv = getInventory(null);
+        return inv != null && stack != null && !inv.extract(slot, stack.stackSize, true).isEmpty();
+    }
+
+    @Override
+    public boolean isUseableByPlayer(EntityPlayer player) {
+        return true;
+    }
+
+    @Override
+    public void openChest() {
+
+    }
+
+    @Override
+    public void closeChest() {
+
+    }
+
+    @Override
+    public int getSizeInventory() {
+        return getInventory(null) == null ? 0 : getInventory(null).getSlotCount();
+    }
+
+    @Override
+    public ItemStack getStackInSlot(int slot) {
+        return getInventory(null) == null ? null : getInventory(null).get(slot).internal;
+    }
+
+    @Override
+    public ItemStack decrStackSize(int slot, int count) {
+        IInventory inv = getInventory(null);
+        return inv == null ? null : inv.extract(slot, count, false).internal;
+    }
+
+    @Override
+    public ItemStack getStackInSlotOnClosing(int p_70304_1_) {
+        return null;
+    }
+
+    @Override
+    public void setInventorySlotContents(int slot, ItemStack stack) {
+        IInventory inv = getInventory(null);
+        if (inv != null) {
+            inv.set(slot, new cam72cam.mod.item.ItemStack(stack));
+        }
+    }
+
+    @Override
+    public String getInventoryName() {
+        return "";
+    }
+
+    @Override
+    public boolean isCustomInventoryName() {
+        return false;
+    }
+
+    @Override
+    public int getInventoryStackLimit() {
+        return 64;
+    }
+
+    @Override
+    public boolean isItemValidForSlot(int slot, ItemStack stack) {
+        IInventory inv = getInventory(null);
+        // remainder != input size
+        return inv != null && stack != null && inv.insert(slot, new cam72cam.mod.item.ItemStack(stack), true).getCount() != stack.stackSize;
+    }
+
+    @Override
+    public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+        return getTank(Facing.from(from)) == null ? 0 : getTank(Facing.from(from)).fill(new cam72cam.mod.fluid.FluidStack(resource), !doFill);
+    }
+
+    @Override
+    public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+        return getTank(Facing.from(from)) == null ? null : getTank(Facing.from(from)).drain(new cam72cam.mod.fluid.FluidStack(resource), !doDrain).internal;
+    }
+
+    @Override
+    public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+        ITank target = getTank(Facing.from(from));
+        if (target == null) {
+            return null;
+        }
+        if (target.getContents().internal == null) {
+            return null;
+        }
+        return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), !doDrain).internal;
+    }
+
+    @Override
+    public boolean canFill(ForgeDirection from, Fluid fluid) {
+        return getTank(Facing.from(from)) != null;
+    }
+
+    @Override
+    public boolean canDrain(ForgeDirection from, Fluid fluid) {
+        return getTank(Facing.from(from)) != null;
+    }
+
+    @Override
+    public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+        ITank tank = getTank(Facing.from(from));
+        return tank == null ? new FluidTankInfo[0] : new FluidTankInfo[]{ new FluidTankInfo(tank.getContents().internal, tank.getCapacity() ) };
     }
 }

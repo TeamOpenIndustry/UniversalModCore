@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Fluid {
-    public static final int BUCKET_VOLUME = net.minecraftforge.fluids.Fluid.BUCKET_VOLUME;
+    public static final int BUCKET_VOLUME = 1000;
     private static final Map<String, Fluid> registryCache = new HashMap<>();
     public static final Fluid WATER = getFluid("water");
     public static final Fluid LAVA = getFluid("lava");
@@ -42,5 +42,10 @@ public class Fluid {
 
     public String toString() {
         return ident + " : " + internal.toString() + " : " + super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Fluid && ((Fluid)o).ident.equals(ident);
     }
 }

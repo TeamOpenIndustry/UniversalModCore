@@ -1,7 +1,7 @@
 package cam72cam.mod.item;
 
+import cpw.mods.fml.common.registry.GameRegistry;
 import cam72cam.mod.event.CommonEvents;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import java.util.ArrayList;

@@ -1,26 +1,26 @@
 package cam72cam.mod.text;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.common.ForgeHooks;
 
 /** A message that can be sent to a player */
 public class PlayerMessage {
-    public final ITextComponent internal;
+    public final IChatComponent internal;
 
-    private PlayerMessage(ITextComponent component) {
+    private PlayerMessage(IChatComponent component) {
         internal = component;
     }
 
     /** Untranslated */
     public static PlayerMessage direct(String msg) {
-        return new PlayerMessage(new TextComponentString(msg));
+        return new PlayerMessage(new ChatComponentText(msg));
     }
 
     /** Translated */
     public static PlayerMessage translate(String msg, Object... objects) {
-        return new PlayerMessage(new TextComponentTranslation(msg, objects));
+        return new PlayerMessage(new ChatComponentTranslation(msg, objects));
     }
 
     /** URL Formatted (clickable) */

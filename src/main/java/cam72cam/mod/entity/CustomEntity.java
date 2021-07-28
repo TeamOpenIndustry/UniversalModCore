@@ -1,7 +1,6 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.entity.sync.EntitySync;
-import cam72cam.mod.world.World;
 
 import java.util.List;
 
@@ -70,7 +69,7 @@ public class CustomEntity extends Entity {
             // If they are already riding a custom passenger, don't fire the dismount handler directly
             ((ModdedEntity)passenger.getRiding().internal).moveRiderTo(passenger, this);
         } else {
-            super.addPassenger(passenger);
+            internal.addPassenger(passenger.internal);
         }
     }
 

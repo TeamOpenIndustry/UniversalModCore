@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
-import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
@@ -13,19 +12,16 @@ import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,7 +57,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
          Certain mods (like IR) use custom bounding boxes that do some really funky shit to break
          the axis constraint.  We don't care about that when rendering, just want a worst-case sized BB
         */
-        return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        return AxisAlignedBB.getBoundingBox(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     });
 
     Pair<String, TagCompound> refusedToJoin = null;
@@ -191,6 +187,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void readSpawnData(ByteBuf additionalData) {
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
+        this.entityUniqueID = data.getUUID("UUIDSYNC");
         load(data);
         try {
             self.sync.receive(data.get("sync"));
@@ -202,6 +199,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void writeSpawnData(ByteBuf buffer) {
         TagCompound data = new TagCompound();
+        data.setUUID("UUIDSYNC", this.getPersistentID());
         data.set("sync", self.sync);
         save(data);
         ByteBufUtils.writeTag(buffer, data.internal);
@@ -215,7 +213,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * @see ITickable
      */
     @Override
-    public final void onUpdate() {
+    public void onEntityUpdate() {
         iTickable.onTick();
         try {
             self.sync.send();
@@ -223,17 +221,28 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
         }
 
+        //TODO 1.7.10
+        super.boundingBox.setBB(BoundingBox.from(iCollision.getCollision()));
+
+        if (this.riddenByEntity != null) {
+            addPassenger(this.riddenByEntity);
+        }
+
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
+        }
+
+        if (this.ticksExisted % 20 == 0 && this.getPassengerCount() > 0) {
+            new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
 
     /* Player Interact */
     /** @see IClickable */
     @Override
-    public final boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack Stack, EnumHand hand) {
-        return iClickable.onClick(new Player(player), Player.Hand.from(hand)) == ClickResult.ACCEPTED;
+    public final boolean interactFirst(EntityPlayer player) {
+        return iClickable.onClick(new Player(player), Player.Hand.PRIMARY).internal;
     }
 
     /* Death */
@@ -269,11 +278,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     /* Ridable */
+
     /** @see IRidable#canFitPassenger */
+    /* TODO 1.7.10
     @Override
     public boolean canFitPassenger(Entity passenger) {
         return iRidable.canFitPassenger(self.getWorld().getEntity(passenger));
     }
+    */
 
     /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
@@ -292,18 +304,22 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      *
      * @see IRidable#getMountOffset
      */
-    @Override
+    // 1.7.10 @Override
     public final void addPassenger(Entity entity) {
-        if (!world.isRemote) {
-            SeatEntity seat = new SeatEntity(world);
+        if (!worldObj.isRemote) {
+            entity.mountEntity(null);
+            ModCore.debug("New Seat");
+            SeatEntity seat = new SeatEntity(worldObj);
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getPersistentID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
-            entity.startRiding(seat);
+            seat.setPosition(posX, posY, posZ);
+            entity.mountEntity(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
-            updateSeat(seat);
-            world.spawnEntity(seat);
+            worldObj.spawnEntityInWorld(seat);
             new PassengerPositionsPacket(this).sendToObserving(self);
+        } else {
+            ModCore.debug("skip");
         }
     }
 
@@ -338,15 +354,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             }
 
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            if (seat.riddenByEntity != passenger.internal) {
                 return;
             }
 
             passengerPositions.put(passenger.getUUID(), offset);
 
             Vec3d pos = calculatePassengerPosition(offset);
+            if (passenger.internal instanceof EntityPlayer) {
+                pos = pos.add(0, passenger.internal.yOffset, 0);
+            }
 
-            if (world.loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
+            if (worldObj.loadedEntityList.indexOf(seat) < worldObj.loadedEntityList.indexOf(passenger.internal)) {
                 pos = pos.add(motionX, motionY, motionZ);
             }
 
@@ -367,12 +386,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
         if (iRidable.canFitPassenger(entity)) {
-            SeatEntity seat = (SeatEntity) entity.internal.getRidingEntity();
+            SeatEntity seat = (SeatEntity) entity.internal.ridingEntity;
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
-            if (!world.isRemote) {
+            if (!worldObj.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
             }
         }
@@ -388,10 +407,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             Vec3d offset = passengerPositions.get(passenger.getUUID());
             if (offset != null) {
                 offset = iRidable.onDismountPassenger(passenger, offset);
-
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(world.isAirBlock(new Vec3i(pos).internal()) && world.isAirBlock(new Vec3i(pos).up().internal()))) {
+                while (!(self.getWorld().isAir(new Vec3i(pos)) && self.getWorld().isAir(new Vec3i(pos).up()))) {
                     pos = pos.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);
@@ -406,7 +424,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         for (SeatEntity seat : this.seats) {
             cam72cam.mod.entity.Entity seatPass = seat.getEntityPassenger();
             if (seatPass != null && seatPass.getUUID().equals(passenger.getUUID())) {
-                passenger.internal.dismountRidingEntity();
+                passenger.internal.mountEntity(null);
                 break;
             }
         }
@@ -425,8 +443,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* ICollision NOTE: set width/height if implementing LivingEntity */
     /** @see #getEntityBoundingBox() */
     @Override
-    public AxisAlignedBB getCollisionBoundingBox() {
-        return getEntityBoundingBox();
+    public AxisAlignedBB getCollisionBox(Entity collider) {
+        // TODO 1.7.10 getBoundingBox?
+        return null;
     }
 
     /**
@@ -435,10 +454,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * @see ICollision
      */
     @Override
-    public AxisAlignedBB getEntityBoundingBox() {
+    public AxisAlignedBB getBoundingBox() {
         if (refusedToJoin != null) {
             // Entity is added to a chunk but not world (yay minecraft)
-            return super.getEntityBoundingBox();
+            return super.getBoundingBox();
         }
         return cachedCollisionBB.get(iCollision.getCollision());
     }
@@ -448,10 +467,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * TODO provide a way of specifying a render bounding box without a collision bounding box
      * @see ICollision
      */
+    /* 1.7.10
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         return cachedRenderBB.get(iCollision.getCollision());
-    }
+    }*/
 
     /* Hacks */
     /** Needed for right click, probably a forge or MC bug */
@@ -465,11 +485,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return self.canBePushed();
     }
 
-    @Override
     @SideOnly(Side.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void setPositionAndRotation2(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
         if (self.allowsDefaultMovement()) {
-            super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.setPositionAndRotation2(x, y, z, yaw, pitch, posRotationIncrements);
         }
     }
 
@@ -480,7 +499,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
+    /*
+    // TODO 1.7.10 getEntityString?
     @Override
+     */
     public String getName() {
         return this.type;
     }

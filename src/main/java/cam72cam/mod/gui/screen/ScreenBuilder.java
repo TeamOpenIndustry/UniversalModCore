@@ -4,13 +4,12 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.resource.Identifier;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,7 +111,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == 1) {
             close();
         }
@@ -125,11 +124,11 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         this.textFields.forEach(x -> x.textboxKeyTyped(typedChar, keyCode));
     }
 
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         // Copy pasta to support right / left button click
 
         for (int i = 0; i < this.buttonList.size(); ++i) {
-            GuiButton guibutton = super.buttonList.get(i);
+            GuiButton guibutton = (GuiButton) super.buttonList.get(i);
 
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 this.selectedButton = guibutton;
@@ -141,6 +140,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         this.textFields.forEach(x -> x.mouseClicked(mouseX, mouseY, mouseButton));
     }
 
+
+    @Override
     protected void mouseReleased(int p_mouseReleased_1_, int p_mouseReleased_2_, int p_mouseReleased_3_) {
         if (this.selectedButton != null && p_mouseReleased_3_ == 0) {
             this.selectedButton.mouseReleased(p_mouseReleased_1_, p_mouseReleased_2_);

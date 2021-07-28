@@ -4,13 +4,13 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
-import io.netty.util.internal.ThreadLocalRandom;
 import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.util.math.MathHelper;
 import paulscode.sound.CommandObject;
 import paulscode.sound.SoundSystem;
 
 import java.net.URL;
+import java.util.Random;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 class ClientSound implements ISound {
@@ -44,7 +44,11 @@ class ClientSound implements ISound {
         if (oggLocation == null) {
             return;
         }
-        id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
+
+        Random rand = MinecraftClient.getPlayer().internal.worldObj.rand;
+        long i = rand.nextLong() & -61441L | 16384L;
+        long j = rand.nextLong() & 4611686018427387903L | Long.MIN_VALUE;
+        id = new UUID(i, j).toString();
         sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
     }
 

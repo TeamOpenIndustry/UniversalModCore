@@ -4,9 +4,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.TriConsumer;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.renderer.Tessellator;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -30,21 +29,24 @@ public abstract class IParticle {
 
         return data -> {
             I ip = ctr.apply(data);
-            Particle p = new Particle(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
+            EntityFX p = new EntityFX(data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
                     particleMaxAge = data.lifespan;
                     motionX = data.motion.x;
                     motionY = data.motion.y;
                     motionZ = data.motion.z;
+                    this.noClip = true;
                 }
 
+                /* TODO 1.7.10
                 @Override
                 public boolean isTransparent() {
                     return !ip.depthTestEnabled();
                 }
+                */
 
                 @Override
-                public void renderParticle(VertexBuffer buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                public void renderParticle(Tessellator buffer, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
                     ip.ticks = particleAge;
                     ip.pos = new Vec3d(posX, posY, posZ);
                     ip.renderPos = new Vec3d(posX - interpPosX, posY - interpPosY, posZ - interpPosZ);

@@ -2,8 +2,11 @@ package cam72cam.mod.fluid;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import cam72cam.mod.util.Facing;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidContainerRegistry;
+import net.minecraftforge.fluids.IFluidContainerItem;
+import net.minecraftforge.fluids.IFluidHandler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,82 +21,132 @@ public interface ITank {
      *
      * See ImmersiveRailroading's FreightTank for an example.
      */
-    static ITank getTank(ItemStack stack, Consumer<ItemStack> onUpdate) {
-
-        IFluidHandler internal = FluidUtil.getFluidHandler(stack.internal);
-        if (internal == null) {
+    static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
+        if (inputCopy.isEmpty()) {
             return null;
         }
-        return new ITank() {
-            @Override
-            public FluidStack getContents() {
-                return new FluidStack(internal.getTankProperties()[0].getContents());
-            }
 
-            @Override
-            public int getCapacity() {
-                return internal.getTankProperties()[0].getCapacity();
-            }
+        if (inputCopy.internal.getItem() instanceof IFluidContainerItem) {
+            IFluidContainerItem internal = (IFluidContainerItem) inputCopy.internal.getItem();
+            return new ITank() {
+                @Override
+                public FluidStack getContents() {
+                    return new FluidStack(internal.getFluid(inputCopy.internal));
+                }
 
-            @Override
-            public boolean allows(Fluid fluid) {
-                return internal.getTankProperties()[0].canDrainFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0)) ||
-                        internal.getTankProperties()[0].canFillFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0));
-            }
+                @Override
+                public int getCapacity() {
+                    return internal.getCapacity(inputCopy.internal);
+                }
 
-            @Override
-            public int fill(FluidStack fluidStack, boolean simulate) {
-                ItemStack ic = stack.copy();
-                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
-                temp.fill(fluidStack.internal, true);
-                onUpdate.accept(ic);
+                @Override
+                public boolean allows(Fluid fluid) {
+                    return true; // TODO 1.7.10
+                }
 
-                return internal.fill(fluidStack.internal, !simulate);
-            }
+                @Override
+                public int fill(FluidStack fluidStack, boolean simulate) {
+                    ItemStack ic = inputCopy.copy();
+                    IFluidContainerItem temp = (IFluidContainerItem) ic.internal.getItem();
+                    temp.fill(ic.internal, fluidStack.internal, true);
+                    onUpdate.accept(ic);
 
-            @Override
-            public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                ItemStack ic = stack.copy();
-                IFluidHandler temp = FluidUtil.getFluidHandler(ic.internal);
-                temp.drain(fluidStack.internal, true);
-                onUpdate.accept(ic);
+                    return internal.fill(inputCopy.internal, fluidStack.internal, !simulate);
+                }
 
-                return new FluidStack(internal.drain(fluidStack.internal, !simulate));
-            }
-        };
+                @Override
+                public FluidStack drain(FluidStack fluidStack, boolean simulate) {
+                    ItemStack ic = inputCopy.copy();
+                    IFluidContainerItem temp = (IFluidContainerItem) ic.internal.getItem();
+                    temp.drain(ic.internal, fluidStack.internal.amount, true);
+                    onUpdate.accept(ic);
+
+                    return new FluidStack(internal.drain(inputCopy.internal, fluidStack.internal.amount, !simulate));
+                }
+            };
+        }
+        if (FluidContainerRegistry.isContainer(inputCopy.internal)) {
+            return new ITank() {
+                @Override
+                public FluidStack getContents() {
+                    return FluidContainerRegistry.isFilledContainer(inputCopy.internal) ? new FluidStack(FluidContainerRegistry.getFluidForFilledItem(inputCopy.internal)) : new FluidStack(null);
+                }
+
+                @Override
+                public int getCapacity() {
+                    return FluidContainerRegistry.getContainerCapacity(inputCopy.internal);
+                }
+
+                @Override
+                public boolean allows(Fluid fluid) {
+                    return true;// TODO 1.7.10
+                }
+
+                @Override
+                public int fill(FluidStack fluidStack, boolean simulate) {
+                    if (FluidContainerRegistry.isFilledContainer(inputCopy.internal)) {
+                        return 0;
+                    }
+
+                    net.minecraft.item.ItemStack output = FluidContainerRegistry.fillFluidContainer(fluidStack.internal, inputCopy.internal);
+                    onUpdate.accept(new ItemStack(output));
+
+                    return FluidContainerRegistry.isFilledContainer(output) ? FluidContainerRegistry.getFluidForFilledItem(output).amount : 0;
+                }
+
+                @Override
+                public FluidStack drain(FluidStack fluidStack, boolean simulate) {
+                    if (!FluidContainerRegistry.isFilledContainer(inputCopy.internal)) {
+                        return new FluidStack(null);
+                    }
+
+                    net.minecraft.item.ItemStack output = FluidContainerRegistry.drainFluidContainer(inputCopy.internal);
+                    onUpdate.accept(new ItemStack(output));
+
+                    return FluidContainerRegistry.isFilledContainer(output) ? new FluidStack(null) : new FluidStack(FluidContainerRegistry.getFluidForFilledItem(inputCopy.internal));
+                }
+            };
+        }
+        return null;
     }
 
     /** Wrap Forge's IFluidHandler, do not use directly */
-    static List<ITank> getTank(IFluidHandler internal) {
-        return Arrays.stream(internal.getTankProperties()).map(properties -> new ITank() {
+    static List<ITank> getTank(IFluidHandler internal, Facing dir) {
+        ForgeDirection fd = dir == null ? ForgeDirection.UNKNOWN : dir.to();
+        if (internal.getTankInfo(fd).length == 0) {
+            return null;
+        }
+        return Arrays.stream(internal.getTankInfo(fd)).map(fluidTankInfo -> new ITank() {
             @Override
             public FluidStack getContents() {
-                return new FluidStack(properties.getContents());
+                return new FluidStack(fluidTankInfo.fluid);
             }
 
             @Override
             public int getCapacity() {
-                return properties.getCapacity();
+                return fluidTankInfo.capacity;
             }
 
             @Override
             public boolean allows(Fluid fluid) {
-                return properties.canDrainFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0)) ||
-                        properties.canFillFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0));
+                return true;
+                //TODO 1.7.10
+                //return internal.getTankProperties()[0].canDrainFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0)) ||
+                //        internal.getTankProperties()[0].canFillFluidType(new net.minecraftforge.fluids.FluidStack(fluid.internal, 0));
             }
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
                 // BUG: This is a pretty fundamental problem with how forge's fluid API works.
                 // IFluidHandler should really expose a list of distinct tanks
-                return internal.fill(fluidStack.internal, !simulate);
+                return internal.fill(fd, fluidStack.internal, !simulate);
             }
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
                 // BUG: This is a pretty fundamental problem with how forge's fluid API works.
                 // IFluidHandler should really expose a list of distinct tanks
-                return new FluidStack(internal.drain(fluidStack.internal, !simulate));
+                return new FluidStack(internal.drain(fd, fluidStack.internal.amount, !simulate));
             }
         }).collect(Collectors.toList());
     }

@@ -1,6 +1,6 @@
 package cam72cam.mod.gui.screen;
 
-import net.minecraftforge.fml.client.config.GuiCheckBox;
+import cpw.mods.fml.client.config.GuiCheckBox;
 
 /** Basic checkbox */
 public abstract class CheckBox extends Button {

@@ -1,7 +1,7 @@
 package cam72cam.mod.config;
 
 import cam72cam.mod.ModCore;
-import net.minecraftforge.fml.common.Loader;
+import cpw.mods.fml.common.Loader;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;

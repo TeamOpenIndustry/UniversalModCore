@@ -14,17 +14,16 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import cpw.mods.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.relauncher.Side;
 
 /**
  * Packet abstraction and registration
@@ -150,13 +149,19 @@ public abstract class Packet {
     public static class Handler<T extends Message> implements IMessageHandler<T, IMessage> {
         @Override
         public IMessage onMessage(T message, MessageContext ctx) {
-            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> handle(message, ctx));
+            // 1.7.10 are messatges handled on the main thread? FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> handle(message, ctx));
+            handle(message, ctx);
             return null;
         }
 
         private void handle(T message, MessageContext ctx) {
+            if (ctx.side == Side.CLIENT && !MinecraftClient.isReady()) {
+                ModCore.warn("Packet received before game fully started: " + message.packet.data);
+                return;
+            }
+
             message.packet.ctx = ctx;
-            World world = ctx.side == Side.CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.getServerHandler().playerEntity.world);
+            World world = ctx.side == Side.CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.getServerHandler().playerEntity.worldObj);
             try {
                 TagSerializer.deserialize(message.packet.data, message.packet, world);
             } catch (SerializationException e) {

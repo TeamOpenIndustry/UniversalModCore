@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockEntityTickable;
 import cam72cam.mod.resource.Identifier;
-import net.minecraft.util.ITickable;
 
 /**
  * TileEntityTickable is an internal class which wraps TileEntity and implements ITickable.  Is paired with
@@ -14,7 +13,7 @@ import net.minecraft.util.ITickable;
  *
  * @see BlockEntityTickable
  */
-public class TileEntityTickable extends TileEntity implements ITickable {
+public class TileEntityTickable extends TileEntity {
     static {
         registerTileEntity(TileEntityTickable.class, new Identifier(ModCore.MODID, "hack_tickable"));
     }
@@ -46,7 +45,7 @@ public class TileEntityTickable extends TileEntity implements ITickable {
 
     private BlockEntityTickable tickable;
     @Override
-    public void update() {
+    public void updateEntity() {
         if (tickable == null) {
             tickable = (BlockEntityTickable) instance();
             if (tickable == null) {

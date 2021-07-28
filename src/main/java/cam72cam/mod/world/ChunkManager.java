@@ -3,10 +3,11 @@ package cam72cam.mod.world;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3i;
+import net.minecraft.world.ChunkCoordIntPair;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
@@ -42,7 +43,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
     }
 
     private static Ticket ticketForWorld(World world) {
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         if (!TICKETS.containsKey(dim)) {
             TICKETS.put(dim, ForgeChunkManager.requestTicket(ModCore.instance, world, ForgeChunkManager.Type.NORMAL));
         }
@@ -54,7 +55,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
             return;
         }
 
-        ChunkPos pos = new ChunkPos(world.internal, inPos.internal());
+        ChunkPos pos = new ChunkPos(world.internal, inPos);
 
         int currTicks = 0;
 
@@ -76,11 +77,11 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
             return;
         }
 
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         Set<ChunkPos> keys = CHUNK_MAP.keySet();
 
-        Set<ChunkPos> loaded = new HashSet<>();
-        Set<ChunkPos> unload = new HashSet<>();
+        Set<ChunkPos> loaded = new HashSet<ChunkPos>();
+        Set<ChunkPos> unload = new HashSet<ChunkPos>();
 
         for (ChunkPos pos : keys) {
             if (pos.dim != dim) {
@@ -101,7 +102,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
             CHUNK_MAP.remove(pos);
         }
 
-        for (net.minecraft.util.math.ChunkPos chunk : ticket.getChunkList()) {
+        for (ChunkCoordIntPair chunk : ticket.getChunkList()) {
             boolean shouldChunkLoad = false;
 
             for (ChunkPos pos : loaded) {
@@ -120,12 +121,9 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
                     ModCore.debug("UNFORCED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
                     ForgeChunkManager.unforceChunk(ticket, chunk);
                     if (world instanceof WorldServer) {
-                        if (!((WorldServer)world).getPlayerChunkMap().contains(chunk.chunkXPos, chunk.chunkZPos)) {
-                            Chunk current = world.getChunkProvider().getLoadedChunk(chunk.chunkXPos, chunk.chunkZPos);
-                            if (current != null) {
-                                ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
-                                ((WorldServer) world).getChunkProvider().unload(current);
-                            }
+                        if (!((WorldServer)world).getPlayerManager().func_152621_a(chunk.chunkXPos, chunk.chunkZPos)) {
+                            ModCore.debug("UNLOADED CHUNK %s %s", chunk.chunkXPos, chunk.chunkZPos);
+                            ((ChunkProviderServer)world.getChunkProvider()).dropChunk(chunk.chunkXPos, chunk.chunkZPos);
                         }
                     }
                 } catch (Exception ex) {
@@ -137,7 +135,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
         for (ChunkPos pos : loaded) {
             ModCore.debug("FORCED CHUNK %s %s", pos.chunkX, pos.chunkZ);
             try {
-                ForgeChunkManager.forceChunk(ticket, new net.minecraft.util.math.ChunkPos(pos.chunkX, pos.chunkZ));
+                ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(pos.chunkX, pos.chunkZ));
             } catch (Exception ex) {
                 ModCore.catching(ex);
             }
@@ -172,7 +170,7 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
 
     @Override
     public void ticketsLoaded(List<Ticket> tickets, World world) {
-        int dim = world.provider.getDimension();
+        int dim = world.provider.dimensionId;
         ModCore.debug("Loading chunks for %s (%s tickets)", dim, tickets.size());
 
         CHUNK_MAP.keySet().stream().filter(x -> x.dim == dim).collect(Collectors.toList()).forEach(CHUNK_MAP::remove);

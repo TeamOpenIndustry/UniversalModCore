@@ -16,36 +16,36 @@ public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy("stickWood");
     public static final Fuzzy WOOD_PLANK = new Fuzzy("plankWood");
     public static final Fuzzy REDSTONE_DUST = new Fuzzy("dustRedstone");
-    public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW_LAYER);
-    public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW);
-    public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
+    public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.snow_layer);
+    public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.snow);
+    public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.lead);
 
-    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Blocks.STONE_SLAB);
-    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone").add(Blocks.STONEBRICK);
+    public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Blocks.stone_slab);
+    public static final Fuzzy STONE_BRICK = new Fuzzy("brickStone").add(Blocks.stonebrick);
     public static final Fuzzy SAND = new Fuzzy("sand");
-    public static final Fuzzy PISTON = new Fuzzy("piston").add(Blocks.PISTON);
+    public static final Fuzzy PISTON = new Fuzzy("piston").add(Blocks.piston);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy("ingotGold");
     public static final Fuzzy STEEL_INGOT = new Fuzzy("ingotSteel");
     public static final Fuzzy STEEL_BLOCK = new Fuzzy("blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy("ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy("blockIron");
-    public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
+    public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.iron_bars);
 
-    public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.NETHER_BRICK);
-    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel");
-    public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock");
+    public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.nether_brick);
+    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy("gravel").add(Blocks.gravel);
+    public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.brick_block);
     public static final Fuzzy COBBLESTONE = new Fuzzy("cobblestone");
-    public static final Fuzzy CONCRETE = new Fuzzy("concrete").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.HARDENED_CLAY, 1, OreDictionary.WILDCARD_VALUE)));
-    public static final Fuzzy DIRT = new Fuzzy("dirt");
-    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.HARDENED_CLAY, 1, OreDictionary.WILDCARD_VALUE)));
+    public static final Fuzzy CONCRETE = new Fuzzy("concrete").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.hardened_clay, 1, OreDictionary.WILDCARD_VALUE)));
+    public static final Fuzzy DIRT = new Fuzzy("dirt").add(Blocks.dirt);
+    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, OreDictionary.WILDCARD_VALUE)));
     public static final Fuzzy LOG_WOOD = new Fuzzy("logWood");
-    public static final Fuzzy PAPER = new Fuzzy("paper");
-    public static final Fuzzy BOOK = new Fuzzy("book").add(Items.BOOK);
-    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.WOOL, 1, OreDictionary.WILDCARD_VALUE)));
-    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(new net.minecraft.item.ItemStack(Items.BUCKET, 1)));
+    public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.paper);
+    public static final Fuzzy BOOK = new Fuzzy("book").add(Items.book);
+    public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.wool, 1, OreDictionary.WILDCARD_VALUE)));
+    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(new net.minecraft.item.ItemStack(Items.bucket, 1)));
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald");
-    public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
+    public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.redstone_torch);
     public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");
 
     private static boolean isPostItemRegistration = false;
@@ -90,9 +90,12 @@ public class Fuzzy {
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return OreDictionary.getOres(ident).stream()
-                        .anyMatch((net.minecraft.item.ItemStack potential) -> OreDictionary.itemMatches(potential, stack.internal, false)) ||
-                        includes.stream().anyMatch(f -> f.matches(stack));
+        for (net.minecraft.item.ItemStack potential : OreDictionary.getOres(ident)) {
+            if (OreDictionary.itemMatches(potential, stack.internal, false)) {
+                return true;
+            }
+        }
+        return includes.stream().anyMatch(f -> f.matches(stack));
     }
 
     /** Do any items exist in this fuzzy */
@@ -104,7 +107,7 @@ public class Fuzzy {
     public List<ItemStack> enumerate() {
         List<ItemStack> results = new ArrayList<>();
         for (net.minecraft.item.ItemStack stack : OreDictionary.getOres(ident)) {
-            if (stack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+            if (stack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
                 List<net.minecraft.item.ItemStack> temp = new ArrayList<>();
                 try {
                     stack.getItem().getSubItems(stack.getItem(), stack.getItem().getCreativeTab(), temp);

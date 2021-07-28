@@ -10,61 +10,42 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL.With;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.*;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.model.ItemLayerModel;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.model.TRSRTransformation;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
-    private static final List<BakedQuad> EMPTY = Collections.emptyList();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
+    private static Map<CustomItem, String> icons = new HashMap<>();
+
+    public static String getIcon(CustomItem itemBase) {
+        return icons.get(itemBase);
+    }
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        // Link Item to Item Registry Name
-        ClientEvents.MODEL_CREATE.subscribe(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
-                new ModelResourceLocation(item.getRegistryName().internal, "")));
-
-        // Link Item Registry name to texture
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                tex.internal
-        )).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter())));
-
-        // Add texture to texture map
-        ClientEvents.TEXTURE_STITCH.subscribe(() -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
+        icons.put(item, tex.toString());
     }
 
     /** Register a complex model for an item */
     public static void register(CustomItem item, IItemModel model) {
         // Link Item to Item Registry Name
         ClientEvents.MODEL_CREATE.subscribe(() ->
-                ModelLoader.setCustomModelResourceLocation(item.internal, 0, new ModelResourceLocation(item.getRegistryName().internal, ""))
+                MinecraftForgeClient.registerItemRenderer(item.internal, new BakedItemModel(model))
         );
-
-        // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel) {
@@ -83,29 +64,33 @@ public class ItemRender {
 
     /** Different contexts in which an item can be rendered */
     public enum ItemRenderType {
-        NONE(TransformType.NONE),
-        THIRD_PERSON_LEFT_HAND(TransformType.THIRD_PERSON_LEFT_HAND),
-        THIRD_PERSON_RIGHT_HAND(TransformType.THIRD_PERSON_RIGHT_HAND),
-        FIRST_PERSON_LEFT_HAND(TransformType.FIRST_PERSON_LEFT_HAND),
-        FIRST_PERSON_RIGHT_HAND(TransformType.FIRST_PERSON_RIGHT_HAND),
-        HEAD(TransformType.HEAD),
-        GUI(TransformType.GUI),
-        ENTITY(TransformType.GROUND),
-        FRAME(TransformType.FIXED);
+        NONE(null),
+        THIRD_PERSON_LEFT_HAND(null),
+        THIRD_PERSON_RIGHT_HAND(IItemRenderer.ItemRenderType.EQUIPPED),
+        FIRST_PERSON_LEFT_HAND(null),
+        FIRST_PERSON_RIGHT_HAND(IItemRenderer.ItemRenderType.EQUIPPED_FIRST_PERSON),
+        HEAD(null),
+        GUI(IItemRenderer.ItemRenderType.INVENTORY),
+        ENTITY(IItemRenderer.ItemRenderType.ENTITY),
+        FRAME(null); // Handled by ENTITY
 
-        private final TransformType type;
+        private final IItemRenderer.ItemRenderType type;
 
-        ItemRenderType(TransformType type) {
+        ItemRenderType(IItemRenderer.ItemRenderType type) {
             this.type = type;
         }
 
-        public static ItemRenderType from(TransformType cameraTransformType) {
+        public static ItemRenderType from(IItemRenderer.ItemRenderType cameraTransformType) {
+            if (cameraTransformType == null) {
+                return NONE;
+            }
+
             for (ItemRenderType type : values()) {
                 if (cameraTransformType == type.type) {
                     return type;
                 }
             }
-            return null;
+            return NONE;
         }
     }
 
@@ -197,98 +182,78 @@ public class ItemRender {
     }
 
     /** Custom Model where we can hack into the MC/Forge render system */
-    static class BakedItemModel implements IBakedModel {
+    static class BakedItemModel implements IItemRenderer {
         private ItemStack stack;
         private final IItemModel model;
-        private ItemRenderType type;
-
 
         BakedItemModel(IItemModel model) {
-            this.stack = null;
             this.model = model;
-            this.type = ItemRenderType.NONE;
         }
 
         @Override
-        public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
-            if (stack == null) {
-                return EMPTY;
-            }
-
-            if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
-                return EMPTY;
-            }
-
-            StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
-            if (std == null) {
-                return EMPTY;
-            }
-
-
-            /*
-             * I am an evil wizard!
-             *
-             * So it turns out that I can stick a draw call in here to
-             * render my own stuff. This subverts forge's entire baked model
-             * system with a single line of code and injects my own OpenGL
-             * payload. Fuck you modeling restrictions.
-             *
-             * This is probably really fragile if someone calls getQuads
-             * before actually setting up the correct GL context.
-             */
-            if (side == null) {
-                model.applyTransform(type);
-                std.renderCustom();
-            }
-
-            return std.getQuads(side, rand);
-        }
-
-        @Override
-        public boolean isAmbientOcclusion() {
+        public boolean handleRenderType(net.minecraft.item.ItemStack item, ItemRenderType type) {
             return true;
         }
 
         @Override
-        public boolean isGui3d() {
-            return true;
-        }
-
-        @Override
-        public boolean isBuiltInRenderer() {
+        public boolean shouldUseRenderHelper(ItemRenderType type, net.minecraft.item.ItemStack item, ItemRendererHelper helper) {
             return false;
         }
 
         @Override
-        public TextureAtlasSprite getParticleTexture() {
-            return null;
-        }
-
-        @Override
-        public ItemOverrideList getOverrides() {
-            return new ItemOverrideListHack();
-        }
-
-        public ItemCameraTransforms getItemCameraTransforms() {
-            return new ItemCameraTransforms(ItemCameraTransforms.DEFAULT) {
-                public ItemTransformVec3f getTransform(ItemCameraTransforms.TransformType type) {
-                    BakedItemModel.this.type = ItemRenderType.from(type);
-                    return super.getTransform(type);
-                }
-            };
-        }
-
-        class ItemOverrideListHack extends ItemOverrideList {
-            ItemOverrideListHack() {
-                super(new ArrayList<>());
+        public void renderItem(ItemRenderType typeIn, net.minecraft.item.ItemStack item, Object... data) {
+            ItemStack stack = new ItemStack(item);
+            if (stack.isEmpty()) {
+                return;
             }
 
-            @Override
-            public IBakedModel handleItemState(IBakedModel originalModel, net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World world, @Nullable EntityLivingBase entity) {
-                BakedItemModel.this.stack = new ItemStack(stack);
-                return BakedItemModel.this;
+            ItemRender.ItemRenderType type = ItemRender.ItemRenderType.from(typeIn);
+
+            if (type == ItemRender.ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                GL11.glPushMatrix();
+                GL11.glRotated(180, 1, 0, 0);
+                //GL11.glRotated(180, 0, 1, 0);
+                GL11.glTranslated(-2, 2, 0);
+                GL11.glScaled(20, 20, 20);
+                GL11.glTranslated(0, -1, 0);
+                GL11.glEnable(GL11.GL_ALPHA_TEST);
+                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                GL11.glPopMatrix();
+                return;
             }
+
+            StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
+            if (std == null) {
+                return;
+            }
+
+            GL11.glPushMatrix();
+            switch (type) {
+                case GUI:
+                    GL11.glRotated(180, 1, 0, 0);
+                    //GL11.glRotated(180, 0, 1, 0);
+                    GL11.glScaled(16, 16, -16);
+                    GL11.glTranslated(0, -1, 0);
+                    break;
+                case FIRST_PERSON_RIGHT_HAND:
+                    GL11.glRotated(90, 0, 1, 0);
+                    GL11.glTranslated(1, 0, 0.7);
+                    GL11.glRotated(180, 0, 1, 0);
+                    GL11.glRotated(10, 1, 0, 0);
+                    break;
+                case THIRD_PERSON_RIGHT_HAND:
+                    GL11.glTranslated(1, -0.5, 0.5);
+                    GL11.glRotated(180, 0, 1, 0);
+                    break;
+                case ENTITY:
+                    GL11.glTranslated(0.5, 0, 0.5);
+                    GL11.glRotated(180, 0, 1, 0);
+                    break;
+            }
+
+            model.applyTransform(type);
+            std.render();
+            GL11.glPopMatrix();
         }
     }
 }

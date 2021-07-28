@@ -2,6 +2,7 @@ package cam72cam.mod;
 
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
@@ -10,21 +11,25 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
-import cam72cam.mod.render.EntityRenderer;
-import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.text.Command;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cam72cam.mod.util.ModCoreCommand;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
@@ -35,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 
 /** UMC Mod, do not touch... */
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)")
+@cpw.mods.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.7.10,1.8)")
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
@@ -152,6 +157,11 @@ public class ModCore {
     }
 
 
+    private static void addHandler(Object handler) {
+        MinecraftForge.EVENT_BUS.register(handler);
+        FMLCommonHandler.instance().bus().register(handler);
+    }
+
     public static class Internal extends Mod {
         public int skipN = 2;
 
@@ -164,14 +174,19 @@ public class ModCore {
         public void commonEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
+
+
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
+                    Packet.register(Player.MovementSync::new, PacketDirection.ClientToServer);
+                    Packet.register(Player.MovementSync2EB::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
                     ConfigFile.sync(Config.class);
                     break;
                 case INITIALIZE:
+                    addHandler(new CommonEvents.EventBus());
                     ChunkManager.setup();
                     break;
                 case SETUP:
@@ -188,17 +203,31 @@ public class ModCore {
         }
 
         @Override
+        @SideOnly(Side.CLIENT)
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    break;
+                case INITIALIZE:
+                    addHandler(new ClientEvents.ClientEventBus());
+                    break;
                 case SETUP:
-                    ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
-                        if (skipN > 0) {
-                            skipN--;
-                            return;
-                        }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                        ClientEvents.fireReload();
-                    });
+                    if (Minecraft.getMinecraft().getResourceManager() instanceof SimpleReloadableResourceManager) {
+                        // Lambda does not work here!  Don't simplify!
+                        ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new IResourceManagerReloadListener() {
+                            @Override
+                            public void onResourceManagerReload(IResourceManager p_110549_1_) {
+
+                                if (skipN > 0) {
+                                    skipN--;
+                                    return;
+                                }
+                                ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                            }
+                        });
+                    } else {
+                        error("BAD RESOURCE MANAGER TYPE " + Minecraft.getMinecraft().getResourceManager());
+                    }
                     BlockRender.onPostColorSetup();
                     ClientEvents.fireReload();
                     break;
@@ -265,7 +294,12 @@ public class ModCore {
 
     /** Get a file for name in the UMC cache dir */
     public static File cacheFile(String name) {
-        File configDir = Loader.instance().getConfigDir();
+        File configDir;
+        try {
+            configDir = Loader.instance().getConfigDir();
+        } catch (ClassCastException ex) {
+            configDir = null;
+        }
         if (configDir == null) {
             configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
         }

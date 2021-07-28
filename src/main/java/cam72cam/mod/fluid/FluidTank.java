@@ -23,14 +23,50 @@ public class FluidTank implements ITank {
     public FluidTank(FluidStack fluidStack, int capacity) {
         if (fluidStack == null) {
             internal = new net.minecraftforge.fluids.FluidTank(capacity) {
-                public void onContentsChanged() {
-                    onChange();
+                @Override
+                public void setFluid(net.minecraftforge.fluids.FluidStack fluid) {
+                    super.setFluid(fluid);
+                    if (this.fluid == null || !this.fluid.isFluidStackIdentical(fluid)) {
+                        onChange();
+                    }
+                }
+                public int fill(net.minecraftforge.fluids.FluidStack resource, boolean doFill) {
+                    int res = super.fill(resource, doFill);
+                    if (doFill && res != 0) {
+                        onChange();
+                    }
+                    return res;
+                }
+                public net.minecraftforge.fluids.FluidStack drain(int maxDrain, boolean doDrain) {
+                    net.minecraftforge.fluids.FluidStack res = super.drain(maxDrain, doDrain);
+                    if (res != null && doDrain) {
+                        onChange();
+                    }
+                    return res;
                 }
             };
         } else {
             internal = new net.minecraftforge.fluids.FluidTank(fluidStack.internal, capacity) {
-                public void onContentsChanged() {
-                    onChange();
+                @Override
+                public void setFluid(net.minecraftforge.fluids.FluidStack fluid) {
+                    super.setFluid(fluid);
+                    if (this.fluid == null || !this.fluid.isFluidStackIdentical(fluid)) {
+                        onChange();
+                    }
+                }
+                public int fill(net.minecraftforge.fluids.FluidStack resource, boolean doFill) {
+                    int res = super.fill(resource, doFill);
+                    if (doFill && res != 0) {
+                        onChange();
+                    }
+                    return res;
+                }
+                public net.minecraftforge.fluids.FluidStack drain(int maxDrain, boolean doDrain) {
+                    net.minecraftforge.fluids.FluidStack res = super.drain(maxDrain, doDrain);
+                    if (res != null && doDrain) {
+                        onChange();
+                    }
+                    return res;
                 }
             };
         }
@@ -57,7 +93,7 @@ public class FluidTank implements ITank {
 
     public void setCapacity(int milliBuckets) {
         if (internal.getFluidAmount() > milliBuckets) {
-            internal.drainInternal(internal.getFluidAmount() - milliBuckets, true);
+            internal.drain(internal.getFluidAmount() - milliBuckets, true);
         }
         internal.setCapacity(milliBuckets);
     }
@@ -72,7 +108,7 @@ public class FluidTank implements ITank {
 
     @Override
     public boolean allows(Fluid fluid) {
-        return (filter == null || filter.get() == null || filter.get().contains(fluid)) && internal.canFill();
+        return (filter == null || filter.get() == null || filter.get().contains(fluid));
     }
 
     @Override
@@ -88,7 +124,7 @@ public class FluidTank implements ITank {
         if (!allows(fluidStack.getFluid())) {
             return null;
         }
-        return new FluidStack(internal.drain(fluidStack.internal, !simulate));
+        return new FluidStack(internal.drain(fluidStack.internal.amount, !simulate));
     }
 
     public TagCompound write(TagCompound tag) {

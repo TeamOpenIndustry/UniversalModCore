@@ -1,14 +1,12 @@
 package cam72cam.mod.event;
 
+import cam72cam.mod.math.Vec3i;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.function.Consumer;
 
@@ -17,6 +15,11 @@ public class CommonEvents {
     private static void registerEvents() {
         cam72cam.mod.world.World.registerEvents();
         cam72cam.mod.entity.EntityRegistry.registerEvents();
+
+        Block.REGISTER.execute(Runnable::run);
+        Item.REGISTER.execute(Runnable::run);
+        Entity.REGISTER.execute(Runnable::run);
+        Recipe.REGISTER.execute(Runnable::run);
     }
 
     public static final class World {
@@ -43,51 +46,38 @@ public class CommonEvents {
         public static final Event<EventBus.EntityJoinEvent> JOIN = new Event<>();
     }
 
-    @Mod.EventBusSubscriber()
     public static final class EventBus {
-        static {
+        public EventBus() {
             registerEvents();
         }
 
         // World
         @SubscribeEvent
-        public static void onWorldLoad(WorldEvent.Load event) {
-            World.LOAD.execute(x -> x.accept(event.getWorld()));
+        public void onWorldLoad(WorldEvent.Load event) {
+            World.LOAD.execute(x -> x.accept(event.world));
         }
 
         @SubscribeEvent
-        public static void onWorldUnload(WorldEvent.Unload event) {
-            World.UNLOAD.execute(x -> x.accept(event.getWorld()));
+        public void onWorldUnload(WorldEvent.Unload event) {
+            World.UNLOAD.execute(x -> x.accept(event.world));
         }
 
         @SubscribeEvent
-        public static void onWorldTick(TickEvent.WorldTickEvent event) {
+        public void onWorldTick(TickEvent.WorldTickEvent event) {
             if (event.phase == TickEvent.Phase.START) {
                 World.TICK.execute(x -> x.accept(event.world));
             }
         }
 
-        @SubscribeEvent
-        public static void registerBlocks(RegistryEvent.Register<net.minecraft.block.Block> event) {
-            Block.REGISTER.execute(Runnable::run);
-        }
-
         @FunctionalInterface
         public interface BlockBrokenEvent {
-            boolean onBroken(net.minecraft.world.World world, BlockPos pos, EntityPlayer player);
+            boolean onBroken(net.minecraft.world.World world, Vec3i pos, EntityPlayer player);
         }
         @SubscribeEvent
-        public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
-            if (!Block.BROKEN.executeCancellable(x -> x.onBroken(event.getWorld(), event.getPos(), event.getPlayer()))) {
+        public void onBlockBreakEvent(BlockEvent.BreakEvent event) {
+            if (!Block.BROKEN.executeCancellable(x -> x.onBroken(event.world, new Vec3i(event.x, event.y, event.z), event.getPlayer()))) {
                 event.setCanceled(true);
             }
-        }
-
-        @SubscribeEvent
-        public static void registerItems(RegistryEvent.Register<net.minecraft.item.Item> event) {
-            Item.REGISTER.execute(Runnable::run);
-            Entity.REGISTER.execute(Runnable::run);
-            Recipe.REGISTER.execute(Runnable::run);
         }
 
         @FunctionalInterface
@@ -95,8 +85,8 @@ public class CommonEvents {
             boolean onJoin(net.minecraft.world.World world, net.minecraft.entity.Entity entity);
         }
         @SubscribeEvent
-        public static void onEntityJoin(EntityJoinWorldEvent event) {
-            if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getWorld(), event.getEntity()))) {
+        public void onEntityJoin(EntityJoinWorldEvent event) {
+            if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.world, event.entity))) {
                 event.setCanceled(true);
             }
         }

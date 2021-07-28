@@ -7,10 +7,12 @@ import java.util.function.Consumer;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
+import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
+import net.minecraft.entity.EntityList;
 
 public class ModCoreCommand extends Command {
     @Override
@@ -24,7 +26,7 @@ public class ModCoreCommand extends Command {
     }
 
 
-    @Override
+	@Override
 	public int getRequiredPermissionLevel() {
 		return PermissionLevel.LEVEL4;
 	}
@@ -72,22 +74,23 @@ public class ModCoreCommand extends Command {
 
 
 		}
-
         return false;
     }
 
 	private void sendWorldEntities(World world, Consumer<PlayerMessage> sender) {
-		Map<String, Integer> counts = new HashMap<>();
-		for (Entity entity : world.getEntities(Entity.class)) {
-			String id = entity.internal.getName();
-			if (!counts.containsKey(id)) {
-				counts.put(id, 0);
-			}
-			counts.put(id, counts.get(id) + 1);
-		}
+        Map<String, Integer> counts = new HashMap<>();
+        for (Entity entity : world.getEntities(Entity.class)) {
+            String id = EntityList.getEntityString(entity.internal);
+            if (entity.internal instanceof ModdedEntity) {
+                id = ((ModdedEntity) entity.internal).getName();
+            }
+            if (!counts.containsKey(id)) {
+                counts.put(id, 0);
+            }
+            counts.put(id, counts.get(id) + 1);
+        }
 
-		counts.entrySet().stream().sorted(Map.Entry.comparingByValue())
-				.forEach(entry -> sender.accept(PlayerMessage.direct(entry.getValue() + " x " + entry.getKey())));
+        counts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> sender.accept(PlayerMessage.direct(entry.getValue() + " x " + entry.getKey())));
 	}
 
 	public Optional<Integer> parseInteger(String text) {
