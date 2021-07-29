@@ -5,11 +5,11 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.Explosion;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
  */
 public class Entity {
     /** The wrapped MC construct.  Do not use directly */
-    public net.minecraft.entity.Entity internal;
+    public net.minecraft.world.entity.Entity internal;
 
     /** Wrap a MC entity in UMC entity.  Do not use directly. */
-    public Entity(net.minecraft.entity.Entity entity) {
+    public Entity(net.minecraft.world.entity.Entity entity) {
         this.internal = entity;
     }
 
@@ -69,12 +69,12 @@ public class Entity {
     }
 
     public float getRotationYaw() {
-        return internal.yRot;
+        return internal.getYRot();
     }
 
     public void setRotationYaw(float yaw) {
-        internal.yRotO = internal.yRot;
-        internal.yRot = yaw;
+        internal.yRotO = internal.getYRot();
+        internal.setYRot(yaw);
         double d0 = internal.yRotO - yaw;
         if (d0 < -180.0D)
         {
@@ -89,12 +89,12 @@ public class Entity {
     }
 
     public float getRotationPitch() {
-        return internal.xRot;
+        return internal.getXRot();
     }
 
     public void setRotationPitch(float pitch) {
-        internal.xRotO = internal.xRot;
-        internal.xRot = pitch;
+        internal.xRotO = internal.getXRot();
+        internal.setXRot(pitch);
     }
 
     public float getPrevRotationYaw() {
@@ -134,11 +134,11 @@ public class Entity {
     }
 
     public boolean isVillager() {
-        return internal instanceof VillagerEntity;
+        return internal instanceof AbstractVillager;
     }
 
     public boolean isMob() {
-        return internal instanceof MobEntity;
+        return internal instanceof Mob;
     }
 
     public boolean isPlayer() {
@@ -150,7 +150,7 @@ public class Entity {
     }
 
     public void kill() {
-        internal.remove();
+        internal.remove(!internal.level.isClientSide); // TODO MAYBE BORK
     }
 
     public final boolean isDead() {
@@ -191,7 +191,7 @@ public class Entity {
         return null;
     }
 
-    private final SingleCache<AxisAlignedBB, IBoundingBox> boundingBox = new SingleCache<>(IBoundingBox::from);
+    private final SingleCache<AABB, IBoundingBox> boundingBox = new SingleCache<>(IBoundingBox::from);
     public IBoundingBox getBounds() {
         return boundingBox.get(internal.getBoundingBox());
     }
@@ -219,7 +219,7 @@ public class Entity {
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.Mode.DESTROY : Explosion.Mode.NONE);
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.explode();
         explosion.finalizeExplosion(true);

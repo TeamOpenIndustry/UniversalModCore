@@ -3,14 +3,12 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.IParticleRenderType;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -49,7 +47,7 @@ public abstract class Particle {
 
         return data -> {
             I ip = ctr.apply(data);
-            net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle((ClientWorld)data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
+            net.minecraft.client.particle.Particle p = new net.minecraft.client.particle.Particle((ClientLevel) data.world.internal, data.pos.x, data.pos.y, data.pos.z, data.motion.x, data.motion.y, data.motion.z) {
                 {
                     lifetime = data.lifespan;
                     xd = data.motion.x;
@@ -61,8 +59,8 @@ public abstract class Particle {
                 }
 
                 @Override
-                public IParticleRenderType getRenderType() {
-                    return IParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+                public ParticleRenderType getRenderType() {
+                    return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
                 }
 
                 @Override
@@ -74,8 +72,8 @@ public abstract class Particle {
                 }
 
                 @Override
-                public void render(IVertexBuilder buffer, ActiveRenderInfo renderInfo, float partialTicks) {
-                    Vector3d vec3d = renderInfo.getPosition();
+                public void render(VertexConsumer buffer, Camera renderInfo, float partialTicks) {
+                    Vec3 vec3d = renderInfo.getPosition();
                     ip.ticks = age;
                     ip.renderX = x + x - xo + this.xd * partialTicks - vec3d.x;
                     ip.renderY = y + y - yo + this.yd * partialTicks - vec3d.y;

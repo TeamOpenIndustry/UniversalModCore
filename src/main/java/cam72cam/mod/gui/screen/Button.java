@@ -1,24 +1,25 @@
 package cam72cam.mod.gui.screen;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.button.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.AbstractButton;
 
 import cam72cam.mod.entity.Player;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.function.Consumer;
 
 /** Base interactable GUI element */
 public abstract class Button {
-    protected final Widget button;
+    protected final AbstractWidget button;
 
     /** Internal MC obj */
     private static class InternalButton extends AbstractButton {
         private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalButton(int xIn, int yIn, int widthIn, int heightIn, String msg) {
-            super(xIn, yIn, widthIn, heightIn, new StringTextComponent(msg));
+            super(xIn, yIn, widthIn, heightIn, new TextComponent(msg));
         }
 
         @Override
@@ -48,6 +49,11 @@ public abstract class Button {
         public void onPress() {
             clicker.accept(Player.Hand.PRIMARY);
         }
+
+        @Override
+        public void updateNarration(NarrationElementOutput narrationElementOutput) {
+            this.defaultButtonNarrationText(narrationElementOutput);
+        }
     }
 
     /** Default width/height */
@@ -62,7 +68,7 @@ public abstract class Button {
     }
 
     /** Internal ctr */
-    Button(IScreenBuilder builder, Widget button) {
+    Button(IScreenBuilder builder, AbstractWidget button) {
         this.button = button;
         builder.addButton(this);
     }
@@ -74,14 +80,14 @@ public abstract class Button {
 
     /** Override current text */
     public void setText(String text) {
-        button.setMessage(new StringTextComponent(text));
+        button.setMessage(new TextComponent(text));
     }
 
     protected void onClickInternal(Player.Hand hand) {
         onClick(hand);
     }
 
-    Widget internal() {
+    AbstractWidget internal() {
         return button;
     }
 

@@ -3,11 +3,11 @@ package cam72cam.mod.entity.sync;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.CustomEntity;
 import cam72cam.mod.net.Packet;
-import net.minecraft.nbt.INBT;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
+import net.minecraft.nbt.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +38,9 @@ public class EntitySync extends TagCompound {
         List<String> removed = new ArrayList<>();
 
         for (String key : internal.getAllKeys()) {
-            INBT newVal = internal.get(key);
+            Tag newVal = internal.get(key);
             if (old.internal.contains(key)) {
-                INBT oldVal = old.internal.get(key);
+                Tag oldVal = old.internal.get(key);
                 if (newVal.equals(oldVal)) {
                     continue;
                 }

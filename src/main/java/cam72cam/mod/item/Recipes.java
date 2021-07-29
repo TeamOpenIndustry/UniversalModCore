@@ -1,15 +1,14 @@
 package cam72cam.mod.item;
 
 
-import net.minecraft.advancements.criterion.EntityPredicate;
-import net.minecraft.advancements.criterion.InventoryChangeTrigger;
-import net.minecraft.advancements.criterion.ItemPredicate;
-import net.minecraft.advancements.criterion.MinMaxBounds;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.data.RecipeProvider;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.ConditionalRecipe;
 import net.minecraftforge.common.crafting.conditions.ItemExistsCondition;
 import net.minecraftforge.common.crafting.conditions.NotCondition;
@@ -22,14 +21,14 @@ import java.util.function.Consumer;
 
 /** Recipe registration */
 public class Recipes extends RecipeProvider {
-    private static final List<Consumer<Consumer<IFinishedRecipe>>> registry = new ArrayList<>();
+    private static final List<Consumer<Consumer<FinishedRecipe>>> registry = new ArrayList<>();
 
     public Recipes(DataGenerator generatorIn) {
         super(generatorIn);
     }
 
     @Override
-    protected void buildShapelessRecipes(Consumer<IFinishedRecipe> consumer) {
+    protected void buildCraftingRecipes(Consumer<FinishedRecipe> consumer) {
         registry.forEach(fn -> fn.accept(consumer));
     }
 
@@ -47,7 +46,7 @@ public class Recipes extends RecipeProvider {
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             registry.add(out -> {
-                net.minecraft.data.ShapedRecipeBuilder builder = new net.minecraft.data.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
 
                 int height = ingredients.length / width;
 
@@ -62,11 +61,11 @@ public class Recipes extends RecipeProvider {
                             builder.define((idx + "").charAt(0), ingredient.tag);
                             builder.unlockedBy(
                                     "has" + ingredient.toString() + idx,
-                                    new InventoryChangeTrigger.Instance(
-                                            EntityPredicate.AndPredicate.ANY,
-                                            MinMaxBounds.IntBound.ANY,
-                                            MinMaxBounds.IntBound.ANY,
-                                            MinMaxBounds.IntBound.ANY,
+                                    new InventoryChangeTrigger.TriggerInstance(
+                                            EntityPredicate.Composite.ANY,
+                                            MinMaxBounds.Ints.ANY,
+                                            MinMaxBounds.Ints.ANY,
+                                            MinMaxBounds.Ints.ANY,
                                             new ItemPredicate[]{ItemPredicate.Builder.item().of(ingredient.tag).build()}
                                     )
                             );

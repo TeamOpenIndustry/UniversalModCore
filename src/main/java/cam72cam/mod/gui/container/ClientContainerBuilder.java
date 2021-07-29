@@ -4,17 +4,17 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import org.lwjgl.opengl.GL11;
 
 import java.util.function.Supplier;
@@ -23,7 +23,7 @@ import static cam72cam.mod.gui.helpers.GUIHelpers.CHEST_GUI_TEXTURE;
 import static cam72cam.mod.gui.helpers.GUIHelpers.drawRect;
 
 /** GUI Container wrapper for the client side, Do not use directly */
-public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuilder> implements IContainerBuilder {
+public class ClientContainerBuilder extends AbstractContainerScreen<ServerContainerBuilder> implements IContainerBuilder {
     private static final int slotSize = 18;
     private static final int topOffset = 17;
     private static final int bottomOffset = 7;
@@ -38,10 +38,10 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     private final Supplier<Boolean> valid;
     private int centerX;
     private int centerY;
-    private MatrixStack stack;
+    private PoseStack stack;
 
-    public ClientContainerBuilder(ServerContainerBuilder serverContainer, PlayerInventory p_create_2_, ITextComponent p_create_3_) {
-        super(serverContainer, serverContainer.playerInventory, new StringTextComponent(""));
+    public ClientContainerBuilder(ServerContainerBuilder serverContainer, Inventory p_create_2_, Component p_create_3_) {
+        super(serverContainer, serverContainer.playerInventory, new TextComponent(""));
         this.server = serverContainer;
         this.imageWidth = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.imageHeight = server.ySize;
@@ -49,7 +49,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     }
 
     @Override
-    protected void renderBg(MatrixStack stack, float partialTicks, int mouseX, int mouseY) {
+    protected void renderBg(PoseStack stack, float partialTicks, int mouseX, int mouseY) {
         try (OpenGL.With color = OpenGL.color(1, 1, 1, 1)) {
             //this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
             this.centerX = (this.width - this.imageWidth) / 2;
@@ -59,13 +59,10 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     }
 
     @Override
-    public void tick() {
+    public void containerTick() {
         super.tick();
         if (!valid.get()) {
-            this.minecraft.setScreen(null);
-            if (this.minecraft.screen == null) {
-                this.minecraft.setWindowActive(true);
-            }
+            this.minecraft.player.closeContainer();
         }
     }
 
@@ -210,7 +207,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
                 OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
                 OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false)
         ) {
-            GlStateManager._enableAlphaTest();
+            //1.17.1 GlStateManager._enableAlphaTest();
             GlStateManager._disableDepthTest();
             drawRect(x, y, 16, 16, -2130706433);
             GlStateManager._enableDepthTest();
@@ -223,9 +220,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         y += centerY + 1;
 
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
-            fill(new MatrixStack(), x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
-            // Reset the state manager color
-            GlStateManager._color4f(1,1,1,1);
+            fill(new PoseStack(), x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
         }
 
 
@@ -234,17 +229,17 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
             spriteId = "minecraft:block/fire_1";
         }
 
-        TextureAtlasSprite sprite = minecraft.getTextureAtlas(AtlasTexture.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
+        TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
         try (
                 OpenGL.With color_ = OpenGL.color(1,1,1,1);
-                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS))
+                OpenGL.With tex = OpenGL.texture(new Identifier(TextureAtlas.LOCATION_BLOCKS))
         ) {
             blit(stack, x, y, 0, 16, 16, sprite);
         }
     }
 
     @Override
-    public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks)
+    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks)
     {
         this.stack = stack;
         super.render(stack, mouseX, mouseY, partialTicks);

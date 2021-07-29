@@ -3,18 +3,18 @@ package cam72cam.mod.gui.container;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.Slot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.items.SlotItemHandler;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /** Match ClientContainerBuilder spacing as closely as possible */
-public class ServerContainerBuilder extends Container implements IContainerBuilder {
+public class ServerContainerBuilder extends AbstractContainerMenu implements IContainerBuilder {
     // server padding overrides
     private static final int slotSize = 18;
     private static final int topOffset = 18;
@@ -28,14 +28,14 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
     final int slotsX;
     final int slotsY;
 
-    protected final PlayerInventory playerInventory;
+    protected final Inventory playerInventory;
     final Supplier<Boolean> valid;
     private int rowSlots = 9;
     private int totalSlots;
 
     int ySize = 0;
 
-    public ServerContainerBuilder(int id, ContainerType<ServerContainerBuilder> type, PlayerInventory playerInventory, IContainer container, Supplier<Boolean> valid) {
+    public ServerContainerBuilder(int id, MenuType<ServerContainerBuilder> type, Inventory playerInventory, IContainer container, Supplier<Boolean> valid) {
         super(type, id);
         this.playerInventory = playerInventory;
         this.valid = valid;
@@ -162,24 +162,24 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
 
 
     @Override
-    public final net.minecraft.item.ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
-        net.minecraft.item.ItemStack itemstack = net.minecraft.item.ItemStack.EMPTY;
+    public final net.minecraft.world.item.ItemStack quickMoveStack(Player playerIn, int index) {
+        net.minecraft.world.item.ItemStack itemstack = net.minecraft.world.item.ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         int numSlots = totalSlots;
 
         if (slot != null && slot.hasItem()) {
-            net.minecraft.item.ItemStack itemstack1 = slot.getItem();
+            net.minecraft.world.item.ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
             if (index < numSlots) {
                 if (!this.moveItemStackTo(itemstack1, numSlots, this.slots.size(), true)) {
-                    return net.minecraft.item.ItemStack.EMPTY;
+                    return net.minecraft.world.item.ItemStack.EMPTY;
                 }
             } else if (!this.moveItemStackTo(itemstack1, 0, numSlots, false)) {
-                return net.minecraft.item.ItemStack.EMPTY;
+                return net.minecraft.world.item.ItemStack.EMPTY;
             }
 
             if (itemstack1.isEmpty()) {
-                slot.set(net.minecraft.item.ItemStack.EMPTY);
+                slot.set(net.minecraft.world.item.ItemStack.EMPTY);
             } else {
                 slot.setChanged();
             }
@@ -189,7 +189,7 @@ public class ServerContainerBuilder extends Container implements IContainerBuild
     }
 
     @Override
-    public boolean stillValid(PlayerEntity playerIn) {
+    public boolean stillValid(Player playerIn) {
         return true;
     }
 }

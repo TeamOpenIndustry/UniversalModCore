@@ -4,27 +4,25 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
-import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import cam72cam.mod.util.SingleCache;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -56,7 +54,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     Pair<String, TagCompound> refusedToJoin = null;
 
     /** Standard forge constructor */
-    public ModdedEntity(EntityType type, World world, Supplier<CustomEntity> ctr) {
+    public ModdedEntity(EntityType type, Level world, Supplier<CustomEntity> ctr) {
         super(type, world);
 
         super.blocksBuilding = true;
@@ -72,16 +70,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         iCollision = ICollision.get(self);
     }
 
-    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedCollisionBB = new SingleCache<>(BoundingBox::from);
-    private final SingleCache<IBoundingBox, AxisAlignedBB> cachedRenderBB = new SingleCache<>(internal -> {
-        AxisAlignedBB bb = BoundingBox.from(internal);
+    private final SingleCache<IBoundingBox, AABB> cachedCollisionBB = new SingleCache<>(BoundingBox::from);
+    private final SingleCache<IBoundingBox, AABB> cachedRenderBB = new SingleCache<>(internal -> {
+        AABB bb = BoundingBox.from(internal);
         /*
          So why do we wrap this with a new AABB here instead of passing the BB straight through?
          Good question
          Certain mods (like IR) use custom bounding boxes that do some really funky shit to break
          the axis constraint.  We don't care about that when rendering, just want a worst-case sized BB
         */
-        return new AxisAlignedBB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        return new AABB(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     });
 
     public CustomEntity getSelf() {
@@ -92,7 +90,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see #load */
     @Override
-    public final void readAdditionalSaveData(CompoundNBT compound) {
+    public final void readAdditionalSaveData(CompoundTag compound) {
         load(new TagCompound(compound));
     }
 
@@ -145,7 +143,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see #save */
     @Override
-    public void addAdditionalSaveData(CompoundNBT compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         save(new TagCompound(compound));
     }
 
@@ -182,7 +180,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see #load */
     @Override
-    public final void readSpawnData(PacketBuffer additionalData) {
+    public final void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         load(data);
         try {
@@ -193,7 +191,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public final void writeSpawnData(PacketBuffer buffer) {
+    public final void writeSpawnData(FriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.set("sync", self.sync);
         save(data);
@@ -214,6 +212,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void tick() {
+        // Moved from getBoundingBox
+        setBoundingBox(cachedCollisionBB.get(iCollision.getCollision()));
+
         iTickable.onTick();
         try {
             self.sync.send();
@@ -230,7 +231,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /* Player Interact */
     /** @see IClickable */
     @Override
-    public final ActionResultType interact(PlayerEntity player, net.minecraft.util.Hand hand) {
+    public final InteractionResult interact(net.minecraft.world.entity.player.Player player, InteractionHand hand) {
         return iClickable.onClick(new Player(player), Player.Hand.from(hand)).internal;
     }
 
@@ -264,9 +265,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public final void remove() {
+    public final void remove(boolean b) {
         if (this.isAlive()) {
-            super.remove();
+            super.remove(b);
             iKillable.onRemoved();
         }
     }
@@ -349,8 +350,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             passenger.setPosition(pos);
             passenger.setVelocity(new Vec3d(getDeltaMovement()));
 
-            float delta = yRot - yRotO;
-            passenger.internal.yRot = passenger.internal.yRot + delta;
+            float delta = getYRot() - yRotO;
+            passenger.internal.setYRot(passenger.internal.getYRot() + delta);
 
             seat.shouldSit = iRidable.shouldRiderSit(passenger);
         }
@@ -422,7 +423,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see #getEntityBoundingBox() */
     /* Removed 1.16
     @Override
-    public AxisAlignedBB getCollisionBoundingBox() {
+    public AABB getCollisionBoundingBox() {
         return getBoundingBox();
     }*/
 
@@ -431,14 +432,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      *
      * @see ICollision
      */
+    /*  Moved to tick and I'm not happy about it
     @Override
-    public AxisAlignedBB getBoundingBox() {
+    public AABB getBoundingBox() {
         if (refusedToJoin != null) {
             // Entity is added to a chunk but not world (yay minecraft)
             return super.getBoundingBox();
         }
         return cachedCollisionBB.get(iCollision.getCollision());
-    }
+    }*/
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes
@@ -446,12 +448,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * @see ICollision
      */
     @Override
-    public AxisAlignedBB getBoundingBoxForCulling() {
+    public AABB getBoundingBoxForCulling() {
         return cachedRenderBB.get(iCollision.getCollision());
     }
 
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public net.minecraft.network.protocol.Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

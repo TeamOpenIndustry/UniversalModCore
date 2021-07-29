@@ -8,12 +8,14 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.sound.Audio;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
@@ -89,10 +91,10 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onRenderMouseover(DrawHighlightEvent.HighlightBlock event) {
+        public static void onRenderMouseover(DrawSelectionEvent.HighlightBlock event) {
             RenderType.cutout().setupRenderState();
             GL11.glPushMatrix();
-            RenderSystem.multMatrix(event.getMatrix().last().pose());
+            OpenGL.internalMultMatrix(event.getMatrix().last().pose());
             // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
             GL11.glPopMatrix();

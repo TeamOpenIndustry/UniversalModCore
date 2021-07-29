@@ -1,7 +1,7 @@
 package cam72cam.mod.math;
 
 import cam72cam.mod.util.Facing;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public class Vec3i {
     public static final Vec3i ZERO = new Vec3i(BlockPos.ZERO);

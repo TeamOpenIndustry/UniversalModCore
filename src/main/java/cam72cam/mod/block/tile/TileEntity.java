@@ -19,16 +19,17 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SUpdateTileEntityPacket;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -56,8 +57,8 @@ import java.util.function.Supplier;
  *
  * @see BlockEntity
  */
-public class TileEntity extends net.minecraft.tileentity.TileEntity {
-    private static final Map<String, TileEntityType<? extends TileEntity>> types = HashBiMap.create();
+public class TileEntity extends net.minecraft.world.level.block.entity.BlockEntity {
+    private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
     private static final Map<String, BlockTypeEntity> blocks = HashBiMap.create();
@@ -81,13 +82,22 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @param id Block Entity ID
      */
     public TileEntity(Identifier id) {
-        super(types.get(id.toString()));
+        super(types.get(id.toString()), new BlockPos.MutableBlockPos() {
+            @Override
+            public BlockPos immutable() {
+                return this; // BAHAHAHAHA
+            }
+        }, null);
         instance = registry.get(id.toString()).get();
         instance.internal = this;
     }
 
+    public void setPos(BlockPos pos) {
+        ((BlockPos.MutableBlockPos)worldPosition).set(pos);
+    }
+
     public static TagCompound legacyConverter(TagCompound data) {
-        for (Function<CompoundNBT, BlockState> migration : migrations) {
+        for (Function<CompoundTag, BlockState> migration : migrations) {
             if (migration.apply(data.internal) != null) {
                 break;
             }
@@ -95,7 +105,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         return data;
     }
 
-    private static final List<Function<CompoundNBT, BlockState>> migrations = new ArrayList<>();
+    private static final List<Function<CompoundTag, BlockState>> migrations = new ArrayList<>();
     public static void registerLegacyTE(Identifier legacyID) {
         registerLegacyTE(legacyID, null);
     }
@@ -106,7 +116,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
                 if (myState == null) {
                     myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
-                data.putString("id", myState.getBlock().createTileEntity(null, null).getType().getRegistryName().toString());
+                data.putString("id", ((EntityBlock)myState.getBlock()).newBlockEntity(null, null).getType().getRegistryName().toString());
                 return myState;
             }
             return null;
@@ -116,12 +126,12 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
 
         CommonEvents.World.LOAD_CHUNK.subscribe(chunk -> {
-            if(chunk instanceof Chunk) {
+            if(chunk instanceof LevelChunk) {
                 return;
             }
             for (BlockPos pos : chunk.getBlockEntitiesPos()) {
-                CompoundNBT data = chunk.getBlockEntityNbt(pos);
-                for (Function<CompoundNBT, BlockState> migration : migrations) {
+                CompoundTag data = chunk.getBlockEntityNbt(pos);
+                for (Function<CompoundTag, BlockState> migration : migrations) {
                     BlockState state = migration.apply(data);
                     if (state != null) {
                         // Usually this is a ChunkPrimer which does not propagate changes
@@ -148,7 +158,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
         example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            TileEntityType<TileEntity> type = new TileEntityType<>(() -> example.supplier(id), new HashSet<Block>() {
+            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> example.supplier(id), new HashSet<>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
                     return true;
@@ -156,12 +166,12 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             }, null);
             type.setRegistryName(id.internal);
             types.put(id.toString(), type);
-            ForgeRegistries.TILE_ENTITIES.register(type);
+            ForgeRegistries.BLOCK_ENTITIES.register(type);
         });
     }
 
-    public static TileEntityType<TileEntity> getType(Identifier type) {
-        return (TileEntityType<TileEntity>) types.get(type.toString());
+    public static BlockEntityType<TileEntity> getType(Identifier type) {
+        return (BlockEntityType<TileEntity>) types.get(type.toString());
     }
 
     /** Wrap getPos() in a cached UMC Vec3i */
@@ -189,8 +199,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public final void load(BlockState state, CompoundNBT compound) {
-        super.load(state, compound);
+    public final void load(CompoundTag compound) {
+        super.load(compound);
         hasTileData = true;
 
         TagCompound data = new TagCompound(compound);
@@ -214,7 +224,7 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @see TagSerializer
      */
     @Override
-    public CompoundNBT save(CompoundNBT compound) {
+    public CompoundTag save(CompoundTag compound) {
         super.save(compound);
 
         TagCompound data = new TagCompound(compound);
@@ -235,23 +245,17 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Active Synchronization from markDirty */
     @Override
-    public final SUpdateTileEntityPacket getUpdatePacket() {
-        return new SUpdateTileEntityPacket(this.worldPosition, 1, getUpdateTag(true));
+    public final ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return new ClientboundBlockEntityDataPacket(this.worldPosition, 1, getUpdateTag(true));
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        handleUpdateTag(level.getBlockState(worldPosition), pkt.getTag());
-    }
-
-    /** Active Synchronization from markDirty */
-    @Override
-    public final CompoundNBT getUpdateTag() {
+    public final CompoundTag getUpdateTag() {
         return getUpdateTag(false);
     }
-    public final CompoundNBT getUpdateTag(boolean writeUpdate) {
-        CompoundNBT tag = super.getUpdateTag();
+    public final CompoundTag getUpdateTag(boolean writeUpdate) {
+        CompoundTag tag = super.getUpdateTag();
         if (this.isLoaded()) {
             this.save(tag);
             TagCompound umcUpdate = new TagCompound();
@@ -269,9 +273,9 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void handleUpdateTag(BlockState state, CompoundNBT tag) {
+    public final void handleUpdateTag(CompoundTag tag) {
         try {
-            this.load(state, tag);
+            this.load(tag);
             if (instance() != null) {
                 if (tag.contains("umcUpdate")) {
                     try {
@@ -300,14 +304,14 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
 
     /* Forge Overrides */
 
-    private final SingleCache<IBoundingBox, AxisAlignedBB> bbCache =
+    private final SingleCache<IBoundingBox, AABB> bbCache =
             new SingleCache<>(internal -> BoundingBox.from(internal).move(getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ()));
     /**
      * @return Instance's bounding box
      * @see BlockEntity
      */
     @Override
-    public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
         if (instance() != null) {
             return bbCache.get(instance().getRenderBoundingBox());
         }
@@ -318,14 +322,15 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
      * @return Instance's render distance
      * @see BlockEntity
      */
+    /* Moved to BlockEntityRenderer
     @Override
     public double getViewDistance() {
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
-    }
+    }*/
 
     @Override
     @Nullable
-    public <T> LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.Direction facing) {
+    public <T> LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             ITank target = getTank(Facing.from(facing));
             if (target == null) {

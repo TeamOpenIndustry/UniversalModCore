@@ -7,24 +7,22 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.culling.ClippingHelper;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
@@ -41,17 +39,22 @@ public class GlobalRender {
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
 
     // Internal hack
-    private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
+    private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
         // Beacon like hack for always running a single global render during the TE render phase
         ClientEvents.REGISTER_ENTITY.subscribe(() -> {
             try {
-                ClientRegistry.bindTileEntityRenderer(grhtype, (ted) -> new TileEntityRenderer<GlobalRenderHelper>(ted) {
+                BlockEntityRenderers.register(grhtype, (ted) -> new BlockEntityRenderer<>() {
                     @Override
-                    public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
-                        RenderSystem.multMatrix(matrixStack.last().pose());
+                    public int getViewDistance() {
+                        return Integer.MAX_VALUE;
+                    }
+
+                    @Override
+                    public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
+                        OpenGL.internalMultMatrix(matrixStack.last().pose());
                         // TODO 1.15+ do we need to set lightmap coords here?
                         renderFuncs.forEach(r -> r.accept(partialTicks));
                     }
@@ -68,9 +71,10 @@ public class GlobalRender {
         });
         ClientEvents.TICK.subscribe(() -> {
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
+            /*
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
                 grhList.get(0).setPosition(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
-            }
+            }*/
         });
 
         // Nice to have GPU info in F3
@@ -125,8 +129,8 @@ public class GlobalRender {
     }
 
     /** Internal camera helper */
-    static ActiveRenderInfo getCamera(float partialTicks) {
-        return new ActiveRenderInfo() {
+    static Camera getCamera(float partialTicks) {
+        return new Camera() {
             {
                 setPosition(getCameraPos(partialTicks).internal());
             }
@@ -143,17 +147,23 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
     }
 
-    static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
+    static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
         @Override
-        public boolean isValid(Block block_1) {
+        public boolean isValid(BlockState block_1) {
             return true;
         }
     };
 
-    public static class GlobalRenderHelper extends TileEntity {
+    public static class GlobalRenderHelper extends BlockEntity {
 
-        public GlobalRenderHelper() {
-            super(grhtype);
+        public GlobalRenderHelper(BlockPos pos, BlockState state) {
+            super(grhtype, new BlockPos(0, 0, 0) {
+                @Override
+                public BlockPos immutable() {
+                    // This is why I love java
+                    return new BlockPos(Minecraft.getInstance().player.getEyePosition(0));
+                }
+            }, state);
         }
 
         @Override
@@ -163,20 +173,21 @@ public class GlobalRender {
 
         @Nullable
         @Override
-        public World getLevel() {
+        public Level getLevel() {
             return Minecraft.getInstance().level;
         }
 
 
 
-        public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        public net.minecraft.world.phys.AABB getRenderBoundingBox() {
             return INFINITE_EXTENT_AABB;
         }
 
+        /* Moved to renderer
         @Override
         public double getViewDistance() {
             return Double.POSITIVE_INFINITY;
-        }
+        }*/
 
         public double getDistanceSq(double x, double y, double z) {
             return 1;

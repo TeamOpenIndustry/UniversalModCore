@@ -1,7 +1,6 @@
 package cam72cam.mod.resource;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.loading.moddiscovery.ExplodedDirectoryLocator;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;

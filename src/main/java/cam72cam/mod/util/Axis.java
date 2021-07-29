@@ -1,6 +1,6 @@
 package cam72cam.mod.util;
 
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 
 /**
  * Wrap MC's Axis construct

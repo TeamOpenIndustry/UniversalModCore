@@ -4,11 +4,10 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import com.mojang.blaze3d.platform.GLX;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 /** Static Minecraft Client props, don't touch server side */
 public class MinecraftClient {
@@ -20,7 +19,7 @@ public class MinecraftClient {
     private static Player playerCache;
     /** Hey, it's you! */
     public static Player getPlayer() {
-        ClientPlayerEntity internal = Minecraft.getInstance().player;
+        LocalPlayer internal = Minecraft.getInstance().player;
         if (internal == null) {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
@@ -42,23 +41,21 @@ public class MinecraftClient {
 
     /** Entity that you are currently looking at (distance limited) */
     public static Entity getEntityMouseOver() {
-        if (Minecraft.getInstance().hitResult instanceof EntityRayTraceResult) {
-            net.minecraft.entity.Entity ent = ((EntityRayTraceResult) Minecraft.getInstance().hitResult).getEntity();
-            if (ent != null) {
-                return getPlayer().getWorld().getEntity(ent.getUUID(), Entity.class);
-            }
+        if (Minecraft.getInstance().hitResult instanceof EntityHitResult) {
+            net.minecraft.world.entity.Entity ent = ((EntityHitResult) Minecraft.getInstance().hitResult).getEntity();
+            return getPlayer().getWorld().getEntity(ent.getUUID(), Entity.class);
         }
         return null;
     }
 
     /** Block you are currently pointing at (distance limited) */
     public static Vec3i getBlockMouseOver() {
-        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == RayTraceResult.Type.BLOCK ? new Vec3i(new Vec3d(Minecraft.getInstance().hitResult.getLocation())) : null;
+        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3i(new Vec3d(Minecraft.getInstance().hitResult.getLocation())) : null;
     }
 
     /** Offset inside the block you are currently pointing at (distance limited) */
     public static Vec3d getPosMouseOver() {
-        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == RayTraceResult.Type.BLOCK ? new Vec3d(Minecraft.getInstance().hitResult.getLocation()) : null;
+        return Minecraft.getInstance().hitResult != null && Minecraft.getInstance().hitResult.getType() == HitResult.Type.BLOCK ? new Vec3d(Minecraft.getInstance().hitResult.getLocation()) : null;
     }
 
     /** Is the game in the paused state? */

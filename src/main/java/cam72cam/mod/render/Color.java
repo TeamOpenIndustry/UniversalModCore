@@ -1,6 +1,6 @@
 package cam72cam.mod.render;
 
-import net.minecraft.item.DyeColor;
+import net.minecraft.world.item.DyeColor;
 
 /** Wrapper for MC's Colors */
 public enum Color {

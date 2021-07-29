@@ -1,7 +1,7 @@
 package cam72cam.mod.sound;
 
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 
 public enum StandardSound {
     // Partial list only

@@ -1,23 +1,24 @@
 package cam72cam.mod.item;
 
-import net.minecraft.util.ActionResultType;
+
+import net.minecraft.world.InteractionResult;
 
 public enum ClickResult {
     /** Handled */
-    ACCEPTED(ActionResultType.SUCCESS),
+    ACCEPTED(InteractionResult.SUCCESS),
     /** Unhandled */
-    PASS(ActionResultType.PASS),
+    PASS(InteractionResult.PASS),
     /** Handled, but cancelled */
-    REJECTED(ActionResultType.FAIL),
+    REJECTED(InteractionResult.FAIL),
     ;
 
-    public final ActionResultType internal;
+    public final InteractionResult internal;
 
-    ClickResult(ActionResultType internal) {
+    ClickResult(InteractionResult internal) {
         this.internal = internal;
     }
 
-    public static ClickResult from(ActionResultType ear) {
+    public static ClickResult from(InteractionResult ear) {
         switch (ear) {
             case SUCCESS:
             case CONSUME:

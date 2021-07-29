@@ -3,12 +3,10 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.resource.Identifier;
 import cpw.mods.modlauncher.Launcher;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,7 +17,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 
 public class OBJModelTest {
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
 
@@ -57,7 +55,7 @@ public class OBJModelTest {
         }
     }
 
-    @Test
+    @org.junit.jupiter.api.Test
     public void testVertexObject() throws Exception {
         StringBuilder objData = new StringBuilder();
         for (int i = 1; i <= 30; i++) {
@@ -82,13 +80,13 @@ public class OBJModelTest {
         int vertOff = 0;
         int floatStride = 9;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i/3f, 0.0001);
             vertOff += floatStride;
         }
     }
-    @Test
+    @org.junit.jupiter.api.Test
     public void testNormalObject() throws Exception {
         StringBuilder objData = new StringBuilder();
         for (int i = 1; i <= 30; i++) {
@@ -117,18 +115,18 @@ public class OBJModelTest {
         int normalOff = 9;
         int floatStride = 12;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i*100/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
-            Assert.assertEquals(data[normalOff], i/1f, 0.0001);
-            Assert.assertEquals(data[normalOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[normalOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i*100/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
+            Assertions.assertEquals(data[normalOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[normalOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[normalOff+2], i/3f, 0.0001);
             vertOff += floatStride;
             normalOff += floatStride;
         }
     }
 
-    @Test
+    @org.junit.jupiter.api.Test
     public void testTexturedObject() throws Exception {
         StringBuilder objData = new StringBuilder();
         for (int i = 1; i <= 30; i++) {
@@ -164,14 +162,14 @@ public class OBJModelTest {
         int normalOff = 9;
         int floatStride = 12;
         for (int i = 1; i <= 30; i++) {
-            Assert.assertEquals(data[vertOff], i*100/1f, 0.0001);
-            Assert.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
-            Assert.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
-            Assert.assertEquals(data[normalOff], i/1f, 0.0001);
-            Assert.assertEquals(data[normalOff+1], i/2f, 0.0001);
-            Assert.assertEquals(data[normalOff+2], i/3f, 0.0001);
-            Assert.assertEquals(data[texOffset], -i/1f, 0.0001);
-            Assert.assertEquals(data[texOffset+1], -i/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff], i*100/1f, 0.0001);
+            Assertions.assertEquals(data[vertOff+1], i*100/2f, 0.0001);
+            Assertions.assertEquals(data[vertOff+2], i*100/3f, 0.0001);
+            Assertions.assertEquals(data[normalOff], i/1f, 0.0001);
+            Assertions.assertEquals(data[normalOff+1], i/2f, 0.0001);
+            Assertions.assertEquals(data[normalOff+2], i/3f, 0.0001);
+            Assertions.assertEquals(data[texOffset], -i/1f, 0.0001);
+            Assertions.assertEquals(data[texOffset+1], -i/2f, 0.0001);
             vertOff += floatStride;
             normalOff += floatStride;
             texOffset += floatStride;

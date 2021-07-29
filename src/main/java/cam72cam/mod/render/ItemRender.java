@@ -12,22 +12,26 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.block.BlockState;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.model.*;
-import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.tileentity.ItemStackTileEntityRenderer;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.client.resources.model.*;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.IItemRenderProperties;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.*;
 import org.lwjgl.opengl.GL11;
@@ -41,7 +45,6 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -50,14 +53,14 @@ public class ItemRender {
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        SimpleModelTransform foo = new SimpleModelTransform(ImmutableMap.of());
+        SimpleModelState foo = new SimpleModelState(ImmutableMap.of());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                new RenderMaterial(AtlasTexture.LOCATION_BLOCKS, tex.internal)
+                new Material(TextureAtlas.LOCATION_BLOCKS, tex.internal)
         )).bake(new IModelConfiguration() {
             @Nullable
             @Override
-            public IUnbakedModel getOwnerModel() {
+            public UnbakedModel getOwnerModel() {
                 return null;
             }
 
@@ -72,7 +75,7 @@ public class ItemRender {
             }
 
             @Override
-            public RenderMaterial resolveTexture(String name) {
+            public Material resolveTexture(String name) {
                 return null;
             }
 
@@ -92,15 +95,15 @@ public class ItemRender {
             }
 
             @Override
-            public ItemCameraTransforms getCameraTransforms() {
-                return ItemCameraTransforms.NO_TRANSFORMS;
+            public ItemTransforms getCameraTransforms() {
+                return ItemTransforms.NO_TRANSFORMS;
             }
 
             @Override
-            public IModelTransform getCombinedTransform() {
-                return new SimpleModelTransform(PerspectiveMapWrapper.getTransforms(getCameraTransforms()));
+            public ModelState getCombinedTransform() {
+                return new SimpleModelState(PerspectiveMapWrapper.getTransforms(getCameraTransforms()));
             }
-        }, event.getModelLoader(), ModelLoader.defaultTextureGetter(), foo, ItemOverrideList.EMPTY, tex.internal)));
+        }, event.getModelLoader(), ModelLoader.defaultTextureGetter(), foo, ItemOverrides.EMPTY, tex.internal)));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
 
@@ -207,7 +210,7 @@ public class ItemRender {
             }
         }
 
-        Framebuffer fb = new Framebuffer(width, height, true, true);
+        TextureTarget fb = new TextureTarget(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
         fb.clear(Minecraft.ON_OSX);
         fb.bindWrite(true);
@@ -251,13 +254,13 @@ public class ItemRender {
     }
 
     static Runnable doRender = () -> {};
-    public static Callable<ItemStackTileEntityRenderer> ISTER() {
-        return () -> new ItemStackTileEntityRenderer() {
+    public static BlockEntityWithoutLevelRenderer ISTER() {
+        return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
             @Override
-            public void renderByItem(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
+            public void renderByItem(net.minecraft.world.item.ItemStack stack, TransformType p_239207_2_, PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
                 try (OpenGL.With matrix = OpenGL.matrix()) {
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    RenderSystem.multMatrix(matrixStack.last().pose());
+                    OpenGL.internalMultMatrix(matrixStack.last().pose());
                     doRender.run();
                 }
             }
@@ -265,7 +268,7 @@ public class ItemRender {
     }
 
     /** Custom Model where we can hack into the MC/Forge render system */
-    static class BakedItemModel implements IBakedModel {
+    static class BakedItemModel implements BakedModel {
         private ItemStack stack;
         private final IItemModel model;
         private ItemRenderType type;
@@ -309,12 +312,12 @@ public class ItemRender {
         }
 
         @Override
-        public ItemOverrideList getOverrides() {
-            return new ItemOverrideListHack();
+        public ItemOverrides getOverrides() {
+            return ItemOverrides.EMPTY;
         }
 
         @Override
-        public IBakedModel handlePerspective(ItemCameraTransforms.TransformType cameraTransformType, MatrixStack mat) {
+        public BakedModel handlePerspective(TransformType cameraTransformType, PoseStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
 
             doRender = () -> {
@@ -346,7 +349,7 @@ public class ItemRender {
                     RenderType.solid().setupRenderState();
                     GL11.glPushMatrix();
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    RenderSystem.multMatrix(mat.last().pose());
+                    OpenGL.internalMultMatrix(mat.last().pose());
                     model.applyTransform(type);
                     //std.renderCustom();
                     std.render();
@@ -360,13 +363,13 @@ public class ItemRender {
             return ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
         }
 
-        class ItemOverrideListHack extends ItemOverrideList {
+        class ItemOverrideListHack extends ItemOverrides {
             ItemOverrideListHack() {
                 super();
             }
 
             @Override
-            public IBakedModel resolve(IBakedModel model, net.minecraft.item.ItemStack stack, @Nullable ClientWorld worldIn, @Nullable LivingEntity entityIn) {
+            public BakedModel resolve(BakedModel model, net.minecraft.world.item.ItemStack stack, @Nullable ClientLevel worldIn, @Nullable LivingEntity entityIn, int what) {
                 BakedItemModel.this.stack = new ItemStack(stack);
                 return BakedItemModel.this;
             }

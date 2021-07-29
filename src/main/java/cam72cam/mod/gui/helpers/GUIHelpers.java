@@ -4,15 +4,12 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -28,7 +25,7 @@ public class GUIHelpers {
             OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, false);
             OpenGL.With blend = OpenGL.bool(GL11.GL_BLEND, true)
         ) {
-            AbstractGui.fill(new MatrixStack(), x, y, x + width, y + height, color);
+            GuiComponent.fill(new PoseStack(), x, y, x + width, y + height, color);
         }
     }
 
@@ -38,13 +35,13 @@ public class GUIHelpers {
             // X Y, U V, UW VH, W H, TW TH
             // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
             // X Y, W H, U V, UW VH, TW TH
-            AbstractGui.blit(new MatrixStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
+            GuiComponent.blit(new PoseStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
         }
     }
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(AtlasTexture.LOCATION_BLOCKS).apply(fluid.internal.get(0).getAttributes().getStillTexture());
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(fluid.internal.get(0).getAttributes().getStillTexture());
         drawSprite(sprite, fluid.internal.get(0).getAttributes().getColor(), x, y, width, height);
     }
 
@@ -53,7 +50,7 @@ public class GUIHelpers {
         double zLevel = 0;
 
         try (
-                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS));
+                OpenGL.With tex = OpenGL.texture(new Identifier(TextureAtlas.LOCATION_BLOCKS));
                 OpenGL.With color = OpenGL.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
         ) {
             int iW = sprite.getWidth();
@@ -63,9 +60,9 @@ public class GUIHelpers {
             float minV = sprite.getV0();
 
 
-            Tessellator tessellator = Tessellator.getInstance();
+            Tesselator tessellator = Tesselator.getInstance();
             BufferBuilder buffer = tessellator.getBuilder();
-            buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
             for (int offY = 0; offY < height; offY += iH) {
                 double curHeight = Math.min(iH, height - offY);
                 float maxVScaled = sprite.getV(16.0 * curHeight / iH);
@@ -103,7 +100,7 @@ public class GUIHelpers {
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
-            Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
+            Minecraft.getInstance().font.draw(new PoseStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         }
     }
 

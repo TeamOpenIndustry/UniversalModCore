@@ -1,9 +1,9 @@
 package cam72cam.mod.world;
 
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.world.level.ChunkPos;
 
 import java.util.Comparator;
 
@@ -17,7 +17,7 @@ public class ChunkManager {
         }
 
         ChunkPos chunkpos = new ChunkPos(inPos.internal());
-        ServerWorld server = (ServerWorld) world.internal;
+        ServerLevel server = (ServerLevel) world.internal;
         server.getChunkSource().registerTickingTicket(UMCTICKET, chunkpos, 3, chunkpos);
     }
 

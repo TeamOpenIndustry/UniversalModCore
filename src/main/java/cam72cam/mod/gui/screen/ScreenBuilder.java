@@ -4,10 +4,10 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.text.StringTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,12 +16,12 @@ import java.util.function.Supplier;
 
 public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
-    private Map<Widget, Button> buttonMap = new HashMap<>();
+    private Map<AbstractWidget, Button> buttonMap = new HashMap<>();
     private final Supplier<Boolean> valid;
-    private MatrixStack stack;
+    private PoseStack stack;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
-        super(new StringTextComponent(""));
+        super(new TextComponent(""));
         this.screen = screen;
         this.valid = valid;
     }
@@ -53,7 +53,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void addButton(Button btn) {
-        super.addButton(btn.internal());
+        super.addRenderableWidget(btn.internal());
         this.buttonMap.put(btn.internal(), btn);
         if (btn instanceof TextField) {
             this.setFocused(btn.internal());
@@ -103,7 +103,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
-    public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
         this.stack = stack;
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();

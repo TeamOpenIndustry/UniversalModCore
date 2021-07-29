@@ -8,13 +8,12 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.DisconnectedScreen;
-import net.minecraft.client.gui.screen.MainMenuScreen;
-import net.minecraft.client.gui.screen.MultiplayerScreen;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -42,8 +41,8 @@ public class EntityRegistry {
         // TODO expose updateFreq and vecUpdates
 
         CommonEvents.Entity.REGISTER.subscribe(() -> {
-            EntityType.IFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr);
-            EntityType.Builder<ModdedEntity> builder = EntityType.Builder.of(factory, EntityClassification.MISC)
+            EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr);
+            EntityType.Builder<ModdedEntity> builder = EntityType.Builder.of(factory, MobCategory.MISC)
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
                     .setUpdateInterval(20)
@@ -93,7 +92,7 @@ public class EntityRegistry {
                 ModCore.error(missingResources);
                 Minecraft.getInstance().getConnection().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
                 Minecraft.getInstance().clearLevel();
-                Minecraft.getInstance().setScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), new TranslationTextComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
+                Minecraft.getInstance().setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), new TranslatableComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

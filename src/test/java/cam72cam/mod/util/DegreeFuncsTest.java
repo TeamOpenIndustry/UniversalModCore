@@ -1,9 +1,10 @@
 package cam72cam.mod.util;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DegreeFuncsTest extends TestCase {
+public class DegreeFuncsTest {
 
+    @org.junit.jupiter.api.Test
     public void testNormalize() {
         float[] cases = new float[]{
                 0, 0,
@@ -21,6 +22,7 @@ public class DegreeFuncsTest extends TestCase {
         }
     }
 
+    @org.junit.jupiter.api.Test
     public void testDelta() {
         float[] cases = new float[]{
                 0, 0, 0,

@@ -19,22 +19,24 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
-import net.minecraft.block.*;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particles.BasicParticleType;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.IPlantable;
@@ -44,13 +46,14 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-/** Wraps both ClientWorld and ServerWorld */
+/** Wraps both ClientLevel and ServerLevel */
 public class World {
 
     /* Static access to loaded worlds */
@@ -59,7 +62,7 @@ public class World {
     private static final List<Consumer<World>> onTicks = new ArrayList<>();
 
     /** Internal, do not use */
-    public final net.minecraft.world.World internal;
+    public final Level internal;
     /** isClient == world.isRemote */
     public final boolean isClient;
     /** isServer != world.isRemote */
@@ -71,23 +74,23 @@ public class World {
 
     /* World Initialization */
 
-    private World(net.minecraft.world.World world) {
+    private World(Level world) {
         internal = world;
         isClient = world.isClientSide;
         isServer = !world.isClientSide;
     }
 
     /** Helper function to get a world map (client or server) */
-    private static Map<String, World> getWorldMap(net.minecraft.world.World world) {
+    private static Map<String, World> getWorldMap(Level world) {
         return world.isClientSide ? clientWorlds : serverWorlds;
     }
     /** Helper function to get a world in it's respective map */
-    private static World getWorld(net.minecraft.world.World world){
+    private static World getWorld(Level world){
         return getWorldMap(world).get(world.dimension().location().toString());
     }
 
     /** Load world hander, sets up maps and internal handlers */
-    private static void loadWorld(net.minecraft.world.World world) {
+    private static void loadWorld(Level world) {
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
@@ -119,23 +122,23 @@ public class World {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private Iterable<net.minecraft.entity.Entity> clientEntities() {
-        return internal instanceof ClientWorld ? ((ClientWorld) internal).entitiesForRendering() : ((ServerWorld) internal).getEntities()::iterator;
+    private Iterable<net.minecraft.world.entity.Entity> clientEntities() {
+        return internal instanceof ClientLevel ? ((ClientLevel) internal).entitiesForRendering() : ((ServerLevel) internal).getEntities().getAll();
     }
 
     @OnlyIn(Dist.DEDICATED_SERVER)
-    private Iterable<net.minecraft.entity.Entity> serverEntities() {
-        return ((ServerWorld) internal).getEntities()::iterator;
+    private Iterable<net.minecraft.world.entity.Entity> serverEntities() {
+        return ((ServerLevel) internal).getEntities().getAll();
     }
 
     private void checkLoadedEntities() {
-        Iterable<net.minecraft.entity.Entity> internalEntities = DistExecutor.runForDist(
+        Iterable<net.minecraft.world.entity.Entity> internalEntities = DistExecutor.runForDist(
                 () -> this::clientEntities,
                 () -> this::serverEntities
         );
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
-        for (net.minecraft.entity.Entity entity : internalEntities) {
+        for (net.minecraft.world.entity.Entity entity : internalEntities) {
             if (!this.entityByID.containsKey(entity.getId())) {
                 ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getId(), entity);
                 this.onEntityAdded(entity);
@@ -150,7 +153,7 @@ public class World {
     }
 
     /** Turn a MC world into a UMC world */
-    public static World get(net.minecraft.world.World world) {
+    public static World get(Level world) {
         if (world == null) {
             return null;
         }
@@ -184,7 +187,7 @@ public class World {
      * Handle tracking entities that have been added to the internal world.
      * Wiring from WorldEventListener
      */
-    void onEntityAdded(net.minecraft.entity.Entity entityIn) {
+    void onEntityAdded(net.minecraft.world.entity.Entity entityIn) {
         if (entityByID.containsKey(entityIn.getId())) {
             // Dupe
             return;
@@ -193,8 +196,8 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
-        } else if (entityIn instanceof PlayerEntity) {
-            entity = new Player((PlayerEntity) entityIn);
+        } else if (entityIn instanceof net.minecraft.world.entity.player.Player) {
+            entity = new Player((net.minecraft.world.entity.player.Player) entityIn);
         } else if (entityIn instanceof LivingEntity) {
             entity = new Living((LivingEntity) entityIn);
         } else {
@@ -210,7 +213,7 @@ public class World {
      * Handle tracking entities that have been removed from the internal world.
      * Wiring from WorldEventListener
      */
-    void onEntityRemoved(net.minecraft.entity.Entity entity) {
+    void onEntityRemoved(net.minecraft.world.entity.Entity entity) {
         for (List<Entity> value : entitiesByClass.values()) {
             value.removeIf(inner -> inner.getUUID().equals(entity.getUUID()));
         }
@@ -221,7 +224,7 @@ public class World {
     /* Entity Methods */
 
     /** Find a UMC entity by MC entity */
-    public Entity getEntity(net.minecraft.entity.Entity entity) {
+    public Entity getEntity(net.minecraft.world.entity.Entity entity) {
         return getEntity(entity.getUUID(), Entity.class);
     }
 
@@ -281,7 +284,7 @@ public class World {
 
     /** Kill an entity */
     public void removeEntity(Entity entity) {
-        entity.internal.remove();
+        entity.internal.remove(!isClient);
     }
 
     /** Force a chunk for up to 5s */
@@ -290,8 +293,8 @@ public class World {
     }
 
     /** Internal, do not use */
-    public <T extends net.minecraft.tileentity.TileEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
-        net.minecraft.tileentity.TileEntity ent = internal.getBlockEntity(pos.internal());
+    public <T extends net.minecraft.world.level.block.entity.BlockEntity> T getTileEntity(Vec3i pos, Class<T> cls) {
+        net.minecraft.world.level.block.entity.BlockEntity ent = internal.getBlockEntity(pos.internal());
 
         if (cls.isInstance(ent)) {
             return (T) ent;
@@ -301,10 +304,12 @@ public class World {
 
     /** Get all block entities of the given type */
     public <T extends BlockEntity> List<T> getBlockEntities(Class<T> cls) {
+        /*
         return internal.blockEntityList.stream()
                 .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
                 .map(x -> (T) ((TileEntity) x).instance())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+        throw new NotImplementedException("TODO remove from UMC!");
     }
 
     /** Get a block entity at the position, assuming type */
@@ -337,12 +342,13 @@ public class World {
     public BlockEntity reconstituteBlockEntity(TagCompound datain) {
         TagCompound data = TileEntity.legacyConverter(datain);
         // TODO 1.16 null state
-        TileEntity te = (TileEntity) TileEntity.loadStatic(null, data.internal);
+        BlockPos blockpos = new BlockPos(data.internal.getInt("x"), data.internal.getInt("y"), data.internal.getInt("z"));
+        TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, null, data.internal);
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
         }
-        te.setLevelAndPosition(internal, te.getBlockPos());
+        te.setLevel(internal);
         if (te.instance() == null) {
             ModCore.warn("Loaded " + te.isLoaded() + " " + data);
         }
@@ -351,9 +357,12 @@ public class World {
 
     /** Set the block entity at pos to given entity */
     public void setBlockEntity(Vec3i pos, BlockEntity entity) {
-        internal.setBlockEntity(pos.internal(), entity != null ? entity.internal : null);
         if (entity != null) {
+            entity.internal.setPos(pos.internal());
+            internal.setBlockEntity(entity.internal);
             entity.markDirty();
+        } else {
+            internal.removeBlockEntity(pos.internal());
         }
     }
 
@@ -391,7 +400,7 @@ public class World {
 
     /** Height of the ground for precipitation purposes at the given block */
     public Vec3i getPrecipitationHeight(Vec3i pos) {
-        return new Vec3i(internal.getHeightmapPos(Heightmap.Type.WORLD_SURFACE, pos.internal()));
+        return new Vec3i(internal.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, pos.internal()));
     }
 
     /** Set the given pos to air */
@@ -411,7 +420,7 @@ public class World {
         if (snowDown == 8) {
             internal.setBlockAndUpdate(ph.internal(), Blocks.SNOW_BLOCK.defaultBlockState());
         } else {
-            internal.setBlockAndUpdate(ph.internal(), Blocks.SNOW.defaultBlockState().setValue(SnowBlock.LAYERS, snowDown));
+            internal.setBlockAndUpdate(ph.internal(), Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, snowDown));
         }
     }
 
@@ -419,7 +428,7 @@ public class World {
     public int getSnowLevel(Vec3i ph) {
         BlockState state = internal.getBlockState(ph.internal());
         if (state.getBlock() == Blocks.SNOW) {
-            return state.getValue(SnowBlock.LAYERS);
+            return state.getValue(SnowLayerBlock.LAYERS);
         }
         if (state.getBlock() == Blocks.SNOW_BLOCK) {
             return 8;
@@ -440,12 +449,12 @@ public class World {
 
     /** If it is is raining */
     public boolean isRaining(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.RainType.RAIN;
+        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.Precipitation.RAIN;
     }
 
     /** If it is snowing */
     public boolean isSnowing(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.RainType.SNOW;
+        return isPrecipitating() && internal.getBiome(position.internal()).getPrecipitation() == Biome.Precipitation.SNOW;
     }
 
     /** Temp in celsius */
@@ -467,7 +476,7 @@ public class World {
 
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i parent) {
-        IChunk chunk = internal.getChunkSource().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
+        ChunkAccess chunk = internal.getChunkSource().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
         return (chunk != null && chunk.getStatus() == ChunkStatus.FULL)
                 && internal.isLoaded(parent.internal());
     }
@@ -552,10 +561,10 @@ public class World {
         if (block instanceof IPlantable) {
             return true;
         }
-        if (block instanceof FlowingFluidBlock) {
+        if (block instanceof LiquidBlock) {
             return true;
         }
-        if (block instanceof SnowBlock || block == Blocks.SNOW_BLOCK) {
+        if (block instanceof SnowLayerBlock || block == Blocks.SNOW_BLOCK) {
             return true;
         }
         if (block instanceof LeavesBlock) {
@@ -579,7 +588,7 @@ public class World {
 
     /** Get the inventory at this block (accessed from given side) */
     public IInventory getInventory(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getBlockEntity(offset.internal());
+        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).isPresent()) {
             IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).orElse(null);
@@ -603,7 +612,7 @@ public class World {
 
     /** Get the tank at this block (accessed from given side) */
     public List<ITank> getTank(Vec3i offset, Facing dir) {
-        net.minecraft.tileentity.TileEntity te = internal.getBlockEntity(offset.internal());
+        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).isPresent()) {
             IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).orElse(null);
@@ -620,7 +629,7 @@ public class World {
         try {
             return new ItemStack(state.getBlock().getCloneItemStack(internal, pos.internal(), state));
         } catch (Exception ex) {
-            return new ItemStack(new net.minecraft.item.ItemStack(state.getBlock()));
+            return new ItemStack(new net.minecraft.world.item.ItemStack(state.getBlock()));
         }
     }
 
@@ -658,9 +667,9 @@ public class World {
         // Incomplete
         ;
 
-        private final BasicParticleType internal;
+        private final SimpleParticleType internal;
 
-        ParticleType(BasicParticleType internal) {
+        ParticleType(SimpleParticleType internal) {
             this.internal = internal;
         }
     }

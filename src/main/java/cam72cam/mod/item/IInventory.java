@@ -1,5 +1,6 @@
 package cam72cam.mod.item;
 
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 public interface IInventory {
@@ -40,7 +41,7 @@ public interface IInventory {
     }
 
     /** Wraps MC construct.  Do not use */
-    static IInventory from(net.minecraft.inventory.IInventory inventory) {
+    static IInventory from(Inventory inventory) {
         return new IInventory() {
             @Override
             public int getSlotCount() {
@@ -63,7 +64,7 @@ public interface IInventory {
                     return itemStack;
                 }
 
-                net.minecraft.item.ItemStack current = inventory.getItem(slot);
+                net.minecraft.world.item.ItemStack current = inventory.getItem(slot);
 
                 if (current.isEmpty()) {
                     if (!inventory.canPlaceItem(slot, itemStack.internal)) {
@@ -78,7 +79,7 @@ public interface IInventory {
                 if (!itemStack.internal.sameItem(current)) {
                     return itemStack;
                 }
-                if (!net.minecraft.item.ItemStack.tagMatches(itemStack.internal, current)) {
+                if (!net.minecraft.world.item.ItemStack.tagMatches(itemStack.internal, current)) {
                     return itemStack;
                 }
 
@@ -101,8 +102,8 @@ public interface IInventory {
 
             @Override
             public ItemStack extract(int slot, int amount, boolean simulate) {
-                net.minecraft.item.ItemStack backup = inventory.getItem(slot).copy();
-                net.minecraft.item.ItemStack output = inventory.removeItem(slot, amount);
+                net.minecraft.world.item.ItemStack backup = inventory.getItem(slot).copy();
+                net.minecraft.world.item.ItemStack output = inventory.removeItem(slot, amount);
                 if (simulate) {
                     inventory.setItem(slot, backup);
                 }

@@ -3,15 +3,15 @@ package cam72cam.mod.entity.boundingbox;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.AABB;
 
 public interface IBoundingBox {
     IBoundingBox INFINITE = new DefaultBoundingBox(TileEntity.INFINITE_EXTENT_AABB);
-    IBoundingBox ORIGIN = new DefaultBoundingBox(new AxisAlignedBB(0,0,0,0,0,0));
-    IBoundingBox BLOCK = new DefaultBoundingBox(new AxisAlignedBB(0,0,0,1,1,1));
+    IBoundingBox ORIGIN = new DefaultBoundingBox(new AABB(0,0,0,0,0,0));
+    IBoundingBox BLOCK = new DefaultBoundingBox(new AABB(0,0,0,1,1,1));
 
-    static IBoundingBox from(AxisAlignedBB internal) {
+    static IBoundingBox from(AABB internal) {
         if (internal == null) {
             return null;
         }
@@ -29,7 +29,7 @@ public interface IBoundingBox {
 
     /** Create a new 0 size BB at pos */
     static IBoundingBox from(Vec3i pos) {
-        return from(new AxisAlignedBB(pos.internal()));
+        return from(new AABB(pos.internal()));
     }
 
     /** Smaller corner of the BB */

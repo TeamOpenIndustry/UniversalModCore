@@ -1,13 +1,14 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,22 +53,22 @@ public class ItemPickerGUI {
 
     /** Internal screen that actually renders and chooses the items */
     private class ItemPickerScreen extends Screen {
-        private Map<Widget, Vector3i> buttonCoordList = new HashMap<>();
+        private Map<AbstractWidget, Vec3i> buttonCoordList = new HashMap<>();
         private GuiScrollBar scrollBar;
 
         protected ItemPickerScreen() {
-            super(new StringTextComponent(""));
+            super(new TextComponent(""));
         }
 
         @Override
-        public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
             this.renderBackground(matrixStack);
             super.render(matrixStack, mouseX, mouseY, partialTicks);
 
-            for (Widget button : this.buttons) {
+            for (Widget button : this.renderables) {
                 if (button instanceof GuiScrollBar) continue;
                 if (scrollBar != null) {
-                    button.y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    ((AbstractWidget)button).y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
                     this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
@@ -91,26 +92,26 @@ public class ItemPickerGUI {
             int stacksX = this.width * 7 / 8 / 32;
             int stacksY = this.height * 7 / 8 / 32;
 
-            this.buttons.clear();
+            this.clearWidgets();
             this.buttonCoordList.clear();
             startX += Math.max(0, (stacksX - items.size()) / 2) * 32;
             int i;
             for (i = 0; i < items.size(); i++) {
                 int col = i % stacksX;
                 int row = i / stacksX;
-                this.addButton(new ItemButton(items.get(i), startX + col * 32, startY + row * 32) {
+                this.addRenderableWidget(new ItemButton(items.get(i), startX + col * 32, startY + row * 32) {
                     @Override
                     public void onPress() {
                         choosenItem = stack;
                         onExit.accept(stack);
                     }
                 });
-                this.buttonCoordList.put(this.buttons.get(this.buttons.size()-1), new Vector3i(startX + col * 32, startY + row * 32, 0));
+                this.buttonCoordList.put((AbstractWidget) this.renderables.get(this.renderables.size()-1), new Vec3i(startX + col * 32, startY + row * 32, 0));
             }
             int rows = i / stacksX + 2;
             if (stacksY < rows) {
                 this.scrollBar = new GuiScrollBar(i++, this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0, null);
-                this.addButton(this.scrollBar);
+                this.addRenderableWidget(this.scrollBar);
             }
         }
 

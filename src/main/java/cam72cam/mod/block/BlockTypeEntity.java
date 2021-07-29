@@ -1,6 +1,7 @@
 package cam72cam.mod.block;
 
 import cam72cam.mod.block.tile.TileEntity;
+import cam72cam.mod.block.tile.TileEntityTickable;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.item.ItemStack;
@@ -8,9 +9,16 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+
+import javax.annotation.Nullable;
 
 /**
  * Extension to BlockType that integrates with BlockEntities.
@@ -20,11 +28,13 @@ import net.minecraft.world.IBlockReader;
 public abstract class BlockTypeEntity extends BlockType {
     // Cached from ctr
     private final boolean isRedstoneProvider;
+    private final boolean isTickable;
 
     public BlockTypeEntity(String modID, String name) {
         super(modID, name);
         TileEntity.register(this::constructBlockEntity, id, this);
         this.isRedstoneProvider = constructBlockEntity() instanceof IRedstoneProvider;
+        this.isTickable = constructBlockEntity() instanceof BlockEntityTickable;
 
         // Force supplier load (may trigger static blocks like TE registration)
         constructBlockEntity().supplier(id);
@@ -40,9 +50,9 @@ public abstract class BlockTypeEntity extends BlockType {
 
     /** Hack for initializing a "fake" te */
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = ((TileEntity) internal.createTileEntity(null, null));
+        TileEntity te = ((TileEntity) ((BlockTypeInternal)internal).newBlockEntity(pos.internal(), null));
         te.hasTileData = true;
-        te.setLevelAndPosition(world.internal, pos.internal());
+        te.setLevel(world.internal);
         return te.instance();
     }
 
@@ -144,27 +154,33 @@ public abstract class BlockTypeEntity extends BlockType {
         return 0;
     }
 
-    protected class BlockTypeInternal extends BlockInternal {
+    protected class BlockTypeInternal extends BlockInternal implements EntityBlock {
         @Override
-        public final boolean hasTileEntity(BlockState state) {
-            return true;
-        }
-
-        @Override
-        public final net.minecraft.tileentity.TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos p_153215_, BlockState p_153216_) {
             return constructBlockEntity().supplier(id);
         }
 
+
+        @Nullable
         @Override
-        protected World getWorldOrNull(IBlockReader source, BlockPos pos) {
-            if (source instanceof net.minecraft.world.World) {
-                return World.get((net.minecraft.world.World) source);
+        public <T extends net.minecraft.world.level.block.entity.BlockEntity> BlockEntityTicker<T> getTicker(Level p_154683_, BlockState p_154684_, BlockEntityType<T> p_154685_) {
+            return p_154684_.getBlock() instanceof BlockTypeInternal && isTickable ? (BlockEntityTicker<T>)(BlockEntityTicker<TileEntityTickable>)this::ticker : null;
+        }
+
+        @Override
+        protected World getWorldOrNull(BlockGetter source, BlockPos pos) {
+            if (source instanceof Level) {
+                return World.get((Level) source);
             }
-            net.minecraft.tileentity.TileEntity te = source.getBlockEntity(pos);
+            net.minecraft.world.level.block.entity.BlockEntity te = source.getBlockEntity(pos);
             if (te instanceof TileEntity && ((TileEntity) te).isLoaded()) {
                 return ((TileEntity) te).getUMCWorld();
             }
             return null;
+        }
+
+        private void ticker(Level level, BlockPos pos, BlockState state, TileEntityTickable instance) {
+            instance.tick();
         }
     }
 }

@@ -8,24 +8,25 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.ItemRender;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.text.TextUtil;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.IItemRenderProperties;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -33,6 +34,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
@@ -44,9 +46,8 @@ public abstract class CustomItem {
         identifier = new ResourceLocation(modID, name);
 
         Item.Properties props = new Item.Properties().stacksTo(getStackSize()).tab(getCreativeTabs().get(0).internal);
-        Item.Properties propsWithRender = DistExecutor.unsafeRunForDist(() -> () -> props.setISTER(ItemRender::ISTER), () -> () -> props);
 
-        internal = new ItemInternal(propsWithRender);
+        internal = new ItemInternal(props);
         internal.setRegistryName(identifier);
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
@@ -64,7 +65,7 @@ public abstract class CustomItem {
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
         List<ItemStack> res = new ArrayList<>();
         if (creativeTab == null || creativeTab.internal == internal.getItemCategory()) {
-            res.add(new ItemStack(new net.minecraft.item.ItemStack(internal, 1)));
+            res.add(new ItemStack(new net.minecraft.world.item.ItemStack(internal, 1)));
         }
         return res;
     }
@@ -106,25 +107,25 @@ public abstract class CustomItem {
         }
 
         @Override
-        public ITextComponent getName(net.minecraft.item.ItemStack stack) {
+        public Component getName(net.minecraft.world.item.ItemStack stack) {
             String custom = getCustomName(new ItemStack(stack));
             if (custom != null) {
-                return new StringTextComponent(custom);
+                return new TextComponent(custom);
             }
             //return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
             return super.getName(stack);
         }
 
         @Override
-        public void fillItemCategory(ItemGroup tab, NonNullList<net.minecraft.item.ItemStack> items) {
-            CreativeTab myTab = tab != ItemGroup.TAB_SEARCH ? new CreativeTab(tab) : null;
+        public void fillItemCategory(CreativeModeTab tab, NonNullList<net.minecraft.world.item.ItemStack> items) {
+            CreativeTab myTab = tab != CreativeModeTab.TAB_SEARCH ? new CreativeTab(tab) : null;
             if (ModCore.hasResources) {
                 items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
             }
         }
 
         @Override
-        public String getDescriptionId(net.minecraft.item.ItemStack stack) {
+        public String getDescriptionId(net.minecraft.world.item.ItemStack stack) {
             String cn = getCustomName(new ItemStack(stack));
             if (cn != null) {
                 return cn;
@@ -134,22 +135,32 @@ public abstract class CustomItem {
 
         @Override
         @OnlyIn(Dist.CLIENT)
-        public final void appendHoverText(net.minecraft.item.ItemStack stack, @Nullable net.minecraft.world.World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        public final void appendHoverText(net.minecraft.world.item.ItemStack stack, @Nullable net.minecraft.world.level.Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
             super.appendHoverText(stack, worldIn, tooltip, flagIn);
             if (ModCore.hasResources) {
-                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(StringTextComponent::new).collect(Collectors.toList()));
+                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(TextComponent::new).collect(Collectors.toList()));
             }
         }
 
         @Override
-        public ActionResultType useOn(ItemUseContext context) {
+        public InteractionResult useOn(UseOnContext context) {
             return CustomItem.this.onClickBlock(new Player(context.getPlayer()), World.get(context.getLevel()), new Vec3i(context.getClickedPos()), Player.Hand.from(context.getHand()), Facing.from(context.getClickedFace()), new Vec3d(context.getClickLocation().subtract(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()))).internal;
         }
 
         @Override
-        public ActionResult<net.minecraft.item.ItemStack> use(net.minecraft.world.World world, PlayerEntity player, net.minecraft.util.Hand hand) {
+        public InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level world, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
             onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
             return super.use(world, player, hand);
+        }
+
+        @Override
+        public void initializeClient(Consumer<IItemRenderProperties> consumer) {
+            consumer.accept(new IItemRenderProperties() {
+                @Override
+                public BlockEntityWithoutLevelRenderer getItemStackRenderer() {
+                    return ItemRender.ISTER();
+                }
+            });
         }
     }
     /**

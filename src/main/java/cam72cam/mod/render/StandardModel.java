@@ -3,20 +3,17 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.block.*;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
@@ -27,7 +24,7 @@ import java.util.function.Consumer;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private List<Pair<BlockState, IBakedModel>> models = new ArrayList<>();
+    private List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
     private List<Consumer<Float>> custom = new ArrayList<>();
 
     BufferBuilder worldRenderer = new BufferBuilder(2048);
@@ -51,7 +48,7 @@ public class StandardModel {
                 .map(Block::defaultBlockState)
                 .findFirst().get();
 
-        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
         return this;
     }
@@ -59,8 +56,8 @@ public class StandardModel {
     /** Add snow layers */
     public StandardModel addSnow(int layers, Vec3d translate) {
         layers = Math.max(1, Math.min(8, layers));
-        BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowBlock.LAYERS, layers);
-        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
+        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
         return this;
     }
@@ -68,7 +65,7 @@ public class StandardModel {
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
         BlockState state = itemToBlockState(bed);
-        IBakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
         return this;
     }
@@ -80,14 +77,14 @@ public class StandardModel {
                 GL11.glTranslated(translate.x, translate.y, translate.z);
                 GL11.glScaled(scale.x, scale.y, scale.z);
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.immediate(worldRenderer);
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(worldRenderer);
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
                     GL11.glDisable(GL11.GL_BLEND);
                 }
 
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemCameraTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new MatrixStack(), buffer);
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, 0);
                 buffer.endBatch();
             }
         });
@@ -109,7 +106,7 @@ public class StandardModel {
     /** Get the quads for the MC standard rendering */
     List<BakedQuad> getQuads(Direction side, Random rand) {
         List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<BlockState, IBakedModel> model : models) {
+        for (Pair<BlockState, BakedModel> model : models) {
             quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
         }
 
@@ -132,10 +129,10 @@ public class StandardModel {
         if (models.isEmpty()) {
             return;
         }
-        Minecraft.getInstance().getTextureManager().getTexture(AtlasTexture.LOCATION_BLOCKS);
-        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+        Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS);
+        worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
-        for (Pair<BlockState, IBakedModel> model : models) {
+        for (Pair<BlockState, BakedModel> model : models) {
             List<BakedQuad> quads = new ArrayList<>();
 
             int i = Minecraft.getInstance().getBlockColors().getColor(model.getLeft(), null, null, 0);
@@ -148,11 +145,11 @@ public class StandardModel {
                 quads.addAll(model.getRight().getQuads(null, facing, new Random()));
             }
 
-            quads.forEach(quad -> worldRenderer.addVertexData(new MatrixStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
+            quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
         }
 
         worldRenderer.end();
-        WorldVertexBufferUploader.end(worldRenderer);
+        BufferUploader.end(worldRenderer);
     }
 
     /** Render the OpenGL parts directly */

@@ -2,16 +2,17 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.data.BlockTagsProvider;
+import net.minecraft.data.tags.BlockTagsProvider;
+import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.ItemTagsProvider;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.tags.ITag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
@@ -96,7 +97,7 @@ public class Fuzzy {
 
     static Map<String, Fuzzy> registered;
     private final String ident;
-    final ITag.INamedTag<Item> tag;
+    final Tag.Named<Item> tag;
     private final List<Item> customItems;
     private final Set<Fuzzy> includes;
 
@@ -119,7 +120,7 @@ public class Fuzzy {
         ), ident);
     }
 
-    private Fuzzy(ITag.INamedTag<Item> tag, String ident) {
+    private Fuzzy(Tag.Named<Item> tag, String ident) {
         if (registered == null) {
             registered = new HashMap<>();
         }
@@ -145,13 +146,13 @@ public class Fuzzy {
     public List<ItemStack> enumerate() {
         Set<ItemStack> items;
         try {
-            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toSet());
+            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item))).collect(Collectors.toSet());
         } catch (IllegalStateException e) {
             ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
             items = new HashSet<>();
         }
         for (Item item : customItems) {
-            items.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
+            items.add(new ItemStack(new net.minecraft.world.item.ItemStack(item)));
         }
         for (Fuzzy f : includes) {
             items.addAll(f.enumerate());
@@ -212,7 +213,7 @@ public class Fuzzy {
             protected void addTags() {
                 for (Fuzzy value : registered.values()) {
                     //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        Builder<Item> builder = tag(value.tag);
+                        TagsProvider.TagAppender<Item> builder = tag(value.tag);
                         for (Item customItem : value.customItems) {
                             builder.add(customItem);
                         }

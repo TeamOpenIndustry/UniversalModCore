@@ -2,13 +2,13 @@ package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.button.AbstractButton;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.opengl.GL11;
 
 /** Internal item button class */
@@ -16,18 +16,18 @@ public abstract class ItemButton extends AbstractButton {
     public ItemStack stack;
 
     public ItemButton(ItemStack stack, int x, int y) {
-        super(x, y, 32, 32, new StringTextComponent(""));
+        super(x, y, 32, 32, new TextComponent(""));
         this.stack = stack;
     }
 
     @Override
-    public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
-        AbstractGui.fill(ms, x, y, x + 32, y + 32, 0xFFFFFFFF);
+    public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
+        GuiComponent.fill(ms, x, y, x + 32, y + 32, 0xFFFFFFFF);
         // Pollutes global state...
-        RenderHelper.turnBackOn();
+        // TODO 1.17.1 RenderHelper.turnBackOn();
         Minecraft mc = Minecraft.getInstance();
 
-        FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
+        Font font = Minecraft.getInstance().font;
         try (
                 OpenGL.With matrix = OpenGL.matrix();
         ) {
@@ -38,10 +38,15 @@ public abstract class ItemButton extends AbstractButton {
         }
 
         // Pollutes global state...
-        RenderHelper.turnOff();
+        // TODO 1.17.1 RenderHelper.turnOff();
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
         return mouseX >= this.x && mouseX < this.x + 32 && mouseY >= this.y && mouseY < this.y + 32;
+    }
+
+    @Override
+    public void updateNarration(NarrationElementOutput narrationElementOutput) {
+        defaultButtonNarrationText(narrationElementOutput);
     }
 }

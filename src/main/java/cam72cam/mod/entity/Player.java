@@ -6,17 +6,19 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.Util;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.phys.BlockHitResult;
+
+import static net.minecraft.world.InteractionHand.*;
 
 /** Wrapper around EntityPlayer */
 public class Player extends Entity {
-    public final PlayerEntity internal;
+    public final net.minecraft.world.entity.player.Player internal;
 
-    public Player(PlayerEntity player) {
+    public Player(net.minecraft.world.entity.player.Player player) {
         super(player);
         this.internal = player;
     }
@@ -55,12 +57,12 @@ public class Player extends Entity {
     }
 
     public IInventory getInventory() {
-        return IInventory.from(internal.inventory);
+        return IInventory.from(internal.getInventory());
     }
 
     /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.useOn(new ItemUseContext(internal, hand.internal, new BlockRayTraceResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
+        return ClickResult.from(getHeldItem(hand).internal.useOn(new UseOnContext(internal, hand.internal, new BlockHitResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
     }
 
     /** What direction the player is trying to move and how fast */
@@ -69,17 +71,17 @@ public class Player extends Entity {
     }
 
     public enum Hand {
-        PRIMARY(net.minecraft.util.Hand.MAIN_HAND),
-        SECONDARY(net.minecraft.util.Hand.OFF_HAND),
+        PRIMARY(MAIN_HAND),
+        SECONDARY(OFF_HAND),
         ;
 
-        public final net.minecraft.util.Hand internal;
+        public final InteractionHand internal;
 
-        Hand(net.minecraft.util.Hand internal) {
+        Hand(InteractionHand internal) {
             this.internal = internal;
         }
 
-        public static Hand from(net.minecraft.util.Hand hand) {
+        public static Hand from(InteractionHand hand) {
             switch (hand) {
                 case MAIN_HAND:
                     return PRIMARY;

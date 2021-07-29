@@ -3,7 +3,6 @@ package cam72cam.mod.sound;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.SoundCategory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ public class ModSoundManager {
     private SoundCategory category = SoundCategory.AMBIENT;
 
     public ModSoundManager() {
-        lastSoundLevel = Minecraft.getInstance().options.getSoundSourceVolume(category);
+        lastSoundLevel = Minecraft.getInstance().options.getSoundSourceVolume(category.category);
     }
 
     public ISound createSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
@@ -31,7 +30,7 @@ public class ModSoundManager {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
         }
 
-        float newSoundLevel = Minecraft.getInstance().options.getSoundSourceVolume(category) * dampenLevel;
+        float newSoundLevel = Minecraft.getInstance().options.getSoundSourceVolume(category.category) * dampenLevel;
         if (newSoundLevel != lastSoundLevel) {
             lastSoundLevel = newSoundLevel;
             for (ISound sound : this.sounds) {

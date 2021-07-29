@@ -1,12 +1,19 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.ARBImaging;
+import org.lwjgl.system.MemoryUtil;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
@@ -17,6 +24,17 @@ import java.nio.FloatBuffer;
  */
 public class OpenGL {
     private OpenGL() {}
+
+    @OnlyIn(Dist.CLIENT)
+    private static final FloatBuffer MATRIX_BUFFER = GLX.make(MemoryUtil.memAllocFloat(16), (p_209238_0_) -> {
+        //LWJGLMemoryUntracker.untrack(MemoryUtil.memAddress(p_209238_0_));
+    });
+    public static void internalMultMatrix(Matrix4f matrix) {
+        RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+        matrix.store(MATRIX_BUFFER);
+        ((Buffer)MATRIX_BUFFER).rewind();
+        multMatrix(MATRIX_BUFFER);
+    }
 
     // This changes depending on LWJGL version
     public static void multMatrix(FloatBuffer fbm) {
@@ -70,7 +88,7 @@ public class OpenGL {
     public static With texture(Identifier identifier) {
         With t = bool(GL11.GL_TEXTURE_2D, true);
         int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        Minecraft.getInstance().getTextureManager().bind(identifier.internal);
+        Minecraft.getInstance().getTextureManager().getTexture(identifier.internal).bind();
         return () -> {
             GlStateManager._bindTexture(currentTexture);
             t.restore();

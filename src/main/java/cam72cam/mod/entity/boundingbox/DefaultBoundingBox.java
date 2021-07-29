@@ -1,15 +1,15 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.phys.AABB;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
-    protected final AxisAlignedBB internal;
+    protected final AABB internal;
     private Vec3d minCached;
     private Vec3d maxCached;
 
-    public DefaultBoundingBox(AxisAlignedBB internal) {
+    public DefaultBoundingBox(AABB internal) {
         this.internal = internal;
     }
 

@@ -2,35 +2,36 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
-    public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
+    public static final ItemStack EMPTY = new ItemStack(net.minecraft.world.item.ItemStack.EMPTY);
 
-    public final net.minecraft.item.ItemStack internal;
+    public final net.minecraft.world.item.ItemStack internal;
 
     /** Wrap Minecraft ItemStack.  Do not use directly */
-    public ItemStack(net.minecraft.item.ItemStack internal) {
+    public ItemStack(net.minecraft.world.item.ItemStack internal) {
         this.internal = internal;
     }
 
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.item.ItemStack.of(nbt.internal));
+        this(net.minecraft.world.item.ItemStack.of(nbt.internal));
     }
 
     /** Construct from customItem */
     public ItemStack(CustomItem item, int i) {
-        this(new net.minecraft.item.ItemStack(item.internal, i));
+        this(new net.minecraft.world.item.ItemStack(item.internal, i));
     }
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.item.ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(item)), i));
+        this(new net.minecraft.world.item.ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(item)), i));
     }
 
     /** Tag attached to this stack */
@@ -83,13 +84,13 @@ public class ItemStack {
     /** Compares: item, count, damage, data */
     @Override
     public boolean equals(Object other) {
-        return other instanceof ItemStack && net.minecraft.item.ItemStack.matches(internal, ((ItemStack)other).internal);
+        return other instanceof ItemStack && net.minecraft.world.item.ItemStack.matches(internal, ((ItemStack)other).internal);
     }
 
 
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
-        return net.minecraft.item.ItemStack.isSame(internal, stack.internal);
+        return net.minecraft.world.item.ItemStack.isSame(internal, stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {
@@ -112,7 +113,7 @@ public class ItemStack {
 
     /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
-        return ForgeHooks.getBurnTime(internal);
+        return ForgeHooks.getBurnTime(internal, RecipeType.SMELTING);
     }
 
     /** Max count of the stack */

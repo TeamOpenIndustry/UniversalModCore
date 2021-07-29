@@ -1,9 +1,8 @@
 package cam72cam.mod.resource;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.IResource;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 
@@ -93,7 +92,7 @@ class Data {
         public List<InputStream> getResourceStreamAll(Identifier identifier) throws IOException {
             List<InputStream> res = new ArrayList<>();
             try {
-                for (IResource resource : Minecraft.getInstance().getResourceManager().getResources(identifier.internal)) {
+                for (Resource resource : Minecraft.getInstance().getResourceManager().getResources(identifier.internal)) {
                     res.add(resource.getInputStream());
                 }
             } catch (java.io.FileNotFoundException ex) {

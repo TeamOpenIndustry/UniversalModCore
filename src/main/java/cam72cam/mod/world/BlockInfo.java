@@ -1,10 +1,10 @@
 package cam72cam.mod.world;
 
-import net.minecraft.block.BlockState;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
-import net.minecraft.nbt.NBTUtil;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.level.block.state.BlockState;
 
 /** Represents a Block in-world and all of it's data (not counting TE) */
 @TagMapped(BlockInfo.TagMapper.class)
@@ -24,9 +24,9 @@ public class BlockInfo {
                             d.remove(fieldName);
                             return;
                         }
-                        d.set(fieldName, new TagCompound(NBTUtil.writeBlockState(o.internal)));
+                        d.set(fieldName, new TagCompound(NbtUtils.writeBlockState(o.internal)));
                     },
-                    info -> new BlockInfo(NBTUtil.readBlockState(info.get(fieldName).internal))
+                    info -> new BlockInfo(NbtUtils.readBlockState(info.get(fieldName).internal))
             );
         }
     }

@@ -1,14 +1,14 @@
 package cam72cam.mod.math;
 
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.phys.Vec3;
 
 /** Custom Vec3d that is equivalent to MC's Vec3d */
 public class Vec3d {
-    public static final Vec3d ZERO = new Vec3d(Vector3d.ZERO);
+    public static final Vec3d ZERO = new Vec3d(Vec3.ZERO);
     public final double x;
     public final double y;
     public final double z;
-    private Vector3d internal = null;
+    private Vec3 internal = null;
 
     public Vec3d(double x, double y, double z) {
         this.x = x;
@@ -16,7 +16,7 @@ public class Vec3d {
         this.z = z;
     }
 
-    public Vec3d(Vector3d internal) {
+    public Vec3d(Vec3 internal) {
         this(internal.x, internal.y, internal.z);
         this.internal = internal;
     }
@@ -108,9 +108,9 @@ public class Vec3d {
         return false;
     }
 
-    public Vector3d internal() {
+    public Vec3 internal() {
         if (internal == null) {
-            internal = new Vector3d(x, y, z);
+            internal = new Vec3(x, y, z);
         }
         return internal;
     }

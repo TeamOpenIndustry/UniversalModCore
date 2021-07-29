@@ -3,23 +3,23 @@ package cam72cam.mod.entity;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,8 +30,8 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     public static final EntityType<SeatEntity> TYPE = makeType();
 
     private static EntityType<SeatEntity> makeType() {
-        EntityType.IFactory<SeatEntity> ctr = SeatEntity::new;
-        EntityType<SeatEntity> et = EntityType.Builder.of(ctr, EntityClassification.MISC)
+        EntityType.EntityFactory<SeatEntity> ctr = SeatEntity::new;
+        EntityType<SeatEntity> et = EntityType.Builder.of(ctr, MobCategory.MISC)
                 .setShouldReceiveVelocityUpdates(false)
                 .setTrackingRange(512)
                 .setUpdateInterval(20)
@@ -71,12 +71,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     // ticks alive?
     private int ticks = 0;
 
-    public SeatEntity(EntityType type, net.minecraft.world.World worldIn) {
+    public SeatEntity(EntityType type, Level worldIn) {
         super(type, worldIn);
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundNBT compound) {
+    protected void readAdditionalSaveData(CompoundTag compound) {
         TagCompound data = new TagCompound(compound);
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");
@@ -84,7 +84,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundNBT compound) {
+    protected void addAdditionalSaveData(CompoundTag compound) {
         TagCompound data = new TagCompound(compound);
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
@@ -105,12 +105,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
         if (parent == null) {
             ModCore.debug("No parent, goodbye");
-            this.remove();
+            this.remove(false);
             return;
         }
         if (passenger == null) {
             ModCore.debug("No passenger, goodbye");
-            this.remove();
+            this.remove(false);
             return;
         }
 
@@ -126,7 +126,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 }
             } else {
                 ModCore.debug("No passengers, goodbye");
-                this.remove();
+                this.remove(false);
                 return;
             }
         }
@@ -134,7 +134,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (getParent() == null) {
             if (ticks > 20) {
                 ModCore.debug("No parent found, goodbye");
-                this.remove();
+                this.remove(false);
             }
         }
     }
@@ -164,7 +164,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     int lastUpdateTick = -1;
     //@Override
-    public final void updatePassengerPreTick(net.minecraft.entity.Entity passenger) {
+    public final void updatePassengerPreTick(net.minecraft.world.entity.Entity passenger) {
         if (lastUpdateTick != this.ticks) {
             lastUpdateTick = this.ticks;
             cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
@@ -180,7 +180,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public final void removePassenger(net.minecraft.entity.Entity passenger) {
+    public final void removePassenger(net.minecraft.world.entity.Entity passenger) {
         cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).removeSeat(this);
@@ -190,12 +190,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
 
     @Override
-    public Vector3d getDismountLocationForPassenger(LivingEntity livingEntity) {
+    public Vec3 getDismountLocationForPassenger(LivingEntity livingEntity) {
         return livingEntity.position();
     }
 
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -210,7 +210,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void writeSpawnData(PacketBuffer buffer) {
+    public void writeSpawnData(FriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
@@ -218,7 +218,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void readSpawnData(PacketBuffer additionalData) {
+    public void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");

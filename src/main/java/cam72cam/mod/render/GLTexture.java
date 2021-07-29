@@ -2,7 +2,6 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;

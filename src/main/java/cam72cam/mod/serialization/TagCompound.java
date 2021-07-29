@@ -7,8 +7,9 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 
 import java.io.*;
 import java.util.*;
@@ -20,21 +21,21 @@ import java.util.stream.Collectors;
 /** Wraps MC's tag object */
 public class TagCompound {
     /** Internal, do not use */
-    public final CompoundNBT internal;
+    public final CompoundTag internal;
 
     /** Wraps MC object, do not use */
-    public TagCompound(CompoundNBT data) {
+    public TagCompound(CompoundTag data) {
         this.internal = data;
     }
 
     public TagCompound(byte[] data) throws IOException {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(data))) {
-            internal = CompressedStreamTools.read(in);
+            internal = NbtIo.read(in);
         }
     }
 
     public TagCompound() {
-        this(new CompoundNBT());
+        this(new CompoundTag());
     }
 
     public boolean hasKey(String key) {
@@ -134,14 +135,14 @@ public class TagCompound {
             if (internal.getTagType(key) == 4) {
                 return new Vec3i(internal.getLong(key));
             }
-            CompoundNBT tag = internal.getCompound(key);
+            CompoundTag tag = internal.getCompound(key);
             return new Vec3i(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"));
         });
     }
 
     public TagCompound setVec3i(String key, Vec3i pos) {
         return setter(key, pos, () -> {
-            CompoundNBT tag = new CompoundNBT();
+            CompoundTag tag = new CompoundTag();
             tag.putInt("X", pos.x);
             tag.putInt("Y", pos.y);
             tag.putInt("Z", pos.z);
@@ -151,14 +152,14 @@ public class TagCompound {
 
     public Vec3d getVec3d(String key) {
         return getter(key, () -> {
-            CompoundNBT nbt = internal.getCompound(key);
+            CompoundTag nbt = internal.getCompound(key);
             return new Vec3d(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
         });
     }
 
     public TagCompound setVec3d(String key, Vec3d value) {
         return setter(key, value, () -> {
-            CompoundNBT nbt = new CompoundNBT();
+            CompoundTag nbt = new CompoundTag();
             nbt.putDouble("x", value.x);
             nbt.putDouble("y", value.y);
             nbt.putDouble("z", value.z);
@@ -297,8 +298,10 @@ public class TagCompound {
                 return null;
             }
 
-            net.minecraft.tileentity.TileEntity te = net.minecraft.tileentity.TileEntity.loadStatic(null, ted.get("data").internal);
-            te.setLevelAndPosition(world.internal, te.getBlockPos());
+
+            BlockPos blockpos = new BlockPos(ted.get("data").internal.getInt("x"), ted.get("data").internal.getInt("y"), ted.get("data").internal.getInt("z"));
+            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, null, ted.get("data").internal);
+            te.setLevel(world.internal);
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();
         });
@@ -323,7 +326,7 @@ public class TagCompound {
 
     public byte[] toBytes() throws IOException {
         try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            CompressedStreamTools.write(internal, new DataOutputStream(out));
+            NbtIo.write(internal, new DataOutputStream(out));
             out.flush();
             return out.toByteArray();
         }

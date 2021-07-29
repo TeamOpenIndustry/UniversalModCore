@@ -7,29 +7,29 @@ import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.Material;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.GrassColor;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.color.BlockColors;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ItemOverrideList;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.Direction;
-import net.minecraft.world.GrassColors;
-import net.minecraft.world.biome.BiomeColors;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
@@ -52,7 +52,7 @@ public class BlockRender {
     // BlockEntity type -> BlockEntity Renderer
     private static final Map<Identifier, Function<BlockEntity, StandardModel>> renderers = new HashMap<>();
     // Internal hack for globally rendered TE's
-    private static List<net.minecraft.tileentity.TileEntity> prev = new ArrayList<>();
+    private static List<net.minecraft.world.level.block.entity.BlockEntity> prev = new ArrayList<>();
 
     static {
         ClientEvents.TICK.subscribe(() -> {
@@ -63,12 +63,13 @@ public class BlockRender {
             Find all UMC TEs
             Create new array to prevent CME's with poorly behaving mods
             TODO: Opt out of renderGlobal!
-             */
-            List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
+            TODO: 1.17.1 borked
+            List<net.minecraft.world.level.block.entity.BlockEntity> tes = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
                     .collect(Collectors.toList());
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(prev, tes);
             prev = tes;
+             */
         });
     }
 
@@ -78,9 +79,14 @@ public class BlockRender {
         colors.forEach(r -> r.accept(blockColors));
 
         renderers.forEach((type, render) -> {
-            ClientRegistry.bindTileEntityRenderer(TileEntity.getType(type), (ted) -> new TileEntityRenderer<TileEntity>(ted) {
+            BlockEntityRenderers.register(TileEntity.getType(type), (ted) -> new BlockEntityRenderer<TileEntity>() {
                 @Override
-                public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int combinedLightIn, int var6) {
+                public boolean shouldRender(TileEntity p_173568_, Vec3 p_173569_) {
+                    return p_173568_.instance() == null || Vec3.atCenterOf(p_173568_.getBlockPos()).closerThan(p_173569_, p_173568_.instance().getRenderDistance());
+                }
+
+                @Override
+                public void render(TileEntity te, float partialTicks, PoseStack var3, MultiBufferSource var4, int combinedLightIn, int var6) {
                     if (ModCore.isInReload()) {
                         return;
                     }
@@ -101,7 +107,7 @@ public class BlockRender {
 
                     RenderType.solid().setupRenderState();
 
-                    RenderHelper.turnBackOn();
+                    //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
                     Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 
@@ -111,14 +117,15 @@ public class BlockRender {
 
                     try (OpenGL.With matrix = OpenGL.matrix()) {
                         //TODO 1.15 lerp xyz
-                        RenderSystem.multMatrix(var3.last().pose());
+                        OpenGL.internalMultMatrix(var3.last().pose());
                         model.renderCustom(partialTicks);
                     }
 
                     RenderType.solid().clearRenderState();
                 }
 
-                public boolean isGlobalRenderer(TileEntity te) {
+                @Override
+                public boolean shouldRenderOffScreen(TileEntity te) {
                     return true;
                 }
             });
@@ -128,19 +135,15 @@ public class BlockRender {
 
     // TODO version for non TE blocks
 
-    private interface IBakedThingy extends IForgeBakedModel, IBakedModel {
-
-    }
-
     public static <T extends BlockEntity> void register(BlockType block, Function<T, StandardModel> model, Class<T> cls) {
         renderers.put(((BlockTypeEntity)block).id, (te) -> model.apply(cls.cast(te)));
 
         colors.add((blockColors) -> {
-            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getAverageGrassColor(worldIn, pos) : GrassColors.get(0.5D, 1.0D), block.internal);
+            blockColors.register((state, worldIn, pos, tintIndex) -> worldIn != null && pos != null ? BiomeColors.getAverageGrassColor(worldIn, pos) : GrassColor.get(0.5D, 1.0D), block.internal);
         });
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
-            event.getModelRegistry().put(new ModelResourceLocation(block.internal.getRegistryName(), ""), new IBakedThingy() {
+            event.getModelRegistry().put(new ModelResourceLocation(block.internal.getRegistryName(), ""), new BakedModel() {
                 @Override
                 public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData properties) {
                     if (block instanceof BlockTypeEntity) {
@@ -194,7 +197,7 @@ public class BlockRender {
                 }
 
                 @Override
-                public ItemOverrideList getOverrides() {
+                public ItemOverrides getOverrides() {
                     return null;
                 }
             });

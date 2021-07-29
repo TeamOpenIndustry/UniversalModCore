@@ -1,17 +1,18 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkDataEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -28,10 +29,10 @@ public class CommonEvents {
     }
 
     public static final class World {
-        public static final Event<Consumer<net.minecraft.world.World>> LOAD = new Event<>();
-        public static final Event<Consumer<net.minecraft.world.World>> UNLOAD = new Event<>();
-        public static final Event<Consumer<net.minecraft.world.World>> TICK = new Event<>();
-        public static final Event<Consumer<IChunk>> LOAD_CHUNK = new Event<>();
+        public static final Event<Consumer<Level>> LOAD = new Event<>();
+        public static final Event<Consumer<Level>> UNLOAD = new Event<>();
+        public static final Event<Consumer<Level>> TICK = new Event<>();
+        public static final Event<Consumer<ChunkAccess>> LOAD_CHUNK = new Event<>();
     }
 
     public static final class Block {
@@ -56,14 +57,14 @@ public class CommonEvents {
         public static final Event<EventBusForge.EntityJoinEvent> JOIN = new Event<>();
     }
 
-    public static final Event<Consumer<IForgeRegistry<ContainerType<?>>>> CONTAINER_REGISTRY = new Event<>();
+    public static final Event<Consumer<IForgeRegistry<MenuType<?>>>> CONTAINER_REGISTRY = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static final class EventBusForge {
         // World
         @SubscribeEvent
         public static void onWorldLoad(WorldEvent.Load event) {
-            World.LOAD.execute(x -> x.accept((net.minecraft.world.World)event.getWorld()));
+            World.LOAD.execute(x -> x.accept((Level)event.getWorld()));
         }
 
         @SubscribeEvent
@@ -73,7 +74,7 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void onWorldUnload(WorldEvent.Unload event) {
-            World.UNLOAD.execute(x -> x.accept((net.minecraft.world.World)event.getWorld()));
+            World.UNLOAD.execute(x -> x.accept((Level)event.getWorld()));
         }
 
         @SubscribeEvent
@@ -85,7 +86,7 @@ public class CommonEvents {
 
         @FunctionalInterface
         public interface EntityJoinEvent {
-            boolean onJoin(net.minecraft.world.World world, net.minecraft.entity.Entity entity);
+            boolean onJoin(Level world, net.minecraft.world.entity.Entity entity);
         }
         @SubscribeEvent
         public static void onEntityJoin(EntityJoinWorldEvent event) {
@@ -96,11 +97,11 @@ public class CommonEvents {
 
         @FunctionalInterface
         public interface BlockBrokenEvent {
-            boolean onBroken(net.minecraft.world.World world, BlockPos pos, PlayerEntity player);
+            boolean onBroken(Level world, BlockPos pos, Player player);
         }
         @SubscribeEvent
         public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
-            if (!Block.BROKEN.executeCancellable(x -> x.onBroken((net.minecraft.world.World)event.getWorld(), event.getPos(), event.getPlayer()))) {
+            if (!Block.BROKEN.executeCancellable(x -> x.onBroken((Level)event.getWorld(), event.getPos(), event.getPlayer()))) {
                 event.setCanceled(true);
             }
         }
@@ -114,17 +115,17 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void registerBlocks(RegistryEvent.Register<net.minecraft.block.Block> event) {
+        public static void registerBlocks(RegistryEvent.Register<net.minecraft.world.level.block.Block> event) {
             Block.REGISTER.execute(Runnable::run);
         }
 
         @SubscribeEvent
-        public static void registerTiles(RegistryEvent.Register<net.minecraft.tileentity.TileEntityType<?>> event) {
+        public static void registerTiles(RegistryEvent.Register<BlockEntityType<?>> event) {
             Tile.REGISTER.execute(Runnable::run);
         }
 
         @SubscribeEvent
-        public static void registerItems(RegistryEvent.Register<net.minecraft.item.Item> event) {
+        public static void registerItems(RegistryEvent.Register<net.minecraft.world.item.Item> event) {
             Item.REGISTER.execute(Runnable::run);
         }
 
@@ -134,7 +135,7 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void registerContainers(RegistryEvent.Register<ContainerType<?>> event) {
+        public static void registerContainers(RegistryEvent.Register<MenuType<?>> event) {
             CONTAINER_REGISTRY.execute(x -> x.accept(event.getRegistry()));
         }
     }

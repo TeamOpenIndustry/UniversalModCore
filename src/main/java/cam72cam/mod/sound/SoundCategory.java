@@ -1,21 +1,23 @@
 package cam72cam.mod.sound;
 
+import net.minecraft.sounds.SoundSource;
+
 public enum SoundCategory {
-    MASTER(net.minecraft.util.SoundCategory.MASTER),
-    MUSIC(net.minecraft.util.SoundCategory.MUSIC),
-    RECORDS(net.minecraft.util.SoundCategory.RECORDS),
-    WEATHER(net.minecraft.util.SoundCategory.WEATHER),
-    BLOCKS(net.minecraft.util.SoundCategory.BLOCKS),
-    HOSTILE(net.minecraft.util.SoundCategory.HOSTILE),
-    NEUTRAL(net.minecraft.util.SoundCategory.NEUTRAL),
-    PLAYERS(net.minecraft.util.SoundCategory.PLAYERS),
-    AMBIENT(net.minecraft.util.SoundCategory.AMBIENT),
-    VOICE(net.minecraft.util.SoundCategory.VOICE),
+    MASTER(SoundSource.MASTER),
+    MUSIC(SoundSource.MUSIC),
+    RECORDS(SoundSource.RECORDS),
+    WEATHER(SoundSource.WEATHER),
+    BLOCKS(SoundSource.BLOCKS),
+    HOSTILE(SoundSource.HOSTILE),
+    NEUTRAL(SoundSource.NEUTRAL),
+    PLAYERS(SoundSource.PLAYERS),
+    AMBIENT(SoundSource.AMBIENT),
+    VOICE(SoundSource.VOICE),
     ;
 
-    final net.minecraft.util.SoundCategory category;
+    final SoundSource category;
 
-    SoundCategory(net.minecraft.util.SoundCategory category) {
+    SoundCategory(SoundSource category) {
         this.category = category;
     }
 }

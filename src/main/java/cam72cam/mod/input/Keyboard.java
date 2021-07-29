@@ -1,12 +1,11 @@
 package cam72cam.mod.input;
 
-import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.event.ClientEvents;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.lwjgl.glfw.GLFW;
 
 public class Keyboard {
@@ -134,7 +133,7 @@ public class Keyboard {
             System.out.println("Shake hands with danger!");
             return;
         }
-        KeyBinding key = new KeyBinding(name, keyCode.code, category);
+        KeyMapping key = new KeyMapping(name, keyCode.code, category);
         ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
             if (key.isDown()) {

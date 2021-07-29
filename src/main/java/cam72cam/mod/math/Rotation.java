@@ -4,17 +4,17 @@ import cam72cam.mod.util.Facing;
 
 /** Represents a rotation around the Y axis */
 public enum Rotation {
-    NONE(net.minecraft.util.Rotation.NONE),
-    CLOCKWISE_90(net.minecraft.util.Rotation.CLOCKWISE_90),
-    CLOCKWISE_180(net.minecraft.util.Rotation.CLOCKWISE_180),
-    COUNTERCLOCKWISE_90(net.minecraft.util.Rotation.COUNTERCLOCKWISE_90);
-    public final net.minecraft.util.Rotation internal;
+    NONE(net.minecraft.world.level.block.Rotation.NONE),
+    CLOCKWISE_90(net.minecraft.world.level.block.Rotation.CLOCKWISE_90),
+    CLOCKWISE_180(net.minecraft.world.level.block.Rotation.CLOCKWISE_180),
+    COUNTERCLOCKWISE_90(net.minecraft.world.level.block.Rotation.COUNTERCLOCKWISE_90);
+    public final net.minecraft.world.level.block.Rotation internal;
 
-    Rotation(net.minecraft.util.Rotation internal) {
+    Rotation(net.minecraft.world.level.block.Rotation internal) {
         this.internal = internal;
     }
 
-    public static Rotation from(net.minecraft.util.Rotation rot) {
+    public static Rotation from(net.minecraft.world.level.block.Rotation rot) {
         switch (rot) {
             case NONE:
                 return NONE;

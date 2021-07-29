@@ -1,12 +1,12 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
-public class BoundingBox extends AxisAlignedBB {
+public class BoundingBox extends AABB {
     public final IBoundingBox internal;
 
     private BoundingBox(IBoundingBox internal, double[] constructorParams) {
@@ -18,7 +18,7 @@ public class BoundingBox extends AxisAlignedBB {
         this(internal, hack(internal));
     }
 
-    public static AxisAlignedBB from(IBoundingBox internal) {
+    public static AABB from(IBoundingBox internal) {
         if (internal instanceof DefaultBoundingBox) {
             return ((DefaultBoundingBox) internal).internal;
         }
@@ -32,13 +32,13 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public BoundingBox intersect(AxisAlignedBB p_191500_1_) {
+    public BoundingBox intersect(AABB p_191500_1_) {
         // Used by piston
         return this;
     }
 
     @Override
-    public BoundingBox minmax(AxisAlignedBB other) {
+    public BoundingBox minmax(AABB other) {
         // Used by piston
         // Used by entityliving for BB stuff
         return this;
@@ -69,17 +69,17 @@ public class BoundingBox extends AxisAlignedBB {
     /* Interactions */
     /*
     @Override
-    public double calculateXOffset(AxisAlignedBB other, double offsetX) {
+    public double calculateXOffset(AABB other, double offsetX) {
         return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
     }
 
     @Override
-    public double calculateYOffset(AxisAlignedBB other, double offsetY) {
+    public double calculateYOffset(AABB other, double offsetY) {
         return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
     }
 
     @Override
-    public double calculateZOffset(AxisAlignedBB other, double offsetZ) {
+    public double calculateZOffset(AABB other, double offsetZ) {
         return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
     }
     */
@@ -96,7 +96,7 @@ public class BoundingBox extends AxisAlignedBB {
     }
 
     @Override
-    public Optional<Vector3d> clip(Vector3d vecA, Vector3d vecB) {
+    public Optional<Vec3> clip(Vec3 vecA, Vec3 vecB) {
         int steps = 10;
         double xDist = vecB.x - vecA.x;
         double yDist = vecB.y - vecA.y;

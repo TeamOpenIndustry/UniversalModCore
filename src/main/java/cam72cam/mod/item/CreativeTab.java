@@ -1,27 +1,27 @@
 package cam72cam.mod.item;
 
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.item.CreativeModeTab;
 
 import java.util.function.Supplier;
 
 /** Creates/Registers a creative tab for custom items */
 public class CreativeTab {
-    public ItemGroup internal;
+    public CreativeModeTab internal;
 
     // TODO expose existing creative tabs as constants to be used by mods
 
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
-        internal = new ItemGroup(label) {
+        internal = new CreativeModeTab(label) {
             @Override
-            public net.minecraft.item.ItemStack makeIcon() {
+            public net.minecraft.world.item.ItemStack makeIcon() {
                 return stack.get().internal;
             }
         };
     }
 
     /** Wraps minecraft's tabs, don't use directly */
-    public CreativeTab(ItemGroup tab) {
+    public CreativeTab(CreativeModeTab tab) {
         this.internal = tab;
     }
 

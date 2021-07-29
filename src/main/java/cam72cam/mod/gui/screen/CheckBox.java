@@ -2,7 +2,7 @@ package cam72cam.mod.gui.screen;
 
 
 import cam72cam.mod.entity.Player;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
 
 /** Basic checkbox */
 public abstract class CheckBox extends Button {
@@ -22,9 +22,9 @@ public abstract class CheckBox extends Button {
 
     public void setChecked(boolean val) {
         if (val) {
-            button.setMessage(new StringTextComponent(button.getMessage().getString().replace("█", "X")));
+            button.setMessage(new TextComponent(button.getMessage().getString().replace("█", "X")));
         } else {
-            button.setMessage(new StringTextComponent(button.getMessage().getString().replace("X", "█")));
+            button.setMessage(new TextComponent(button.getMessage().getString().replace("X", "█")));
         }
     }
 }

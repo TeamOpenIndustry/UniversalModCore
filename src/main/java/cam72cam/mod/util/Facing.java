@@ -1,7 +1,7 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.math.Rotation;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 
 /**
  * Wrap MC's EnumFacing enum, provide some helpers
@@ -50,7 +50,7 @@ public enum Facing {
     /** Older versions of MC used a single byte to represent facing */
     @Deprecated
     public static Facing from(byte facing) {
-        return from(net.minecraft.util.Direction.from3DDataValue(facing));
+        return from(net.minecraft.core.Direction.from3DDataValue(facing));
     }
 
     /** 0 is SOUTH, 90 is WEST */

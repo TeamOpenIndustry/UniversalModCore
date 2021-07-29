@@ -2,9 +2,9 @@ package cam72cam.mod.config;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.screen.*;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -240,7 +240,7 @@ public class ConfigGui implements IScreen {
 
     @Override
     public void draw(IScreenBuilder builder) {
-        ((Screen)builder).renderBackground(new MatrixStack(), 0);
+        ((Screen)builder).renderBackground(new PoseStack(), 0);
 
         String name = "";
         ConfigGui iter = this;

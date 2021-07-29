@@ -12,22 +12,22 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.MessageArgument;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.MessageArgument;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
 
 
 /** API not finalized use at your own risk */
-public abstract class Command implements com.mojang.brigadier.Command<CommandSource> {
+public abstract class Command implements com.mojang.brigadier.Command<CommandSourceStack> {
     private static final List<Command> commands = new ArrayList<>();
 
     public static void register(Command cmd) {
         commands.add(cmd);
     }
 
-    public static void registration(CommandDispatcher<CommandSource> ch) {
+    public static void registration(CommandDispatcher<CommandSourceStack> ch) {
 		ModCore.debug("Registration of commands started.. (Count: %d)", commands.size());
 
 		for (Command command : commands) {
@@ -51,10 +51,10 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 	}
 
 	@Override
-	public int run(CommandContext<CommandSource> context) throws CommandSyntaxException {
+	public int run(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
 		Optional<Player> player = Optional.empty();
 		try {
-			ServerPlayerEntity serverPlayer = context.getSource().getPlayerOrException();
+			ServerPlayer serverPlayer = context.getSource().getPlayerOrException();
 			player = Optional.of(new Player(serverPlayer));
 		} catch (CommandSyntaxException e) {
 			// Is the console ?
@@ -69,7 +69,7 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 
 
 		if (!ok) {
-			context.getSource().sendFailure(new StringTextComponent(getUsage()));
+			context.getSource().sendFailure(new TextComponent(getUsage()));
 			return -1;
 		}
 

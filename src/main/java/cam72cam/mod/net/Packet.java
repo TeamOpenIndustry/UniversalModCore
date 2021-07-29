@@ -14,16 +14,16 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.fmllegacy.network.NetworkDirection;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
 
 /**
  * Packet abstraction and registration
@@ -100,7 +100,7 @@ public abstract class Packet {
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
-        net.minecraft.entity.Entity internal = entity.internal;
+        net.minecraft.world.entity.Entity internal = entity.internal;
         int syncDist = entity.internal.getType().clientTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
@@ -123,7 +123,7 @@ public abstract class Packet {
 
 	/** Send from server to player */
 	public void sendToPlayer(Player player) {
-		net.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player.internal), new Message(this));
+		net.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player.internal), new Message(this));
 	}
 
     /** Forge message construct.  Do not use directly */
@@ -134,18 +134,18 @@ public abstract class Packet {
             this.packet = pkt;
         }
 
-        public Message(PacketBuffer buff) {
+        public Message(FriendlyByteBuf buff) {
             fromBytes(buff);
         }
 
-        public void fromBytes(PacketBuffer buf) {
+        public void fromBytes(FriendlyByteBuf buf) {
             TagCompound data = new TagCompound(buf.readNbt());
             String cls = data.getString("cam72cam.mod.pktid");
             packet = types.get(cls).get();
             packet.data = data;
         }
 
-        public void toBytes(PacketBuffer buf) {
+        public void toBytes(FriendlyByteBuf buf) {
             packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
             try {
                 TagSerializer.serialize(packet.data, packet);

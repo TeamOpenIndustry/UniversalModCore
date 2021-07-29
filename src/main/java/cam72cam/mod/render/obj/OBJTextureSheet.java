@@ -3,7 +3,7 @@ package cam72cam.mod.render.obj;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.serialization.ResourceCache;
-import net.minecraft.client.renderer.texture.TextureUtil;
+import com.mojang.blaze3d.platform.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 

@@ -4,7 +4,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.resource.Identifier;
-import net.minecraft.client.audio.*;
+import com.mojang.blaze3d.audio.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.lwjgl.openal.AL10;
 
@@ -25,7 +25,7 @@ class ClientSound implements ISound {
     private final float scale;
     private boolean disposable = false;
     private int id;
-    private AudioStreamBuffer sound;
+    private SoundBuffer sound;
     private int lastUsed = 0;
 
     ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
@@ -62,7 +62,7 @@ class ClientSound implements ISound {
             AudioFormat fmt = stream.getFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.read(sizeBytes);
-            sound = new AudioStreamBuffer(buffer, fmt);
+            sound = new SoundBuffer(buffer, fmt);
             for (int i = 0; i< 4; i++) {
                 sound.releaseAlBuffer().ifPresent(bufferId -> {
                     AL10.alSourceQueueBuffers(id, bufferId);

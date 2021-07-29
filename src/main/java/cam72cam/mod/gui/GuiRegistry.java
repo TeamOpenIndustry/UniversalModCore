@@ -15,21 +15,21 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.network.IContainerFactory;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -42,8 +42,8 @@ import java.util.zip.CRC32;
 public class GuiRegistry {
     private static final Map<Integer, Function<CreateEvent, ServerContainerBuilder>> registry = new HashMap<>();
 
-    private static final ContainerType<ServerContainerBuilder> TYPE = IForgeContainerType.create(
-            (id, inv, data) -> registry.get(data.readInt()).apply(new CreateEvent(id, inv, data.readInt(), data.readInt(), data.readInt()))
+    private static final MenuType<ServerContainerBuilder> TYPE = new MenuType<>((IContainerFactory<ServerContainerBuilder>) (
+            (id, inv, data) -> registry.get(data.readInt()).apply(new CreateEvent(id, inv, data.readInt(), data.readInt(), data.readInt())))
     );
     static {
         TYPE.setRegistryName(new ResourceLocation(ModCore.MODID, "alltheguis"));
@@ -57,7 +57,7 @@ public class GuiRegistry {
     /** Internal event registration, do not use */
     @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> ScreenManager.register(TYPE, ClientContainerBuilder::new));
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> MenuScreens.register(TYPE, ClientContainerBuilder::new));
     }
 
     public GuiRegistry() {
@@ -133,19 +133,19 @@ public class GuiRegistry {
             return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> !entity.internal.isRemoved());
         });
         return (player, pos) -> {
-            if (!(player.internal instanceof ServerPlayerEntity)) {
+            if (!(player.internal instanceof ServerPlayer)) {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openGui((ServerPlayerEntity) player.internal, new INamedContainerProvider() {
+            NetworkHooks.openGui((ServerPlayer) player.internal, new MenuProvider() {
                 @Override
-                public ITextComponent getDisplayName() {
-                    return new StringTextComponent("");
+                public Component getDisplayName() {
+                    return new TextComponent("");
                 }
 
                 @Nullable
                 @Override
-                public Container createMenu(int p_createMenu_1_, PlayerInventory p_createMenu_2_, PlayerEntity p_createMenu_3_) {
+                public AbstractContainerMenu createMenu(int p_createMenu_1_, Inventory p_createMenu_2_, net.minecraft.world.entity.player.Player p_createMenu_3_) {
                     return registry.get(id).apply(new CreateEvent(p_createMenu_1_, p_createMenu_2_, pos.x, pos.y, pos.z));
                 }
             }, (buff) -> {
@@ -188,19 +188,19 @@ public class GuiRegistry {
         });
 
         return (player, ent) -> {
-            if (!(player.internal instanceof ServerPlayerEntity)) {
+            if (!(player.internal instanceof ServerPlayer)) {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openGui((ServerPlayerEntity) player.internal, new INamedContainerProvider() {
+            NetworkHooks.openGui((ServerPlayer) player.internal, new MenuProvider() {
                 @Override
-                public ITextComponent getDisplayName() {
-                    return new StringTextComponent("");
+                public Component getDisplayName() {
+                    return new TextComponent("");
                 }
 
                 @Nullable
                 @Override
-                public Container createMenu(int p_createMenu_1_, PlayerInventory p_createMenu_2_, PlayerEntity p_createMenu_3_) {
+                public AbstractContainerMenu createMenu(int p_createMenu_1_, Inventory p_createMenu_2_, net.minecraft.world.entity.player.Player p_createMenu_3_) {
                     return registry.get(id).apply(new CreateEvent(p_createMenu_1_, p_createMenu_2_, ent.getId(), 0, 0));
                 }
             }, (buff) -> {
@@ -214,13 +214,13 @@ public class GuiRegistry {
 
     /** Used to represent a client or server create event (for passing params) */
     private static class CreateEvent {
-        final PlayerInventory inv;
+        final Inventory inv;
         final int entityIDorX;
         final int y;
         final int z;
         final int id;
 
-        private CreateEvent(int id, PlayerInventory inv, int entityIDorX, int y, int z) {
+        private CreateEvent(int id, Inventory inv, int entityIDorX, int y, int z) {
             this.id = id;
             this.inv = inv;
             this.entityIDorX = entityIDorX;

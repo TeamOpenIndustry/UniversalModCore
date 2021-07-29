@@ -24,7 +24,7 @@ public class ItemStackHandler implements IInventory {
     public ItemStackHandler(int size) {
         this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
             @Override
-            public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            public void setStackInSlot(int slot, @Nonnull net.minecraft.world.item.ItemStack stack) {
                 if (checkSlot.test(slot, new ItemStack(stack))) {
                     super.setStackInSlot(slot, stack);
                 }
@@ -32,12 +32,12 @@ public class ItemStackHandler implements IInventory {
 
             @Override
             @Nonnull
-            public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
+            public net.minecraft.world.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.world.item.ItemStack stack, boolean simulate) {
                 return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
             }
 
             @Override
-            public boolean isItemValid(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            public boolean isItemValid(int slot, @Nonnull net.minecraft.world.item.ItemStack stack) {
                 return checkSlot.test(slot, new ItemStack(stack));
             }
 

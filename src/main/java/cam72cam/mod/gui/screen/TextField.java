@@ -2,8 +2,8 @@ package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.function.Predicate;
 
@@ -13,12 +13,12 @@ public class TextField extends Button {
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         super(
                 builder,
-                new TextFieldWidget(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, new StringTextComponent(""))
+                new EditBox(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, new TextComponent(""))
         );
     }
 
-    TextFieldWidget internal() {
-        return (TextFieldWidget) button;
+    EditBox internal() {
+        return (EditBox) button;
     }
 
     /** Validator that can block a string from being entered */

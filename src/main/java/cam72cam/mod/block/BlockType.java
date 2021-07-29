@@ -11,21 +11,23 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /** A standard block with no attached entity */
@@ -35,7 +37,7 @@ public abstract class BlockType {
      */
     static {
         CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
-            net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
+            net.minecraft.world.level.block.Block block = world.getBlockState(pos).getBlock();
             if (block instanceof BlockInternal) {
                 return ((BlockInternal) block).tryBreak(world, pos, player);
             }
@@ -44,7 +46,7 @@ public abstract class BlockType {
     }
 
     /** Wraps the minecraft construct, do not use directly. */
-    public final net.minecraft.block.Block internal;
+    public final net.minecraft.world.level.block.Block internal;
 
     /** Mod/name of the block */
     public final Identifier id;
@@ -119,7 +121,7 @@ public abstract class BlockType {
     /**
      * Shape of the block.
      */
-    protected static final IBoundingBox defaultBox = IBoundingBox.from(new AxisAlignedBB(0, 0, 0, 1, 1, 1));
+    protected static final IBoundingBox defaultBox = IBoundingBox.from(new AABB(0, 0, 0, 1, 1, 1));
     public IBoundingBox getBoundingBox(World world, Vec3i pos) {
         return defaultBox;
     }
@@ -144,7 +146,7 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    protected class BlockInternal extends net.minecraft.block.Block {
+    protected class BlockInternal extends net.minecraft.world.level.block.Block {
         public BlockInternal() {
             super(Block.Properties.of(BlockType.this.getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
@@ -155,34 +157,34 @@ public abstract class BlockType {
 
         /** Called server side at the end of the block break call chain as cleanup */
         @Override
-        public void onRemove(BlockState state, net.minecraft.world.World world, BlockPos pos, BlockState newState, boolean isMoving) {
+        public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
             BlockType.this.onBreak(World.get(world), new Vec3i(pos));
             super.onRemove(state, world, pos, newState, isMoving);
         }
 
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
-        public ActionResultType use(BlockState state, net.minecraft.world.World world, BlockPos pos, PlayerEntity player, net.minecraft.util.Hand hand, BlockRayTraceResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? ActionResultType.SUCCESS : ActionResultType.PASS;
+        public InteractionResult use(BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, InteractionHand hand, BlockHitResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         @Override
-        public final net.minecraft.item.ItemStack getPickBlock(BlockState state, RayTraceResult target, IBlockReader worldIn, BlockPos pos, PlayerEntity player) {
+        public final net.minecraft.world.item.ItemStack getPickBlock(BlockState state, HitResult target, BlockGetter worldIn, BlockPos pos, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(worldIn, pos);
             if (world != null) {
                 return BlockType.this.onPick(world, new Vec3i(pos)).internal;
             }
-            return net.minecraft.item.ItemStack.EMPTY;
+            return net.minecraft.world.item.ItemStack.EMPTY;
         }
 
         @Override
-        public void neighborChanged(BlockState state, net.minecraft.world.World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
+        public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
             this.onNeighborChange(state, worldIn, pos, fromPos);
         }
 
         @Override
-        public void onNeighborChange(BlockState state, IWorldReader world, BlockPos pos, BlockPos neighbor){
-            BlockType.this.onNeighborChange(World.get((net.minecraft.world.World) world), new Vec3i(pos), new Vec3i(neighbor));
+        public void onNeighborChange(BlockState state, LevelReader world, BlockPos pos, BlockPos neighbor){
+            BlockType.this.onNeighborChange(World.get((Level) world), new Vec3i(pos), new Vec3i(neighbor));
         }
 
         /*
@@ -190,18 +192,18 @@ public abstract class BlockType {
          */
 
         @Override
-        public BlockRenderType getRenderShape(BlockState state) {
+        public RenderShape getRenderShape(BlockState state) {
             // TESR Renderer TODO OPTIONAL!@!!!!
-            return BlockRenderType.MODEL;
+            return RenderShape.MODEL;
         }
 
-        protected World getWorldOrNull(IBlockReader source, BlockPos pos) {
-            return source instanceof net.minecraft.world.World ? World.get((net.minecraft.world.World) source) : null;
+        protected World getWorldOrNull(BlockGetter source, BlockPos pos) {
+            return source instanceof Level ? World.get((Level) source) : null;
         }
 
-        private final SingleCache<IBoundingBox, VoxelShape> bbCache = new SingleCache<>((IBoundingBox box) -> VoxelShapes.create(BoundingBox.from(box)));
+        private final SingleCache<IBoundingBox, VoxelShape> bbCache = new SingleCache<>((IBoundingBox box) -> Shapes.create(BoundingBox.from(box)));
         @Override
-        public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+        public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
             World world = getWorldOrNull(worldIn, pos);
             if (world != null) {
                 return bbCache.get(BlockType.this.getBoundingBox(world, new Vec3i(pos)));
@@ -209,7 +211,7 @@ public abstract class BlockType {
             return super.getShape(state, worldIn, pos, context);
         }
 
-        public boolean tryBreak(net.minecraft.world.IWorld worldIn, BlockPos pos, PlayerEntity player) {
+        public boolean tryBreak(LevelAccessor worldIn, BlockPos pos, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(worldIn, pos);
             if (world != null) {
                 return BlockType.this.tryBreak(world, new Vec3i(pos), new Player(player));
@@ -221,7 +223,7 @@ public abstract class BlockType {
         /* Redstone */
 
         @Override
-        public int getSignal(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        public int getSignal(BlockState blockState, BlockGetter blockAccess, BlockPos pos, Direction side)
         {
             World world = getWorldOrNull(blockAccess, pos);
             if (world != null) {
@@ -231,7 +233,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public int getDirectSignal(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+        public int getDirectSignal(BlockState blockState, BlockGetter blockAccess, BlockPos pos, Direction side)
         {
             World world = getWorldOrNull(blockAccess, pos);
             if (world != null) {
@@ -259,13 +261,13 @@ public abstract class BlockType {
         }
 
         @Override
-        public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
+        public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
             return true;
         }
 
         @Override
-        public VoxelShape getOcclusionShape(BlockState state, IBlockReader worldIn, BlockPos pos) {
-            return VoxelShapes.empty();
+        public VoxelShape getOcclusionShape(BlockState state, BlockGetter worldIn, BlockPos pos) {
+            return Shapes.empty();
         }
     }
 }
