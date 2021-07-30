@@ -114,7 +114,7 @@ public class OBJTexturePacker {
 
         public void draw(int x, int y, String variant) {
             if (materials == null) {
-                graphics.setColor(Color.MAGENTA);
+                graphics.setColor(Color.BLACK);
                 graphics.fillRect(x, y, width, height);
                 return;
             }
