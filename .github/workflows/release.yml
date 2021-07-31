@@ -22,7 +22,7 @@ jobs:
             - name: keyscan
               run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
             - name: Hack date
-              run: sudo date -s '2021-07-30 00:00:00'
+              run: sudo date -s '2021-07-30 23:00:00'
             - name: secrets
               env:
                 MAVENCI: ${{ secrets.MAVENCI }}
