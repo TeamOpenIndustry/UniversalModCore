@@ -1,5 +1,6 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
@@ -30,6 +31,12 @@ public class OBJBuilder {
         this.groups = parser.getGroups();
         this.vbo = parser.getBuffer();
 
+        if (Config.getMaxTextureSize() <= 0) {
+            textures = null;
+            textureWidth = -1;
+            textureHeight = -1;
+            return;
+        }
         List<Material> materials = new ArrayList<>();
         for (String materialPath : parser.getMaterialLibraries()) {
             materials.addAll(MTLParser.parse(new ByteArrayInputStream(input.apply(modelLoc.getRelative(materialPath)))));

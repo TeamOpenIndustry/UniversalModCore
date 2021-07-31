@@ -28,7 +28,7 @@ public class OBJRender {
         this.model = model;
         for (String name : model.textures.keySet()) {
             this.textures.put(name, new OBJTextureSheet(model.textureWidth, model.textureHeight, model.textures.get(name), cacheSeconds));
-            Pair<Integer, Integer> size = scaleSize(model.textureWidth, model.textureHeight, Config.MaxTextureSize/8);
+            Pair<Integer, Integer> size = scaleSize(model.textureWidth, model.textureHeight, Config.getMaxTextureSize()/8);
             this.icons.put(name, new OBJTextureSheet(size.getLeft(), size.getRight(), model.icons.get(name), cacheSeconds));
         }
     }

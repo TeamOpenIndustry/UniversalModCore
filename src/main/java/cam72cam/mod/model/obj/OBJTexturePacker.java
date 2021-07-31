@@ -253,10 +253,10 @@ public class OBJTexturePacker {
             image = new BufferedImage(rootNode.getFullWidth(), rootNode.getFullHeight(), BufferedImage.TYPE_INT_ARGB);
             graphics = image.createGraphics();
             rootNode.draw(0, 0, variant);
-            if (image.getWidth() > Config.MaxTextureSize || image.getHeight() > Config.MaxTextureSize) {
+            if (image.getWidth() > Config.getMaxTextureSize() || image.getHeight() > Config.getMaxTextureSize()) {
                 int originalWidth = image.getWidth();
                 int originalHeight = image.getHeight();
-                image = scaleImage(image, Config.MaxTextureSize);
+                image = scaleImage(image, Config.getMaxTextureSize());
                 ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
             }
             textures.put(variant, image);
