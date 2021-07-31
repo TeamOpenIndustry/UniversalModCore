@@ -19,6 +19,7 @@ import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.opengl.GL11;
@@ -140,7 +141,7 @@ public class ClientEvents {
             ModCore.testReload();
         }
 
-        @SubscribeEvent
+        @SubscribeEvent(priority = EventPriority.LOW)
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             REGISTER_ENTITY.execute(Runnable::run);
         }
