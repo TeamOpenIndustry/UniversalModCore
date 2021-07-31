@@ -114,7 +114,7 @@ public class OBJTexturePacker {
 
         public void draw(int x, int y, String variant) {
             if (materials == null) {
-                graphics.setColor(Color.MAGENTA);
+                graphics.setColor(Color.BLACK);
                 graphics.fillRect(x, y, width, height);
                 return;
             }
@@ -215,7 +215,7 @@ public class OBJTexturePacker {
         }
     }
 
-    public OBJTexturePacker(Function<String, Identifier> paths, Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
+    public OBJTexturePacker(Identifier ident, Function<String, Identifier> paths, Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
         if (materials.isEmpty()) {
             return;
         }
@@ -254,7 +254,10 @@ public class OBJTexturePacker {
             graphics = image.createGraphics();
             rootNode.draw(0, 0, variant);
             if (image.getWidth() > Config.MaxTextureSize || image.getHeight() > Config.MaxTextureSize) {
+                int originalWidth = image.getWidth();
+                int originalHeight = image.getHeight();
                 image = scaleImage(image, Config.MaxTextureSize);
+                ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
             }
             textures.put(variant, image);
         }

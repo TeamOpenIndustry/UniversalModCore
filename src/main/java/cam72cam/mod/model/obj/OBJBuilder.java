@@ -45,6 +45,8 @@ public class OBJBuilder {
                 Material material = materialLookup.get(materialName);
                 if (material == null) {
                     ModCore.warn("Unknown material '%s' in %s", materialName, modelLoc);
+                    colorOffset += vbo.stride * 3;
+                    textureOffset += vbo.stride * 3;
                     continue;
                 }
                 material.used = true;
@@ -103,6 +105,7 @@ public class OBJBuilder {
         }
 
         OBJTexturePacker packer = new OBJTexturePacker(
+                modelLoc,
                 modelLoc::getRelative,
                 path -> new ByteArrayInputStream(input.apply(modelLoc.getRelative(path))),
                 materialLookup.values(),
