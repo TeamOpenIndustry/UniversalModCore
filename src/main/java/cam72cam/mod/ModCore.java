@@ -31,6 +31,7 @@ import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL11;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -207,6 +208,9 @@ public class ModCore {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
+                    if (Config.MaxTextureSize < 128) {
+                        Config.MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+                    }
                     break;
                 case INITIALIZE:
                     addHandler(new ClientEvents.ClientEventBus());

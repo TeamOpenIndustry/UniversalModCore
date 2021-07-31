@@ -9,8 +9,8 @@ public class Config {
     @ConfigFile.Comment("Size of each sprite in the texture sheet")
     public static int SpriteSize = 128;
 
-    @ConfigFile.Comment("Max size of a generated texture sheet")
-    public static int MaxTextureSize = 4096;
+    @ConfigFile.Comment("Max size of a generated texture sheet (-1 == autodetect, 4096 is a sane option)")
+    public static int MaxTextureSize = -1;
 
     @ConfigFile.Comment("Enable Debug Logging")
     public static boolean DebugLogging = false;
