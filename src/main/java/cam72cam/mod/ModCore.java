@@ -45,6 +45,7 @@ import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.lwjgl.opengl.GL11;
 
 
 /** UMC Mod, do not touch... */
@@ -227,6 +228,10 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    if (Config.MaxTextureSize < 128) {
+                        Config.MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+                    }
                 case SETUP:
                     try {
                         Minecraft.getInstance().populateSearchTreeManager();
