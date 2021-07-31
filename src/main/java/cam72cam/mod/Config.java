@@ -13,7 +13,7 @@ public class Config {
     public static int MaxTextureSize = -1;
 
     public static int getMaxTextureSize() {
-        if (MaxTextureSize < 128) {
+        if (MaxTextureSize < 128 && ModCore.instance != null /*for tests*/) {
             MaxTextureSize = ModCore.instance.getGPUTextureSize();
         }
         return MaxTextureSize;

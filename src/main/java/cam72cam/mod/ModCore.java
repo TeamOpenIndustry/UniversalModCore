@@ -146,6 +146,9 @@ public class ModCore {
 
     public static class ClientProxy extends Proxy {
         public void event(ModEvent event, Mod m) {
+            if (event == ModEvent.CONSTRUCT) {
+                Config.getMaxTextureSize(); //populate
+            }
             super.event(event, m);
             m.clientEvent(event);
         }
