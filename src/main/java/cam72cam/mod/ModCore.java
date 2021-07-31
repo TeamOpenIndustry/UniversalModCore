@@ -118,6 +118,11 @@ public class ModCore {
         }
     }
 
+    /** Returns -1 if server side */
+    public int getGPUTextureSize() {
+        return proxy.getGPUTextureSize();
+    }
+
     @SidedProxy(serverSide = "cam72cam.mod.ModCore$ServerProxy", clientSide = "cam72cam.mod.ModCore$ClientProxy", modId = ModCore.MODID)
     private static Proxy proxy;
     /** Hooked into forge's proxy system and fires off corresponding events */
@@ -133,12 +138,21 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
         }
+
+        public int getGPUTextureSize() {
+            return -1;
+        }
     }
 
     public static class ClientProxy extends Proxy {
         public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        @Override
+        public int getGPUTextureSize() {
+            return GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
         }
     }
 
@@ -188,10 +202,6 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
-                case CONSTRUCT:
-                    if (Config.MaxTextureSize < 128) {
-                        Config.MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
-                    }
                 case SETUP:
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
                         if (skipN > 0) {
