@@ -12,6 +12,13 @@ public class Config {
     @ConfigFile.Comment("Max size of a generated texture sheet (-1 == autodetect, 4096 is a sane option)")
     public static int MaxTextureSize = -1;
 
+    public static int getMaxTextureSize() {
+        if (MaxTextureSize < 128 && ModCore.instance != null /*for tests*/) {
+            MaxTextureSize = ModCore.instance.getGPUTextureSize();
+        }
+        return MaxTextureSize;
+    }
+
     @ConfigFile.Comment("Enable Debug Logging")
     public static boolean DebugLogging = false;
 }
