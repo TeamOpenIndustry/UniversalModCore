@@ -42,7 +42,7 @@ public class OBJModel {
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
-                String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.MaxTextureSize),
+                String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.getMaxTextureSize()),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
         );
 
@@ -55,9 +55,11 @@ public class OBJModel {
                 builder -> {
                     TagCompound data = new TagCompound();
                     data.setBoolean("hasVertexNormals", builder.vertexBufferObject().hasNormals);
-                    data.setInteger("textureWidth", builder.getTextureWidth());
-                    data.setInteger("textureHeight", builder.getTextureHeight());
-                    data.setList("variants", new ArrayList<>(builder.getTextures().keySet()), k -> new TagCompound().setString("variant", k));
+                    if (Config.getMaxTextureSize() > 0) {
+                        data.setInteger("textureWidth", builder.getTextureWidth());
+                        data.setInteger("textureHeight", builder.getTextureHeight());
+                        data.setList("variants", new ArrayList<>(builder.getTextures().keySet()), k -> new TagCompound().setString("variant", k));
+                    }
                     data.setList("groups", builder.getGroups(), v -> {
                         try {
                             TagCompound tag = new TagCompound();
@@ -76,12 +78,17 @@ public class OBJModel {
         ).get().bytes());
 
         boolean hasVertexNormals = meta.getBoolean("hasVertexNormals");
-        this.textureWidth = meta.getInteger("textureWidth");
-        this.textureHeight = meta.getInteger("textureHeight");
+        if (Config.getMaxTextureSize() > 0) {
+            this.textureWidth = meta.getInteger("textureWidth");
+            this.textureHeight = meta.getInteger("textureHeight");
 
-        for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-            this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
-            this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.MaxTextureSize/8)))));
+            for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
+                this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
+                this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.getMaxTextureSize() / 8)))));
+            }
+        } else {
+            this.textureWidth = -1;
+            this.textureHeight = -1;
         }
 
         this.groups = meta.getList("groups", v -> {
