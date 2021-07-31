@@ -46,6 +46,8 @@ import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 
 
@@ -166,6 +168,11 @@ public class ModCore {
         }
     }
 
+    /** Returns -1 if server side */
+    public int getGPUTextureSize() {
+        return proxy.getGPUTextureSize();
+    }
+
     private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
@@ -179,6 +186,10 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
         }
+
+        public int getGPUTextureSize() {
+            return -1;
+        }
     }
 
     public static class ClientProxy extends Proxy {
@@ -186,6 +197,17 @@ public class ModCore {
 		public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        @Override
+        public int getGPUTextureSize() {
+            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+            long window = GLFW.glfwCreateWindow(40, 40, "Temp", 0, 0);
+            GLFW.glfwMakeContextCurrent(window);
+            GL.createCapabilities();
+            int res = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+            GLFW.glfwDestroyWindow(window);
+            return res;
         }
     }
 
@@ -248,10 +270,6 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
-                case CONSTRUCT:
-                    if (Config.MaxTextureSize < 128) {
-                        Config.MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
-                    }
                 case SETUP:
                     try {
                         Minecraft.getInstance().createSearchTrees();
