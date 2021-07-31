@@ -74,9 +74,7 @@ public class Player extends Entity {
     private static final Map<UUID, Vec3d> serverMovement = new HashMap<>();
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
-        return serverMovement.containsKey(getUUID()) ?
-                serverMovement.get(getUUID()) :
-                new Vec3d(internal.moveStrafing, internal.motionY, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
+        return serverMovement.getOrDefault(getUUID(), Vec3d.ZERO);
     }
 
     public enum Hand {
@@ -92,12 +90,11 @@ public class Player extends Entity {
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
             if (MinecraftClient.isReady()) {
-                // The following line is the wrong way to do this
-                serverMovement.remove(MinecraftClient.getPlayer().getUUID());
-
-                Vec3d movement = MinecraftClient.getPlayer().getMovementInput();
+                EntityPlayer internal = MinecraftClient.getPlayer().internal;
+                Vec3d movement = new Vec3d(internal.moveStrafing, internal.motionY, internal.moveForward).scale(internal.isSprinting() ? 0.4 : 0.2);
                 if (!movement.equals(posCache)) {
                     posCache = movement;
+                    serverMovement.put(MinecraftClient.getPlayer().getUUID(), movement);
                     new MovementSync(movement).sendToServer();
                 }
             }
