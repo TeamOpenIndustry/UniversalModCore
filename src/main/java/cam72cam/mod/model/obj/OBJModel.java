@@ -83,8 +83,8 @@ public class OBJModel {
             this.textureHeight = meta.getInteger("textureHeight");
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-                this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant)))));
-                this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant), Config.getMaxTextureSize() / 8)))));
+                this.textures.put(variant, cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant).get()))));
+                this.icons.put(variant, cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), Config.getMaxTextureSize() / 8)))));
             }
         } else {
             this.textureWidth = -1;
