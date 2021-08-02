@@ -8,7 +8,7 @@ buildscript {
         maven { url = "https://teamopenindustry.cc/maven" }
     }
 	dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.2'
         classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.3'
 	}
 }
