@@ -3,6 +3,7 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -14,21 +15,25 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static cam72cam.mod.model.obj.ImageUtils.scaleImage;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class OBJTexturePacker {
+    private int width = 0;
+    private int height = 0;
+    private int scaledWidth = 0;
+    private int scaledHeight = 0;
     private Function<String, Identifier> paths;
     private Function<String, InputStream> lookup;
-    private BufferedImage image;
-    private Graphics2D graphics;
 
     public final Map<String, UVConverter> converters = new HashMap<>();
-    public final Map<String, BufferedImage> textures = new HashMap<>();
+    public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
 
     class Node {
+        Dimension size;
         List<Material> materials;
         String texKd;
         int width;
@@ -43,13 +48,15 @@ public class OBJTexturePacker {
 
             if (materials.get(0).hasTexture()) {
                 try {
-                    Dimension size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
+                    size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
                     this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
                     this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
                     this.texKd = materials.get(0).texKd;
                 } catch (Exception e) {
                     ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
                 }
+            } else {
+                size = new Dimension(width, height);
             }
         }
 
@@ -112,7 +119,29 @@ public class OBJTexturePacker {
             return down != null ? down.getFurthestDown() : this;
         }
 
-        public void draw(int x, int y, String variant) {
+        public void converters(int x, int y) {
+            if (materials != null) {
+                int copiesU = materials.stream().mapToInt(m -> m.copiesU).max().getAsInt();
+                int copiesV = materials.stream().mapToInt(m -> m.copiesV).max().getAsInt();
+                UVConverter converter = new UVConverter(
+                        x, y,
+                        size.width, size.height,
+                        copiesU, copiesV,
+                        OBJTexturePacker.this.width, OBJTexturePacker.this.height
+                );
+                for (Material material : materials) {
+                    converters.put(material.name, converter);
+                }
+                if (right != null) {
+                    right.converters(x + width, y);
+                }
+                if (down != null) {
+                    down.converters(x, y + height);
+                }
+            }
+        }
+
+        public void draw(int x, int y, String variant, Graphics2D graphics) {
             if (materials == null) {
                 graphics.setColor(Color.BLACK);
                 graphics.fillRect(x, y, width, height);
@@ -163,20 +192,11 @@ public class OBJTexturePacker {
                     graphics.drawImage(image, null, offX, offY);
                 }
             }
-            UVConverter converter = new UVConverter(
-                    x, y,
-                    image.getWidth(), image.getHeight(),
-                    copiesU, copiesV,
-                    OBJTexturePacker.this.image.getWidth(), OBJTexturePacker.this.image.getHeight()
-            );
-            for (Material material : materials) {
-                converters.put(material.name, converter);
-            }
             if (right != null) {
-                right.draw(x + width, y, variant);
+                right.draw(x + width, y, variant, graphics);
             }
             if (down != null) {
-                down.draw(x, y + height, variant);
+                down.draw(x, y + height, variant, graphics);
             }
         }
     }
@@ -249,25 +269,43 @@ public class OBJTexturePacker {
             }
         }
 
+        this.width = rootNode.getFullWidth();
+        this.height = rootNode.getFullHeight();
+        if (needsScaling()) {
+            Pair<Integer, Integer> size = ImageUtils.scaleSize(width, height, Config.getMaxTextureSize());
+            this.scaledWidth = size.getLeft();
+            this.scaledHeight = size.getRight();
+        } else {
+            this.scaledWidth = width;
+            this.scaledHeight = height;
+        }
+        rootNode.converters(0, 0);
+
         for (String variant : variants) {
-            image = new BufferedImage(rootNode.getFullWidth(), rootNode.getFullHeight(), BufferedImage.TYPE_INT_ARGB);
-            graphics = image.createGraphics();
-            rootNode.draw(0, 0, variant);
-            if (image.getWidth() > Config.getMaxTextureSize() || image.getHeight() > Config.getMaxTextureSize()) {
-                int originalWidth = image.getWidth();
-                int originalHeight = image.getHeight();
-                image = scaleImage(image, Config.getMaxTextureSize());
-                ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
-            }
-            textures.put(variant, image);
+            textures.put(variant, () -> {
+                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D graphics = image.createGraphics();
+                rootNode.draw(0, 0, variant, graphics);
+                if (needsScaling()) {
+                    int originalWidth = image.getWidth();
+                    int originalHeight = image.getHeight();
+                    image = scaleImage(image, Config.getMaxTextureSize());
+                    ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
+                }
+                return image;
+            });
         }
     }
 
+    private boolean needsScaling() {
+        return width > Config.getMaxTextureSize() || height > Config.getMaxTextureSize();
+    }
+
     public int getWidth() {
-        return image == null ? 0 : image.getWidth();
+        return scaledWidth;
     }
     public int getHeight() {
-        return image == null ? 0 : image.getHeight();
+        return scaledHeight;
     }
 
     private static Dimension getImageDimension(InputStream imgFile, String texKd) throws IOException {
