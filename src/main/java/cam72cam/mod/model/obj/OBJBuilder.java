@@ -9,13 +9,14 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OBJBuilder {
 
     private final VertexBuffer vbo;
     private final List<OBJGroup> groups;
-    private final Map<String, BufferedImage> textures;
+    private final Map<String, Supplier<BufferedImage>> textures;
     private final int textureWidth;
     private final int textureHeight;
 
@@ -141,7 +142,7 @@ public class OBJBuilder {
     public VertexBuffer vertexBufferObject() {
         return vbo;
     }
-    public Map<String, BufferedImage> getTextures() {
+    public Map<String, Supplier<BufferedImage>> getTextures() {
         return textures;
     }
     public List<OBJGroup> getGroups() {
