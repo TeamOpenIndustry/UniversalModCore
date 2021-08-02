@@ -33,6 +33,7 @@ public class OBJTexturePacker {
     public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
 
     class Node {
+        Dimension size;
         List<Material> materials;
         String texKd;
         int width;
@@ -47,13 +48,15 @@ public class OBJTexturePacker {
 
             if (materials.get(0).hasTexture()) {
                 try {
-                    Dimension size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
+                    size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
                     this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
                     this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
                     this.texKd = materials.get(0).texKd;
                 } catch (Exception e) {
                     ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
                 }
+            } else {
+                size = new Dimension(width, height);
             }
         }
 
@@ -116,6 +119,28 @@ public class OBJTexturePacker {
             return down != null ? down.getFurthestDown() : this;
         }
 
+        public void converters(int x, int y) {
+            if (materials != null) {
+                int copiesU = materials.stream().mapToInt(m -> m.copiesU).max().getAsInt();
+                int copiesV = materials.stream().mapToInt(m -> m.copiesV).max().getAsInt();
+                UVConverter converter = new UVConverter(
+                        x, y,
+                        size.width, size.height,
+                        copiesU, copiesV,
+                        OBJTexturePacker.this.width, OBJTexturePacker.this.height
+                );
+                for (Material material : materials) {
+                    converters.put(material.name, converter);
+                }
+                if (right != null) {
+                    right.converters(x + width, y);
+                }
+                if (down != null) {
+                    down.converters(x, y + height);
+                }
+            }
+        }
+
         public void draw(int x, int y, String variant, Graphics2D graphics) {
             if (materials == null) {
                 graphics.setColor(Color.BLACK);
@@ -166,15 +191,6 @@ public class OBJTexturePacker {
                     int offY = y + image.getHeight() * cV;
                     graphics.drawImage(image, null, offX, offY);
                 }
-            }
-            UVConverter converter = new UVConverter(
-                    x, y,
-                    image.getWidth(), image.getHeight(),
-                    copiesU, copiesV,
-                    OBJTexturePacker.this.width, OBJTexturePacker.this.height
-            );
-            for (Material material : materials) {
-                converters.put(material.name, converter);
             }
             if (right != null) {
                 right.draw(x + width, y, variant, graphics);
@@ -255,16 +271,22 @@ public class OBJTexturePacker {
 
         this.width = rootNode.getFullWidth();
         this.height = rootNode.getFullHeight();
-        Pair<Integer, Integer> size = ImageUtils.scaleSize(width, height, Config.getMaxTextureSize());
-        this.scaledWidth = size.getLeft();
-        this.scaledHeight = size.getRight();
+        if (needsScaling()) {
+            Pair<Integer, Integer> size = ImageUtils.scaleSize(width, height, Config.getMaxTextureSize());
+            this.scaledWidth = size.getLeft();
+            this.scaledHeight = size.getRight();
+        } else {
+            this.scaledWidth = width;
+            this.scaledHeight = height;
+        }
+        rootNode.converters(0, 0);
 
         for (String variant : variants) {
             textures.put(variant, () -> {
                 BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D graphics = image.createGraphics();
                 rootNode.draw(0, 0, variant, graphics);
-                if (image.getWidth() > Config.getMaxTextureSize() || image.getHeight() > Config.getMaxTextureSize()) {
+                if (needsScaling()) {
                     int originalWidth = image.getWidth();
                     int originalHeight = image.getHeight();
                     image = scaleImage(image, Config.getMaxTextureSize());
@@ -273,6 +295,10 @@ public class OBJTexturePacker {
                 return image;
             });
         }
+    }
+
+    private boolean needsScaling() {
+        return width > Config.getMaxTextureSize() || height > Config.getMaxTextureSize();
     }
 
     public int getWidth() {
