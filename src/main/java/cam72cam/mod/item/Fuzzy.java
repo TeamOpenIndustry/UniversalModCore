@@ -111,8 +111,8 @@ public class Fuzzy {
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
         this(new ItemTags.Wrapper(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
-                        new ResourceLocation("forge", ident.toLowerCase())
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase(Locale.ROOT)) :
+                        new ResourceLocation("forge", ident.toLowerCase(Locale.ROOT))
         ), ident);
     }
 
