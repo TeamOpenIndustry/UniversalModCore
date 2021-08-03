@@ -7,6 +7,7 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 
 /** Pair(domain, path).  Used to reference registry entries and resource pack contents alike */
 public class Identifier {
@@ -20,12 +21,12 @@ public class Identifier {
 
     /** Parse identifier from string (domain:path) */
     public Identifier(String ident) {
-        this(new ResourceLocation(ident.toLowerCase()));
+        this(new ResourceLocation(ident.toLowerCase(Locale.ROOT)));
     }
 
     /** Standard constructor */
     public Identifier(String domain, String path) {
-        this(new ResourceLocation(domain.toLowerCase(), path.toLowerCase()));
+        this(new ResourceLocation(domain.toLowerCase(Locale.ROOT), path.toLowerCase(Locale.ROOT)));
     }
 
     @Override
