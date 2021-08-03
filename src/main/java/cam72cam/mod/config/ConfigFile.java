@@ -91,7 +91,7 @@ public class ConfigFile {
         if (cls.isEnum()) {
             return "S";
         }
-        return cls.getSimpleName().substring(0, 1).toUpperCase(Locale.ENGLISH);
+        return cls.getSimpleName().substring(0, 1).toUpperCase(Locale.ROOT);
     }
 
     private static String encode(Class<?> cls, Object o) {

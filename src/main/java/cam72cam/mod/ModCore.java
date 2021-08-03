@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -306,7 +307,7 @@ public class ModCore {
                 continue;
             }
 
-            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase().replace(".lang", ".json"));
+            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase(Locale.ROOT).replace(".lang", ".json"));
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
                 List<String> translations = new ArrayList<>();
