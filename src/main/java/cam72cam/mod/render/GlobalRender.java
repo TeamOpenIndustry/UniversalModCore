@@ -51,6 +51,7 @@ public class GlobalRender {
                 grhList.get(0).xCoord = eyes.x;
                 grhList.get(0).yCoord = eyes.y;
                 grhList.get(0).zCoord = eyes.z;
+                grhList.get(0).setWorldObj(Minecraft.getMinecraft().thePlayer.worldObj);
             }
         });
 
