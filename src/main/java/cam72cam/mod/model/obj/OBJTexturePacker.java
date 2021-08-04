@@ -46,6 +46,8 @@ public class OBJTexturePacker {
             this.width = this.height = 8;
             this.texKd = null; // Textured images will be color only if the image fails to load.
 
+            size = new Dimension(width, height);
+
             if (materials.get(0).hasTexture()) {
                 try {
                     size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
@@ -55,8 +57,6 @@ public class OBJTexturePacker {
                 } catch (Exception e) {
                     ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
                 }
-            } else {
-                size = new Dimension(width, height);
             }
         }
 
