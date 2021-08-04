@@ -69,7 +69,7 @@ public class GlobalRender {
         ClientEvents.TICK.subscribe(() -> {
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setPosition(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
             }
         });
 
