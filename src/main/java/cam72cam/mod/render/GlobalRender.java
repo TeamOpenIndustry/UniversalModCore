@@ -70,6 +70,7 @@ public class GlobalRender {
             Minecraft.getInstance().worldRenderer.updateTileEntities(grhList, grhList);
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
                 grhList.get(0).setPos(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+                grhList.get(0).setWorld(Minecraft.getInstance().player.world);
             }
         });
 
