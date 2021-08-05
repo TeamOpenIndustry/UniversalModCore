@@ -24,6 +24,7 @@ public class OBJModel {
     public final Map<String, Supplier<GenericByteBuffer>> textures = new HashMap<>();
     public final Map<String, Supplier<GenericByteBuffer>> icons = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
+    public final boolean isSmoothShading;
 
     public String hash;
 
@@ -55,6 +56,7 @@ public class OBJModel {
                 builder -> {
                     TagCompound data = new TagCompound();
                     data.setBoolean("hasVertexNormals", builder.vertexBufferObject().hasNormals);
+                    data.setBoolean("isSmoothShading", builder.isSmoothShading());
                     if (Config.getMaxTextureSize() > 0) {
                         data.setInteger("textureWidth", builder.getTextureWidth());
                         data.setInteger("textureHeight", builder.getTextureHeight());
@@ -78,6 +80,7 @@ public class OBJModel {
         ).get().bytes());
 
         boolean hasVertexNormals = meta.getBoolean("hasVertexNormals");
+        this.isSmoothShading = meta.hasKey("isSmoothShading") && meta.getBoolean("isSmoothShading");
         if (Config.getMaxTextureSize() > 0) {
             this.textureWidth = meta.getInteger("textureWidth");
             this.textureHeight = meta.getInteger("textureHeight");
