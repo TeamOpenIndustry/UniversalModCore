@@ -5,11 +5,15 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.Event;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.util.function.Function;
 
 /** Only used for MC bugfixes, don't use directly */
 public class Mouse {
@@ -65,5 +69,13 @@ public class Mouse {
                 }
             }
         }
+    }
+
+    public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
+        ClientEvents.DRAG.subscribe(handler);
+    }
+
+    public static Vec3d getDrag() {
+        return ClientEvents.ClientEventBus.getDragPos();
     }
 }

@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
@@ -39,6 +40,7 @@ public class ClientEvents {
     }
 
     public static final Event<Runnable> TICK = new Event<>();
+    public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
@@ -52,6 +54,8 @@ public class ClientEvents {
 
     @Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
     public static class ClientEventBus {
+        private static Vec3d dragPos = null;
+
         static {
             registerClientEvents();
         }
@@ -66,12 +70,33 @@ public class ClientEvents {
             int attackID = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode() + 100;
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
 
-            if ((event.getButton() == attackID || event.getButton() == useID) && event.isButtonstate()) {
-                Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
-                if (!CLICK.executeCancellable(x -> x.apply(button))) {
-                    event.setCanceled(true);
+            if ((event.getButton() == attackID || event.getButton() == useID)) {
+                if (event.isButtonstate()) {
+                    Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
+                    if (!DRAG.executeCancellable(x -> x.apply(button))) {
+                        event.setCanceled(true);
+                        dragPos = new Vec3d(0, 0, 0);
+                        return;
+                    }
+                    if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                        event.setCanceled(true);
+                    }
+                } else {
+                    dragPos = null;
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void onFrame(TickEvent.RenderTickEvent event) {
+            if (dragPos != null) {
+                Minecraft.getMinecraft().mouseHelper.mouseXYChange();
+                dragPos = dragPos.add(Minecraft.getMinecraft().mouseHelper.deltaX, Minecraft.getMinecraft().mouseHelper.deltaY, 0);
+            }
+        }
+
+        public static Vec3d getDragPos() {
+            return dragPos;
         }
 
         @SubscribeEvent
