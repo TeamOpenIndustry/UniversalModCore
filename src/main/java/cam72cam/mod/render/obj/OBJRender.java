@@ -52,10 +52,10 @@ public class OBJRender {
 
         if (icon) {
             OBJTextureSheet tex = this.icons.get(texName);
-            return tex.bind();
+            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
         } else {
             OBJTextureSheet tex = this.textures.get(texName);
-            return tex.bind();
+            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
         }
     }
 
