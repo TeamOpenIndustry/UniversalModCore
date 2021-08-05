@@ -28,9 +28,6 @@ public class GlobalRender {
     // Fire these off every tick
     private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
 
-    // Internal hack
-    private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
-
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
         // Beacon like hack for always running a single global render during the TE render phase
@@ -44,14 +41,14 @@ public class GlobalRender {
         });
         GlobalRenderHelper grh = new GlobalRenderHelper();
         ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getMinecraft().renderGlobal.tileEntities.remove(grh);
-            Minecraft.getMinecraft().renderGlobal.tileEntities.add(grh);
-            if (Minecraft.getMinecraft().thePlayer != null) {  // May be able to get away with running this every N ticks?
+            if (Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.worldObj != null) {  // May be able to get away with running this every N ticks?
                 Vec3i eyes = new Vec3i(MinecraftClient.getPlayer().getPositionEyes());
-                grhList.get(0).xCoord = eyes.x;
-                grhList.get(0).yCoord = eyes.y;
-                grhList.get(0).zCoord = eyes.z;
-                grhList.get(0).setWorldObj(Minecraft.getMinecraft().thePlayer.worldObj);
+                grh.xCoord = eyes.x;
+                grh.yCoord = eyes.y;
+                grh.zCoord = eyes.z;
+                grh.setWorldObj(Minecraft.getMinecraft().thePlayer.worldObj);
+                Minecraft.getMinecraft().renderGlobal.tileEntities.remove(grh);
+                Minecraft.getMinecraft().renderGlobal.tileEntities.add(grh);
             }
         });
 
