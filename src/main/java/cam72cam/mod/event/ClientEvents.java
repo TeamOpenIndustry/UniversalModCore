@@ -90,7 +90,7 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onFrame(TickEvent.RenderTickEvent event) {
             if (dragPos != null) {
-                Minecraft.getMinecraft().mouseHelper.mouseXYChange();
+                //Minecraft.getMinecraft().mouseHelper.mouseXYChange();
                 dragPos = dragPos.add(Minecraft.getMinecraft().mouseHelper.deltaX, Minecraft.getMinecraft().mouseHelper.deltaY, 0);
             }
         }
