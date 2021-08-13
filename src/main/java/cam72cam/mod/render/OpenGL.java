@@ -3,6 +3,8 @@ package cam72cam.mod.render;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
@@ -128,6 +130,23 @@ public class OpenGL {
         int orig = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
         GL11.glShadeModel(enabled ? GL11.GL_SMOOTH : GL11.GL_FLAT);
         return () -> GL11.glShadeModel(orig);
+    }
+
+    public static With shader(int program) {
+        int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
+        ARBShaderObjects.glUseProgramObjectARB(program);
+        return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
+    }
+
+    public static With lightmap(boolean enabled) {
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+        With t = bool(GL11.GL_TEXTURE_2D, enabled);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        return () -> {
+            GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+            t.restore();
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        };
     }
 
     @FunctionalInterface

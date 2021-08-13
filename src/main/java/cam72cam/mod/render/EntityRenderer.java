@@ -105,6 +105,24 @@ public class EntityRenderer extends Render<ModdedEntity> {
         }
     }
 
+    @Override
+    public boolean isMultipass() {
+        return true;
+    }
+
+    @Override
+    public void renderMultipass(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
+        Entity self = stock.getSelf();
+
+        try (With c = OpenGL.matrix()) {
+            GL11.glTranslated(x, y, z);
+            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
+            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
+            GL11.glRotatef(-90, 0, 1, 0);
+            renderers.get(self.getClass()).postRender(self, partialTicks);
+        }
+    }
+
     @Nullable
     @Override
     protected ResourceLocation getEntityTexture(ModdedEntity entity) {

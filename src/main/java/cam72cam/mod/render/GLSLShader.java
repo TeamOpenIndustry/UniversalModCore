@@ -50,9 +50,7 @@ public class GLSLShader {
 
     /** Bind the shader, make sure you call restore() or put this in a try block */
     public OpenGL.With bind() {
-        int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
-        ARBShaderObjects.glUseProgramObjectARB(program);
-        return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
+        return OpenGL.shader(program);
     }
 
     private final Map<String, Integer> paramLocations = new HashMap<>();
