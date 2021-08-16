@@ -149,6 +149,16 @@ public class OpenGL {
         };
     }
 
+    public static OpenGL.With lightmap(float block, float sky) {
+        int i = ((int)(sky * 15)) << 20 | ((int)(block*15)) << 4;
+        int x = i % 65536;
+        int y = i / 65536;
+        float oldX = OpenGlHelper.lastBrightnessX;
+        float oldY = OpenGlHelper.lastBrightnessY;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, x, y);
+        return () -> OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldX, oldY);
+    }
+
     @FunctionalInterface
     public interface With extends AutoCloseable {
         default void close() {

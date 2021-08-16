@@ -28,6 +28,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -649,5 +650,13 @@ public class World {
         ParticleType(EnumParticleTypes internal) {
             this.internal = internal;
         }
+    }
+
+    public float getBlockLightLevel(Vec3i pos) {
+        return internal.getLightFor(EnumSkyBlock.BLOCK, pos.internal()) / 15f;
+    }
+
+    public float getSkyLightLevel(Vec3i pos) {
+        return internal.getLightFor(EnumSkyBlock.SKY, pos.internal()) / 15f;
     }
 }
