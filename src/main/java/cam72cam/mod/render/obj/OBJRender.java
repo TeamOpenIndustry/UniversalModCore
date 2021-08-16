@@ -29,7 +29,9 @@ public class OBJRender {
         for (String name : model.textures.keySet()) {
             this.textures.put(name, new OBJTextureSheet(model.textureWidth, model.textureHeight, model.textures.get(name), cacheSeconds));
             Pair<Integer, Integer> size = scaleSize(model.textureWidth, model.textureHeight, Config.getMaxTextureSize()/8);
-            this.icons.put(name, new OBJTextureSheet(size.getLeft(), size.getRight(), model.icons.get(name), cacheSeconds));
+            if (icons.containsKey(name)) {
+                this.icons.put(name, new OBJTextureSheet(size.getLeft(), size.getRight(), model.icons.get(name), cacheSeconds));
+            }
         }
     }
 
@@ -50,12 +52,12 @@ public class OBJRender {
             texName = ""; // Default
         }
 
-        if (icon) {
+        if (icon && icons.containsKey(texName)) {
             OBJTextureSheet tex = this.icons.get(texName);
-            return tex.bind();
+            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
         } else {
             OBJTextureSheet tex = this.textures.get(texName);
-            return tex.bind();
+            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
         }
     }
 

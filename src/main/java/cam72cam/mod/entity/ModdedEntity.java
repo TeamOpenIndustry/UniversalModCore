@@ -385,7 +385,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
-        if (iRidable.canFitPassenger(entity)) {
+        if (other.internal.iRidable.canFitPassenger(entity)) {
             SeatEntity seat = (SeatEntity) entity.internal.ridingEntity;
             this.seats.remove(seat);
             seat.moveTo(other.internal);
