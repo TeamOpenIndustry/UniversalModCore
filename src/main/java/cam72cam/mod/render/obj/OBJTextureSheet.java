@@ -51,7 +51,15 @@ public class OBJTextureSheet {
             textureID = GL11.glGenTextures();
 
             try (OpenGL.With tex = OpenGL.texture(textureID)) {
-                TextureUtil.prepareImage(textureID, width, height);
+                //TextureUtil.prepareImage(textureID, width, height);
+                // Minecraft can leave these in a bad state
+                GL11.glPixelStorei(GL11.GL_UNPACK_SWAP_BYTES, GL11.GL_FALSE);
+                GL11.glPixelStorei(GL11.GL_UNPACK_LSB_FIRST, GL11.GL_FALSE);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
