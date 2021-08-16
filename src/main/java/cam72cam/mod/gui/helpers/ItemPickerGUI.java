@@ -109,7 +109,7 @@ public class ItemPickerGUI {
             }
             int rows = i / stacksX + 2;
             if (stacksY < rows) {
-                this.scrollBar = new GuiScrollBar(i++, this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0, null);
+                this.scrollBar = new GuiScrollBar(i++, this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0, b -> {});
                 this.addButton(this.scrollBar);
             }
         }

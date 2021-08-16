@@ -125,11 +125,24 @@ public class OpenGL {
         return () -> GL11.glDepthMask(orig);
     }
 
+    public static With shading(boolean enabled) {
+        int orig = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
+        GL11.glShadeModel(enabled ? GL11.GL_SMOOTH : GL11.GL_FLAT);
+        return () -> GL11.glShadeModel(orig);
+    }
+
     @FunctionalInterface
     public interface With extends AutoCloseable {
         default void close() {
             restore();
         }
         void restore();
+
+        default With and(With other) {
+            return () -> {
+                this.close();
+                other.close();
+            };
+        }
     }
 }

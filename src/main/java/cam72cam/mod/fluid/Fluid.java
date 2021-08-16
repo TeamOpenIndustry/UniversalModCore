@@ -1,5 +1,6 @@
 package cam72cam.mod.fluid;
 
+import net.minecraft.fluid.Fluids;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -38,7 +39,7 @@ public class Fluid {
                 }
             }
             if (fluids.isEmpty()) {
-                return null;
+                fluids.add(Fluids.EMPTY);
             }
             registryCache.put(type, new Fluid(type, fluids));
         }
