@@ -31,6 +31,7 @@ public class OBJParser {
     private final List<OBJGroup> correctedGroups;
     private final VertexBuffer buffer;
     private final String[] correctedFaceMaterials;
+    private boolean smoothShading = false;
 
     private String currentMaterial = null;
     private int currentGroupStart = 0;
@@ -87,7 +88,10 @@ public class OBJParser {
                         }
                         break;
                     case "s":
-                        //Ignore
+                        if (args.length == 2 && args[1].equals("1")) {
+                            // Technically this should be for every group, but this is a close enough approximation
+                            this.smoothShading = true;
+                        }
                         break;
                     case "l":
                         // Ignore
@@ -186,6 +190,9 @@ public class OBJParser {
     }
     public String[] getFaceMaterials() {
         return correctedFaceMaterials;
+    }
+    public boolean isSmoothShading() {
+        return smoothShading;
     }
 
     private void addMaterialLibrary(String lib) {

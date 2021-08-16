@@ -19,6 +19,7 @@ public class OBJBuilder {
     private final Map<String, Supplier<BufferedImage>> textures;
     private final int textureWidth;
     private final int textureHeight;
+    private boolean smoothShading;
 
     public OBJBuilder(Identifier modelLoc, ResourceCache.ResourceProvider input, float scale, float darken, Collection<String> variants) throws IOException {
         if (variants == null) {
@@ -31,6 +32,7 @@ public class OBJBuilder {
         OBJParser parser = new OBJParser(new ByteArrayInputStream(input.apply(modelLoc)), scale);
         this.groups = parser.getGroups();
         this.vbo = parser.getBuffer();
+        this.smoothShading = parser.isSmoothShading();
 
         if (Config.getMaxTextureSize() <= 0) {
             textures = null;
@@ -155,5 +157,8 @@ public class OBJBuilder {
 
     public int getTextureHeight() {
         return textureHeight;
+    }
+    public boolean isSmoothShading() {
+        return smoothShading;
     }
 }
