@@ -2,24 +2,10 @@ package cam72cam.mod.render.obj;
 
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.OpenGL;
-import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.platform.TextureUtil;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
-import net.minecraft.util.math.MathHelper;
 import cam72cam.mod.serialization.ResourceCache;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.util.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +50,15 @@ public class OBJTextureSheet {
             textureID = GL11.glGenTextures();
 
             try (OpenGL.With tex = OpenGL.texture(textureID)) {
-                TextureUtil.prepareImage(textureID, width, height);
+                //TextureUtil.prepareImage(textureID, width, height);
+                // Minecraft can leave these in a bad state
+                GL11.glPixelStorei(GL11.GL_UNPACK_SWAP_BYTES, GL11.GL_FALSE);
+                GL11.glPixelStorei(GL11.GL_UNPACK_LSB_FIRST, GL11.GL_FALSE);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
