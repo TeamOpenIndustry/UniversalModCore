@@ -9,6 +9,7 @@ import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.RegistryEvent;
@@ -24,6 +25,7 @@ import java.util.function.Function;
 /** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
 
+    private static net.minecraft.world.World clientLast = null;
     private static void registerClientEvents() {
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
@@ -31,6 +33,15 @@ public class ClientEvents {
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
         World.registerClientEvnets();
+
+        // Forge does not fire world unloaded client side
+        TICK.subscribe(() -> {
+            WorldClient mcw = Minecraft.getMinecraft().world;
+            if (clientLast != mcw && clientLast != null) {
+                CommonEvents.World.UNLOAD.execute(worldConsumer -> worldConsumer.accept(clientLast));
+            }
+            clientLast = mcw;
+        });
     }
 
     /** Fires off a client resource reload event (UMC only).  Do not use directly */
