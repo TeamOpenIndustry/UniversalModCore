@@ -132,6 +132,10 @@ public class OpenGL {
         return () -> GL11.glShadeModel(orig);
     }
 
+    public static boolean shaderActive() {
+        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+    }
+
     public static With shader(int program) {
         int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
         ARBShaderObjects.glUseProgramObjectARB(program);
