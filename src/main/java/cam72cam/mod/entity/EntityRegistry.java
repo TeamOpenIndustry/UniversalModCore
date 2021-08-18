@@ -80,6 +80,7 @@ public class EntityRegistry {
         });
     }
 
+
     @SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
@@ -89,6 +90,13 @@ public class EntityRegistry {
                 Minecraft.getMinecraft().loadWorld(null);
                 Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
+            }
+        });
+        CommonEvents.World.UNLOAD.subscribe(w -> {
+            if (w.isRemote) {
+                // Cleanup client side since mc does not call setDead client side...
+                // See ClientEvents registration for related crap
+                w.getEntities(ModdedEntity.class, e -> true).forEach(ModdedEntity::setDead);
             }
         });
     }
