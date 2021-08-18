@@ -137,7 +137,6 @@ public class Light {
             Class<?> optiConfig = Class.forName("Config");
             return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
             return false;
         }
     }
