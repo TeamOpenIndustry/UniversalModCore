@@ -4,10 +4,12 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 
 public class Light {
     private LightEntity internal;
@@ -127,6 +129,16 @@ public class Light {
         @Override
         protected void writeEntityToNBT(NBTTagCompound compound) {
 
+        }
+    }
+
+    public static boolean enabled() {
+        try {
+            Class<?> optiConfig = Class.forName("Config");
+            return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }
