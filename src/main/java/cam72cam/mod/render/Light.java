@@ -56,10 +56,8 @@ public class Light {
             default:
             case 15: internal = new LightEntity15(world); break;
         }
-        System.out.println(internal.getClass());
         internal.setPosition(pos.x, pos.y, pos.z);
         world.spawnEntity(internal);
-        System.out.println(pos);
         this.lightLevel = lightLevel;
     }
 
