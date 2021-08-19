@@ -54,8 +54,13 @@ public class BlockRender {
             TODO: Opt out of renderGlobal!
              */
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getMinecraft().world.loadedTileEntityList).stream()
-                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getMaxRenderDistanceSquared() > 0)
                     .collect(Collectors.toList());
+            if (Minecraft.getMinecraft().world.getTotalWorldTime() % 20 == 1) {
+                prev = new ArrayList<>(Minecraft.getMinecraft().world.loadedTileEntityList).stream()
+                        .filter(x -> x instanceof TileEntity)
+                        .collect(Collectors.toList());
+            }
             Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
             prev = tes;
         });
