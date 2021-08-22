@@ -50,16 +50,20 @@ public class OBJRender {
     }
 
     public OpenGL.With bindTexture(String texName, boolean icon) {
+        return bindTexture(texName, icon, false);
+    }
+
+    public OpenGL.With bindTexture(String texName, boolean icon, boolean wait) {
         if (this.textures.get(texName) == null) {
             texName = ""; // Default
         }
 
         if (icon && icons.containsKey(texName)) {
             OBJTextureSheet tex = this.icons.get(texName);
-            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
+            return tex.bind(wait).and(OpenGL.shading(model.isSmoothShading));
         } else {
             OBJTextureSheet tex = this.textures.get(texName);
-            return tex.bind().and(OpenGL.shading(model.isSmoothShading));
+            return tex.bind(wait).and(OpenGL.shading(model.isSmoothShading));
         }
     }
 

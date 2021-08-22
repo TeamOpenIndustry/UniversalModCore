@@ -99,17 +99,17 @@ public class OBJTextureSheet {
         createTexture();
     }
 
-    OpenGL.With bind() {
+    OpenGL.With bind(boolean wait) {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
-            if (Config.ThreadedTextureLoading && fallback != null) {
+            if (Config.ThreadedTextureLoading && fallback != null && !wait) {
                 threadedLoader();
             } else {
                 directLoader();
             }
         }
-        return textureID == null ? fallback.bind() : OpenGL.texture(this.textureID);
+        return textureID == null ? fallback.bind(wait) : OpenGL.texture(this.textureID);
     }
 
     public void dealloc() {
