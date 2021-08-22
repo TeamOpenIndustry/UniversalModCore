@@ -37,7 +37,9 @@ public abstract class CustomItem {
         internal.setTranslationKey(modID + ":" + name);
         internal.setRegistryName(new ResourceLocation(modID, name));
         internal.setMaxStackSize(getStackSize());
-        internal.setCreativeTab(getCreativeTabs().get(0).internal);
+        if (!getCreativeTabs().isEmpty()) {
+            internal.setCreativeTab(getCreativeTabs().get(0).internal);
+        }
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
     }
