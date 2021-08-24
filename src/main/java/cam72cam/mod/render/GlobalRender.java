@@ -8,9 +8,11 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -126,6 +128,32 @@ public class GlobalRender {
     /** Return the render distance in meters */
     public static int getRenderDistance() {
         return Minecraft.getMinecraft().gameSettings.renderDistanceChunks * 16;
+    }
+
+
+    /** Similar to drawNameplate */
+    public static void drawText(String str, Vec3d pos, float scale, float rotate)
+    {
+        RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+        float viewerYaw = renderManager.playerViewY + rotate;
+        float viewerPitch = renderManager.playerViewX;
+        boolean isThirdPersonFrontal = renderManager.options.thirdPersonView == 2;
+
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
+        try (
+                OpenGL.With matrix = OpenGL.matrix();
+                OpenGL.With light = OpenGL.bool(GL11.GL_LIGHTING, false);
+                OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false);
+                OpenGL.With color = OpenGL.color(1, 1, 1, 1);
+        ) {
+            GL11.glTranslated(pos.x, pos.y, pos.z);
+            GL11.glRotated(-viewerYaw, 0.0F, 1.0F, 0.0F);
+            GL11.glRotated((float)(isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
+            GL11.glScalef(scale, scale, scale);
+            GL11.glScalef(-0.025F, -0.025F, 0.025F);
+
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        }
     }
 
     @FunctionalInterface
