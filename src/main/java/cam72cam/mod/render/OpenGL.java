@@ -163,6 +163,11 @@ public class OpenGL {
         return () -> OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldX, oldY);
     }
 
+    public static int allocateTexture() {
+        // Allows us to set some parameters that cause issues in newer MC versions
+        return GL11.glGenTextures();
+    }
+
     @FunctionalInterface
     public interface With extends AutoCloseable {
         default void close() {
