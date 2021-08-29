@@ -12,6 +12,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import paulscode.sound.SoundSystemConfig;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class Audio {
     @SideOnly(Side.CLIENT)
     private static ModSoundManager soundManager;
@@ -57,7 +60,16 @@ public class Audio {
 
     /** Create a custom sound */
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
-        return soundManager.createSound(oggLocation, repeats, attenuationDistance, scale);
+        try {
+            return soundManager.createSound(oggLocation, oggLocation.getLastResourceStream(), repeats, attenuationDistance, scale);
+        } catch (IOException e) {
+            throw new RuntimeException("Invalid sound: " + oggLocation, e);
+        }
+    }
+
+    /** Create a custom sound */
+    public static ISound newSound(Identifier oggLocation, InputStream oggData, boolean repeats, float attenuationDistance, float scale) {
+        return soundManager.createSound(oggLocation, oggData, repeats, attenuationDistance, scale);
     }
 
     /** Hack to increase the number of sounds that can be played at a time */

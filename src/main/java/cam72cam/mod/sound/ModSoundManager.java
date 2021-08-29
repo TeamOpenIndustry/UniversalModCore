@@ -59,19 +59,19 @@ class ModSoundManager {
         }
     }
 
-    ISound createSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
+    ISound createSound(Identifier oggLocation, InputStream data, boolean repeats, float attenuationDistance, float scale) {
         SoundSystem sndSystem = this.soundSystem.get();
         if (sndSystem == null) {
             return null;
         }
 
-        ClientSound snd = new ClientSound(this.soundSystem, oggLocation, getURLForSoundResource(oggLocation), lastSoundLevel, repeats, attenuationDistance, scale);
+        ClientSound snd = new ClientSound(this.soundSystem, oggLocation, getURLForSoundResource(oggLocation, data), lastSoundLevel, repeats, attenuationDistance, scale);
         this.sounds.add(snd);
 
         return snd;
     }
 
-    private URL getURLForSoundResource(Identifier internal) {
+    private URL getURLForSoundResource(Identifier internal, InputStream data) {
         // Duplicate MC's getUrlForSoundResource but inject our own resources as well
 
         String s = String.format("%s:%s:%s", "mcsounddomain", internal.getDomain(), internal.getPath());
@@ -85,7 +85,7 @@ class ModSoundManager {
                     }
                     public InputStream getInputStream() throws IOException
                     {
-                        return internal.getLastResourceStream();
+                        return data;
                     }
                 };
             }
