@@ -59,7 +59,7 @@ class ModSoundManager {
         }
     }
 
-    ISound createSound(Identifier oggLocation, InputStream data, boolean repeats, float attenuationDistance, float scale) {
+    ISound createSound(Identifier oggLocation, Audio.InputTransformer data, boolean repeats, float attenuationDistance, float scale) {
         SoundSystem sndSystem = this.soundSystem.get();
         if (sndSystem == null) {
             return null;
@@ -71,7 +71,7 @@ class ModSoundManager {
         return snd;
     }
 
-    private URL getURLForSoundResource(Identifier internal, InputStream data) {
+    private URL getURLForSoundResource(Identifier internal, Audio.InputTransformer data) {
         // Duplicate MC's getUrlForSoundResource but inject our own resources as well
 
         String s = String.format("%s:%s:%s", "mcsounddomain", internal.getDomain(), internal.getPath());
@@ -85,7 +85,7 @@ class ModSoundManager {
                     }
                     public InputStream getInputStream() throws IOException
                     {
-                        return data;
+                        return data.getStream(internal);
                     }
                 };
             }
