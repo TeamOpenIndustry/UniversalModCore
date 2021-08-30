@@ -164,10 +164,26 @@ public class OBJParser {
 
             Vec3d groupMin = points.stream().reduce(points.get(0), Vec3d::min);
             Vec3d groupMax = points.stream().reduce(points.get(0), Vec3d::max);
-            Vec3d min = points.stream().min(Comparator.comparingDouble(Vec3d::length)).get();
-            Vec3d max = points.stream().max(Comparator.comparingDouble(Vec3d::length)).get();
-            List<Vec3d> minG = points.stream().filter(p -> p.distanceTo(min) < p.distanceTo(max)).collect(Collectors.toList());
-            List<Vec3d> maxG = points.stream().filter(p -> p.distanceTo(min) > p.distanceTo(max)).collect(Collectors.toList());
+            Vec3d center = groupMax.add(groupMin).scale(0.5);
+
+            Vec3d min = points.get(0);
+            Vec3d max = points.get(0);
+            // Furthest from center
+            for (Vec3d point : points) {
+                if (max.distanceToSquared(center) < point.distanceToSquared(center)) {
+                    max = point;
+                }
+            }
+            //
+            for (Vec3d point : points) {
+                if (min.distanceToSquared(max) < point.distanceToSquared(max)) {
+                    min = point;
+                }
+            }
+            Vec3d finalMin = min.lengthSquared() < max.lengthSquared() ? min : max;
+            Vec3d finalMax = min.lengthSquared() < max.lengthSquared() ? max : min;
+            List<Vec3d> minG = points.stream().filter(p -> p.distanceToSquared(finalMin) < p.distanceToSquared(finalMax)).collect(Collectors.toList());
+            List<Vec3d> maxG = points.stream().filter(p -> p.distanceToSquared(finalMin) > p.distanceToSquared(finalMax)).collect(Collectors.toList());
             Vec3d minN = minG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1. / minG.size());
             Vec3d maxN = maxG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1. / maxG.size());
             Vec3d normal = maxN.subtract(minN).normalize();

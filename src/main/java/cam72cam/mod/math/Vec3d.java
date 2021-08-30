@@ -48,17 +48,31 @@ public class Vec3d {
     }
 
     private static double length(double x, double y, double z) {
-        return Math.sqrt(x * x + y * y + z * z);
+        return Math.sqrt(lengthSquared(x, y, z));
+    }
+
+    private static double lengthSquared(double x, double y, double z) {
+        return x * x + y * y + z * z;
     }
 
     public double length() {
         return length(x, y, z);
     }
 
+    public double lengthSquared() {
+        return lengthSquared(x, y, z);
+    }
+
     public double distanceTo(Vec3d other) {
         // optimized by inlining the subtract (removes 1 allocation)
         //return this.subtract(other).length();
         return length(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    public double distanceToSquared(Vec3d other) {
+        // optimized by inlining the subtract (removes 1 allocation)
+        //return this.subtract(other).length();
+        return lengthSquared(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     public Vec3d scale(double scale) {
