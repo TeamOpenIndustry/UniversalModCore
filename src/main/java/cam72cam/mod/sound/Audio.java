@@ -61,10 +61,15 @@ public class Audio {
     /** Create a custom sound */
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
         try {
-            return soundManager.createSound(oggLocation, oggLocation.getResourceStream(), repeats, attenuationDistance, scale);
+            return soundManager.createSound(oggLocation, oggLocation.getLastResourceStream(), repeats, attenuationDistance, scale);
         } catch (IOException e) {
             throw new RuntimeException("Invalid sound: " + oggLocation, e);
         }
+    }
+
+    /** Create a custom sound */
+    public static ISound newSound(Identifier oggLocation, InputStream oggData, boolean repeats, float attenuationDistance, float scale) {
+        return soundManager.createSound(oggLocation, oggData, repeats, attenuationDistance, scale);
     }
 
     /** Hack to increase the number of sounds that can be played at a time */
