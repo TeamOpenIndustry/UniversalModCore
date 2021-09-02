@@ -138,7 +138,10 @@ public class OBJParser {
                     buffer.data[vertexOffset+1] = y;
                     buffer.data[vertexOffset+2] = z;
                     vertexOffset += buffer.stride;
-                    points.add(new Vec3d(x, y, z));
+                    Vec3d pt = new Vec3d(x, y, z);
+                    if (!points.contains(pt)) {
+                        points.add(pt);
+                    }
 
                     int texture = faceVerts[faceVertexIdx+1] * 2;
                     if (texture >= 0) {
