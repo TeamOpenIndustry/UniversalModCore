@@ -4,9 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.Buffers.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class OBJParser {
@@ -124,7 +122,7 @@ public class OBJParser {
 
         for (OBJGroup group : groups) {
             int startFace = faceCount;
-            List<Vec3d> points = new ArrayList<>();
+            Set<Vec3d> points = new HashSet<>();
             for (int face = group.faceStart; face <= group.faceStop; face++) {
                 correctedFaceMaterials[faceCount] = faceMaterials.get(face);
                 for (int point = 0; point < 3; point++) {
@@ -139,9 +137,7 @@ public class OBJParser {
                     buffer.data[vertexOffset+2] = z;
                     vertexOffset += buffer.stride;
                     Vec3d pt = new Vec3d(x, y, z);
-                    if (!points.contains(pt)) {
-                        points.add(pt);
-                    }
+                    points.add(pt);
 
                     int texture = faceVerts[faceVertexIdx+1] * 2;
                     if (texture >= 0) {
@@ -165,12 +161,13 @@ public class OBJParser {
             }
 
 
-            Vec3d groupMin = points.stream().reduce(points.get(0), Vec3d::min);
-            Vec3d groupMax = points.stream().reduce(points.get(0), Vec3d::max);
+            Vec3d first = points.stream().findFirst().orElse(Vec3d.ZERO);
+            Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
+            Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
             Vec3d center = groupMax.add(groupMin).scale(0.5);
 
-            Vec3d min = points.get(0);
-            Vec3d max = points.get(0);
+            Vec3d min = first;
+            Vec3d max = first;
             // Furthest from center
             for (Vec3d point : points) {
                 if (max.distanceToSquared(center) < point.distanceToSquared(center)) {

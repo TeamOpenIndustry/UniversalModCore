@@ -113,6 +113,11 @@ public class Vec3d {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return (int) (x + y + z);
+    }
+
     public net.minecraft.util.math.Vec3d internal() {
         if (internal == null) {
             internal = new net.minecraft.util.math.Vec3d(x, y, z);
