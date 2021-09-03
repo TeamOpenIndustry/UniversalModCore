@@ -335,8 +335,9 @@ public class ConfigFile {
                     return;
                 }
 
-                String[] parts = line.split("[ =]");
-                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0]) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
+                String[] parts = line.split("[{=<]");
+                System.out.println(line);
+                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0].trim()) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
                 if (prop != null) {
                     prop.read(lines);
                 } else {
