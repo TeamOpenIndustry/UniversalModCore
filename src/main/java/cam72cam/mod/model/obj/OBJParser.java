@@ -63,7 +63,11 @@ public class OBJParser {
                         break;
                     case "o":
                     case "g":
-                        addGroup(args[1]);
+                        String groupName = args[1];
+                        for (int i = 2; i < args.length; i++) {
+                            groupName += " " + args[i];
+                        }
+                        addGroup(groupName);
                         break;
                     case "v":
                         addVertex(args[1], args[2], args[3]);
