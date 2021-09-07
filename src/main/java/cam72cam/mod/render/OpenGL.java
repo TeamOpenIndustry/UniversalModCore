@@ -3,6 +3,8 @@ package cam72cam.mod.render;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
@@ -128,6 +130,42 @@ public class OpenGL {
         int orig = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
         GL11.glShadeModel(enabled ? GL11.GL_SMOOTH : GL11.GL_FLAT);
         return () -> GL11.glShadeModel(orig);
+    }
+
+    public static boolean shaderActive() {
+        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+    }
+
+    public static With shader(int program) {
+        int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
+        ARBShaderObjects.glUseProgramObjectARB(program);
+        return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
+    }
+
+    public static With lightmap(boolean enabled) {
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+        With t = bool(GL11.GL_TEXTURE_2D, enabled);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        return () -> {
+            GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+            t.restore();
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        };
+    }
+
+    public static OpenGL.With lightmap(float block, float sky) {
+        int i = ((int)(sky * 15)) << 20 | ((int)(block*15)) << 4;
+        int x = i % 65536;
+        int y = i / 65536;
+        float oldX = OpenGlHelper.lastBrightnessX;
+        float oldY = OpenGlHelper.lastBrightnessY;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, x, y);
+        return () -> OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldX, oldY);
+    }
+
+    public static int allocateTexture() {
+        // Allows us to set some parameters that cause issues in newer MC versions
+        return GL11.glGenTextures();
     }
 
     @FunctionalInterface
