@@ -164,4 +164,17 @@ public class OBJModel {
         Vec3d max = maxOfGroup(groupNames);
         return max.z - min.z;
     }
+
+    /** WARNING This is a very slow function and should be used for debug only */
+    public List<Vec3d> points(OBJGroup group) {
+        List<Vec3d> points = new ArrayList<>();
+        VertexBuffer vbo = this.vbo.get();
+        for (int face = group.faceStart; face <= group.faceStop; face++) {
+            for (int point = 0; point < 3; point++) {
+                int idx = (face * 3 + point) * vbo.stride + vbo.vertexOffset;
+                points.add(new Vec3d(vbo.data[idx], vbo.data[idx+1], vbo.data[idx+2]));
+            }
+        }
+        return points;
+    }
 }
