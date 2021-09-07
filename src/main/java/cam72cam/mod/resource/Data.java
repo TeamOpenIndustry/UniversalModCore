@@ -48,10 +48,10 @@ class Data {
         }
 
         public InputStream getResourceStream(Identifier location) throws IOException {
-            return getResourceStream(location, true);
+            return getResourceStream(location, false);
         }
         public InputStream getLastResourceStream(Identifier location) throws IOException {
-            return getResourceStream(location, false);
+            return getResourceStream(location, true);
         }
 
         String pathString(Identifier location, boolean startingSlash) {
