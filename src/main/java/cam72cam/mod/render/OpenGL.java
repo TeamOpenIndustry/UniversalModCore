@@ -4,11 +4,14 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
+import util.Matrix4;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 /**
@@ -22,6 +25,23 @@ public class OpenGL {
     // This changes depending on LWJGL version
     public static void multMatrix(FloatBuffer fbm) {
         GL11.glMultMatrix(fbm);
+    }
+
+    private static FloatBuffer fbm = null;
+    public static void multMatrix(Matrix4 matrix) {
+        if (fbm == null) {
+            // Can't static init since class is loaded server side
+            fbm = BufferUtils.createFloatBuffer(16);
+        }
+        fbm.position(0);
+        fbm.put(new float[]{
+                (float) matrix.m00, (float) matrix.m01, (float) matrix.m02, (float) matrix.m03,
+                (float) matrix.m10, (float) matrix.m11, (float) matrix.m12, (float) matrix.m13,
+                (float) matrix.m20, (float) matrix.m21, (float) matrix.m22, (float) matrix.m23,
+                (float) matrix.m30, (float) matrix.m31, (float) matrix.m32, (float) matrix.m33
+        });
+        fbm.flip();
+        OpenGL.multMatrix(fbm);
     }
 
     public static With matrix(int mode) {
@@ -81,7 +101,7 @@ public class OpenGL {
     public static With color(float r, float g, float b, float a) {
         With color = bool(GL11.GL_COLOR_MATERIAL, true);
 
-        FloatBuffer orig = ByteBuffer.allocateDirect(4 * 16).asFloatBuffer();
+        FloatBuffer orig = ByteBuffer.allocateDirect(4 * 16).order(ByteOrder.nativeOrder()).asFloatBuffer();
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR, orig);
 
         GL11.glColor4f(r, g, b, a);
@@ -104,7 +124,7 @@ public class OpenGL {
 
     public static With transparency(float r, float g, float b, float a) {
         With blend = blend(GL11.GL_CONSTANT_ALPHA, GL11.GL_ONE);
-        FloatBuffer orig = ByteBuffer.allocateDirect(4 * 16).asFloatBuffer();
+        FloatBuffer orig = ByteBuffer.allocateDirect(4 * 16).order(ByteOrder.nativeOrder()).asFloatBuffer();
         GL11.glGetFloat(GL14.GL_BLEND_COLOR, orig);
         GL14.glBlendColor(r,g,b,a);
         return () -> {
