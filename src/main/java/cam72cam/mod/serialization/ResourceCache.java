@@ -37,12 +37,17 @@ public class ResourceCache<T> {
         private static ResourceProvider fromTag(TagCompound data) {
             ResourceProvider provider = new ResourceProvider();
             Map<Identifier, String> expected = data.getMap("resources", Identifier::new, v -> v.getString("key"));
-            for (Identifier id : expected.keySet()) {
-                String expectedHash = expected.get(id);
-                String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
-                if (!expectedHash.equals(foundHash)) {
-                    return provider;
+            try {
+                for (Identifier id : expected.keySet()) {
+                    String expectedHash = expected.get(id);
+                    String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
+                    if (!expectedHash.equals(foundHash)) {
+                        return provider;
+                    }
                 }
+            } catch (RuntimeException ex) {
+                ModCore.catching(ex);
+                return null;
             }
             return null;
         }
