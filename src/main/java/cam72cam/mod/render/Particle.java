@@ -2,11 +2,11 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,13 +76,12 @@ public abstract class Particle {
                     ip.renderZ = posZ - interpPosZ + this.motionZ * partialTicks;
 
                     if (renderer == null) {
-                        try (OpenGL.With c = OpenGL.matrix()) {
-                            GL11.glTranslated(ip.renderX, ip.renderY, ip.renderZ);
-                            ip.render(partialTicks);
-                        }
+                        RenderState state = new RenderState();
+                        state.translate(ip.renderX, ip.renderY, ip.renderZ);
+                        ip.render(state, partialTicks);
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, partialTicks);
+                            renderer.accept(particles, new RenderState(), partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }
@@ -100,21 +99,21 @@ public abstract class Particle {
     protected abstract boolean depthTestEnabled();
 
     /** Render this particle */
-    protected abstract void render(float partialTicks);
+    protected abstract void render(RenderState state, float partialTicks);
 
-    protected void lookAtPlayer() {
+    protected void lookAtPlayer(RenderState state) {
         Vec3d eyes = MinecraftClient.getPlayer().getPositionEyes();
         double x = eyes.x - posX;
         double y = eyes.y - posY;
         double z = eyes.z - posZ;
-        GL11.glRotated(180 - Math.toDegrees(Math.atan2(-x, z)), 0, 1, 0);
-        GL11.glRotated(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y)) + 90, 1, 0, 0);
+        state.rotate(180 - Math.toDegrees(Math.atan2(-x, z)), 0, 1, 0);
+        state.rotate(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y)) + 90, 1, 0, 0);
     }
 
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
-        void accept(List<I> l, float pt);
+        void accept(List<I> l, RenderState state, float pt);
     }
 
     /** Data to be stored for each particle (can be extended) */

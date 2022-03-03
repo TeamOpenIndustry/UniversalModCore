@@ -3,6 +3,9 @@ package cam72cam.mod.render.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.serialization.ResourceCache;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -65,7 +68,7 @@ public class OBJTextureSheet {
 
     private void createTexture() {
         textureID = GL11.glGenTextures();
-        try (OpenGL.With tex = OpenGL.texture(textureID)) {
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(new Texture(textureID)))) {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -99,7 +102,7 @@ public class OBJTextureSheet {
         createTexture();
     }
 
-    OpenGL.With bind(boolean wait) {
+    Texture texture(boolean wait) {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
@@ -109,7 +112,7 @@ public class OBJTextureSheet {
                 directLoader();
             }
         }
-        return textureID == null ? fallback.bind(wait) : OpenGL.texture(this.textureID);
+        return textureID == null ? fallback.texture(wait) : new Texture(this.textureID);
     }
 
     public void dealloc() {

@@ -7,7 +7,8 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL.With;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
@@ -28,6 +29,7 @@ import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import util.Matrix4;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Matrix4f;
@@ -119,18 +121,18 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type) {
-            defaultTransform(type);
+        default void applyTransform(ItemRenderType type, RenderState ctx) {
+            defaultTransform(type, ctx);
         }
-        static void defaultTransform(ItemRenderType type) {
+        static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
                 case FRAME:
-                    GL11.glRotated(90, 0, 1, 0);
-                    GL11.glTranslated(-0.9, 0, 0);
+                    state.rotate(90, 0, 1, 0);
+                    state.translate(-0.9, 0, 0);
                     break;
                 case HEAD:
-                    GL11.glTranslated(-0.5, 1, 0);
-                    GL11.glScaled(2, 2, 2);
+                    state.translate(-0.5, 1, 0);
+                    state.scale(2, 2, 2);
                     break;
             }
         }
@@ -166,35 +168,34 @@ public class ItemRender {
         fb.framebufferClear();
         fb.bindFramebuffer(true);
 
-        try (With projection = OpenGL.matrix(GL11.GL_PROJECTION)) {
-            GL11.glLoadIdentity();
-            try (With modelM = OpenGL.matrix(GL11.GL_MODELVIEW)) {
-                GL11.glLoadIdentity();
-                try (With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, true)) {
-                    int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-                    GL11.glDepthFunc(GL11.GL_LESS);
-                    GL11.glClearDepth(1);
+        RenderState state = new RenderState();
+        state.projection().setIdentity();
+        state.model_view().setIdentity();
+        state.depth_test(true);
 
-                    model.renderCustom();
+        try (OpenGL.With matrix = LegacyRenderContext.INSTANCE.apply(state)) {
+            int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+            GL11.glDepthFunc(GL11.GL_LESS);
+            GL11.glClearDepth(1);
 
-                    ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-                    GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+            model.renderCustom(state);
 
-                    fb.unbindFramebuffer();
-                    fb.deleteFramebuffer();
-                    GL11.glDepthFunc(oldDepth);
+            ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+            GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
 
-                    iconSheet.setSprite(id, buff);
+            fb.unbindFramebuffer();
+            fb.deleteFramebuffer();
+            GL11.glDepthFunc(oldDepth);
 
-                    try {
-                        byte[] data = new byte[buff.capacity()];
-                        buff.get(data);
-                        Files.write(sprite.toPath(), data);
-                    } catch (IOException e) {
-                        ModCore.catching(e);
-                        sprite.delete();
-                    }
-                }
+            iconSheet.setSprite(id, buff);
+
+            try {
+                byte[] data = new byte[buff.capacity()];
+                buff.get(data);
+                Files.write(sprite.toPath(), data);
+            } catch (IOException e) {
+                ModCore.catching(e);
+                sprite.delete();
             }
         }
     }
@@ -241,8 +242,9 @@ public class ItemRender {
              * before actually setting up the correct GL context.
              */
             if (side == null) {
-                model.applyTransform(type);
-                std.renderCustom();
+                RenderState ctx = new RenderState();
+                model.applyTransform(type, ctx);
+                std.renderCustom(ctx);
             }
 
             return std.getQuads(side, rand);

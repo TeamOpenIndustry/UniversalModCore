@@ -7,6 +7,7 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
@@ -19,9 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +29,7 @@ import java.util.function.Consumer;
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
+    private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     // Internal hack
     private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
@@ -42,7 +41,7 @@ public class GlobalRender {
             ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
                 @Override
                 public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-                    renderFuncs.forEach(r -> r.accept(partialTicks));
+                    renderFuncs.forEach(r -> r.render(new RenderState(), partialTicks));
                 }
 
                 @Override
@@ -76,15 +75,15 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the Block Entity render phase */
-    public static void registerRender(Consumer<Float> func) {
+    public static void registerRender(RenderFunction func) {
         renderFuncs.add(func);
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(Consumer<Float> func) {
+    public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.accept(event.getPartialTicks());
+                func.render(new RenderState(), event.getPartialTicks());
             }
         });
     }
@@ -95,7 +94,7 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);
                 }
             }
         });
@@ -140,25 +139,24 @@ public class GlobalRender {
         boolean isThirdPersonFrontal = renderManager.options.thirdPersonView == 2;
 
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
-        try (
-                OpenGL.With matrix = OpenGL.matrix();
-                OpenGL.With light = OpenGL.bool(GL11.GL_LIGHTING, false);
-                OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false);
-                OpenGL.With color = OpenGL.color(1, 1, 1, 1);
-        ) {
-            GL11.glTranslated(pos.x, pos.y, pos.z);
-            GL11.glRotated(-viewerYaw, 0.0F, 1.0F, 0.0F);
-            GL11.glRotated((float)(isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
-            GL11.glScalef(scale, scale, scale);
-            GL11.glScalef(-0.025F, -0.025F, 0.025F);
 
-            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
-        }
+        new OpenGL.RenderContext()
+                .lighting(false)
+                .depth_test(false)
+                .color(1, 1, 1, 1)
+                .translate(pos.x, pos.y, pos.z)
+                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                .scale(scale, scale, scale)
+                .scale(-0.025F, -0.025F, 0.025F)
+                .apply(() ->
+                        fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1)
+                );
     }
 
     @FunctionalInterface
     public interface MouseoverEvent {
-        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
+        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
     public static class GlobalRenderHelper extends TileEntity {

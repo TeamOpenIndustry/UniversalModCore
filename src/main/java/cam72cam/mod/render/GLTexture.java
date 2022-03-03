@@ -153,18 +153,20 @@ public class GLTexture {
     private int uploadTexture() {
         this.lastUsed = System.currentTimeMillis();
         int textureID = GL11.glGenTextures();
-        try (OpenGL.With tex = OpenGL.texture(textureID)) {
-            TextureUtil.allocateTexture(textureID, width, height);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        new OpenGL.RenderContext()
+                .texture(textureID)
+                .apply(() -> {
+                    TextureUtil.allocateTexture(textureID, width, height);
+                    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+                    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+                    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+                    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-            //GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-            pixels = null;
-            transition(TextureState.ALLOCATED);
-        }
+                    GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+                    //GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+                    pixels = null;
+                    transition(TextureState.ALLOCATED);
+                });
         return textureID;
     }
 
@@ -208,7 +210,7 @@ public class GLTexture {
     }
 
     /** Bind the texture, force waiting if specified */
-    public OpenGL.With bind(boolean force) {
+    public void bind(OpenGL.RenderContext ctx, boolean force) {
         lastUsed = System.currentTimeMillis();
 
         if (force) {
@@ -227,9 +229,9 @@ public class GLTexture {
         }
 
         if (!tryUpload()) {
-            return () -> {};
+            return;
         }
-        return OpenGL.texture(glTexID);
+        ctx.texture(glTexID);
     }
 
     /** Completely free this texture */

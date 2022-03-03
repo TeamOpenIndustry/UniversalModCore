@@ -3,7 +3,10 @@ package cam72cam.mod.render.obj;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.render.VBO;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 import util.Matrix4;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class OBJVBO extends VBO {
     private final OBJModel model;
@@ -20,12 +24,24 @@ public class OBJVBO extends VBO {
         super(model.vbo.get());
         this.model = model;
     }
-    public BoundOBJVBO bind() {
-        return new BoundOBJVBO();
+
+    public Binding bind(RenderState state) {
+        return new Binding(state);
     }
 
+    public class Binding extends VBO.Binding {
+        protected Binding(RenderState state) {
+            super(state);
+        }
 
-    public class BoundOBJVBO extends BoundVBO {
+        public void draw(Collection<String> groups, Consumer<RenderState> mod) {
+            RenderState state = new RenderState();
+            mod.accept(state);
+            try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+                draw(groups);
+            }
+        }
+
         /**
          * Draw these groups in the VB
          */

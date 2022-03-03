@@ -1,5 +1,8 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -23,7 +26,7 @@ public class SpriteSheet {
     /** Create new blank sheet and add slots to unallocated */
     private void allocateSheet() {
         int textureID = GL11.glGenTextures();
-        try (OpenGL.With tex = OpenGL.texture(textureID)) {
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(new Texture(textureID)))) {
             int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
             TextureUtil.allocateTexture(textureID, sheetSize, sheetSize);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
@@ -52,7 +55,7 @@ public class SpriteSheet {
         }
         SpriteInfo sprite = sprites.get(id);
 
-        try (OpenGL.With tex = OpenGL.texture(sprite.texID)) {
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(new Texture(sprite.texID)))) {
             GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, sprite.uPx, sprite.vPx, spriteSize, spriteSize, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
         }
     }
@@ -63,23 +66,23 @@ public class SpriteSheet {
         if (sprite == null) {
             return;
         }
-        try (OpenGL.With tex = OpenGL.texture(sprite.texID)) {
-            try (OpenGL.With matrix = OpenGL.matrix()) {
-                GL11.glRotated(180, 1, 0, 0);
-                GL11.glTranslated(0, -1, 0);
-                GL11.glBegin(GL11.GL_QUADS);
-                GL11.glColor4f(1, 1, 1, 1);
-                GL11.glTexCoord2f(sprite.uMin, sprite.vMin);
-                GL11.glVertex3f(0, 0, 0);
-                GL11.glTexCoord2f(sprite.uMin, sprite.vMax);
-                GL11.glVertex3f(0, 1, 0);
-                GL11.glTexCoord2f(sprite.uMax, sprite.vMax);
-                GL11.glVertex3f(1, 1, 0);
-                GL11.glTexCoord2f(sprite.uMax, sprite.vMin);
-                GL11.glVertex3f(1, 0, 0);
-                GL11.glEnd();
-            }
-        }
+        RenderState state = new RenderState()
+                .texture(new Texture(sprite.texID))
+                .rotate(180, 1, 0, 0)
+                .translate(0, -1, 0);
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glColor4f(1, 1, 1, 1);
+            GL11.glTexCoord2f(sprite.uMin, sprite.vMin);
+            GL11.glVertex3f(0, 0, 0);
+            GL11.glTexCoord2f(sprite.uMin, sprite.vMax);
+            GL11.glVertex3f(0, 1, 0);
+            GL11.glTexCoord2f(sprite.uMax, sprite.vMax);
+            GL11.glVertex3f(1, 1, 0);
+            GL11.glTexCoord2f(sprite.uMax, sprite.vMin);
+            GL11.glVertex3f(1, 0, 0);
+            GL11.glEnd();
+        };
     }
 
     /** Remove a sprite from the sheet (does not reduce used GPU memory yet) */

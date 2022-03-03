@@ -2,6 +2,8 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockColored;
 import net.minecraft.block.BlockLog;
@@ -23,12 +25,11 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
     private final List<Pair<IBlockState, IBakedModel>> models = new ArrayList<>();
-    private final List<Consumer<Float>> custom = new ArrayList<>();
+    private final List<RenderFunction> custom = new ArrayList<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static IBlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
@@ -69,10 +70,10 @@ public class StandardModel {
 
     /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
-        custom.add((pt) -> {
-            try (OpenGL.With matrix = OpenGL.matrix()) {
-                GL11.glTranslated(translate.x, translate.y, translate.z);
-                GL11.glScaled(scale.x, scale.y, scale.z);
+        custom.add((matrix, pt) -> {
+            matrix.translate(translate.x, translate.y, translate.z);
+            matrix.scale(scale.x, scale.y, scale.z);
+            try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(matrix)) {
                 Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
             }
         });
@@ -80,13 +81,7 @@ public class StandardModel {
     }
 
     /** Do whatever you want here! */
-    public StandardModel addCustom(Runnable fn) {
-        this.custom.add(pt -> fn.run());
-        return this;
-    }
-
-    /** Do whatever you want here! (aware of partialTicks) */
-    public StandardModel addCustom(Consumer<Float> fn) {
+    public StandardModel addCustom(RenderFunction fn) {
         this.custom.add(fn);
         return this;
     }
@@ -101,14 +96,15 @@ public class StandardModel {
         return quads;
     }
 
-    /** Render this entire model */
-    public void render() {
-        render(0);
+    /** Render this entire model
+     * @param state*/
+    public void render(RenderState state) {
+        render(0, state);
     }
 
     /** Render this entire model (partial tick aware) */
-    public void render(float partialTicks) {
-        renderCustom(partialTicks);
+    public void render(float partialTicks, RenderState state) {
+        renderCustom(state, partialTicks);
         renderQuads();
     }
 
@@ -135,14 +131,15 @@ public class StandardModel {
         new WorldVertexBufferUploader().draw(worldRenderer);
     }
 
-    /** Render the OpenGL parts directly */
-    public void renderCustom() {
-        renderCustom(0);
+    /** Render the OpenGL parts directly
+     * @param state*/
+    public void renderCustom(RenderState state) {
+        renderCustom(state, 0);
     }
 
     /** Render the OpenGL parts directly (partial tick aware) */
-    public void renderCustom(float partialTicks) {
-        custom.forEach(cons -> cons.accept(partialTicks));
+    public void renderCustom(RenderState state, float partialTicks) {
+        custom.forEach(cons -> cons.render(state.clone(), partialTicks));
     }
 
     /** Is there anything that's not MC standard in this model? */

@@ -6,7 +6,9 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.OpenGL.With;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.ICamera;
@@ -15,7 +17,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -61,7 +62,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
      * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
      * We try to detect entities in this edge case and render them here to prevent the issue.
      */
-    private static void renderLargeEntities(float partialTicks) {
+    private static void renderLargeEntities(RenderState state, float partialTicks) {
         if (GlobalRender.isTransparentPass()) {
             return;
         }
@@ -96,13 +97,12 @@ public class EntityRenderer extends Render<ModdedEntity> {
     public void doRender(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
         Entity self = stock.getSelf();
 
-        try (With c = OpenGL.matrix()) {
-                GL11.glTranslated(x, y, z);
-                GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-                GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-                GL11.glRotatef(-90, 0, 1, 0);
-                renderers.get(self.getClass()).render(self, partialTicks);
-        }
+        RenderState state = new RenderState();
+        state.translate(x, y, z);
+        state.rotate(180 - entityYaw, 0, 1, 0);
+        state.rotate(self.getRotationPitch(), 1, 0, 0);
+        state.rotate(-90, 0, 1, 0);
+        renderers.get(self.getClass()).render(self, state, partialTicks);
     }
 
     @Override
@@ -114,13 +114,12 @@ public class EntityRenderer extends Render<ModdedEntity> {
     public void renderMultipass(ModdedEntity stock, double x, double y, double z, float entityYaw, float partialTicks) {
         Entity self = stock.getSelf();
 
-        try (With c = OpenGL.matrix()) {
-            GL11.glTranslated(x, y, z);
-            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-            GL11.glRotatef(-90, 0, 1, 0);
-            renderers.get(self.getClass()).postRender(self, partialTicks);
-        }
+        RenderState state = new RenderState();
+        state.translate(x, y, z);
+        state.rotate(180 - entityYaw, 0, 1, 0);
+        state.rotate(self.getRotationPitch(), 1, 0, 0);
+        state.rotate(-90, 0, 1, 0);
+        renderers.get(self.getClass()).postRender(self, state, partialTicks);
     }
 
     @Nullable

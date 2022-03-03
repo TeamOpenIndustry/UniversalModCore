@@ -2,12 +2,11 @@ package cam72cam.mod.render.obj;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.model.obj.OBJModel;
-import cam72cam.mod.render.OpenGL;
-import cam72cam.mod.render.obj.OBJVBO.BoundOBJVBO;
+import cam72cam.mod.render.obj.OBJVBO.Binding;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.serialization.ResourceCache;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,50 +36,30 @@ public class OBJRender {
         }
     }
 
-    public OpenGL.With bindTexture() {
-        return bindTexture(null);
+    public Binding bind(RenderState state) {
+        return bind(state, null);
     }
 
-    public OpenGL.With bindTexture(boolean icon) {
-        return bindTexture(null, icon);
+    public Binding bind(RenderState state, boolean icon) {
+        return bind(state, null, icon);
     }
 
-    public OpenGL.With bindTexture(String texName) {
-        return bindTexture(texName, false);
+    public Binding bind(RenderState state, String texName) {
+        return bind(state, texName, false);
     }
 
-    public OpenGL.With bindTexture(String texName, boolean icon) {
-        return bindTexture(texName, icon, false);
+    public Binding bind(RenderState state, String texName, boolean icon) {
+        return bind(state, texName, icon, false);
     }
 
-    public OpenGL.With bindTexture(String texName, boolean icon, boolean wait) {
+    public Binding bind(RenderState state, String texName, boolean icon, boolean wait) {
         if (this.textures.get(texName) == null) {
             texName = ""; // Default
         }
 
-        if (icon && icons.containsKey(texName)) {
-            OBJTextureSheet tex = this.icons.get(texName);
-            return tex.bind(wait).and(OpenGL.shading(model.isSmoothShading));
-        } else {
-            OBJTextureSheet tex = this.textures.get(texName);
-            return tex.bind(wait).and(OpenGL.shading(model.isSmoothShading));
-        }
-    }
-
-    public BoundOBJVBO bind() {
-        return getVBO().bind();
-    }
-
-    public void draw() {
-        try (BoundOBJVBO vbo = bind()) {
-            vbo.draw();
-        }
-    }
-
-    public void drawGroups(Collection<String> groups) {
-        try (BoundOBJVBO vbo = bind()) {
-            vbo.draw(groups);
-        }
+        state.texture((icon && icons.containsKey(texName) ? this.icons : this.textures).get(texName).texture(wait));
+        state.smooth_shading(model.isSmoothShading);
+        return getVBO().bind(state);
     }
 
     public OBJVBO getVBO() {
