@@ -2,18 +2,39 @@ package cam72cam.mod.serialization;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.util.Facing;
 import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class Test {
     @TagField
     private boolean booleanF;
     @TagField
     private Boolean booleanO;
+
+    @org.junit.Test
+    public void timeA() {
+        int k = 0;
+        for (int i = 0; i < 10_000_000; i++) {
+            try (OpenGL.With w = () -> {}) {
+                k++;
+            }
+        }
+    }
+    @org.junit.Test
+    public void timeB() {
+        for (int i = 0; i < 10_000_000; i++) {
+            Consumer<Integer> fn = (k) -> {
+                k++;
+            };
+            fn.accept(i);
+        }
+    }
 
     @org.junit.Test
     public void booleans() throws SerializationException {

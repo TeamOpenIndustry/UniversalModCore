@@ -40,11 +40,11 @@ public class OBJTextureSheet {
     }
 
 
-    OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
+    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
         this(width, height, data, cacheSeconds, null);
     }
 
-    OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds, OBJTextureSheet fallback) {
+    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds, OBJTextureSheet fallback) {
         this.width = width;
         this.height = height;
         this.textureID = null;
@@ -102,7 +102,7 @@ public class OBJTextureSheet {
         createTexture();
     }
 
-    Texture texture(boolean wait) {
+    public Texture texture(boolean wait) {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
@@ -124,7 +124,7 @@ public class OBJTextureSheet {
         }
     }
 
-    void freeGL() {
+    public void freeGL() {
         dealloc();
         textures.remove(this);
     }

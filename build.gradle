@@ -28,7 +28,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.1.4"
+String umcVersion = "1.1.2"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     umcVersion += "-" + Util.GitRevision()
 }

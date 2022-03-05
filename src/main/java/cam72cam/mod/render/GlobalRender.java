@@ -7,6 +7,7 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -131,7 +132,7 @@ public class GlobalRender {
 
 
     /** Similar to drawNameplate */
-    public static void drawText(String str, Vec3d pos, float scale, float rotate)
+    public static void drawText(String str, RenderState state, Vec3d pos, float scale, float rotate)
     {
         RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
         float viewerYaw = renderManager.playerViewY + rotate;
@@ -140,7 +141,7 @@ public class GlobalRender {
 
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
-        new OpenGL.RenderContext()
+        state = state.clone()
                 .lighting(false)
                 .depth_test(false)
                 .color(1, 1, 1, 1)
@@ -148,10 +149,11 @@ public class GlobalRender {
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F)
-                .apply(() ->
-                        fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1)
-                );
+                .scale(-0.025F, -0.025F, 0.025F);
+
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        }
     }
 
     @FunctionalInterface

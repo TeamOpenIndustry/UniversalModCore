@@ -1,17 +1,21 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.resource.Identifier;
+import net.minecraft.client.renderer.OpenGlHelper;
 import org.apache.commons.io.IOUtils;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBFragmentShader;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ARBVertexShader;
 import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 /** Optional GLSL Shader wrapper */
 public class GLSLShader {
@@ -55,10 +59,15 @@ public class GLSLShader {
         return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);
     }
 
+    public void paramInt(String name, int i) {
+        int loc = paramLocations.computeIfAbsent(name, n -> ARBShaderObjects.glGetUniformLocationARB(program, n));
+        ARBShaderObjects.glUniform1iARB(loc, i);
+    }
+
     private final Map<String, Integer> paramLocations = new HashMap<>();
-    /** Set the param to the given values (up to 3) */
+    /** Set the param to the given values (up to 4) */
     public void paramFloat(String name, float... params) {
-        Integer loc = paramLocations.computeIfAbsent(name, n -> ARBShaderObjects.glGetUniformLocationARB(program, n));
+        int loc = paramLocations.computeIfAbsent(name, n -> ARBShaderObjects.glGetUniformLocationARB(program, n));
 
         switch (params.length) {
             case 1:
@@ -70,23 +79,33 @@ public class GLSLShader {
             case 3:
                 ARBShaderObjects.glUniform3fARB(loc, params[0], params[1], params[2]);
                 break;
+            case 4:
+                ARBShaderObjects.glUniform4fARB(loc, params[0], params[1], params[2], params[3]);
+                break;
         }
+    }
+
+    private final FloatBuffer uniformFloatBuffer = BufferUtils.createFloatBuffer(16);
+    public void paramMatrix(String name, Matrix4 m) {
+        int loc = paramLocations.computeIfAbsent(name, n -> ARBShaderObjects.glGetUniformLocationARB(program, n));
+
+        uniformFloatBuffer.position(0);
+        uniformFloatBuffer.put(new float[]{
+                (float) m.m00, (float) m.m01, (float) m.m02, (float) m.m03, (float) m.m10, (float) m.m11, (float) m.m12, (float) m.m13, (float) m.m20, (float) m.m21, (float) m.m22, (float) m.m23, (float) m.m30, (float) m.m31, (float) m.m32, (float) m.m33
+        });
+        uniformFloatBuffer.position(0);
+
+        OpenGlHelper.glUniformMatrix4(loc, true, this.uniformFloatBuffer);
     }
 
     private String readShader(Identifier fname) {
         InputStream input;
         try {
             input = fname.getResourceStream();
+            return IOUtils.toString(input, Charset.defaultCharset());
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Error reading shader " + fname);
         }
-        Scanner reader = new Scanner(input);
-        String text = "";
-        while (reader.hasNextLine()) {
-            text = text + reader.nextLine();
-        }
-        reader.close(); // closes input
-        return text;
     }
 }
