@@ -28,6 +28,8 @@ public class OBJModel {
     public final int textureHeight;
     public final Map<String, OBJTextureSheet> textures = new HashMap<>();
     public final Map<String, OBJTextureSheet> icons = new HashMap<>();
+    public final Map<String, OBJTextureSheet> normals = new HashMap<>();
+    public final Map<String, OBJTextureSheet> speculars = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
     public final boolean isSmoothShading;
 
@@ -67,6 +69,8 @@ public class OBJModel {
                         data.setInteger("textureHeight", builder.getTextureHeight());
                         data.setList("variants", new ArrayList<>(builder.getTextures().keySet()), k -> new TagCompound().setString("variant", k));
                     }
+                    data.setBoolean("hasNormals", !builder.getNormals().isEmpty());
+                    data.setBoolean("hasSpeculars", !builder.getSpeculars().isEmpty());
                     data.setList("groups", builder.getGroups(), v -> {
                         try {
                             TagCompound tag = new TagCompound();
@@ -90,6 +94,10 @@ public class OBJModel {
             this.textureWidth = meta.getInteger("textureWidth");
             this.textureHeight = meta.getInteger("textureHeight");
 
+            boolean hasNormals = meta.getBoolean("hasNormals");
+            boolean hasSpeculars = meta.getBoolean("hasSpeculars");
+
+
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
                 //TODO CACHE SECONDS!
                 int cacheSeconds = 30;
@@ -101,6 +109,16 @@ public class OBJModel {
                 }
                 Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant).get())));
                 this.textures.put(variant, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds, this.icons.getOrDefault(variant, defTex)));
+
+                if (hasNormals) {
+                    Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
+                    this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds, defTex));
+                }
+
+                if (hasSpeculars) {
+                    Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
+                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds, defTex));
+                }
             }
         } else {
             this.textureWidth = -1;
@@ -223,6 +241,12 @@ public class OBJModel {
             }
 
             state.texture((icon && OBJModel.this.icons.containsKey(texName) ? OBJModel.this.icons : OBJModel.this.textures).get(texName).texture(wait));
+            if (!icon && OBJModel.this.normals.containsKey(texName)) {
+                state.normals(OBJModel.this.normals.get(texName).texture(wait));
+            }
+            if (!icon && OBJModel.this.speculars.containsKey(texName)) {
+                state.specular(OBJModel.this.speculars.get(texName).texture(wait));
+            }
             state.smooth_shading(OBJModel.this.isSmoothShading);
         }
 

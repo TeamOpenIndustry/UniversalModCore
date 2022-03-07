@@ -12,6 +12,8 @@ public class RenderState {
     protected Matrix4 model_view = null;
     protected Matrix4 projection = null;
     protected Texture texture = null;
+    protected Texture normals = null;
+    protected Texture specular = null;
     protected float[] color = null;
     protected Map<Integer, Boolean> bools = new HashMap<>();
     protected Boolean smooth_shading = null;
@@ -76,6 +78,16 @@ public class RenderState {
 
     public RenderState texture(Texture tex) {
         this.texture = tex;
+        return this;
+    }
+
+    public RenderState normals(Texture norm) {
+        this.normals = norm;
+        return this;
+    }
+
+    public RenderState specular(Texture spec) {
+        this.specular = spec;
         return this;
     }
 

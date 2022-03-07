@@ -21,6 +21,7 @@ public class VBO {
     private int vbo;
     private int length;
     private VertexBuffer vbInfo;
+    private boolean useModern = false;
 
     public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
@@ -72,8 +73,11 @@ public class VBO {
             this.state = state.clone();
             settings.accept(state);
 
-            //legacy(state);
-            modern(state);
+            if (useModern) {
+                modern(state);
+            } else {
+                legacy(state);
+            }
         }
 
         protected void legacy(RenderState state) {
@@ -209,7 +213,7 @@ public class VBO {
         }
 
         protected OpenGL.With push(Consumer<RenderState> mod) {
-            if (1 == 1) {
+            if (useModern) {
                 RenderState sub = state.clone();
                 mod.accept(sub);
                 OpenGL.With subrest = sync(sub);

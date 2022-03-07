@@ -16,7 +16,7 @@ public class OBJBuilder {
 
     private final VertexBuffer vbo;
     private final List<OBJGroup> groups;
-    private final Map<String, Supplier<BufferedImage>> textures;
+    private final OBJTexturePacker packer;
     private final int textureWidth;
     private final int textureHeight;
     private boolean smoothShading;
@@ -35,7 +35,7 @@ public class OBJBuilder {
         this.smoothShading = parser.isSmoothShading();
 
         if (Config.getMaxTextureSize() <= 0) {
-            textures = null;
+            packer = null;
             textureWidth = -1;
             textureHeight = -1;
             return;
@@ -121,7 +121,7 @@ public class OBJBuilder {
                 materialLookup.values(),
                 variants
         );
-        textures = packer.textures;
+        this.packer = packer;
         textureOffset = vbo.textureOffset;
         for (String materialName : faceMaterials) {
             if (materialName != null) {
@@ -145,7 +145,13 @@ public class OBJBuilder {
         return vbo;
     }
     public Map<String, Supplier<BufferedImage>> getTextures() {
-        return textures;
+        return packer != null ? packer.textures : Collections.emptyMap();
+    }
+    public Map<String, Supplier<BufferedImage>> getNormals() {
+        return packer != null ? packer.normals : Collections.emptyMap();
+    }
+    public Map<String, Supplier<BufferedImage>> getSpeculars() {
+        return packer != null ? packer.speculars : Collections.emptyMap();
     }
     public List<OBJGroup> getGroups() {
         return groups;

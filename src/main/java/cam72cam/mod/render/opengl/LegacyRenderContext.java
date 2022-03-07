@@ -49,7 +49,7 @@ public class LegacyRenderContext implements RenderContext {
             });
         }
 
-        if (state.texture != null || state.lightmap != null) {
+        if (state.texture != null || state.lightmap != null || state.normals != null || state.specular != null) {
             int oldActive = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
             restore.add(() -> GL13.glActiveTexture(oldActive));
         }
@@ -81,10 +81,13 @@ public class LegacyRenderContext implements RenderContext {
         if (state.texture != null) {
             GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
             boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
-            restore.add(() -> applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled));
 
             if (state.texture == NO_TEXTURE) {
                 applyBool(GL11.GL_TEXTURE_2D, false);
+                restore.add(() -> {
+                    GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
+                    applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
+                });
             } else {
                 applyBool(GL11.GL_TEXTURE_2D, true);
 
@@ -92,10 +95,62 @@ public class LegacyRenderContext implements RenderContext {
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.textureId);
                 restore.add(() -> {
                     GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
+                    applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldTex);
                 });
             }
         }
+
+        if (state.normals != null) {
+            // Normals
+            GL13.glActiveTexture(GL13.GL_TEXTURE2);
+            boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+
+            if (state.normals == NO_TEXTURE) {
+                applyBool(GL11.GL_TEXTURE_2D, false);
+                restore.add(() -> {
+                    GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                    applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+                });
+            } else {
+                applyBool(GL11.GL_TEXTURE_2D, true);
+
+                int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.textureId);
+                restore.add(() -> {
+                    GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                    applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
+                });
+            }
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        }
+        if (state.specular != null) {
+            // Specular
+            GL13.glActiveTexture(GL13.GL_TEXTURE3);
+            boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+
+            if (state.specular == NO_TEXTURE) {
+                applyBool(GL11.GL_TEXTURE_2D, false);
+                restore.add(() -> {
+                    GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                    applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+                });
+            } else {
+                applyBool(GL11.GL_TEXTURE_2D, true);
+
+                int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.textureId);
+                restore.add(() -> {
+                    GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                    applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
+                });
+            }
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+
+        }
+
 
         if (state.color != null) {
             boolean oldColorMaterial = GL11.glGetBoolean(GL11.GL_COLOR_MATERIAL);
