@@ -13,7 +13,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
 
-import static cam72cam.mod.render.OpenGL.applyBool;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class LegacyRenderContext implements RenderContext {
@@ -114,7 +113,7 @@ public class LegacyRenderContext implements RenderContext {
         state.bools.forEach((glId, value) -> {
             boolean oldValue = GL11.glGetBoolean(glId);
             applyBool(glId, value);
-            restore.add(() -> applyBool(GL11.GL_LIGHTING, oldValue));
+            restore.add(() -> applyBool(glId, oldValue));
         });
 
         if (state.smooth_shading != null) {
@@ -146,5 +145,13 @@ public class LegacyRenderContext implements RenderContext {
         });
         fbm.flip();
         GL11.glMultMatrix(fbm);
+    }
+
+    public static void applyBool(int opt, boolean currState) {
+        if (currState) {
+            GL11.glEnable(opt);
+        } else {
+            GL11.glDisable(opt);
+        }
     }
 }

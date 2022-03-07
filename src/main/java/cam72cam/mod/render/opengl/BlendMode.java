@@ -3,7 +3,7 @@ package cam72cam.mod.render.opengl;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-import static cam72cam.mod.render.OpenGL.applyBool;
+import static cam72cam.mod.render.opengl.LegacyRenderContext.applyBool;
 
 public class BlendMode {
     private final boolean opaque;

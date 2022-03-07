@@ -4,6 +4,9 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -21,18 +24,23 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        new OpenGL.RenderContext()
-            .color(1, 1, 1, 1)
-            .texture(OpenGL.RenderContext.NO_TEXTURE)
-            .blend(BlendMode.OPAQUE)
-            .apply(() -> Gui.drawRect(x, y, x + width, y + height, color));
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+                new RenderState()
+                        .color(1, 1, 1, 1)
+                        .texture(Texture.NO_TEXTURE)
+                        .blend(BlendMode.OPAQUE)
+        )) {
+            Gui.drawRect(x, y, x + width, y + height, color);
+        }
     }
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        new OpenGL.RenderContext()
-            .texture(tex)
-            .apply(() -> Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1));
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+                new RenderState().texture(new Texture(tex))
+        )) {
+            Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
+        }
     }
 
     /** Draw fluid block at coords */
@@ -62,10 +70,11 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        new OpenGL.RenderContext()
-            .texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))
-            .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
-            .apply(() -> {
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+                new RenderState()
+                        .texture(new Texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
+                        .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
+        )) {
             int iW = sprite.getIconWidth();
             int iH = sprite.getIconHeight();
 
@@ -77,7 +86,7 @@ public class GUIHelpers {
                     instance.drawTexturedModalRect(x + offX, y + offY, GUIHelpers.sprite, (int)curWidth, (int)curHeight);
                 }
             }
-        });
+        }
     }
 
     /** Draw the fluid in a tank with a black background at % full */
@@ -100,12 +109,11 @@ public class GUIHelpers {
 
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
-        new OpenGL.RenderContext()
-            .color(1, 1, 1, 1)
-            .alpha_test(true)
-            .apply(() ->
-                Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color)
-        );
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+                new RenderState().color(1, 1, 1, 1).alpha_test(true)
+        )) {
+            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+        }
     }
 
     /** Screen Width in pixels (std coords) */
@@ -120,11 +128,14 @@ public class GUIHelpers {
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
-        new OpenGL.RenderContext()
-            .color(1, 1, 1, 1)
-            .alpha_test(false)
-            .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
-            .rescale_normal(true)
-            .apply(() -> Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y));
+        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+                new RenderState()
+                        .color(1, 1, 1, 1)
+                        .alpha_test(false)
+                        .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                        .rescale_normal(true)
+        )) {
+            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
+        }
     }
 }
