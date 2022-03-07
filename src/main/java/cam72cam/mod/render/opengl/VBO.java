@@ -145,22 +145,8 @@ public class VBO {
 
             shader.paramInt("Sampler0", OpenGlHelper.defaultTexUnit - GL13.GL_TEXTURE0);
             shader.paramInt("Sampler1", OpenGlHelper.lightmapTexUnit - GL13.GL_TEXTURE0);
-            shader.paramMatrix("ModelViewMat", state.model_view());
-            shader.paramMatrix("ProjMat", state.projection());
-            set_light(state);
+            restore = restore.and(sync(state));
             checkError("SETUP2");
-
-            /*
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_TEXTURE_ENV_COLOR);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, OpenGlHelper.GL_PREVIOUS);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.lightmapTexUnit);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_REPLACE);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, OpenGlHelper.GL_PREVIOUS);
-            GlStateManager.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-             */
         }
 
         @Override
@@ -178,10 +164,25 @@ public class VBO {
             }
         }
 
-        private void set_light(RenderState state) {
+        private OpenGL.With sync(RenderState state) {
             float x = OpenGlHelper.lastBrightnessX;
             float y = OpenGlHelper.lastBrightnessY;
-            float[] lightmap = state.lightmap != null ? state.lightmap : this.state.lightmap;
+
+            // given lightmap
+            float[] lightmap = state.lightmap;
+
+            // default lightmap
+            if (lightmap == null) {
+                lightmap = this.state.lightmap;
+            }
+
+            if (lightmap == null) {
+                // disabled lighting
+                if (!state.bools.getOrDefault(GL11.GL_LIGHTING, false)) {
+                    lightmap = new float[]{1, 1};
+                }
+            }
+
             if (lightmap != null) {
                 float block = lightmap[0];
                 float sky = lightmap[1];
@@ -190,20 +191,29 @@ public class VBO {
                 y = i / 65536;
             }
             shader.paramFloat("lightmapCoord", x, y);
+            shader.paramMatrix("ModelViewMat", state.model_view());
+            shader.paramMatrix("ProjMat", state.projection());
+            shader.paramFloat("colorMult", state.color != null ? state.color : new float[] {1, 1, 1, 1});
+
+            if (state.bools.containsKey(GL11.GL_CULL_FACE) || state.blend != null) {
+                RenderState lrs = new RenderState();
+                if (state.bools.containsKey(GL11.GL_CULL_FACE)) {
+                    lrs.bools.put(GL11.GL_CULL_FACE, state.bools.get(GL11.GL_CULL_FACE));
+                }
+                if (state.blend != null) {
+                    lrs.blend = state.blend;
+                }
+                return LegacyRenderContext.INSTANCE.apply(lrs);
+            }
+            return () -> {};
         }
 
         protected OpenGL.With push(Consumer<RenderState> mod) {
             if (1 == 1) {
                 RenderState sub = state.clone();
                 mod.accept(sub);
-                shader.paramMatrix("ModelViewMat", sub.model_view());
-                shader.paramMatrix("ProjMat", sub.projection());
-                set_light(sub);
-                return () -> {
-                    shader.paramMatrix("ModelViewMat", state.model_view());
-                    shader.paramMatrix("ProjMat", state.projection());
-                    set_light(state);
-                };
+                OpenGL.With subrest = sync(sub);
+                return subrest.and(() -> sync(state));
             } else {
                 RenderState state = new RenderState();
                 mod.accept(state);

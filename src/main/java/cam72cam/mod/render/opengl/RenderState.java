@@ -18,23 +18,6 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
 
-    /*
-
-    RenderState state = new RenderState()
-    state.translate(1, 2, 3)
-
-    BoundVBO vbo = model.bind(state) // apply state and clone
-    vbo.draw(state -> {
-        state.lighting(true);
-        return groups
-    });
-    vbo.draw(groups)
-
-
-
-
-     */
-
     public RenderState() {
     }
 
