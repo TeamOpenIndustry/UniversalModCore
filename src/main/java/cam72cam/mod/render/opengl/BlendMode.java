@@ -12,13 +12,13 @@ public class BlendMode {
     private Integer srcAlpha;
     private Integer dstAlpha;
 
-    public static final BlendMode OPAQUE = new BlendMode(false);
+    public static final BlendMode OPAQUE = new BlendMode(true);
 
     private BlendMode(boolean opaque) {
         this.opaque = opaque;
     }
     public BlendMode(int srcColor, int dstColor) {
-        this(true);
+        this(false);
         this.srcColor = srcColor;
         this.dstColor = dstColor;
         this.srcAlpha = null;
