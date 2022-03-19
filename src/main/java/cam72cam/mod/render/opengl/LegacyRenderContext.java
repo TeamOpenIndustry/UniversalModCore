@@ -92,7 +92,7 @@ public class LegacyRenderContext implements RenderContext {
                 applyBool(GL11.GL_TEXTURE_2D, true);
 
                 int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.textureId);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
                 restore.add(() -> {
                     GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
@@ -116,7 +116,7 @@ public class LegacyRenderContext implements RenderContext {
                 applyBool(GL11.GL_TEXTURE_2D, true);
 
                 int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.textureId);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
                 restore.add(() -> {
                     GL13.glActiveTexture(GL13.GL_TEXTURE2);
                     applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
@@ -140,7 +140,7 @@ public class LegacyRenderContext implements RenderContext {
                 applyBool(GL11.GL_TEXTURE_2D, true);
 
                 int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.textureId);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
                 restore.add(() -> {
                     GL13.glActiveTexture(GL13.GL_TEXTURE3);
                     applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);

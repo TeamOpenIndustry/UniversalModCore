@@ -150,7 +150,7 @@ public class ItemRender {
     private static void createSprite(String id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        File sprite = GLTexture.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
+        File sprite = ModCore.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
         if (sprite.exists()) {
             try {
                 ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);

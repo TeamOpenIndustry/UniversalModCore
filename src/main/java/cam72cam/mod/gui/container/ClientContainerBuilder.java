@@ -36,7 +36,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     private int centerX;
     private int centerY;
 
-    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(new Texture(CHEST_GUI_TEXTURE));
+    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
@@ -232,7 +232,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
         try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState().color(1, 1, 1, 1)
-                        .texture(new Texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
+                        .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
         )) {
             super.drawTexturedModalRect(x, y, sprite, 16, 16);
         }

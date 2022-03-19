@@ -118,7 +118,7 @@ public class VBO {
             int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
             int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.textureId);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
             restore = shader.bind().and(() -> {
                 GL11.glPopClientAttrib();
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);

@@ -5,22 +5,22 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 
-public class Texture {
-    public final static Texture NO_TEXTURE = new Texture(-1);
+public interface Texture {
+    Texture NO_TEXTURE = Texture.wrap(-1);
 
-    public final int textureId;
+    int getId();
 
-    public Texture(int textureId) {
-        this.textureId = textureId;
+    static Texture wrap(int id) {
+        return () -> id;
     }
 
-    public Texture(Identifier id) {
+    static Texture wrap(Identifier id) {
         ITextureObject tex = Minecraft.getMinecraft().getTextureManager().getTexture(id.internal);
         //noinspection ConstantConditions
         if (tex == null) {
             Minecraft.getMinecraft().getTextureManager().loadTexture(id.internal, new SimpleTexture(id.internal));
             tex = Minecraft.getMinecraft().getTextureManager().getTexture(id.internal);
         }
-        this.textureId = tex.getGlTextureId();
+        return tex::getGlTextureId;
     }
 }

@@ -37,7 +37,7 @@ public class GUIHelpers {
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
         try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
-                new RenderState().texture(new Texture(tex))
+                new RenderState().texture(Texture.wrap(tex))
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
         }
@@ -72,7 +72,7 @@ public class GUIHelpers {
 
         try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState()
-                        .texture(new Texture(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
+                        .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
         )) {
             int iW = sprite.getIconWidth();
