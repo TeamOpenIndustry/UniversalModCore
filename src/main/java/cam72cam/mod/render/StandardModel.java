@@ -1,7 +1,6 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.Block;
@@ -22,6 +21,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.model.pipeline.LightUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,36 +43,35 @@ public class StandardModel {
     }
 
     /** Add a block with a solid color */
-    public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
+    public StandardModel addColorBlock(Color color, Matrix4 transform) {
         IBlockState state = Blocks.CONCRETE.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
     }
 
     /** Add snow layers */
-    public StandardModel addSnow(int layers, Vec3d translate) {
+    public StandardModel addSnow(int layers, Matrix4 transform) {
         layers = Math.max(1, Math.min(8, layers));
         IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, new Vec3d(1, 1, 1), translate)));
+        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
     }
 
     /** Add item as a block (best effort) */
-    public StandardModel addItemBlock(ItemStack bed, Vec3d translate, Vec3d scale) {
+    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
         IBlockState state = itemToBlockState(bed);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, scale, translate)));
+        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
     }
 
     /** Add item (think dropped item) */
-    public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
+    public StandardModel addItem(ItemStack stack, Matrix4 transform) {
         custom.add((matrix, pt) -> {
-            matrix.translate(translate.x, translate.y, translate.z);
-            matrix.scale(scale.x, scale.y, scale.z);
+            matrix.model_view().multiply(transform);
             try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(matrix)) {
                 Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);
             }
