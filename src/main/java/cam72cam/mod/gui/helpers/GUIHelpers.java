@@ -2,7 +2,7 @@ package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -24,7 +24,7 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
@@ -36,7 +36,7 @@ public class GUIHelpers {
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState().texture(Texture.wrap(tex))
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
@@ -70,7 +70,7 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState()
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
@@ -109,7 +109,7 @@ public class GUIHelpers {
 
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState().color(1, 1, 1, 1).alpha_test(true)
         )) {
             Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
@@ -128,7 +128,7 @@ public class GUIHelpers {
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .alpha_test(false)

@@ -1,7 +1,7 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
@@ -27,7 +27,7 @@ class ItemButton extends GuiButton {
         RenderHelper.enableGUIStandardItemLighting();
 
         FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(
                 new RenderState().translate(x, y, 0).scale(2, 2, 1)
         )) {
             mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);

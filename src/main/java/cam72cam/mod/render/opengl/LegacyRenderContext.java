@@ -1,6 +1,6 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.BufferUtils;
@@ -22,7 +22,7 @@ public class LegacyRenderContext implements RenderContext {
     private LegacyRenderContext() {
     }
 
-    public OpenGL.With apply(RenderState state) {
+    public With apply(RenderState state) {
         List<Runnable> restore = new ArrayList<>();
 
         if (state.model_view != null || state.projection != null) {

@@ -1,6 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.BufferUtils;
@@ -53,7 +54,7 @@ public class GLSLShader {
     }
 
     /** Bind the shader, make sure you call restore() or put this in a try block */
-    public OpenGL.With bind() {
+    public With bind() {
         int oldProc = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
         ARBShaderObjects.glUseProgramObjectARB(program);
         return () -> ARBShaderObjects.glUseProgramObjectARB(oldProc);

@@ -1,6 +1,6 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
@@ -11,7 +11,7 @@ import java.util.function.Function;
 import static cam72cam.mod.render.opengl.LegacyRenderContext.applyBool;
 
 public class BlendMode {
-    private Function<OpenGL.With, OpenGL.With> apply;
+    private Function<With, With> apply;
 
     public static final BlendMode OPAQUE = new BlendMode(false);
 

@@ -10,6 +10,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
@@ -173,7 +174,7 @@ public class ItemRender {
         state.model_view().setIdentity();
         state.depth_test(true);
 
-        try (OpenGL.With matrix = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With matrix = LegacyRenderContext.INSTANCE.apply(state)) {
             int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
             GL11.glDepthFunc(GL11.GL_LESS);
             GL11.glClearDepth(1);

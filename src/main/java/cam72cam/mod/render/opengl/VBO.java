@@ -2,7 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.GLSLShader;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -62,9 +62,9 @@ public class VBO {
         return new Binding(state);
     }
 
-    public class Binding implements OpenGL.With {
+    public class Binding implements With {
         private final RenderState state;
-        private OpenGL.With restore;
+        private With restore;
 
         protected Binding(RenderState state) {
             if (vbo == -1) {
@@ -169,7 +169,7 @@ public class VBO {
             }
         }
 
-        private OpenGL.With sync(RenderState state) {
+        private With sync(RenderState state) {
             float x = OpenGlHelper.lastBrightnessX;
             float y = OpenGlHelper.lastBrightnessY;
 
@@ -213,11 +213,11 @@ public class VBO {
             return () -> {};
         }
 
-        protected OpenGL.With push(Consumer<RenderState> mod) {
+        protected With push(Consumer<RenderState> mod) {
             if (useModern) {
                 RenderState sub = state.clone();
                 mod.accept(sub);
-                OpenGL.With subrest = sync(sub);
+                With subrest = sync(sub);
                 return subrest.and(() -> sync(state));
             } else {
                 RenderState state = new RenderState();

@@ -1,7 +1,7 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 
 public interface RenderContext {
-    OpenGL.With apply(RenderState state);
+    With apply(RenderState state);
 }

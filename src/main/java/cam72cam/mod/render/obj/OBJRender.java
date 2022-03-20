@@ -3,7 +3,7 @@ package cam72cam.mod.render.obj;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.VertexBuffer;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.render.opengl.RenderState;
 import org.lwjgl.opengl.GL11;
@@ -35,7 +35,7 @@ public class OBJRender extends VBO {
 
         // TODO use parent push publicly?
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
-            try (OpenGL.With pus = super.push(mod)) {
+            try (With pus = super.push(mod)) {
                 draw(groups);
             }
         }

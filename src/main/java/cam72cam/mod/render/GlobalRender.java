@@ -9,6 +9,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.LegacyRenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
@@ -25,7 +26,6 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 /** Global Render Registry and helper functions */
 public class GlobalRender {
@@ -151,7 +151,7 @@ public class GlobalRender {
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
-        try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
         }
     }

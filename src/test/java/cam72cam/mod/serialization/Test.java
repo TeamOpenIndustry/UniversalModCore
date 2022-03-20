@@ -2,7 +2,7 @@ package cam72cam.mod.serialization;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
 import cam72cam.mod.util.Facing;
 import org.junit.Assert;
 
@@ -21,7 +21,7 @@ public class Test {
     public void timeA() {
         int k = 0;
         for (int i = 0; i < 10_000_000; i++) {
-            try (OpenGL.With w = () -> {}) {
+            try (With w = () -> {}) {
                 k++;
             }
         }
