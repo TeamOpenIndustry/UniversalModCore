@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.render.OpenGL;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBShaderObjects;
@@ -8,8 +9,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import util.Matrix4;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
 
@@ -17,7 +16,7 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class LegacyRenderContext implements RenderContext {
     // TODO does this break server side?
-    private static final FloatBuffer fourFloatBuffer = ByteBuffer.allocateDirect(4 * 16).order(ByteOrder.nativeOrder()).asFloatBuffer();
+    private static final FloatBuffer fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
     public static final LegacyRenderContext INSTANCE = new LegacyRenderContext();
 
     private LegacyRenderContext() {
@@ -54,10 +53,12 @@ public class LegacyRenderContext implements RenderContext {
             restore.add(() -> GL13.glActiveTexture(oldActive));
         }
 
+        boolean shaderActive = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+
         if (state.lightmap != null) {
             float block = state.lightmap[0];
             float sky = state.lightmap[1];
-            boolean vanillaEmissive = block == 1 && sky == 1 && ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) == 0;
+            boolean vanillaEmissive = block == 1 && sky == 1 && !shaderActive;
             if (vanillaEmissive) {
                 state.lighting(false);
                 GL13.glActiveTexture(OpenGlHelper.lightmapTexUnit);
@@ -101,54 +102,57 @@ public class LegacyRenderContext implements RenderContext {
             }
         }
 
-        if (state.normals != null) {
-            // Normals
-            GL13.glActiveTexture(GL13.GL_TEXTURE2);
-            boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+        if (shaderActive) {
 
-            if (state.normals == NO_TEXTURE) {
-                applyBool(GL11.GL_TEXTURE_2D, false);
-                restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE2);
-                    applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
-                });
-            } else {
-                applyBool(GL11.GL_TEXTURE_2D, true);
+            if (state.normals != null) {
+                // Normals
+                GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
 
-                int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
-                restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE2);
-                    applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
-                });
+                if (state.normals == NO_TEXTURE) {
+                    applyBool(GL11.GL_TEXTURE_2D, false);
+                    restore.add(() -> {
+                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+                    });
+                } else {
+                    applyBool(GL11.GL_TEXTURE_2D, true);
+
+                    int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
+                    restore.add(() -> {
+                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                        applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
+                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
+                    });
+                }
+                GL13.glActiveTexture(GL13.GL_TEXTURE0);
             }
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        }
-        if (state.specular != null) {
-            // Specular
-            GL13.glActiveTexture(GL13.GL_TEXTURE3);
-            boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+            if (state.specular != null) {
+                // Specular
+                GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
 
-            if (state.specular == NO_TEXTURE) {
-                applyBool(GL11.GL_TEXTURE_2D, false);
-                restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE3);
-                    applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
-                });
-            } else {
-                applyBool(GL11.GL_TEXTURE_2D, true);
+                if (state.specular == NO_TEXTURE) {
+                    applyBool(GL11.GL_TEXTURE_2D, false);
+                    restore.add(() -> {
+                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+                    });
+                } else {
+                    applyBool(GL11.GL_TEXTURE_2D, true);
 
-                int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
-                restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE3);
-                    applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
-                });
+                    int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
+                    restore.add(() -> {
+                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                        applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
+                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
+                    });
+                }
+                GL13.glActiveTexture(GL13.GL_TEXTURE0);
+
             }
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
-
         }
 
 

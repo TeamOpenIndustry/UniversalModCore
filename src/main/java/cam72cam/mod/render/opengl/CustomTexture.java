@@ -89,6 +89,8 @@ public abstract class CustomTexture implements Texture {
     }
 
     public Texture synchronous(boolean sync) {
+        lastUsed = System.currentTimeMillis();
+
         if (textureID == null) {
             if (sync) {
                 directLoader();

@@ -243,9 +243,13 @@ public class OBJModel {
             state.texture((icon && OBJModel.this.icons.containsKey(texName) ? OBJModel.this.icons : OBJModel.this.textures).get(texName).synchronous(wait));
             if (!icon && OBJModel.this.normals.containsKey(texName)) {
                 state.normals(OBJModel.this.normals.get(texName).synchronous(wait));
+            } else {
+                state.normals(defTex);
             }
             if (!icon && OBJModel.this.speculars.containsKey(texName)) {
                 state.specular(OBJModel.this.speculars.get(texName).synchronous(wait));
+            } else {
+                state.specular(defTex);
             }
             state.smooth_shading(OBJModel.this.isSmoothShading);
         }

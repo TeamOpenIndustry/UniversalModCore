@@ -4,11 +4,11 @@ import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.GLSLShader;
 import cam72cam.mod.render.OpenGL;
 import cam72cam.mod.resource.Identifier;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.*;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -40,8 +40,9 @@ public class VBO {
         VertexBuffer vb = buffer.get();
         this.length = vb.data.length / (vb.stride);
         this.vbInfo = new VertexBuffer(0, vb.hasNormals);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(vb.data.length * Float.BYTES).order(ByteOrder.nativeOrder());
-        buffer.asFloatBuffer().put(vb.data);
+        FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(vb.data.length);
+        buffer.put(vb.data);
+        buffer.position(0);
 
         //int oldVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
         int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);

@@ -10,6 +10,7 @@ import net.minecraft.block.BlockSnow;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -71,6 +72,9 @@ public class StandardModel {
     /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Matrix4 transform) {
         custom.add((matrix, pt) -> {
+            // Hack GLStateManager...
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+
             matrix.model_view().multiply(transform);
             try (OpenGL.With ctx = LegacyRenderContext.INSTANCE.apply(matrix)) {
                 Minecraft.getMinecraft().getRenderItem().renderItem(stack.internal, ItemCameraTransforms.TransformType.NONE);

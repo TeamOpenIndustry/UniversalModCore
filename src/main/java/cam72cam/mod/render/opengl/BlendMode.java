@@ -1,62 +1,59 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.render.OpenGL;
+import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
+
+import java.nio.FloatBuffer;
+import java.util.function.Function;
 
 import static cam72cam.mod.render.opengl.LegacyRenderContext.applyBool;
 
 public class BlendMode {
-    private final boolean opaque;
-    private int srcColor;
-    private int dstColor;
-    private Integer srcAlpha;
-    private Integer dstAlpha;
+    private Function<OpenGL.With, OpenGL.With> apply;
 
-    public static final BlendMode OPAQUE = new BlendMode(true);
+    public static final BlendMode OPAQUE = new BlendMode(false);
 
-    private BlendMode(boolean opaque) {
-        this.opaque = opaque;
+    private BlendMode(boolean enabled) {
+        apply = w -> {
+            boolean oldBlend = GL11.glGetBoolean(GL11.GL_BLEND);
+            applyBool(GL11.GL_BLEND, enabled);
+            return w.and(() -> applyBool(GL11.GL_BLEND, oldBlend));
+        };
     }
     public BlendMode(int srcColor, int dstColor) {
-        this(false);
-        this.srcColor = srcColor;
-        this.dstColor = dstColor;
-        this.srcAlpha = null;
-        this.dstAlpha = null;
+        this(true);
+        apply = apply.andThen(w -> {
+            int origSrcColor = GL11.glGetInteger(GL11.GL_BLEND_SRC);
+            int origDstColor = GL11.glGetInteger(GL11.GL_BLEND_DST);
+            GL11.glBlendFunc(srcColor, dstColor);
+            return w.and(() -> GL11.glBlendFunc(origSrcColor, origDstColor));
+        });
     }
     public BlendMode(int srcColor, int dstColor, int srcAlpha, int dstAlpha) {
-        this(srcColor, dstColor);
-        this.srcAlpha = srcAlpha;
-        this.dstAlpha = dstAlpha;
+        this(true);
+        apply = apply.andThen(w -> {
+            int origSrcColor = GL11.glGetInteger(GL11.GL_BLEND_SRC);
+            int origDstColor = GL11.glGetInteger(GL11.GL_BLEND_DST);
+            int origSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
+            int origDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
+            GL14.glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
+            return w.and(() -> GL14.glBlendFuncSeparate(origSrcColor, origDstColor, origSrcAlpha, origDstAlpha));
+        });
+    }
+
+    public BlendMode constantColor(float r, float g, float b, float a) {
+        apply = apply.andThen(w -> {
+            FloatBuffer orig = GLAllocation.createDirectFloatBuffer(16);
+            GL11.glGetFloat(GL14.GL_BLEND_COLOR, orig);
+            GL14.glBlendColor(r,g,b,a);
+            return w.and(() -> GL14.glBlendColor(orig.get(0), orig.get(1), orig.get(2), orig.get(3)));
+        });
+        return this;
     }
 
     public Runnable apply() {
-        boolean oldBlend = GL11.glGetBoolean(GL11.GL_BLEND);
-        if (opaque) {
-            applyBool(GL11.GL_BLEND, false);
-            return () -> applyBool(GL11.GL_BLEND, oldBlend);
-        } else {
-            applyBool(GL11.GL_BLEND, true);
-            int origSrcColor = GL11.glGetInteger(GL11.GL_BLEND_SRC);
-            int origDstColor = GL11.glGetInteger(GL11.GL_BLEND_DST);
-
-            boolean withAlpha = srcAlpha != null && dstAlpha != null;
-
-            int origSrcAlpha = withAlpha ? GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA) : -1;
-            int origDstAlpha = withAlpha ? GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA) : -1;
-            if (withAlpha) {
-                GL14.glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
-            } else {
-                GL11.glBlendFunc(srcColor, dstColor);
-            }
-            return () -> {
-                if (withAlpha) {
-                    GL14.glBlendFuncSeparate(origSrcColor, origDstColor, origSrcAlpha, origDstAlpha);
-                } else {
-                    GL11.glBlendFunc(origSrcColor, origDstColor);
-                }
-                applyBool(GL11.GL_BLEND, oldBlend);
-            };
-        }
+        return apply.apply(() -> {})::restore;
     }
 }

@@ -14,6 +14,7 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -29,7 +30,6 @@ import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-import util.Matrix4;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Matrix4f;
@@ -153,7 +153,7 @@ public class ItemRender {
         File sprite = ModCore.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
         if (sprite.exists()) {
             try {
-                ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+                ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
                 buff.put(ByteBuffer.wrap(Files.readAllBytes(sprite.toPath())));
                 buff.flip();
                 iconSheet.setSprite(id, buff);
@@ -180,7 +180,7 @@ public class ItemRender {
 
             model.renderCustom(state);
 
-            ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+            ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
             GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
 
             fb.unbindFramebuffer();
