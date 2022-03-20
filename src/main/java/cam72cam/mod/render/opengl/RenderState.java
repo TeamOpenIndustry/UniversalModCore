@@ -16,6 +16,7 @@ public class RenderState {
     protected Texture specular = null;
     protected float[] color = null;
     protected Map<Integer, Boolean> bools = new HashMap<>();
+    protected Boolean depth_mask;
     protected Boolean smooth_shading = null;
     protected float[] lightmap = null;
     protected BlendMode blend = null;
@@ -29,6 +30,7 @@ public class RenderState {
         this.texture = ctx.texture;
         this.color = ctx.color != null ? ctx.color.clone() : null;
         this.bools = new HashMap<>(ctx.bools);
+        this.depth_mask = ctx.depth_mask;
         this.smooth_shading = ctx.smooth_shading;
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
@@ -101,6 +103,10 @@ public class RenderState {
     }
     public RenderState depth_test(boolean depth_test) {
         this.bools.put(GL11.GL_DEPTH_TEST, depth_test);
+        return this;
+    }
+    public RenderState depth_mask(boolean depth_mask) {
+        this.depth_mask = depth_mask;
         return this;
     }
     public RenderState smooth_shading(boolean smooth_shading) {

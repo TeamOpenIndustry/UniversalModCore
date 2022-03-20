@@ -175,6 +175,12 @@ public class LegacyRenderContext implements RenderContext {
             restore.add(() -> applyBool(glId, oldValue));
         });
 
+        if (state.depth_mask != null) {
+            boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+            GL11.glDepthMask(state.depth_mask);
+            restore.add(() -> GL11.glDepthMask(oldDepthMask));
+        }
+
         if (state.smooth_shading != null) {
             int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
             GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
