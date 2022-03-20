@@ -7,6 +7,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -107,8 +108,8 @@ public abstract class Particle {
         double x = eyes.x - posX;
         double y = eyes.y - posY;
         double z = eyes.z - posZ;
-        mat.rotate(Math.toRadians(180 - Math.toDegrees(Math.atan2(-x, z))), 0, 1, 0);
-        mat.rotate(Math.toRadians(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(MathHelper.atan2(-x, z))), 0, 1, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(MathHelper.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
     }
 
     /** Used to render multiple particles in the same function for efficiency */

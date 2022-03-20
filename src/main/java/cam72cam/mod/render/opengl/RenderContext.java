@@ -25,25 +25,26 @@ public class RenderContext {
         List<Runnable> restore = new ArrayList<>();
 
         if (state.model_view != null || state.projection != null) {
-            int oldMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-            restore.add(() -> GL11.glMatrixMode(oldMode));
+            //int oldMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+            //restore.add(() -> GL11.glMatrixMode(oldMode));
+            // Sane default and removes a few % on render overhead
+            restore.add(() -> GL11.glMatrixMode(GL11.GL_MODELVIEW));
         }
         if (state.model_view != null) {
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
             multMatrix(state.model_view.copy().transpose());
-            restore.add(() -> {
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
-                GL11.glPopMatrix();
-            });
+            restore.add(GL11::glPopMatrix);
         }
         if (state.projection != null) {
+            // Since we use the projection matrix so little, we assume that we are always defaulted to MODELVIEW
             GL11.glMatrixMode(GL11.GL_PROJECTION);
             GL11.glPushMatrix();
             multMatrix(state.projection.copy().transpose());
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
             restore.add(() -> {
                 GL11.glMatrixMode(GL11.GL_PROJECTION);
                 GL11.glPopMatrix();
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
             });
         }
 
