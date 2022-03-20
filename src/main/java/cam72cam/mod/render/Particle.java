@@ -7,6 +7,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
+import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,13 +102,13 @@ public abstract class Particle {
     /** Render this particle */
     protected abstract void render(RenderState state, float partialTicks);
 
-    protected void lookAtPlayer(RenderState state) {
+    protected void lookAtPlayer(Matrix4 mat) {
         Vec3d eyes = MinecraftClient.getPlayer().getPositionEyes();
         double x = eyes.x - posX;
         double y = eyes.y - posY;
         double z = eyes.z - posZ;
-        state.rotate(180 - Math.toDegrees(Math.atan2(-x, z)), 0, 1, 0);
-        state.rotate(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y)) + 90, 1, 0, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(Math.atan2(-x, z))), 0, 1, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
     }
 
     /** Used to render multiple particles in the same function for efficiency */
