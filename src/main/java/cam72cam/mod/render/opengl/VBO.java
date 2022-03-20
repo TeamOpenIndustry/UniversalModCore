@@ -1,11 +1,10 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.model.obj.VertexBuffer;
-import cam72cam.mod.render.GLSLShader;
 import cam72cam.mod.util.With;
-import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.renderer.GLAllocation;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
 
 import java.nio.FloatBuffer;
 import java.util.function.Consumer;
@@ -14,7 +13,6 @@ import java.util.function.Supplier;
 public class VBO {
     private final Supplier<VertexBuffer> buffer;
     private final Consumer<RenderState> settings;
-    private GLSLShader shader = null;
 
     private int vbo;
     private int length;
@@ -27,13 +25,6 @@ public class VBO {
     }
 
     private void init() {
-        if (shader == null) {
-            this.shader = new GLSLShader(
-                    new Identifier("universalmodcore:shaders/std.vert"),
-                    new Identifier("universalmodcore:shaders/std.frag")
-            );
-        }
-
         VertexBuffer vb = buffer.get();
         this.length = vb.data.length / (vb.stride);
         this.vbInfo = new VertexBuffer(0, vb.hasNormals);
