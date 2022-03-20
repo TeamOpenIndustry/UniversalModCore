@@ -14,6 +14,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
@@ -109,9 +110,12 @@ public class GUIHelpers {
 
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(
-                new RenderState().color(1, 1, 1, 1).alpha_test(true)
-        )) {
+        drawCenteredString(text, x, y, color, new Matrix4());
+    }
+    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
             Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
         }
     }
@@ -128,13 +132,17 @@ public class GUIHelpers {
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(
-                new RenderState()
-                        .color(1, 1, 1, 1)
-                        .alpha_test(false)
-                        .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
-                        .rescale_normal(true)
-        )) {
+        drawItem(stack, x, y, new Matrix4());
+    }
+
+    public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
+        RenderState state = new RenderState()
+                .color(1, 1, 1, 1)
+                .alpha_test(false)
+                .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                .rescale_normal(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         }
     }
