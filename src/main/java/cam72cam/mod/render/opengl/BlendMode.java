@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL14;
 import java.nio.FloatBuffer;
 import java.util.function.Function;
 
-import static cam72cam.mod.render.opengl.LegacyRenderContext.applyBool;
+import static cam72cam.mod.render.opengl.RenderContext.applyBool;
 
 public class BlendMode {
     private Function<With, With> apply;

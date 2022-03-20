@@ -50,7 +50,7 @@ public abstract class CustomTexture implements Texture {
 
     private void createTexture() {
         textureID = GL11.glGenTextures();
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(Texture.wrap(textureID)))) {
+        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);

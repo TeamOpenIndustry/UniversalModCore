@@ -1,6 +1,6 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.util.With;
@@ -27,7 +27,7 @@ public class SpriteSheet {
     /** Create new blank sheet and add slots to unallocated */
     private void allocateSheet() {
         int textureID = GL11.glGenTextures();
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(Texture.wrap(textureID)))) {
+        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
             int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
             TextureUtil.allocateTexture(textureID, sheetSize, sheetSize);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
@@ -56,7 +56,7 @@ public class SpriteSheet {
         }
         SpriteInfo sprite = sprites.get(id);
 
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(new RenderState().texture(Texture.wrap(sprite.texID)))) {
+        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(sprite.texID)))) {
             GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, sprite.uPx, sprite.vPx, spriteSize, spriteSize, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
         }
     }
@@ -71,7 +71,7 @@ public class SpriteSheet {
                 .texture(Texture.wrap(sprite.texID))
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With ctx = RenderContext.apply(state)) {
             GL11.glBegin(GL11.GL_QUADS);
             GL11.glColor4f(1, 1, 1, 1);
             GL11.glTexCoord2f(sprite.uMin, sprite.vMin);

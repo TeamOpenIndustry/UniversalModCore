@@ -7,7 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
@@ -174,7 +174,7 @@ public class ItemRender {
         state.model_view().setIdentity();
         state.depth_test(true);
 
-        try (With matrix = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With matrix = RenderContext.apply(state)) {
             int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
             GL11.glDepthFunc(GL11.GL_LESS);
             GL11.glClearDepth(1);

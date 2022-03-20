@@ -4,7 +4,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
-import cam72cam.mod.render.opengl.LegacyRenderContext;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
@@ -25,7 +25,7 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = RenderContext.apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
@@ -37,7 +37,7 @@ public class GUIHelpers {
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = RenderContext.apply(
                 new RenderState().texture(Texture.wrap(tex))
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
@@ -71,7 +71,7 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(
+        try (With ctx = RenderContext.apply(
                 new RenderState()
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
@@ -115,7 +115,7 @@ public class GUIHelpers {
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
         }
     }
@@ -142,7 +142,7 @@ public class GUIHelpers {
                 .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         }
     }

@@ -11,7 +11,7 @@ public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
-        try (With ctx = LegacyRenderContext.INSTANCE.apply(state)) {
+        try (With ctx = RenderContext.apply(state)) {
             GL11.glBegin(GL11.GL_QUADS);
             for (VertexBuilder vert : verts) {
                 vert.draw();

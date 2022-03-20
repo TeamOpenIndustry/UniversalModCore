@@ -67,7 +67,7 @@ public class VBO {
             int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
 
-            this.restore = LegacyRenderContext.INSTANCE.apply(state).and(() -> {
+            this.restore = RenderContext.apply(state).and(() -> {
                 GL11.glPopClientAttrib();
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
             });
@@ -101,7 +101,7 @@ public class VBO {
         protected With push(Consumer<RenderState> mod) {
             RenderState state = new RenderState();
             mod.accept(state);
-            return LegacyRenderContext.INSTANCE.apply(state);
+            return RenderContext.apply(state);
         }
 
         /**
