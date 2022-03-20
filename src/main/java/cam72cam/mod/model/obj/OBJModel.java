@@ -36,18 +36,18 @@ public class OBJModel {
     public String hash;
 
     public OBJModel(Identifier modelLoc, float darken) throws Exception {
-        this(modelLoc, darken, 1, null);
+        this(modelLoc, darken, 1, null, 30);
     }
 
     public OBJModel(Identifier modelLoc, float darken, Collection<String> variants) throws Exception {
-        this(modelLoc, darken, 1, variants);
+        this(modelLoc, darken, 1, variants, 30);
     }
 
     public OBJModel(Identifier modelLoc, float darken, double scale) throws Exception {
-        this(modelLoc, darken, scale, null);
+        this(modelLoc, darken, scale, null, 30);
     }
 
-    public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants) throws Exception {
+    public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants, int cacheSeconds) throws Exception {
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 modelLoc,
                 String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.getMaxTextureSize()),
@@ -99,9 +99,6 @@ public class OBJModel {
 
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-                //TODO CACHE SECONDS!
-                int cacheSeconds = 30;
-
                 if (Config.getMaxTextureSize() / 8 < Math.max(textureWidth, textureHeight)) {
                     Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, Config.getMaxTextureSize()/8);
                     Supplier<GenericByteBuffer> iconData = cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), Config.getMaxTextureSize() / 8))));
