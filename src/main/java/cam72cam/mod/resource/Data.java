@@ -7,11 +7,10 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.SidedProxy;
 import org.apache.commons.io.IOUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,6 +78,15 @@ class Data {
                             streams.add(new ByteArrayInputStream(IOUtils.toByteArray(stream)));
                         }
                         resourcePack.close();
+                    }
+                    File[] folders = folder.listFiles((dir, name) -> true);
+                    for (File dir : folders) {
+                        if (dir.isDirectory()) {
+                            File path = Paths.get(dir.getPath(), pathString(location, false)).toFile();
+                            if (path.exists()) {
+                                streams.add(new FileInputStream(path));
+                            }
+                        }
                     }
                 }
             } else {
