@@ -26,9 +26,11 @@ public abstract class CustomTexture implements Texture {
     static {
         // free unused textures
         ClientEvents.TICK.subscribe(() -> {
-            for (CustomTexture texture : textures) {
-                if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isAlive())) {
-                    texture.dealloc();
+            synchronized (textures) {
+                for (CustomTexture texture : textures) {
+                    if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isAlive())) {
+                        texture.dealloc();
+                    }
                 }
             }
         });
@@ -125,7 +127,9 @@ public abstract class CustomTexture implements Texture {
     }
 
     public void freeGL() {
-        dealloc();
-        textures.remove(this);
+        synchronized (textures) {
+            dealloc();
+            textures.remove(this);
+        }
     }
 }
