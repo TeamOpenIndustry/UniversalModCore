@@ -10,6 +10,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
@@ -23,6 +24,9 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
@@ -76,6 +80,19 @@ public class ModCore {
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
+        File cacheDir = cacheFile(new Identifier(MODID, "foo")).getParentFile().getParentFile();
+        if (cacheDir.exists() && cacheDir.isDirectory()) {
+            for (File modDir : cacheDir.listFiles()) {
+                if (modDir.isDirectory()) {
+                    for (File file : modDir.listFiles()) {
+                        if (!usedCacheFiles.contains(file)) {
+                            ModCore.warn("Removing file cache entry: %s", file);
+                            FileUtils.deleteQuietly(file);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /** START Phase (Forge) */
@@ -280,15 +297,27 @@ public class ModCore {
         instance.logger.catching(ex);
     }
 
+    private static final List<File> usedCacheFiles = new ArrayList<>();
+
     /** Get a file for name in the UMC cache dir */
-    public static File cacheFile(String name) {
+    public static File cacheFile(Identifier id) {
         File configDir = Loader.instance().getConfigDir();
         if (configDir == null) {
             configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
         }
-        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 
-        return new File(cacheDir, name);
+        // https://stackoverflow.com/questions/1155107/is-there-a-cross-platform-java-method-to-remove-filename-special-chars#comment96425990_17745189
+        String path = id.getPath().replaceAll("(?U)[^\\w\\._]+", ".");
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // In a world with linux, who needs windows or gates?
+            path = StringUtils.right(path, 250 - cacheDir.getAbsolutePath().length()); // Windows default max *Path* len is 256
+        } else {
+            path = StringUtils.right(path, 250); // Most FS's allow up to 255
+        }
+        File f = new File(cacheDir, path);
+        usedCacheFiles.add(f);
+        return f;
     }
 }

@@ -48,9 +48,9 @@ public class OBJModel {
     }
 
     public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants, int cacheSeconds) throws Exception {
+        String settings = String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants), Config.getMaxTextureSize());
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
-                modelLoc,
-                String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants).hashCode(), Config.getMaxTextureSize()),
+                new Identifier(modelLoc.getDomain(), modelLoc.getPath() + "_" + settings.hashCode()),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
         );
 

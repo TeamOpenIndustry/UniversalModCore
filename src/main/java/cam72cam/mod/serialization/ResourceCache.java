@@ -91,8 +91,8 @@ public class ResourceCache<T> {
     private final T intermediary;
     private boolean isClosed;
 
-    public ResourceCache(Identifier id, String prefix, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
-        dir = ModCore.cacheFile(String.format("%s-%s", prefix, hasher.hashString(id.toString(), Charset.defaultCharset()).toString()));
+    public ResourceCache(Identifier id, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
+        dir = ModCore.cacheFile(id);
         dir.mkdirs();
         meta = new File(dir, "meta.nbt");
         provider = meta.exists() ?

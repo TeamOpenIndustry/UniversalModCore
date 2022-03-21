@@ -78,8 +78,8 @@ public class ItemRender {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
-                    String id = ((ISpriteItemModel) model).getSpriteKey(stack);
-                    bar.step(id);
+                    Identifier id = ((ISpriteItemModel) model).getSpriteKey(stack);
+                    bar.step(id.toString());
                     createSprite(id, ((ISpriteItemModel) model).getSpriteModel(stack));
                 }
                 Progress.pop(bar);
@@ -142,16 +142,16 @@ public class ItemRender {
     /** Support for turning a custom model into a sprite */
     public interface ISpriteItemModel extends IItemModel {
         /** Unique string to represent this stack */
-        String getSpriteKey(ItemStack stack);
+        Identifier getSpriteKey(ItemStack stack);
         /** Model that should be rendered as a sprite */
         StandardModel getSpriteModel(ItemStack stack);
     }
 
     /** Internal method to render a model to a framebuffer and drop it in the texture sheet */
-    private static void createSprite(String id, StandardModel model) {
+    private static void createSprite(Identifier id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        File sprite = ModCore.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
+        File sprite = ModCore.cacheFile(new Identifier(id.getDomain(),id.getPath() + "_sprite" + iconSheet.spriteSize + ".raw"));
         if (sprite.exists()) {
             try {
                 ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
