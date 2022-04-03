@@ -27,18 +27,18 @@ public class ImageUtils {
 
 
     public static int[] toRGBA(BufferedImage image) {
-        int[] argb = new int[image.getWidth() * image.getHeight()];
-        int[] rgba = new int[image.getWidth() * image.getHeight()];
-        image.getRGB(0, 0, image.getWidth(), image.getHeight(), argb, 0, image.getWidth());
-        for (int i = 0; i < rgba.length; i++) {
-            int c_argb = argb[i];
+        int[] pixels = new int[image.getWidth() * image.getHeight()];
+        image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+        for (int i = 0; i < pixels.length; i++) {
+            int c_argb = pixels[i];
             int a = c_argb >> 24 & 255;
             int r = c_argb >> 16 & 255;
             int g = c_argb >> 8 & 255;
             int b = c_argb >> 0 & 255;
-            int c_rgba = (r << 24) | (g << 16) | (b << 8) | a;
-            rgba[i] = c_rgba;
+            pixels[i] = (r << 24) | (g << 16) | (b << 8) | a;
+
+            //pixels[i] = (argb & 0xFFFFFF) << 8 | (argb >> 24);
         }
-        return rgba;
+        return pixels;
     }
 }
