@@ -15,8 +15,7 @@ import java.util.*;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
-    // TODO does this break server side?
-    private static final FloatBuffer fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
+    private static FloatBuffer fourFloatBuffer;
 
     private RenderContext() {
     }
@@ -160,6 +159,9 @@ public class RenderContext {
             boolean oldColorMaterial = GL11.glGetBoolean(GL11.GL_COLOR_MATERIAL);
             applyBool(GL11.GL_COLOR_MATERIAL, true);
 
+            if (fourFloatBuffer == null) {
+                fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
+            }
             GL11.glGetFloat(GL11.GL_CURRENT_COLOR, fourFloatBuffer);
             float[] oldColor = new float[] {fourFloatBuffer.get(0), fourFloatBuffer.get(1), fourFloatBuffer.get(2), fourFloatBuffer.get(3)};
             GL11.glColor4f(state.color[0], state.color[1], state.color[2], state.color[3]);

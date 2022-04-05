@@ -33,7 +33,6 @@ public class OBJRender extends VBO {
             super(state);
         }
 
-        // TODO use parent push publicly?
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
             try (With pus = super.push(mod)) {
                 draw(groups);

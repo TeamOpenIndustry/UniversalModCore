@@ -13,6 +13,7 @@ import static cam72cam.mod.render.opengl.RenderContext.applyBool;
 public class BlendMode {
     private Function<With, With> apply;
 
+    private static FloatBuffer fourFloatBuffer;
     public static final BlendMode OPAQUE = new BlendMode(false);
 
     private BlendMode(boolean enabled) {
@@ -45,10 +46,13 @@ public class BlendMode {
 
     public BlendMode constantColor(float r, float g, float b, float a) {
         apply = apply.andThen(w -> {
-            FloatBuffer orig = GLAllocation.createDirectFloatBuffer(16);
-            GL11.glGetFloat(GL14.GL_BLEND_COLOR, orig);
+            if (fourFloatBuffer == null) {
+                fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
+            }
+            GL11.glGetFloat(GL14.GL_BLEND_COLOR, fourFloatBuffer);
+            float[] oldColor = new float[] {fourFloatBuffer.get(0), fourFloatBuffer.get(1), fourFloatBuffer.get(2), fourFloatBuffer.get(3)};
             GL14.glBlendColor(r,g,b,a);
-            return w.and(() -> GL14.glBlendColor(orig.get(0), orig.get(1), orig.get(2), orig.get(3)));
+            return w.and(() -> GL14.glBlendColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         });
         return this;
     }
