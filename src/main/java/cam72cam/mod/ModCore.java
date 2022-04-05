@@ -80,15 +80,13 @@ public class ModCore {
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
-        File cacheDir = cacheFile(new Identifier(MODID, "foo")).getParentFile().getParentFile();
-        if (cacheDir.exists() && cacheDir.isDirectory()) {
-            for (File modDir : cacheDir.listFiles()) {
-                if (modDir.isDirectory()) {
-                    for (File file : modDir.listFiles()) {
-                        if (!usedCacheFiles.contains(file)) {
-                            ModCore.warn("Removing file cache entry: %s", file);
-                            FileUtils.deleteQuietly(file);
-                        }
+        for (Mod mod : mods) {
+            File modDir = cacheFile(new Identifier(mod.modID(), "foo")).getParentFile();
+            if (modDir.exists() && modDir.isDirectory()) {
+                for (File file : modDir.listFiles()) {
+                    if (!usedCacheFiles.contains(file)) {
+                        ModCore.warn("Removing file cache entry: %s", file);
+                        FileUtils.deleteQuietly(file);
                     }
                 }
             }
