@@ -3,6 +3,7 @@ package cam72cam.mod.event;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
@@ -50,9 +51,30 @@ public class ClientEvents {
         RELOAD.execute(Runnable::run);
     }
 
+    public enum MouseAction {
+        CLICK,
+        RELEASE,
+        MOVE,
+    }
+
+    public static class MouseGuiEvent {
+        public final MouseAction action;
+        public final int x;
+        public final int y;
+        public final int button;
+
+        public MouseGuiEvent(MouseAction action, int x, int y, int button) {
+            this.action = action;
+            this.x = x;
+            this.y = y;
+            this.button = button;
+        }
+    }
+
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
+    public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
     public static final Event<Runnable> TEXTURE_STITCH = new Event<>();
@@ -74,6 +96,28 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             TICK.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void onGuiClick(GuiScreenEvent.MouseInputEvent.Pre event) {
+            int x = org.lwjgl.input.Mouse.getEventX() * GUIHelpers.getScreenWidth() / Minecraft.getMinecraft().displayWidth;
+            int y = org.lwjgl.input.Mouse.getEventY() * GUIHelpers.getScreenHeight() / Minecraft.getMinecraft().displayHeight;
+            int btn = org.lwjgl.input.Mouse.getEventButton();
+            MouseAction action;
+            if (org.lwjgl.input.Mouse.getEventButtonState()) {
+                // click
+                action = MouseAction.CLICK;
+            } else if (btn != -1) {
+                // release
+                action = MouseAction.RELEASE;
+            } else {
+                // move
+                action = MouseAction.MOVE;
+            }
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn);
+            if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
+                event.setCanceled(true);
+            }
         }
 
         @SubscribeEvent
