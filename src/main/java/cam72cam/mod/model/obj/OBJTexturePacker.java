@@ -164,7 +164,7 @@ public class OBJTexturePacker {
                 } catch (Exception e) {
                     //Fallback
                     try {
-                        image = ImageIO.read(lookup.apply(texture.texKd));
+                        image = ImageIO.read(lookup.apply(texlu.apply(texture)));
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                         throw new RuntimeException(e);
