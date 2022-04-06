@@ -67,42 +67,82 @@ public class OBJRender extends VBO {
     }
 
     public class Builder {
-        private final VertexBuffer vb;
         private final Consumer<RenderState> settings;
-        private float[] built;
-        private int builtIdx;
+        private final List<Consumer<Buffer>> actions = new ArrayList<>();
 
         private Builder(Consumer<RenderState> settings) {
-            this.vb = buffer.get();
-            this.built = new float[vb.data.length];
-            this.builtIdx = 0;
             this.settings = settings;
         }
 
-        private void require(int size) {
-            while (built.length <= builtIdx + size) {
-                float[] tmp = new float[built.length * 2];
-                System.arraycopy(built, 0, tmp, 0, builtIdx);
-                built = tmp;
-            }
-        }
-        private void add(float[] buff, Matrix4 m) {
-            require(buff.length);
+        private class Buffer {
+            private VertexBuffer vb;
+            private float[] built;
+            private int builtIdx;
 
-            if (m != null) {
-                for (int i = 0; i < buff.length; i += vb.stride) {
-                    float x = buff[i+0];
-                    float y = buff[i+1];
-                    float z = buff[i+2];
-                    Vector3f v = m.apply(new Vector3f(x, y, z));
-                    buff[i+0] = v.x;
-                    buff[i+1] = v.y;
-                    buff[i+2] = v.z;
+            private Buffer() {
+                this.vb = buffer.get();
+                this.built = new float[vb.data.length];
+                this.builtIdx = 0;
+            }
+
+            private void require(int size) {
+                while (built.length <= builtIdx + size) {
+                    float[] tmp = new float[built.length * 2];
+                    System.arraycopy(built, 0, tmp, 0, builtIdx);
+                    built = tmp;
                 }
             }
 
-            System.arraycopy(buff, 0, built, builtIdx, buff.length);
-            builtIdx += buff.length;
+            private void add(float[] buff, Matrix4 m) {
+                require(buff.length);
+
+                if (m != null) {
+                    for (int i = 0; i < buff.length; i += vb.stride) {
+                        float x = buff[i+0];
+                        float y = buff[i+1];
+                        float z = buff[i+2];
+                        Vector3f v = m.apply(new Vector3f(x, y, z));
+                        buff[i+0] = v.x;
+                        buff[i+1] = v.y;
+                        buff[i+2] = v.z;
+                    }
+                }
+
+                System.arraycopy(buff, 0, built, builtIdx, buff.length);
+                builtIdx += buff.length;
+            }
+
+            public void draw(Matrix4 m) {
+                if (m == null) {
+                    add(vb.data, null);
+                } else {
+                    float[] buff = new float[vb.data.length];
+                    System.arraycopy(vb.data, 0, buff, 0, vb.data.length);
+                    add(buff, m);
+                }
+            }
+
+            public void draw(Collection<String> groups, Matrix4 m) {
+                for (String group : groups) {
+                    OBJGroup info = model.groups.get(group);
+
+                    int start = info.faceStart * vb.vertsPerFace * vb.stride;
+                    int stop = (info.faceStop + 1) * vb.vertsPerFace * vb.stride;
+
+                    float[] buff = new float[stop - start];
+                    System.arraycopy(vb.data, start, buff, 0, stop - start);
+                    add(buff, m);
+                }
+            }
+
+            public VertexBuffer build() {
+                float[] out = new float[builtIdx];
+                System.arraycopy(built, 0, out, 0, builtIdx);
+                boolean hasNormals = vb.hasNormals;
+                vb = null;
+                built = null;
+                return new VertexBuffer(out, hasNormals);
+            }
         }
 
         public void draw() {
@@ -110,13 +150,7 @@ public class OBJRender extends VBO {
         }
 
         public void draw(Matrix4 m) {
-            if (m == null) {
-                add(vb.data, null);
-            } else {
-                float[] buff = new float[vb.data.length];
-                System.arraycopy(vb.data, 0, buff, 0, vb.data.length);
-                add(buff, m);
-            }
+            actions.add(b -> b.draw(m));
         }
 
         public void draw(Collection<String> groups) {
@@ -124,22 +158,16 @@ public class OBJRender extends VBO {
         }
 
         public void draw(Collection<String> groups, Matrix4 m) {
-            for (String group : groups) {
-                OBJGroup info = model.groups.get(group);
-
-                int start = info.faceStart * vb.vertsPerFace * vb.stride;
-                int stop = (info.faceStop + 1) * vb.vertsPerFace * vb.stride;
-
-                float[] buff = new float[stop - start];
-                System.arraycopy(vb.data, start, buff, 0, stop - start);
-                add(buff, m);
-            }
+            actions.add(b -> b.draw(groups, m));
         }
 
         public VBO build() {
-            float[] out = new float[builtIdx];
-            System.arraycopy(built, 0, out, 0, builtIdx);
-            return new VBO(() -> new VertexBuffer(out, vb.hasNormals), settings);
+            List<Consumer<Buffer>> actions = new ArrayList<>(this.actions); // Snapshot
+            return new VBO(() -> {
+                Buffer buff = new Buffer();
+                actions.forEach(c -> c.accept(buff));
+                return buff.build();
+            }, settings);
         }
     }
 
