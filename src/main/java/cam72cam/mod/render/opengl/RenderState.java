@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.OptiFine;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
@@ -20,6 +21,7 @@ public class RenderState {
     protected Boolean smooth_shading = null;
     protected float[] lightmap = null;
     protected BlendMode blend = null;
+    protected OptiFine.Shaders shader;
 
     public RenderState() {
     }
@@ -34,6 +36,7 @@ public class RenderState {
         this.smooth_shading = ctx.smooth_shading;
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
+        this.shader = ctx.shader;
     }
 
     public RenderState clone() {
@@ -127,6 +130,10 @@ public class RenderState {
     }
     public RenderState blend(BlendMode blend) {
         this.blend = blend;
+        return this;
+    }
+    public RenderState shader(OptiFine.Shaders shader) {
+        this.shader = shader;
         return this;
     }
 }

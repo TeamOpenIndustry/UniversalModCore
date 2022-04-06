@@ -133,6 +133,9 @@ public class Light {
     }
 
     public static boolean enabled() {
+        if (!OptiFine.isLoaded()) {
+            return false;
+        }
         try {
             Class<?> optiConfig = Class.forName("Config");
             return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));

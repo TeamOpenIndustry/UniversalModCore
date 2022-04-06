@@ -52,6 +52,11 @@ public class RenderContext {
             restore.add(() -> GL13.glActiveTexture(oldActive));
         }
 
+        if (state.shader != null) {
+            With bound = state.shader.bind();
+            restore.add(bound::restore);
+        }
+
         boolean shaderActive = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
 
         if (state.lightmap != null) {
