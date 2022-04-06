@@ -87,27 +87,34 @@ public class ResourceCache<T> {
 
     private final File dir;
     private final File meta;
-    private final ResourceProvider provider;
-    private final T intermediary;
+    private ResourceProvider provider;
+    private T intermediary;
     private boolean isClosed;
+    private ThrowingFunction<ResourceProvider, T, IOException> constructor;
 
     public ResourceCache(Identifier id, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
         dir = ModCore.cacheFile(id);
         dir.mkdirs();
         meta = new File(dir, "meta.nbt");
+        this.constructor = constructor;
         provider = meta.exists() ?
                 ResourceProvider.fromTag(new TagCompound(Files.readAllBytes(meta.toPath()))) :
                 new ResourceProvider();
         intermediary = provider != null ? constructor.apply(provider) : null;
     }
 
+    interface IOExec {
+        GenericByteBuffer exec() throws IOException;
+    }
+
     public Supplier<GenericByteBuffer> getResource(String name, Function<T, GenericByteBuffer> converter) throws IOException {
         File file = new File(dir, name + ".lz4");
-        if (intermediary != null) {
+        IOExec genData = () -> {
             NullPointerException ex = null;
+            GenericByteBuffer in = null;
             for (int retry = 0; retry < 10; retry++) {
                 try (FileChannel channel = new FileOutputStream(file).getChannel()) {
-                    GenericByteBuffer in = converter.apply(intermediary);
+                    in = converter.apply(intermediary);
                     LZ4Factory factory = LZ4Factory.fastestInstance();
                     LZ4Compressor compressor = factory.highCompressor(2);
                     // Could be faster
@@ -116,7 +123,6 @@ public class ResourceCache<T> {
                     prefix.asIntBuffer().put(in.buffer.capacity());
                     channel.write(prefix);
                     channel.write(ByteBuffer.wrap(output));
-                    break;
                 } catch (NullPointerException e) {
                     ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
                     ex = e;
@@ -125,6 +131,11 @@ public class ResourceCache<T> {
             if (ex != null) {
                 throw ex;
             }
+            return in;
+        };
+
+        if (intermediary != null) {
+            genData.exec();
         }
         return () -> {
             try (FileChannel channel = new FileInputStream(file).getChannel()) {
@@ -135,8 +146,16 @@ public class ResourceCache<T> {
                 decompressor.decompress(raw, out.buffer);
                 out.buffer.position(0);
                 return out;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    // Terrible Haxxx
+                    provider = new ResourceProvider();
+                    intermediary = constructor.apply(provider);
+                    return genData.exec();
+                } catch (IOException ex) {
+                    throw new RuntimeException();
+                }
             }
         };
     }
