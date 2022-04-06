@@ -42,7 +42,9 @@ public class OptiFine {
         }
 
         public With bind() {
-            int oldProg = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
+            if (!isLoaded()) {
+                return () -> {};
+            }
             try {
                 if (clsShaders == null) {
                     clsShaders = Class.forName("net.optifine.shaders.Shaders");
@@ -52,11 +54,13 @@ public class OptiFine {
                 if (program == null) {
                     program = clsShaders.getDeclaredField(name).get(null);
                 }
+                int oldProg = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB);
                 useProgram.invoke(null, program);
+                return () -> ARBShaderObjects.glUseProgramObjectARB(oldProg);
             } catch (Exception ex) {
                 // Ignore me
             }
-            return () -> ARBShaderObjects.glUseProgramObjectARB(oldProg);
+            return () -> {};
         }
     }
 }
