@@ -123,6 +123,7 @@ public class ResourceCache<T> {
                     prefix.asIntBuffer().put(in.buffer.capacity());
                     channel.write(prefix);
                     channel.write(ByteBuffer.wrap(output));
+                    channel.force(true);
                 } catch (NullPointerException e) {
                     ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
                     ex = e;
