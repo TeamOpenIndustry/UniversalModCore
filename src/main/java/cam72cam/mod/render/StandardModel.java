@@ -109,30 +109,33 @@ public class StandardModel {
     /** Render this entire model (partial tick aware) */
     public void render(float partialTicks, RenderState state) {
         renderCustom(state, partialTicks);
-        renderQuads();
+        renderQuads(state);
     }
 
-    /** Render only the MC quads in this model */
-    public void renderQuads() {
-        List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<IBlockState, IBakedModel> model : models) {
-            quads.addAll(model.getRight().getQuads(null, null, 0));
-            for (EnumFacing facing : EnumFacing.values()) {
-                quads.addAll(model.getRight().getQuads(null, facing, 0));
+    /** Render only the MC quads in this model
+     * @param state*/
+    public void renderQuads(RenderState state) {
+        try (With ctx = RenderContext.apply(state)) {
+            List<BakedQuad> quads = new ArrayList<>();
+            for (Pair<IBlockState, IBakedModel> model : models) {
+                quads.addAll(model.getRight().getQuads(null, null, 0));
+                for (EnumFacing facing : EnumFacing.values()) {
+                    quads.addAll(model.getRight().getQuads(null, facing, 0));
+                }
+
+            }
+            if (quads.isEmpty()) {
+                return;
             }
 
-        }
-        if (quads.isEmpty()) {
-            return;
-        }
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-
-        BufferBuilder worldRenderer = new BufferBuilder(2048);
-        worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
-        worldRenderer.finishDrawing();
-        new WorldVertexBufferUploader().draw(worldRenderer);
+            BufferBuilder worldRenderer = new BufferBuilder(2048);
+            worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+            quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
+            worldRenderer.finishDrawing();
+            new WorldVertexBufferUploader().draw(worldRenderer);
+        }
     }
 
     /** Render the OpenGL parts directly
