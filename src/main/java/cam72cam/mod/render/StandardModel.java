@@ -3,6 +3,8 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockColored;
@@ -30,7 +32,13 @@ import java.util.List;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<IBlockState, IBakedModel>> models = new ArrayList<>();
+    private final List<Pair<IBlockState, IBakedModel>> models = new ArrayList<Pair<IBlockState, IBakedModel>>() {
+        @Override
+        public boolean add(Pair<IBlockState, IBakedModel> o) {
+            worldRenderer = null;
+            return super.add(o);
+        }
+    };
     private final List<RenderFunction> custom = new ArrayList<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
@@ -112,10 +120,11 @@ public class StandardModel {
         renderQuads(state);
     }
 
+    private BufferBuilder worldRenderer = null;
     /** Render only the MC quads in this model
      * @param state*/
     public void renderQuads(RenderState state) {
-        try (With ctx = RenderContext.apply(state)) {
+        if (worldRenderer == null) {
             List<BakedQuad> quads = new ArrayList<>();
             for (Pair<IBlockState, IBakedModel> model : models) {
                 quads.addAll(model.getRight().getQuads(null, null, 0));
@@ -130,10 +139,17 @@ public class StandardModel {
 
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 
-            BufferBuilder worldRenderer = new BufferBuilder(2048);
+            worldRenderer = new BufferBuilder(2048) {
+                @Override
+                public void reset() {
+                    //super.reset();
+                }
+            };
             worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
             quads.forEach(quad -> LightUtil.renderQuadColor(worldRenderer, quad, -1));
             worldRenderer.finishDrawing();
+        }
+        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE))))) {
             new WorldVertexBufferUploader().draw(worldRenderer);
         }
     }
