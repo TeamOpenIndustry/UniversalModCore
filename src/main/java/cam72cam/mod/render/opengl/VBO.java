@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 public class VBO {
     private static final List<VBO> vbos = new ArrayList<>();
-    static {
+    public static void registerClientEvents() {
         // free unused textures
         ClientEvents.TICK.subscribe(() -> {
             synchronized (vbos) {

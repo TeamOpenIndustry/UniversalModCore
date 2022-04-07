@@ -8,6 +8,8 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.opengl.CustomTexture;
+import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -35,6 +37,9 @@ public class ClientEvents {
         GlobalRender.registerClientEvents();
         Audio.registerClientCallbacks();
         World.registerClientEvnets();
+
+        VBO.registerClientEvents();
+        CustomTexture.registerClientEvents();
 
         // Forge does not fire world unloaded client side
         TICK.subscribe(() -> {

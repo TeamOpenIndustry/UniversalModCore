@@ -29,7 +29,7 @@ public abstract class CustomTexture implements Texture {
 
     private static final List<CustomTexture> textures = new ArrayList<>();
 
-    static {
+    public static void registerClientEvents() {
         // free unused textures
         ClientEvents.TICK.subscribe(() -> {
             synchronized (textures) {
