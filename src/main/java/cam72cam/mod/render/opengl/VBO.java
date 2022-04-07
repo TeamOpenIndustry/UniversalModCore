@@ -1,5 +1,6 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
@@ -7,21 +8,42 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class VBO {
+    private static final List<VBO> vbos = new ArrayList<>();
+    static {
+        // free unused textures
+        ClientEvents.TICK.subscribe(() -> {
+            synchronized (vbos) {
+                for (VBO vbo : vbos) {
+                    if (vbo.vbo != -1 && System.currentTimeMillis() - vbo.lastUsed > 30 * 1000) {
+                        vbo.free();
+                    }
+                }
+            }
+        });
+    }
+
     private final Supplier<VertexBuffer> buffer;
     private final Consumer<RenderState> settings;
 
     private int vbo;
     private int length;
+    private long lastUsed;
     private VertexBuffer vbInfo;
 
     public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
         this.vbo = -1;
         this.settings = settings;
+
+        synchronized (vbos) {
+            vbos.add(this);
+        }
     }
 
     private void init() {
@@ -52,6 +74,8 @@ public class VBO {
             if (vbo == -1) {
                 init();
             }
+
+            lastUsed = System.currentTimeMillis();
 
             settings.accept(state);
 
@@ -107,9 +131,11 @@ public class VBO {
      * Clear this VB from standard and GPU memory
      */
     public void free() {
-        if (vbo != -1) {
-            GL15.glDeleteBuffers(vbo);
-            vbo = -1;
+        synchronized (vbos) {
+            if (vbo != -1) {
+                GL15.glDeleteBuffers(vbo);
+                vbo = -1;
+            }
         }
     }
 }
