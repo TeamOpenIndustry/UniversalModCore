@@ -239,6 +239,7 @@ public class OBJTexturePacker {
     }
 
     public OBJTexturePacker(Identifier ident, Function<String, Identifier> paths, Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
+        ImageIO.setUseCache(false);
         if (materials.isEmpty()) {
             return;
         }

@@ -11,11 +11,7 @@ public class OBJTextureSheet extends CustomTexture {
     private final Supplier<ResourceCache.GenericByteBuffer> data;
 
     public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds) {
-        this(width, height, data, cacheSeconds, null);
-    }
-
-    public OBJTextureSheet(int width, int height, Supplier<ResourceCache.GenericByteBuffer> data, int cacheSeconds, OBJTextureSheet fallback) {
-        super(width, height, cacheSeconds, fallback);
+        super(width, height, cacheSeconds);
         this.data = data;
     }
 

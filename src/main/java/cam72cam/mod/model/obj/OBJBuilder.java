@@ -22,6 +22,7 @@ public class OBJBuilder {
     private boolean smoothShading;
 
     public OBJBuilder(Identifier modelLoc, ResourceCache.ResourceProvider input, float scale, float darken, Collection<String> variants) throws IOException {
+        long start = System.currentTimeMillis();
         if (variants == null) {
             variants = Collections.singleton("");
         }
@@ -139,6 +140,7 @@ public class OBJBuilder {
         }
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();
+        ModCore.debug("Building %s took %sms", modelLoc, (System.currentTimeMillis() - start));
     }
 
     public VertexBuffer vertexBufferObject() {

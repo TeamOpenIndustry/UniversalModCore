@@ -1,9 +1,11 @@
 package cam72cam.mod.model.obj;
 
 import cam72cam.mod.Config;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.obj.OBJRender;
+import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -22,12 +25,11 @@ import static cam72cam.mod.model.obj.ImageUtils.*;
 
 public class OBJModel {
     private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE);
-
     public final OBJRender vbo;
     public final int textureWidth;
     public final int textureHeight;
-    public final Map<String, OBJTextureSheet> textures = new HashMap<>();
-    public final Map<String, OBJTextureSheet> icons = new HashMap<>();
+    public final int defaultLodSize;
+    public final Map<String, Map<Integer, OBJTextureSheet>> textures = new HashMap<>();
     public final Map<String, OBJTextureSheet> normals = new HashMap<>();
     public final Map<String, OBJTextureSheet> speculars = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
@@ -36,19 +38,34 @@ public class OBJModel {
     public String hash;
 
     public OBJModel(Identifier modelLoc, float darken) throws Exception {
-        this(modelLoc, darken, 1, null, 30);
+        this(modelLoc, darken, 1, null, 30, null);
     }
 
     public OBJModel(Identifier modelLoc, float darken, Collection<String> variants) throws Exception {
-        this(modelLoc, darken, 1, variants, 30);
+        this(modelLoc, darken, 1, variants, 30, null);
     }
 
     public OBJModel(Identifier modelLoc, float darken, double scale) throws Exception {
-        this(modelLoc, darken, scale, null, 30);
+        this(modelLoc, darken, scale, null, 30, null);
     }
 
-    public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants, int cacheSeconds) throws Exception {
-        String settings = String.format("v1-%s-%s-%s-%s", scale, darken, variants == null ? "null" : String.join(":" + variants), Config.getMaxTextureSize());
+    public OBJModel(Identifier modelLoc, float darken, double scale, Collection<String> variants, int cacheSeconds, Function<Integer, List<Integer>> lodSizes) throws Exception {
+        ModCore.debug("Start obj model " + modelLoc);
+        List<Integer> lodValues;
+        if (lodSizes != null) {
+            lodValues = lodSizes.apply(Config.getMaxTextureSize());
+        } else {
+            lodValues = new ArrayList<>();
+            lodValues.add(Config.getMaxTextureSize());
+        }
+
+        String settings = Arrays.toString(new Object[]{
+                "v1",
+                scale,
+                darken,
+                variants == null ? "[]" : String.join(":", variants),
+                lodValues.stream().map(Object::toString).collect(Collectors.joining("-"))
+        });
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 new Identifier(modelLoc.getDomain(), modelLoc.getPath() + "_" + settings.hashCode()),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
@@ -99,25 +116,39 @@ public class OBJModel {
 
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-                if (Config.getMaxTextureSize() / 8 < Math.max(textureWidth, textureHeight)) {
-                    Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, Config.getMaxTextureSize()/8);
-                    Supplier<GenericByteBuffer> iconData = cache.getResource(variant + "_icon.rgba", builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), Config.getMaxTextureSize() / 8))));
-                    this.icons.put(variant, new OBJTextureSheet(size.getLeft(), size.getRight(), iconData, cacheSeconds, defTex));
+                ModCore.debug("%s : tex %s", modelLoc, variant);
+                Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
+
+                int texSize = Math.max(textureWidth, textureHeight);
+                Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba",
+                        builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant).get()))
+                );
+                lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
+
+                for (Integer lodValue : lodValues) {
+                    if (lodValue < texSize) {
+                        Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
+                        Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
+                                builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
+                        );
+                        lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
+                    }
                 }
-                Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba", builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant).get())));
-                this.textures.put(variant, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds, this.icons.getOrDefault(variant, defTex)));
+                this.textures.put(variant, lodMap);
 
                 if (hasNormals) {
                     Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
-                    this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds, defTex));
+                    this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
                 }
 
                 if (hasSpeculars) {
                     Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
-                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds, defTex));
+                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
                 }
             }
+            defaultLodSize = textures.get("").keySet().stream().mapToInt(i -> i).max().getAsInt();
         } else {
+            defaultLodSize = -1;
             this.textureWidth = -1;
             this.textureHeight = -1;
         }
@@ -135,6 +166,8 @@ public class OBJModel {
         this.vbo = new OBJRender(this, () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals));
 
         this.hash = cache.close();
+
+        ModCore.debug("End obj model " + modelLoc);
     }
 
     public Set<String> groups() {
@@ -210,7 +243,7 @@ public class OBJModel {
 
     public class Binder {
         private boolean wait = false;
-        private boolean icon = false;
+        private int lodSize = Config.MaxTextureSize;
         private String texName = "";
 
         private Binder() {
@@ -222,8 +255,8 @@ public class OBJModel {
             return this;
         }
 
-        public Binder icon() {
-            this.icon = true;
+        public Binder lod(int lodSize) {
+            this.lodSize = lodSize;
             return this;
         }
 
@@ -237,13 +270,33 @@ public class OBJModel {
                 texName = ""; // Default
             }
 
-            state.texture((icon && OBJModel.this.icons.containsKey(texName) ? OBJModel.this.icons : OBJModel.this.textures).get(texName).synchronous(wait));
-            if (!icon && OBJModel.this.normals.containsKey(texName)) {
+            OBJTextureSheet tex = OBJModel.this.textures.get(texName).get(lodSize);
+            if (tex == null) {
+                tex = OBJModel.this.textures.get(texName).get(defaultLodSize);
+            }
+            if (wait) {
+                state.texture(tex.synchronous(true));
+            } else {
+                // Start load even if not loaded
+                tex.getId();
+
+                if (!tex.isLoaded()) {
+                    // Try to find a loaded LOD, with a sane default
+                    tex = OBJModel.this.textures.get(texName).values().stream()
+                            .filter(CustomTexture::isLoaded)
+                            .findAny().orElse(defTex);
+                }
+                state.texture(tex);
+            }
+
+
+
+            if (lodSize == defaultLodSize && OBJModel.this.normals.containsKey(texName)) {
                 state.normals(OBJModel.this.normals.get(texName).synchronous(wait));
             } else {
                 state.normals(defTex);
             }
-            if (!icon && OBJModel.this.speculars.containsKey(texName)) {
+            if (lodSize == defaultLodSize && OBJModel.this.speculars.containsKey(texName)) {
                 state.specular(OBJModel.this.speculars.get(texName).synchronous(wait));
             } else {
                 state.specular(defTex);
@@ -263,11 +316,10 @@ public class OBJModel {
     }
 
     public void free() {
-        for (OBJTextureSheet texture : textures.values()) {
-            texture.freeGL();
-        }
-        for (OBJTextureSheet texture : icons.values()) {
-            texture.freeGL();
+        for (Map<Integer, OBJTextureSheet> lodMap : textures.values()) {
+            for (OBJTextureSheet texture : lodMap.values()) {
+                texture.dealloc();
+            }
         }
         vbo.free();
     }

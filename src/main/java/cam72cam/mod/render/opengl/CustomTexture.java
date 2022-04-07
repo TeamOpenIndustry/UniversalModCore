@@ -9,15 +9,21 @@ import org.lwjgl.opengl.GL12;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 public abstract class CustomTexture implements Texture {
     private final int width;
     private final int height;
     private final int cacheSeconds;
-    private final Texture fallback;
 
-    private Thread loader = null;
-    private ByteBuffer buffer = null;
+    private static final ExecutorService pool = Executors.newFixedThreadPool(1, runnable -> {
+        Thread thread = new Thread(runnable);
+        thread.setName("UMC-TextureLoader");
+        thread.setPriority(Thread.MIN_PRIORITY);
+        return thread;
+    });
+
+    private Future<ByteBuffer> loader = null;
     private long lastUsed;
     private Integer textureID;
 
@@ -28,7 +34,7 @@ public abstract class CustomTexture implements Texture {
         ClientEvents.TICK.subscribe(() -> {
             synchronized (textures) {
                 for (CustomTexture texture : textures) {
-                    if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isAlive())) {
+                    if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isDone())) {
                         texture.dealloc();
                     }
                 }
@@ -37,12 +43,11 @@ public abstract class CustomTexture implements Texture {
     }
 
 
-    public CustomTexture(int width, int height, int cacheSeconds, Texture fallback) {
+    public CustomTexture(int width, int height, int cacheSeconds) {
         textures.add(this);
         this.width = width;
         this.height = height;
         this.cacheSeconds = cacheSeconds;
-        this.fallback = fallback;
     }
 
     protected abstract ByteBuffer getData();
@@ -50,7 +55,7 @@ public abstract class CustomTexture implements Texture {
         return GL11.GL_RGBA;
     }
 
-    private void createTexture() {
+    private void createTexture(ByteBuffer buffer) {
         textureID = GL11.glGenTextures();
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
@@ -60,34 +65,28 @@ public abstract class CustomTexture implements Texture {
 
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
         }
-        loader = null;
-        buffer = null;
-    }
-
-    private void loadData() {
-        this.buffer = getData();
     }
 
     private void threadedLoader() {
         synchronized (this) {
             if (loader != null) {
-                // Loading thread in progress
-                if (buffer != null) {
-                    // We have the data ready
-                    createTexture();
+                if (loader.isDone()) {
+                    try {
+                        createTexture(loader.get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                    loader = null;
                 }
             } else {
                 // Start thread
-                loader = new Thread(this::loadData);
-                loader.setName("UMC-TextureLoader");
-                loader.start();
+                loader = pool.submit(this::getData);
             }
         }
     }
 
     private void directLoader() {
-        loadData();
-        createTexture();
+        createTexture(getData());
     }
 
     public Texture synchronous(boolean sync) {
@@ -103,33 +102,29 @@ public abstract class CustomTexture implements Texture {
         return () -> textureID;
     }
 
+    public boolean isLoaded() {
+        return textureID != null;
+    }
+
     @Override
     public int getId() {
         lastUsed = System.currentTimeMillis();
 
         if (textureID == null) {
-            if (Config.ThreadedTextureLoading && fallback != null) {
+            if (Config.ThreadedTextureLoading) {
                 threadedLoader();
             } else {
                 directLoader();
             }
         }
-        return textureID == null ? fallback != null ? fallback.getId() : NO_TEXTURE.getId() : this.textureID;
+        return textureID == null ? NO_TEXTURE.getId() : this.textureID;
     }
 
     public void dealloc() {
         if (this.textureID != null) {
             GL11.glDeleteTextures(this.textureID);
             this.textureID = null;
-            this.buffer = null;
             this.loader = null;
-        }
-    }
-
-    public void freeGL() {
-        synchronized (textures) {
-            dealloc();
-            textures.remove(this);
         }
     }
 }
