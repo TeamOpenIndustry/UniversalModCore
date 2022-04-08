@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import static cam72cam.mod.model.obj.ImageUtils.*;
 
 public class OBJModel {
-    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE);
+    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
     public final OBJRender vbo;
     public final int textureWidth;
     public final int textureHeight;
@@ -284,9 +284,13 @@ public class OBJModel {
                     // Try to find a loaded LOD, with a sane default
                     tex = OBJModel.this.textures.get(texName).values().stream()
                             .filter(CustomTexture::isLoaded)
-                            .findAny().orElse(defTex);
+                            .findAny().orElse(null);
                 }
-                state.texture(tex);
+                if (tex != null) {
+                    state.texture(tex);
+                } else {
+                    state.texture(defTex.synchronous(true));
+                }
             }
 
 
