@@ -137,13 +137,21 @@ public class OBJModel {
                 this.textures.put(variant, lodMap);
 
                 if (hasNormals) {
-                    Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
-                    this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+                    try {
+                        Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
+                        this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+                    } catch (Exception ex) {
+                        ModCore.warn("Unable to load normal map for %s, %s", modelLoc, ex);
+                    }
                 }
 
                 if (hasSpeculars) {
+                    try {
                     Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
                     this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
+                    } catch (Exception ex) {
+                        ModCore.warn("Unable to load specular map for %s, %s", modelLoc, ex);
+                    }
                 }
             }
             defaultLodSize = textures.get("").keySet().stream().mapToInt(i -> i).max().getAsInt();
