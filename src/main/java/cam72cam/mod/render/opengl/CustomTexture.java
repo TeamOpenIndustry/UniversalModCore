@@ -68,7 +68,7 @@ public abstract class CustomTexture implements Texture {
     }
 
     private void threadedLoader() {
-        synchronized (this) {
+        synchronized (textures) {
             if (loader != null) {
                 if (loader.isDone()) {
                     try {
@@ -121,10 +121,12 @@ public abstract class CustomTexture implements Texture {
     }
 
     public void dealloc() {
-        if (this.textureID != null) {
-            GL11.glDeleteTextures(this.textureID);
-            this.textureID = null;
-            this.loader = null;
+        synchronized (textures) {
+            if (this.textureID != null) {
+                GL11.glDeleteTextures(this.textureID);
+                this.textureID = null;
+                this.loader = null;
+            }
         }
     }
 }
