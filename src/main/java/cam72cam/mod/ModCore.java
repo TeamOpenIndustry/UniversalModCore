@@ -298,7 +298,7 @@ public class ModCore {
     private static final List<File> usedCacheFiles = new ArrayList<>();
 
     /** Get a file for name in the UMC cache dir */
-    public static File cacheFile(Identifier id) {
+    public static synchronized File cacheFile(Identifier id) {
         File configDir = Loader.instance().getConfigDir();
         if (configDir == null) {
             configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");

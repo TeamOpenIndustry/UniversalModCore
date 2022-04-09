@@ -40,9 +40,11 @@ public class ResourceCache<T> {
             try {
                 for (Identifier id : expected.keySet()) {
                     String expectedHash = expected.get(id);
-                    String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
-                    if (!expectedHash.equals(foundHash)) {
-                        return provider;
+                    synchronized (hashCache) {
+                        String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
+                        if (!expectedHash.equals(foundHash)) {
+                            return provider;
+                        }
                     }
                 }
             } catch (RuntimeException ex) {
