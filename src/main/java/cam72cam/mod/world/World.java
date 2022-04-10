@@ -115,10 +115,13 @@ public class World {
                     this.onEntityAdded(entity);
                 }
             }
-            for (Entity entity : new ArrayList<>(this.entityByID.values())) {
-                if (!this.internal.loadedEntityList.contains(entity.internal)) {
-                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
-                    this.onEntityRemoved(entity.internal);
+            for (int entityId : new ArrayList<>(this.entityByID.keySet())) {
+                if (this.internal.getEntityByID(entityId) == null) {
+                    Entity entity = this.entityByID.get(entityId);
+                    if (entity != null) { // be super careful around concurrent modification (I should probably synchronize around the map)
+                        ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                        this.onEntityRemoved(entity.internal);
+                    }
                 }
             }
         }
