@@ -1,8 +1,11 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.util.With;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import org.lwjgl.opengl.ARBShaderObjects;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class OptiFine {
@@ -21,6 +24,22 @@ public class OptiFine {
             }
         }
         return isLoaded;
+    }
+
+    public static With overrideFastRender(boolean state) {
+        if (isLoaded()) {
+            try {
+                boolean isFastRender = (boolean)Class.forName("Config").getDeclaredMethod("isFastRender").invoke(null);
+                if (isFastRender != state) {
+                    GameSettings.Options setting = (GameSettings.Options) GameSettings.Options.class.getDeclaredField("FAST_RENDER").get(null);
+                    Minecraft.getMinecraft().gameSettings.setOptionValue(setting, 0); // invert
+                    return () -> Minecraft.getMinecraft().gameSettings.setOptionValue(setting, 0); // invert
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return () -> {};
     }
 
     public enum Shaders {
