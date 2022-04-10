@@ -114,8 +114,13 @@ public class World {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
                     this.onEntityAdded(entity);
                 }
-                if (this.internal.getEntityByID(entity.getEntityId()) == null){
-                    this.onEntityRemoved(entity);
+            }
+	    Iterator<Map.Entry<Integer,cam72cam.mod.entity.Entity>> entityIterator = this.entityByID.entrySet().iterator();
+	    while (entityIterator.hasNext()){
+		Map.Entry<Integer, cam72cam.mod.entity.Entity> entityEntry = entityIterator.next();
+                if (this.internal.getEntityByID(entityEntry.getValue().internal.getEntityId()) == null){
+		    this.onEntityRemoved(entityEntry.getValue().internal);
+                    entityIterator.remove();
                 }
             }
         }
@@ -186,7 +191,7 @@ public class World {
         for (List<Entity> value : entitiesByClass.values()) {
             value.removeIf(inner -> inner.getUUID().equals(entity.getUniqueID()));
         }
-        entityByID.remove(entity.getEntityId());
+        //entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUniqueID());
     }
 
