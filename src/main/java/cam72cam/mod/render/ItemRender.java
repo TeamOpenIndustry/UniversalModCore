@@ -164,41 +164,70 @@ public class ItemRender {
             }
         }
 
+
+        With restore = OptiFine.overrideFastRender(false);
+
         Framebuffer fb = new Framebuffer(width, height, true);
         fb.setFramebufferColor(0, 0, 0, 0);
         fb.framebufferClear();
         fb.bindFramebuffer(true);
 
-        RenderState state = new RenderState();
-        state.projection().setIdentity();
-        state.model_view().setIdentity();
-        state.depth_test(true);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
 
-        try (With matrix = RenderContext.apply(state)) {
-            int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-            GL11.glDepthFunc(GL11.GL_LESS);
-            GL11.glClearDepth(1);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
 
-            model.renderCustom(state);
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
 
-            ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
-            GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
-            fb.unbindFramebuffer();
-            fb.deleteFramebuffer();
-            GL11.glDepthFunc(oldDepth);
+        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
-            iconSheet.setSprite(id, buff);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LESS);
+        GL11.glClearDepth(1);
 
-            try {
-                byte[] data = new byte[buff.capacity()];
-                buff.get(data);
-                Files.write(sprite.toPath(), data);
-            } catch (IOException e) {
-                ModCore.catching(e);
-                sprite.delete();
-            }
+        model.renderCustom(new RenderState());
+
+        ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
+        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+
+        fb.unbindFramebuffer();
+        fb.deleteFramebuffer();
+        GL11.glDepthFunc(oldDepth);
+
+        iconSheet.setSprite(id, buff);
+
+        try {
+            byte[] data = new byte[buff.capacity()];
+            buff.get(data);
+            Files.write(sprite.toPath(), data);
+        } catch (IOException e) {
+            ModCore.catching(e);
+            sprite.delete();
         }
+
+        if (!depthEnabled) {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        GL11.glDepthFunc(oldDepth);
+
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopMatrix();
+
+        restore.close();
     }
 
     /** Custom Model where we can hack into the MC/Forge render system */

@@ -40,11 +40,15 @@ public class ResourceCache<T> {
             try {
                 for (Identifier id : expected.keySet()) {
                     String expectedHash = expected.get(id);
+                    String foundHash;
                     synchronized (hashCache) {
-                        String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
-                        if (!expectedHash.equals(foundHash)) {
-                            return provider;
-                        }
+                        foundHash = hashCache.get(id);
+                    }
+                    if (foundHash == null) {
+                        foundHash = provider.get(id).getKey().toString();
+                    }
+                    if (!expectedHash.equals(foundHash)) {
+                        return provider;
                     }
                 }
             } catch (RuntimeException ex) {
@@ -71,7 +75,9 @@ public class ResourceCache<T> {
                     IOUtils.copy(source, sink);
                     HashCode hash = source.hash();
                     resources.put(id, Pair.of(hash, sink.toByteArray()));
-                    hashCache.put(id, hash.toString());
+                    synchronized (hashCache) {
+                        hashCache.put(id, hash.toString());
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

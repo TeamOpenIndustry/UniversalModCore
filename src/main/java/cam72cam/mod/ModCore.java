@@ -171,7 +171,7 @@ public class ModCore {
 
         @Override
         public int getGPUTextureSize() {
-            return Math.max(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 8196);
+            return Math.min(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 8196);
         }
     }
 
