@@ -57,7 +57,7 @@ public class World {
     /** isServer != world.isRemote */
     public final boolean isServer;
 
-    private final HashMap<Integer, Entity> entityByID = new HashMap<>();
+    private final Map<Integer, Entity> entityByID = new HashMap<>();
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
 
@@ -110,15 +110,13 @@ public class World {
         // Once a second scan entities that may have de-sync'd with the UMC world
         if (this.getTicks() % 20 == 0) {
             for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
-	        //absentEntities.remove(entity.getEntityId());
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
                     this.onEntityAdded(entity);
                 }
-		if (this.internal.getEntityByID(entity.getEntityId()) == null){
-		    this.onEntityRemoved(entity);
-		}
-		
+                if (this.internal.getEntityByID(entity.getEntityId()) == null){
+                    this.onEntityRemoved(entity);
+                }
             }
         }
     }
