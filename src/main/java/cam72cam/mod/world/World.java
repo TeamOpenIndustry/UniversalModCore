@@ -119,6 +119,7 @@ public class World {
 	    while (entityIterator.hasNext()){
 		Map.Entry<Integer, cam72cam.mod.entity.Entity> entityEntry = entityIterator.next();
                 if (this.internal.getEntityByID(entityEntry.getValue().internal.getEntityId()) == null){
+                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entityEntry.getValue().getUUID(), entityEntry.getValue());
 		    this.onEntityRemoved(entityEntry.getValue().internal);
                     entityIterator.remove();
                 }
