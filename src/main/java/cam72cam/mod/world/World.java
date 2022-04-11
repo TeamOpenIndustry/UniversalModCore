@@ -118,7 +118,7 @@ public class World {
             for (int entityId : new ArrayList<>(this.entityByID.keySet())) {
                 if (this.internal.getEntityByID(entityId) == null) {
                     Entity entity = this.entityByID.get(entityId);
-                    if (entity != null) { // be super careful around concurrent modification (I should probably synchronize around the map)
+                    if (entity != null && !this.internal.loadedEntityList.contains(entity.internal)) {
                         ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
                         this.onEntityRemoved(entity.internal);
                     }
