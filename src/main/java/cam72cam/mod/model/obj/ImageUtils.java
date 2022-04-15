@@ -21,7 +21,7 @@ public class ImageUtils {
         int y = size.getRight();
         BufferedImage target = new BufferedImage(x, y, image.getType());
         Graphics2D g = target.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.drawImage(image, 0, 0, x, y, 0, 0, image.getWidth(), image.getHeight(), null);
         return target;
     }
