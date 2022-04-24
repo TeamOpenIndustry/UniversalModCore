@@ -58,6 +58,10 @@ public class Entity {
         return posCache;
     }
 
+    public Vec3d getPrevPosition() {
+        return new Vec3d(internal.prevPosX, internal.prevPosY, internal.prevPosZ);
+    }
+
     public void setPosition(Vec3d pos) {
         internal.setPosition(pos.x, pos.y, pos.z);
     }
@@ -77,9 +81,9 @@ public class Entity {
     }
 
     public void setRotationYaw(float yaw) {
-        internal.prevRotationYaw = internal.rotationYaw;
+        //internal.prevRotationYaw = internal.rotationYaw;
         internal.rotationYaw = yaw;
-        double d0 = internal.prevRotationYaw - yaw;
+        /*double d0 = internal.prevRotationYaw - yaw;
         if (d0 < -180.0D)
         {
             internal.prevRotationYaw += 360.0F;
@@ -88,7 +92,7 @@ public class Entity {
         if (d0 >= 180.0D)
         {
             internal.prevRotationYaw -= 360.0F;
-        }
+        }*/
 
     }
 
@@ -97,7 +101,7 @@ public class Entity {
     }
 
     public void setRotationPitch(float pitch) {
-        internal.prevRotationPitch = internal.rotationPitch;
+        //internal.prevRotationPitch = internal.rotationPitch;
         internal.rotationPitch = pitch;
     }
 

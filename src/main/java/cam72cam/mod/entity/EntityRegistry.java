@@ -37,7 +37,7 @@ public class EntityRegistry {
 
             // This has back-compat for older entity names
             // TODO expose updateFreq and vecUpdates
-            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(id.internal, ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 20, false);
+            net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(id.internal, ModdedEntity.class, type.getSimpleName(), constructors.size(), ModCore.instance, distance, 1, false);
 
             identifiers.put(type, id.toString());
             constructors.put(id.toString(), ctr);

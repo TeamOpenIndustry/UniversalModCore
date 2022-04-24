@@ -214,6 +214,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void onUpdate() {
+        super.onUpdate();
         iTickable.onTick();
         try {
             self.sync.send();
@@ -462,6 +463,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return self.canBePushed();
     }
 
+    /*
     @Override
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
@@ -476,6 +478,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             super.setVelocity(x, y, z);
         }
     }
+     */
 
     @Override
     public String getName() {
