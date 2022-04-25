@@ -97,8 +97,8 @@ public class EntityRenderer extends Render<ModdedEntity> {
 
         RenderState state = new RenderState();
         state.translate(x, y, z);
-        state.rotate(180 - entityYaw - 90, 0, 1, 0);
-        state.rotate(self.getRotationPitch(), 0, 0, 1);
+        //state.rotate(180 - entityYaw - 90, 0, 1, 0);
+        //state.rotate(self.getRotationPitch(), 0, 0, 1);
         //state.rotate(-90, 0, 1, 0);
         renderers.get(self.getClass()).render(self, state, partialTicks);
     }
