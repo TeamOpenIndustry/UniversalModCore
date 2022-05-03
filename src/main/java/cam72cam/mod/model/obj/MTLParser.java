@@ -14,6 +14,8 @@ public class MTLParser {
             String line;
             String materialName = null;
             String map_Kd = null;
+            String map_Bump = null;
+            String map_Ns = null;
             Float KdR = null;
             Float KdG = null;
             Float KdB = null;
@@ -30,7 +32,7 @@ public class MTLParser {
                 switch (parts[0]) {
                     case "newmtl":
                         if (materialName != null) {
-                            materials.add(new Material(materialName, map_Kd, KdR, KdG, KdB, KdA));
+                            materials.add(new Material(materialName, map_Kd, map_Bump, map_Ns, KdR, KdG, KdB, KdA));
                         }
                         materialName = parts[1];
                         for (int i = 2; i < parts.length; i++) {
@@ -59,6 +61,12 @@ public class MTLParser {
                     case "map_Kd":
                         map_Kd = parts[1];
                         break;
+                    case "map_Bump":
+                        map_Bump = parts[1];
+                        break;
+                    case "map_Ns":
+                        map_Ns = parts[1];
+                        break;
                     case "Ns":
                         //Ignore
                         break;
@@ -80,7 +88,7 @@ public class MTLParser {
                 }
             }
             if (materialName != null) {
-                materials.add(new Material(materialName, map_Kd, KdR, KdG, KdB, KdA));
+                materials.add(new Material(materialName, map_Kd, map_Bump, map_Ns, KdR, KdG, KdB, KdA));
             }
             return materials;
         }

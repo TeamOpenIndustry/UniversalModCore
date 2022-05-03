@@ -1,15 +1,14 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
-import org.lwjgl.opengl.GL11;
 
 /** Internal item button class */
 class ItemButton extends GuiButton {
@@ -28,11 +27,9 @@ class ItemButton extends GuiButton {
         RenderHelper.enableGUIStandardItemLighting();
 
         FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
-        try (
-                OpenGL.With matrix = OpenGL.matrix();
-        ) {
-            GL11.glTranslated(x, y, 0);
-            GL11.glScaled(2, 2, 1);
+        try (With ctx = RenderContext.apply(
+                new RenderState().translate(x, y, 0).scale(2, 2, 1)
+        )) {
             mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
             mc.getRenderItem().renderItemOverlays(font, stack.internal, 0, 0);
         }

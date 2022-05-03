@@ -5,6 +5,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -18,7 +19,6 @@ import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.biome.BiomeColorHelper;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -51,8 +51,13 @@ public class BlockRender {
             TODO: Opt out of renderGlobal!
              */
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getMinecraft().world.loadedTileEntityList).stream()
-                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getMaxRenderDistanceSquared() > 0)
                     .collect(Collectors.toList());
+            if (Minecraft.getMinecraft().world.getTotalWorldTime() % 20 == 1) {
+                prev = new ArrayList<>(Minecraft.getMinecraft().world.loadedTileEntityList).stream()
+                        .filter(x -> x instanceof TileEntity)
+                        .collect(Collectors.toList());
+            }
             Minecraft.getMinecraft().renderGlobal.updateTileEntities(prev, tes);
             prev = tes;
         });
@@ -83,11 +88,7 @@ public class BlockRender {
                 if (!model.hasCustom()) {
                     return;
                 }
-
-                try (OpenGL.With matrix = OpenGL.matrix()) {
-                    GL11.glTranslated(x, y, z);
-                    model.renderCustom(partialTicks);
-                }
+                model.renderCustom(new RenderState().translate(x, y, z), partialTicks);
             }
 
             public boolean isGlobalRenderer(TileEntity te) {
