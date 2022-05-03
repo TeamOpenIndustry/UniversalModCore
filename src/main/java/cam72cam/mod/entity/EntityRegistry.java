@@ -1,6 +1,7 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.TagCompound;
@@ -70,10 +71,10 @@ public class EntityRegistry {
             return true;
         });
     }
-/*
-    @SideOnly(Side.CLIENT)
+
+    //@SideOnly(Side.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.TICK.subscribe(() -> {
+        /*TODO 1.10.2 ClientEvents.TICK.subscribe(() -> {
             if (missingResources != null && !Minecraft.getMinecraft().isSingleplayer() && Minecraft.getMinecraft().getConnection() != null) {
                 ModCore.error(missingResources);
                 Minecraft.getMinecraft().getConnection().getNetworkManager().closeChannel(PlayerMessage.direct(missingResources).internal);
@@ -81,6 +82,13 @@ public class EntityRegistry {
                 Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
+        });/
+        CommonEvents.World.UNLOAD.subscribe(w -> {
+            if (w.isRemote) {
+                // Cleanup client side since mc does not call setDead client side...
+                // See ClientEvents registration for related crap
+                w.getEntities(ModdedEntity.class, e -> true).forEach(ModdedEntity::setDead);
+            }
         });
-    }*/
+    }
 }

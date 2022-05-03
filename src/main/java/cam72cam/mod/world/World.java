@@ -27,6 +27,8 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -113,10 +115,13 @@ public class World {
                     this.onEntityAdded(entity);
                 }
             }
-            for (Entity entity : new ArrayList<>(this.entityByID.values())) {
-                if (!this.internal.loadedEntityList.contains(entity.internal)) {
-                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
-                    this.onEntityRemoved(entity.internal);
+            for (int entityId : new ArrayList<>(this.entityByID.keySet())) {
+                if (this.internal.getEntityByID(entityId) == null) {
+                    Entity entity = this.entityByID.get(entityId);
+                    if (entity != null && !this.internal.loadedEntityList.contains(entity.internal)) {
+                        ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                        this.onEntityRemoved(entity.internal);
+                    }
                 }
             }
         }
@@ -652,5 +657,13 @@ public class World {
         ParticleType(EnumParticleTypes internal) {
             this.internal = internal;
         }
+    }
+
+    public float getBlockLightLevel(Vec3i pos) {
+        return internal.getLightFor(EnumSkyBlock.BLOCK, pos.internal()) / 15f;
+    }
+
+    public float getSkyLightLevel(Vec3i pos) {
+        return internal.getLightFor(EnumSkyBlock.SKY, pos.internal()) / 15f;
     }
 }
