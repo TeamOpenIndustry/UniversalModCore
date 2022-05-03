@@ -82,7 +82,7 @@ public class EntityRegistry {
                 Minecraft.getMinecraft().displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
-        });/
+        });*/
         CommonEvents.World.UNLOAD.subscribe(w -> {
             if (w.isRemote) {
                 // Cleanup client side since mc does not call setDead client side...
