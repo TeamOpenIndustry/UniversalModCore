@@ -97,6 +97,17 @@ public class EntityRegistry {
                 missingResources = null;
             }
         });
+        CommonEvents.World.UNLOAD.subscribe(w -> {
+            if (w.isClientSide) {
+                // Cleanup client side since mc does not call setDead client side...
+                // See ClientEvents registration for related crap
+                for (net.minecraft.entity.Entity entity : ((ClientWorld) w).entitiesForRendering()) {
+                    if (entity instanceof ModdedEntity) {
+                        entity.remove();
+                    }
+                }
+            }
+        });
     }
 
     static CustomEntity create(String custom_mob_type, ModdedEntity base) {

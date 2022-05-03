@@ -4,12 +4,18 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.custom.IClickable;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.Event;
+import cam72cam.mod.item.ClickResult;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.function.Function;
 
 /** Only used for MC bugfixes, don't use directly */
 public class Mouse {
@@ -26,20 +32,25 @@ public class Mouse {
             }
 
             Entity entity = MinecraftClient.getEntityMouseOver();
-            if (entity != null && entity.internal instanceof ModdedEntity) {
+            if (entity != null && entity.internal instanceof ModdedEntity && entity instanceof IClickable) {
                 double d0 = 36.0D;
                 // Invert MC's built in logic for entity distance (assumes small entities)
                 if (MinecraftClient.getPlayer().internal.distanceToSqr(entity.internal) >= d0) {
-                    new MousePressPacket(button, entity).sendToServer();
+                    if (((IClickable)entity).onClick(MinecraftClient.getPlayer(), button) == ClickResult.ACCEPTED) {
+                        new MousePressPacket(button, entity).sendToServer();
+                    }
                     return false;
                 }
                 return true;
             }
+            /*
             Entity riding = MinecraftClient.getPlayer().getRiding();
-            if (riding != null && riding.internal instanceof ModdedEntity) {
-                new MousePressPacket(button, riding).sendToServer();
-                return false;
-            }
+            if (riding != null && riding.internal instanceof ModdedEntity && entity instanceof IClickable) {
+                if (((IClickable)riding).onClick(MinecraftClient.getPlayer(), button) == ClickResult.ACCEPTED) {
+                    new MousePressPacket(button, riding).sendToServer();
+                    return false;
+                }
+            }*/
             return true;
         });
     }
@@ -70,5 +81,13 @@ public class Mouse {
                 }
             }
         }
+    }
+
+    public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
+        ClientEvents.DRAG.subscribe(handler);
+    }
+
+    public static Vec3d getDrag() {
+        return ClientEvents.ClientEventBusForge.getDragPos();
     }
 }

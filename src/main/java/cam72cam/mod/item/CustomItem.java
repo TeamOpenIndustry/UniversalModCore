@@ -43,8 +43,12 @@ public abstract class CustomItem {
     public CustomItem(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        Item.Properties props = new Item.Properties().stacksTo(getStackSize()).tab(getCreativeTabs().get(0).internal);
-        Item.Properties propsWithRender = DistExecutor.unsafeRunForDist(() -> () -> props.setISTER(ItemRender::ISTER), () -> () -> props);
+        Item.Properties props = new Item.Properties().stacksTo(getStackSize());
+        if (!getCreativeTabs().isEmpty()) {
+            props = props.tab(getCreativeTabs().get(0).internal);
+        }
+        Item.Properties finalProps = props;
+        Item.Properties propsWithRender = DistExecutor.unsafeRunForDist(() -> () -> finalProps.setISTER(ItemRender::ISTER), () -> () -> finalProps);
 
         internal = new ItemInternal(propsWithRender);
         internal.setRegistryName(identifier);

@@ -2,7 +2,11 @@ package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
@@ -14,7 +18,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
@@ -23,18 +27,21 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (
-            OpenGL.With c = OpenGL.color(0, 0, 0, 0);
-            OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, false);
-            OpenGL.With blend = OpenGL.bool(GL11.GL_BLEND, true)
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState()
+                        .color(1, 1, 1, 1)
+                        .texture(Texture.NO_TEXTURE)
+                        .blend(BlendMode.OPAQUE)
+        )) {
             AbstractGui.fill(new MatrixStack(), x, y, x + width, y + height, color);
         }
     }
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (OpenGL.With t = OpenGL.texture(tex)) {
+        try (With ctx = RenderContext.apply(
+                new RenderState().texture(Texture.wrap(tex))
+        )) {
             // X Y, U V, UW VH, W H, TW TH
             // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
             // X Y, W H, U V, UW VH, TW TH
@@ -52,10 +59,11 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (
-                OpenGL.With tex = OpenGL.texture(new Identifier(AtlasTexture.LOCATION_BLOCKS));
-                OpenGL.With color = OpenGL.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState()
+                        .texture(Texture.wrap(new Identifier(AtlasTexture.LOCATION_BLOCKS)))
+                        .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
+        )) {
             int iW = sprite.getWidth();
             int iH = sprite.getHeight();
 
@@ -102,7 +110,12 @@ public class GUIHelpers {
 
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
-        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
+        drawCenteredString(text, x, y, color, new Matrix4());
+    }
+    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         }
     }
@@ -119,12 +132,17 @@ public class GUIHelpers {
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
-        try (
-            OpenGL.With c = OpenGL.color(1, 1, 1, 1);
-            OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
-            OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
-        ) {
+        drawItem(stack, x, y, new Matrix4());
+    }
+
+    public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
+        RenderState state = new RenderState()
+                .color(1, 1, 1, 1)
+                .alpha_test(false)
+                .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                .rescale_normal(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
         }
     }

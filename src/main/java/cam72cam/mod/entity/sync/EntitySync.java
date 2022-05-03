@@ -16,6 +16,7 @@ import java.util.List;
 public class EntitySync extends TagCompound {
     // Entity to synchronize
     private final CustomEntity entity;
+    private int interval;
     // Previous entry (for calculating diff / needs update)
     private TagCompound old;
 
@@ -24,11 +25,20 @@ public class EntitySync extends TagCompound {
         super();
         this.entity = entity;
         this.old = new TagCompound();
+        this.interval = 10;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
     }
 
     /** Perform synchronization */
     public void send() throws SerializationException {
         if (entity.getWorld().isClient) {
+            return;
+        }
+
+        if (entity.getTickCount() % interval != 0) {
             return;
         }
 
@@ -73,7 +83,6 @@ public class EntitySync extends TagCompound {
 
         if (sync.internal.getAllKeys().size() != 0) {
             old = new TagCompound(this.internal.copy());
-
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
     }

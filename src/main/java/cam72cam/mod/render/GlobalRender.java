@@ -9,6 +9,9 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.util.With;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -16,8 +19,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.culling.ClippingHelper;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.settings.PointOfView;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
@@ -25,20 +31,18 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Consumer;
 
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
+    private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     // Internal hack
     private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
@@ -51,9 +55,8 @@ public class GlobalRender {
                 ClientRegistry.bindTileEntityRenderer(grhtype, (ted) -> new TileEntityRenderer<GlobalRenderHelper>(ted) {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
-                        RenderSystem.multMatrix(matrixStack.last().pose());
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        renderFuncs.forEach(r -> r.accept(partialTicks));
+                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack), partialTicks));
                     }
 
                     @Override
@@ -89,26 +92,26 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the Block Entity render phase */
-    public static void registerRender(Consumer<Float> func) {
+    public static void registerRender(RenderFunction func) {
         renderFuncs.add(func);
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(Consumer<Float> func) {
+    public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.accept(event.getPartialTicks());
+                func.render(new RenderState(), event.getPartialTicks());
             }
         });
     }
 
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
-        ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
+        ClientEvents.RENDER_MOUSEOVER.subscribe((event) -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getMatrix()), event.getPartialTicks());
                 }
             }
         });
@@ -138,9 +141,35 @@ public class GlobalRender {
         return Minecraft.getInstance().options.renderDistance * 16;
     }
 
+
+    /** Similar to drawNameplate */
+    public static void drawText(String str, RenderState state, Vec3d pos, float scale, float rotate)
+    {
+        EntityRendererManager renderManager = Minecraft.getInstance().getEntityRenderDispatcher();
+        float viewerYaw = renderManager.camera.getYRot() + rotate;
+        float viewerPitch = renderManager.camera.getXRot();
+        boolean isThirdPersonFrontal = renderManager.options.getCameraType() == PointOfView.THIRD_PERSON_FRONT;
+
+        FontRenderer fontRendererIn = Minecraft.getInstance().font;
+
+        state = state.clone()
+                .lighting(false)
+                .depth_test(false)
+                .color(1, 1, 1, 1)
+                .translate(pos.x, pos.y, pos.z)
+                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                .scale(scale, scale, scale)
+                .scale(-0.025F, -0.025F, 0.025F);
+
+        try (With ctx = RenderContext.apply(state)) {
+            fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+        }
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
-        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
+        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
     static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {

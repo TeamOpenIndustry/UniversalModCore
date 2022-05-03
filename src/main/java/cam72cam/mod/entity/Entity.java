@@ -118,6 +118,12 @@ public class Entity {
     }
 
 
+    private final SingleCache<Float, Vec3d> lookCache = new SingleCache<>(f -> new Vec3d(internal.getLookAngle()));
+    public Vec3d getLookVector() {
+        return lookCache.get(internal.xRot + internal.yRot);
+    }
+
+
     /* Casting */
 
     /** Wrapper around as(Player) */

@@ -95,6 +95,6 @@ public class Identifier {
      * @return the last resource this identifier points at (mod jar, mod config zip, resource pack)
      */
     public InputStream getLastResourceStream() throws IOException {
-        return Data.proxy.getResourceStream(this);
+        return Data.proxy.getLastResourceStream(this);
     }
 }

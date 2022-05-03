@@ -11,6 +11,8 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraftforge.server.permission.DefaultPermissionLevel;
+import net.minecraftforge.server.permission.PermissionAPI;
 
 /** Wrapper around EntityPlayer */
 public class Player extends Entity {
@@ -66,6 +68,23 @@ public class Player extends Entity {
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
         return new Vec3d(internal.xxa, internal.yya, internal.zza).scale(internal.isSprinting() ? 0.4 : 0.2);
+    }
+
+    public boolean hasPermission(PermissionAction action) {
+        return PermissionAPI.hasPermission(internal, action.node);
+    }
+
+    public static class PermissionAction {
+        private final String node;
+
+        private PermissionAction(String node) {
+            this.node = node;
+        }
+    }
+
+    public static PermissionAction registerAction(String name, String description, boolean opRequiredDefault) {
+        PermissionAPI.registerNode(name, opRequiredDefault ? DefaultPermissionLevel.OP : DefaultPermissionLevel.ALL, description);
+        return new PermissionAction(name);
     }
 
     public enum Hand {

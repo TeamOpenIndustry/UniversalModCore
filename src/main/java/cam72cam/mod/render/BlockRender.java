@@ -11,6 +11,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -23,14 +24,12 @@ import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.GrassColors;
 import net.minecraft.world.biome.BiomeColors;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
@@ -65,8 +64,13 @@ public class BlockRender {
             TODO: Opt out of renderGlobal!
              */
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
-                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getViewDistance() > 0)
                     .collect(Collectors.toList());
+            if (Minecraft.getInstance().level.getGameTime() % 20 == 1) {
+                prev = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
+                        .filter(x -> x instanceof TileEntity)
+                        .collect(Collectors.toList());
+            }
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(prev, tes);
             prev = tes;
         });
@@ -89,7 +93,6 @@ public class BlockRender {
                     if (instance == null) {
                         return;
                     }
-                    Class<? extends BlockEntity> cls = instance.getClass();
                     StandardModel model = render.apply(instance);
                     if (model == null) {
                         return;
@@ -103,17 +106,9 @@ public class BlockRender {
 
                     RenderHelper.turnBackOn();
 
-                    Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    GL13.glMultiTexCoord2f(33986, (float)j, (float)k);
-
-                    try (OpenGL.With matrix = OpenGL.matrix()) {
-                        //TODO 1.15 lerp xyz
-                        RenderSystem.multMatrix(var3.last().pose());
-                        model.renderCustom(partialTicks);
-                    }
+                    model.renderCustom(new RenderState(var3).lightmap(j/15f, k/15f), partialTicks);
 
                     RenderType.solid().clearRenderState();
                 }

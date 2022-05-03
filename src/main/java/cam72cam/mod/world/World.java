@@ -29,6 +29,7 @@ import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -676,5 +677,13 @@ public class World {
         ParticleType(BasicParticleType internal) {
             this.internal = internal;
         }
+    }
+
+    public float getBlockLightLevel(Vec3i pos) {
+        return internal.getBrightness(LightType.BLOCK, pos.internal()) / 15f;
+    }
+
+    public float getSkyLightLevel(Vec3i pos) {
+        return internal.getBrightness(LightType.SKY, pos.internal()) / 15f;
     }
 }

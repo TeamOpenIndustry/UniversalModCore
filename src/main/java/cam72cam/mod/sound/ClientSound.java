@@ -17,6 +17,7 @@ class ClientSound implements ISound {
     private final boolean repeats;
     private final Identifier oggLocation;
     private final float attenuationDistance;
+    private final Audio.InputTransformer data;
     private Vec3d currentPos;
     private Vec3d velocity;
     private float currentPitch = 1;
@@ -28,10 +29,11 @@ class ClientSound implements ISound {
     private AudioStreamBuffer sound;
     private int lastUsed = 0;
 
-    ClientSound(Identifier oggLocation, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
+    ClientSound(Identifier oggLocation, Audio.InputTransformer data, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
         this.baseSoundMultiplier = baseSoundMultiplier;
         this.repeats = repeats;
         this.oggLocation = oggLocation;
+        this.data = data;
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
@@ -58,7 +60,7 @@ class ClientSound implements ISound {
             return;
         }
         try {
-            OggAudioStream stream = new OggAudioStream(oggLocation.getResourceStream());
+            OggAudioStream stream = new OggAudioStream(data.getStream(oggLocation));
             AudioFormat fmt = stream.getFormat();
             int sizeBytes = (int) ((fmt.getSampleSizeInBits() * fmt.getChannels() * fmt.getSampleRate())/8);
             ByteBuffer buffer = stream.read(sizeBytes);
