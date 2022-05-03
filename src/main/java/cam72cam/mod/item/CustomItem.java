@@ -41,7 +41,12 @@ public abstract class CustomItem {
     public CustomItem(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        internal = new ItemInternal(new Item.Properties().maxStackSize(getStackSize()).group(getCreativeTabs().get(0).internal)); // .setTEISR()
+        Item.Properties props = new Item.Properties().maxStackSize(getStackSize());
+        if (!getCreativeTabs().isEmpty()) {
+            props = props.group(getCreativeTabs().get(0).internal);
+        }
+
+        internal = new ItemInternal(props); // .setTEISR()
         internal.setRegistryName(identifier);
 
         CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));

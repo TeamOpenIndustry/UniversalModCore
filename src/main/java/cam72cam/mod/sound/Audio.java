@@ -11,6 +11,9 @@ import cam72cam.mod.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class Audio {
     @OnlyIn(Dist.CLIENT)
     private static ModSoundManager soundManager;
@@ -60,7 +63,17 @@ public class Audio {
 
     /** Create a custom sound */
     public static ISound newSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
-        return soundManager.createSound(oggLocation, repeats, attenuationDistance, scale);
+        return newSound(oggLocation, Identifier::getLastResourceStream, repeats, attenuationDistance, scale);
+    }
+
+    /** Create a custom sound */
+    public static ISound newSound(Identifier oggLocation, InputTransformer oggData, boolean repeats, float attenuationDistance, float scale) {
+        return soundManager.createSound(oggLocation, oggData, repeats, attenuationDistance, scale);
+    }
+
+    @FunctionalInterface
+    public interface InputTransformer {
+        InputStream getStream(Identifier id) throws IOException;
     }
 
     /** Hack to increase the number of sounds that can be played at a time */

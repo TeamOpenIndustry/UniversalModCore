@@ -69,8 +69,8 @@ public class OBJModelTest {
                 "umc:simplev.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().data;
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);
+        float[] data = model.vbo.buffer.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;
@@ -103,8 +103,8 @@ public class OBJModelTest {
                 "umc:simplevvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().data;
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);
+        float[] data = model.vbo.buffer.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;
@@ -149,8 +149,8 @@ public class OBJModelTest {
                 "umc:simplevvtvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
-        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null);
-        float[] data = model.vbo.get().data;
+        OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);
+        float[] data = model.vbo.buffer.get().data;
         //System.out.println(Arrays.toString(data));
 
         int vertOff = 0;

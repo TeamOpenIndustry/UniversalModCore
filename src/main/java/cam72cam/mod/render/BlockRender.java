@@ -8,6 +8,7 @@ import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.color.BlockColors;
@@ -23,7 +24,6 @@ import net.minecraft.world.biome.BiomeColors;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -57,8 +57,13 @@ public class BlockRender {
             TODO: Opt out of renderGlobal!
              */
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().world.loadedTileEntityList).stream()
-                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getMaxRenderDistanceSquared() > 0)
                     .collect(Collectors.toList());
+            if (Minecraft.getInstance().world.getGameTime() % 20 == 1) {
+                prev = new ArrayList<>(Minecraft.getInstance().world.loadedTileEntityList).stream()
+                        .filter(x -> x instanceof TileEntity)
+                        .collect(Collectors.toList());
+            }
             Minecraft.getInstance().worldRenderer.updateTileEntities(prev, tes);
             prev = tes;
         });
@@ -94,12 +99,7 @@ public class BlockRender {
                 if (!model.hasCustom()) {
                     return;
                 }
-
-                try (OpenGL.With matrix = OpenGL.matrix()) {
-                    GL11.glTranslated(x, y, z);
-                    //GL11.glTranslated(-te.getPos().getX(), 0, -te.getPos().getZ());
-                    model.renderCustom(partialTicks);
-                }
+                model.renderCustom(new RenderState().translate(x, y, z), partialTicks);
             }
 
             public boolean isGlobalRenderer(TileEntity te) {

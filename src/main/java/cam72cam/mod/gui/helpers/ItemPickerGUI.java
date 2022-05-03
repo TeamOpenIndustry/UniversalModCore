@@ -3,15 +3,16 @@ package cam72cam.mod.gui.helpers;
 import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.text.StringTextComponent;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /** GUI that presents a standard item chooser */
 public class ItemPickerGUI {
@@ -51,6 +52,7 @@ public class ItemPickerGUI {
 
     /** Internal screen that actually renders and chooses the items */
     private class ItemPickerScreen extends Screen {
+        private TextFieldWidget search;
         private Map<Widget, Vec3i> buttonCoordList = new HashMap<>();
         private GuiScrollBar scrollBar;
 
@@ -62,6 +64,8 @@ public class ItemPickerGUI {
         public void render(int mouseX, int mouseY, float partialTicks) {
             this.renderBackground();
             super.render(mouseX, mouseY, partialTicks);
+
+            search.render(mouseX, mouseY, partialTicks);
 
             for (Widget button : this.buttons) {
                 if (button instanceof GuiScrollBar) continue;
@@ -85,19 +89,36 @@ public class ItemPickerGUI {
                 return;
             }
             int startX = this.width / 16;
-            int startY = this.height / 8;
+            int startY = Math.max(this.height / 8, 40);
 
             int stacksX = this.width * 7 / 8 / 32;
             int stacksY = this.height * 7 / 8 / 32;
 
+            if (search == null) {
+                this.search = new TextFieldWidget(Minecraft.getInstance().fontRenderer, width / 2 - 100, 20, 200, 20, "");
+            } else {
+                this.search.x = width / 2 - 100;
+                this.search.setHeight(20);
+            }
             this.buttons.clear();
+
+            this.search.setFocused2(true);
+            this.addButton(this.search);
+
             this.buttonCoordList.clear();
-            startX += Math.max(0, (stacksX - items.size()) / 2) * 32;
+            String[] searchParts = this.search.getText().toLowerCase(Locale.ROOT).split(" ");
+            List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
+                    .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
+                            stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
+                            stack.internal.getTooltip(null, ITooltipFlag.TooltipFlags.NORMAL).stream()
+                                    .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
+                    )).collect(Collectors.toList());
+            startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;
             int i;
-            for (i = 0; i < items.size(); i++) {
+            for (i = 0; i < filteredItems.size(); i++) {
                 int col = i % stacksX;
                 int row = i / stacksX;
-                this.addButton(new ItemButton(items.get(i), startX + col * 32, startY + row * 32) {
+                this.addButton(new ItemButton(filteredItems.get(i), startX + col * 32, startY + row * 32) {
                     @Override
                     public void onPress() {
                         choosenItem = stack;

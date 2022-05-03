@@ -188,8 +188,13 @@ public class TagCompound {
         });
     }
 
+    private <T extends Enum<?>> T safeEnumDecode(Class<T> cls, int ordinal) {
+        T[] values = cls.getEnumConstants();
+        return ordinal >= values.length ? values[0] : values[ordinal];
+    }
+
     public <T extends Enum<?>> T getEnum(String key, Class<T> cls) {
-        return getter(key, () -> cls.getEnumConstants()[internal.getInt(key)]);
+        return getter(key, () -> safeEnumDecode(cls, internal.getInt(key)));
     }
 
     public TagCompound setEnum(String key, Enum<?> value) {
@@ -198,7 +203,7 @@ public class TagCompound {
 
     public <T extends Enum<?>> List<T> getEnumList(String key, Class<T> cls) {
         return getter(key, () ->
-            Arrays.stream(internal.getIntArray(key)).mapToObj((int i) -> cls.getEnumConstants()[i]).collect(Collectors.toList())
+            Arrays.stream(internal.getIntArray(key)).mapToObj((int i) -> safeEnumDecode(cls, i)).collect(Collectors.toList())
         );
     }
 

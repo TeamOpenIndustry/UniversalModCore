@@ -7,8 +7,10 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL.With;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -16,6 +18,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.*;
 import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
@@ -70,8 +73,8 @@ public class ItemRender {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
-                    String id = ((ISpriteItemModel) model).getSpriteKey(stack);
-                    bar.step(id);
+                    Identifier id = ((ISpriteItemModel) model).getSpriteKey(stack);
+                    bar.step(id.toString());
                     createSprite(id, ((ISpriteItemModel) model).getSpriteModel(stack));
                 }
                 Progress.pop(bar);
@@ -114,18 +117,18 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type) {
-            defaultTransform(type);
+        default void applyTransform(ItemRenderType type, RenderState ctx) {
+            defaultTransform(type, ctx);
         }
-        static void defaultTransform(ItemRenderType type) {
+        static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
                 case FRAME:
-                    GL11.glRotated(90, 0, 1, 0);
-                    GL11.glTranslated(-0.9, 0, 0);
+                    state.rotate(90, 0, 1, 0);
+                    state.translate(-0.9, 0, 0);
                     break;
                 case HEAD:
-                    GL11.glTranslated(-0.5, 1, 0);
-                    GL11.glScaled(2, 2, 2);
+                    state.translate(-0.5, 1, 0);
+                    state.scale(2, 2, 2);
                     break;
             }
         }
@@ -134,19 +137,19 @@ public class ItemRender {
     /** Support for turning a custom model into a sprite */
     public interface ISpriteItemModel extends IItemModel {
         /** Unique string to represent this stack */
-        String getSpriteKey(ItemStack stack);
+        Identifier getSpriteKey(ItemStack stack);
         /** Model that should be rendered as a sprite */
         StandardModel getSpriteModel(ItemStack stack);
     }
 
     /** Internal method to render a model to a framebuffer and drop it in the texture sheet */
-    private static void createSprite(String id, StandardModel model) {
+    private static void createSprite(Identifier id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        File sprite = GLTexture.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
+        File sprite = ModCore.cacheFile(new Identifier(id.getDomain(),id.getPath() + "_sprite" + iconSheet.spriteSize + ".raw"));
         if (sprite.exists()) {
             try {
-                ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+                ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
                 buff.put(ByteBuffer.wrap(Files.readAllBytes(sprite.toPath())));
                 buff.flip();
                 iconSheet.setSprite(id, buff);
@@ -156,47 +159,69 @@ public class ItemRender {
             }
         }
 
+        With restore = OptiFine.overrideFastRender(false);
+
         Framebuffer fb = new Framebuffer(width, height, true, true);
         fb.setFramebufferColor(0, 0, 0, 0);
         fb.framebufferClear(Minecraft.IS_RUNNING_ON_MAC);
         fb.bindFramebuffer(true);
 
-        try (With projection = OpenGL.matrix(GL11.GL_PROJECTION)) {
-            GL11.glLoadIdentity();
-            try (With modelM = OpenGL.matrix(GL11.GL_MODELVIEW)) {
-                GL11.glLoadIdentity();
-                try (With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, true); With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
 
-                    // GL COLOR MATERIAL = true
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
-                    int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-                    GL11.glDepthFunc(GL11.GL_LESS);
-                    GL11.glClearDepth(1);
+        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
-                    model.renderCustom();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LESS);
+        GL11.glClearDepth(1);
 
-                    fb.bindFramebufferTexture();
-                    ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-                    GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-                    fb.unbindFramebufferTexture();
+        model.renderCustom(new RenderState());
 
-                    fb.unbindFramebuffer();
-                    fb.deleteFramebuffer();
-                    GL11.glDepthFunc(oldDepth);
+        fb.bindFramebufferTexture();
+        ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
+        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+        fb.unbindFramebufferTexture();
 
-                    iconSheet.setSprite(id, buff);
+        fb.unbindFramebuffer();
+        fb.deleteFramebuffer();
+        GL11.glDepthFunc(oldDepth);
 
-                    try {
-                        byte[] data = new byte[buff.capacity()];
-                        buff.get(data);
-                        Files.write(sprite.toPath(), data);
-                    } catch (IOException e) {
-                        ModCore.catching(e);
-                        sprite.delete();
-                    }
-                }
-            }
+        iconSheet.setSprite(id, buff);
+
+        try {
+            byte[] data = new byte[buff.capacity()];
+            buff.get(data);
+            Files.write(sprite.toPath(), data);
+        } catch (IOException e) {
+            ModCore.catching(e);
+            sprite.delete();
         }
+
+        if (!depthEnabled) {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        GL11.glDepthFunc(oldDepth);
+
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopMatrix();
+
+        restore.close();
     }
 
     /** Custom Model where we can hack into the MC/Forge render system */
@@ -241,8 +266,9 @@ public class ItemRender {
              * before actually setting up the correct GL context.
              */
             if (side == null && !ModCore.isInReload()) {
-                model.applyTransform(type);
-                std.renderCustom();
+                RenderState ctx = new RenderState();
+                model.applyTransform(type, ctx);
+                std.renderCustom(ctx);
             }
 
             return std.getQuads(side, rand);

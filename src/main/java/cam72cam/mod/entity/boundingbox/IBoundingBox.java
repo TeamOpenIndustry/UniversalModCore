@@ -32,6 +32,10 @@ public interface IBoundingBox {
         return from(new AxisAlignedBB(pos.internal()));
     }
 
+    static IBoundingBox from(Vec3d start, Vec3d end) {
+        return from(new AxisAlignedBB(start.x, start.y, start.z, end.x, end.y, end.z));
+    }
+
     /** Smaller corner of the BB */
     Vec3d min();
 

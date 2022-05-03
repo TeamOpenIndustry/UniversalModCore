@@ -11,13 +11,13 @@ import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Function;
@@ -37,12 +37,23 @@ public class ResourceCache<T> {
         private static ResourceProvider fromTag(TagCompound data) {
             ResourceProvider provider = new ResourceProvider();
             Map<Identifier, String> expected = data.getMap("resources", Identifier::new, v -> v.getString("key"));
-            for (Identifier id : expected.keySet()) {
-                String expectedHash = expected.get(id);
-                String foundHash = hashCache.containsKey(id) ? hashCache.get(id) : provider.get(id).getKey().toString();
-                if (!expectedHash.equals(foundHash)) {
-                    return provider;
+            try {
+                for (Identifier id : expected.keySet()) {
+                    String expectedHash = expected.get(id);
+                    String foundHash;
+                    synchronized (hashCache) {
+                        foundHash = hashCache.get(id);
+                    }
+                    if (foundHash == null) {
+                        foundHash = provider.get(id).getKey().toString();
+                    }
+                    if (!expectedHash.equals(foundHash)) {
+                        return provider;
+                    }
                 }
+            } catch (RuntimeException ex) {
+                ModCore.catching(ex);
+                return null;
             }
             return null;
         }
@@ -64,7 +75,9 @@ public class ResourceCache<T> {
                     IOUtils.copy(source, sink);
                     HashCode hash = source.hash();
                     resources.put(id, Pair.of(hash, sink.toByteArray()));
-                    hashCache.put(id, hash.toString());
+                    synchronized (hashCache) {
+                        hashCache.put(id, hash.toString());
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -82,56 +95,101 @@ public class ResourceCache<T> {
 
     private final File dir;
     private final File meta;
-    private final ResourceProvider provider;
-    private final T intermediary;
-    private boolean isClosed;
+    private ResourceProvider provider;
+    private T intermediary;
+    private final ThrowingFunction<ResourceProvider, T, IOException> constructor;
 
-    public ResourceCache(Identifier id, String prefix, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
-        dir = ModCore.cacheFile(String.format("%s-%s", prefix, hasher.hashString(id.toString(), Charset.defaultCharset()).toString()));
+    public ResourceCache(Identifier id, ThrowingFunction<ResourceProvider, T, IOException> constructor) throws IOException {
+        dir = ModCore.cacheFile(id);
         dir.mkdirs();
         meta = new File(dir, "meta.nbt");
+        this.constructor = constructor;
         provider = meta.exists() ?
                 ResourceProvider.fromTag(new TagCompound(Files.readAllBytes(meta.toPath()))) :
                 new ResourceProvider();
         intermediary = provider != null ? constructor.apply(provider) : null;
     }
 
+    private static void writeBuffer(File file, ByteBuffer buffer) throws IOException {
+        buffer.position(0);
+        try (FileChannel channel = new FileOutputStream(file).getChannel()) {
+            LZ4Factory factory = LZ4Factory.fastestInstance();
+            LZ4Compressor compressor = factory.highCompressor(2);
+
+            // Could be faster
+            byte[] input = buffer.array();
+            byte[] output = compressor.compress(input);
+
+            // Write number of input bytes
+            ByteBuffer prefix = ByteBuffer.allocate(Integer.BYTES);
+            prefix.asIntBuffer().put(input.length);
+            channel.write(prefix);
+
+            // Write the compressed data
+            channel.write(ByteBuffer.wrap(output));
+        } catch (NullPointerException e) {
+            ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
+            throw e;
+        }
+    }
+    private static ByteBuffer readBuffer(File file) throws IOException {
+        try (FileChannel channel = new FileInputStream(file).getChannel()) {
+            LZ4Factory factory = LZ4Factory.fastestInstance();
+            LZ4FastDecompressor decompressor = factory.fastDecompressor();
+
+            // Memmap the file (per javadoc, hooks into GC cleanup)
+            MappedByteBuffer raw = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+
+            // Read number of input bytes
+            int decompressedBytes = raw.getInt();
+            // Buffer to hold the decompressed data
+            ByteBuffer decompressed = ByteBuffer.allocate(decompressedBytes);
+
+            // Perform the decompression and move the head to the beginning of the buffer
+            decompressor.decompress(raw, decompressed);
+            decompressed.position(0);
+
+            return decompressed;
+        }
+    }
+
+    private GenericByteBuffer regenerateBuffer(File file, Function<T, GenericByteBuffer> converter) throws IOException {
+        GenericByteBuffer gen = converter.apply(constructor.apply(new ResourceProvider()));
+        writeBuffer(file, gen.buffer);
+        gen.buffer.position(0);
+        return gen;
+    }
+
     public Supplier<GenericByteBuffer> getResource(String name, Function<T, GenericByteBuffer> converter) throws IOException {
         File file = new File(dir, name + ".lz4");
+
         if (intermediary != null) {
-            NullPointerException ex = null;
-            for (int retry = 0; retry < 10; retry++) {
-                try (FileChannel channel = new FileOutputStream(file).getChannel()) {
-                    GenericByteBuffer in = converter.apply(intermediary);
-                    LZ4Factory factory = LZ4Factory.fastestInstance();
-                    LZ4Compressor compressor = factory.highCompressor(2);
-                    // Could be faster
-                    byte[] output = compressor.compress(in.buffer.array());
-                    ByteBuffer prefix = ByteBuffer.wrap(new byte[Integer.BYTES]);
-                    prefix.asIntBuffer().put(in.buffer.capacity());
-                    channel.write(prefix);
-                    channel.write(ByteBuffer.wrap(output));
-                    break;
-                } catch (NullPointerException e) {
-                    ModCore.error("Hit an exception while compressing cache data!  If you are using Java OpenJ9, please use a different JVM as there are known memory corruption bugs.");
-                    ex = e;
+            writeBuffer(file, converter.apply(intermediary).buffer);
+        } else if (!file.exists()) {
+            // This sometimes happens on windows or after a failed launch attempt.
+            regenerateBuffer(file, converter);
+        }
+
+        return () -> {
+            if (!file.exists()) {
+                // This sometimes happens on windows or after a failed launch attempt.
+                try {
+                    return regenerateBuffer(file, converter);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
-            if (ex != null) {
-                throw ex;
-            }
-        }
-        return () -> {
-            try (FileChannel channel = new FileInputStream(file).getChannel()) {
-                MappedByteBuffer raw = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-                GenericByteBuffer out = new GenericByteBuffer(new byte[raw.getInt()]);
-                LZ4Factory factory = LZ4Factory.fastestInstance();
-                LZ4FastDecompressor decompressor = factory.fastDecompressor();
-                decompressor.decompress(raw, out.buffer);
-                out.buffer.position(0);
-                return out;
+
+            try {
+                return new GenericByteBuffer(readBuffer(file));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                // Hail Mary!
+                try {
+                    return regenerateBuffer(file, converter);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    throw new RuntimeException(e);
+                }
             }
         };
     }
@@ -140,13 +198,17 @@ public class ResourceCache<T> {
         if (provider != null) {
             Files.write(meta.toPath(), provider.toTag().toBytes());
         }
-        isClosed = true;
+        provider = null;
+        intermediary = null;
         return hasher.hashBytes(Files.readAllBytes(meta.toPath())).toString();
     }
 
     public static class GenericByteBuffer {
         private final ByteBuffer buffer;
 
+        public GenericByteBuffer(ByteBuffer buffer) {
+            this.buffer = buffer;
+        }
         public GenericByteBuffer(byte[] bytes) {
             this.buffer = ByteBuffer.wrap(bytes);
         }
