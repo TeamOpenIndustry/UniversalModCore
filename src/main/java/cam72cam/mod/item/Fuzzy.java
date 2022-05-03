@@ -47,6 +47,7 @@ public class Fuzzy {
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald");
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.redstone_torch);
     public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");
+    public static final Fuzzy NAME_TAG = new Fuzzy("nameTag").add(Items.name_tag);
 
     private static boolean isPostItemRegistration = false;
 

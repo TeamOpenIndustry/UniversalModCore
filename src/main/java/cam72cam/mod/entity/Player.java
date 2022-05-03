@@ -12,7 +12,6 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.Facing;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.WorldSettings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -75,6 +74,25 @@ public class Player extends Entity {
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
         return serverMovement.getOrDefault(getUUID(), Vec3d.ZERO);
+    }
+
+    public boolean hasPermission(PermissionAction action) {
+        return !action.opRequired || internal.canCommandSenderUseCommand(2, "");
+    }
+
+    public static class PermissionAction {
+        private final String node;
+        private final boolean opRequired;
+
+        private PermissionAction(String node, boolean opRequiredDefault) {
+            this.node = node;
+            this.opRequired = opRequiredDefault;
+        }
+    }
+
+    public static PermissionAction registerAction(String name, String description, boolean opRequiredDefault) {
+        //PermissionAPI.registerNode(name, opRequiredDefault ? DefaultPermissionLevel.OP : DefaultPermissionLevel.ALL, description);
+        return new PermissionAction(name, opRequiredDefault);
     }
 
     public enum Hand {

@@ -29,6 +29,8 @@ import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -112,10 +114,13 @@ public class World {
                     this.onEntityAdded(entity);
                 }
             }
-            for (Entity entity : new ArrayList<>(this.entityByID.values())) {
-                if (!this.internal.loadedEntityList.contains(entity.internal)) {
-                    ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
-                    this.onEntityRemoved(entity.internal);
+            for (int entityId : new ArrayList<>(this.entityByID.keySet())) {
+                if (this.internal.getEntityByID(entityId) == null) {
+                    Entity entity = this.entityByID.get(entityId);
+                    if (entity != null && !this.internal.loadedEntityList.contains(entity.internal)) {
+                        ModCore.warn("Dropping entity that was not removed correctly %s - %s", entity.getUUID(), entity);
+                        this.onEntityRemoved(entity.internal);
+                    }
                 }
             }
             for (Map.Entry<UUID, Entity> entry : new HashSet<>(this.entityByUUID.entrySet())) {
@@ -657,5 +662,13 @@ public class World {
         ParticleType(String internal) {
             this.internal = internal;
         }
+    }
+
+    public float getBlockLightLevel(Vec3i pos) {
+        return internal.getSavedLightValue(EnumSkyBlock.Block, pos.x, pos.y, pos.z) / 15f;
+    }
+
+    public float getSkyLightLevel(Vec3i pos) {
+        return internal.getSavedLightValue(EnumSkyBlock.Sky, pos.x, pos.y, pos.z) / 15f;
     }
 }

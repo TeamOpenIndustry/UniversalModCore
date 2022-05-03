@@ -11,6 +11,8 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
@@ -30,6 +32,9 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
@@ -83,6 +88,17 @@ public class ModCore {
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.event(ModEvent.FINALIZE);
+        for (Mod mod : mods) {
+            File modDir = cacheFile(new Identifier(mod.modID(), "foo")).getParentFile();
+            if (modDir.exists() && modDir.isDirectory()) {
+                for (File file : modDir.listFiles()) {
+                    if (!usedCacheFiles.contains(file)) {
+                        ModCore.warn("Removing file cache entry: %s", file);
+                        FileUtils.deleteQuietly(file);
+                    }
+                }
+            }
+        }
     }
 
     /** START Phase (Forge) */
@@ -163,7 +179,7 @@ public class ModCore {
 
         @Override
         public int getGPUTextureSize() {
-            return GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+            return Math.min(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 8196);
         }
     }
 
@@ -201,6 +217,7 @@ public class ModCore {
                     Packet.register(Player.MovementSync::new, PacketDirection.ClientToServer);
                     Packet.register(Player.MovementSync2EB::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
+                    Light.register();
                     ConfigFile.sync(Config.class);
                     break;
                 case INITIALIZE:
@@ -313,8 +330,10 @@ public class ModCore {
         instance.logger.catching(ex);
     }
 
+    private static final List<File> usedCacheFiles = new ArrayList<>();
+
     /** Get a file for name in the UMC cache dir */
-    public static File cacheFile(String name) {
+    public static synchronized File cacheFile(Identifier id) {
         File configDir;
         try {
             configDir = Loader.instance().getConfigDir();
@@ -324,9 +343,19 @@ public class ModCore {
         if (configDir == null) {
             configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
         }
-        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", "universalmodcore").toFile();
+        File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 
-        return new File(cacheDir, name);
+        // https://stackoverflow.com/questions/1155107/is-there-a-cross-platform-java-method-to-remove-filename-special-chars#comment96425990_17745189
+        String path = id.getPath().replaceAll("(?U)[^\\w\\._]+", ".");
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // In a world with linux, who needs windows or gates?
+            path = StringUtils.right(path, 250 - cacheDir.getAbsolutePath().length()); // Windows default max *Path* len is 256
+        } else {
+            path = StringUtils.right(path, 250); // Most FS's allow up to 255
+        }
+        File f = new File(cacheDir, path);
+        usedCacheFiles.add(f);
+        return f;
     }
 }

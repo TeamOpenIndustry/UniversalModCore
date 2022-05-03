@@ -7,26 +7,27 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.util.With;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.culling.Frustrum;
 import net.minecraft.client.renderer.culling.ICamera;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import org.lwjgl.opengl.GL11;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
+    private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
@@ -35,7 +36,7 @@ public class GlobalRender {
             ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer() {
                 @Override
                 public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
-                    renderFuncs.forEach(r -> r.accept(partialTicks));
+                    renderFuncs.forEach(r -> r.render(new RenderState(), partialTicks));
                 }
             });
         });
@@ -68,15 +69,15 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the Block Entity render phase */
-    public static void registerRender(Consumer<Float> func) {
+    public static void registerRender(RenderFunction func) {
         renderFuncs.add(func);
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(Consumer<Float> func) {
+    public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
-                func.accept(event.partialTicks);
+            if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+                func.render(new RenderState(), event.partialTicks);
             }
         });
     }
@@ -87,7 +88,7 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (!player.getHeldItem(Player.Hand.PRIMARY).isEmpty() && item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);
                 }
             }
         });
@@ -120,9 +121,35 @@ public class GlobalRender {
         return Minecraft.getMinecraft().gameSettings.renderDistanceChunks * 16;
     }
 
+
+    /** Similar to drawNameplate */
+    public static void drawText(String str, RenderState state, Vec3d pos, float scale, float rotate)
+    {
+        RenderManager renderManager = RenderManager.instance;
+        float viewerYaw = renderManager.playerViewY + rotate;
+        float viewerPitch = renderManager.playerViewX;
+        boolean isThirdPersonFrontal = renderManager.options.thirdPersonView == 2;
+
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
+
+        state = state.clone()
+                .lighting(false)
+                .depth_test(false)
+                .color(1, 1, 1, 1)
+                .translate(pos.x, pos.y, pos.z)
+                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                .scale(scale, scale, scale)
+                .scale(-0.025F, -0.025F, 0.025F);
+
+        try (With ctx = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        }
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
-        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
+        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
     public static class GlobalRenderHelper extends TileEntity {

@@ -1,7 +1,12 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
+import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.client.Minecraft;
@@ -14,6 +19,7 @@ import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +28,7 @@ import java.util.function.Consumer;
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
     private List<Consumer<RenderInfo>> models = new ArrayList<>();
+
     private class RenderInfo {
         IBlockAccess world;
         int x;
@@ -35,7 +42,7 @@ public class StandardModel {
             this.z = z;
         }
     }
-    private List<Consumer<Float>> custom = new ArrayList<>();
+    private List<RenderFunction> custom = new ArrayList<>();
 
     private RenderBlocks renderBlocks = new RenderBlocks();
 
@@ -50,52 +57,56 @@ public class StandardModel {
     }
 
     /** Add a block with a solid color */
-    public StandardModel addColorBlock(Color color, Vec3d translate, Vec3d scale) {
-        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), translate, scale);
+    public StandardModel addColorBlock(Color color, Matrix4 transform) {
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), transform);
         return this;
     }
 
     /** Add snow layers */
-    public StandardModel addSnow(int layers, Vec3d translate) {
-        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), translate, new Vec3d(1, Math.max(1, Math.min(8, layers))/8f, 1));
+    public StandardModel addSnow(int layers, Matrix4 transform) {
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), transform.copy().scale(1, Math.max(1, Math.min(8, layers))/8f, 1));
         return this;
     }
 
     /** Add item as a block (best effort) */
-    public StandardModel addItemBlock(ItemStack stack, Vec3d translate, Vec3d scale) {
+    public StandardModel addItemBlock(ItemStack stack, Matrix4 matrix4) {
         if (stack.isEmpty()) {
             return this;
         }
+        RenderState state = new RenderState();
+        state.model_view().multiply(matrix4);
         models.add((pt) -> {
             Block block = Block.getBlockFromItem(stack.internal.getItem());
             if (block != null) {
-                renderBlocks.blockAccess = pt.world;
-                renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
-                renderBlocks.lockBlockBounds = true;
-                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
-                renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
-                renderBlocks.lockBlockBounds = false;
+                try (With ctx = RenderContext.apply(state)) {
+                    renderBlocks.blockAccess = pt.world;
+                    //renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
+                    //renderBlocks.lockBlockBounds = true;
+                    renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
+                    renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
+                    //renderBlocks.lockBlockBounds = false;
+                }
             }
         });
         return this;
     }
 
     /** Add item (think dropped item) */
-    public StandardModel addItem(ItemStack stack, Vec3d translate, Vec3d scale) {
+    public StandardModel addItem(ItemStack stack, Matrix4 apply) {
         if (stack.isEmpty()) {
             return this;
         }
-        custom.add((pt) -> {
-            try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
-                GL11.glTranslated(translate.x, translate.y, translate.z);
-                GL11.glScaled(scale.x, scale.y, scale.z);
+        custom.add((state, pt) -> {
+            state = state.clone().texture(Texture.wrap(new Identifier(TextureMap.locationBlocksTexture)));
+            state.model_view().multiply(apply);
+
+            try (With ctx = RenderContext.apply(state)) {
                 IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.ENTITY);
                 if (ir != null) {
                     ir.renderItem(IItemRenderer.ItemRenderType.ENTITY, stack.internal);
                 } else {
                     Block block = Block.getBlockFromItem(stack.internal.getItem());
                     if (block != null) {
-                        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
                         renderBlocks.renderBlockAsItem(block, stack.internal.getMetadata(), 1.0f);
                     }
                 }
@@ -105,28 +116,21 @@ public class StandardModel {
     }
 
     /** Do whatever you want here! */
-    public StandardModel addCustom(Runnable fn) {
-        this.custom.add(pt -> fn.run());
-        return this;
-    }
-
-    /** Do whatever you want here! (aware of partialTicks) */
-    public StandardModel addCustom(Consumer<Float> fn) {
+    public StandardModel addCustom(RenderFunction fn) {
         this.custom.add(fn);
         return this;
     }
 
     /** Render this entire model */
-    public void render() {
-        render(0);
+    public void render(RenderState state) {
+        render(state, 0);
     }
 
     /** Render this entire model (partial tick aware) */
-    public void render(float partialTicks) {
-        renderCustom(partialTicks);
-        try (OpenGL.With matrix = OpenGL.matrix(); OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, true)) {
+    public void render(RenderState state, float partialTicks) {
+        renderCustom(state, partialTicks);
+        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureMap.locationBlocksTexture))))) {
             GL11.glTranslated(0, -255, 0);
-            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
             Tessellator.instance.startDrawingQuads();
             renderQuads(Minecraft.getMinecraft().theWorld, 0, 255, 0);
             Tessellator.instance.draw();
@@ -137,14 +141,15 @@ public class StandardModel {
         models.forEach(a -> a.accept(new RenderInfo(world, x, y, z)));
     }
 
-    /** Render the OpenGL parts directly */
-    public void renderCustom() {
-        renderCustom(0);
+    /** Render the OpenGL parts directly
+     * @param state*/
+    public void renderCustom(RenderState state) {
+        renderCustom(state, 0);
     }
 
     /** Render the OpenGL parts directly (partial tick aware) */
-    public void renderCustom(float partialTicks) {
-        custom.forEach(cons -> cons.accept(partialTicks));
+    public void renderCustom(RenderState state, float partialTicks) {
+        custom.forEach(cons -> cons.render(state.clone(), partialTicks));
     }
 
     /** Is there anything that's not MC standard in this model? */

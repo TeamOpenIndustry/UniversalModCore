@@ -4,14 +4,16 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import org.lwjgl.opengl.GL11;
 
 import java.util.function.Supplier;
 
@@ -34,6 +36,8 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     private int centerX;
     private int centerY;
 
+    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
+
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
         this.server = serverContainer;
@@ -44,7 +48,9 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        try (OpenGL.With color = OpenGL.color(1, 1, 1, 1)) {
+        try (With ctx = RenderContext.apply(
+                new RenderState().color(1, 1, 1, 1)
+        )) {
             //this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
             this.centerX = (this.width - this.xSize) / 2;
             this.centerY = (this.height - this.ySize) / 2;
@@ -67,7 +73,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
             // Top Bar
             for (int k = 1; k <= slots; k++) {
@@ -81,7 +87,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             x += paddingLeft;
             if (handler != null && handler.getSlotCount() > slotID) {
                 super.drawTexturedModalRect(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
@@ -93,7 +99,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             // Left Side
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
             // Middle Slots
@@ -101,7 +107,8 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
                 int slotOff = (slotID - start);
                 drawSlot(handler, slotID, x + slotOff * slotSize, y);
             }
-            GL11.glColor4f(1, 1, 1, 1);
+        }
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             // Right Side
             super.drawTexturedModalRect(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         }
@@ -122,7 +129,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             // Left Bottom
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
             // Middle Bottom
@@ -137,7 +144,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         }
         return y + bottomOffset;
@@ -145,7 +152,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         }
         return y + midBarHeight;
@@ -154,7 +161,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        try (OpenGL.With color = OpenGL.color(1,1,1,1); OpenGL.With tex = OpenGL.texture(CHEST_GUI_TEXTURE)) {
+        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         }
         return y + 96;
@@ -203,12 +210,13 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
             itemRender.renderItemIntoGUI(fontRendererObj, mc.getTextureManager(), stack.internal, x, y);
          */
 
-        try (
-                OpenGL.With color = OpenGL.color(1, 1, 1, 1);
-                OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
-                OpenGL.With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, false);
-                OpenGL.With light = OpenGL.bool(GL11.GL_LIGHTING, false)
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState()
+                        .color(1, 1, 1, 1)
+                        .alpha_test(true)
+                        .depth_test(false)
+                        .lighting(false)
+        )) {
             Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
         }
     }
@@ -218,16 +226,18 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1)) {
+        try (With ctx = RenderContext.apply(
+                new RenderState().color(1, 1, 1, 1)
+        )) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId.replace("minecraft:blocks/", ""));
-        try (
-                OpenGL.With color_ = OpenGL.color(1,1,1,1);
-                OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.locationBlocksTexture))
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState().color(1, 1, 1, 1)
+                        .texture(Texture.wrap(new Identifier(TextureMap.locationBlocksTexture)))
+        )) {
             super.drawTexturedModelRectFromIcon(x, y, sprite, 16, 16);
         }
     }

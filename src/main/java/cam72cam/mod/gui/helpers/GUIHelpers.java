@@ -2,7 +2,11 @@ package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -15,7 +19,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
@@ -26,18 +30,21 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (
-            OpenGL.With c = OpenGL.color(0, 0, 0, 0);
-            OpenGL.With tex = OpenGL.bool(GL11.GL_TEXTURE_2D, false);
-            OpenGL.With blend = OpenGL.bool(GL11.GL_BLEND, true)
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState()
+                        .color(1, 1, 1, 1)
+                        .texture(Texture.NO_TEXTURE)
+                        .blend(BlendMode.OPAQUE)
+        )) {
             Gui.drawRect(x, y, x + width, y + height, color);
         }
     }
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (OpenGL.With t = OpenGL.texture(tex)) {
+        try (With ctx = RenderContext.apply(
+                new RenderState().texture(Texture.wrap(tex))
+        )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
         }
     }
@@ -69,10 +76,11 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (
-                OpenGL.With tex = OpenGL.texture(new Identifier(TextureMap.locationBlocksTexture));
-                OpenGL.With color = OpenGL.color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
-        ) {
+        try (With ctx = RenderContext.apply(
+                new RenderState()
+                        .texture(Texture.wrap(new Identifier(TextureMap.locationBlocksTexture)))
+                        .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
+        )) {
             int iW = sprite.getIconWidth();
             int iH = sprite.getIconHeight();
 
@@ -107,7 +115,12 @@ public class GUIHelpers {
 
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
-        try (OpenGL.With c = OpenGL.color(1, 1, 1, 1); OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
+        drawCenteredString(text, x, y, color, new Matrix4());
+    }
+    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, (x - Minecraft.getMinecraft().fontRendererObj.getStringWidth(text) / 2), y, color);
         }
     }
@@ -126,18 +139,21 @@ public class GUIHelpers {
 
     /** Draw a Item at the given coords */
     public static void drawItem(ItemStack stack, int x, int y) {
-        IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
-        try (
-                OpenGL.With c = OpenGL.color(1, 1, 1, 1);
-                OpenGL.With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true);
-                OpenGL.With blend = OpenGL.blend(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                OpenGL.With rescale = OpenGL.bool(GL12.GL_RESCALE_NORMAL, true);
-                OpenGL.With mat = OpenGL.matrix()
-        ) {
-            GL11.glPushMatrix();
-            GL11.glTranslated(x, y, 0);
+        drawItem(stack, x, y, new Matrix4());
+    }
+
+    public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
+        RenderState state = new RenderState()
+                .color(1, 1, 1, 1)
+                .alpha_test(true)
+                .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                .rescale_normal(true)
+                .translate(x, y, 0);
+
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
+            IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
             ir.renderItem(IItemRenderer.ItemRenderType.INVENTORY, stack.internal);
-            GL11.glPopMatrix();
         }
     }
 }

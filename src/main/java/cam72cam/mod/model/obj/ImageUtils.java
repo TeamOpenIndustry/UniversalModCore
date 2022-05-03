@@ -1,5 +1,6 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.ModCore;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
@@ -9,8 +10,8 @@ public class ImageUtils {
     public static Pair<Integer, Integer> scaleSize(int width, int height, int maxSize) {
         double scale = maxSize / (double)Math.max(width, height);
         return Pair.of(
-                (int) Math.floor(width * scale),
-                (int) Math.floor(height * scale)
+                width < 32 ? width : (int) Math.floor(width * scale),
+                height < 32 ? height : (int) Math.floor(height * scale)
         );
     }
 
@@ -20,25 +21,27 @@ public class ImageUtils {
         int y = size.getRight();
         BufferedImage target = new BufferedImage(x, y, image.getType());
         Graphics2D g = target.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.drawImage(image, 0, 0, x, y, 0, 0, image.getWidth(), image.getHeight(), null);
         return target;
     }
 
 
     public static int[] toRGBA(BufferedImage image) {
-        int[] argb = new int[image.getWidth() * image.getHeight()];
-        int[] rgba = new int[image.getWidth() * image.getHeight()];
-        image.getRGB(0, 0, image.getWidth(), image.getHeight(), argb, 0, image.getWidth());
-        for (int i = 0; i < rgba.length; i++) {
-            int c_argb = argb[i];
+        long start = System.currentTimeMillis();
+        int[] pixels = new int[image.getWidth() * image.getHeight()];
+        image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+        for (int i = 0; i < pixels.length; i++) {
+            int c_argb = pixels[i];
             int a = c_argb >> 24 & 255;
             int r = c_argb >> 16 & 255;
             int g = c_argb >> 8 & 255;
             int b = c_argb >> 0 & 255;
-            int c_rgba = (r << 24) | (g << 16) | (b << 8) | a;
-            rgba[i] = c_rgba;
+            pixels[i] = (r << 24) | (g << 16) | (b << 8) | a;
+
+            //pixels[i] = (argb & 0xFFFFFF) << 8 | (argb >> 24);
         }
-        return rgba;
+        ModCore.debug("Fetching pixels for %sx%s took %sms", image.getWidth(), image.getHeight(), (System.currentTimeMillis() - start));
+        return pixels;
     }
 }

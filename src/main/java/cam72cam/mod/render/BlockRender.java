@@ -4,6 +4,7 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderState;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -12,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.world.IBlockAccess;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,11 +79,7 @@ public class BlockRender {
                 if (!model.hasCustom()) {
                     return;
                 }
-
-                try (OpenGL.With matrix = OpenGL.matrix()) {
-                    GL11.glTranslated(x, y, z);
-                    model.renderCustom(partialTicks);
-                }
+                model.renderCustom(new RenderState().translate(x, y, z), partialTicks);
             }
         });
     }

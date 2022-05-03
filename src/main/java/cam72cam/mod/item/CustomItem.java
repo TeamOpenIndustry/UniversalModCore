@@ -32,7 +32,9 @@ public abstract class CustomItem {
         internal = new ItemInternal();
         internal.setUnlocalizedName(modID + ":" + name);
         internal.setMaxStackSize(getStackSize());
-        internal.setCreativeTab(getCreativeTabs().get(0).internal);
+        if (!getCreativeTabs().isEmpty()) {
+            internal.setCreativeTab(getCreativeTabs().get(0).internal);
+        }
 
         CommonEvents.Item.REGISTER.subscribe(() -> GameRegistry.registerItem(internal, name, modID));
     }

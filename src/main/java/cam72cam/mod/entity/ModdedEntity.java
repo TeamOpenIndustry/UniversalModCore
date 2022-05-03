@@ -289,12 +289,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
-        return passenger.getPosition().subtract(self.getPosition()).rotateMinecraftYaw(-self.getRotationYaw());
+        return passenger.getPosition().subtract(self.getPosition()).rotateYaw(self.getRotationYaw());
     }
 
     /** Rotate offset around entity center by entity yaw and add entity center */
     private Vec3d calculatePassengerPosition(Vec3d offset) {
-        return offset.rotateMinecraftYaw(-self.getRotationYaw()).add(self.getPosition());
+        return offset.rotateYaw(-self.getRotationYaw()).add(self.getPosition());
     }
 
     /**
@@ -604,4 +604,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return super.getCapability(capability, facing);
     }
      */
+
+    @Override
+    public boolean shouldRenderInPass(int pass) {
+        return pass == 0 || pass == 1;
+    }
 }
