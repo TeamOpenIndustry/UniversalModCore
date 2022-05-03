@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.MultiplayerScreen;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -93,6 +94,17 @@ public class EntityRegistry {
                 Minecraft.getInstance().loadWorld(null);
                 Minecraft.getInstance().displayGuiScreen(new DisconnectedScreen(new MultiplayerScreen(new MainMenuScreen()), "disconnect.lost", PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
+            }
+        });
+        CommonEvents.World.UNLOAD.subscribe(w -> {
+            if (w.isRemote) {
+                // Cleanup client side since mc does not call setDead client side...
+                // See ClientEvents registration for related crap
+                for (net.minecraft.entity.Entity entity : ((ClientWorld) w).getAllEntities()) {
+                    if (entity instanceof ModdedEntity) {
+                        entity.remove();
+                    }
+                }
             }
         });
     }

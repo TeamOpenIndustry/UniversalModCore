@@ -4,15 +4,20 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.opengl.CustomTexture;
+import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.sound.Audio;
 import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -30,6 +35,7 @@ import java.util.function.Function;
 /** Registry of events that fire off client side only.  Do not use directly! */
 public class ClientEvents {
 
+    private static net.minecraft.world.World clientLast = null;
     private static void registerClientEvents() {
         EntityRegistry.registerClientEvents();
         EntityRenderer.registerClientEvents();
@@ -38,6 +44,18 @@ public class ClientEvents {
         Audio.registerClientCallbacks();
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
+
+        VBO.registerClientEvents();
+        CustomTexture.registerClientEvents();
+
+        // Forge does not fire world unloaded client side
+        TICK.subscribe(() -> {
+            ClientWorld mcw = Minecraft.getInstance().world;
+            if (clientLast != mcw && clientLast != null) {
+                CommonEvents.World.UNLOAD.execute(worldConsumer -> worldConsumer.accept(clientLast));
+            }
+            clientLast = mcw;
+        });
     }
 
     /** Fires off a client resource reload event (UMC only).  Do not use directly */
@@ -45,24 +63,68 @@ public class ClientEvents {
         RELOAD.execute(Runnable::run);
     }
 
+    public enum MouseAction {
+        CLICK,
+        RELEASE,
+        MOVE,
+    }
+
+    public static class MouseGuiEvent {
+        public final MouseAction action;
+        public final int x;
+        public final int y;
+        public final int button;
+
+        public MouseGuiEvent(MouseAction action, int x, int y, int button) {
+            this.action = action;
+            this.x = x;
+            this.y = y;
+            this.button = button;
+        }
+    }
+
     public static final Event<Runnable> TICK = new Event<>();
+    public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
+    public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
     public static final Event<Consumer<TextureStitchEvent.Pre>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Text>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
-    public static final Event<Consumer<Float>> RENDER_MOUSEOVER = new Event<>();
+    public static final Event<Consumer<DrawHighlightEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderWorldLastEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
+        private static Vec3d dragPos = null;
+
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             TICK.execute(Runnable::run);
+        }
+
+        private static void onGuiMouse(GuiScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
+            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
+            if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
+                event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onGuiClick(GuiScreenEvent.MouseClickedEvent.Pre event) {
+            onGuiMouse(event, event.getButton(), MouseAction.CLICK);
+        }
+        @SubscribeEvent
+        public static void onGuiDrag(GuiScreenEvent.MouseDragEvent.Pre event) {
+            onGuiMouse(event, event.getMouseButton(), MouseAction.RELEASE);
+        }
+        @SubscribeEvent
+        public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
+            onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
 
         @SubscribeEvent
@@ -72,11 +134,29 @@ public class ClientEvents {
 
             if ((event.getButton() == attackID || event.getButton() == useID) && event.getAction() == 1) {
                 Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
-                if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                if (!DRAG.executeCancellable(x -> x.apply(button))) {
                     //event.setCanceled(true);
+                    dragPos = new Vec3d(0, 0, 0);
+                } else if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                    //event.setCanceled(true);
+                } else {
+                    dragPos = null;
                 }
             }
         }
+
+        @SubscribeEvent
+        public static void onFrame(TickEvent.RenderTickEvent event) {
+            if (dragPos != null) {
+                //Minecraft.getMinecraft().mouseHelper.mouseXYChange();
+                dragPos = dragPos.add(Minecraft.getInstance().mouseHelper.getXVelocity(), Minecraft.getInstance().mouseHelper.getYVelocity(), 0);
+            }
+        }
+
+        public static Vec3d getDragPos() {
+            return dragPos;
+        }
+
 
         @SubscribeEvent
         public static void onDebugRender(RenderGameOverlayEvent.Text event) {
@@ -91,11 +171,8 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onRenderMouseover(DrawHighlightEvent.HighlightBlock event) {
             RenderType.getCutout().setupRenderState();
-            GL11.glPushMatrix();
-            RenderSystem.multMatrix(event.getMatrix().getLast().getMatrix());
             // TODO 1.15+ do we need to set lightmap coords here?
-            RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
-            GL11.glPopMatrix();
+            RENDER_MOUSEOVER.execute(x -> x.accept(event));
             RenderType.getCutout().clearRenderState();
         }
 

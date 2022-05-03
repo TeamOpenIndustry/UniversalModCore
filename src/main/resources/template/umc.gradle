@@ -113,7 +113,11 @@ repositories {
 #UMC_REPO#
 
 dependencies {
+<<<<<<< HEAD
     minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
+=======
+	minecraft 'net.minecraftforge:forge:1.14.4-28.2.26'
+>>>>>>> origin/1.14.4-forge
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"

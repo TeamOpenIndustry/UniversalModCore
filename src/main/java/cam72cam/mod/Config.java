@@ -18,4 +18,7 @@ public class Config {
 
     @ConfigFile.Comment("Enable Debug Logging")
     public static boolean DebugLogging = false;
+
+    @ConfigFile.Comment("Enable threaded texture loading")
+    public static boolean ThreadedTextureLoading = true;
 }
