@@ -48,7 +48,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         this.server = serverContainer;
         this.xSize = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.ySize = server.ySize;
-        this.valid = () -> true; // TODO
+        this.valid = serverContainer.valid;
     }
 
     @Override
