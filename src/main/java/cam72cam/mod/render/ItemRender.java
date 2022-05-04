@@ -104,7 +104,7 @@ public class ItemRender {
             public ModelState getCombinedTransform() {
                 return new SimpleModelState(PerspectiveMapWrapper.getTransforms(getCameraTransforms()));
             }
-        }, event.getModelLoader(), ModelLoader.defaultTextureGetter(), foo, ItemOverrides.EMPTY, tex.internal)));
+        }, event.getModelLoader(), ForgeModelBakery.defaultTextureGetter(), foo, ItemOverrides.EMPTY, tex.internal)));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
 

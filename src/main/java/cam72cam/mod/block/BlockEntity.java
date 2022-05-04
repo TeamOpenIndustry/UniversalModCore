@@ -100,8 +100,7 @@ public abstract class BlockEntity {
 
     /** @return the data that would be written to disk on world save */
     public TagCompound getData() {
-        TagCompound data = new TagCompound();
-        internal.save(data.internal);
+        TagCompound data = new TagCompound(internal.saveWithFullMetadata());
         return data;
     }
 

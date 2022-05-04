@@ -17,6 +17,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
 
@@ -58,6 +59,10 @@ public class CommonEvents {
     }
 
     public static final Event<Consumer<IForgeRegistry<MenuType<?>>>> CONTAINER_REGISTRY = new Event<>();
+
+    public static final class Permissions {
+        public static final Event<Consumer<PermissionGatherEvent.Nodes>> NODES = new Event<>();
+    }
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static final class EventBusForge {

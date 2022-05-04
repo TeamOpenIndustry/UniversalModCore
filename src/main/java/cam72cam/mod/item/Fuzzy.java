@@ -2,10 +2,13 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.Registry;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.data.DataGenerator;
@@ -34,8 +37,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold");
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(new ResourceLocation("forge", "ingots/steel")), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(new ResourceLocation("forge", "storage_blocks/steel")), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron");
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron");
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -98,7 +101,7 @@ public class Fuzzy {
 
     static Map<String, Fuzzy> registered;
     private final String ident;
-    final Tag.Named<Item> tag;
+    final TagKey<Item> tag;
     private final List<Item> customItems;
     private final Set<Fuzzy> includes;
 
@@ -115,13 +118,13 @@ public class Fuzzy {
 
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
-        this(ItemTags.createOptional(
+        this(ItemTags.create(
                 ident.contains(":") ? new ResourceLocation(ident.toLowerCase(Locale.ROOT)) :
                         new ResourceLocation("forge", ident.toLowerCase(Locale.ROOT))
         ), ident);
     }
 
-    private Fuzzy(Tag.Named<Item> tag, String ident) {
+    private Fuzzy(TagKey<Item> tag, String ident) {
         if (registered == null) {
             registered = new HashMap<>();
         }
@@ -147,7 +150,14 @@ public class Fuzzy {
     public List<ItemStack> enumerate() {
         Set<ItemStack> items;
         try {
-            items = tag.getValues().stream().map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item))).collect(Collectors.toSet());
+
+            HolderSet.Named<Item> tag = Registry.ITEM.getTag(this.tag).orElse(null);
+            if (tag == null) {
+                items = new HashSet<>();
+                ModCore.warn("Unable to locate registered tag: %s", this.tag);
+            } else {
+                items = tag.stream().map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item))).collect(Collectors.toSet());
+            }
         } catch (IllegalStateException e) {
             ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
             items = new HashSet<>();

@@ -224,8 +224,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public CompoundTag save(CompoundTag compound) {
-        super.save(compound);
+    public void saveAdditional(CompoundTag compound) {
+        super.saveAdditional(compound);
 
         TagCompound data = new TagCompound(compound);
 
@@ -240,13 +240,12 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             }
             data.set("instanceData", instanceData);
         }
-        return compound;
     }
 
     /** Active Synchronization from markDirty */
     @Override
     public final ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return new ClientboundBlockEntityDataPacket(this.worldPosition, 1, getUpdateTag(true));
+        return ClientboundBlockEntityDataPacket.create(this, e -> getUpdateTag(true));
     }
 
     /** Active Synchronization from markDirty */
@@ -257,7 +256,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final CompoundTag getUpdateTag(boolean writeUpdate) {
         CompoundTag tag = super.getUpdateTag();
         if (this.isLoaded()) {
-            this.save(tag);
+            this.saveAdditional(tag);
             TagCompound umcUpdate = new TagCompound();
             if (writeUpdate) {
                 try {

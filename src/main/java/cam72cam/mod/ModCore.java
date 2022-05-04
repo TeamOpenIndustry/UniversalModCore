@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,7 +123,7 @@ public class ModCore {
     }
 
 	@SubscribeEvent
-    public void serverStarting(FMLServerStartingEvent event) {
+    public void serverStarting(ServerStartingEvent event) {
 		// Formerly for command registration
     }
 
@@ -142,7 +142,7 @@ public class ModCore {
 
     /** START Phase (Forge) */
     @SubscribeEvent
-    public void serverStarted(FMLServerStartedEvent event) {
+    public void serverStarted(ServerStartedEvent event) {
         proxy.event(ModEvent.START);
     }
 

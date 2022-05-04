@@ -7,9 +7,9 @@ import net.minecraft.network.chat.TextComponent;
 public abstract class Slider extends Button {
 
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-        super(builder, new net.minecraftforge.fmlclient.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new TextComponent(text), min, max, start, null, null));
-        ((net.minecraftforge.fmlclient.gui.widget.Slider) this.button).showDecimal = doublePrecision;
-        ((net.minecraftforge.fmlclient.gui.widget.Slider) this.button).parent = slider -> Slider.this.onSlider();
+        super(builder, new net.minecraftforge.client.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new TextComponent(text), min, max, start, null, null));
+        ((net.minecraftforge.client.gui.widget.Slider) this.button).showDecimal = doublePrecision;
+        ((net.minecraftforge.client.gui.widget.Slider) this.button).parent = slider -> Slider.this.onSlider();
     }
 
     @Override
@@ -21,10 +21,10 @@ public abstract class Slider extends Button {
     public abstract void onSlider();
 
     public int getValueInt() {
-        return ((net.minecraftforge.fmlclient.gui.widget.Slider) button).getValueInt();
+        return ((net.minecraftforge.client.gui.widget.Slider) button).getValueInt();
     }
 
     public double getValue() {
-        return ((net.minecraftforge.fmlclient.gui.widget.Slider) button).getValue();
+        return ((net.minecraftforge.client.gui.widget.Slider) button).getValue();
     }
 }

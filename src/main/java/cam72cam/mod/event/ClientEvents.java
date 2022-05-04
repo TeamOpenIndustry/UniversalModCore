@@ -98,7 +98,7 @@ public class ClientEvents {
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderWorldLastEvent>> OPTIFINE_SUCKS = new Event<>();
+    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -109,7 +109,7 @@ public class ClientEvents {
             TICK.execute(Runnable::run);
         }
 
-        private static void onGuiMouse(GuiScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
+        private static void onGuiMouse(ScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
             MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
@@ -117,15 +117,15 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onGuiClick(GuiScreenEvent.MouseClickedEvent.Pre event) {
+        public static void onGuiClick(ScreenEvent.MouseClickedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.CLICK);
         }
         @SubscribeEvent
-        public static void onGuiDrag(GuiScreenEvent.MouseDragEvent.Pre event) {
+        public static void onGuiDrag(ScreenEvent.MouseDragEvent.Pre event) {
             onGuiMouse(event, event.getMouseButton(), MouseAction.RELEASE);
         }
         @SubscribeEvent
-        public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
+        public static void onGuiRelease(ScreenEvent.MouseReleasedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
 
@@ -184,7 +184,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void optifineSucksEvent(RenderWorldLastEvent event) {
+        public static void optifineSucksEvent(RenderLevelLastEvent event) {
             OPTIFINE_SUCKS.execute(x -> x.accept(event));
         }
     }

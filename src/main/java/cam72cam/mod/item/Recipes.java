@@ -79,10 +79,10 @@ public class Recipes extends RecipeProvider {
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
                     ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();
                     for (Fuzzy dependency : dependencies) {
-                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.getName())));
+                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.location())));
                     }
                     for (Fuzzy conflict : conflicts) {
-                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.getName()));
+                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.location()));
                     }
                     conditions.addRecipe(builder::save).build(out, name);
                 } else {

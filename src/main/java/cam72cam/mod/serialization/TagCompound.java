@@ -317,8 +317,7 @@ public class TagCompound {
             TagCompound ted = new TagCompound();
             ted.setWorld("world", tile.getWorld());
 
-            TagCompound data = new TagCompound();
-            tile.internal.save(data.internal);
+            TagCompound data = new TagCompound(tile.internal.saveWithFullMetadata());
             ted.set("data", data);
 
             set(key, ted);
