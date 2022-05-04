@@ -16,7 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 public class Light {
-    private static EntityType<LightEntity>[] types = new EntityType[15];
+    private static EntityType<LightEntity>[] types = new EntityType[16];
 
     private LightEntity internal;
     private double lightLevel;
