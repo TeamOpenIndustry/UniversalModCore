@@ -17,14 +17,12 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 configurations {
     shade
     compile.extendsFrom shade
 }
-
-apply plugin: 'maven'
 
 repositories {
     removeIf { it.url.host == 'files.minecraftforge.net' }
@@ -161,22 +159,21 @@ test {
     maxHeapSize = '1G'
 }
 
-task deployJar(type: Jar)
-
-configurations {
-    deployerJars
-}
-
-dependencies {
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
-}
-
-uploadArchives {
-    tasks.uploadArchives.dependsOn build
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: "scp://teamopenindustry.cc/var/www/html/maven/") {
-            authentication(userName: "mavenci", privateKey: "publish_key")
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifact sourceJar
+            artifactId archivesBaseName
+        }
+    }
+    repositories {
+        maven {
+            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            credentials {
+                username = "mavenci"
+                password = System.getenv("MAVENCI_PASS")
+            }
         }
     }
 }
