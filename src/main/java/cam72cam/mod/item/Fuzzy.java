@@ -90,6 +90,7 @@ public class Fuzzy {
     public static final Fuzzy EMERALD = new Fuzzy(Tags.Items.GEMS_EMERALD, "gemEmerald");
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
     public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass");
+    public static final Fuzzy NAME_TAG = new Fuzzy("nameTag").add(Items.NAME_TAG);
 
     static {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
@@ -115,8 +116,8 @@ public class Fuzzy {
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
         this(ItemTags.createOptional(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase()) :
-                        new ResourceLocation("forge", ident.toLowerCase())
+                ident.contains(":") ? new ResourceLocation(ident.toLowerCase(Locale.ROOT)) :
+                        new ResourceLocation("forge", ident.toLowerCase(Locale.ROOT))
         ), ident);
     }
 

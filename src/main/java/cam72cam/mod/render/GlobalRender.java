@@ -7,36 +7,36 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import com.mojang.blaze3d.systems.RenderSystem;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Consumer;
 
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<Consumer<Float>> renderFuncs = new ArrayList<>();
+    private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     // Internal hack
     private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
@@ -54,9 +54,8 @@ public class GlobalRender {
 
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
-                        OpenGL.internalMultMatrix(matrixStack.last().pose());
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        renderFuncs.forEach(r -> r.accept(partialTicks));
+                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack), partialTicks));
                     }
 
                     @Override
@@ -71,9 +70,9 @@ public class GlobalRender {
         });
         ClientEvents.TICK.subscribe(() -> {
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
-            /*
+            /* TODO 1.17.1
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setPosition(new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
             }*/
         });
 
@@ -93,26 +92,26 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the Block Entity render phase */
-    public static void registerRender(Consumer<Float> func) {
+    public static void registerRender(RenderFunction func) {
         renderFuncs.add(func);
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(Consumer<Float> func) {
+    public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.accept(event.getPartialTicks());
+                func.render(new RenderState(), event.getPartialTicks());
             }
         });
     }
 
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
-        ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
+        ClientEvents.RENDER_MOUSEOVER.subscribe((event) -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getMatrix()), event.getPartialTicks());
                 }
             }
         });
@@ -142,9 +141,35 @@ public class GlobalRender {
         return Minecraft.getInstance().options.renderDistance * 16;
     }
 
+
+    /** Similar to drawNameplate */
+    public static void drawText(String str, RenderState state, Vec3d pos, float scale, float rotate)
+    {
+        EntityRenderDispatcher renderManager = Minecraft.getInstance().getEntityRenderDispatcher();
+        float viewerYaw = renderManager.camera.getYRot() + rotate;
+        float viewerPitch = renderManager.camera.getXRot();
+        boolean isThirdPersonFrontal = renderManager.options.getCameraType() == CameraType.THIRD_PERSON_FRONT;
+
+        Font fontRendererIn = Minecraft.getInstance().font;
+
+        state = state.clone()
+                .lighting(false)
+                .depth_test(false)
+                .color(1, 1, 1, 1)
+                .translate(pos.x, pos.y, pos.z)
+                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                .scale(scale, scale, scale)
+                .scale(-0.025F, -0.025F, 0.025F);
+
+        try (With ctx = RenderContext.apply(state)) {
+            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+        }
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
-        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, float partialTicks);
+        void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
     static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {

@@ -6,31 +6,28 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
-import net.minecraftforge.fmlclient.registry.ClientRegistry;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
@@ -63,10 +60,16 @@ public class BlockRender {
             Find all UMC TEs
             Create new array to prevent CME's with poorly behaving mods
             TODO: Opt out of renderGlobal!
-            TODO: 1.17.1 borked
-            List<net.minecraft.world.level.block.entity.BlockEntity> tes = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
-                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded())
+             */
+            /* TODO 1.17.1
+            List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().level.getBlockEntity()).stream()
+                    .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getViewDistance() > 0)
                     .collect(Collectors.toList());
+            if (Minecraft.getInstance().level.getGameTime() % 20 == 1) {
+                prev = new ArrayList<>(Minecraft.getInstance().level.blockEntityList).stream()
+                        .filter(x -> x instanceof TileEntity)
+                        .collect(Collectors.toList());
+            }
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(prev, tes);
             prev = tes;
              */
@@ -95,7 +98,6 @@ public class BlockRender {
                     if (instance == null) {
                         return;
                     }
-                    Class<? extends BlockEntity> cls = instance.getClass();
                     StandardModel model = render.apply(instance);
                     if (model == null) {
                         return;
@@ -109,17 +111,9 @@ public class BlockRender {
 
                     //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
-                    Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    GL13.glMultiTexCoord2f(33986, (float)j, (float)k);
-
-                    try (OpenGL.With matrix = OpenGL.matrix()) {
-                        //TODO 1.15 lerp xyz
-                        OpenGL.internalMultMatrix(var3.last().pose());
-                        model.renderCustom(partialTicks);
-                    }
+                    model.renderCustom(new RenderState(var3).lightmap(j/15f, k/15f), partialTicks);
 
                     RenderType.solid().clearRenderState();
                 }

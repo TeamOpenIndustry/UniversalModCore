@@ -1,9 +1,7 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.math.Vec3d;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Transformation;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
@@ -12,8 +10,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.QuadTransformer;
+import util.Matrix4;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Internal class to scale an existing Baked Model
@@ -23,28 +25,41 @@ import java.util.*;
 class BakedScaledModel implements BakedModel {
     // I know this is evil and I love it :D
 
-    private final Vec3d scale;
-    private final Vec3d transform;
+    private final Matrix4 transform;
     private final BakedModel source;
     private final Map<Direction, List<BakedQuad>> quadCache = new HashMap<>();
 
-    public BakedScaledModel(BakedModel source, Vec3d scale, Vec3d transform) {
+    public BakedScaledModel(BakedModel source, Matrix4 transform) {
         this.source = source;
-        this.scale = scale;
         this.transform = transform;
     }
 
     public BakedScaledModel(BakedModel source, float height) {
         this.source = source;
-        this.scale = new Vec3d(1, height, 1);
-        transform = new Vec3d(0, 0, 0);
+        transform = new Matrix4().scale(1, height, 1);
     }
 
     @Override
     public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand) {
         if (quadCache.get(side) == null) {
-            Matrix4f mat = Matrix4f.createScaleMatrix((float)scale.x, (float)scale.y, (float)scale.z);
-            mat.translate(new Vector3f((float)transform.x, (float)transform.y, (float)transform.z));
+            Matrix4f mat = new Matrix4f(new float[] {
+                    (float) transform.m00,
+                    (float) transform.m01,
+                    (float) transform.m02,
+                    (float) transform.m03,
+                    (float) transform.m10,
+                    (float) transform.m11,
+                    (float) transform.m12,
+                    (float) transform.m13,
+                    (float) transform.m20,
+                    (float) transform.m21,
+                    (float) transform.m22,
+                    (float) transform.m23,
+                    (float) transform.m30,
+                    (float) transform.m31,
+                    (float) transform.m32,
+                    (float) transform.m33
+            });
             QuadTransformer qt = new QuadTransformer(new Transformation(mat));
             quadCache.put(side, qt.processMany(source.getQuads(state, side, rand)));
         }

@@ -1,98 +1,177 @@
 package cam72cam.mod.render.obj;
 
-import cam72cam.mod.Config;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
-import cam72cam.mod.render.OpenGL;
-import cam72cam.mod.render.obj.OBJVBO.BoundOBJVBO;
-import org.apache.commons.lang3.tuple.Pair;
+import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.VBO;
+import cam72cam.mod.render.opengl.RenderState;
+import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import static cam72cam.mod.model.obj.ImageUtils.scaleSize;
+public class OBJRender extends VBO {
+    public final OBJModel model;
+    public final Supplier<VertexBuffer> buffer;
 
-/**
- * VBA/VBO Backed object renderer
- */
-public class OBJRender {
-    public OBJModel model;
-    public Map<String, OBJTextureSheet> textures = new HashMap<>();
-    public Map<String, OBJTextureSheet> icons = new HashMap<>();
-    private OBJVBO vbo;
-
-    public OBJRender(OBJModel model) {
-        this(model, 30);
-    }
-    public OBJRender(OBJModel model, int cacheSeconds) {
+    public OBJRender(OBJModel model, Supplier<VertexBuffer> buffer) {
+        super(buffer, s -> {});
         this.model = model;
-        for (String name : model.textures.keySet()) {
-            this.textures.put(name, new OBJTextureSheet(model.textureWidth, model.textureHeight, model.textures.get(name), cacheSeconds));
-            Pair<Integer, Integer> size = scaleSize(model.textureWidth, model.textureHeight, Config.MaxTextureSize/8);
-            this.icons.put(name, new OBJTextureSheet(size.getLeft(), size.getRight(), model.icons.get(name), cacheSeconds));
+        this.buffer = buffer;
+    }
+
+    public Binding bind(RenderState state) {
+        return new Binding(state);
+    }
+
+    public class Binding extends VBO.Binding {
+        protected Binding(RenderState state) {
+            super(state);
+        }
+
+        public void draw(Collection<String> groups, Consumer<RenderState> mod) {
+            try (With pus = super.push(mod)) {
+                draw(groups);
+            }
+        }
+
+        /**
+         * Draw these groups in the VB
+         */
+        public void draw(Collection<String> groups) {
+            List<String> sorted = new ArrayList<>(groups);
+            sorted.sort(Comparator.naturalOrder());
+            int start = -1;
+            int stop = -1;
+            for (String group : sorted) {
+                OBJGroup info = model.groups.get(group);
+                if (start == stop) {
+                    start = info.faceStart;
+                    stop = info.faceStop + 1;
+                } else if (info.faceStart == stop) {
+                    stop = info.faceStop + 1;
+                } else {
+                    GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                    start = info.faceStart;
+                    stop = info.faceStop + 1;
+                }
+            }
+            if (start != stop) {
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
+            }
         }
     }
 
-    public OpenGL.With bindTexture() {
-        return bindTexture(null);
-    }
+    public class Builder {
+        private final Consumer<RenderState> settings;
+        private final List<Consumer<Buffer>> actions = new ArrayList<>();
 
-    public OpenGL.With bindTexture(boolean icon) {
-        return bindTexture(null, icon);
-    }
-
-    public OpenGL.With bindTexture(String texName) {
-        return bindTexture(texName, false);
-    }
-
-    public OpenGL.With bindTexture(String texName, boolean icon) {
-        if (this.textures.get(texName) == null) {
-            texName = ""; // Default
+        private Builder(Consumer<RenderState> settings) {
+            this.settings = settings;
         }
 
-        if (icon) {
-            OBJTextureSheet tex = this.icons.get(texName);
-            return tex.bind();
-        } else {
-            OBJTextureSheet tex = this.textures.get(texName);
-            return tex.bind();
+        private class Buffer {
+            private VertexBuffer vb;
+            private float[] built;
+            private int builtIdx;
+
+            private Buffer() {
+                this.vb = buffer.get();
+                this.built = new float[vb.data.length];
+                this.builtIdx = 0;
+            }
+
+            private void require(int size) {
+                while (built.length <= builtIdx + size) {
+                    float[] tmp = new float[built.length * 2];
+                    System.arraycopy(built, 0, tmp, 0, builtIdx);
+                    built = tmp;
+                }
+            }
+
+            private void add(float[] buff, Matrix4 m) {
+                require(buff.length);
+
+                if (m != null) {
+                    for (int i = 0; i < buff.length; i += vb.stride) {
+                        float x = buff[i+0];
+                        float y = buff[i+1];
+                        float z = buff[i+2];
+                        Vec3d v = m.apply(new Vec3d(x, y, z));
+                        buff[i+0] = (float) v.x;
+                        buff[i+1] = (float) v.y;
+                        buff[i+2] = (float) v.z;
+                    }
+                }
+
+                System.arraycopy(buff, 0, built, builtIdx, buff.length);
+                builtIdx += buff.length;
+            }
+
+            public void draw(Matrix4 m) {
+                if (m == null) {
+                    add(vb.data, null);
+                } else {
+                    float[] buff = new float[vb.data.length];
+                    System.arraycopy(vb.data, 0, buff, 0, vb.data.length);
+                    add(buff, m);
+                }
+            }
+
+            public void draw(Collection<String> groups, Matrix4 m) {
+                for (String group : groups) {
+                    OBJGroup info = model.groups.get(group);
+
+                    int start = info.faceStart * vb.vertsPerFace * vb.stride;
+                    int stop = (info.faceStop + 1) * vb.vertsPerFace * vb.stride;
+
+                    float[] buff = new float[stop - start];
+                    System.arraycopy(vb.data, start, buff, 0, stop - start);
+                    add(buff, m);
+                }
+            }
+
+            public VertexBuffer build() {
+                float[] out = new float[builtIdx];
+                System.arraycopy(built, 0, out, 0, builtIdx);
+                boolean hasNormals = vb.hasNormals;
+                vb = null;
+                built = null;
+                return new VertexBuffer(out, hasNormals);
+            }
+        }
+
+        public void draw() {
+            draw((Matrix4) null);
+        }
+
+        public void draw(Matrix4 m) {
+            actions.add(b -> b.draw(m));
+        }
+
+        public void draw(Collection<String> groups) {
+            draw(groups, null);
+        }
+
+        public void draw(Collection<String> groups, Matrix4 m) {
+            actions.add(b -> b.draw(groups, m));
+        }
+
+        public VBO build() {
+            List<Consumer<Buffer>> actions = new ArrayList<>(this.actions); // Snapshot
+            return new VBO(() -> {
+                Buffer buff = new Buffer();
+                actions.forEach(c -> c.accept(buff));
+                return buff.build();
+            }, settings);
         }
     }
 
-    public BoundOBJVBO bind() {
-        return getVBO().bind();
+    public Builder subModel(Consumer<RenderState> settings) {
+        return new Builder(settings);
     }
-
-    public void draw() {
-        try (BoundOBJVBO vbo = bind()) {
-            vbo.draw();
-        }
-    }
-
-    public void drawGroups(Collection<String> groups) {
-        try (BoundOBJVBO vbo = bind()) {
-            vbo.draw(groups);
-        }
-    }
-
-    public OBJVBO getVBO() {
-        if (vbo != null) {
-            return vbo;
-        }
-        vbo = new OBJVBO(model);
-        return vbo;
-    }
-
-    public void free() {
-        for (OBJTextureSheet texture : textures.values()) {
-            texture.freeGL();
-        }
-        for (OBJTextureSheet texture : icons.values()) {
-            texture.freeGL();
-        }
-        if (vbo != null) {
-            vbo.free();
-        }
-    }
-
 }

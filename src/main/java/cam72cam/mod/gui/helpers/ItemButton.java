@@ -1,8 +1,10 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL;
 import com.mojang.blaze3d.vertex.PoseStack;
+import cam72cam.mod.util.With;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -28,11 +30,9 @@ public abstract class ItemButton extends AbstractButton {
         Minecraft mc = Minecraft.getInstance();
 
         Font font = Minecraft.getInstance().font;
-        try (
-                OpenGL.With matrix = OpenGL.matrix();
-        ) {
-            GL11.glTranslated(x, y, 0);
-            GL11.glScaled(2, 2, 1);
+        try (With ctx = RenderContext.apply(
+                new RenderState().translate(x, y, 0).scale(2, 2, 1)
+        )) {
             mc.getItemRenderer().renderAndDecorateItem(stack.internal, 0, 0);
             mc.getItemRenderer().renderGuiItemDecorations(font, stack.internal, 0, 0);
         }

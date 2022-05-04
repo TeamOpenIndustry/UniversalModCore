@@ -17,8 +17,8 @@ public class ModSoundManager {
         lastSoundLevel = Minecraft.getInstance().options.getSoundSourceVolume(category.category);
     }
 
-    public ISound createSound(Identifier oggLocation, boolean repeats, float attenuationDistance, float scale) {
-        ClientSound snd = new ClientSound(oggLocation, lastSoundLevel, repeats, attenuationDistance, scale);
+    public ISound createSound(Identifier oggLocation, Audio.InputTransformer data, boolean repeats, float attenuationDistance, float scale) {
+        ClientSound snd = new ClientSound(oggLocation, data, lastSoundLevel, repeats, attenuationDistance, scale);
         this.sounds.add(snd);
         return snd;
     }

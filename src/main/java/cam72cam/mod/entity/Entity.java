@@ -118,6 +118,12 @@ public class Entity {
     }
 
 
+    private final SingleCache<Float, Vec3d> lookCache = new SingleCache<>(f -> new Vec3d(internal.getLookAngle()));
+    public Vec3d getLookVector() {
+        return lookCache.get(internal.getXRot() + internal.getYRot());
+    }
+
+
     /* Casting */
 
     /** Wrapper around as(Player) */
@@ -150,7 +156,7 @@ public class Entity {
     }
 
     public void kill() {
-        internal.remove(!internal.level.isClientSide); // TODO MAYBE BORK
+        internal.remove(!internal.level.isClientSide ? net.minecraft.world.entity.Entity.RemovalReason.KILLED : net.minecraft.world.entity.Entity.RemovalReason.DISCARDED); // TODO MAYBE BORK
     }
 
     public final boolean isDead() {

@@ -2,14 +2,17 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
+import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,24 +82,19 @@ public abstract class Particle {
                     ip.renderY = y + y - yo + this.yd * partialTicks - vec3d.y;
                     ip.renderZ = z + z - zo + this.zd * partialTicks - vec3d.z;
 
-                    try (
-                            OpenGL.With depth = OpenGL.depth(false);
-                            OpenGL.With alpha = OpenGL.alphaFunc(516, 0.003921569F)
-                    ) {
-                        if (renderer == null) {
-                            try (OpenGL.With c = OpenGL.matrix()) {
-                                GL11.glTranslated(ip.renderX, ip.renderY, ip.renderZ);
-                                ip.render(partialTicks);
-                            }
-                        } else {
-                            if (!ip.canRender) {
-                                renderer.accept(particles, partialTicks);
-                                particles.forEach(p -> p.canRender = true);
-                                particles.clear();
-                            }
-                            particles.add(ip);
-                            ip.canRender = false;
+                    if (renderer == null) {
+                        // TODO 1.16.5 OpenGL.With alpha = OpenGL.alphaFunc(516, 0.003921569F)
+                        RenderState state = new RenderState().depth_test(false);
+                        state.translate(ip.renderX, ip.renderY, ip.renderZ);
+                        ip.render(state, partialTicks);
+                    } else {
+                        if (!ip.canRender) {
+                            renderer.accept(particles, new RenderState(), partialTicks);
+                            particles.forEach(p -> p.canRender = true);
+                            particles.clear();
                         }
+                        particles.add(ip);
+                        ip.canRender = false;
                     }
                 }
 
@@ -110,21 +108,21 @@ public abstract class Particle {
     protected abstract boolean depthTestEnabled();
 
     /** Render this particle */
-    protected abstract void render(float partialTicks);
+    protected abstract void render(RenderState state, float partialTicks);
 
-    protected void lookAtPlayer() {
+    protected void lookAtPlayer(Matrix4 mat) {
         Vec3d eyes = MinecraftClient.getPlayer().getPositionEyes();
         double x = eyes.x - posX;
         double y = eyes.y - posY;
         double z = eyes.z - posZ;
-        GL11.glRotated(180 - Math.toDegrees(Math.atan2(-x, z)), 0, 1, 0);
-        GL11.glRotated(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y)) + 90, 1, 0, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(Mth.atan2(-x, z))), 0, 1, 0);
+        mat.rotate(Math.toRadians(180 - Math.toDegrees(Mth.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
     }
 
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
-        void accept(List<I> l, float pt);
+        void accept(List<I> l, RenderState state, float pt);
     }
 
     /** Data to be stored for each particle (can be extended) */

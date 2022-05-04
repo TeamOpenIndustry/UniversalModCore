@@ -8,13 +8,13 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import cam72cam.mod.render.OpenGL.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -147,20 +147,16 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
-        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-
         int j = i % 65536;
         int k = i / 65536;
-        GL13.glMultiTexCoord2f(33986, (float)j, (float)k);
+        RenderState state = new RenderState(p_225623_4_).lightmap(j / 15f, k / 15f);
+        state.rotate(180 - entityYaw, 0, 1, 0);
+        state.rotate(self.getRotationPitch(), 1, 0, 0);
+        state.rotate(-90, 0, 1, 0);
 
-        try (With c = OpenGL.matrix()) {
-            //TODO 1.15 lerp xyz
-            OpenGL.internalMultMatrix(p_225623_4_.last().pose());
-            GL11.glRotatef(180 - entityYaw, 0, 1, 0);
-            GL11.glRotatef(self.getRotationPitch(), 1, 0, 0);
-            GL11.glRotatef(-90, 0, 1, 0);
-            renderers.get(self.getClass()).render(self, partialTicks);
-        }
+        renderers.get(self.getClass()).render(self, state, partialTicks);
+        // TODO
+        renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
         RenderType.cutout().clearRenderState();
     }

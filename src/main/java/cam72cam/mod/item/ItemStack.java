@@ -123,7 +123,7 @@ public class ItemStack {
 
     /** Is the item this type of tool? */
     public boolean isValidTool(ToolType tool) {
-        return internal.getItem().getToolTypes(internal).contains(tool.internal);
+        return internal.getItem().canPerformAction(internal, tool.internal);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package cam72cam.mod.fluid;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class Fluid {
                 }
             }
             if (fluids.isEmpty()) {
-                return null;
+                fluids.add(Fluids.EMPTY);
             }
             registryCache.put(type, new Fluid(type, fluids));
         }

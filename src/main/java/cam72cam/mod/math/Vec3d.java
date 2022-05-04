@@ -50,17 +50,31 @@ public class Vec3d {
     }
 
     private static double length(double x, double y, double z) {
-        return Math.sqrt(x * x + y * y + z * z);
+        return Math.sqrt(lengthSquared(x, y, z));
+    }
+
+    private static double lengthSquared(double x, double y, double z) {
+        return x * x + y * y + z * z;
     }
 
     public double length() {
         return length(x, y, z);
     }
 
+    public double lengthSquared() {
+        return lengthSquared(x, y, z);
+    }
+
     public double distanceTo(Vec3d other) {
         // optimized by inlining the subtract (removes 1 allocation)
         //return this.subtract(other).length();
         return length(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    public double distanceToSquared(Vec3d other) {
+        // optimized by inlining the subtract (removes 1 allocation)
+        //return this.subtract(other).length();
+        return lengthSquared(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     public Vec3d scale(double scale) {
@@ -85,18 +99,11 @@ public class Vec3d {
         return String.format("(%s, %s, %s)", this.x, this.y, this.z);
     }
 
-    public Vec3d rotateMinecraftYaw(float angleDegrees) {
-        double rad = Math.toRadians(angleDegrees);
-        double sin = Math.sin(rad);
-        double cos = Math.cos(rad);
-        return new Vec3d(cos * -x + sin * z, y, sin * x + cos * z);
-    }
-
     public Vec3d rotateYaw(float angleDegrees) {
         double rad = Math.toRadians(angleDegrees);
         double sin = Math.sin(rad);
         double cos = Math.cos(rad);
-        return new Vec3d(cos * x + sin * z, y, sin * x + cos * z);
+        return new Vec3d(cos * x + sin * z, y, sin * -x + cos * z);
     }
 
     @Override
@@ -106,6 +113,11 @@ public class Vec3d {
             return ov.x == this.x && ov.y == this.y && ov.z == this.z;
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (x + y + z);
     }
 
     public Vec3 internal() {

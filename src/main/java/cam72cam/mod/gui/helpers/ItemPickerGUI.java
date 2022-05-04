@@ -4,16 +4,17 @@ import cam72cam.mod.item.ItemStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.item.TooltipFlag;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /** GUI that presents a standard item chooser */
 public class ItemPickerGUI {
@@ -53,6 +54,7 @@ public class ItemPickerGUI {
 
     /** Internal screen that actually renders and chooses the items */
     private class ItemPickerScreen extends Screen {
+        private EditBox search;
         private Map<AbstractWidget, Vec3i> buttonCoordList = new HashMap<>();
         private GuiScrollBar scrollBar;
 
@@ -64,6 +66,8 @@ public class ItemPickerGUI {
         public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
             this.renderBackground(matrixStack);
             super.render(matrixStack, mouseX, mouseY, partialTicks);
+
+            search.render(matrixStack, mouseX, mouseY, partialTicks);
 
             for (Widget button : this.renderables) {
                 if (button instanceof GuiScrollBar) continue;
@@ -87,19 +91,37 @@ public class ItemPickerGUI {
                 return;
             }
             int startX = this.width / 16;
-            int startY = this.height / 8;
+            int startY = Math.max(this.height / 8, 40);
 
             int stacksX = this.width * 7 / 8 / 32;
             int stacksY = this.height * 7 / 8 / 32;
 
             this.clearWidgets();
             this.buttonCoordList.clear();
-            startX += Math.max(0, (stacksX - items.size()) / 2) * 32;
+
+            if (search == null) {
+                this.search = new EditBox(Minecraft.getInstance().font, width / 2 - 100, 20, 200, 20, new TextComponent(""));
+            } else {
+                this.search.x = width / 2 - 100;
+                this.search.setHeight(20);
+            }
+
+            this.search.setFocus(true);
+            this.addRenderableWidget(this.search);
+
+            String[] searchParts = this.search.getValue().toLowerCase(Locale.ROOT).split(" ");
+            List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
+                    .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
+                            stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
+                            stack.internal.getTooltipLines(null, TooltipFlag.Default.NORMAL).stream()
+                                    .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
+                    )).collect(Collectors.toList());
+            startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;
             int i;
-            for (i = 0; i < items.size(); i++) {
+            for (i = 0; i < filteredItems.size(); i++) {
                 int col = i % stacksX;
                 int row = i / stacksX;
-                this.addRenderableWidget(new ItemButton(items.get(i), startX + col * 32, startY + row * 32) {
+                this.addRenderableWidget(new ItemButton(filteredItems.get(i), startX + col * 32, startY + row * 32) {
                     @Override
                     public void onPress() {
                         choosenItem = stack;
@@ -110,7 +132,7 @@ public class ItemPickerGUI {
             }
             int rows = i / stacksX + 2;
             if (stacksY < rows) {
-                this.scrollBar = new GuiScrollBar(i++, this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0, null);
+                this.scrollBar = new GuiScrollBar(i++, this.width - 30, 4, 20, this.height - 8, "", 0.0, rows - stacksY, 0.0, b -> {});
                 this.addRenderableWidget(this.scrollBar);
             }
         }

@@ -4,9 +4,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.Buffers.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class OBJParser {
     public static final float UNSPECIFIED = Float.MIN_VALUE;
@@ -31,6 +30,7 @@ public class OBJParser {
     private final List<OBJGroup> correctedGroups;
     private final VertexBuffer buffer;
     private final String[] correctedFaceMaterials;
+    private boolean smoothShading = false;
 
     private String currentMaterial = null;
     private int currentGroupStart = 0;
@@ -63,7 +63,11 @@ public class OBJParser {
                         break;
                     case "o":
                     case "g":
-                        addGroup(args[1]);
+                        String groupName = args[1];
+                        for (int i = 2; i < args.length; i++) {
+                            groupName += " " + args[i];
+                        }
+                        addGroup(groupName);
                         break;
                     case "v":
                         addVertex(args[1], args[2], args[3]);
@@ -87,7 +91,10 @@ public class OBJParser {
                         }
                         break;
                     case "s":
-                        //Ignore
+                        if (args.length == 2 && args[1].equals("1")) {
+                            // Technically this should be for every group, but this is a close enough approximation
+                            this.smoothShading = true;
+                        }
                         break;
                     case "l":
                         // Ignore
@@ -119,12 +126,9 @@ public class OBJParser {
 
         for (OBJGroup group : groups) {
             int startFace = faceCount;
-            float minX = 0;
-            float minY = 0;
-            float minZ = 0;
-            float maxX = 0;
-            float maxY = 0;
-            float maxZ = 0;
+            List<Vec3d> points = new ArrayList<>();
+            // primitive array here only takes up maybe 1-2MB at worst
+            boolean[] usedVerts = new boolean[this.vertices.size()/3];
             for (int face = group.faceStart; face <= group.faceStop; face++) {
                 correctedFaceMaterials[faceCount] = faceMaterials.get(face);
                 for (int point = 0; point < 3; point++) {
@@ -138,6 +142,11 @@ public class OBJParser {
                     buffer.data[vertexOffset+1] = y;
                     buffer.data[vertexOffset+2] = z;
                     vertexOffset += buffer.stride;
+
+                    if (!usedVerts[vertex/3]) {
+                        usedVerts[vertex/3] = true;
+                        points.add(new Vec3d(x, y, z));
+                    }
 
                     int texture = faceVerts[faceVertexIdx+1] * 2;
                     if (texture >= 0) {
@@ -156,23 +165,38 @@ public class OBJParser {
                         buffer.data[normalOffset+2] = vertexNormals[normal+2];
                         normalOffset += buffer.stride;
                     }
-
-                    if (point == 0 && faceCount == startFace) {
-                        minX = maxX = x;
-                        minY = maxY = y;
-                        minZ = maxZ = z;
-                    } else {
-                        minX = Math.min(minX, x);
-                        minY = Math.min(minY, y);
-                        minZ = Math.min(minZ, z);
-                        maxX = Math.max(maxX, x);
-                        maxY = Math.max(maxY, y);
-                        maxZ = Math.max(maxZ, z);
-                    }
                 }
                 faceCount++;
             }
-            correctedGroups.add(new OBJGroup(group.name, startFace, faceCount-1, new Vec3d(minX, minY, minZ), new Vec3d(maxX, maxY, maxZ)));
+
+            Vec3d first = points.get(0);
+            Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
+            Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
+            Vec3d center = groupMax.add(groupMin).scale(0.5);
+
+            Vec3d min = first;
+            Vec3d max = first;
+            // Furthest from center
+            for (Vec3d point : points) {
+                if (max.distanceToSquared(center) < point.distanceToSquared(center)) {
+                    max = point;
+                }
+            }
+            //
+            for (Vec3d point : points) {
+                if (min.distanceToSquared(max) < point.distanceToSquared(max)) {
+                    min = point;
+                }
+            }
+            Vec3d finalMin = min.lengthSquared() < max.lengthSquared() ? min : max;
+            Vec3d finalMax = min.lengthSquared() < max.lengthSquared() ? max : min;
+            List<Vec3d> minG = points.stream().filter(p -> p.distanceToSquared(finalMin) < p.distanceToSquared(finalMax)).collect(Collectors.toList());
+            List<Vec3d> maxG = points.stream().filter(p -> p.distanceToSquared(finalMin) > p.distanceToSquared(finalMax)).collect(Collectors.toList());
+            Vec3d minN = minG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1. / minG.size());
+            Vec3d maxN = maxG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1. / maxG.size());
+            Vec3d normal = maxN.subtract(minN).normalize();
+
+            correctedGroups.add(new OBJGroup(group.name, startFace, faceCount-1, groupMin, groupMax, normal));
         }
     }
     public VertexBuffer getBuffer() {
@@ -187,6 +211,9 @@ public class OBJParser {
     public String[] getFaceMaterials() {
         return correctedFaceMaterials;
     }
+    public boolean isSmoothShading() {
+        return smoothShading;
+    }
 
     private void addMaterialLibrary(String lib) {
         materialLibraries.add(lib);
@@ -198,7 +225,7 @@ public class OBJParser {
 
     private void addGroup(String name) {
         if (currentGroupStart != faceMaterials.size()) {
-            groups.add(new OBJGroup(currentGroupName, currentGroupStart, faceMaterials.size() - 1, null, null));
+            groups.add(new OBJGroup(currentGroupName, currentGroupStart, faceMaterials.size() - 1, null, null, null));
         }
         currentGroupName = name;
         currentGroupStart = faceMaterials.size();

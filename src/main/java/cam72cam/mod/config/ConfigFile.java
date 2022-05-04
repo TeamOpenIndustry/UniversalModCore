@@ -91,7 +91,7 @@ public class ConfigFile {
         if (cls.isEnum()) {
             return "S";
         }
-        return cls.getSimpleName().substring(0, 1).toUpperCase();
+        return cls.getSimpleName().substring(0, 1).toUpperCase(Locale.ROOT);
     }
 
     private static String encode(Class<?> cls, Object o) {
@@ -335,8 +335,8 @@ public class ConfigFile {
                     return;
                 }
 
-                String[] parts = line.split("[ =]");
-                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0]) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
+                String[] parts = line.split("[{=<]");
+                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0].trim()) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
                 if (prop != null) {
                     prop.read(lines);
                 } else {

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -29,6 +30,8 @@ import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
+import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
@@ -43,6 +46,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.lwjgl.opengl.GL11;
 
 
 /** UMC Mod, do not touch... */
@@ -50,7 +57,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.1.4";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
@@ -101,6 +108,17 @@ public class ModCore {
     /** FINALIZE Phase (Forge) */
     public void postInit(FMLLoadCompleteEvent event) {
         proxy.event(ModEvent.FINALIZE);
+        for (Mod mod : mods) {
+            File modDir = cacheFile(new Identifier(mod.modID(), "foo")).getParentFile();
+            if (modDir.exists() && modDir.isDirectory()) {
+                for (File file : modDir.listFiles()) {
+                    if (!usedCacheFiles.contains(file)) {
+                        ModCore.warn("Removing file cache entry: %s", file);
+                        FileUtils.deleteQuietly(file);
+                    }
+                }
+            }
+        }
     }
 
 	@SubscribeEvent
@@ -178,6 +196,15 @@ public class ModCore {
     }
 
     public static class ClientProxy extends Proxy {
+        static int MaxTextureSize = -1;
+
+        public ClientProxy() {
+            super();
+            if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
+                MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+                ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
+            }
+        }
         @Override
 		public void event(ModEvent event, Mod m) {
             super.event(event, m);
@@ -215,6 +242,7 @@ public class ModCore {
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());
+                    Light.register();
                     ConfigFile.sync(Config.class);
                     break;
                 case INITIALIZE:
@@ -294,7 +322,7 @@ public class ModCore {
                 continue;
             }
 
-            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase().replace(".lang", ".json"));
+            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase(Locale.ROOT).replace(".lang", ".json"));
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
                 List<String> translations = new ArrayList<>();
@@ -392,15 +420,27 @@ public class ModCore {
         instance.logger.catching(ex);
     }
 
+    private static final List<File> usedCacheFiles = new ArrayList<>();
+
     /** Get a file for name in the UMC cache dir */
-    public static File cacheFile(String name) {
+    public static synchronized File cacheFile(Identifier id) {
         Path configDir = FMLPaths.CONFIGDIR.get();
         if (configDir == null) {
             configDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
         }
-        File cacheDir = Paths.get(configDir.getParent().toString(), "cache", "universalmodcore").toFile();
+        File cacheDir = Paths.get(configDir.getParent().toFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 
-        return new File(cacheDir, name);
+        // https://stackoverflow.com/questions/1155107/is-there-a-cross-platform-java-method-to-remove-filename-special-chars#comment96425990_17745189
+        String path = id.getPath().replaceAll("(?U)[^\\w\\._]+", ".");
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // In a world with linux, who needs windows or gates?
+            path = StringUtils.right(path, 250 - cacheDir.getAbsolutePath().length()); // Windows default max *Path* len is 256
+        } else {
+            path = StringUtils.right(path, 250); // Most FS's allow up to 255
+        }
+        File f = new File(cacheDir, path);
+        usedCacheFiles.add(f);
+        return f;
     }
 }

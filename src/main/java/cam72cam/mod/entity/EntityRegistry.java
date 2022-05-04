@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -94,6 +95,17 @@ public class EntityRegistry {
                 Minecraft.getInstance().clearLevel();
                 Minecraft.getInstance().setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), new TranslatableComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
+            }
+        });
+        CommonEvents.World.UNLOAD.subscribe(w -> {
+            if (w.isClientSide) {
+                // Cleanup client side since mc does not call setDead client side...
+                // See ClientEvents registration for related crap
+                for (net.minecraft.world.entity.Entity entity : ((ClientLevel) w).entitiesForRendering()) {
+                    if (entity instanceof ModdedEntity) {
+                        entity.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+                    }
+                }
             }
         });
     }

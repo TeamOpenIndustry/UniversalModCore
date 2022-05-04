@@ -265,10 +265,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public final void remove(boolean b) {
+    public final void remove(RemovalReason reason) {
         if (this.isAlive()) {
-            super.remove(b);
-            iKillable.onRemoved();
+            super.remove(reason);
+            if (reason == RemovalReason.KILLED) { // TODO bork??
+                iKillable.onRemoved();
+            }
         }
     }
 
@@ -281,12 +283,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
-        return passenger.getPosition().subtract(self.getPosition()).rotateMinecraftYaw(-self.getRotationYaw());
+        return passenger.getPosition().subtract(self.getPosition()).rotateYaw(self.getRotationYaw());
     }
 
     /** Rotate offset around entity center by entity yaw and add entity center */
     private Vec3d calculatePassengerPosition(Vec3d offset) {
-        return offset.rotateMinecraftYaw(-self.getRotationYaw()).add(self.getPosition());
+        return offset.rotateYaw(-self.getRotationYaw()).add(self.getPosition());
     }
 
     /**
@@ -363,7 +365,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public void moveRiderTo(cam72cam.mod.entity.Entity entity, CustomEntity other) {
-        if (iRidable.canFitPassenger(entity)) {
+        if (other.internal.iRidable.canFitPassenger(entity)) {
             SeatEntity seat = (SeatEntity) entity.internal.getVehicle();
             this.seats.remove(seat);
             seat.moveTo(other.internal);

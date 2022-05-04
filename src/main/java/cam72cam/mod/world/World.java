@@ -30,6 +30,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -284,7 +285,7 @@ public class World {
 
     /** Kill an entity */
     public void removeEntity(Entity entity) {
-        entity.internal.remove(!isClient);
+        entity.internal.remove(!isClient ? net.minecraft.world.entity.Entity.RemovalReason.KILLED : net.minecraft.world.entity.Entity.RemovalReason.DISCARDED); // TODO MAYBE BORK
     }
 
     /** Force a chunk for up to 5s */
@@ -662,6 +663,19 @@ public class World {
         internal.addParticle(type.internal, position.x, position.y, position.z, velocity.x, velocity.y, velocity.z);
     }
 
+    /**
+     *
+     * Updates the blocks around the position.
+     * Value updateObservers will be ignored in some MC versions.
+     *
+     * @param pos
+     * @param blockType
+     * @param updateObservers
+     */
+    public void notifyNeighborsOfStateChange(Vec3i pos, BlockType blockType, boolean updateObservers){
+        this.internal.updateNeighborsAt(pos.internal(), blockType.internal);
+    }
+
     public enum ParticleType {
         SMOKE(ParticleTypes.SMOKE),
         // Incomplete
@@ -672,5 +686,13 @@ public class World {
         ParticleType(SimpleParticleType internal) {
             this.internal = internal;
         }
+    }
+
+    public float getBlockLightLevel(Vec3i pos) {
+        return internal.getBrightness(LightLayer.BLOCK, pos.internal()) / 15f;
+    }
+
+    public float getSkyLightLevel(Vec3i pos) {
+        return internal.getBrightness(LightLayer.SKY, pos.internal()) / 15f;
     }
 }

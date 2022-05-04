@@ -1,5 +1,6 @@
 package cam72cam.mod.model.obj;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
@@ -8,17 +9,20 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OBJBuilder {
 
     private final VertexBuffer vbo;
     private final List<OBJGroup> groups;
-    private final Map<String, BufferedImage> textures;
+    private final OBJTexturePacker packer;
     private final int textureWidth;
     private final int textureHeight;
+    private boolean smoothShading;
 
     public OBJBuilder(Identifier modelLoc, ResourceCache.ResourceProvider input, float scale, float darken, Collection<String> variants) throws IOException {
+        long start = System.currentTimeMillis();
         if (variants == null) {
             variants = Collections.singleton("");
         }
@@ -29,7 +33,14 @@ public class OBJBuilder {
         OBJParser parser = new OBJParser(new ByteArrayInputStream(input.apply(modelLoc)), scale);
         this.groups = parser.getGroups();
         this.vbo = parser.getBuffer();
+        this.smoothShading = parser.isSmoothShading();
 
+        if (Config.getMaxTextureSize() <= 0) {
+            packer = null;
+            textureWidth = -1;
+            textureHeight = -1;
+            return;
+        }
         List<Material> materials = new ArrayList<>();
         for (String materialPath : parser.getMaterialLibraries()) {
             materials.addAll(MTLParser.parse(new ByteArrayInputStream(input.apply(modelLoc.getRelative(materialPath)))));
@@ -45,6 +56,8 @@ public class OBJBuilder {
                 Material material = materialLookup.get(materialName);
                 if (material == null) {
                     ModCore.warn("Unknown material '%s' in %s", materialName, modelLoc);
+                    colorOffset += vbo.stride * 3;
+                    textureOffset += vbo.stride * 3;
                     continue;
                 }
                 material.used = true;
@@ -103,12 +116,13 @@ public class OBJBuilder {
         }
 
         OBJTexturePacker packer = new OBJTexturePacker(
+                modelLoc,
                 modelLoc::getRelative,
                 path -> new ByteArrayInputStream(input.apply(modelLoc.getRelative(path))),
                 materialLookup.values(),
                 variants
         );
-        textures = packer.textures;
+        this.packer = packer;
         textureOffset = vbo.textureOffset;
         for (String materialName : faceMaterials) {
             if (materialName != null) {
@@ -126,13 +140,20 @@ public class OBJBuilder {
         }
         this.textureWidth = packer.getWidth();
         this.textureHeight = packer.getHeight();
+        ModCore.debug("Building %s took %sms", modelLoc, (System.currentTimeMillis() - start));
     }
 
     public VertexBuffer vertexBufferObject() {
         return vbo;
     }
-    public Map<String, BufferedImage> getTextures() {
-        return textures;
+    public Map<String, Supplier<BufferedImage>> getTextures() {
+        return packer != null ? packer.textures : Collections.emptyMap();
+    }
+    public Map<String, Supplier<BufferedImage>> getNormals() {
+        return packer != null ? packer.normals : Collections.emptyMap();
+    }
+    public Map<String, Supplier<BufferedImage>> getSpeculars() {
+        return packer != null ? packer.speculars : Collections.emptyMap();
     }
     public List<OBJGroup> getGroups() {
         return groups;
@@ -144,5 +165,8 @@ public class OBJBuilder {
 
     public int getTextureHeight() {
         return textureHeight;
+    }
+    public boolean isSmoothShading() {
+        return smoothShading;
     }
 }

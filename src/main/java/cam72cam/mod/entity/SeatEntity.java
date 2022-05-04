@@ -105,12 +105,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
         if (parent == null) {
             ModCore.debug("No parent, goodbye");
-            this.remove(false);
+            this.remove(RemovalReason.KILLED);
             return;
         }
         if (passenger == null) {
             ModCore.debug("No passenger, goodbye");
-            this.remove(false);
+            this.remove(RemovalReason.KILLED);
             return;
         }
 
@@ -126,7 +126,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 }
             } else {
                 ModCore.debug("No passengers, goodbye");
-                this.remove(false);
+                this.remove(RemovalReason.KILLED);
                 return;
             }
         }
@@ -134,7 +134,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (getParent() == null) {
             if (ticks > 20) {
                 ModCore.debug("No parent found, goodbye");
-                this.remove(false);
+                this.remove(RemovalReason.KILLED);
             }
         }
     }

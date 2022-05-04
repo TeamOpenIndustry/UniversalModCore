@@ -7,13 +7,13 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.OpenGL.With;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -31,9 +31,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.IItemRenderProperties;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.*;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -45,6 +45,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -124,8 +125,8 @@ public class ItemRender {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
-                    String id = ((ISpriteItemModel) model).getSpriteKey(stack);
-                    bar.step(id);
+                    Identifier id = ((ISpriteItemModel) model).getSpriteKey(stack);
+                    bar.step(id.toString());
                     createSprite(id, ((ISpriteItemModel) model).getSpriteModel(stack));
                 }
                 Progress.pop(bar);
@@ -168,18 +169,18 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type) {
-            defaultTransform(type);
+        default void applyTransform(ItemRenderType type, RenderState ctx) {
+            defaultTransform(type, ctx);
         }
-        static void defaultTransform(ItemRenderType type) {
+        static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
                 case FRAME:
-                    GL11.glRotated(90, 0, 1, 0);
-                    GL11.glTranslated(-0.9, 0, 0);
+                    state.rotate(90, 0, 1, 0);
+                    state.translate(-0.9, 0, 0);
                     break;
                 case HEAD:
-                    GL11.glTranslated(-0.5, 1, 0);
-                    GL11.glScaled(2, 2, 2);
+                    state.translate(-0.5, 1, 0);
+                    state.scale(2, 2, 2);
                     break;
             }
         }
@@ -188,19 +189,19 @@ public class ItemRender {
     /** Support for turning a custom model into a sprite */
     public interface ISpriteItemModel extends IItemModel {
         /** Unique string to represent this stack */
-        String getSpriteKey(ItemStack stack);
+        Identifier getSpriteKey(ItemStack stack);
         /** Model that should be rendered as a sprite */
         StandardModel getSpriteModel(ItemStack stack);
     }
 
     /** Internal method to render a model to a framebuffer and drop it in the texture sheet */
-    private static void createSprite(String id, StandardModel model) {
+    private static void createSprite(Identifier id, StandardModel model) {
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
-        File sprite = GLTexture.cacheFile(id.replace("/", ".") + "_" + "sprite" + iconSheet.spriteSize + ".raw");
+        File sprite = ModCore.cacheFile(new Identifier(id.getDomain(),id.getPath() + "_sprite" + iconSheet.spriteSize + ".raw"));
         if (sprite.exists()) {
             try {
-                ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+                ByteBuffer buff = BufferUtils.createByteBuffer(4 * width * height);
                 buff.put(ByteBuffer.wrap(Files.readAllBytes(sprite.toPath())));
                 buff.flip();
                 iconSheet.setSprite(id, buff);
@@ -210,59 +211,79 @@ public class ItemRender {
             }
         }
 
+        With restore = OptiFine.overrideFastRender(false);
+
         TextureTarget fb = new TextureTarget(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
         fb.clear(Minecraft.ON_OSX);
         fb.bindWrite(true);
 
-        try (With projection = OpenGL.matrix(GL11.GL_PROJECTION)) {
-            GL11.glLoadIdentity();
-            try (With modelM = OpenGL.matrix(GL11.GL_MODELVIEW)) {
-                GL11.glLoadIdentity();
-                try (With depth = OpenGL.bool(GL11.GL_DEPTH_TEST, true); With alpha = OpenGL.bool(GL11.GL_ALPHA_TEST, true)) {
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
 
-                    // GL COLOR MATERIAL = true
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
 
-                    int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-                    GL11.glDepthFunc(GL11.GL_LESS);
-                    GL11.glClearDepth(1);
+        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
-                    model.renderCustom();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LESS);
+        GL11.glClearDepth(1);
 
-                    fb.bindRead();
-                    ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-                    GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-                    fb.unbindRead();
+        model.renderCustom(new RenderState());
 
-                    fb.unbindWrite();
-                    fb.destroyBuffers();
-                    GL11.glDepthFunc(oldDepth);
+        fb.bindRead();
+        ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+        fb.unbindRead();
 
-                    iconSheet.setSprite(id, buff);
+        fb.unbindWrite();
+        fb.destroyBuffers();
 
-                    try {
-                        byte[] data = new byte[buff.capacity()];
-                        buff.get(data);
-                        Files.write(sprite.toPath(), data);
-                    } catch (IOException e) {
-                        ModCore.catching(e);
-                        sprite.delete();
-                    }
-                }
-            }
+        GL11.glDepthFunc(oldDepth);
+
+        iconSheet.setSprite(id, buff);
+
+        try {
+            byte[] data = new byte[buff.capacity()];
+            buff.get(data);
+            Files.write(sprite.toPath(), data);
+        } catch (IOException e) {
+            ModCore.catching(e);
+            sprite.delete();
         }
+
+        if (!depthEnabled) {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        GL11.glDepthFunc(oldDepth);
+
+        GL11.glMatrixMode(GL11.GL_TEXTURE);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopMatrix();
+
+        restore.close();
     }
 
-    static Runnable doRender = () -> {};
+    static Consumer<PoseStack> doRender = s -> {};
     public static BlockEntityWithoutLevelRenderer ISTER() {
         return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
             @Override
             public void renderByItem(net.minecraft.world.item.ItemStack stack, TransformType p_239207_2_, PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
-                try (OpenGL.With matrix = OpenGL.matrix()) {
-                    // TODO 1.15+ do we need to set lightmap coords here?
-                    OpenGL.internalMultMatrix(matrixStack.last().pose());
-                    doRender.run();
-                }
+                // TODO 1.15+ do we need to set lightmap coords here?
+                doRender.accept(matrixStack);
             }
         };
     }
@@ -283,7 +304,6 @@ public class ItemRender {
         @Override
         public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
             return EMPTY;
-
         }
 
         @Override
@@ -320,7 +340,7 @@ public class ItemRender {
         public BakedModel handlePerspective(TransformType cameraTransformType, PoseStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
 
-            doRender = () -> {
+            doRender = matrix -> {
                 if (stack == null) {
                     return;
                 }
@@ -347,13 +367,20 @@ public class ItemRender {
                  */
                 if (!ModCore.isInReload()) {
                     RenderType.solid().setupRenderState();
-                    GL11.glPushMatrix();
+
                     // TODO 1.15+ do we need to set lightmap coords here?
-                    OpenGL.internalMultMatrix(mat.last().pose());
-                    model.applyTransform(type);
+
+                    mat.pushPose();
+                    // Maybe backwards?
+                    mat.last().pose().multiply(matrix.last().pose());
+
+                    RenderState state = new RenderState(mat);
+                    model.applyTransform(type, state);
                     //std.renderCustom();
-                    std.render();
-                    GL11.glPopMatrix();
+                    std.render(state);
+
+                    mat.popPose();
+
                     RenderType.solid().clearRenderState();
                 }
                 // TODO return std.getQuads(side, rand);
