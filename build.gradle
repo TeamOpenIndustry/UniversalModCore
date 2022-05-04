@@ -3,7 +3,6 @@ import cam72cam.universalmodcore.Util;
 
 buildscript {
     repositories {
-        jcenter()
         maven { url = "https://maven.minecraftforge.net/" }
         maven { url = "https://teamopenindustry.cc/maven" }
     }
