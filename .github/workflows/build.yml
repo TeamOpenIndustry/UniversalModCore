@@ -21,8 +21,6 @@ jobs:
                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
             - name: keyscan
               run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
-            - name: Hack Forge Gradle
-              run: mkdir -p ~/.gradle/caches/minecraft/; wget 'https://teamopenindustry.cc/maven/hack/ForgeGradleVersion.json' -O ~/.gradle/caches/minecraft/ForgeGradleVersion.json
             - name: Gradle publish
               env:
                 MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
