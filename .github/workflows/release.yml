@@ -23,14 +23,10 @@ jobs:
               run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
             - name: Hack Forge Gradle
               run: mkdir -p ~/.gradle/caches/minecraft/; wget 'https://teamopenindustry.cc/maven/hack/ForgeGradleVersion.json' -O ~/.gradle/caches/minecraft/ForgeGradleVersion.json
-            - name: secrets
+            - name: Gradle publish
               env:
-                MAVENCI: ${{ secrets.MAVENCI }}
-              run: echo "${MAVENCI}" >> publish_key
-            - name: Gradle uploadArchives
-              run: ./gradlew uploadArchives -Dtarget=release
-            - name: cleanup
-              run: rm publish_key
+                MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
+              run: ./gradlew publish -Dtarget=release
             - uses: actions/upload-artifact@v2-preview
               with:
                 name: UniversalModCore-${{ env.ref }}

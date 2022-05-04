@@ -19,7 +19,7 @@ configurations {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 repositories {
     removeIf { it.url.host == 'files.minecraftforge.net' }
@@ -114,21 +114,20 @@ test {
     maxHeapSize = '1G'
 }
 
-task deployJar(type: Jar)
-
-configurations {
-    deployerJars
-}
-
-dependencies {
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: "scp://teamopenindustry.cc/var/www/html/maven/") {
-            authentication(userName: "mavenci", privateKey: "publish_key")
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifactId archivesBaseName
+        }
+    }
+    repositories {
+        maven {
+            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            credentials {
+                username = "mavenci"
+                password = System.getenv("MAVENCI_PASS")
+            }
         }
     }
 }
