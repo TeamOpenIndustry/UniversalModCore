@@ -17,10 +17,16 @@ apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+
 configurations {
     shade
     implementation.extendsFrom shade
 }
+
+java {
+    withSourcesJar()
+}
+
 
 String umcVersion = "1.1.4"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
@@ -130,7 +136,6 @@ dependencies {
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
@@ -152,6 +157,7 @@ jar {
         }
     }
 }
+jar.finalizedBy('reobfJar')
 
 jar.finalizedBy('reobfJar')
 
@@ -160,20 +166,12 @@ test {
     maxHeapSize = '1G'
 }
 
-task deployJar(type: Jar)
-
-configurations {
-    deployerJars
-}
-
-dependencies {
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact sourcesJar
+            artifactId archivesBaseName
         }
     }
     repositories {
@@ -181,7 +179,7 @@ publishing {
             url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
             credentials {
                 username = "mavenci"
-                password = System.getenv("MAVENCI_PASSWORD")
+                password = System.getenv("MAVENCI_PASS")
             }
         }
     }
