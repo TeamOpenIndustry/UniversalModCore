@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
 import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
@@ -201,8 +202,10 @@ public class ModCore {
         public ClientProxy() {
             super();
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
-                ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
+                RenderSystem.recordRenderCall(() -> {
+                        MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+                        ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
+                });
             }
         }
         @Override

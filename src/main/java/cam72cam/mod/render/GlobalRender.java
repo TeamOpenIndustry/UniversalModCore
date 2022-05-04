@@ -186,7 +186,7 @@ public class GlobalRender {
                 @Override
                 public BlockPos immutable() {
                     // This is why I love java
-                    return new BlockPos(Minecraft.getInstance().player.getEyePosition(0));
+                    return Minecraft.getInstance().player != null ? new BlockPos(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
                 }
             }, state);
         }
