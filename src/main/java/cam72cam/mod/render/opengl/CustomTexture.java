@@ -3,8 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.Config;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.util.With;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -52,25 +51,25 @@ public abstract class CustomTexture implements Texture {
 
     protected abstract ByteBuffer getData();
     protected int internalGLFormat() {
-        return GL11.GL_RGBA;
+        return GL32.GL_RGBA;
     }
 
     private void createTexture(ByteBuffer buffer) {
-        textureID = GL11.glGenTextures();
+        textureID = GL32.glGenTextures();
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            GL11.glPixelStorei(GL11.GL_UNPACK_SWAP_BYTES, GL11.GL_FALSE);
-            GL11.glPixelStorei(GL11.GL_UNPACK_LSB_FIRST, GL11.GL_FALSE);
-            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
-            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+            GL32.glPixelStorei(GL32.GL_UNPACK_SWAP_BYTES, GL32.GL_FALSE);
+            GL32.glPixelStorei(GL32.GL_UNPACK_LSB_FIRST, GL32.GL_FALSE);
+            GL32.glPixelStorei(GL32.GL_UNPACK_ROW_LENGTH, 0);
+            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_ROWS, 0);
+            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_PIXELS, 0);
+            GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 4);
 
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MIN_FILTER, GL32.GL_NEAREST);
+            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MAG_FILTER, GL32.GL_NEAREST);
+            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_EDGE);
+            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_EDGE);
 
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+            GL32.glTexImage2D(GL32.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL32.GL_RGBA, GL32.GL_UNSIGNED_BYTE, buffer);
         }
     }
 
@@ -130,7 +129,7 @@ public abstract class CustomTexture implements Texture {
     public void dealloc() {
         synchronized (textures) {
             if (this.textureID != null) {
-                GL11.glDeleteTextures(this.textureID);
+                GL32.glDeleteTextures(this.textureID);
                 this.textureID = null;
                 this.loader = null;
             }

@@ -11,7 +11,6 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.TextComponent;
-import org.lwjgl.opengl.GL11;
 
 /** Internal item button class */
 public abstract class ItemButton extends AbstractButton {

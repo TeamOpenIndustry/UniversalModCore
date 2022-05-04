@@ -11,7 +11,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
 import java.util.ArrayList;

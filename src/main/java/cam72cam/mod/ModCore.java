@@ -11,8 +11,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
@@ -37,7 +35,6 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -50,7 +47,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
 
 
 /** UMC Mod, do not touch... */
@@ -201,9 +198,10 @@ public class ModCore {
 
         public ClientProxy() {
             super();
+
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
                 RenderSystem.recordRenderCall(() -> {
-                        MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
+                        MaxTextureSize = GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE);
                         ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
                 });
             }

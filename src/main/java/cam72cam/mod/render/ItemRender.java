@@ -120,7 +120,7 @@ public class ItemRender {
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel) {
+        if (model instanceof ISpriteItemModel && false) { // TODO re-enable sprite system in 1.17+
             ClientEvents.RELOAD.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
