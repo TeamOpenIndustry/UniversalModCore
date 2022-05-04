@@ -1,12 +1,11 @@
 buildscript {
     repositories {
         maven { url = "http://files.minecraftforge.net/maven" }
-        jcenter()
 		mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
     }
 	dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
 	}
 }
 
@@ -18,7 +17,7 @@ apply plugin: 'eclipse'
 
 configurations {
     shade
-    compile.extendsFrom shade
+    implementation.extendsFrom shade
 }
 
 
@@ -130,7 +129,7 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-    compile fg.deobf(#UMC_DEPENDENCY#)
+    implementation fg.deobf(#UMC_DEPENDENCY#)
 }
 
 jar {
@@ -151,3 +150,4 @@ jar {
         }
     }
 }
+jar.finalizedBy('reobfJar')
