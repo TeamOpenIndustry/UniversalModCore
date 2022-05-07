@@ -13,10 +13,10 @@ public class GPUInfo {
     public static int memFreeMB() {
         GLCapabilities capabilities = GL.getCapabilities();
         if (capabilities.GL_NVX_gpu_memory_info) {
-            return GL11.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) / 1024;
+            return GL32.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) / 1024;
         }
         if (capabilities.GL_ATI_meminfo) {
-            return GL11.glGetInteger(ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI);
+            return GL32.glGetInteger(ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI);
         }
         return 0;
     }
@@ -24,7 +24,7 @@ public class GPUInfo {
     public static int memTotalMB() {
         GLCapabilities capabilities = GL.getCapabilities();
         if (capabilities.GL_NVX_gpu_memory_info) {
-            return GL11.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX) / 1024;
+            return GL32.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX) / 1024;
         }
         return 1024;
     }

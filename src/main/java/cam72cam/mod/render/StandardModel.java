@@ -19,7 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -84,12 +84,12 @@ public class StandardModel {
             matrix.model_view().multiply(transform);
 
             try (With ctx = RenderContext.apply(matrix)) {
-                boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
+                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
                 MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(worldRenderer);
                 if (oldState) {
-                    GL11.glEnable(GL11.GL_BLEND);
+                    GL32.glEnable(GL32.GL_BLEND);
                 } else {
-                    GL11.glDisable(GL11.GL_BLEND);
+                    GL32.glDisable(GL32.GL_BLEND);
                 }
 
                 Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, 0);

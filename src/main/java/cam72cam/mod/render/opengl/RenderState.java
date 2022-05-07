@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -35,6 +36,27 @@ public class RenderState {
         mbuf.position(0);
         stack.last().pose().store(mbuf);
         this.model_view = new Matrix4(
+                mbuf.get(0),
+                mbuf.get(1),
+                mbuf.get(2),
+                mbuf.get(3),
+                mbuf.get(4),
+                mbuf.get(5),
+                mbuf.get(6),
+                mbuf.get(7),
+                mbuf.get(8),
+                mbuf.get(9),
+                mbuf.get(10),
+                mbuf.get(11),
+                mbuf.get(12),
+                mbuf.get(13),
+                mbuf.get(14),
+                mbuf.get(15)
+        ).transpose();
+
+        mbuf.position(0);
+        RenderSystem.getProjectionMatrix().store(mbuf);
+        this.projection = new Matrix4(
                 mbuf.get(0),
                 mbuf.get(1),
                 mbuf.get(2),

@@ -7,7 +7,7 @@ import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.render.opengl.RenderState;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 import java.util.*;
@@ -55,13 +55,13 @@ public class OBJRender extends VBO {
                 } else if (info.faceStart == stop) {
                     stop = info.faceStop + 1;
                 } else {
-                    GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                    GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
                     start = info.faceStart;
                     stop = info.faceStop + 1;
                 }
             }
             if (start != stop) {
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
+                GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
             }
         }
     }

@@ -120,7 +120,7 @@ public class ItemRender {
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel) {
+        if (model instanceof ISpriteItemModel && false) { // TODO re-enable sprite system in 1.17+
             ClientEvents.RELOAD.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
@@ -169,7 +169,7 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type, RenderState ctx) {
+        default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
@@ -375,7 +375,7 @@ public class ItemRender {
                     mat.last().pose().multiply(matrix.last().pose());
 
                     RenderState state = new RenderState(mat);
-                    model.applyTransform(type, state);
+                    model.applyTransform(stack, type, state);
                     //std.renderCustom();
                     std.render(state);
 

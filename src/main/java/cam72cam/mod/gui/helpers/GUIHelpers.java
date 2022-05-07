@@ -13,8 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
@@ -136,7 +135,7 @@ public class GUIHelpers {
         RenderState state = new RenderState()
                 .color(1, 1, 1, 1)
                 .alpha_test(false)
-                .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                .blend(new BlendMode(GL32.GL_SRC_ALPHA, GL32.GL_ONE_MINUS_SRC_ALPHA))
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
