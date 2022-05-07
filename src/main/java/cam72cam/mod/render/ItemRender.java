@@ -170,7 +170,7 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type, RenderState ctx) {
+        default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
@@ -372,7 +372,7 @@ public class ItemRender {
                     mat.getLast().getMatrix().mul(matrix.getLast().getMatrix());
 
                     RenderState state = new RenderState(mat);
-                    model.applyTransform(type, state);
+                    model.applyTransform(stack, type, state);
                     //std.renderCustom();
                     std.render(state);
 
