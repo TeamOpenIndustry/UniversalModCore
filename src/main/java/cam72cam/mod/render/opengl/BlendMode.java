@@ -11,6 +11,22 @@ import java.util.function.Function;
 import static cam72cam.mod.render.opengl.RenderContext.applyBool;
 
 public class BlendMode {
+    public static final int GL_ZERO = GL32.GL_ZERO;
+    public static final int GL_ONE = GL32.GL_ONE;
+    public static final int GL_SRC_COLOR = GL32.GL_SRC_COLOR;
+    public static final int GL_ONE_MINUS_SRC_COLOR = GL32.GL_ONE_MINUS_SRC_COLOR;
+    public static final int GL_DST_COLOR = GL32.GL_DST_COLOR;
+    public static final int GL_ONE_MINUS_DST_COLOR = GL32.GL_ONE_MINUS_DST_COLOR;
+    public static final int GL_SRC_ALPHA = GL32.GL_SRC_ALPHA;
+    public static final int GL_ONE_MINUS_SRC_ALPHA = GL32.GL_ONE_MINUS_SRC_ALPHA;
+    public static final int GL_DST_ALPHA = GL32.GL_DST_ALPHA;
+    public static final int GL_ONE_MINUS_DST_ALPHA = GL32.GL_ONE_MINUS_DST_ALPHA;
+    public static final int GL_CONSTANT_COLOR = GL32.GL_CONSTANT_COLOR;
+    public static final int GL_ONE_MINUS_CONSTANT_COLOR = GL32.GL_ONE_MINUS_CONSTANT_COLOR;
+    public static final int GL_CONSTANT_ALPHA = GL32.GL_CONSTANT_ALPHA;
+    public static final int GL_ONE_MINUS_CONSTANT_ALPHA = GL32.GL_ONE_MINUS_CONSTANT_ALPHA;
+
+
     private Function<With, With> apply;
 
     private static FloatBuffer fourFloatBuffer;
