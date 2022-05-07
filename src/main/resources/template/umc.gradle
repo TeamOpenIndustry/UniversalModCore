@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-        jcenter()
         maven { url = "http://files.minecraftforge.net/maven" }
         maven { url "https://plugins.gradle.org/m2/" }
     }
@@ -17,8 +16,6 @@ configurations {
 //apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-
-apply plugin: 'maven'
 
 
 version = "1.11.2-forge-#VERSION#"
