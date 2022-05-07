@@ -101,7 +101,7 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type, RenderState ctx) {
+        default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
@@ -251,7 +251,7 @@ public class ItemRender {
              *//*
             if (side == null) {
                 RenderState ctx = new RenderState();
-                model.applyTransform(type, ctx);
+                model.applyTransform(stack, type, ctx);
                 std.renderCustom(ctx);
             }
 
@@ -321,7 +321,7 @@ public class ItemRender {
             }
 
             RenderState ctx = new RenderState();
-            model.applyTransform(type, ctx);
+            model.applyTransform(stack, type, ctx);
             std.render(ctx);
             GL11.glPopMatrix();
         }

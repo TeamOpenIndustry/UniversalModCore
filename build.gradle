@@ -20,7 +20,7 @@ configurations {
     compile.extendsFrom shade
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 String umcVersion = "1.1.4"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
@@ -106,21 +106,20 @@ test {
     maxHeapSize = '1G'
 }
 
-task deployJar(type: Jar)
-
-configurations {
-    deployerJars
-}
-
-dependencies {
-    deployerJars "org.apache.maven.wagon:wagon-ssh:2.9"
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: "scp://teamopenindustry.cc/var/www/html/maven/") {
-            authentication(userName: "mavenci", privateKey: "publish_key")
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifactId archivesBaseName
+        }
+    }
+    repositories {
+        maven {
+            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            credentials {
+                username = "mavenci"
+                password = System.getenv("MAVENCI_PASS")
+            }
         }
     }
 }
