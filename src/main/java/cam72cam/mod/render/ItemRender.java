@@ -7,7 +7,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
@@ -117,7 +116,7 @@ public class ItemRender {
         StandardModel getModel(World world, ItemStack stack);
 
         /** Apply GL transformations based on the render context */
-        default void applyTransform(ItemRenderType type, RenderState ctx) {
+        default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
@@ -267,7 +266,7 @@ public class ItemRender {
              */
             if (side == null && !ModCore.isInReload()) {
                 RenderState ctx = new RenderState();
-                model.applyTransform(type, ctx);
+                model.applyTransform(stack, type, ctx);
                 std.renderCustom(ctx);
             }
 
