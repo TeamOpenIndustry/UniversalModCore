@@ -233,7 +233,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
         }
 
-        if (this.ticksExisted % 20 == 0 && this.getPassengerCount() > 0) {
+        if (this.ticksExisted % 20 == 0 && this.getPassengerCount() > 0 && !worldObj.isRemote) {
             new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
