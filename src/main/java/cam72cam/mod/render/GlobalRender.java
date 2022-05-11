@@ -76,7 +76,7 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.type == RenderGameOverlayEvent.ElementType.ALL) {
+            if (event.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
                 func.render(new RenderState(), event.partialTicks);
             }
         });

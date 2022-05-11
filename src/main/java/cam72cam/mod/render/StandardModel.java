@@ -1,6 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -73,19 +74,17 @@ public class StandardModel {
         if (stack.isEmpty()) {
             return this;
         }
-        RenderState state = new RenderState();
-        state.model_view().multiply(matrix4);
+        Vec3d bmin = matrix4.apply(new Vec3d(0, 0, 0));
+        Vec3d bmax = matrix4.apply(new Vec3d(1, 1, 1));
         models.add((pt) -> {
             Block block = Block.getBlockFromItem(stack.internal.getItem());
             if (block != null) {
-                try (With ctx = RenderContext.apply(state)) {
-                    renderBlocks.blockAccess = pt.world;
-                    //renderBlocks.setRenderBounds(0 + translate.x, 0 + translate.y, 0 + translate.z, scale.x + translate.x, scale.y + translate.y, scale.z + translate.z);
-                    //renderBlocks.lockBlockBounds = true;
-                    renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
-                    renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
-                    //renderBlocks.lockBlockBounds = false;
-                }
+                renderBlocks.blockAccess = pt.world;
+                renderBlocks.setRenderBounds(bmin.x, bmin.y, bmin.z, bmax.x, bmax.y, bmax.z);
+                renderBlocks.lockBlockBounds = true;
+                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
+                renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
+                renderBlocks.lockBlockBounds = false;
             }
         });
         return this;

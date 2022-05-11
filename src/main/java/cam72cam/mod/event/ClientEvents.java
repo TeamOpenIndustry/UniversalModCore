@@ -129,15 +129,17 @@ public class ClientEvents {
             int attackID = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode() + 100;
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
 
-            if ((event.button == attackID || event.button == useID) && event.buttonstate) {
-                Player.Hand button = attackID == event.button ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
-                if (!DRAG.executeCancellable(x -> x.apply(button))) {
-                    event.setCanceled(true);
-                    dragPos = new Vec3d(0, 0, 0);
-                    return;
-                }
-                if (!CLICK.executeCancellable(x -> x.apply(button))) {
-                    event.setCanceled(true);
+            if ((event.button == attackID || event.button == useID)) {
+                if (event.buttonstate) {
+                    Player.Hand button = attackID == event.button ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
+                    if (!DRAG.executeCancellable(x -> x.apply(button))) {
+                        event.setCanceled(true);
+                        dragPos = new Vec3d(0, 0, 0);
+                        return;
+                    }
+                    if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                        event.setCanceled(true);
+                    }
                 } else {
                     dragPos = null;
                 }
