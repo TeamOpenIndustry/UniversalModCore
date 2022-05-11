@@ -54,7 +54,7 @@ public interface IInventory {
 
             @Override
             public void set(int slot, ItemStack itemStack) {
-                inventory.setInventorySlotContents(slot, itemStack.internal);
+                inventory.setInventorySlotContents(slot, itemStack.isEmpty() ? null : itemStack.internal);
                 inventory.markDirty();
             }
 
