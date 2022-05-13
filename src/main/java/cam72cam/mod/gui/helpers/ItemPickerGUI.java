@@ -8,10 +8,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -107,11 +104,19 @@ public class ItemPickerGUI {
             this.buttonCoordList.clear();
             String[] searchParts = this.search.getText().toLowerCase(Locale.ROOT).split(" ");
             List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
-                    .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
-                            stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
-                            stack.internal.getTooltip(null, false).stream()
-                                    .anyMatch(tip -> ((String)tip).toLowerCase(Locale.ROOT).contains(searchText))
-                    )).collect(Collectors.toList());
+                    .filter(stack -> Arrays.stream(searchParts).allMatch(searchText -> {
+                        if (stack.internal == null) {
+                            return false;
+                        }
+                        if (stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText)) {
+                            return true;
+                        }
+                        List<?> tt = stack.internal.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                        if (tt == null) {
+                            return false;
+                        }
+                        return tt.stream().map(x -> (String) x).anyMatch(tip -> tip.toLowerCase(Locale.ROOT).contains(searchText));
+                    })).collect(Collectors.toList());
             startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;
             int i;
             for (i = 0; i < filteredItems.size(); i++) {
