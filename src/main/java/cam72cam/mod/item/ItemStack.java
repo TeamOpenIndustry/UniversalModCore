@@ -153,6 +153,8 @@ public class ItemStack {
 
     /** Completely null out the tag compound */
     public void clearTagCompound() {
-        internal.setTagCompound(null);
+        if (internal != null) {
+            internal.setTagCompound(null);
+        }
     }
 }
