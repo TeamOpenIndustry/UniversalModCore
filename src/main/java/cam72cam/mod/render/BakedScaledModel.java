@@ -1,6 +1,5 @@
 package cam72cam.mod.render;
 
-import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -10,6 +9,7 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
 import util.Matrix4;
 
+import javax.vecmath.Vector3f;
 import java.util.*;
 
 /**
@@ -46,16 +46,16 @@ class BakedScaledModel implements IBakedModel {
 
                 for (int i = 0; i < 4; ++i) {
                     int j = format.getIntegerSize() * i;
-                    Vec3d vec = new Vec3d(
+                    Vector3f vec = new Vector3f(
                             Float.intBitsToFloat(newData[j + 0]),
                             Float.intBitsToFloat(newData[j + 1]),
                             Float.intBitsToFloat(newData[j + 2])
                     );
                     transform.apply(vec);
 
-                    newData[j + 0] = Float.floatToRawIntBits((float) vec.x);
-                    newData[j + 1] = Float.floatToRawIntBits((float) vec.y);
-                    newData[j + 2] = Float.floatToRawIntBits((float) vec.z);
+                    newData[j + 0] = Float.floatToRawIntBits(vec.x);
+                    newData[j + 1] = Float.floatToRawIntBits(vec.y);
+                    newData[j + 2] = Float.floatToRawIntBits(vec.z);
                 }
 
                 quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
