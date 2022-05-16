@@ -1,0 +1,45 @@
+//BUILDSCRIPT//
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net/" }
+    }
+	dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+	}
+}
+
+//PLUGINS//
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+//MINECRAFT//
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+minecraft {
+    version = "1.11.2-13.20.0.2315"
+    runDir = "run"
+    mappings = "stable_32"
+}
+
+//DEPENDENCIES//
+#UMC_REPO#
+
+dependencies {
+    compile #UMC_DEPENDENCY#
+}
+
+//JAR//
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
