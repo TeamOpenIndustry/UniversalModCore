@@ -13,7 +13,6 @@ import net.minecraftforge.common.model.TRSRTransformation;
 import util.Matrix4;
 
 import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
 import java.util.*;
 
 /**

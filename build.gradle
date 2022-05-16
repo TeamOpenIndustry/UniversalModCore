@@ -1,15 +1,10 @@
-import cam72cam.universalmodcore.CurseForge;
-
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
-        maven { url = "https://teamopenindustry.cc/maven" }
-		mavenCentral()
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-        classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.3'
-	}
+    }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -27,10 +22,7 @@ java {
 }
 
 repositories {
-    removeIf { it.url.host == 'files.minecraftforge.net' }
-    maven {
-        url "https://maven.minecraftforge.net/"
-    }
+    mavenCentral()
 }
 
 String umcVersion = "1.1.4"
