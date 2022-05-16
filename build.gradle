@@ -1,5 +1,4 @@
 import cam72cam.universalmodcore.CurseForge;
-import cam72cam.universalmodcore.Util;
 
 buildscript {
     repositories {
@@ -36,7 +35,11 @@ repositories {
 
 String umcVersion = "1.1.4"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
-    umcVersion += "-" + Util.GitRevision()
+    try {
+        umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
+    } catch (Exception ex) {
+        umcVersion += "-unknown"
+    }
 }
 version = "1.15.2-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html

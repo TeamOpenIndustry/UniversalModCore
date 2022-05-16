@@ -1,0 +1,90 @@
+//BUILDSCRIPT//
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net/" }
+        mavenCentral()
+    }
+	dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+	}
+}
+
+//PLUGINS//
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+
+//MINECRAFT//
+sourceSets {
+    main {
+        resources {
+            srcDirs = [
+                    "$rootDir/src/main/resources",
+                    "$rootDir/src/generated/resources"
+            ]
+        }
+    }
+}
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
+minecraft {
+    mappings channel: 'snapshot', version: '20201108-1.15.1'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                #ID# {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                #ID# {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', '#ID#', '--all', '--output', file('src/generated/resources/')
+            mods {
+                #ID# {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+//DEPENDENCIES//
+#UMC_REPO#
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
+    implementation fg.deobf(#UMC_DEPENDENCY#)
+}
+
+//JAR//
+jar {
+    manifest {
+        attributes([
+                "Specification-Title": "#ID#",
+                "Specification-Vendor": "#ID#",
+                "Specification-Version": "1", // We are version 1 of ourselves
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}",
+                "Implementation-Vendor" :"#ID#",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+jar.finalizedBy('reobfJar')
