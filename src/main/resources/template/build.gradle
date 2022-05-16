@@ -70,6 +70,7 @@ minecraft {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
+    implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     implementation fg.deobf(#UMC_DEPENDENCY#)
 }
 
