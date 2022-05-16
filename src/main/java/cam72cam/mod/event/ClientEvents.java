@@ -1,5 +1,6 @@
 package cam72cam.mod.event;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
@@ -96,7 +97,9 @@ public class ClientEvents {
 
         @SubscribeEvent
         public void onClientTick(TickEvent.ClientTickEvent event) {
-            TICK.execute(Runnable::run);
+            if (MinecraftClient.isReady()) {
+                TICK.execute(Runnable::run);
+            }
         }
 
         @SubscribeEvent
