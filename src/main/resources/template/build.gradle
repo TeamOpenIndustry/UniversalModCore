@@ -1,0 +1,47 @@
+//BUILDSCRIPT//
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = "https://teamopenindustry.cc/maven" }
+        maven { url = 'https://repo.eclipse.org/content/groups/eclipse' }
+    }
+	dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+	}
+}
+
+//PLUGINS//
+apply plugin: 'forge'
+
+//MINECRAFT//
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+minecraft {
+    version = "1.7.10-10.13.4.9999-1.7.10"
+    runDir = "run"
+    mappings = "stable_12"
+}
+
+//DEPENDENCIES//
+#UMC_REPO#
+
+dependencies {
+    compile #UMC_DEPENDENCY#
+}
+
+//JAR//
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
