@@ -3,6 +3,8 @@ package util;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
 
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -59,6 +61,25 @@ public class Matrix4
 	{
 		set(mat);
 	}
+	public Matrix4(Matrix4f mat)
+	{
+		m00 = mat.m00;
+		m01 = mat.m01;
+		m02 = mat.m02;
+		m03 = mat.m03;
+		m10 = mat.m10;
+		m11 = mat.m11;
+		m12 = mat.m12;
+		m13 = mat.m13;
+		m20 = mat.m20;
+		m21 = mat.m21;
+		m22 = mat.m22;
+		m23 = mat.m23;
+		m30 = mat.m30;
+		m31 = mat.m31;
+		m32 = mat.m32;
+		m33 = mat.m33;
+	}
 
 	public Matrix4(Facing facing)
 	{
@@ -92,12 +113,36 @@ public class Matrix4
 		m01 = m02 = m03 = m10 = m12 = m13 = m20 = m21 = m23 = m30 = m31 = m32 = 0;
 		return this;
 	}
+	public Matrix4 translate(Vector3f vec)
+	{
+		m03 += m00 * vec.x + m01 * vec.y + m02 * vec.z;
+		m13 += m10 * vec.x + m11 * vec.y + m12 * vec.z;
+		m23 += m20 * vec.x + m21 * vec.y + m22 * vec.z;
+		m33 += m30 * vec.x + m31 * vec.y + m32 * vec.z;
+		return this;
+	}
 	public Matrix4 translate(double x, double y, double z)
 	{
 		m03 += m00 * x + m01 * y + m02 * z;
 		m13 += m10 * x + m11 * y + m12 * z;
 		m23 += m20 * x + m21 * y + m22 * z;
 		m33 += m30 * x + m31 * y + m32 * z;
+		return this;
+	}
+	public Matrix4 scale(Vector3f vec)
+	{
+		m00 *= vec.x;
+		m10 *= vec.x;
+		m20 *= vec.x;
+		m30 *= vec.x;
+		m01 *= vec.y;
+		m11 *= vec.y;
+		m21 *= vec.y;
+		m31 *= vec.y;
+		m02 *= vec.z;
+		m12 *= vec.z;
+		m22 *= vec.z;
+		m32 *= vec.z;
 		return this;
 	}
 	public Matrix4 scale(double x, double y, double z)
@@ -114,6 +159,48 @@ public class Matrix4
 		m12 *= z;
 		m22 *= z;
 		m32 *= z;
+		return this;
+	}
+	public Matrix4 rotate(double angle, Vector3f axis)
+	{
+		double c = Math.cos(angle);
+		double s = Math.sin(angle);
+		double mc = 1.0f - c;
+		double xy = axis.x*axis.y;
+		double yz = axis.y*axis.z;
+		double xz = axis.x*axis.z;
+		double xs = axis.x*s;
+		double ys = axis.y*s;
+		double zs = axis.z*s;
+		double f00 = axis.x*axis.x*mc+c;
+		double f10 = xy*mc+zs;
+		double f20 = xz*mc-ys;
+		double f01 = xy*mc-zs;
+		double f11 = axis.y*axis.y*mc+c;
+		double f21 = yz*mc+xs;
+		double f02 = xz*mc+ys;
+		double f12 = yz*mc-xs;
+		double f22 = axis.z*axis.z*mc+c;
+		double t00 = m00 * f00 + m01 * f10 + m02 * f20;
+		double t10 = m10 * f00 + m11 * f10 + m12 * f20;
+		double t20 = m20 * f00 + m21 * f10 + m22 * f20;
+		double t30 = m30 * f00 + m31 * f10 + m32 * f20;
+		double t01 = m00 * f01 + m01 * f11 + m02 * f21;
+		double t11 = m10 * f01 + m11 * f11 + m12 * f21;
+		double t21 = m20 * f01 + m21 * f11 + m22 * f21;
+		double t31 = m30 * f01 + m31 * f11 + m32 * f21;
+		m02 = m00 * f02 + m01 * f12 + m02 * f22;
+		m12 = m10 * f02 + m11 * f12 + m12 * f22;
+		m22 = m20 * f02 + m21 * f12 + m22 * f22;
+		m32 = m30 * f02 + m31 * f12 + m32 * f22;
+		m00 = t00;
+		m10 = t10;
+		m20 = t20;
+		m30 = t30;
+		m01 = t01;
+		m11 = t11;
+		m21 = t21;
+		m31 = t31;
 		return this;
 	}
 	public Matrix4 rotate(double angle, double x, double y, double z)
@@ -294,6 +381,22 @@ public class Matrix4
 	{
 		mat.multiply(this);
 	}
+	private void mult3x3(Vector3f vec)
+	{
+		double x = m00 * vec.x + m01 * vec.y + m02 * vec.z;
+		double y = m10 * vec.x + m11 * vec.y + m12 * vec.z;
+		double z = m20 * vec.x + m21 * vec.y + m22 * vec.z;
+		vec.x = (float)x;
+		vec.y = (float)y;
+		vec.z = (float)z;
+	}
+	public void apply(Vector3f vec)
+	{
+		mult3x3(vec);
+		vec.x += m03;
+		vec.y += m13;
+		vec.z += m23;
+	}
 	private Vec3d mult3x3(Vec3d vec)
 	{
 		double x = m00 * vec.x + m01 * vec.y + m02 * vec.z;
@@ -324,6 +427,25 @@ public class Matrix4
 		return vec2;
 	}
 	*/
+
+	public Matrix4f toMatrix4f()
+	{
+		return new Matrix4f((float)m00,(float)m01,(float)m02,(float)m03, (float)m10,(float)m11,(float)m12,(float)m13, (float)m20,(float)m21,(float)m22,(float)m23, (float)m30,(float)m31,(float)m32,(float)m33);
+	}
+	public void fromMatrix4f(Matrix4f mat)
+	{
+		m00 = mat.m00;	m01 = mat.m01;	m02 = mat.m02;	m03 = mat.m03;
+		m10 = mat.m10;	m11 = mat.m11;	m12 = mat.m12;	m13 = mat.m13;
+		m20 = mat.m20;	m21 = mat.m21;	m22 = mat.m22;	m23 = mat.m23;
+		m30 = mat.m30;	m31 = mat.m31;	m32 = mat.m32;	m33 = mat.m33;
+	}
+
+	public final void invert()
+	{
+		Matrix4f temp = toMatrix4f();
+		temp.invert();
+		this.fromMatrix4f(temp);
+	}
 
 	@Override
 	public String toString()
