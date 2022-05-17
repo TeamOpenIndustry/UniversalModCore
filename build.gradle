@@ -1,5 +1,3 @@
-import cam72cam.universalmodcore.CurseForge;
-
 buildscript {
     repositories {
         mavenCentral()
@@ -8,7 +6,6 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath 'cam72cam.universalmodcore:UniversalModCoreGradle:0.1.3'
     }
 }
 
@@ -20,6 +17,12 @@ configurations {
 }
 
 apply plugin: 'maven-publish'
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+}
 
 String umcVersion = "1.1.4"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
@@ -70,7 +73,7 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-	shade files(CurseForge.asset(223094,2431302))
+	shade "curse.maven:invtweaks-223094:2431302"
 
     testCompile('junit:junit:4.13')
 
