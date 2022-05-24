@@ -509,6 +509,11 @@ public class World {
         return internal.getBlock(pos.x, pos.y, pos.z).isSideSolid(internal, pos.x, pos.y, pos.z, ForgeDirection.UP);
     }
 
+    /** How hard is the block? */
+    public float getBlockHardness(Vec3i pos) {
+        return internal.getBlock(pos.x, pos.y, pos.z).getBlockHardness(internal, pos.x, pos.y, pos.z);
+    }
+
     /** Get max redstone power surrounding this block */
     public int getRedstone(Vec3i pos) {
         return internal.getStrongestIndirectPower(pos.x, pos.y, pos.z);
