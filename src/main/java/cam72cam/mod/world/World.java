@@ -518,6 +518,11 @@ public class World {
         return Block.hasSolidSide(internal.getBlockState(pos.internal()), internal, pos.internal(), Direction.UP);
     }
 
+    /** How hard is the block? */
+    public float getBlockHardness(Vec3i pos) {
+        return internal.getBlockState(pos.internal()).getBlockHardness(internal, pos.internal());
+    }
+
     /** Get max redstone power surrounding this block */
     public int getRedstone(Vec3i pos) {
         int power = 0;
