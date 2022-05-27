@@ -520,7 +520,7 @@ public class World {
 
     /** How hard is the block? */
     public float getBlockHardness(Vec3i pos) {
-        return internal.getBlockState(pos.internal()).getBlockHardness(internal, pos.internal());
+        return internal.getBlockState(pos.internal()).getDestroySpeed(internal, pos.internal());
     }
 
     /** Get max redstone power surrounding this block */
