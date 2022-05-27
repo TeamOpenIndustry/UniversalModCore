@@ -20,9 +20,4 @@ displayName="#NAME#"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.#ID#]]
-    modId="universalmodcore"
-    mandatory=true
-    versionRange="[#UMC_API#,#UMC_API_NEXT#)"
-    ordering="BEFORE"
-    side="BOTH"
+#FORGE_TOML_DEPENDENCIES#
