@@ -61,10 +61,20 @@ public abstract class BlockTypeEntity extends BlockType {
         return new BlockTypeInternal();
     }
 
+    private boolean makeSureNotRecursive = false;
     private BlockEntity getInstance(World world, Vec3i pos) {
-        TileEntity te = world.getTileEntity(pos, TileEntity.class);
-        if (te != null) {
-            return te.instance();
+        if (makeSureNotRecursive) {
+            return null;
+        }
+
+        try {
+            makeSureNotRecursive = true;
+            TileEntity te = world.getTileEntity(pos, TileEntity.class);
+            if (te != null) {
+                return te.instance();
+            }
+        } finally {
+            makeSureNotRecursive = false;
         }
         return null;
     }
