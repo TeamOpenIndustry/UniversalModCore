@@ -14,8 +14,10 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.handshake.NetworkDispatcher;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
@@ -84,8 +86,25 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        net.sendToAllAround(new Message(this),
-                new NetworkRegistry.TargetPoint(world.getId(), pos.x, pos.y, pos.z, distance));
+        // Do the send check before hand since packet serialization is called in all cases below
+        boolean playerFound = false;
+        for (Object o : FMLCommonHandler.instance().getMinecraftServerInstance().getConfigurationManager().playerEntityList) {
+            EntityPlayerMP player = (EntityPlayerMP)o;
+            if (player.dimension == world.internal.provider.dimensionId) {
+                double d4 = pos.x - player.posX;
+                double d5 = pos.y - player.posY;
+                double d6 = pos.z - player.posZ;
+                if (d4 * d4 + d5 * d5 + d6 * d6 < distance * distance) {
+                    playerFound = true;
+                }
+            }
+
+        }
+
+        if (playerFound) {
+            net.sendToAllAround(new Message(this),
+                    new NetworkRegistry.TargetPoint(world.getId(), pos.x, pos.y, pos.z, distance));
+        }
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
