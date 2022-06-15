@@ -15,6 +15,12 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public Vec3d min() {
+        // Mutable in 1.7.10
+        if (minCached != null) {
+            if (minCached.x != internal.minX || minCached.y != internal.minY || minCached.z != internal.minZ) {
+                minCached = null;
+            }
+        }
         if (minCached == null) {
             minCached = new Vec3d(internal.minX, internal.minY, internal.minZ);
         }
@@ -23,6 +29,13 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public Vec3d max() {
+        // Mutable in 1.7.10
+        if (maxCached != null) {
+            if (maxCached.x != internal.maxX || maxCached.y != internal.maxY || maxCached.z != internal.maxZ) {
+                maxCached = null;
+            }
+        }
+
         if (maxCached == null) {
             maxCached = new Vec3d(internal.maxX, internal.maxY, internal.maxZ);
         }

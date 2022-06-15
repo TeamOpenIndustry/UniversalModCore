@@ -32,7 +32,9 @@ public interface IBoundingBox {
     }
 
     static IBoundingBox from(Vec3d start, Vec3d end) {
-        return from(AxisAlignedBB.getBoundingBox(start.x, start.y, start.z, end.x, end.y, end.z));
+        Vec3d min = start.min(end);
+        Vec3d max = start.max(end);
+        return from(AxisAlignedBB.getBoundingBox(min.x, min.y, min.z, max.x, max.y, max.z));
     }
 
     /** Smaller corner of the BB */
