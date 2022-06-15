@@ -5,10 +5,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.Entity;
-import cam72cam.mod.entity.Living;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
@@ -105,6 +102,31 @@ public class World {
     }
 
     private void checkLoadedEntities() {
+        if (this.getTicks() % 1000 == 0) {
+            List ments = new ArrayList(internal.loadedEntityList);
+            // Only our modded entities
+            ments.removeIf(o -> !(o instanceof ModdedEntity));
+
+            // Lowest ID's first
+            ments.sort(Comparator.comparingInt(o -> ((net.minecraft.entity.Entity) o).getEntityId()));
+
+            Map<UUID, net.minecraft.entity.Entity> keeps = new HashMap<>();
+            for (Object o : ments) {
+                net.minecraft.entity.Entity ent = (net.minecraft.entity.Entity) o;
+                // Only grab the newest
+                if (!keeps.containsKey(ent.getUniqueID())) {
+                    keeps.put(ent.getUniqueID(), ent);
+                }
+            }
+            ments.removeAll(keeps.values());
+            if (!ments.isEmpty()) {
+                ModCore.warn("BUG: Removing %s duplicated Entities", ments.size());
+                for (Object ment : ments) {
+                    internal.removeEntity((ModdedEntity) ment);
+                }
+            }
+        }
+
         // Once a second scan entities that may have de-sync'd with the UMC world
         if (this.getTicks() % 20 == 0) {
             for (Object entityObj : this.internal.loadedEntityList) {
@@ -135,6 +157,7 @@ public class World {
                 }
             }
         }
+
     }
 
     /** Turn a MC world into a UMC world */
