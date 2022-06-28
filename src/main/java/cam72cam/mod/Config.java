@@ -22,6 +22,9 @@ public class Config {
     @ConfigFile.Comment("Enable Debug Logging")
     public static boolean DebugLogging = false;
 
+    @ConfigFile.Comment("Write texture sheets to PNGs in cache directory")
+    public static boolean DebugTextureSheets = false;
+
     @ConfigFile.Comment("Enable threaded texture loading")
     public static boolean ThreadedTextureLoading = true;
 }
