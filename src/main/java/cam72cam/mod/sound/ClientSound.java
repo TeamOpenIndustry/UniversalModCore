@@ -7,6 +7,7 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.audio.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.lwjgl.openal.AL10;
+import org.lwjgl.openal.AL11;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -80,6 +81,8 @@ class ClientSound implements ISound {
             AL10.alSourcei(id, AL10.AL_LOOPING, 1);
             checkErr();
         }
+
+        AL10.alSourcei(id, AL10.AL_DISTANCE_MODEL, AL10.AL_NONE);
     }
 
 
