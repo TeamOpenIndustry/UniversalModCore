@@ -375,11 +375,7 @@ public class ModCore {
             System.out.println("INFO: " + String.format(msg, params));
             return;
         }
-        if (params.length != 0) {
-            instance.logger.info(String.format(msg, params));
-        } else {
-            instance.logger.info(msg);
-        }
+        instance.logger.info(String.format(msg, params));
     }
 
     public static void warn(String msg, Object... params) {
@@ -388,11 +384,7 @@ public class ModCore {
             return;
         }
 
-        if (params.length != 0) {
-            instance.logger.warn(String.format(msg, params));
-        } else {
-            instance.logger.warn(msg);
-        }
+        instance.logger.warn(String.format(msg, params));
     }
 
     public static void error(String msg, Object... params) {
@@ -401,11 +393,7 @@ public class ModCore {
             return;
         }
 
-        if (params.length != 0) {
-            instance.logger.error(String.format(msg, params));
-        } else {
-            instance.logger.error(msg);
-        }
+        instance.logger.error(String.format(msg, params));
     }
 
     public static void catching(Throwable ex, String msg, Object... params) {

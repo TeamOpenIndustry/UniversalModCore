@@ -69,12 +69,13 @@ public class ItemPickerGUI {
             search.render(matrixStack, mouseX, mouseY, partialTicks);
 
             for (Widget button : this.buttons) {
-                if (button instanceof GuiScrollBar) continue;
-                if (scrollBar != null) {
-                    button.y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
-                }
-                if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                    this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                if (button instanceof ItemButton) {
+                    if (scrollBar != null) {
+                        button.y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    }
+                    if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
+                        this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                    }
                 }
             }
         }
