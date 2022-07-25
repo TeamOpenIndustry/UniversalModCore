@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -183,6 +184,15 @@ public class ModCore {
 
         public ClientProxy() {
             super();
+
+            try {
+                throw new Exception();
+            } catch (Exception ex) {
+                if (Arrays.toString(ex.getStackTrace()).contains("net.minecraftforge.fml.ModLoader.runDataGenerator")) {
+                    ModCore.warn("Skipping MaxTextureSize detection during data generation");
+                    return;
+                }
+            }
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
                 MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
                 ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
