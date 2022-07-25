@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import net.minecraftforge.fml.DatagenModLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -205,14 +206,11 @@ public class ModCore {
         public ClientProxy() {
             super();
 
-            try {
-                throw new Exception();
-            } catch (Exception ex) {
-                if (Arrays.toString(ex.getStackTrace()).contains("net.minecraftforge.fml.ModLoader.runDataGenerator")) {
-                    ModCore.warn("Skipping MaxTextureSize detection during data generation");
-                    return;
-                }
+            if (DatagenModLoader.isRunningDataGen()) {
+                ModCore.warn("Skipping MaxTextureSize detection during data generation");
+                return;
             }
+
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
                 MaxTextureSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
                 ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
