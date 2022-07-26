@@ -23,7 +23,7 @@ public abstract class ItemButton extends AbstractButton {
     public void render(int mouseX, int mouseY, float partialTicks) {
         AbstractGui.fill(x, y, x + 32, y + 32, 0xFFFFFFFF);
         // Pollutes global state...
-        RenderHelper.enableStandardItemLighting();
+        RenderHelper.enableGUIStandardItemLighting();
         Minecraft mc = Minecraft.getInstance();
 
         FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
