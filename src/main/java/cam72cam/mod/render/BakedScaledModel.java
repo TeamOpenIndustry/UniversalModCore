@@ -1,18 +1,15 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.math.Vec3d;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Direction;
-import net.minecraftforge.client.model.QuadTransformer;
-import net.minecraftforge.common.model.TRSRTransformation;
 import util.Matrix4;
 
-import javax.vecmath.Matrix4f;
 import java.util.*;
 
 /**
@@ -40,25 +37,38 @@ class BakedScaledModel implements IBakedModel {
     @Override
     public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand) {
         if (quadCache.get(side) == null) {
-            Matrix4f mat = new Matrix4f();
-            mat.m00 = (float) transform.m00;
-            mat.m01 = (float) transform.m01;
-            mat.m02 = (float) transform.m02;
-            mat.m03 = (float) transform.m03;
-            mat.m10 = (float) transform.m10;
-            mat.m11 = (float) transform.m11;
-            mat.m12 = (float) transform.m12;
-            mat.m13 = (float) transform.m13;
-            mat.m20 = (float) transform.m20;
-            mat.m21 = (float) transform.m21;
-            mat.m22 = (float) transform.m22;
-            mat.m23 = (float) transform.m23;
-            mat.m30 = (float) transform.m30;
-            mat.m31 = (float) transform.m31;
-            mat.m32 = (float) transform.m32;
-            mat.m33 = (float) transform.m33;
-            QuadTransformer qt = new QuadTransformer(DefaultVertexFormats.BLOCK, new TRSRTransformation(mat));
-            quadCache.put(side, qt.processMany(source.getQuads(state, side, rand)));
+            List<BakedQuad> quads = source.getQuads(state, side, rand);
+            // We can't use QuadTransformer here yet.  It's buggy in 1.14.4
+            List<BakedQuad> altered = new ArrayList<>();
+            for (BakedQuad quad : quads) {
+                int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
+
+                VertexFormat format = quad.getFormat();
+
+                for (int i = 0; i < 4; ++i) {
+                    int j = format.getIntegerSize() * i;
+                    Vec3d vec = new Vec3d(
+                            Float.intBitsToFloat(newData[j + 0]),
+                            Float.intBitsToFloat(newData[j + 1]),
+                            Float.intBitsToFloat(newData[j + 2])
+                    );
+                    vec = transform.apply(vec);
+
+                    newData[j + 0] = Float.floatToRawIntBits((float) vec.x);
+                    newData[j + 1] = Float.floatToRawIntBits((float) vec.y);
+                    newData[j + 2] = Float.floatToRawIntBits((float) vec.z);
+                }
+
+                altered.add(new BakedQuad(
+                        newData,
+                        quad.getTintIndex(),
+                        quad.getFace(),
+                        quad.getSprite(),
+                        quad.shouldApplyDiffuseLighting(),
+                        quad.getFormat()
+                ));
+            }
+            quadCache.put(side, altered);
         }
 
         return quadCache.get(side);
