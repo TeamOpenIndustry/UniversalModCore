@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** Item Render Registry (Here be dragons...) */
@@ -276,13 +277,12 @@ public class ItemRender {
         restore.close();
     }
 
-    static Consumer<MatrixStack> doRender = s -> {};
+    static BiConsumer<MatrixStack, Integer> doRender = (s, i) -> {};
     public static Callable<ItemStackTileEntityRenderer> ISTER() {
         return () -> new ItemStackTileEntityRenderer() {
             @Override
             public void renderByItem(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
-                // TODO 1.15+ do we need to set lightmap coords here?
-                doRender.accept(matrixStack);
+                doRender.accept(matrixStack, combinedLight);
             }
         };
     }
@@ -339,13 +339,13 @@ public class ItemRender {
         public IBakedModel handlePerspective(ItemCameraTransforms.TransformType cameraTransformType, MatrixStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
 
-            doRender = matrix -> {
+            doRender = (matrix, i) -> {
                 if (stack == null) {
                     return;
                 }
 
                 if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack), new RenderState(matrix));
                     return ;
                 }
 
@@ -367,14 +367,17 @@ public class ItemRender {
                 if (!ModCore.isInReload()) {
                     RenderType.solid().setupRenderState();
 
-                    // TODO 1.15+ do we need to set lightmap coords here?
-
                     mat.pushPose();
                     // Maybe backwards?
                     mat.last().pose().multiply(matrix.last().pose());
 
                     RenderState state = new RenderState(mat);
                     model.applyTransform(stack, type, state);
+
+                    int j = i % 65536;
+                    int k = i / 65536;
+                    state.lightmap(j/240f, k/240f);
+
                     //std.renderCustom();
                     std.render(state);
 

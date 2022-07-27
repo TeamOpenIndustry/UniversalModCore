@@ -114,10 +114,6 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            ModCore.warn("Warning, trying to send %s client side!");
-            return;
-        }
         net.send(PacketDistributor.ALL.noArg(), new Message(this));
     }
 
