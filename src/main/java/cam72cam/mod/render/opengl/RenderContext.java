@@ -58,6 +58,10 @@ public class RenderContext {
         }
 
         boolean shaderActive = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+        int standardTextureID = GL13.GL_TEXTURE0;
+        int lightmapTextureID = GL13.GL_TEXTURE2;
+        int normalTextureID = GL13.GL_TEXTURE1;
+        int specularTextureID = GL13.GL_TEXTURE3;
 
         if (state.lightmap != null) {
             float block = state.lightmap[0];
@@ -65,32 +69,29 @@ public class RenderContext {
             boolean vanillaEmissive = block == 1 && sky == 1 && !shaderActive;
             if (vanillaEmissive) {
                 state.lighting(false);
-                GL13.glActiveTexture(GL13.GL_TEXTURE1);
+                GL13.glActiveTexture(lightmapTextureID);
                 boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
                 applyBool(GL11.GL_TEXTURE_2D, false);
                 restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE1);
+                    GL13.glActiveTexture(lightmapTextureID);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                 });
             } else {
-                int i = ((int)(sky * 15)) << 20 | ((int)(block*15)) << 4;
-                int x = i % 65536;
-                int y = i / 65536;
                 float oldX = GlStateManager.lastBrightnessX;
                 float oldY = GlStateManager.lastBrightnessY;
-                GlStateManager.multiTexCoord2f(GL13.GL_TEXTURE1, x, y);
-                restore.add(() -> GlStateManager.multiTexCoord2f(GL13.GL_TEXTURE1, oldX, oldY));
+                GlStateManager.multiTexCoord2f(lightmapTextureID, block * 240, sky * 240);
+                restore.add(() -> GlStateManager.multiTexCoord2f(lightmapTextureID, oldX, oldY));
             }
         }
 
         if (state.texture != null) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL13.glActiveTexture(standardTextureID);
             boolean oldTexEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
 
             if (state.texture == NO_TEXTURE) {
                 applyBool(GL11.GL_TEXTURE_2D, false);
                 restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE0);
+                    GL13.glActiveTexture(standardTextureID);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                 });
             } else {
@@ -99,7 +100,7 @@ public class RenderContext {
                 int oldTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
                 restore.add(() -> {
-                    GL13.glActiveTexture(GL13.GL_TEXTURE0);
+                    GL13.glActiveTexture(standardTextureID);
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldTex);
                 });
@@ -110,13 +111,13 @@ public class RenderContext {
 
             if (state.normals != null) {
                 // Normals
-                GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                GL13.glActiveTexture(normalTextureID);
                 boolean oldNormalEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
 
                 if (state.normals == NO_TEXTURE) {
                     applyBool(GL11.GL_TEXTURE_2D, false);
                     restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                        GL13.glActiveTexture(normalTextureID);
                         applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
                     });
                 } else {
@@ -125,22 +126,22 @@ public class RenderContext {
                     int oldNorm = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.normals.getId());
                     restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE2);
+                        GL13.glActiveTexture(normalTextureID);
                         applyBool(GL11.GL_TEXTURE_2D, oldNormalEnabled);
                         GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldNorm);
                     });
                 }
-                GL13.glActiveTexture(GL13.GL_TEXTURE0);
+                GL13.glActiveTexture(standardTextureID);
             }
             if (state.specular != null) {
                 // Specular
-                GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                GL13.glActiveTexture(specularTextureID);
                 boolean oldSpecularEnalbed = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
 
                 if (state.specular == NO_TEXTURE) {
                     applyBool(GL11.GL_TEXTURE_2D, false);
                     restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                        GL13.glActiveTexture(specularTextureID);
                         applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
                     });
                 } else {
@@ -149,12 +150,12 @@ public class RenderContext {
                     int oldSpec = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.specular.getId());
                     restore.add(() -> {
-                        GL13.glActiveTexture(GL13.GL_TEXTURE3);
+                        GL13.glActiveTexture(specularTextureID);
                         applyBool(GL11.GL_TEXTURE_2D, oldSpecularEnalbed);
                         GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldSpec);
                     });
                 }
-                GL13.glActiveTexture(GL13.GL_TEXTURE0);
+                GL13.glActiveTexture(standardTextureID);
 
             }
         }

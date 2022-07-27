@@ -344,7 +344,7 @@ public class ItemRender {
                 }
 
                 if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack), new RenderState(matrix));
                     return ;
                 }
 

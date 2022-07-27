@@ -148,7 +148,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         int j = i % 65536;
         int k = i / 65536;
 
-        RenderState state = new RenderState(p_225623_4_).lightmap(j / 15f, k / 15f);
+        RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
