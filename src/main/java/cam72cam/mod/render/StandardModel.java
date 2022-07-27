@@ -2,9 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.math.Vec3d;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.*;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -23,23 +21,21 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ILightReader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.function.Consumer;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
     private final List<Pair<BlockState, IBakedModel>> models = new ArrayList<Pair<BlockState, IBakedModel>>() {
         @Override
         public boolean add(Pair<BlockState, IBakedModel> o) {
-            worldRenderer = null;
+            worldRendererBuffer = null;
             return super.add(o);
         }
     };
@@ -136,6 +132,7 @@ public class StandardModel {
     }
 
     private BufferBuilder worldRenderer = null;
+    private com.mojang.datafixers.util.Pair<BufferBuilder.DrawState, ByteBuffer> worldRendererBuffer = null;
 
     /** Render only the MC quads in this model */
     public void renderQuads(RenderState state) {
@@ -143,13 +140,8 @@ public class StandardModel {
             return;
         }
 
-        if (worldRenderer == null) {
-            worldRenderer = new BufferBuilder(2048) {
-                @Override
-                public void reset() {
-                    //super.reset();
-                }
-            };
+        if (worldRendererBuffer == null) {
+            worldRenderer = new BufferBuilder(2048);
             worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 
             for (Pair<BlockState, IBakedModel> model : models) {
@@ -169,10 +161,17 @@ public class StandardModel {
             }
 
             worldRenderer.finishDrawing();
+            worldRendererBuffer = worldRenderer.getNextBuffer();
         }
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
         try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(AtlasTexture.LOCATION_BLOCKS_TEXTURE))))) {
-            WorldVertexBufferUploader.draw(worldRenderer);
+            WorldVertexBufferUploader.draw(new BufferBuilder(0) {
+                @Override
+                public com.mojang.datafixers.util.Pair<DrawState, ByteBuffer> getNextBuffer() {
+                    // java is fun...
+                    return worldRendererBuffer;
+                }
+            });
         }
     }
 
