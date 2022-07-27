@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** Item Render Registry (Here be dragons...) */
@@ -277,11 +278,11 @@ public class ItemRender {
         restore.close();
     }
 
-    static Consumer<MatrixStack> doRender = s -> {};
+    static BiConsumer<MatrixStack, Integer> doRender = (s, i) -> {};
     public static Callable<ItemStackTileEntityRenderer> ISTER() {
         return () -> new ItemStackTileEntityRenderer() {
             public void render(net.minecraft.item.ItemStack itemStackIn, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
-                doRender.accept(matrixStackIn);
+                doRender.accept(matrixStackIn, combinedLightIn);
             }
         };
     }
@@ -338,7 +339,7 @@ public class ItemRender {
         public IBakedModel handlePerspective(ItemCameraTransforms.TransformType cameraTransformType, MatrixStack mat) {
             this.type = ItemRenderType.from(cameraTransformType);
 
-            doRender = matrix -> {
+            doRender = (matrix, i) -> {
                 if (stack == null) {
                     return;
                 }
@@ -365,7 +366,6 @@ public class ItemRender {
                  */
                 if (!ModCore.isInReload()) {
                     RenderType.getSolid().setupRenderState();
-                    // TODO 1.15+ do we need to set lightmap coords here?
 
                     mat.push();
                     // Maybe backwards?
@@ -373,6 +373,11 @@ public class ItemRender {
 
                     RenderState state = new RenderState(mat);
                     model.applyTransform(stack, type, state);
+
+                    int j = i % 65536;
+                    int k = i / 65536;
+                    state.lightmap(j/240f, k/240f);
+
                     //std.renderCustom();
                     std.render(state);
 
