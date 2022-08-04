@@ -181,9 +181,20 @@ public class StandardModel {
         renderCustom(state, 0);
     }
 
+    private BufferBuilder itemRenderer = null;
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
+        if (itemRenderer == null) {
+            // This is not the best method, but is rarely used?  To be revisited
+            itemRenderer = new BufferBuilder(256);
+        }
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
+        if (itemRenderer.isDrawing()) {
+            itemRenderer.finishDrawing();
+            try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(AtlasTexture.LOCATION_BLOCKS_TEXTURE))))) {
+                WorldVertexBufferUploader.draw(itemRenderer);
+            }
+        }
     }
 
     /** Is there anything that's not MC standard in this model? */
