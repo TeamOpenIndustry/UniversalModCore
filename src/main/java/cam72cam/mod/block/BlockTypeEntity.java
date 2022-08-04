@@ -10,6 +10,9 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 
 /**
@@ -153,6 +156,16 @@ public abstract class BlockTypeEntity extends BlockType {
         @Override
         public final net.minecraft.tileentity.TileEntity createTileEntity(BlockState state, IBlockReader world) {
             return constructBlockEntity().supplier(id);
+        }
+
+        @Override
+        public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+            net.minecraft.tileentity.TileEntity entity = worldIn.getBlockEntity(pos);
+            if (entity instanceof TileEntity) {
+                VoxelShape shape = ((TileEntity) entity).getShape();
+                return shape != null ? shape : VoxelShapes.block();
+            }
+            return super.getShape(state, worldIn, pos, context);
         }
 
         @Override
