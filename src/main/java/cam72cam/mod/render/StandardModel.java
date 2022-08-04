@@ -89,7 +89,7 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.immediate(worldRenderer);
+                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.immediate(itemRenderer);
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
@@ -180,9 +180,20 @@ public class StandardModel {
         renderCustom(state, 0);
     }
 
+    private BufferBuilder itemRenderer = null;
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
+        if (itemRenderer == null) {
+            // This is not the best method, but is rarely used?  To be revisited
+            itemRenderer = new BufferBuilder(256);
+        }
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
+        if (itemRenderer.building()) {
+            itemRenderer.end();
+            try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(AtlasTexture.LOCATION_BLOCKS))))) {
+                WorldVertexBufferUploader.end(itemRenderer);
+            }
+        }
     }
 
     /** Is there anything that's not MC standard in this model? */
