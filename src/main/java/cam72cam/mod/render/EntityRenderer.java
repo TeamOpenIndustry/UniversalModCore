@@ -148,6 +148,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderHelper.turnBackOn();
 
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+
         int j = i % 65536;
         int k = i / 65536;
         RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
