@@ -1,13 +1,15 @@
 package util;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.model.obj.Buffers;
 import cam72cam.mod.util.Facing;
+import net.minecraft.util.math.vector.Matrix4f;
 
-import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.nio.FloatBuffer;
 
 /**
  * Copyright (C) 2013 Chicken-Bones
@@ -61,6 +63,7 @@ public class Matrix4
 	{
 		set(mat);
 	}
+	/*
 	public Matrix4(Matrix4f mat)
 	{
 		m00 = mat.m00;
@@ -79,7 +82,7 @@ public class Matrix4
 		m31 = mat.m31;
 		m32 = mat.m32;
 		m33 = mat.m33;
-	}
+	}*/
 
 	public Matrix4(Facing facing)
 	{
@@ -430,14 +433,17 @@ public class Matrix4
 
 	public Matrix4f toMatrix4f()
 	{
-		return new Matrix4f((float)m00,(float)m01,(float)m02,(float)m03, (float)m10,(float)m11,(float)m12,(float)m13, (float)m20,(float)m21,(float)m22,(float)m23, (float)m30,(float)m31,(float)m32,(float)m33);
+		return new Matrix4f(new float[] {(float)m00,(float)m01,(float)m02,(float)m03, (float)m10,(float)m11,(float)m12,(float)m13, (float)m20,(float)m21,(float)m22,(float)m23, (float)m30,(float)m31,(float)m32,(float)m33});
 	}
 	public void fromMatrix4f(Matrix4f mat)
 	{
-		m00 = mat.m00;	m01 = mat.m01;	m02 = mat.m02;	m03 = mat.m03;
-		m10 = mat.m10;	m11 = mat.m11;	m12 = mat.m12;	m13 = mat.m13;
-		m20 = mat.m20;	m21 = mat.m21;	m22 = mat.m22;	m23 = mat.m23;
-		m30 = mat.m30;	m31 = mat.m31;	m32 = mat.m32;	m33 = mat.m33;
+		FloatBuffer crap = FloatBuffer.wrap(new float[16]);
+		mat.store(crap);
+		crap.position(0);
+		m00 = crap.get();	m01 = crap.get();	m02 = crap.get();	m03 = crap.get();
+		m10 = crap.get();	m11 = crap.get();	m12 = crap.get();	m13 = crap.get();
+		m20 = crap.get();	m21 = crap.get();	m22 = crap.get();	m23 = crap.get();
+		m30 = crap.get();	m31 = crap.get();	m32 = crap.get();	m33 = crap.get();
 	}
 
 	public final void invert()
