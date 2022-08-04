@@ -89,7 +89,7 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(worldRenderer);
+                IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(itemRenderer);
                 if (oldState) {
                     GL11.glEnable(GL11.GL_BLEND);
                 } else {
