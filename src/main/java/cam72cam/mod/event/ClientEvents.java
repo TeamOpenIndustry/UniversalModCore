@@ -121,7 +121,7 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiDrag(GuiScreenEvent.MouseDragEvent.Pre event) {
-            onGuiMouse(event, event.getMouseButton(), MouseAction.RELEASE);
+            onGuiMouse(event, event.getMouseButton(), MouseAction.MOVE);
         }
         @SubscribeEvent
         public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
