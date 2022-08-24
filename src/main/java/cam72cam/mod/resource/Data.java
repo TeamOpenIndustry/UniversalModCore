@@ -75,7 +75,7 @@ class Data {
                         if (entry != null) {
                             // Copy the input stream so we can close the resource pack
                             InputStream stream = resourcePack.getInputStream(entry);
-                            streams.add(new ByteArrayInputStream(IOUtils.toByteArray(stream)));
+                            streams.add(new Identifier.InputStreamMod(new ByteArrayInputStream(IOUtils.toByteArray(stream)), file.lastModified()));
                         }
                         resourcePack.close();
                     }
@@ -84,7 +84,7 @@ class Data {
                         if (dir.isDirectory()) {
                             File path = Paths.get(dir.getPath(), pathString(location, false)).toFile();
                             if (path.exists()) {
-                                streams.add(new FileInputStream(path));
+                                streams.add(new Identifier.InputStreamMod(new FileInputStream(path), path.lastModified()));
                             }
                         }
                     }

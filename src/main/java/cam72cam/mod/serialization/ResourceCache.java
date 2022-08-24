@@ -45,7 +45,15 @@ public class ResourceCache<T> {
                         foundHash = hashCache.get(id);
                     }
                     if (foundHash == null) {
-                        foundHash = provider.get(id).getKey().toString();
+                        try (InputStream stream = id.getLastResourceStream()) {
+                            if (stream instanceof Identifier.InputStreamMod) {
+                                foundHash = "MOD" + ((Identifier.InputStreamMod) stream).time;
+                            } else {
+                                foundHash = provider.get(id).getKey().toString();
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     if (!expectedHash.equals(foundHash)) {
                         return provider;
@@ -69,14 +77,19 @@ public class ResourceCache<T> {
         private Pair<HashCode, byte[]> get(Identifier id) {
             if (!resources.containsKey(id)) {
                 try (
-                        HashingInputStream source = new HashingInputStream(ResourceCache.hasher, id.getLastResourceStream());
+                        InputStream stream = id.getLastResourceStream();
+                        HashingInputStream source = new HashingInputStream(ResourceCache.hasher, stream);
                         ByteArrayOutputStream sink = new ByteArrayOutputStream(1024 * 1024)
                 ) {
                     IOUtils.copy(source, sink);
                     HashCode hash = source.hash();
                     resources.put(id, Pair.of(hash, sink.toByteArray()));
                     synchronized (hashCache) {
-                        hashCache.put(id, hash.toString());
+                        if (stream instanceof Identifier.InputStreamMod) {
+                            hashCache.put(id, "MOD" + ((Identifier.InputStreamMod) stream).time);
+                        } else {
+                            hashCache.put(id, hash.toString());
+                        }
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
