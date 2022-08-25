@@ -15,6 +15,9 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -66,6 +69,9 @@ public class OBJModel {
                 variants == null ? "[]" : String.join(":", variants),
                 lodValues.stream().map(Object::toString).collect(Collectors.joining("-"))
         });
+        if (Config.DebugTextureSheets) {
+            settings += "-debug";
+        }
         ResourceCache<OBJBuilder> cache = new ResourceCache<>(
                 new Identifier(modelLoc.getDomain(), modelLoc.getPath() + "_" + settings.hashCode()),
                 provider -> new OBJBuilder(modelLoc, provider, (float)scale, darken, variants)
@@ -120,9 +126,19 @@ public class OBJModel {
                 Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
 
                 int texSize = Math.max(textureWidth, textureHeight);
-                Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba",
-                        builder -> new GenericByteBuffer(toRGBA(builder.getTextures().get(variant).get()))
-                );
+                Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba", builder -> {
+                    BufferedImage img = builder.getTextures().get(variant).get();
+                    if (Config.DebugTextureSheets) {
+                        try {
+                            File cacheFile = ModCore.cacheFile(new Identifier(modelLoc.getDomain() + "debug", modelLoc.getPath() + "_" + variant + ".png"));
+                            ModCore.info("Writing debug to " + cacheFile);
+                            ImageIO.write(img, "png", cacheFile);
+                        } catch (IOException e) {
+                            ModCore.catching(e);
+                        }
+                    }
+                    return new GenericByteBuffer(toRGBA(img));
+                });
                 lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
 
                 for (Integer lodValue : lodValues) {
