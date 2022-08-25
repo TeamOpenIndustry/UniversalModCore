@@ -311,7 +311,7 @@ public class ModCore {
         }
     }
 
-    static int i = 1;
+    static int i = 0;
     public static void testReload() {
         if (i % 10 == 0) { // 4 sheets, we fire on the last one
             ModCore.isInReload = true;
