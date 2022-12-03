@@ -73,7 +73,7 @@ public class ItemRender {
 
         // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel) {
-            ClientEvents.RELOAD.subscribe(() -> {
+            ClientEvents.TEXTURE_STITCH.subscribe() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
