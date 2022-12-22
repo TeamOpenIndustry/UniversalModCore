@@ -90,6 +90,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void initGui() {
+        buttonMap.clear();
+        textFields.clear();
         screen.init(this);
     }
 
