@@ -3,6 +3,7 @@ package cam72cam.mod.gui.container;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import cam72cam.mod.render.opengl.RenderState;
 import invtweaks.api.container.ChestContainer;
 import invtweaks.api.container.ContainerSection;
 import invtweaks.api.container.ContainerSectionCallback;
@@ -45,7 +46,7 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
         this.slotsX = container.getSlotsX();
         this.slotsY = container.getSlotsY();
 
-        this.draw = container::draw;
+        this.draw = builder -> container.draw(builder, new RenderState());
         draw.accept(this);
     }
 

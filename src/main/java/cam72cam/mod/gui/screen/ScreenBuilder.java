@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -94,6 +95,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void initGui() {
+        buttonMap.clear();
+        textFields.clear();
         screen.init(this);
     }
 
@@ -103,7 +106,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             btn.onUpdate();
         }
 
-        screen.draw(this);
+        screen.draw(this, new RenderState());
 
         textFields.forEach(GuiTextField::drawTextBox);
 
