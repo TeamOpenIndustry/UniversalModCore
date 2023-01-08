@@ -119,7 +119,7 @@ public class ClientEvents {
                 // move
                 action = MouseAction.MOVE;
             }
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, GUIHelpers.getScreenHeight() - y, btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
             }
