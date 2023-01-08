@@ -31,7 +31,7 @@ public class GUIHelpers {
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
-                        .blend(BlendMode.OPAQUE)
+                        .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
         )) {
             AbstractGui.fill(new MatrixStack(), x, y, x + width, y + height, color);
         }

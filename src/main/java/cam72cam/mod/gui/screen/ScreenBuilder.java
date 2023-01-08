@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.screen.Screen;
@@ -99,6 +100,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void init() {
+        buttonMap.clear();
         screen.init(this);
     }
 
@@ -109,7 +111,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             btn.onUpdate();
         }
 
-        screen.draw(this);
+        screen.draw(this, new RenderState());
 
         // draw buttons
         super.render(stack, mouseX, mouseY, partialTicks);

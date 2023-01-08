@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
