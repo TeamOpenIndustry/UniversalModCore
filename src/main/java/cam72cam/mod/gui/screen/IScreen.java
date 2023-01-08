@@ -12,8 +12,9 @@ public interface IScreen {
     /** Called during close */
     void onClose();
 
+    @Deprecated
+    default void draw(IScreenBuilder builder) { }
     /** Called once per screen draw */
-    void draw(IScreenBuilder builder);
     default void draw(IScreenBuilder builder, RenderState state) {
         draw(builder);
     }
