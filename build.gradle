@@ -87,6 +87,7 @@ jar {
         }
     }
 }
+jar.finalizedBy('reobfJar')
 
 jar.finalizedBy('reobf')
 

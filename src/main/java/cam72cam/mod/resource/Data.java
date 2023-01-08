@@ -8,12 +8,16 @@ import cpw.mods.fml.common.SidedProxy;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -75,7 +79,7 @@ class Data {
                         if (entry != null) {
                             // Copy the input stream so we can close the resource pack
                             InputStream stream = resourcePack.getInputStream(entry);
-                            streams.add(new ByteArrayInputStream(IOUtils.toByteArray(stream)));
+                            streams.add(new Identifier.InputStreamMod(new ByteArrayInputStream(IOUtils.toByteArray(stream)), file.lastModified()));
                         }
                         resourcePack.close();
                     }
@@ -84,7 +88,7 @@ class Data {
                         if (dir.isDirectory()) {
                             File path = Paths.get(dir.getPath(), pathString(location, false)).toFile();
                             if (path.exists()) {
-                                streams.add(new FileInputStream(path));
+                                streams.add(new Identifier.InputStreamMod(new FileInputStream(path), path.lastModified()));
                             }
                         }
                     }
@@ -95,6 +99,34 @@ class Data {
             return streams;
         }
 
+    }
+
+    public static List<InputStream> unwrapResources(List<InputStream> in) {
+        try {
+            List<InputStream> out = new ArrayList<>();
+            for (InputStream stream : in) {
+                if (stream instanceof InflaterInputStream) {
+                    // DOES NOT WORK PAST JAVA 8!!!!
+                    Field zfsField = ((InflaterInputStream) stream).getClass().getDeclaredField("this$0");
+                    zfsField.setAccessible(true);
+
+                    Field modifiersField = Field.class.getDeclaredField("modifiers");
+                    modifiersField.setAccessible(true);
+                    modifiersField.setInt(zfsField, zfsField.getModifiers() & ~Modifier.FINAL);
+
+                    Object zfs = zfsField.get(stream);
+                    Method gzf = zfs.getClass().getDeclaredMethod("getZipFile");
+                    gzf.setAccessible(true);
+                    Path p = (Path) gzf.invoke(zfs);
+                    out.add(new Identifier.InputStreamMod(stream, p.toFile().lastModified()));
+                } else {
+                    out.add(stream);
+                }
+            }
+            return out;
+        } catch (Exception ex) {
+            return in;
+        }
     }
 
     public static class ClientProxy extends DataProxy {
@@ -109,7 +141,7 @@ class Data {
                 // Ignore
             }
             res.addAll(getFileResourceStreams(identifier));
-            return res;
+            return unwrapResources(res);
         }
     }
 
@@ -129,7 +161,7 @@ class Data {
 
             res.addAll(getFileResourceStreams(location));
 
-            return res;
+            return unwrapResources(res);
         }
     }
 }

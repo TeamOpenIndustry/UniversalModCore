@@ -33,6 +33,7 @@ dependencies {
 }
 
 //JAR//
+jar.finalizedBy('reobfJar')
 
 processResources {
     inputs.property "version", project.version

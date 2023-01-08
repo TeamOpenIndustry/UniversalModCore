@@ -3,6 +3,7 @@ package cam72cam.mod.resource;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -94,5 +95,14 @@ public class Identifier {
      */
     public InputStream getLastResourceStream() throws IOException {
         return Data.proxy.getLastResourceStream(this);
+    }
+
+    public static class InputStreamMod extends FilterInputStream {
+        public final long time;
+
+        protected InputStreamMod(InputStream inputStream, long modTime) {
+            super(inputStream);
+            this.time = modTime;
+        }
     }
 }
