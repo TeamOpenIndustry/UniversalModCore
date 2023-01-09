@@ -8,11 +8,8 @@ import cam72cam.mod.render.obj.OBJRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.serialization.ResourceCache;
+import cam72cam.mod.serialization.*;
 import cam72cam.mod.serialization.ResourceCache.GenericByteBuffer;
-import cam72cam.mod.serialization.SerializationException;
-import cam72cam.mod.serialization.TagCompound;
-import cam72cam.mod.serialization.TagSerializer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -94,15 +91,7 @@ public class OBJModel {
                     }
                     data.setBoolean("hasNormals", !builder.getNormals().isEmpty());
                     data.setBoolean("hasSpeculars", !builder.getSpeculars().isEmpty());
-                    data.setList("groups", builder.getGroups(), v -> {
-                        try {
-                            TagCompound tag = new TagCompound();
-                            TagSerializer.serialize(tag, v);
-                            return tag;
-                        } catch (SerializationException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    data.setList("groups", builder.getGroups(), OBJGroup::toTag);
                     try {
                         return new GenericByteBuffer(data.toBytes());
                     } catch (IOException e) {
@@ -177,15 +166,7 @@ public class OBJModel {
             this.textureHeight = -1;
         }
 
-        this.groups = meta.getList("groups", v -> {
-            try {
-                OBJGroup group = new OBJGroup();
-                TagSerializer.deserialize(v, group);
-                return group;
-            } catch (SerializationException e) {
-                throw new RuntimeException(e);
-            }
-        }).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
+        this.groups = meta.getList("groups", OBJGroup::new).stream().collect(Collectors.toMap(k -> k.name, v -> v, (x, y) -> y, LinkedHashMap::new));
 
         this.vbo = new OBJRender(this, () -> new VertexBuffer(vboData.get().floats(), hasVertexNormals));
 
