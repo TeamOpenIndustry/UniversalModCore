@@ -447,6 +447,14 @@ public class Matrix4
 		this.fromMatrix4f(temp);
 	}
 
+	public Matrix4 slerp(Matrix4 to, float percent) {
+		Matrix4 from = this;
+		// For now I am going to be lazy
+		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
+		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
+		return new Matrix4(s.slerp(e, percent).getMatrix());
+	}
+
 	@Override
 	public String toString()
 	{
