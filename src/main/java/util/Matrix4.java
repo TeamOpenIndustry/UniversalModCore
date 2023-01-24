@@ -2,9 +2,10 @@ package util;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
+import javax.vecmath.*;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -443,6 +444,14 @@ public class Matrix4
 		Matrix4f temp = toMatrix4f();
 		temp.invert();
 		this.fromMatrix4f(temp);
+	}
+
+	public Matrix4 slerp(Matrix4 to, float percent) {
+		Matrix4 from = this;
+		// For now I am going to be lazy
+		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
+		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
+		return new Matrix4(s.slerp(e, percent).getMatrix());
 	}
 
 	@Override
