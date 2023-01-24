@@ -4,6 +4,10 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.Buffers;
 import cam72cam.mod.util.Facing;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.TransformationMatrix;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.model.TransformationHelper;
 
 import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
@@ -451,6 +455,16 @@ public class Matrix4
 		Matrix4f temp = toMatrix4f();
 		temp.invert();
 		this.fromMatrix4f(temp);
+	}
+
+	public Matrix4 slerp(Matrix4 to, float percent) {
+		Matrix4 from = this;
+		// For now I am going to be lazy
+		TransformationMatrix s = new TransformationMatrix(from.toMatrix4f());
+		TransformationMatrix e = new TransformationMatrix(to.toMatrix4f());
+		Matrix4 m = new Matrix4();
+		m.fromMatrix4f(TransformationHelper.slerp(s, e, percent).getMatrix());
+		return m;
 	}
 
 	@Override
