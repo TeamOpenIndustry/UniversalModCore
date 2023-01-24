@@ -2,6 +2,7 @@ package util;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
+import net.minecraftforge.common.model.TRSRTransformation;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
@@ -445,6 +446,14 @@ public class Matrix4
 		Matrix4f temp = toMatrix4f();
 		temp.invert();
 		this.fromMatrix4f(temp);
+	}
+
+	public Matrix4 slerp(Matrix4 to, float percent) {
+		Matrix4 from = this;
+		// For now I am going to be lazy
+		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
+		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
+		return new Matrix4(s.slerp(e, percent).getMatrixVec());
 	}
 
 	@Override
