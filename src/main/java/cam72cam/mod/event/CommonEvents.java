@@ -15,6 +15,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraft.world.server.ServerWorld;
 
 import java.util.function.Consumer;
 
@@ -29,6 +30,7 @@ public class CommonEvents {
     public static final class World {
         public static final Event<Consumer<net.minecraft.world.World>> LOAD = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> UNLOAD = new Event<>();
+        public static final Event<Consumer<ServerWorld>> SAVE = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> TICK = new Event<>();
         public static final Event<Consumer<IChunk>> LOAD_CHUNK = new Event<>();
     }
@@ -68,6 +70,11 @@ public class CommonEvents {
         @SubscribeEvent
         public static void onWorldLoad(ChunkEvent.Load event) {
             World.LOAD_CHUNK.execute(x -> x.accept(event.getChunk()));
+        }
+
+        @SubscribeEvent
+        public static void onWorldLoad(WorldEvent.Save event) {
+            World.SAVE.execute(x -> x.accept((ServerWorld) event.getWorld()));
         }
 
         @SubscribeEvent
