@@ -85,6 +85,9 @@ jar {
             exclude 'META-INF', 'META-INF/**'
         }
     }
+    manifest {
+        attributes 'FMLAT': 'UniversalModCore_at.cfg'
+    }
 }
 jar.finalizedBy('reobfJar')
 

@@ -1,71 +1,37 @@
 package cam72cam.mod.sound;
 
 import cam72cam.mod.MinecraftClient;
-import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundManager;
 import net.minecraft.util.SoundCategory;
-import paulscode.sound.SoundSystem;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 /** We have our own sound manager that wraps the minecraft internal sound manager to fix some bugs/limitations */
 class ModSoundManager {
     private final SoundManager manager;
-    private Supplier<SoundSystem> soundSystem;
     private List<ISound> sounds = new ArrayList<>();
     private float lastSoundLevel;
     private final SoundCategory category = SoundCategory.AMBIENT;
-    private SoundSystem cachedSnd;
 
     ModSoundManager(SoundManager manager) {
         this.manager = manager;
-
-        initSoundSystem();
-
         lastSoundLevel = Minecraft.getMinecraft().gameSettings.getSoundLevel(category);
     }
 
     private void initSoundSystem() {
-        for (String fname : new String[]{"field_148620_e", "sndSystem"}) {
-            try {
-                Field sndSystemField = SoundManager.class.getDeclaredField(fname);
-                sndSystemField.setAccessible(true);
-                this.soundSystem = () -> {
-                    try {
-                        if (cachedSnd == null) {
-                            cachedSnd = (paulscode.sound.SoundSystem) sndSystemField.get(manager);
-                        }
-                        return cachedSnd;
-                    } catch (Exception e) {
-                        ModCore.catching(e);
-                        return null;
-                    }
-                };
-                return;
-            } catch (Exception e) {
-                ModCore.catching(e);
-            }
-        }
     }
 
     ISound createSound(Identifier oggLocation, Audio.InputTransformer data, boolean repeats, float attenuationDistance, float scale) {
-        SoundSystem sndSystem = this.soundSystem.get();
-        if (sndSystem == null) {
-            return null;
-        }
-
-        ClientSound snd = new ClientSound(this.soundSystem, oggLocation, getURLForSoundResource(oggLocation, data), lastSoundLevel, repeats, attenuationDistance, scale);
+        ClientSound snd = new ClientSound(() -> manager.sndSystem, oggLocation, getURLForSoundResource(oggLocation, data), lastSoundLevel, repeats, attenuationDistance, scale);
         this.sounds.add(snd);
 
         return snd;
@@ -148,7 +114,6 @@ class ModSoundManager {
                 sound.stop();
             }
         }
-        this.cachedSnd = null;
         for (ISound sound : this.sounds) {
             sound.reload();
         }
