@@ -61,10 +61,13 @@ public class ChunkManager {
             if (!world.isRemote) {
                 try {
                     ServerWorld server = (ServerWorld) world;
-                    for (String line : Files.readAllLines(chunkData(server))) {
-                        ChunkPos chunkpos = new ChunkPos(Long.parseLong(line));
-                        ModCore.debug("Remembered to keep chunk %s loaded", chunkpos);
-                        server.getChunkProvider().func_217228_a(UMCTICKET, chunkpos, 3, chunkpos);
+                    Path dataFile = chunkData(server);
+                    if (dataFile.toFile().exists()) {
+                        for (String line : Files.readAllLines(dataFile)) {
+                            ChunkPos chunkpos = new ChunkPos(Long.parseLong(line));
+                            ModCore.debug("Remembered to keep chunk %s loaded", chunkpos);
+                            server.getChunkProvider().func_217228_a(UMCTICKET, chunkpos, 3, chunkpos);
+                        }
                     }
                 } catch (IOException e) {
                     ModCore.catching(e);
