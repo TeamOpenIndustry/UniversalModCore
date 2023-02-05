@@ -92,12 +92,12 @@ public abstract class Particle {
                     ip.renderZ = posZ + posZ - prevPosZ + this.motionZ * partialTicks - vec3d.z;
 
                     if (renderer == null) {
-                        RenderState state = new RenderState();
+                        RenderState state = base.clone();
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, new RenderState(), partialTicks);
+                            renderer.accept(particles, base.clone(), partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }
