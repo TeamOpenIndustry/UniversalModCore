@@ -124,8 +124,15 @@ public interface ITank {
      * @return if anything was transferred
      */
     default int drain(ITank inputTank, int max, boolean simulate) {
+        if (inputTank.getContents().getAmount() <= 0) {
+            return 0;
+        }
         // Calculate max transfer into this tank
-        int maxTransfer = this.fill(inputTank.getContents(), true);
+        // Estimated
+        int maxTransfer = this.getCapacity() - this.getContents().getAmount();
+        // Simulated
+        maxTransfer = this.fill(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), true);
+        // Limited
         maxTransfer = Math.min(maxTransfer, max);
 
         if (maxTransfer == 0) {
