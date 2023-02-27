@@ -15,6 +15,9 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.FileResourcePack;
+import net.minecraft.client.resources.FolderResourcePack;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
@@ -31,6 +34,8 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -164,6 +169,39 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
+
+                List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+                String configDir = Loader.instance().getConfigDir().toString();
+                new File(configDir).mkdirs();
+
+                File folder = new File(configDir + File.separator + m.modID());
+                if (folder.exists()) {
+                    if (folder.isDirectory()) {
+                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
+                        for (File file : files) {
+                            packs.add(new FileResourcePack(file) {
+                                @Override
+                                protected InputStream getInputStreamByName(String name) throws IOException {
+                                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), file.lastModified());
+                                }
+                            });
+                        }
+
+                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
+                        for (File dir : folders) {
+                            packs.add(new FolderResourcePack(dir) {
+                                @Override
+                                protected InputStream getInputStreamByName(String name) throws IOException {
+                                    InputStream stream = super.getInputStreamByName(name);
+                                    File file = this.getFile(name);
+                                    return new Identifier.InputStreamMod(stream, file.lastModified());
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    folder.mkdirs();
+                }
             }
             super.event(event, m);
             m.clientEvent(event);
