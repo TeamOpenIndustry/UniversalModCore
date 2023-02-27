@@ -22,6 +22,7 @@ import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -165,12 +166,33 @@ public class ModCore {
         }
     }
 
+    private static IResourcePack createPack(File path) {
+        if (path.isDirectory()) {
+            return new FolderResourcePack(path) {
+                @Override
+                protected InputStream getInputStreamByName(String name) throws IOException {
+                    InputStream stream = super.getInputStreamByName(name);
+                    File file = this.getFile(name);
+                    return new Identifier.InputStreamMod(stream, file.lastModified());
+                }
+            };
+        } else {
+            return new FileResourcePack(path) {
+                @Override
+                protected InputStream getInputStreamByName(String name) throws IOException {
+                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), path.lastModified());
+                }
+            };
+        }
+    }
+
     public static class ClientProxy extends Proxy {
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
 
                 List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+
                 String configDir = Loader.instance().getConfigDir().toString();
                 new File(configDir).mkdirs();
 
@@ -179,29 +201,22 @@ public class ModCore {
                     if (folder.isDirectory()) {
                         File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
                         for (File file : files) {
-                            packs.add(new FileResourcePack(file) {
-                                @Override
-                                protected InputStream getInputStreamByName(String name) throws IOException {
-                                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), file.lastModified());
-                                }
-                            });
+                            packs.add(createPack(file));
                         }
 
                         File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
                         for (File dir : folders) {
-                            packs.add(new FolderResourcePack(dir) {
-                                @Override
-                                protected InputStream getInputStreamByName(String name) throws IOException {
-                                    InputStream stream = super.getInputStreamByName(name);
-                                    File file = this.getFile(name);
-                                    return new Identifier.InputStreamMod(stream, file.lastModified());
-                                }
-                            });
+                            packs.add(createPack(dir));
                         }
                     }
                 } else {
                     folder.mkdirs();
                 }
+
+                IResourcePack modPack = createPack(Loader.instance().activeModContainer().getSource());
+                // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+                packs.add(1, modPack);
+                packs.add(modPack);
             }
             super.event(event, m);
             m.clientEvent(event);
