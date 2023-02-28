@@ -72,7 +72,6 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
     }
 
     @Override
-    @Deprecated
     public void update() {
     }
 
@@ -120,12 +119,10 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
     }
 
     @Override
-    @Deprecated
     public void disposable() {
     }
 
     @Override
-    @Deprecated
     public boolean isDisposable() {
         return false;
     }
