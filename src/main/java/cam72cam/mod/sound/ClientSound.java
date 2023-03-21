@@ -3,30 +3,25 @@ package cam72cam.mod.sound;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.resource.Identifier;
-import io.netty.util.internal.ThreadLocalRandom;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.*;
-import net.minecraft.client.audio.ISound.AttenuationType;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import paulscode.sound.CommandObject;
-import paulscode.sound.SoundSystem;
 
-import java.net.URL;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.List;
 
-class ClientSound extends PositionedSound implements ISound, ITickableSound {
+class ClientSound extends PositionedSound implements ITickableSound, ISound {
     private final static float dopplerScale = 0.05f;
     private Vec3d position;
     private Vec3d velocity;
     private float currentPitch;
+    private List<Float> rollingPitch;
 
     private final float attenuationDistance;
     private final float scale;
     private float currentVolume;
 
-    private SoundEventAccessor accessor;
+    private final SoundEventAccessor accessor;
 
     protected ClientSound(ResourceLocation soundId, SoundCategory categoryIn, boolean repeats, float attenuationDistance, float scale) {
         super(soundId, categoryIn.category);
@@ -45,6 +40,8 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
         };
         this.accessor = new SoundEventAccessor(soundId, null); // TODO translation
         this.accessor.addSound(sound);
+
+        this.rollingPitch = new ArrayList<>();
     }
 
     @Override
@@ -56,6 +53,10 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
     public void play(Vec3d pos) {
         setPosition(pos);
         if (Minecraft.getMinecraft().getSoundHandler().sndManager.playingSounds.containsValue(this)) {
+            return;
+        }
+        if (this.isDonePlaying()) {
+            // Don't play if invalid condition
             return;
         }
 
@@ -73,11 +74,39 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
 
     @Override
     public void update() {
-    }
+        float dampenLevel = 1;
+        if (MinecraftClient.getPlayer().getRiding() != null) {
+            dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
+        }
 
-    @Override
-    public void terminate() {
-        stop();
+        this.volume = currentVolume * this.scale * dampenLevel;
+
+        if (position == null || velocity == null) {
+            pitch = currentPitch / scale;
+        } else {
+            //Doppler shift
+
+            Player player = MinecraftClient.getPlayer();
+            Vec3d ppos = player.getPosition();
+            Vec3d nextPpos = ppos.add(player.getVelocity());
+
+            Vec3d nextPos = this.position.add(velocity);
+
+            double origDist = ppos.subtract(position).length();
+            double newDist = nextPpos.subtract(nextPos).length();
+
+            float appliedPitch = currentPitch;
+            if (origDist > newDist) {
+                appliedPitch *= 1 + (origDist - newDist) * dopplerScale;
+            } else {
+                appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
+            }
+            if (rollingPitch.size() > 5) {
+                rollingPitch.remove(0);
+            }
+            rollingPitch.add(appliedPitch / scale);
+            pitch = (float)rollingPitch.stream().mapToDouble(x -> x).average().getAsDouble();
+        }
     }
 
     @Override
@@ -109,57 +138,7 @@ class ClientSound extends PositionedSound implements ISound, ITickableSound {
     }
 
     @Override
-    @Deprecated
-    public void updateBaseSoundLevel(float baseSoundMultiplier) {
-    }
-
-    @Override
-    @Deprecated
-    public void reload() {
-    }
-
-    @Override
-    public void disposable() {
-    }
-
-    @Override
-    public boolean isDisposable() {
-        return false;
-    }
-
-    @Override
     public boolean isDonePlaying() {
-        float dampenLevel = 1;
-        if (MinecraftClient.getPlayer().getRiding() != null) {
-            dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
-        }
-
-        this.volume = currentVolume * this.scale * dampenLevel;
-
-        if (position == null || velocity == null) {
-            pitch = currentPitch / scale;
-        } else {
-            //Doppler shift
-
-            Player player = MinecraftClient.getPlayer();
-            Vec3d ppos = player.getPosition();
-            Vec3d nextPpos = ppos.add(player.getVelocity());
-
-            Vec3d nextPos = this.position.add(velocity);
-
-            double origDist = ppos.subtract(position).length();
-            double newDist = nextPpos.subtract(nextPos).length();
-
-            float appliedPitch = currentPitch;
-            if (origDist > newDist) {
-                appliedPitch *= 1 + (origDist - newDist) * dopplerScale;
-            } else {
-                appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
-            }
-            pitch = appliedPitch / scale;
-        }
-
-
-        return false;
+        return position != null && MinecraftClient.getPlayer().getPosition().distanceTo(position) > attenuationDistance;
     }
 }
