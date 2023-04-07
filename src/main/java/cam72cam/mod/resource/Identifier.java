@@ -102,7 +102,7 @@ public class Identifier {
     public static class InputStreamMod extends FilterInputStream {
         public final long time;
 
-        protected InputStreamMod(InputStream inputStream, long modTime) {
+        public InputStreamMod(InputStream inputStream, long modTime) {
             super(inputStream);
             this.time = modTime;
         }

@@ -8,13 +8,19 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import net.minecraft.resources.*;
+import net.minecraft.resources.data.IMetadataSectionSerializer;
+import net.minecraft.resources.data.PackMetadataSection;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,8 +41,6 @@ import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IFutureReloadListener;
-import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -54,6 +58,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(ModCore.MODID)
@@ -198,10 +211,181 @@ public class ModCore {
                 ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
+
         @Override
-		public void event(ModEvent event, Mod m) {
+        public void event(ModEvent event, Mod m) {
+            if (event == ModEvent.CONSTRUCT) {
+                Config.getMaxTextureSize(); //populate
+
+                List<UMCResourcePack> packs = new ArrayList<>();
+                UMCResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
+                packs.add(modPack);
+                String configDir = FMLPaths.CONFIGDIR.get().toString();
+                new File(configDir).mkdirs();
+
+                File folder = new File(configDir + File.separator + m.modID());
+                if (folder.exists()) {
+                    if (folder.isDirectory()) {
+                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
+                        for (File file : files) {
+                            packs.add(createPack(file));
+                        }
+
+                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
+                        for (File dir : folders) {
+                            packs.add(createPack(dir));
+                        }
+                    }
+                } else {
+                    folder.mkdirs();
+                }
+                packs.add(modPack);
+
+                // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+                Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
+                    @Override
+                    public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
+
+                        final T packInfo = ResourcePackInfo.createResourcePack("umc_inject", true, () -> new CombinedResourcePack("umc_inject", "UMC Resources",
+                                new PackMetadataSection(new StringTextComponent("Universal Mod Core"), 4), packs) , packInfoFactory, ResourcePackInfo.Priority.TOP);
+                        nameToPackMap.put("umc_inject", packInfo);
+                    }
+                });
+            }
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        private interface UMCResourcePack extends IResourcePack {
+            boolean resourceExists(String resourcePath);
+
+            InputStream getInputStream(String resourcePath) throws IOException;
+        }
+
+        private static class UMCFolderPack extends FolderPack implements UMCResourcePack {
+            public UMCFolderPack(File folder) {
+                super(folder);
+            }
+
+            @Override
+            public InputStream getInputStream(String name) throws IOException {
+                InputStream stream = super.getInputStream(name);
+                File file = this.getFile(name);
+                return new Identifier.InputStreamMod(stream, file.lastModified());
+            }
+
+            @Override
+            public boolean resourceExists(String resourcePath) {
+                return super.resourceExists(resourcePath);
+            }
+        }
+
+        private static class UMCFilePack extends FilePack implements UMCResourcePack {
+            private final File path;
+
+            public UMCFilePack(File fileIn) {
+                super(fileIn);
+                this.path = fileIn;
+            }
+
+            @Override
+            public InputStream getInputStream(String name) throws IOException {
+                return new Identifier.InputStreamMod(super.getInputStream(name), path.lastModified());
+            }
+        }
+
+
+        private static UMCResourcePack createPack(File path) {
+            if (path.isDirectory()) {
+                return new UMCFolderPack(path);
+            } else {
+                return new UMCFilePack(path);
+            }
+        }
+
+        /**
+         * Modified from Forge's DelegatingResourcePack
+         */
+        public static class CombinedResourcePack extends ResourcePack {
+            private final List<UMCResourcePack> packs;
+            private final String name;
+            private final PackMetadataSection packInfo;
+
+            public CombinedResourcePack(String id, String name, PackMetadataSection packInfo, List<UMCResourcePack> packs) {
+                super(new File(id));
+                this.name = name;
+                this.packInfo = packInfo;
+                this.packs = packs;
+            }
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <T> T getMetadata(IMetadataSectionSerializer<T> deserializer) throws IOException {
+                if (deserializer.getSectionName().equals("pack")) {
+                    return (T) packInfo;
+                }
+                return null;
+            }
+
+            @Override
+            public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
+                synchronized (packs) {
+                    return packs.stream()
+                            .flatMap(r -> r.getAllResourceLocations(type, pathIn, maxDepth, filter).stream())
+                            .collect(Collectors.toList());
+                }
+            }
+
+            @Override
+            public Set<String> getResourceNamespaces(ResourcePackType type) {
+                synchronized (packs) {
+                    return packs.stream()
+                            .flatMap(r -> r.getResourceNamespaces(type).stream())
+                            .collect(Collectors.toSet());
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                synchronized (packs) {
+                    for (IResourcePack pack : packs) {
+                        pack.close();
+                    }
+                }
+            }
+
+            @Override
+            protected InputStream getInputStream(String resourcePath) throws IOException {
+                if (!resourcePath.equals("pack.png")) // Mods shouldn't be able to mess with the pack icon
+                {
+                    synchronized (packs) {
+                        for (UMCResourcePack pack : packs) {
+                            if (pack.resourceExists(resourcePath)) {
+                                return pack.getInputStream(resourcePath);
+                            }
+                        }
+                    }
+                }
+                throw new ResourcePackFileNotFoundException(this.file, resourcePath);
+            }
+
+            @Override
+            protected boolean resourceExists(String resourcePath) {
+                synchronized (packs) {
+                    for (UMCResourcePack pack : packs) {
+                        if (pack.resourceExists(resourcePath)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
         }
     }
 
