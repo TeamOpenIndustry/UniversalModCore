@@ -177,13 +177,13 @@ public class ResourceCache<T> {
 
         if (intermediary != null) {
             writeBuffer(file, converter.apply(intermediary).buffer);
-        } else if (!file.exists()) {
+        } else if (!file.exists() || file.length() < Integer.BYTES) {
             // This sometimes happens on windows or after a failed launch attempt.
             regenerateBuffer(file, converter);
         }
 
         return () -> {
-            if (!file.exists()) {
+            if (!file.exists() || file.length() < Integer.BYTES) {
                 // This sometimes happens on windows or after a failed launch attempt.
                 try {
                     return regenerateBuffer(file, converter);

@@ -3,7 +3,7 @@ buildscript {
         maven { url = "https://maven.minecraftforge.net/" }
     }
 	dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
     }
 }
 
@@ -50,7 +50,7 @@ minecraft {
     mappings channel: 'snapshot', version: '20201108-1.15.1'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    accessTransformer = file('src/main/resources/META-INF/UniversalModCore_at.cfg')
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
@@ -180,3 +180,11 @@ publishing {
     }
 }
 
+task ('showBuildInfo') {
+    doLast {
+        System.out.println("Build Uploaded to Maven at: ")
+        System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${version}/UniversalModCore-${version}.jar")
+    }
+}
+
+publish.finalizedBy showBuildInfo

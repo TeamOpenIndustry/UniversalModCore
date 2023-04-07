@@ -182,6 +182,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see #load */
     @Override
     public final void readSpawnData(PacketBuffer additionalData) {
+        if (cam72cam.mod.world.World.get(world) == null) {
+            // This can happen during a sudden disconnect...
+            return;
+        }
         TagCompound data = new TagCompound(additionalData.readCompoundTag());
         load(data);
         try {
