@@ -32,7 +32,6 @@ public class ClientEvents {
         Mouse.registerClientEvents();
         Player.registerClientEvents();
         GlobalRender.registerClientEvents();
-        Audio.registerClientCallbacks();
         World.registerClientEvnets();
 
         MODEL_CREATE.execute(Runnable::run);

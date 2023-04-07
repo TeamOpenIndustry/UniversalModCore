@@ -10,12 +10,6 @@ public interface ISound {
     /** Stop playing the sound */
     void stop();
 
-    /** Call after updating sound properties (setters) */
-    void update();
-
-    /** Completely remove this sound */
-    void terminate();
-
     void setPosition(Vec3d pos);
 
     void setPitch(float f);
@@ -26,15 +20,4 @@ public interface ISound {
     void setVolume(float f);
 
     boolean isPlaying();
-
-    /** Used internally to hook into minecraft sound settings (Ambient) */
-    void updateBaseSoundLevel(float baseSoundMultiplier);
-
-    /** Used internally to handle snd system reloads */
-    void reload();
-
-    /** Mark ready for cleanup */
-    void disposable();
-
-    boolean isDisposable();
 }
