@@ -86,7 +86,7 @@ public class FluidTank implements ITank {
     @Override
     public FluidStack drain(FluidStack fluidStack, boolean simulate) {
         if (!allows(fluidStack.getFluid())) {
-            return null;
+            return new FluidStack(null, 0);
         }
         return new FluidStack(internal.drain(fluidStack.internal, !simulate));
     }
