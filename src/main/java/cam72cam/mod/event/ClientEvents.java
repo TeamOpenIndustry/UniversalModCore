@@ -11,7 +11,6 @@ import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.sound.Audio;
 import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -40,7 +39,6 @@ public class ClientEvents {
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
-        Audio.registerClientCallbacks();
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
         CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
