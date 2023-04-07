@@ -3,105 +3,86 @@ package cam72cam.mod.sound;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.resource.Identifier;
-import io.netty.util.internal.ThreadLocalRandom;
-import net.minecraft.client.audio.ISound.AttenuationType;
-import net.minecraft.util.math.MathHelper;
-import paulscode.sound.CommandObject;
-import paulscode.sound.SoundSystem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.*;
+import net.minecraft.util.ResourceLocation;
 
-import java.net.URL;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.List;
 
-class ClientSound implements ISound {
+class ClientSound extends PositionedSound implements ITickableSound, ISound {
     private final static float dopplerScale = 0.05f;
-    private String id;
-    private final Supplier<SoundSystem> sndSystem;
-    private final URL resource;
-    private final boolean repeats;
-    private final Identifier oggLocation;
-    private final float attenuationDistance;
-    private Vec3d currentPos;
+    private Vec3d position;
     private Vec3d velocity;
-    private float currentPitch = 1;
-    private float currentVolume = 1;
-    private float baseSoundMultiplier;
-    private final float scale;
-    private boolean disposable = false;
-    private int lastUsed = 0;
+    private float currentPitch;
+    private List<Float> rollingPitch;
 
-    ClientSound(Supplier<SoundSystem> soundSystem, Identifier oggLocation, URL resource, float baseSoundMultiplier, boolean repeats, float attenuationDistance, float scale) {
-        this.sndSystem = soundSystem;
-        this.resource = resource;
-        this.baseSoundMultiplier = baseSoundMultiplier;
-        this.repeats = repeats;
-        this.oggLocation = oggLocation;
+    private final float attenuationDistance;
+    private final float scale;
+    private float currentVolume;
+
+    private final SoundEventAccessor accessor;
+
+    protected ClientSound(ResourceLocation soundId, SoundCategory categoryIn, boolean repeats, float attenuationDistance, float scale) {
+        super(soundId, categoryIn.category);
+        this.volume = 1;
+        this.pitch = 1;
+        this.repeat = repeats;
+
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
+
+        this.sound = new Sound(getSoundLocation().toString(), 1, 1,  1, Sound.Type.FILE, false) {
+            @Override
+            public ResourceLocation getSoundAsOggLocation() {
+                return soundId;
+            }
+        };
+        this.accessor = new SoundEventAccessor(soundId, null); // TODO translation
+        this.accessor.addSound(sound);
+
+        this.rollingPitch = new ArrayList<>();
     }
 
-    void init() {
-        if (oggLocation == null) {
-            return;
-        }
-        id = MathHelper.getRandomUUID(ThreadLocalRandom.current()).toString();
-        sndSystem.get().newSource(false, id, resource, oggLocation.toString(), repeats, 0f, 0f, 0f, AttenuationType.LINEAR.getTypeInt(), attenuationDistance);
+    @Override
+    public SoundEventAccessor createAccessor(SoundHandler handler) {
+        return this.accessor;
     }
 
     @Override
     public void play(Vec3d pos) {
-        stop();
-
-        if (id == null) {
-            init();
+        setPosition(pos);
+        if (Minecraft.getMinecraft().getSoundHandler().sndManager.playingSounds.containsValue(this)) {
+            return;
+        }
+        if (this.isDonePlaying()) {
+            // Don't play if invalid condition
+            return;
         }
 
-        this.setPosition(pos);
-        update();
-
-        if (repeats || currentPos == null || !MinecraftClient.isReady()) {
-            sndSystem.get().play(id);
-        } else if (MinecraftClient.getPlayer().getPosition().distanceTo(currentPos) < this.attenuationDistance * 1.1) {
-            sndSystem.get().play(id);
-        }
+        float vol = this.volume;
+        // Hack in attenuation distance
+        this.volume = attenuationDistance / 16F;
+        Minecraft.getMinecraft().getSoundHandler().playSound(this);
+        this.volume = vol;
     }
 
     @Override
     public void stop() {
-        if (isPlaying()) {
-            sndSystem.get().stop(id);
-        }
-    }
-
-    @Override
-    public void terminate() {
-        if (id == null) {
-            return;
-        }
-        stop();
-        sndSystem.get().removeSource(id);
-        id = null;
+        Minecraft.getMinecraft().getSoundHandler().stopSound(this);
     }
 
     @Override
     public void update() {
-        if (id == null) {
-            init();
+        float dampenLevel = 1;
+        if (MinecraftClient.getPlayer().getRiding() != null) {
+            dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
         }
 
-        MinecraftClient.startProfiler("irSound");
-        SoundSystem snd = sndSystem.get();
-        //(float)Math.sqrt(Math.sqrt(scale()))
+        this.volume = currentVolume * this.scale * dampenLevel;
 
-        float vol = currentVolume * baseSoundMultiplier * scale;
-        snd.CommandQueue(new CommandObject(CommandObject.SET_VOLUME, id, vol));
-
-        if (currentPos != null) {
-            snd.CommandQueue(new CommandObject(CommandObject.SET_POSITION, id, (float) currentPos.x, (float) currentPos.y, (float) currentPos.z));
-        }
-
-        if (currentPos == null || velocity == null) {
-            snd.CommandQueue(new CommandObject(CommandObject.SET_PITCH, id, currentPitch / scale));
+        if (position == null || velocity == null) {
+            pitch = currentPitch / scale;
         } else {
             //Doppler shift
 
@@ -109,9 +90,9 @@ class ClientSound implements ISound {
             Vec3d ppos = player.getPosition();
             Vec3d nextPpos = ppos.add(player.getVelocity());
 
-            Vec3d nextPos = this.currentPos.add(velocity);
+            Vec3d nextPos = this.position.add(velocity);
 
-            double origDist = ppos.subtract(currentPos).length();
+            double origDist = ppos.subtract(position).length();
             double newDist = nextPpos.subtract(nextPos).length();
 
             float appliedPitch = currentPitch;
@@ -120,19 +101,20 @@ class ClientSound implements ISound {
             } else {
                 appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
             }
-
-            sndSystem.get().setPitch(id, appliedPitch / scale);
-            snd.CommandQueue(new CommandObject(CommandObject.SET_PITCH, id, appliedPitch / scale));
+            if (rollingPitch.size() > 5) {
+                rollingPitch.remove(0);
+            }
+            rollingPitch.add(appliedPitch / scale);
+            pitch = (float)rollingPitch.stream().mapToDouble(x -> x).average().getAsDouble();
         }
-
-        MinecraftClient.endProfiler();
-
-        snd.interruptCommandThread();
     }
 
     @Override
     public void setPosition(Vec3d pos) {
-        this.currentPos = pos;
+        this.position = pos;
+        this.xPosF = (float) pos.x;
+        this.yPosF = (float) pos.y;
+        this.zPosF = (float) pos.z;
     }
 
     @Override
@@ -151,44 +133,12 @@ class ClientSound implements ISound {
     }
 
     @Override
-    public void updateBaseSoundLevel(float baseSoundMultiplier) {
-        this.baseSoundMultiplier = baseSoundMultiplier;
-    }
-
-    @Override
     public boolean isPlaying() {
-        if (id == null) {
-            return false;
-        }
-
-        return sndSystem.get().playing(id);
+        return Minecraft.getMinecraft().getSoundHandler().isSoundPlaying(this);
     }
 
     @Override
-    public void reload() {
-        // Force re-create sound
-        id = null;
-    }
-
-    @Override
-    public void disposable() {
-        disposable = true;
-    }
-
-    void tick() {
-        lastUsed -= 1;
-
-        if (isPlaying()) {
-            lastUsed = 20;
-        }
-
-        if (lastUsed == 0) {
-            terminate();
-        }
-    }
-
-    @Override
-    public boolean isDisposable() {
-        return disposable;
+    public boolean isDonePlaying() {
+        return position != null && MinecraftClient.getPlayer().getPosition().distanceTo(position) > attenuationDistance;
     }
 }

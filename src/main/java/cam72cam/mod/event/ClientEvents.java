@@ -32,7 +32,6 @@ public class ClientEvents {
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
-        Audio.registerClientCallbacks();
         World.registerClientEvnets();
 
         VBO.registerClientEvents();
