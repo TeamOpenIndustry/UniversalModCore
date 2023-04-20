@@ -295,6 +295,13 @@ public class World {
 
     /** Get a block entity at the position, assuming type */
     public <T extends BlockEntity> T getBlockEntity(Vec3i pos, Class<T> cls) {
+        if (Thread.currentThread().getName().contains("ImmersiveRailroading") && !this.isBlockLoaded(pos)) {
+            try {
+                throw new Exception("Invalid chunk access off of main thread!");
+            } catch (Exception e) {
+                ModCore.catching(e);
+            }
+        }
         TileEntity te = getTileEntity(pos, TileEntity.class);
         if (te == null) {
             return null;
