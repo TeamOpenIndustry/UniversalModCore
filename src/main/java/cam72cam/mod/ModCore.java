@@ -214,7 +214,8 @@ public class ModCore {
 
         @Override
         public void event(ModEvent event, Mod m) {
-            if (event == ModEvent.CONSTRUCT) {
+            // Instance can be null during data gen
+            if (event == ModEvent.CONSTRUCT && Minecraft.getInstance() != null) {
                 Config.getMaxTextureSize(); //populate
 
                 List<UMCResourcePack> packs = new ArrayList<>();
@@ -403,8 +404,6 @@ public class ModCore {
 
 
     public static class Internal extends Mod {
-        public int skipN = 0;
-
         @Override
         public String modID() {
             return "universalmodcoreinternal";
@@ -449,22 +448,18 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    // Instance can be null during data gen
+                    if (Minecraft.getInstance() != null) {
+                        ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
+                                stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                    }
                 case SETUP:
                     try {
                         Minecraft.getInstance().populateSearchTreeManager();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
-                    /*
-                    ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((SynchronousResourceReloadListener)resourceManager -> {
-                        if (skipN > 0) {
-                            skipN--;
-                            return;
-                        }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                        ClientEvents.fireReload();
-                    });
-                    */
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
                     break;
@@ -475,17 +470,6 @@ public class ModCore {
         @Override
         public void serverEvent(ModEvent event) {
         }
-    }
-
-    static int i = 1;
-    public static void testReload() {
-        if (i % 4 == 0) { // 4 sheets, we fire on the last one
-            ModCore.isInReload = true;
-            proxy.event(ModEvent.RELOAD);
-            ClientEvents.fireReload();
-            ModCore.isInReload = false;
-        }
-        i++;
     }
 
     public static void genData(String MODID, GatherDataEvent event) {

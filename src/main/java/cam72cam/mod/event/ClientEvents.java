@@ -201,11 +201,6 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent.Post event) {
-            ModCore.testReload();
-        }
-
-        @SubscribeEvent
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             REGISTER_ENTITY.execute(Runnable::run);
         }
