@@ -1,10 +1,7 @@
 package cam72cam.mod;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,9 +55,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -218,6 +215,7 @@ public class ModCore {
                 Config.getMaxTextureSize(); //populate
 
                 List<UMCResourcePack> packs = new ArrayList<>();
+                packs.add(new TranslationResourcePack());
                 UMCResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
                 packs.add(modPack);
                 String configDir = FMLPaths.CONFIGDIR.get().toString();
@@ -261,6 +259,84 @@ public class ModCore {
             boolean resourceExists(String resourcePath);
 
             InputStream getInputStream(String resourcePath) throws IOException;
+        }
+
+        private static class TranslationResourcePack extends ResourcePack implements UMCResourcePack {
+            public TranslationResourcePack() {
+                super(null);
+            }
+
+            private ResourceLocation toLang(String path) {
+                // assets/mod/location
+                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
+                String[] parts = path.split("/");
+                String type = parts[0];
+                String namespace = parts[1];
+                String prefix = String.format("%s/%s/", type, namespace);
+                path = path.replace(prefix, "").replace(".json", ".lang");
+                String lang = path.split("_")[1].replace(".lang", "");
+                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
+                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
+                    @Override
+                    public String getPath() {
+                        // Very evil...
+                        return path;
+                    }
+                };
+            }
+
+            @Override
+            public boolean resourceExists(String resourcePath) {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    ResourceLocation lang = toLang(resourcePath);
+                    return Minecraft.getInstance().getResourceManager().hasResource(lang);
+                }
+                return false;
+            }
+
+            @Override
+            public InputStream getInputStream(String resourcePath) throws IOException {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    // Magical Translations!
+                    ResourceLocation lang = toLang(resourcePath);
+                    if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Minecraft.getInstance().getResourceManager().getResource(lang).getInputStream()))) {
+                            List<String> translations = new ArrayList<>();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    String key = splits[0];
+                                    String value = splits[1];
+
+                                    translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                                }
+                            }
+                            String output = "{" + String.join(",", translations) + "}";
+                            return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public Set<String> getResourceNamespaces(ResourcePackType type) {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
         }
 
         private static class UMCFolderPack extends FolderPack implements UMCResourcePack {
