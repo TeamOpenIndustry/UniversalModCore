@@ -2,7 +2,6 @@ package cam72cam.mod;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -55,11 +54,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -331,7 +327,7 @@ public class ModCore {
 
             @Override
             public Set<String> getResourceNamespaces(ResourcePackType type) {
-                return Collections.emptySet();
+                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
             }
 
             @Override
@@ -549,41 +545,6 @@ public class ModCore {
     }
 
     public static void genData(String MODID, GatherDataEvent event) {
-        // src/main/resources/assets/immersiverailroading/
-        Path langPath = Paths.get(
-                event.getGenerator().getOutputFolder().getParent().getParent().toString(),
-                "main", "resources", "assets", MODID, "lang");
-        for (File path : langPath.toFile().listFiles()) {
-            if (!path.getPath().endsWith(".lang")) {
-                continue;
-            }
-
-            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase(Locale.ROOT).replace(".lang", ".json"));
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
-                List<String> translations = new ArrayList<>();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] splits = line.split("=", 2);
-                    if (splits.length == 2) {
-                        String key = splits[0];
-                        String value = splits[1];
-
-                        translations.add(String.format("\"%s\": \"%s\"", key, value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                    }
-                }
-                String output = "{" + String.join(",", translations) + "}";
-                System.out.println(outPath);
-                System.out.println(output);
-                Files.write(outPath, output.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
         event.getGenerator().addProvider(new Recipes(event.getGenerator()));
         Fuzzy.register(event.getGenerator());
