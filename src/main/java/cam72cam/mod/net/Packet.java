@@ -161,6 +161,15 @@ public abstract class Packet {
                 TagSerializer.deserialize(message.packet.data, message.packet, world);
             } catch (SerializationException e) {
                 ModCore.catching(e);
+                return;
+            }
+            if (message.packet.getPlayer() == null) {
+                try {
+                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                } catch (Exception e) {
+                    ModCore.catching(e);
+                    return;
+                }
             }
             message.packet.handle();
         }
