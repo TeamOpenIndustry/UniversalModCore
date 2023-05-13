@@ -30,6 +30,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.minecraft.client.resources.data.IMetadataSection;
+import net.minecraft.client.resources.data.IMetadataSerializer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.client.resources.FileResourcePack;
@@ -41,14 +44,13 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /** UMC Mod, do not touch... */
 @cpw.mods.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.7.10,1.8)")
@@ -204,9 +206,55 @@ public class ModCore {
                 // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
                 packs.add(1, modPack);
                 packs.add(modPack);
+                packs.add(new TranslationPack());
             }
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        private static class TranslationPack implements IResourcePack {
+            private ResourceLocation langLoc(ResourceLocation loc) {
+                return new ResourceLocation(loc.getResourceDomain(), loc.getResourcePath().toLowerCase(Locale.ROOT));
+            }
+
+            @Override
+            public InputStream getInputStream(ResourceLocation p_110590_1_) throws IOException {
+                return Minecraft.getMinecraft().getResourceManager().getResource(langLoc(p_110590_1_)).getInputStream();
+            }
+
+            @Override
+            public boolean resourceExists(ResourceLocation p_110589_1_) {
+                if (!p_110589_1_.getResourcePath().endsWith(".lang") || p_110589_1_.getResourcePath().toLowerCase(Locale.ROOT).equals(p_110589_1_.getResourcePath())) {
+                    // Not lang or not uppercase
+                    return false;
+                }
+                try {
+                     Minecraft.getMinecraft().getResourceManager().getResource(langLoc(p_110589_1_)).getInputStream().close();
+                     return true;
+                } catch (IOException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            public Set getResourceDomains() {
+                return Minecraft.getMinecraft().getResourceManager().getResourceDomains();
+            }
+
+            @Override
+            public IMetadataSection getPackMetadata(IMetadataSerializer p_135058_1_, String p_135058_2_) throws IOException {
+                return null;
+            }
+
+            @Override
+            public BufferedImage getPackImage() throws IOException {
+                return null;
+            }
+
+            @Override
+            public String getPackName() {
+                return "Backported Translations";
+            }
         }
 
         @SideOnly(Side.CLIENT)
