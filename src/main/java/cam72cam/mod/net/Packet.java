@@ -17,8 +17,6 @@ import cam72cam.mod.world.World;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -49,6 +47,15 @@ public abstract class Packet {
                     TagSerializer.deserialize(msg.packet.data, msg.packet, world);
                 } catch (SerializationException e) {
                     ModCore.catching(e);
+                    return;
+                }
+                if (msg.packet.getPlayer() == null) {
+                    try {
+                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                    } catch (Exception e) {
+                        ModCore.catching(e);
+                        return;
+                    }
                 }
                 msg.packet.handle();
             });

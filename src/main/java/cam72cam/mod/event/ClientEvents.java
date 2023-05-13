@@ -11,7 +11,6 @@ import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
-import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -25,7 +24,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.opengl.GL11;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -212,11 +210,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent.Post event) {
-            ModCore.testReload();
         }
 
         @SubscribeEvent(priority = EventPriority.LOW)
