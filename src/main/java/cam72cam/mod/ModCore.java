@@ -1,11 +1,7 @@
 package cam72cam.mod;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -60,9 +56,6 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -219,10 +212,12 @@ public class ModCore {
 
         @Override
         public void event(ModEvent event, Mod m) {
-            if (event == ModEvent.CONSTRUCT) {
+            // Instance can be null during data gen
+            if (event == ModEvent.CONSTRUCT && Minecraft.getInstance() != null) {
                 Config.getMaxTextureSize(); //populate
 
                 List<UMCResourcePack> packs = new ArrayList<>();
+                packs.add(new TranslationResourcePack());
                 UMCResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
                 packs.add(modPack);
                 String configDir = FMLPaths.CONFIGDIR.get().toString();
@@ -266,6 +261,84 @@ public class ModCore {
             boolean resourceExists(String resourcePath);
 
             InputStream getInputStream(String resourcePath) throws IOException;
+        }
+
+        private static class TranslationResourcePack extends ResourcePack implements UMCResourcePack {
+            public TranslationResourcePack() {
+                super(null);
+            }
+
+            private ResourceLocation toLang(String path) {
+                // assets/mod/location
+                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
+                String[] parts = path.split("/");
+                String type = parts[0];
+                String namespace = parts[1];
+                String prefix = String.format("%s/%s/", type, namespace);
+                path = path.replace(prefix, "").replace(".json", ".lang");
+                String lang = path.split("_")[1].replace(".lang", "");
+                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
+                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
+                    @Override
+                    public String getPath() {
+                        // Very evil...
+                        return path;
+                    }
+                };
+            }
+
+            @Override
+            public boolean resourceExists(String resourcePath) {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    ResourceLocation lang = toLang(resourcePath);
+                    return Minecraft.getInstance().getResourceManager().hasResource(lang);
+                }
+                return false;
+            }
+
+            @Override
+            public InputStream getInputStream(String resourcePath) throws IOException {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    // Magical Translations!
+                    ResourceLocation lang = toLang(resourcePath);
+                    if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Minecraft.getInstance().getResourceManager().getResource(lang).getInputStream()))) {
+                            List<String> translations = new ArrayList<>();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    String key = splits[0];
+                                    String value = splits[1];
+
+                                    translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                                }
+                            }
+                            String output = "{" + String.join(",", translations) + "}";
+                            return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String namespaceIn, String pathIn, int maxDepthIn, Predicate<String> filterIn) {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public Set<String> getResourceNamespaces(ResourcePackType type) {
+                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
         }
 
         private static class UMCFolderPack extends FolderPack implements UMCResourcePack {
@@ -408,8 +481,6 @@ public class ModCore {
 
 
     public static class Internal extends Mod {
-        public int skipN = 0;
-
         @Override
         public String modID() {
             return "universalmodcoreinternal";
@@ -454,22 +525,18 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    // Instance can be null during data gen
+                    if (Minecraft.getInstance() != null) {
+                        ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
+                                stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                    }
                 case SETUP:
                     try {
                         Minecraft.getInstance().populateSearchTreeManager();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
-                    /*
-                    ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((SynchronousResourceReloadListener)resourceManager -> {
-                        if (skipN > 0) {
-                            skipN--;
-                            return;
-                        }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                        ClientEvents.fireReload();
-                    });
-                    */
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
                     break;
@@ -482,53 +549,7 @@ public class ModCore {
         }
     }
 
-    static int i = 1;
-    public static void testReload() {
-        if (i % 10 == 0) { // 4 sheets, we fire on the last one
-            ModCore.isInReload = true;
-            proxy.event(ModEvent.RELOAD);
-            ClientEvents.fireReload();
-            ModCore.isInReload = false;
-        }
-        i++;
-    }
-
     public static void genData(String MODID, GatherDataEvent event) {
-        // src/main/resources/assets/immersiverailroading/
-        Path langPath = Paths.get(
-                event.getGenerator().getOutputFolder().getParent().getParent().toString(),
-                "main", "resources", "assets", MODID, "lang");
-        for (File path : langPath.toFile().listFiles()) {
-            if (!path.getPath().endsWith(".lang")) {
-                continue;
-            }
-
-            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase(Locale.ROOT).replace(".lang", ".json"));
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
-                List<String> translations = new ArrayList<>();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] splits = line.split("=", 2);
-                    if (splits.length == 2) {
-                        String key = splits[0];
-                        String value = splits[1];
-
-                        translations.add(String.format("\"%s\": \"%s\"", key, value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                    }
-                }
-                String output = "{" + String.join(",", translations) + "}";
-                System.out.println(outPath);
-                System.out.println(output);
-                Files.write(outPath, output.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
         event.getGenerator().addProvider(new Recipes(event.getGenerator()));
         Fuzzy.register(event.getGenerator());

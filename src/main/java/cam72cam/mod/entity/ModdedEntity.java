@@ -54,6 +54,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     Pair<String, TagCompound> refusedToJoin = null;
 
+    private final List<Runnable> deferredTasks = new ArrayList<>();
+
     /** Standard forge constructor */
     public ModdedEntity(EntityType type, World world, Supplier<CustomEntity> ctr) {
         super(type, world);
@@ -224,6 +226,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
         }
 
+        deferredTasks.forEach(Runnable::run);
+        deferredTasks.clear();
+
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(getPosX(), getPosY(), getPosZ()));
@@ -305,10 +310,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getUniqueID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
-            entity.startRiding(seat);
             //updateSeat(seat); Don't do this here, can cause StackOverflow
             world.addEntity(seat);
-            new PassengerPositionsPacket(this).sendToObserving(self);
+            deferredTasks.add(() -> {
+                new PassengerPositionsPacket(this).sendToObserving(self);
+                entity.startRiding(seat);
+            });
         }
     }
 

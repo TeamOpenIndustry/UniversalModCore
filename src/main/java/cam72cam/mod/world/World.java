@@ -212,6 +212,10 @@ public class World {
      * Wiring from WorldEventListener
      */
     void onEntityRemoved(net.minecraft.entity.Entity entity) {
+        if(entity == null) {
+            ModCore.warn("Somehow removed a null entity?");
+            return;
+        }
         for (List<Entity> value : entitiesByClass.values()) {
             value.removeIf(inner -> inner.getUUID().equals(entity.getUniqueID()));
         }
