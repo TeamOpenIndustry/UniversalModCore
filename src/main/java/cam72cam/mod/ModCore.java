@@ -230,9 +230,9 @@ public class ModCore {
             if (event == ModEvent.CONSTRUCT && Minecraft.getInstance() != null) {
                 Config.getMaxTextureSize(); //populate
 
-                List<UMCResourcePack> packs = new ArrayList<>();
+                List<ResourcePack> packs = new ArrayList<>();
                 packs.add(new TranslationResourcePack());
-                UMCResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
+                ResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
                 packs.add(modPack);
                 String configDir = FMLPaths.CONFIGDIR.get().toString();
                 new File(configDir).mkdirs();
@@ -269,14 +269,7 @@ public class ModCore {
             m.clientEvent(event);
         }
 
-        @OnlyIn(Dist.CLIENT)
-        private interface UMCResourcePack extends IResourcePack {
-            boolean hasResource(String resourcePath);
-
-            InputStream getResource(String resourcePath) throws IOException;
-        }
-
-        private static class TranslationResourcePack extends ResourcePack implements UMCResourcePack {
+        private static class TranslationResourcePack extends ResourcePack  {
             public TranslationResourcePack() {
                 super(null);
             }
@@ -354,7 +347,7 @@ public class ModCore {
             }
         }
 
-        private static class UMCFolderPack extends FolderPack implements UMCResourcePack {
+        private static class UMCFolderPack extends FolderPack  {
             public UMCFolderPack(File folder) {
                 super(folder);
             }
@@ -372,7 +365,7 @@ public class ModCore {
             }
         }
 
-        private static class UMCFilePack extends FilePack implements UMCResourcePack {
+        private static class UMCFilePack extends FilePack  {
             private final File path;
 
             public UMCFilePack(File fileIn) {
@@ -387,7 +380,7 @@ public class ModCore {
         }
 
 
-        private static UMCResourcePack createPack(File path) {
+        private static ResourcePack createPack(File path) {
             if (path.isDirectory()) {
                 return new UMCFolderPack(path);
             } else {
@@ -399,11 +392,11 @@ public class ModCore {
          * Modified from Forge's DelegatingResourcePack
          */
         public static class CombinedResourcePack extends ResourcePack {
-            private final List<UMCResourcePack> packs;
+            private final List<ResourcePack> packs;
             private final String name;
             private final PackMetadataSection packInfo;
 
-            public CombinedResourcePack(String id, String name, PackMetadataSection packInfo, List<UMCResourcePack> packs) {
+            public CombinedResourcePack(String id, String name, PackMetadataSection packInfo, List<ResourcePack> packs) {
                 super(new File(id));
                 this.name = name;
                 this.packInfo = packInfo;
@@ -452,11 +445,11 @@ public class ModCore {
             }
 
             @Override
-            protected InputStream getResource(String resourcePath) throws IOException {
+            public InputStream getResource(String resourcePath) throws IOException {
                 if (!resourcePath.equals("pack.png")) // Mods shouldn't be able to mess with the pack icon
                 {
                     synchronized (packs) {
-                        for (UMCResourcePack pack : packs) {
+                        for (ResourcePack pack : packs) {
                             if (pack.hasResource(resourcePath)) {
                                 return pack.getResource(resourcePath);
                             }
@@ -467,9 +460,9 @@ public class ModCore {
             }
 
             @Override
-            protected boolean hasResource(String resourcePath) {
+            public boolean hasResource(String resourcePath) {
                 synchronized (packs) {
-                    for (UMCResourcePack pack : packs) {
+                    for (ResourcePack pack : packs) {
                         if (pack.hasResource(resourcePath)) {
                             return true;
                         }
