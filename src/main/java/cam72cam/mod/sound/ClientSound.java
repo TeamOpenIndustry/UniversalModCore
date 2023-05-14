@@ -34,7 +34,7 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
 
         this.sound = new Sound(getLocation().toString(), 1, 1,  1, Sound.Type.FILE, false, false, (int) attenuationDistance) {
             @Override
-            public ResourceLocation getLocation() {
+            public ResourceLocation getPath() {
                 return soundId;
             }
         };
