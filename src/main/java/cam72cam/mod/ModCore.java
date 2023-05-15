@@ -8,9 +8,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
-import net.minecraft.resources.data.PackMetadataSection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.ModList;
@@ -51,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -246,10 +247,19 @@ public class ModCore {
             Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
                 @Override
                 public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
-
-                    final T packInfo = ResourcePackInfo.createResourcePack("umc_inject", true, () -> new CombinedResourcePack("umc_inject", "UMC Resources",
-                            new PackMetadataSection(new StringTextComponent("Universal Mod Core"), 4), packs) , packInfoFactory, ResourcePackInfo.Priority.TOP);
-                    nameToPackMap.put("umc_inject", packInfo);
+                    for (ResourcePack pack : packs) {
+                        //noinspection unchecked
+                        nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
+                                true,
+                                () -> pack,
+                                new StringTextComponent(pack.getName()),
+                                new StringTextComponent("UMC Resource"),
+                                PackCompatibility.COMPATIBLE,
+                                ResourcePackInfo.Priority.TOP,
+                                true,
+                                null,
+                                true));
+                    }
                 }
             });
         }
@@ -336,6 +346,17 @@ public class ModCore {
             public void close() throws IOException {
 
             }
+
+            @Override
+            public String getName() {
+                return "Translation Hackery";
+            }
+
+            @Nullable
+            @Override
+            public <T> T getMetadata(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
+                return getResourceMetadata(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+            }
         }
 
         private static class UMCFolderPack extends FolderPack  {
@@ -376,90 +397,6 @@ public class ModCore {
                 return new UMCFolderPack(path);
             } else {
                 return new UMCFilePack(path);
-            }
-        }
-
-        /**
-         * Modified from Forge's DelegatingResourcePack
-         */
-        public static class CombinedResourcePack extends ResourcePack {
-            private final List<ResourcePack> packs;
-            private final String name;
-            private final PackMetadataSection packInfo;
-
-            public CombinedResourcePack(String id, String name, PackMetadataSection packInfo, List<ResourcePack> packs) {
-                super(new File(id));
-                this.name = name;
-                this.packInfo = packInfo;
-                this.packs = packs;
-            }
-
-            @Override
-            public String getName() {
-                return name;
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <T> T getMetadata(IMetadataSectionSerializer<T> deserializer) throws IOException {
-                if (deserializer.getSectionName().equals("pack")) {
-                    return (T) packInfo;
-                }
-                return null;
-            }
-
-            @Override
-            public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
-                synchronized (packs) {
-                    return packs.stream()
-                            .flatMap(r -> r.getAllResourceLocations(type, pathIn, maxDepth, filter).stream())
-                            .collect(Collectors.toList());
-                }
-            }
-
-            @Override
-            public Set<String> getResourceNamespaces(ResourcePackType type) {
-                synchronized (packs) {
-                    return packs.stream()
-                            .flatMap(r -> r.getResourceNamespaces(type).stream())
-                            .collect(Collectors.toSet());
-                }
-            }
-
-            @Override
-            public void close() throws IOException {
-                synchronized (packs) {
-                    for (IResourcePack pack : packs) {
-                        pack.close();
-                    }
-                }
-            }
-
-            @Override
-            public InputStream getInputStream(String resourcePath) throws IOException {
-                if (!resourcePath.equals("pack.png")) // Mods shouldn't be able to mess with the pack icon
-                {
-                    synchronized (packs) {
-                        for (ResourcePack pack : packs) {
-                            if (pack.resourceExists(resourcePath)) {
-                                return pack.getInputStream(resourcePath);
-                            }
-                        }
-                    }
-                }
-                throw new ResourcePackFileNotFoundException(this.file, resourcePath);
-            }
-
-            @Override
-            public boolean resourceExists(String resourcePath) {
-                synchronized (packs) {
-                    for (ResourcePack pack : packs) {
-                        if (pack.resourceExists(resourcePath)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
             }
         }
     }
