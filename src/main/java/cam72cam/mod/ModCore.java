@@ -13,10 +13,7 @@ import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.resources.data.PackMetadataSection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
+import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,6 +83,7 @@ public class ModCore {
 
         ModCore.register(new Internal());
 
+        proxy.setup();
         proxy.event(ModEvent.CONSTRUCT);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
@@ -183,6 +181,9 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
         }
+
+        public void setup() {
+        }
     }
 
     public static class ClientProxy extends Proxy {
@@ -206,14 +207,18 @@ public class ModCore {
         }
 
         @Override
-        public void event(ModEvent event, Mod m) {
-            // Instance can be null during data gen
-            if (event == ModEvent.CONSTRUCT && Minecraft.getInstance() != null) {
-                Config.getMaxTextureSize(); //populate
+        public void setup() {
+            if (Minecraft.getInstance() == null) {
+                // Instance can be null during data gen
+                return;
+            }
+            Config.getMaxTextureSize(); //populate
 
-                List<ResourcePack> packs = new ArrayList<>();
-                packs.add(new TranslationResourcePack());
-                ResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
+            List<ResourcePack> packs = new ArrayList<>();
+            packs.add(new TranslationResourcePack());
+
+            for (Mod m : mods) {
+                ResourcePack modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
                 packs.add(modPack);
                 String configDir = FMLPaths.CONFIGDIR.get().toString();
                 new File(configDir).mkdirs();
@@ -235,18 +240,22 @@ public class ModCore {
                     folder.mkdirs();
                 }
                 packs.add(modPack);
-
-                // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-                Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
-                    @Override
-                    public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
-
-                        final T packInfo = ResourcePackInfo.createResourcePack("umc_inject", true, () -> new CombinedResourcePack("umc_inject", "UMC Resources",
-                                new PackMetadataSection(new StringTextComponent("Universal Mod Core"), 4), packs) , packInfoFactory, ResourcePackInfo.Priority.TOP);
-                        nameToPackMap.put("umc_inject", packInfo);
-                    }
-                });
             }
+
+            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+            Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
+                @Override
+                public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
+
+                    final T packInfo = ResourcePackInfo.createResourcePack("umc_inject", true, () -> new CombinedResourcePack("umc_inject", "UMC Resources",
+                            new PackMetadataSection(new StringTextComponent("Universal Mod Core"), 4), packs) , packInfoFactory, ResourcePackInfo.Priority.TOP);
+                    nameToPackMap.put("umc_inject", packInfo);
+                }
+            });
+        }
+
+        @Override
+        public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
         }
