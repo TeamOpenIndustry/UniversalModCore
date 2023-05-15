@@ -11,13 +11,9 @@ import java.util.concurrent.Executor;
 import net.minecraftforge.fml.DatagenModLoader;
 import net.minecraft.resources.*;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
-import net.minecraft.resources.data.PackMetadataSection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
+import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,6 +86,7 @@ public class ModCore {
 
         ModCore.register(new Internal());
 
+        proxy.setup();
         proxy.event(ModEvent.CONSTRUCT);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
@@ -205,6 +203,9 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
         }
+
+        public void setup() {
+        }
     }
 
     public static class ClientProxy extends Proxy {
@@ -225,14 +226,18 @@ public class ModCore {
         }
 
         @Override
-        public void event(ModEvent event, Mod m) {
-            // Instance can be null during data gen
-            if (event == ModEvent.CONSTRUCT && Minecraft.getInstance() != null) {
-                Config.getMaxTextureSize(); //populate
+        public void setup() {
+            if (Minecraft.getInstance() == null) {
+                // Instance can be null during data gen
+                return;
+            }
+            Config.getMaxTextureSize(); //populate
 
-                List<ResourcePack> packs = new ArrayList<>();
-                packs.add(new TranslationResourcePack());
-                ResourcePack modPack = createPack(((ModFileInfo) ModLoadingContext.get().getActiveContainer().getModInfo().getOwningFile()).getFile().getFilePath().toFile());
+            List<ResourcePack> packs = new ArrayList<>();
+            packs.add(new TranslationResourcePack());
+
+            for (Mod m : mods) {
+                ResourcePack modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
                 packs.add(modPack);
                 String configDir = FMLPaths.CONFIGDIR.get().toString();
                 new File(configDir).mkdirs();
@@ -254,17 +259,30 @@ public class ModCore {
                     folder.mkdirs();
                 }
                 packs.add(modPack);
-
-                // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-                Minecraft.getInstance().getResourcePackRepository().addPackFinder(new IPackFinder() {
-                    @Override
-                    public void loadPacks(Consumer<ResourcePackInfo> consumer, ResourcePackInfo.IFactory packInfoFactory) {
-                        ResourcePackInfo packInfo = ResourcePackInfo.create("umc_inject", true, () -> new CombinedResourcePack("umc_inject", "UMC Resources",
-                                new PackMetadataSection(new StringTextComponent("Universal Mod Core"), 4), packs) , packInfoFactory, ResourcePackInfo.Priority.TOP, IPackNameDecorator.DEFAULT);
-                        consumer.accept(packInfo);
-                    }
-                });
             }
+
+            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+            Minecraft.getInstance().getResourcePackRepository().addPackFinder(new IPackFinder() {
+                @Override
+                public void loadPacks(Consumer<ResourcePackInfo> consumer, ResourcePackInfo.IFactory packInfoFactory) {
+                    for (ResourcePack pack : packs) {
+                        consumer.accept(new ResourcePackInfo(pack.getName(),
+                                true,
+                                () -> pack,
+                                new StringTextComponent(pack.getName()),
+                                new StringTextComponent("UMC Resource"),
+                                PackCompatibility.COMPATIBLE,
+                                ResourcePackInfo.Priority.TOP,
+                                true,
+                                IPackNameDecorator.DEFAULT,
+                                true));
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
         }
@@ -345,6 +363,18 @@ public class ModCore {
             public void close() {
 
             }
+
+            @Override
+            public String getName() {
+                return "Translation Hackery";
+            }
+
+
+            @Nullable
+            @Override
+            public <T> T getMetadataSection(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
+                return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+            }
         }
 
         private static class UMCFolderPack extends FolderPack  {
@@ -387,90 +417,6 @@ public class ModCore {
                 return new UMCFilePack(path);
             }
         }
-
-        /**
-         * Modified from Forge's DelegatingResourcePack
-         */
-        public static class CombinedResourcePack extends ResourcePack {
-            private final List<ResourcePack> packs;
-            private final String name;
-            private final PackMetadataSection packInfo;
-
-            public CombinedResourcePack(String id, String name, PackMetadataSection packInfo, List<ResourcePack> packs) {
-                super(new File(id));
-                this.name = name;
-                this.packInfo = packInfo;
-                this.packs = packs;
-            }
-
-            @Override
-            public String getName() {
-                return name;
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <T> T getMetadataSection(IMetadataSectionSerializer<T> deserializer) throws IOException {
-                if (deserializer.getMetadataSectionName().equals("pack")) {
-                    return (T) packInfo;
-                }
-                return null;
-            }
-
-            @Override
-            public Collection<ResourceLocation> getResources(ResourcePackType type, String namespaceIn, String pathIn, int maxDepth, Predicate<String> filter) {
-                synchronized (packs) {
-                    return packs.stream()
-                            .flatMap(r -> r.getResources(type, namespaceIn, pathIn, maxDepth, filter).stream())
-                            .collect(Collectors.toList());
-                }
-            }
-
-            @Override
-            public Set<String> getNamespaces(ResourcePackType type) {
-                synchronized (packs) {
-                    return packs.stream()
-                            .flatMap(r -> r.getNamespaces(type).stream())
-                            .collect(Collectors.toSet());
-                }
-            }
-
-            @Override
-            public void close() {
-                synchronized (packs) {
-                    for (IResourcePack pack : packs) {
-                        pack.close();
-                    }
-                }
-            }
-
-            @Override
-            public InputStream getResource(String resourcePath) throws IOException {
-                if (!resourcePath.equals("pack.png")) // Mods shouldn't be able to mess with the pack icon
-                {
-                    synchronized (packs) {
-                        for (ResourcePack pack : packs) {
-                            if (pack.hasResource(resourcePath)) {
-                                return pack.getResource(resourcePath);
-                            }
-                        }
-                    }
-                }
-                throw new ResourcePackFileNotFoundException(this.file, resourcePath);
-            }
-
-            @Override
-            public boolean hasResource(String resourcePath) {
-                synchronized (packs) {
-                    for (ResourcePack pack : packs) {
-                        if (pack.hasResource(resourcePath)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-        }
     }
 
     public static class ServerProxy extends Proxy {
@@ -489,7 +435,7 @@ public class ModCore {
     public static class Internal extends Mod {
         @Override
         public String modID() {
-            return "universalmodcoreinternal";
+            return "universalmodcore";
         }
 
         @Override
