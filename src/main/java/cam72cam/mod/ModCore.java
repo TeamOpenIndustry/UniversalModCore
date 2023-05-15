@@ -480,7 +480,7 @@ public class ModCore {
     public static class Internal extends Mod {
         @Override
         public String modID() {
-            return "universalmodcoreinternal";
+            return "universalmodcore";
         }
 
         @Override
