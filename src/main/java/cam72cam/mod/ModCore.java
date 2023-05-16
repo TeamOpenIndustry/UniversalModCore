@@ -559,7 +559,7 @@ public class ModCore {
             return;
         }
 
-        instance.logger.catching(ex);
+        instance.logger.error("CATCHING", ex);
     }
 
     private static final List<File> usedCacheFiles = new ArrayList<>();
