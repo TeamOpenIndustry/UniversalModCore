@@ -5,8 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
@@ -33,7 +31,6 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -252,8 +249,8 @@ public class ModCore {
                         nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
                                 true,
                                 () -> pack,
-                                new StringTextComponent(pack.getName()),
-                                new StringTextComponent("UMC Resource"),
+                                new StringTextComponent(""),
+                                new StringTextComponent(""),
                                 PackCompatibility.COMPATIBLE,
                                 ResourcePackInfo.Priority.TOP,
                                 true,
@@ -443,17 +440,6 @@ public class ModCore {
                 case START:
                     break;
             }
-        }
-
-        public interface SynchronousResourceReloadListener extends IFutureReloadListener {
-            @Override
-			default CompletableFuture<Void> reload(IFutureReloadListener.IStage stage, IResourceManager resourceManager, IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
-                return stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRunAsync(() -> {
-                    this.apply(resourceManager);
-                }, backgroundExecutor);
-            }
-
-            void apply(IResourceManager var1);
         }
 
         @Override
