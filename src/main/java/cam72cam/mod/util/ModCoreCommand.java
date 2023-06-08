@@ -1,9 +1,8 @@
 package cam72cam.mod.util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
@@ -11,6 +10,9 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
+import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
 
 public class ModCoreCommand extends Command {
     @Override
@@ -44,6 +46,11 @@ public class ModCoreCommand extends Command {
 				return true;
 			}
 
+			if (args.length >= 1 && args[0].equals("chunks")) {
+				World world = player.get().getWorld();
+				sendChunkInfo(world, sender, args.length == 2 && args[1].equals("detailed"));
+			}
+
 		} else {
 			// Executed by console
 
@@ -62,7 +69,21 @@ public class ModCoreCommand extends Command {
 				}
 
 
-			} else {
+			} else if (args.length >= 2 && args[0].equals("chunks")) {
+				Optional<Integer> dimId = parseInteger(args[args.length-1]);
+				if (dimId.isPresent()) {
+					World world = World.get(dimId.get(), false);
+					if (world == null) {
+						sender.accept(PlayerMessage.direct("Dimension '" + dimId.get() + "' is not loaded or does not exist."));
+					} else {
+						sendChunkInfo(world, sender, args.length == 3 && args[1].equals("detailed"));
+					}
+				} else {
+					sender.accept(PlayerMessage.direct("Dimension must be a number!"));
+				}
+			}
+
+			else {
 
 				sender.accept(PlayerMessage.direct(getUsage() + " [dim]"));
 
@@ -75,6 +96,18 @@ public class ModCoreCommand extends Command {
 
         return false;
     }
+
+	private void sendChunkInfo(World world, Consumer<PlayerMessage> sender, boolean detailed) {
+		ChunkProviderServer provider = (ChunkProviderServer) world.internal.getChunkProvider();
+		List<Chunk> chunks = provider.getLoadedChunks().stream().filter(Chunk::isLoaded).collect(Collectors.toList());
+		sender.accept(PlayerMessage.direct(String.format("%s loaded chunks in %s:", chunks.size(), world.getId())));
+		if (detailed) {
+			chunks.sort(Comparator.comparingInt(a -> a.x * 1000000 + a.z));
+			for (Chunk chunk : chunks) {
+				sender.accept(PlayerMessage.direct(String.format("x=%s, z=%s: %s tiles, %s entities", chunk.x, chunk.z, chunk.getTileEntityMap().size(), Arrays.stream(chunk.getEntityLists()).mapToInt(ClassInheritanceMultiMap::size).sum())));
+			}
+		}
+	}
 
 	private void sendWorldEntities(World world, Consumer<PlayerMessage> sender) {
 		Map<String, Integer> counts = new HashMap<>();
