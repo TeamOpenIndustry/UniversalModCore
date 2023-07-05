@@ -72,7 +72,7 @@ public class OBJTexturePacker {
 
         public Node(List<Material> materials) {
             this.materials = materials;
-            this.width = this.height = 8;
+            this.width = this.height = 32;
             this.texture = null; // Textured images will be color only if the image fails to load.
 
             size = new Dimension(width, height);
@@ -189,9 +189,9 @@ public class OBJTexturePacker {
                 int b = (int) (Math.max(0, mat.KdB) * 255);
                 int a = (int) (mat.KdA * 255);
                 int cint = (a << 24) | (r << 16) | (g << 8) | b;
-                image = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
-                for (int px = 0; px < 8; px++) {
-                    for (int py = 0; py < 8; py++) {
+                image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+                for (int px = 0; px < this.width; px++) {
+                    for (int py = 0; py < this.height; py++) {
                         image.setRGB(px, py, cint);
                     }
                 }
