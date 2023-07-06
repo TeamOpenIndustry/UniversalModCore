@@ -125,7 +125,7 @@ public class ModCoreCommand extends Command {
 
 
 		ServerChunkProvider provider = (ServerChunkProvider) world.internal.getChunkProvider();
-		List<Chunk> chunks = StreamSupport.stream(provider.chunkManager.getLoadedChunksIterable().spliterator(), false).filter(holder -> holder.func_219285_d() == ChunkStatus.FULL).map(ChunkHolder::func_219298_c).sorted(Comparator.comparingInt((Chunk a) -> a.getPos().x * 1000000 + a.getPos().z)).collect(Collectors.toList());
+		List<Chunk> chunks = StreamSupport.stream(provider.chunkManager.getLoadedChunksIterable().spliterator(), false).filter(holder -> holder.func_219285_d() == ChunkStatus.FULL).map(ChunkHolder::getChunkIfComplete).sorted(Comparator.comparingInt((Chunk a) -> a.getPos().x * 1000000 + a.getPos().z)).collect(Collectors.toList());
 		long totalTeCount = 0;
 		long totalUmcCount = 0;
 		long totalEntityCount = 0;
