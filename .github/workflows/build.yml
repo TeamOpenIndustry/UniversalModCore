@@ -1,6 +1,6 @@
 name: Universal Mod Core CI
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
     build:
