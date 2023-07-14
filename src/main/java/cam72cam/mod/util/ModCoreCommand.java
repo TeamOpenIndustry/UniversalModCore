@@ -15,8 +15,10 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraftforge.common.ForgeChunkManager;
 
 public class ModCoreCommand extends Command {
     @Override
@@ -26,7 +28,7 @@ public class ModCoreCommand extends Command {
 
     @Override
     public String getUsage() {
-        return "Usage: " + ModCore.MODID + " entity list [server dim] | chunk [[list|debug] [all|cx cz]] [server dim]";
+        return "Usage: " + ModCore.MODID + " entity list [server dim] | chunk [[list|debug] [all|cx cz]] [server dim] | ticket [list|debug] [server dim]";
     }
 
 
@@ -74,9 +76,57 @@ public class ModCoreCommand extends Command {
 				return false;
 			case "chunk":
 				return sendChunkInfo(world, sender, player, args);
+			case "ticket":
+				return sendTicketInfo(world, sender, player, args);
 			default:
 				return false;
 		}
+	}
+
+	private String ticketIdentifier(ForgeChunkManager.Ticket ticket) {
+		if (ticket.isPlayerTicket()) {
+			return String.format("%s:%s", ticket.getModId(), ticket.getPlayerName());
+		} else {
+			return ticket.getModId();
+		}
+	}
+
+	private boolean sendTicketInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
+		boolean list = false;
+		boolean debug = false;
+		if (args.size() > 0) {
+			switch (args.remove(0)) {
+				case "list":
+					list = true;
+					break;
+				case "debug":
+					debug = true;
+					break;
+				default:
+					return false;
+			}
+		}
+
+		sender.accept(PlayerMessage.direct(String.format(
+				"%s forced chunks in %s",
+				ForgeChunkManager.getPersistentChunksFor(world.internal).size(), world.getId()
+		)));
+
+		List<ForgeChunkManager.Ticket> tickets = new ArrayList<>(new HashSet<>(ForgeChunkManager.getPersistentChunksFor(world.internal).values()));
+		tickets.sort(Comparator.comparing(this::ticketIdentifier));
+
+		if (list || debug) {
+			for (ForgeChunkManager.Ticket ticket : tickets) {
+				sender.accept(PlayerMessage.direct(String.format("%s : %s forced", ticketIdentifier(ticket), ticket.getChunkList().size())));
+				if (debug) {
+					for (ChunkPos chunkPos : ticket.getChunkList()) {
+						sender.accept(PlayerMessage.direct(String.format("  x=%s y=%s", chunkPos.x, chunkPos.z)));
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 
 	private boolean sendChunkInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
