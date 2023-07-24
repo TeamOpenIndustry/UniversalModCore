@@ -137,8 +137,14 @@ public class World {
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.entity.Entity entity : internalEntities) {
-            if (!this.entityByID.containsKey(entity.getId())) {
-                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getId(), entity);
+            Entity found = this.entityByID.get(entity.getId());
+            if (found == null) {
+                ModCore.debug("Adding entity that was not wrapped correctly %s - %s", entity.getUUID(), entity);
+                this.onEntityAdded(entity);
+            } else if (found.internal != entity) {
+                // For some reason, this can happen on the client.  I'm guessing entities pop in and out of render distance
+                ModCore.debug("Mismatching world entity %s - %s", entity.getId(), entity);
+                this.onEntityRemoved(found.internal);
                 this.onEntityAdded(entity);
             }
         }
