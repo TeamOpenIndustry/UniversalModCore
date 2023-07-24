@@ -44,6 +44,14 @@ public class GlobalRender {
     // Fire these off every tick
     private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
+    // This is required before new GRH()
+    static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
+        @Override
+        public boolean isValidBlock(Block block_1) {
+            return true;
+        }
+    };
+
     // Internal hack
     private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
 
@@ -171,13 +179,6 @@ public class GlobalRender {
     public interface MouseoverEvent {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
-
-    static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
-        @Override
-        public boolean isValidBlock(Block block_1) {
-            return true;
-        }
-    };
 
     public static class GlobalRenderHelper extends TileEntity {
 
