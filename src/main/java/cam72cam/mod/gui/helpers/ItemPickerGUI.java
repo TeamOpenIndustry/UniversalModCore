@@ -137,12 +137,17 @@ public class ItemPickerGUI {
 
         @Override
         public boolean keyPressed(int typedChar, int keyCode, int mod) {
+            String oldSearch = search.getText();
             if (super.keyPressed(typedChar, keyCode, mod)) {
                 onExit.accept(null);
                 return true;
             }
             if (keyCode == 1) {
                 onExit.accept(null);
+                return true;
+            }
+            if (!Objects.equals(oldSearch, search.getText())) {
+                init();
                 return true;
             }
             return false;
