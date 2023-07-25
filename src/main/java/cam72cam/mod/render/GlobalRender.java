@@ -64,7 +64,14 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack), partialTicks));
+                        te.setLevelAndPosition(te.getLevel(), new BlockPos(Minecraft.getInstance().player.getEyePosition(partialTicks)));
+                        RenderState state = new RenderState(matrixStack);
+
+                        // TODO this might need to be backported to 1.15.+
+                        Vec3d off = GlobalRender.getCameraPos(partialTicks);
+                        state.translate(off.x % 1, off.y % 1, off.z % 1);
+
+                        renderFuncs.forEach(r -> r.render(state, partialTicks));
                     }
 
                     @Override
