@@ -23,8 +23,6 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
 
     private final SoundEventAccessor accessor;
 
-    private boolean shouldBePlaying;
-
     protected ClientSound(ResourceLocation soundId, SoundCategory categoryIn, boolean repeats, float attenuationDistance, float scale) {
         super(soundId, categoryIn.category);
         this.volume = 1;
@@ -44,8 +42,6 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
         this.accessor.addSound(sound);
 
         this.rollingPitch = new ArrayList<>();
-
-        this.shouldBePlaying = false;
     }
 
     @Override
@@ -70,22 +66,15 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
         this.volume = attenuationDistance / 16F;
         Minecraft.getInstance().getSoundManager().play(this);
         this.volume = vol;
-        this.shouldBePlaying = looping;
     }
 
     @Override
     public void stop() {
         Minecraft.getInstance().getSoundManager().stop(this);
-        shouldBePlaying = false;
     }
 
     @Override
     public void tick() {
-        if (shouldBePlaying && !isStopped() && !isPlaying()) {
-            // Can be culled due to attenuation, we want to restart it
-            play(position);
-        }
-
         float dampenLevel = 1;
         if (MinecraftClient.getPlayer().getRiding() != null) {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
