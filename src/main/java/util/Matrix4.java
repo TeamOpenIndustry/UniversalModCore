@@ -1,14 +1,9 @@
 package util;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.model.obj.Buffers;
 import cam72cam.mod.util.Facing;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.TransformationMatrix;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.model.TransformationHelper;
 
+import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -114,6 +109,26 @@ public class Matrix4
 		}
 		translate(-.5, -.5, -.5);
 	}
+
+	public Matrix4(Matrix4f mat) {
+		m00 = mat.m00;
+		m01 = mat.m01;
+		m02 = mat.m02;
+		m03 = mat.m03;
+		m10 = mat.m10;
+		m11 = mat.m11;
+		m12 = mat.m12;
+		m13 = mat.m13;
+		m20 = mat.m20;
+		m21 = mat.m21;
+		m22 = mat.m22;
+		m23 = mat.m23;
+		m30 = mat.m30;
+		m31 = mat.m31;
+		m32 = mat.m32;
+		m33 = mat.m33;
+	}
+
 	public Matrix4 setIdentity()
 	{
 		m00 = m11 = m22 = m33 = 1;
@@ -441,13 +456,10 @@ public class Matrix4
 	}
 	public void fromMatrix4f(Matrix4f mat)
 	{
-		FloatBuffer crap = FloatBuffer.wrap(new float[16]);
-		mat.store(crap);
-		crap.position(0);
-		m00 = crap.get();	m01 = crap.get();	m02 = crap.get();	m03 = crap.get();
-		m10 = crap.get();	m11 = crap.get();	m12 = crap.get();	m13 = crap.get();
-		m20 = crap.get();	m21 = crap.get();	m22 = crap.get();	m23 = crap.get();
-		m30 = crap.get();	m31 = crap.get();	m32 = crap.get();	m33 = crap.get();
+		m00 = mat.m00;	m01 = mat.m01;	m02 = mat.m02;	m03 = mat.m03;
+		m10 = mat.m10;	m11 = mat.m11;	m12 = mat.m12;	m13 = mat.m13;
+		m20 = mat.m20;	m21 = mat.m21;	m22 = mat.m22;	m23 = mat.m23;
+		m30 = mat.m30;	m31 = mat.m31;	m32 = mat.m32;	m33 = mat.m33;
 	}
 
 	public final void invert()
@@ -460,11 +472,9 @@ public class Matrix4
 	public Matrix4 slerp(Matrix4 to, float percent) {
 		Matrix4 from = this;
 		// For now I am going to be lazy
-		TransformationMatrix s = new TransformationMatrix(from.toMatrix4f());
-		TransformationMatrix e = new TransformationMatrix(to.toMatrix4f());
-		Matrix4 m = new Matrix4();
-		m.fromMatrix4f(TransformationHelper.slerp(s, e, percent).getMatrix());
-		return m;
+		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
+		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
+		return new Matrix4(s.slerp(e, percent).getMatrix());
 	}
 
 	@Override
