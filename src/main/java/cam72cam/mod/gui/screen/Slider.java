@@ -7,7 +7,7 @@ import net.minecraft.util.text.StringTextComponent;
 public abstract class Slider extends Button {
 
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-        super(builder, new net.minecraftforge.fml.client.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new StringTextComponent(text), min, max, start, null, null));
+        super(builder, new net.minecraftforge.fml.client.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new StringTextComponent(text), min, max, start, b -> {}, null));
         ((net.minecraftforge.fml.client.gui.widget.Slider) this.button).showDecimal = doublePrecision;
         ((net.minecraftforge.fml.client.gui.widget.Slider) this.button).parent = slider -> Slider.this.onSlider();
     }
