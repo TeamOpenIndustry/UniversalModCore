@@ -180,6 +180,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact shadowJar
             artifact sourcesJar
             artifactId archivesBaseName
         }
