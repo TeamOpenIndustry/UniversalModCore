@@ -76,6 +76,11 @@ public class ConfigFile {
         }
     }
 
+    public static void write(Class cls) {
+        ConfigInstance ci = new ConfigInstance(cls);
+        ci.write();
+    }
+
     public static void sync(Class cls) {
         ConfigInstance ci = new ConfigInstance(cls);
         ci.read();
