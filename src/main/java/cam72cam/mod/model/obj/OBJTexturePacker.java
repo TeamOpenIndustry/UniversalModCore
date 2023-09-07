@@ -34,6 +34,33 @@ public class OBJTexturePacker {
     public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> speculars = new HashMap<>();
 
+    private final Map<String, BufferedImage> imageCache = new HashMap<>();
+
+    private BufferedImage getCachedImage(String origPath, String variant) {
+        if (variant != null && !variant.isEmpty()) {
+            try {
+                // Variants should only be read once
+                String path = origPath;
+                String[] sp = path.split("/");
+                String fname = sp[sp.length - 1];
+                path = path.replaceAll(fname, variant + "/" + fname);
+                return ImageIO.read(lookup.apply(path));
+            } catch (Exception e) {
+                //Fallback
+                return getCachedImage(origPath, null);
+            }
+        }
+
+        // Base image should be cached and re-used when applicable
+        return imageCache.computeIfAbsent(origPath, path -> {
+            try {
+                return ImageIO.read(lookup.apply(origPath));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     class Node {
         Dimension size;
         List<Material> materials;
@@ -45,14 +72,15 @@ public class OBJTexturePacker {
 
         public Node(List<Material> materials) {
             this.materials = materials;
-            this.width = this.height = 8;
+            this.width = this.height = 32;
             this.texture = null; // Textured images will be color only if the image fails to load.
 
             size = new Dimension(width, height);
 
             if (materials.get(0).hasTexture()) {
                 try {
-                    size = getImageDimension(lookup.apply(materials.get(0).texKd), materials.get(0).texKd);
+                    BufferedImage image = getCachedImage(materials.get(0).texKd, null);
+                    size = new Dimension(image.getWidth(), image.getHeight());
                     this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
                     this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
                     this.texture = materials.get(0);
@@ -153,23 +181,7 @@ public class OBJTexturePacker {
             BufferedImage image;
             if (texture != null) {
                 String origPath = texlu.apply(texture);
-                try {
-                    String path = origPath;
-                    if (variant != null && !variant.isEmpty()) {
-                        String[] sp = path.split("/");
-                        String fname = sp[sp.length - 1];
-                        path = path.replaceAll(fname, variant + "/" + fname);
-                    }
-                    image = ImageIO.read(lookup.apply(path));
-                } catch (Exception e) {
-                    //Fallback
-                    try {
-                        image = ImageIO.read(lookup.apply(texlu.apply(texture)));
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                        throw new RuntimeException(e);
-                    }
-                }
+                image = getCachedImage(origPath, variant);
             } else {
                 Material mat = materials.get(0);
                 int r = (int) (Math.max(0, mat.KdR) * 255);
@@ -177,9 +189,9 @@ public class OBJTexturePacker {
                 int b = (int) (Math.max(0, mat.KdB) * 255);
                 int a = (int) (mat.KdA * 255);
                 int cint = (a << 24) | (r << 16) | (g << 8) | b;
-                image = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
-                for (int px = 0; px < 8; px++) {
-                    for (int py = 0; py < 8; py++) {
+                image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+                for (int px = 0; px < this.width; px++) {
+                    for (int py = 0; py < this.height; py++) {
                         image.setRGB(px, py, cint);
                     }
                 }
@@ -329,6 +341,7 @@ public class OBJTexturePacker {
                 });
             }
         }
+        imageCache.clear();
     }
 
     private boolean needsScaling() {
@@ -340,21 +353,5 @@ public class OBJTexturePacker {
     }
     public int getHeight() {
         return scaledHeight;
-    }
-
-    private static Dimension getImageDimension(InputStream imgFile, String texKd) throws IOException {
-        try(ImageInputStream in = ImageIO.createImageInputStream(imgFile)){
-            final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
-            if (readers.hasNext()) {
-                ImageReader reader = readers.next();
-                try {
-                    reader.setInput(in);
-                    return new Dimension(reader.getWidth(0), reader.getHeight(0));
-                } finally {
-                    reader.dispose();
-                }
-            }
-        }
-        throw new IOException("Unable to determine image file type!");
     }
 }

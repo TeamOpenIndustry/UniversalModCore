@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -23,7 +24,7 @@ public class MinecraftClient {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
         if (playerCache == null || internal != playerCache.internal) {
-            playerCache = new Player(Minecraft.getMinecraft().thePlayer);
+            playerCache = World.get(internal.worldObj).getEntity(internal).asPlayer();
         }
         return playerCache;
     }

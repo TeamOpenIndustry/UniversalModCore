@@ -76,6 +76,11 @@ public class ConfigFile {
         }
     }
 
+    public static void write(Class cls) {
+        ConfigInstance ci = new ConfigInstance(cls);
+        ci.write();
+    }
+
     public static void sync(Class cls) {
         ConfigInstance ci = new ConfigInstance(cls);
         ci.read();
@@ -123,6 +128,13 @@ public class ConfigFile {
         String value();
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Range {
+        double min();
+        double max();
+    }
+
+
     abstract static class Property {
         protected abstract <A extends Annotation> A getAnnotation(Class<A> cls);
 
@@ -140,6 +152,10 @@ public class ConfigFile {
         protected String getComment() {
             Comment n = getAnnotation(Comment.class);
             return n == null ? "" : n.value();
+        }
+
+        public Range getRange() {
+            return getAnnotation(Range.class);
         }
 
         protected List<String> getFormattedComment() {
@@ -316,7 +332,7 @@ public class ConfigFile {
                     properties.add(new PropertyClass(scls));
                 }
             }
-            properties.sort(Comparator.comparing(Property::getName));
+            //properties.sort(Comparator.comparing(Property::getName));
         }
 
         @Override

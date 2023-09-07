@@ -1,18 +1,24 @@
 package cam72cam.mod.util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.EntityList;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraftforge.common.ForgeChunkManager;
 
 public class ModCoreCommand extends Command {
     @Override
@@ -22,7 +28,7 @@ public class ModCoreCommand extends Command {
 
     @Override
     public String getUsage() {
-        return "Usage: " + ModCore.MODID + " entity list";
+        return "Usage: " + ModCore.MODID + " entity list [server dim] | chunk [[list|debug] [all|cx cz]] [server dim] | ticket [list|debug] [server dim]";
     }
 
 
@@ -32,50 +38,206 @@ public class ModCoreCommand extends Command {
 	}
 
 	@Override
-	public boolean execute(Consumer<PlayerMessage> sender, Optional<Player> player, String[] args) {
+	public boolean execute(Consumer<PlayerMessage> sender, Optional<Player> player, String[] rawArgs) {
+		List<String> args = new ArrayList<>(Arrays.asList(rawArgs));
 
+		World world;
 		if (player.isPresent()) {
-			// Executed by player
-
-			if (args.length == 2 && "entity".equals(args[0]) && "list".equals(args[1])) {
-
-				World world = player.get().getWorld();
-
-				sendWorldEntities(world, sender);
-
-				return true;
-			}
-
+			world = player.get().getWorld();
 		} else {
-			// Executed by console
-
-			if (args.length == 3 && "entity".equals(args[0]) && "list".equals(args[1])) {
-
-				Optional<Integer> dimId = parseInteger(args[2]);
-				if (dimId.isPresent()) {
-					World world = World.get(dimId.get(), false);
-					if (world == null) {
-						sender.accept(PlayerMessage.direct("Dimension '" + dimId.get() + "' is not loaded or does not exist."));
-					} else {
-						sendWorldEntities(world, sender);
-					}
-				} else {
-					sender.accept(PlayerMessage.direct("Dimension must be a number!"));
+			try {
+				int dimId = Integer.parseInt(args.remove(args.size()-1));
+				world = World.get(dimId, false);
+				if (world == null) {
+					sender.accept(PlayerMessage.direct(String.format("Dimension '%d' is not loaded or does not exist.", dimId)));
+					return false;
 				}
+			} catch (IndexOutOfBoundsException | NumberFormatException ex) {
+				sender.accept(PlayerMessage.direct("Dimension must be a number!"));
+				return false;
+			}
+		}
 
+		if (args.isEmpty()) {
+			return false;
+		}
 
-			} else {
+		String cmd = args.remove(0);
+		switch (cmd) {
+			case "entity":
+				if (args.isEmpty()) {
+					return false;
+				}
+				String list = args.remove(0);
+				if (list.equals("list")) {
+					sendWorldEntities(world, sender);
+					return true;
+				}
+				return false;
+			case "chunk":
+				return sendChunkInfo(world, sender, player, args);
+			case "ticket":
+				return sendTicketInfo(world, sender, player, args);
+			default:
+				return false;
+		}
+	}
 
-				sender.accept(PlayerMessage.direct(getUsage() + " [dim]"));
+	private String ticketIdentifier(ForgeChunkManager.Ticket ticket) {
+		if (ticket.isPlayerTicket()) {
+			return String.format("%s:%s", ticket.getModId(), ticket.getPlayerName());
+		} else {
+			return ticket.getModId();
+		}
+	}
 
+	private boolean sendTicketInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
+		boolean list = false;
+		boolean debug = false;
+		if (args.size() > 0) {
+			switch (args.remove(0)) {
+				case "list":
+					list = true;
+					break;
+				case "debug":
+					debug = true;
+					break;
+				default:
+					return false;
+			}
+		}
+
+		sender.accept(PlayerMessage.direct(String.format(
+				"%s forced chunks in %s",
+				ForgeChunkManager.getPersistentChunksFor(world.internal).size(), world.getId()
+		)));
+
+		List<ForgeChunkManager.Ticket> tickets = new ArrayList<>(new HashSet<>(ForgeChunkManager.getPersistentChunksFor(world.internal).values()));
+		tickets.sort(Comparator.comparing(this::ticketIdentifier));
+
+		if (list || debug) {
+			for (ForgeChunkManager.Ticket ticket : tickets) {
+				sender.accept(PlayerMessage.direct(String.format("%s : %s forced", ticketIdentifier(ticket), ticket.getChunkList().size())));
+				if (debug) {
+					for (ChunkCoordIntPair chunkPos : ticket.getChunkList()) {
+						sender.accept(PlayerMessage.direct(String.format("  x=%s y=%s", chunkPos.chunkXPos, chunkPos.chunkZPos)));
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	private boolean sendChunkInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
+		boolean list = false;
+		boolean debug = false;
+		boolean all = false;
+		Integer cx = null;
+		Integer cz = null;
+		if (args.size() > 0) {
+			switch (args.remove(0)) {
+				case "list":
+					list = true;
+					break;
+				case "debug":
+					debug = true;
+					break;
+				default:
+					return false;
 			}
 
-			return true;
+			if (!args.isEmpty()) {
+				if (args.get(0).equals("all")) {
+					args.remove(0);
+					all = true;
+				}
+			}
 
-
+			if (args.size() >= 2) {
+				if (player.isPresent() && args.get(0).equals("~") && args.get(1).equals("~")) {
+					Vec3d chunkPos = player.get().getBlockPosition().toChunkMin();
+					cx = (int)chunkPos.x/16;
+					cz = (int)chunkPos.z/16;
+				} else {
+					try {
+						cx = Integer.parseInt(args.get(0));
+						cz = Integer.parseInt(args.get(1));
+					} catch (NumberFormatException ex) {
+						sender.accept(PlayerMessage.direct("Expected integer chunk arguments"));
+						return false;
+					}
+				}
+			}
 		}
-        return false;
-    }
+
+
+		ChunkProviderServer provider = (ChunkProviderServer) world.internal.getChunkProvider();
+		List<Chunk> chunks = new ArrayList<Chunk>(provider.loadedChunks).stream().filter(x -> x.isChunkLoaded).sorted(Comparator.comparingInt(a -> a.xPosition * 1000000 + a.zPosition)).collect(Collectors.toList());
+		long totalTeCount = 0;
+		long totalUmcCount = 0;
+		long totalEntityCount = 0;
+
+		boolean hasChunkLocation = cx != null && cz != null;
+
+		for (Chunk chunk : chunks) {
+			int teCount = chunk.chunkTileEntityMap.size();
+			long umcCount = chunk.chunkTileEntityMap.values().stream().filter(x -> x instanceof cam72cam.mod.block.tile.TileEntity).count();
+			int entityCount = Arrays.stream(chunk.entityLists).mapToInt(List::size).sum();
+
+			boolean isChunkLocation = hasChunkLocation && chunk.xPosition == cx && chunk.zPosition == cz;
+			if (all || isChunkLocation || !hasChunkLocation && (teCount > 0 || entityCount > 0)) {
+				if (list || debug) {
+					sender.accept(PlayerMessage.direct(String.format(
+							"x=%s, z=%s: %s tiles (%s UMC), %s entities",
+							chunk.xPosition, chunk.zPosition, teCount, umcCount, entityCount
+					)));
+				}
+				if (debug) {
+					Map<String, Integer> counts = new HashMap<>();
+					for (Object obj : chunk.chunkTileEntityMap.values()) {
+						TileEntity tile = (TileEntity) obj;
+						String key = tile.getClass().toString();
+						if (tile instanceof cam72cam.mod.block.tile.TileEntity) {
+							BlockEntity instance = ((cam72cam.mod.block.tile.TileEntity) tile).instance();
+							key = instance != null ? instance.getClass().toString() : "UMC Pending";
+						}
+						counts.put(key, counts.getOrDefault(key, 0) + 1);
+					}
+					sender.accept(PlayerMessage.direct(" tiles: "));
+					counts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((entry) -> sender.accept(PlayerMessage.direct(String.format(
+							"  * %s x %s", entry.getValue(), entry.getKey()
+					))));
+
+					counts.clear();
+					for (List<net.minecraft.entity.Entity> entityList : chunk.entityLists) {
+						for (net.minecraft.entity.Entity entity : entityList) {
+							String key = entity.getClass().toString();
+							if (entity instanceof ModdedEntity) {
+								key = ((ModdedEntity)entity).getSelf().getClass().toString();
+							}
+							counts.put(key, counts.getOrDefault(key, 0) + 1);
+						}
+					}
+					sender.accept(PlayerMessage.direct(" entities: "));
+					counts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach((entry) -> sender.accept(PlayerMessage.direct(String.format(
+							"  * %s x %s", entry.getValue(), entry.getKey()
+					))));
+				}
+			}
+			totalTeCount += teCount;
+			totalUmcCount += umcCount;
+			totalEntityCount += entityCount;
+		}
+		if (!hasChunkLocation) {
+			sender.accept(PlayerMessage.direct(String.format(
+					"%s loaded chunks in %s: %s tiles (%s UMC), %s entities",
+					chunks.size(), world.getId(),
+					totalTeCount, totalUmcCount, totalEntityCount)
+			));
+		}
+		return true;
+	}
 
 	private void sendWorldEntities(World world, Consumer<PlayerMessage> sender) {
         Map<String, Integer> counts = new HashMap<>();
@@ -92,15 +254,4 @@ public class ModCoreCommand extends Command {
 
         counts.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(entry -> sender.accept(PlayerMessage.direct(entry.getValue() + " x " + entry.getKey())));
 	}
-
-	public Optional<Integer> parseInteger(String text) {
-
-		try {
-			return Optional.of(Integer.parseInt(text));
-		} catch (NumberFormatException e) {
-			return Optional.empty();
-		}
-
-	}
-
 }
