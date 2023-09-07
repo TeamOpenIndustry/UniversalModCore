@@ -25,7 +25,7 @@ public class MinecraftClient {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
         if (playerCache == null || internal != playerCache.internal) {
-            playerCache = World.get(internal.world).getEntity(internal).asPlayer();
+            playerCache = World.get(internal.level).getEntity(internal).asPlayer();
         }
         return playerCache;
     }
