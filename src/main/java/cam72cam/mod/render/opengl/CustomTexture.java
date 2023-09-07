@@ -49,7 +49,9 @@ public abstract class CustomTexture implements Texture {
 
 
     public CustomTexture(int width, int height, int cacheSeconds) {
-        textures.add(this);
+        synchronized (textures) {
+            textures.add(this);
+        }
         this.width = width;
         this.height = height;
         this.cacheSeconds = cacheSeconds;
