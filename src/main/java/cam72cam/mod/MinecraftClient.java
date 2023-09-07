@@ -4,7 +4,7 @@ import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import com.mojang.blaze3d.platform.GLX;
+import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.util.math.EntityRayTraceResult;
@@ -25,7 +25,7 @@ public class MinecraftClient {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
         if (playerCache == null || internal != playerCache.internal) {
-            playerCache = new Player(Minecraft.getInstance().player);
+            playerCache = World.get(internal.world).getEntity(internal).asPlayer();
         }
         return playerCache;
     }
