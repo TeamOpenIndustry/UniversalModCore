@@ -120,7 +120,7 @@ public class ModCoreCommand extends Command {
 				sender.accept(PlayerMessage.direct(String.format("%s : %s forced", ticketIdentifier(ticket), ticket.getChunkList().size())));
 				if (debug) {
 					for (ChunkPos chunkPos : ticket.getChunkList()) {
-						sender.accept(PlayerMessage.direct(String.format("  x=%s y=%s", chunkPos.x, chunkPos.z)));
+						sender.accept(PlayerMessage.direct(String.format("  x=%s y=%s", chunkPos.chunkXPos, chunkPos.chunkZPos)));
 					}
 				}
 			}
@@ -173,7 +173,7 @@ public class ModCoreCommand extends Command {
 
 
 		ChunkProviderServer provider = (ChunkProviderServer) world.internal.getChunkProvider();
-		List<Chunk> chunks = provider.getLoadedChunks().stream().filter(Chunk::isLoaded).sorted(Comparator.comparingInt(a -> a.x * 1000000 + a.z)).collect(Collectors.toList());
+		List<Chunk> chunks = provider.getLoadedChunks().stream().filter(Chunk::isLoaded).sorted(Comparator.comparingInt(a -> a.xPosition * 1000000 + a.zPosition)).collect(Collectors.toList());
 		long totalTeCount = 0;
 		long totalUmcCount = 0;
 		long totalEntityCount = 0;
@@ -185,12 +185,12 @@ public class ModCoreCommand extends Command {
 			long umcCount = chunk.getTileEntityMap().values().stream().filter(x -> x instanceof cam72cam.mod.block.tile.TileEntity).count();
 			int entityCount = Arrays.stream(chunk.getEntityLists()).mapToInt(ClassInheritanceMultiMap::size).sum();
 
-			boolean isChunkLocation = hasChunkLocation && chunk.x == cx && chunk.z == cz;
+			boolean isChunkLocation = hasChunkLocation && chunk.xPosition == cx && chunk.zPosition == cz;
 			if (all || isChunkLocation || !hasChunkLocation && (teCount > 0 || entityCount > 0)) {
 				if (list || debug) {
 					sender.accept(PlayerMessage.direct(String.format(
 							"x=%s, z=%s: %s tiles (%s UMC), %s entities",
-							chunk.x, chunk.z, teCount, umcCount, entityCount
+							chunk.xPosition, chunk.zPosition, teCount, umcCount, entityCount
 					)));
 				}
 				if (debug) {
