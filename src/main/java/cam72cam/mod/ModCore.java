@@ -323,24 +323,28 @@ public class ModCore {
                     // Magical Translations!
                     ResourceLocation lang = toLang(resourcePath);
                     if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Minecraft.getInstance().getResourceManager().getResource(lang).getInputStream()))) {
-                            List<String> translations = new ArrayList<>();
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                String[] splits = line.split("=", 2);
-                                if (splits.length == 2) {
-                                    String key = splits[0];
-                                    String value = splits[1];
-
-                                    translations.add(String.format("\"%s\": \"%s\"", key, value));
-                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                                    translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                        Map<String, String> rawTranslations = new HashMap<>();
+                        for (IResource resource : Minecraft.getInstance().getResourceManager().getResources(lang)) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    String[] splits = line.split("=", 2);
+                                    if (splits.length == 2) {
+                                        rawTranslations.put(splits[0], splits[1]);
+                                    }
                                 }
                             }
-                            String output = "{" + String.join(",", translations) + "}";
-                            return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
                         }
+                        List<String> translations = new ArrayList<>();
+                        rawTranslations.forEach((key, value) -> {
+                            translations.add(String.format("\"%s\": \"%s\"", key, value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                        });
+                        String output = "{" + String.join(",", translations) + "}";
+                        ModCore.info("Created translation for %s : %s", resourcePath, output);
+                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
                     }
                 }
                 return null;
