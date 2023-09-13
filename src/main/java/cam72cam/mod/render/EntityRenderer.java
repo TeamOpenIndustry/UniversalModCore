@@ -153,7 +153,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
 
-        renderers.get(self.getClass()).render(self, state, partialTicks);
+        // State may be modified in render, before calling in to post-render
+        renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
