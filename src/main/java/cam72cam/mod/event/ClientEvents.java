@@ -97,6 +97,7 @@ public class ClientEvents {
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
         private static Vec3d dragPos = null;
+        private static boolean skipNextMouseInputEvent = false;
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -107,6 +108,9 @@ public class ClientEvents {
             MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
+                // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
+                // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
+                skipNextMouseInputEvent = true;
             }
         }
 
@@ -125,6 +129,10 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onClick(InputEvent.MouseInputEvent event) {
+            if (skipNextMouseInputEvent) {
+                skipNextMouseInputEvent = false;
+                return;
+            }
             int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
             int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
 
