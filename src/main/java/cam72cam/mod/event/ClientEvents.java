@@ -127,10 +127,25 @@ public class ClientEvents {
             onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
 
+        private static void hackInputState(InputEvent.MouseInputEvent event) {
+            int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
+            int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
+
+            // This prevents the event from firing
+            if (event.getButton() == attackID) {
+                Minecraft.getInstance().options.keyAttack.consumeClick();
+            }
+            if (event.getButton() == useID) {
+                Minecraft.getInstance().options.keyUse.consumeClick();
+            }
+        }
+
         @SubscribeEvent
         public static void onClick(InputEvent.MouseInputEvent event) {
             if (skipNextMouseInputEvent) {
+                // This is the path from onGuiMouse
                 skipNextMouseInputEvent = false;
+                hackInputState(event);
                 return;
             }
             int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
@@ -141,10 +156,12 @@ public class ClientEvents {
                     Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
                     if (!DRAG.executeCancellable(x -> x.apply(button))) {
                         //event.setCanceled(true);
+                        hackInputState(event);
                         dragPos = new Vec3d(0, 0, 0);
                     }
                     if (!CLICK.executeCancellable(x -> x.apply(button))) {
                         //event.setCanceled(true);
+                        hackInputState(event);
                     }
                 } else {
                     dragPos = null;
