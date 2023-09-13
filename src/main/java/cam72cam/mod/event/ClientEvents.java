@@ -123,7 +123,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onClick(InputEvent.MouseInputEvent event) {
+        public static void onClick(InputEvent.RawMouseEvent event) {
             int attackID = Minecraft.getInstance().gameSettings.keyBindAttack.getKey().getKeyCode();
             int useID = Minecraft.getInstance().gameSettings.keyBindUseItem.getKey().getKeyCode();
 
@@ -131,11 +131,11 @@ public class ClientEvents {
                 if(event.getAction() == 1) {
                     Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
                     if (!DRAG.executeCancellable(x -> x.apply(button))) {
-                        //event.setCanceled(true);
+                        event.setCanceled(true);
                         dragPos = new Vec3d(0, 0, 0);
                     }
                     if (!CLICK.executeCancellable(x -> x.apply(button))) {
-                        //event.setCanceled(true);
+                        event.setCanceled(true);
                     }
                 } else {
                     dragPos = null;
