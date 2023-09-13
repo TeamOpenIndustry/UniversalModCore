@@ -155,6 +155,7 @@ public class ClientEvents {
                         //event.setCanceled(true);
                         hackInputState(event);
                         dragPos = new Vec3d(0, 0, 0);
+                        return;
                     }
                     if (!CLICK.executeCancellable(x -> x.apply(button))) {
                         //event.setCanceled(true);
