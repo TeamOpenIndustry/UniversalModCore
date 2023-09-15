@@ -116,7 +116,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, (float) (x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2), (float) y, color);
+            Minecraft.getMinecraft().fontRenderer.drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color);
         }
     }
 
