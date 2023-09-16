@@ -64,7 +64,8 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack), partialTicks));
+                        BlockPos off = te.getPos();
+                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
                     }
 
                     @Override
