@@ -151,7 +151,7 @@ jar {
         }
     }
 }
-//jar.finalizedBy('reobfJar')
+jar.finalizedBy('reobfJar')
 
 test {
     useJUnit()
