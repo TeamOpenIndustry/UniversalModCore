@@ -145,9 +145,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         Entity self = stock.getSelf();
 
         RenderType.cutout().setupRenderState();
-
         RenderHelper.turnBackOn();
-
         Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 
         int j = i % 65536;
@@ -162,6 +160,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+        RenderHelper.turnOff();
         RenderType.cutout().clearRenderState();
     }
 
