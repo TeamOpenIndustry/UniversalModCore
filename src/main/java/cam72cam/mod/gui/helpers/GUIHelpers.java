@@ -11,6 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.opengl.GL11;
@@ -116,6 +117,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
+            GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color);
         }
     }
