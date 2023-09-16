@@ -110,6 +110,8 @@ public class BlockRender {
                     int k = combinedLightIn / 65536;
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
+                    RenderHelper.turnOff();
+
                     RenderType.solid().clearRenderState();
                 }
 
