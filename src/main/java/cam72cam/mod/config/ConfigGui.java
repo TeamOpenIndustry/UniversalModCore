@@ -1,5 +1,6 @@
 package cam72cam.mod.config;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.screen.*;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -67,6 +68,8 @@ public class ConfigGui implements IScreen {
             if (property instanceof ConfigFile.PropertyField) {
                 ConfigFile.PropertyField prop = (ConfigFile.PropertyField) property;
                 try {
+                    ConfigFile.Range range = property.getRange();
+
                     if (prop.field.get(null) instanceof String) {
                         String text = (String) prop.field.get(null);
                         widgets.add(screen -> {
@@ -127,53 +130,107 @@ public class ConfigGui implements IScreen {
                     } else if (prop.field.get(null) instanceof Double) {
                         Double val = (Double) prop.field.get(null);
                         widgets.add(screen -> {
-                            TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
-                            tf.setText(val.toString());
-                            tf.setValidator(str -> {
-                                try {
-                                    prop.field.set(null, Double.parseDouble(str));
-                                    ci.write();
-                                } catch (IllegalAccessException | NumberFormatException e) {
-                                    return false;
-                                }
-                                return true;
-                            });
-                            onPage.accept(finalI, tf::setVisible);
-                            return tf;
+                            if (range == null) {
+                                TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
+                                tf.setText(val.toString());
+                                tf.setValidator(str -> {
+                                    try {
+                                        prop.field.set(null, Double.parseDouble(str));
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                                onPage.accept(finalI, tf::setVisible);
+                                return tf;
+                            } else {
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, true) {
+                                    @Override
+                                    public void onSlider() {
+                                        setText(String.format("%.2f", getValue()));
+                                        try {
+                                            prop.field.set(null, getValue());
+                                            ci.write();
+                                        } catch (IllegalAccessException | NumberFormatException e) {
+                                            ModCore.catching(e);
+                                        }
+                                    }
+                                };
+                                s.onSlider();
+                                onPage.accept(finalI, s::setVisible);
+                                return s;
+                            }
                         });
                     } else if (prop.field.get(null) instanceof Float) {
                         Float val = (Float) prop.field.get(null);
                         widgets.add(screen -> {
-                            TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
-                            tf.setText(val.toString());
-                            tf.setValidator(str -> {
-                                try {
-                                    prop.field.set(null, Float.parseFloat(str));
-                                    ci.write();
-                                } catch (IllegalAccessException | NumberFormatException e) {
-                                    return false;
-                                }
-                                return true;
-                            });
-                            onPage.accept(finalI, tf::setVisible);
-                            return tf;
+                            if (range == null) {
+                                TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
+                                tf.setText(val.toString());
+                                tf.setValidator(str -> {
+                                    try {
+                                        prop.field.set(null, Float.parseFloat(str));
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                                onPage.accept(finalI, tf::setVisible);
+                                return tf;
+                            } else {
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, false) {
+                                    @Override
+                                    public void onSlider() {
+                                        setText(String.format("%.2f", getValue()));
+                                        try {
+                                            prop.field.set(null, (float)getValue());
+                                            ci.write();
+                                        } catch (IllegalAccessException | NumberFormatException e) {
+                                            ModCore.catching(e);
+                                        }
+                                    }
+                                };
+                                s.onSlider();
+                                onPage.accept(finalI, s::setVisible);
+                                return s;
+                            }
                         });
                     } else if (prop.field.get(null) instanceof Integer) {
                         Integer val = (Integer) prop.field.get(null);
                         widgets.add(screen -> {
-                            TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
-                            tf.setText(val.toString());
-                            tf.setValidator(str -> {
-                                try {
-                                    prop.field.set(null, Integer.parseInt(str));
-                                    ci.write();
-                                } catch (IllegalAccessException | NumberFormatException e) {
-                                    return false;
-                                }
-                                return true;
-                            });
-                            onPage.accept(finalI, tf::setVisible);
-                            return tf;
+                            if (range == null) {
+                                TextField tf = new TextField(screen, 1, offsetI * 20 + 1, 196, 18);
+                                tf.setText(val.toString());
+                                tf.setValidator(str -> {
+                                    try {
+                                        prop.field.set(null, Integer.parseInt(str));
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                                onPage.accept(finalI, tf::setVisible);
+                                return tf;
+                            } else {
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, true) {
+                                    @Override
+                                    public void onSlider() {
+                                        setText(getValueInt() + "");
+                                        try {
+                                            prop.field.set(null, getValueInt());
+                                            ci.write();
+                                        } catch (IllegalAccessException | NumberFormatException e) {
+                                            ModCore.catching(e);
+                                        }
+                                    }
+                                };
+                                s.onSlider();
+                                onPage.accept(finalI, s::setVisible);
+                                return s;
+                            }
                         });
                     } else {
                         //continue;

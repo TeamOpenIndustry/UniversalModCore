@@ -63,13 +63,12 @@ public class SpriteSheet {
     }
 
     /** Render the sprite represented by id (skip if unknown) */
-    public void renderSprite(Identifier id) {
+    public void renderSprite(Identifier id, RenderState state) {
         SpriteInfo sprite = sprites.get(id);
         if (sprite == null) {
             return;
         }
-        RenderState state = new RenderState()
-                .texture(Texture.wrap(sprite.texID))
+        state.texture(Texture.wrap(sprite.texID))
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
         try (With ctx = RenderContext.apply(state)) {

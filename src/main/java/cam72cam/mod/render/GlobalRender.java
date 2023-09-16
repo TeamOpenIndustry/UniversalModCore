@@ -38,6 +38,14 @@ public class GlobalRender {
     // Fire these off every tick
     private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
+    // This is required before new GRH()
+    static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<>(GlobalRenderHelper::new, new HashSet<>(), null) {
+        @Override
+        public boolean isValid(BlockState block_1) {
+            return true;
+        }
+    };
+
     // Internal hack
     private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
 
@@ -55,7 +63,8 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
                         // TODO 1.15+ do we need to set lightmap coords here?
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack), partialTicks));
+                        BlockPos off = te.getBlockPos();
+                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
                     }
 
                     @Override
@@ -172,15 +181,7 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
-    static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
-        @Override
-        public boolean isValid(BlockState block_1) {
-            return true;
-        }
-    };
-
     public static class GlobalRenderHelper extends BlockEntity {
-
         public GlobalRenderHelper(BlockPos pos, BlockState state) {
             super(grhtype, new BlockPos(0, 0, 0) {
                 @Override

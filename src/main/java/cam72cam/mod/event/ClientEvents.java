@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
@@ -12,9 +11,6 @@ import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.sound.Audio;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -41,7 +37,6 @@ public class ClientEvents {
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
-        Audio.registerClientCallbacks();
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
         CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
@@ -102,6 +97,7 @@ public class ClientEvents {
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
         private static Vec3d dragPos = null;
+        private static boolean skipNextMouseInputEvent = false;
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -112,6 +108,9 @@ public class ClientEvents {
             MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
+                // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
+                // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
+                skipNextMouseInputEvent = true;
             }
         }
 
@@ -121,25 +120,50 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiDrag(GuiScreenEvent.MouseDragEvent.Pre event) {
-            onGuiMouse(event, event.getMouseButton(), MouseAction.RELEASE);
+            onGuiMouse(event, event.getMouseButton(), MouseAction.MOVE);
         }
         @SubscribeEvent
         public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
 
-        @SubscribeEvent
-        public static void onClick(InputEvent.MouseInputEvent event) {
+        private static void hackInputState(InputEvent.MouseInputEvent event) {
             int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
             int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
 
-            if ((event.getButton() == attackID || event.getButton() == useID) && event.getAction() == 1) {
-                Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
-                if (!DRAG.executeCancellable(x -> x.apply(button))) {
-                    //event.setCanceled(true);
-                    dragPos = new Vec3d(0, 0, 0);
-                } else if (!CLICK.executeCancellable(x -> x.apply(button))) {
-                    //event.setCanceled(true);
+            // This prevents the event from firing
+            if (event.getButton() == attackID) {
+                Minecraft.getInstance().options.keyAttack.consumeClick();
+            }
+            if (event.getButton() == useID) {
+                Minecraft.getInstance().options.keyUse.consumeClick();
+            }
+        }
+
+        @SubscribeEvent
+        public static void onClick(InputEvent.MouseInputEvent event) {
+            if (skipNextMouseInputEvent) {
+                // This is the path from onGuiMouse
+                skipNextMouseInputEvent = false;
+                hackInputState(event);
+                return;
+            }
+            int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
+            int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
+
+            if (event.getButton() == attackID || event.getButton() == useID) {
+                if(event.getAction() == 1) {
+                    Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
+                    if (!DRAG.executeCancellable(x -> x.apply(button))) {
+                        //event.setCanceled(true);
+                        hackInputState(event);
+                        dragPos = new Vec3d(0, 0, 0);
+                        return;
+                    }
+                    if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                        //event.setCanceled(true);
+                        hackInputState(event);
+                    }
                 } else {
                     dragPos = null;
                 }
@@ -212,11 +236,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent.Post event) {
-            ModCore.testReload();
         }
 
         @SubscribeEvent(priority = EventPriority.LOW)

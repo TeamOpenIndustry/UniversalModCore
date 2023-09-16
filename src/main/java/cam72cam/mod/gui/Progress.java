@@ -33,9 +33,8 @@ public class Progress {
 
         public void step(String name) {
             at += 1;
-            String msg = this.name + " " + (at * 100 / steps) + "% : " + name;
-            StartupMessageManager.addModMessage(msg);
-            ModCore.info(msg);
+            StartupMessageManager.addModMessage(this.name + " " + (at * 100 / steps) + "% : " + name);
+            ModCore.info(this.name + " " + (at * 100 / steps) + "%% : " + name);
         }
     }
 }

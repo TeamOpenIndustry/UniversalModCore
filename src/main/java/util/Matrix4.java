@@ -8,6 +8,7 @@ import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.nio.FloatBuffer;
 
 /**
  * Copyright (C) 2013 Chicken-Bones
@@ -61,6 +62,7 @@ public class Matrix4
 	{
 		set(mat);
 	}
+	/*
 	public Matrix4(Matrix4f mat)
 	{
 		m00 = mat.m00;
@@ -79,7 +81,7 @@ public class Matrix4
 		m31 = mat.m31;
 		m32 = mat.m32;
 		m33 = mat.m33;
-	}
+	}*/
 
 	public Matrix4(Facing facing)
 	{
@@ -107,6 +109,26 @@ public class Matrix4
 		}
 		translate(-.5, -.5, -.5);
 	}
+
+	public Matrix4(Matrix4f mat) {
+		m00 = mat.m00;
+		m01 = mat.m01;
+		m02 = mat.m02;
+		m03 = mat.m03;
+		m10 = mat.m10;
+		m11 = mat.m11;
+		m12 = mat.m12;
+		m13 = mat.m13;
+		m20 = mat.m20;
+		m21 = mat.m21;
+		m22 = mat.m22;
+		m23 = mat.m23;
+		m30 = mat.m30;
+		m31 = mat.m31;
+		m32 = mat.m32;
+		m33 = mat.m33;
+	}
+
 	public Matrix4 setIdentity()
 	{
 		m00 = m11 = m22 = m33 = 1;
@@ -430,7 +452,7 @@ public class Matrix4
 
 	public Matrix4f toMatrix4f()
 	{
-		return new Matrix4f((float)m00,(float)m01,(float)m02,(float)m03, (float)m10,(float)m11,(float)m12,(float)m13, (float)m20,(float)m21,(float)m22,(float)m23, (float)m30,(float)m31,(float)m32,(float)m33);
+		return new Matrix4f(new float[] {(float)m00,(float)m01,(float)m02,(float)m03, (float)m10,(float)m11,(float)m12,(float)m13, (float)m20,(float)m21,(float)m22,(float)m23, (float)m30,(float)m31,(float)m32,(float)m33});
 	}
 	public void fromMatrix4f(Matrix4f mat)
 	{
@@ -445,6 +467,14 @@ public class Matrix4
 		Matrix4f temp = toMatrix4f();
 		temp.invert();
 		this.fromMatrix4f(temp);
+	}
+
+	public Matrix4 slerp(Matrix4 to, float percent) {
+		Matrix4 from = this;
+		// For now I am going to be lazy
+		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
+		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
+		return new Matrix4(s.slerp(e, percent).getMatrix());
 	}
 
 	@Override

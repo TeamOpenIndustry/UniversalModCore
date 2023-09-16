@@ -2,6 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -11,6 +12,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -62,7 +64,7 @@ public abstract class Particle {
 
                 @Override
                 public ParticleRenderType getRenderType() {
-                    return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+                    return ParticleRenderType.CUSTOM;
                 }
 
                 @Override
@@ -75,6 +77,14 @@ public abstract class Particle {
 
                 @Override
                 public void render(VertexConsumer buffer, Camera renderInfo, float partialTicks) {
+                    RenderState base = new RenderState();
+                    base.blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA));
+                    base.alpha_test(true);
+                    GL11.glAlphaFunc(516, 0.003921569F);
+                    base.depth_mask(ip.depthTestEnabled());
+                    base.color(1, 1, 1, 1);
+                    Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+
                     Vec3 vec3d = renderInfo.getPosition();
                     ip.ticks = age;
                     ip.renderX = x + x - xo + this.xd * partialTicks - vec3d.x;
@@ -82,19 +92,21 @@ public abstract class Particle {
                     ip.renderZ = z + z - zo + this.zd * partialTicks - vec3d.z;
 
                     if (renderer == null) {
-                        // TODO 1.16.5 OpenGL.With alpha = OpenGL.alphaFunc(516, 0.003921569F)
-                        RenderState state = new RenderState().depth_test(false);
+                        RenderState state = base.clone();
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, new RenderState(), partialTicks);
+                            renderer.accept(particles, base.clone(), partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }
                         particles.add(ip);
                         ip.canRender = false;
                     }
+
+
+                    Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
                 }
 
             };

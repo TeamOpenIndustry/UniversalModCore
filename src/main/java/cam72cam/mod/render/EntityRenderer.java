@@ -6,6 +6,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.opengl.RenderState;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -133,12 +134,13 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         int j = i % 65536;
         int k = i / 65536;
-        RenderState state = new RenderState(p_225623_4_).lightmap(j / 15f, k / 15f);
+        RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
 
-        renderers.get(self.getClass()).render(self, state, partialTicks);
+        // State may be modified in render, before calling in to post-render
+        renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
         // TODO
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
 

@@ -1,11 +1,7 @@
 package cam72cam.mod;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -13,9 +9,23 @@ import java.util.List;
 import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.packs.*;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.repository.RepositorySource;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraftforge.fmllegacy.DatagenModLoader;
 import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
 import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import java.util.*;
+
+import net.minecraft.resources.*;
+import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +45,7 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -49,6 +60,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL32;
 
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(ModCore.MODID)
@@ -75,6 +94,7 @@ public class ModCore {
 
         ModCore.register(new Internal());
 
+        proxy.setup();
         proxy.event(ModEvent.CONSTRUCT);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
@@ -191,6 +211,9 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
         }
+
+        public void setup() {
+        }
     }
 
     public static class ClientProxy extends Proxy {
@@ -199,6 +222,11 @@ public class ModCore {
         public ClientProxy() {
             super();
 
+            if (DatagenModLoader.isRunningDataGen()) {
+                ModCore.warn("Skipping MaxTextureSize detection during data generation");
+                return;
+            }
+
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
                 RenderSystem.recordRenderCall(() -> {
                         MaxTextureSize = GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE);
@@ -206,10 +234,202 @@ public class ModCore {
                 });
             }
         }
+
         @Override
-		public void event(ModEvent event, Mod m) {
+        public void setup() {
+            if (Minecraft.getInstance() == null) {
+                // Instance can be null during data gen
+                return;
+            }
+            Config.getMaxTextureSize(); //populate
+
+            List<PackResources> packs = new ArrayList<>();
+            packs.add(new TranslationResourcePack());
+
+            for (Mod m : mods) {
+                PackResources modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
+                packs.add(modPack);
+                String configDir = FMLPaths.CONFIGDIR.get().toString();
+                new File(configDir).mkdirs();
+
+                File folder = new File(configDir + File.separator + m.modID());
+                if (folder.exists()) {
+                    if (folder.isDirectory()) {
+                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
+                        for (File file : files) {
+                            packs.add(createPack(file));
+                        }
+
+                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
+                        for (File dir : folders) {
+                            packs.add(createPack(dir));
+                        }
+                    }
+                } else {
+                    folder.mkdirs();
+                }
+                packs.add(modPack);
+            }
+
+            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+            Minecraft.getInstance().getResourcePackRepository().addPackFinder(new RepositorySource() {
+                @Override
+                public void loadPacks(Consumer<Pack> consumer, Pack.PackConstructor packInfoFactory) {
+                    for (PackResources pack : packs) {
+                        consumer.accept(new Pack(pack.getName(),
+                                true,
+                                () -> pack,
+                                new TextComponent(""),
+                                new TextComponent(""),
+                                PackCompatibility.COMPATIBLE,
+                                Pack.Position.TOP,
+                                true,
+                                PackSource.DEFAULT,
+                                true));
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        private static class TranslationResourcePack extends AbstractPackResources {
+            public TranslationResourcePack() {
+                super(null);
+            }
+
+            private ResourceLocation toLang(String path) {
+                // assets/mod/location
+                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
+                String[] parts = path.split("/");
+                String type = parts[0];
+                String namespace = parts[1];
+                String prefix = String.format("%s/%s/", type, namespace);
+                path = path.replace(prefix, "").replace(".json", ".lang");
+                String lang = path.split("_")[1].replace(".lang", "");
+                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
+                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
+                    @Override
+                    public String getPath() {
+                        // Very evil...
+                        return path;
+                    }
+                };
+            }
+
+            @Override
+            public boolean hasResource(String resourcePath) {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    ResourceLocation lang = toLang(resourcePath);
+                    return Minecraft.getInstance().getResourceManager().hasResource(lang);
+                }
+                return false;
+            }
+
+            @Override
+            public InputStream getResource(String resourcePath) throws IOException {
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
+                    // Magical Translations!
+                    ResourceLocation lang = toLang(resourcePath);
+                    if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
+                        Map<String, String> translationMap = new HashMap<>();
+                        for (Resource resource : Minecraft.getInstance().getResourceManager().getResources(lang)) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    String[] splits = line.split("=", 2);
+                                    if (splits.length == 2) {
+                                        translationMap.put(splits[0], splits[1]);
+                                    }
+                                }
+                            }
+                        }
+
+                        List<String> translations = new ArrayList<>();
+                        translationMap.forEach((key, value) -> {
+                            translations.add(String.format("\"%s\": \"%s\"", key, value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                        });
+                        String output = "{" + String.join(",", translations) + "}";
+                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public Collection<ResourceLocation> getResources(PackType p_225637_1_, String p_225637_2_, String p_225637_3_, int p_225637_4_, Predicate<String> p_225637_5_) {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public Set<String> getNamespaces(PackType p_195759_1_) {
+                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public String getName() {
+                return "Translation Hackery";
+            }
+
+
+            @Nullable
+            @Override
+            public <T> T getMetadataSection(MetadataSectionSerializer<T> p_195760_1_) throws IOException {
+                return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+            }
+        }
+
+        private static class UMCFolderPack extends FolderPackResources {
+            public UMCFolderPack(File folder) {
+                super(folder);
+            }
+
+            @Override
+            public InputStream getResource(String name) throws IOException {
+                InputStream stream = super.getResource(name);
+                File file = this.getFile(name);
+                return new Identifier.InputStreamMod(stream, file.lastModified());
+            }
+
+            @Override
+            public boolean hasResource(String resourcePath) {
+                return super.hasResource(resourcePath);
+            }
+        }
+
+        private static class UMCFilePack extends FilePackResources {
+            private final File path;
+
+            public UMCFilePack(File fileIn) {
+                super(fileIn);
+                this.path = fileIn;
+            }
+
+            @Override
+            public InputStream getResource(String name) throws IOException {
+                return new Identifier.InputStreamMod(super.getResource(name), path.lastModified());
+            }
+        }
+
+
+        private static PackResources createPack(File path) {
+            if (path.isDirectory()) {
+                return new UMCFolderPack(path);
+            } else {
+                return new UMCFilePack(path);
+            }
         }
     }
 
@@ -227,11 +447,9 @@ public class ModCore {
 
 
     public static class Internal extends Mod {
-        public int skipN = 0;
-
         @Override
         public String modID() {
-            return "universalmodcoreinternal";
+            return "universalmodcore";
         }
 
         @Override
@@ -259,37 +477,21 @@ public class ModCore {
             }
         }
 
-        /*
-        public interface SynchronousResourceReloadListener extends IFutureReloadListener {
-            @Override
-			default CompletableFuture<Void> reload(IFutureReloadListener.IStage stage, IResourceManager resourceManager, IProfiler preparationsProfiler, IProfiler reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
-                return stage.wait(Unit.INSTANCE).thenRunAsync(() -> {
-                    this.apply(resourceManager);
-                }, backgroundExecutor);
-            }
-
-            void apply(IResourceManager var1);
-        }*/
-
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    // Instance can be null during data gen
+                    if (Minecraft.getInstance() != null) {
+                        ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
+                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                    }
                 case SETUP:
                     try {
                         Minecraft.getInstance().createSearchTrees();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
-                    /*
-                    ((SimpleReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((SynchronousResourceReloadListener)resourceManager -> {
-                        if (skipN > 0) {
-                            skipN--;
-                            return;
-                        }
-                        ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                        ClientEvents.fireReload();
-                    });
-                    */
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
                     break;
@@ -302,53 +504,7 @@ public class ModCore {
         }
     }
 
-    static int i = 1;
-    public static void testReload() {
-        if (i % 10 == 0) { // 4 sheets, we fire on the last one
-            ModCore.isInReload = true;
-            proxy.event(ModEvent.RELOAD);
-            ClientEvents.fireReload();
-            ModCore.isInReload = false;
-        }
-        i++;
-    }
-
     public static void genData(String MODID, GatherDataEvent event) {
-        // src/main/resources/assets/immersiverailroading/
-        Path langPath = Paths.get(
-                event.getGenerator().getOutputFolder().getParent().getParent().toString(),
-                "main", "resources", "assets", MODID, "lang");
-        for (File path : langPath.toFile().listFiles()) {
-            if (!path.getPath().endsWith(".lang")) {
-                continue;
-            }
-
-            Path outPath = Paths.get(path.getParent(), path.toPath().getFileName().toString().toLowerCase(Locale.ROOT).replace(".lang", ".json"));
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
-                List<String> translations = new ArrayList<>();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] splits = line.split("=", 2);
-                    if (splits.length == 2) {
-                        String key = splits[0];
-                        String value = splits[1];
-
-                        translations.add(String.format("\"%s\": \"%s\"", key, value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                    }
-                }
-                String output = "{" + String.join(",", translations) + "}";
-                System.out.println(outPath);
-                System.out.println(output);
-                Files.write(outPath, output.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
         event.getGenerator().addProvider(new Recipes(event.getGenerator()));
         Fuzzy.register(event.getGenerator(), event.getExistingFileHelper());
@@ -374,11 +530,7 @@ public class ModCore {
             System.out.println("INFO: " + String.format(msg, params));
             return;
         }
-        if (params.length != 0) {
-            instance.logger.info(String.format(msg, params));
-        } else {
-            instance.logger.info(msg);
-        }
+        instance.logger.info(String.format(msg, params));
     }
 
     public static void warn(String msg, Object... params) {
@@ -387,11 +539,7 @@ public class ModCore {
             return;
         }
 
-        if (params.length != 0) {
-            instance.logger.warn(String.format(msg, params));
-        } else {
-            instance.logger.warn(msg);
-        }
+        instance.logger.warn(String.format(msg, params));
     }
 
     public static void error(String msg, Object... params) {
@@ -400,11 +548,7 @@ public class ModCore {
             return;
         }
 
-        if (params.length != 0) {
-            instance.logger.error(String.format(msg, params));
-        } else {
-            instance.logger.error(msg);
-        }
+        instance.logger.error(String.format(msg, params));
     }
 
     public static void catching(Throwable ex, String msg, Object... params) {
@@ -418,7 +562,7 @@ public class ModCore {
             return;
         }
 
-        instance.logger.catching(ex);
+        instance.logger.error("CATCHING", ex);
     }
 
     private static final List<File> usedCacheFiles = new ArrayList<>();

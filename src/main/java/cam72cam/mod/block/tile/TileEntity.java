@@ -30,6 +30,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -497,5 +499,14 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
     public final IModelData getModelData() {
         return new ModelDataMap.Builder().withInitial(TE_PROPERTY, this).build();
+    }
+
+    /* 1.16+ caching */
+    private final SingleCache<IBoundingBox, VoxelShape> shapeCache = new SingleCache<>((IBoundingBox box) -> Shapes.create(BoundingBox.from(box)));
+    public VoxelShape getShape() {
+        if (instance() != null) {
+            return shapeCache.get(this.instance().getBoundingBox());
+        }
+        return null;
     }
 }

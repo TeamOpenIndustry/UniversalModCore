@@ -49,6 +49,15 @@ public abstract class Packet {
                     TagSerializer.deserialize(msg.packet.data, msg.packet, world);
                 } catch (SerializationException e) {
                     ModCore.catching(e);
+                    return;
+                }
+                if (msg.packet.getPlayer() == null) {
+                    try {
+                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                    } catch (Exception e) {
+                        ModCore.catching(e);
+                        return;
+                    }
                 }
                 msg.packet.handle();
             });
@@ -114,10 +123,6 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            ModCore.warn("Warning, trying to send %s client side!");
-            return;
-        }
         net.send(PacketDistributor.ALL.noArg(), new Message(this));
     }
 

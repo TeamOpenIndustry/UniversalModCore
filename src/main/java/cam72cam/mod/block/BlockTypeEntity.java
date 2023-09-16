@@ -17,6 +17,9 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
 
@@ -165,6 +168,16 @@ public abstract class BlockTypeEntity extends BlockType {
         @Override
         public <T extends net.minecraft.world.level.block.entity.BlockEntity> BlockEntityTicker<T> getTicker(Level p_154683_, BlockState p_154684_, BlockEntityType<T> p_154685_) {
             return p_154684_.getBlock() instanceof BlockTypeInternal && isTickable ? (BlockEntityTicker<T>)(BlockEntityTicker<TileEntityTickable>)this::ticker : null;
+        }
+
+        @Override
+        public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+            net.minecraft.world.level.block.entity.BlockEntity entity = worldIn.getBlockEntity(pos);
+            if (entity instanceof TileEntity) {
+                VoxelShape shape = ((TileEntity) entity).getShape();
+                return shape != null ? shape : Shapes.block();
+            }
+            return super.getShape(state, worldIn, pos, context);
         }
 
         @Override

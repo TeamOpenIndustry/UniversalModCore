@@ -2,6 +2,7 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -31,6 +32,7 @@ public class CommonEvents {
     public static final class World {
         public static final Event<Consumer<Level>> LOAD = new Event<>();
         public static final Event<Consumer<Level>> UNLOAD = new Event<>();
+        public static final Event<Consumer<ServerLevel>> SAVE = new Event<>();
         public static final Event<Consumer<Level>> TICK = new Event<>();
         public static final Event<Consumer<ChunkAccess>> LOAD_CHUNK = new Event<>();
     }
@@ -70,6 +72,11 @@ public class CommonEvents {
         @SubscribeEvent
         public static void onWorldLoad(ChunkDataEvent.Load event) {
             World.LOAD_CHUNK.execute(x -> x.accept(event.getChunk()));
+        }
+
+        @SubscribeEvent
+        public static void onWorldLoad(WorldEvent.Save event) {
+            World.SAVE.execute(x -> x.accept((ServerLevel) event.getWorld()));
         }
 
         @SubscribeEvent

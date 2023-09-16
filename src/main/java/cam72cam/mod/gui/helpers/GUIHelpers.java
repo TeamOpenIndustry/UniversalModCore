@@ -27,7 +27,7 @@ public class GUIHelpers {
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
-                        .blend(BlendMode.OPAQUE)
+                        .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
         )) {
             GuiComponent.fill(new PoseStack(), x, y, x + width, y + height, color);
         }

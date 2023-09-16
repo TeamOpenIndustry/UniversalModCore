@@ -4,6 +4,7 @@ import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -66,7 +67,23 @@ public class RenderContext {
         if (state.color != null && shader.COLOR_MODULATOR != null) {
             shader.COLOR_MODULATOR.set(state.color);
         }
+        /* TODO 1.17.1
+        state.bools.forEach((glId, value) -> {
+            boolean oldValue = GL11.glGetBoolean(glId);
+            applyBool(glId, value);
+            restore.add(() -> applyBool(glId, oldValue));
+        });
+        if (state.depth_mask != null) {
+            boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+            GL11.glDepthMask(state.depth_mask);
+            restore.add(() -> GL11.glDepthMask(oldDepthMask));
+        }
 
+        if (state.smooth_shading != null) {
+            int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
+            GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
+            restore.add(() -> GL11.glShadeModel(oldShading));
+        }*/
 
         shader.apply();
 
