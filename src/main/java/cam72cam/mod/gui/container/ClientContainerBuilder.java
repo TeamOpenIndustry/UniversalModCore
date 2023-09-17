@@ -15,7 +15,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
@@ -45,7 +44,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Inventory p_create_2_, Component p_create_3_) {
-        super(serverContainer, serverContainer.playerInventory, new TextComponent(""));
+        super(serverContainer, serverContainer.playerInventory, Component.literal(""));
         this.server = serverContainer;
         this.imageWidth = paddingRight + serverContainer.slotsX * slotSize + paddingLeft;
         this.imageHeight = server.ySize;
@@ -207,7 +206,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        this.minecraft.getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
+        this.minecraft.getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal, x, y);
 
         try (With ctx = RenderContext.apply(
                 new RenderState()

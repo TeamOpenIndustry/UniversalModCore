@@ -1,7 +1,13 @@
 package cam72cam.mod.item;
 
+import cam72cam.mod.ModCore;
+import cam72cam.mod.event.ClientEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 /** Creates/Registers a creative tab for custom items */
@@ -10,14 +16,23 @@ public class CreativeTab {
 
     // TODO expose existing creative tabs as constants to be used by mods
 
+    public List<CustomItem> inject = new ArrayList<>();
+
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
-        internal = new CreativeModeTab(label) {
-            @Override
-            public net.minecraft.world.item.ItemStack makeIcon() {
-                return stack.get().internal;
-            }
-        };
+        ClientEvents.CREATIVE_TAB.subscribe(event -> {
+            internal = event.registerCreativeModeTab(new ResourceLocation(ModCore.MODID, label), builder -> {
+                builder.title(Component.literal(label));
+                builder.icon(() -> stack.get().internal);
+                builder.displayItems((params, output) -> {
+                    for (CustomItem customItem : inject) {
+                        for (ItemStack itemVariant : customItem.getItemVariants(null)) {
+                            output.accept(itemVariant.internal);
+                        }
+                    }
+                });
+            });
+        });
     }
 
     /** Wraps minecraft's tabs, don't use directly */

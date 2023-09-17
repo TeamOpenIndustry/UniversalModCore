@@ -5,7 +5,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientRegistry;
 import org.lwjgl.glfw.GLFW;
 
 public class Keyboard {
@@ -134,7 +133,7 @@ public class Keyboard {
             return;
         }
         KeyMapping key = new KeyMapping(name, keyCode.code, category);
-        ClientRegistry.registerKeyBinding(key);
+        //TODO 1.19.4 ClientRegistry.registerKeyBinding(key);
         ClientEvents.TICK.subscribe(() -> {
             if (key.isDown()) {
                 handler.run();

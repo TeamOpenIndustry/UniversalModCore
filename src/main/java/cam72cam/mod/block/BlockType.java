@@ -59,7 +59,7 @@ public abstract class BlockType {
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
         internal = getBlock();
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(id.internal, internal));
+        CommonEvents.Block.REGISTER.subscribe(helper -> helper.register(id.internal, internal));
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */

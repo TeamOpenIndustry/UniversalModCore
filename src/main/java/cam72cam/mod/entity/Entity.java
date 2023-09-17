@@ -221,11 +221,11 @@ public class Entity {
 
     /** Damage entity directly (bypassing armor) */
     public void directDamage(String msg, double damage) {
-        internal.hurt((new DamageSource(msg)).bypassArmor(), (float) damage);
+        // TODO 1.19.4 internal.hurt((new DamageSource(msg)).bypassArmor(), (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP);
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.explode();
         explosion.finalizeExplosion(true);

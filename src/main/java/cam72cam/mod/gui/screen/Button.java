@@ -6,7 +6,7 @@ import net.minecraft.client.gui.components.AbstractButton;
 
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
@@ -19,7 +19,7 @@ public abstract class Button {
         private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalButton(int xIn, int yIn, int widthIn, int heightIn, String msg) {
-            super(xIn, yIn, widthIn, heightIn, new TextComponent(msg));
+            super(xIn, yIn, widthIn, heightIn, Component.literal(msg));
         }
 
         @Override
@@ -51,8 +51,8 @@ public abstract class Button {
         }
 
         @Override
-        public void updateNarration(NarrationElementOutput narrationElementOutput) {
-            this.defaultButtonNarrationText(narrationElementOutput);
+        protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
+            this.defaultButtonNarrationText(p_259858_);
         }
     }
 
@@ -80,7 +80,7 @@ public abstract class Button {
 
     /** Override current text */
     public void setText(String text) {
-        button.setMessage(new TextComponent(text));
+        button.setMessage(Component.literal(text));
     }
 
     protected void onClickInternal(Player.Hand hand) {

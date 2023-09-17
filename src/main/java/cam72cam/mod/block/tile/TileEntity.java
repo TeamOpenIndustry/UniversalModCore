@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
+import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -155,7 +156,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         // Force legacy registration
         example.supplier(id);
 
-        CommonEvents.Tile.REGISTER.subscribe(() -> {
+        CommonEvents.Tile.REGISTER.subscribe(helper -> {
             BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> example.supplier(id), new HashSet<>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
@@ -163,7 +164,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 }
             }, null);
             types.put(id.toString(), type);
-            ForgeRegistries.BLOCK_ENTITY_TYPES.register(id.internal, type);
+            helper.register(id.internal, type);
         });
     }
 
@@ -491,7 +492,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     /* Render */
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
-    public final IModelData getModelData() {
-        return new ModelDataMap.Builder().withInitial(TE_PROPERTY, this).build();
+    public final ModelData getModelData() {
+        return ModelData.builder().with(TE_PROPERTY, this).build();
     }
 }

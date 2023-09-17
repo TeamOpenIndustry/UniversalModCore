@@ -25,8 +25,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.IItemRenderProperties;
-import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
@@ -46,11 +45,13 @@ public abstract class CustomItem {
 
         Item.Properties props = new Item.Properties().stacksTo(getStackSize());
         if (!getCreativeTabs().isEmpty()) {
-            props = props.tab(getCreativeTabs().get(0).internal);
+            for (CreativeTab creativeTab : getCreativeTabs()) {
+                creativeTab.inject.add(this);
+            }
         }
 
         internal = new ItemInternal(props);
-        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(identifier, internal));
+        CommonEvents.Item.REGISTER.subscribe(helper -> helper.register(identifier, internal));
     }
 
     /** Creative tabs that this should be shown under */
@@ -64,7 +65,7 @@ public abstract class CustomItem {
     /** Return variants of this itemstack to add to this particular creative tab */
     public List<ItemStack> getItemVariants(CreativeTab creativeTab) {
         List<ItemStack> res = new ArrayList<>();
-        if (creativeTab == null || creativeTab.internal == internal.getItemCategory()) {
+        if (creativeTab == null || getCreativeTabs().contains(creativeTab)) {
             res.add(new ItemStack(new net.minecraft.world.item.ItemStack(internal, 1)));
         }
         return res;
@@ -116,13 +117,13 @@ public abstract class CustomItem {
             return super.getName(stack);
         }
 
-        @Override
+        /*@Override
         public void fillItemCategory(CreativeModeTab tab, NonNullList<net.minecraft.world.item.ItemStack> items) {
             CreativeTab myTab = tab != CreativeModeTab.TAB_SEARCH ? new CreativeTab(tab) : null;
             if (ModCore.hasResources) {
                 items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
             }
-        }
+        }*/
 
         @Override
         public String getDescriptionId(net.minecraft.world.item.ItemStack stack) {
@@ -154,10 +155,10 @@ public abstract class CustomItem {
         }
 
         @Override
-        public void initializeClient(Consumer<IItemRenderProperties> consumer) {
-            consumer.accept(new IItemRenderProperties() {
+        public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+            consumer.accept(new IClientItemExtensions() {
                 @Override
-                public BlockEntityWithoutLevelRenderer getItemStackRenderer() {
+                public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                     return ItemRender.ISTER();
                 }
             });

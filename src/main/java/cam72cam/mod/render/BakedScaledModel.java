@@ -1,6 +1,5 @@
 package cam72cam.mod.render;
 
-import com.mojang.math.Matrix4f;
 import com.mojang.math.Transformation;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
@@ -12,6 +11,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.IQuadTransformer;
 import net.minecraftforge.client.model.QuadTransformers;
+import org.joml.Matrix4f;
 import util.Matrix4;
 
 import java.util.HashMap;
@@ -44,7 +44,7 @@ class BakedScaledModel implements BakedModel {
     @Override
     public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand) {
         if (quadCache.get(side) == null) {
-            Matrix4f mat = new Matrix4f(new float[] {
+            Matrix4f mat = new Matrix4f(
                     (float) transform.m00,
                     (float) transform.m01,
                     (float) transform.m02,
@@ -61,7 +61,7 @@ class BakedScaledModel implements BakedModel {
                     (float) transform.m31,
                     (float) transform.m32,
                     (float) transform.m33
-            });
+            );
             IQuadTransformer qt = QuadTransformers.applying(new Transformation(mat));
             quadCache.put(side, qt.process(source.getQuads(state, side, rand)));
         }

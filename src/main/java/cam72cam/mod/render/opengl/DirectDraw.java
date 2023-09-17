@@ -22,8 +22,7 @@ public class DirectDraw {
             for (VertexBuilder vert : verts) {
                 vert.draw(builder);
             }
-            builder.end();
-            BufferUploader.end(builder);
+            BufferUploader.draw(builder.end());
         }
         RenderSystem.setShader(() -> shader);
     }

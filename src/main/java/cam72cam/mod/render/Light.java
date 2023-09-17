@@ -5,6 +5,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -58,15 +59,14 @@ public class Light {
     }
 
     public static void register() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
+        CommonEvents.Entity.REGISTER.subscribe(helper -> {
             for (int i = 1; i <= 15; i++) {
                 EntityType.Builder<LightEntity> builder = EntityType.Builder.of(LightEntity::new, MobCategory.MISC);
                 builder.fireImmune();
                 builder.sized(0, 0);
 
                 EntityType<LightEntity> et = builder.build("light" + i);
-                et.setRegistryName(new ResourceLocation("universalmodcore:light" + i));
-                ForgeRegistries.ENTITIES.register(et);
+                helper.register(new ResourceLocation("universalmodcore:light" + i), et);
                 types[i] = et;
             }
         });
@@ -95,7 +95,7 @@ public class Light {
         }
 
         @Override
-        public Packet<?> getAddEntityPacket() {
+        public Packet<ClientGamePacketListener> getAddEntityPacket() {
             return null;
         }
     }

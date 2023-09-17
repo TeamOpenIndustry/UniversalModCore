@@ -5,11 +5,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
 
 import java.util.*;
@@ -59,7 +59,7 @@ public class ItemPickerGUI {
         private GuiScrollBar scrollBar;
 
         protected ItemPickerScreen() {
-            super(new TextComponent(""));
+            super(Component.literal(""));
         }
 
         @Override
@@ -69,10 +69,10 @@ public class ItemPickerGUI {
 
             search.render(matrixStack, mouseX, mouseY, partialTicks);
 
-            for (Widget button : this.renderables) {
+            for (Renderable button : this.renderables) {
                 if (button instanceof GuiScrollBar) continue;
                 if (scrollBar != null) {
-                    ((AbstractWidget)button).y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    ((AbstractWidget)button).setY(buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32));
                 }
                 if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
                     this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
@@ -100,13 +100,13 @@ public class ItemPickerGUI {
             this.buttonCoordList.clear();
 
             if (search == null) {
-                this.search = new EditBox(Minecraft.getInstance().font, width / 2 - 100, 20, 200, 20, new TextComponent(""));
+                this.search = new EditBox(Minecraft.getInstance().font, width / 2 - 100, 20, 200, 20, Component.literal(""));
             } else {
-                this.search.x = width / 2 - 100;
+                this.search.setX(width / 2 - 100);
                 this.search.setHeight(20);
             }
 
-            this.search.setFocus(true);
+            this.search.setFocused(true);
             this.addRenderableWidget(this.search);
 
             String[] searchParts = this.search.getValue().toLowerCase(Locale.ROOT).split(" ");

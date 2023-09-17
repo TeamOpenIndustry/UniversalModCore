@@ -451,12 +451,12 @@ public class World {
 
     /** If it is is raining */
     public boolean isRaining(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitation() == Biome.Precipitation.RAIN;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal()) == Biome.Precipitation.RAIN;
     }
 
     /** If it is snowing */
     public boolean isSnowing(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitation() == Biome.Precipitation.SNOW;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal()) == Biome.Precipitation.SNOW;
     }
 
     /** Temp in celsius */

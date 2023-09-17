@@ -26,53 +26,51 @@ public class RenderState {
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
 
-    private static FloatBuffer mbuf = FloatBuffer.wrap(new float[16]);
+    private static float[] mbuf = new float[16];
 
     public RenderState() {
 
     }
 
     public RenderState(PoseStack stack) {
-        mbuf.position(0);
-        stack.last().pose().store(mbuf);
+        stack.last().pose().get(mbuf);
         this.model_view = new Matrix4(
-                mbuf.get(0),
-                mbuf.get(1),
-                mbuf.get(2),
-                mbuf.get(3),
-                mbuf.get(4),
-                mbuf.get(5),
-                mbuf.get(6),
-                mbuf.get(7),
-                mbuf.get(8),
-                mbuf.get(9),
-                mbuf.get(10),
-                mbuf.get(11),
-                mbuf.get(12),
-                mbuf.get(13),
-                mbuf.get(14),
-                mbuf.get(15)
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
         ).transpose();
 
-        mbuf.position(0);
-        RenderSystem.getProjectionMatrix().store(mbuf);
+        RenderSystem.getProjectionMatrix().get(mbuf);
         this.projection = new Matrix4(
-                mbuf.get(0),
-                mbuf.get(1),
-                mbuf.get(2),
-                mbuf.get(3),
-                mbuf.get(4),
-                mbuf.get(5),
-                mbuf.get(6),
-                mbuf.get(7),
-                mbuf.get(8),
-                mbuf.get(9),
-                mbuf.get(10),
-                mbuf.get(11),
-                mbuf.get(12),
-                mbuf.get(13),
-                mbuf.get(14),
-                mbuf.get(15)
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
         ).transpose();
     }
 

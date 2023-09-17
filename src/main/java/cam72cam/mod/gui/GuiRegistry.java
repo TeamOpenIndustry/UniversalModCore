@@ -17,11 +17,11 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -42,14 +42,12 @@ public class GuiRegistry {
     private static final Map<Integer, Function<CreateEvent, ServerContainerBuilder>> registry = new HashMap<>();
 
     private static final MenuType<ServerContainerBuilder> TYPE = new MenuType<>((IContainerFactory<ServerContainerBuilder>) (
-            (id, inv, data) -> registry.get(data.readInt()).apply(new CreateEvent(id, inv, data.readInt(), data.readInt(), data.readInt())))
+            (id, inv, data) -> registry.get(data.readInt()).apply(new CreateEvent(id, inv, data.readInt(), data.readInt(), data.readInt()))),
+            FeatureFlagSet.of()
     );
-    static {
-        TYPE.setRegistryName(new ResourceLocation(ModCore.MODID, "alltheguis"));
-    }
 
     public static void registerEvents() {
-        CommonEvents.CONTAINER_REGISTRY.subscribe(reg -> reg.register(TYPE));
+        CommonEvents.CONTAINER_REGISTRY.subscribe(helper -> helper.register(new ResourceLocation(ModCore.MODID, "alltheguis"), TYPE));
     }
 
 
@@ -136,10 +134,10 @@ public class GuiRegistry {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openGui((ServerPlayer) player.internal, new MenuProvider() {
+            NetworkHooks.openScreen((ServerPlayer) player.internal, new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
-                    return new TextComponent("");
+                    return Component.literal("");
                 }
 
                 @Nullable
@@ -191,10 +189,10 @@ public class GuiRegistry {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openGui((ServerPlayer) player.internal, new MenuProvider() {
+            NetworkHooks.openScreen((ServerPlayer) player.internal, new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
-                    return new TextComponent("");
+                    return Component.literal("");
                 }
 
                 @Nullable

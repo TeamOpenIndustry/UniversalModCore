@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Transformation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -28,7 +29,9 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -55,7 +58,7 @@ public class ItemRender {
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        SimpleModelState foo = new SimpleModelState(ImmutableMap.of());
+        SimpleModelState foo = new SimpleModelState(Transformation.identity());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
                 new Material(TextureAtlas.LOCATION_BLOCKS, tex.internal)
@@ -137,23 +140,23 @@ public class ItemRender {
 
     /** Different contexts in which an item can be rendered */
     public enum ItemRenderType {
-        NONE(TransformType.NONE),
-        THIRD_PERSON_LEFT_HAND(TransformType.THIRD_PERSON_LEFT_HAND),
-        THIRD_PERSON_RIGHT_HAND(TransformType.THIRD_PERSON_RIGHT_HAND),
-        FIRST_PERSON_LEFT_HAND(TransformType.FIRST_PERSON_LEFT_HAND),
-        FIRST_PERSON_RIGHT_HAND(TransformType.FIRST_PERSON_RIGHT_HAND),
-        HEAD(TransformType.HEAD),
-        GUI(TransformType.GUI),
-        ENTITY(TransformType.GROUND),
-        FRAME(TransformType.FIXED);
+        NONE(ItemDisplayContext.NONE),
+        THIRD_PERSON_LEFT_HAND(ItemDisplayContext.THIRD_PERSON_LEFT_HAND),
+        THIRD_PERSON_RIGHT_HAND(ItemDisplayContext.THIRD_PERSON_RIGHT_HAND),
+        FIRST_PERSON_LEFT_HAND(ItemDisplayContext.FIRST_PERSON_LEFT_HAND),
+        FIRST_PERSON_RIGHT_HAND(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND),
+        HEAD(ItemDisplayContext.HEAD),
+        GUI(ItemDisplayContext.GUI),
+        ENTITY(ItemDisplayContext.GROUND),
+        FRAME(ItemDisplayContext.FIXED);
 
-        private final TransformType type;
+        private final ItemDisplayContext type;
 
-        ItemRenderType(TransformType type) {
+        ItemRenderType(ItemDisplayContext type) {
             this.type = type;
         }
 
-        public static ItemRenderType from(TransformType cameraTransformType) {
+        public static ItemRenderType from(ItemDisplayContext cameraTransformType) {
             for (ItemRenderType type : values()) {
                 if (cameraTransformType == type.type) {
                     return type;
@@ -282,7 +285,7 @@ public class ItemRender {
     public static BlockEntityWithoutLevelRenderer ISTER() {
         return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
             @Override
-            public void renderByItem(net.minecraft.world.item.ItemStack stack, TransformType p_239207_2_, PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
+            public void renderByItem(net.minecraft.world.item.ItemStack stack, ItemDisplayContext p_270899_, PoseStack matrixStack, MultiBufferSource p_108833_, int p_108834_, int p_108835_) {
                 // TODO 1.15+ do we need to set lightmap coords here?
                 doRender.accept(matrixStack);
             }
@@ -303,7 +306,7 @@ public class ItemRender {
         }
 
         @Override
-        public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+        public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState p_235039_, @org.jetbrains.annotations.Nullable Direction p_235040_, RandomSource p_235041_) {
             return EMPTY;
         }
 
@@ -330,6 +333,11 @@ public class ItemRender {
         @Override
         public TextureAtlasSprite getParticleIcon() {
             return null;
+        }
+
+        @Override
+        public ItemTransforms getTransforms() {
+            return BakedModel.super.getTransforms();
         }
 
         @Override

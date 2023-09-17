@@ -10,9 +10,11 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import cam72cam.mod.util.SingleCache;
@@ -200,7 +202,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public EntityType<?> getType() {
-        return legacyId == null ? super.getType() : ForgeRegistries.ENTITIES.getValue(new ResourceLocation(legacyId));
+        return legacyId == null ? super.getType() : ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(legacyId));
     }
 
     /* ITickable */
@@ -242,18 +244,18 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public final boolean hurt(DamageSource damagesource, float amount) {
         cam72cam.mod.entity.Entity wrapEnt = damagesource.getDirectEntity() != null ? self.getWorld().getEntity(damagesource.getDirectEntity()) : null;
         DamageType type;
-        if (damagesource.isExplosion()) {
+        if (damagesource.is(DamageTypes.EXPLOSION)) {
             type = DamageType.EXPLOSION;
-        } else if (damagesource.isProjectile()) {
+        } else if (damagesource.is(DamageTypes.MOB_PROJECTILE)) {
             type = DamageType.PROJECTILE;
-        } else if (damagesource.isFire()) {
+        } else if (damagesource.is(DamageTypes.ON_FIRE)) {
             type = DamageType.FIRE;
-        } else if (damagesource.isMagic()) {
+        } else if (damagesource.is(DamageTypes.MAGIC)) {
             type = DamageType.MAGIC;
         } else {
             type = DamageType.OTHER;
         }
-        iKillable.onDamage(type, wrapEnt, amount, damagesource.isBypassInvul());
+        iKillable.onDamage(type, wrapEnt, amount, damagesource.is(DamageTypes.OUT_OF_WORLD));
 
         return false;
     }
@@ -455,7 +457,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public net.minecraft.network.protocol.Packet<?> getAddEntityPacket() {
+    public net.minecraft.network.protocol.Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

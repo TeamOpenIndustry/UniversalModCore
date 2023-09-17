@@ -13,6 +13,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.client.model.DynamicFluidContainerModel;
+import net.minecraftforge.client.model.ItemLayerModel;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -47,8 +50,8 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(fluid.internal.get(0).getAttributes().getStillTexture());
-        drawSprite(sprite, fluid.internal.get(0).getAttributes().getColor(), x, y, width, height);
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(IClientFluidTypeExtensions.of(fluid.internal.get(0)).getStillTexture());
+        drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.get(0)).getTintColor(), x, y, width, height);
     }
 
     /** Draw a texture sprite at coords, tinted with col  */
@@ -60,8 +63,8 @@ public class GUIHelpers {
                         .texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
         )) {
-            int iW = sprite.getWidth();
-            int iH = sprite.getHeight();
+            int iW = sprite.contents().width();
+            int iH = sprite.contents().height();
 
             float minU = sprite.getU0();
             float minV = sprite.getV0();
@@ -139,7 +142,7 @@ public class GUIHelpers {
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
+            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal, x, y);
         }
     }
 }

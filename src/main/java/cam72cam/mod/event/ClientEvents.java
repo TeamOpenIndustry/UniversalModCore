@@ -4,7 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
@@ -13,8 +12,6 @@ import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.sound.Audio;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,8 +20,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
-import net.minecraftforge.client.event.sound.SoundLoadEvent;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -91,14 +87,15 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.RegisterAdditional>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureStitchEvent.Pre>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
-    public static final Event<Consumer<RenderGuiOverlayEvent.Post>> RENDER_DEBUG = new Event<>();
+    public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
+    public static final Event<Consumer<CreativeModeTabEvent.Register>> CREATIVE_TAB = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -109,28 +106,28 @@ public class ClientEvents {
             TICK.execute(Runnable::run);
         }
 
-        private static void onGuiMouse(ScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
+        private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
             }
         }
 
         @SubscribeEvent
-        public static void onGuiClick(ScreenEvent.MouseClickedEvent.Pre event) {
-            onGuiMouse(event, event.getButton(), MouseAction.CLICK);
+        public static void onGuiClick(ScreenEvent.MouseButtonPressed.Pre event) {
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getButton(), MouseAction.CLICK);
         }
         @SubscribeEvent
-        public static void onGuiDrag(ScreenEvent.MouseDragEvent.Pre event) {
-            onGuiMouse(event, event.getMouseButton(), MouseAction.RELEASE);
+        public static void onGuiDrag(ScreenEvent.MouseDragged.Pre event) {
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getMouseButton(), MouseAction.RELEASE);
         }
         @SubscribeEvent
-        public static void onGuiRelease(ScreenEvent.MouseReleasedEvent.Pre event) {
-            onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
+        public static void onGuiRelease(ScreenEvent.MouseButtonReleased.Pre event) {
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getButton(), MouseAction.RELEASE);
         }
 
         @SubscribeEvent
-        public static void onClick(InputEvent.MouseInputEvent event) {
+        public static void onClick(InputEvent.MouseButton event) {
             int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
             int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
 
@@ -155,23 +152,23 @@ public class ClientEvents {
             }
         }
 
+        @SubscribeEvent
         public static Vec3d getDragPos() {
             return dragPos;
         }
 
 
-        @SubscribeEvent
-        public static void onDebugRender(RenderGameOverlayEvent.Text event) {
+        public static void onDebugRender(CustomizeGuiOverlayEvent.DebugText event) {
             RENDER_DEBUG.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
+        public static void onOverlayEvent(RenderGuiOverlayEvent.Pre event) {
             RENDER_OVERLAY.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void onRenderMouseover(DrawSelectionEvent.HighlightBlock event) {
+        public static void onRenderMouseover(RenderHighlightEvent.Block event) {
             RenderType.cutout().setupRenderState();
             // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event));
@@ -179,13 +176,18 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onSoundLoad(SoundLoadEvent event) {
+        public static void onSoundLoad(SoundEngineLoadEvent event) {
             SOUND_LOAD.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
         public static void optifineSucksEvent(RenderLevelLastEvent event) {
             OPTIFINE_SUCKS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public void buildContents(CreativeModeTabEvent.Register event) {
+            CREATIVE_TAB.execute(x -> x.accept(event));
         }
     }
 
@@ -195,23 +197,24 @@ public class ClientEvents {
             registerClientEvents();
         }
 
-        @SubscribeEvent
+        /*TODO 1.18.2 @SubscribeEvent
         public static void registerModels(ModelRegistryEvent event) {
             MODEL_CREATE.execute(Runnable::run);
-        }
+        }*/
 
         @SubscribeEvent
-        public static void onModelBakeEvent(ModelBakeEvent event) {
+        public static void onModelBakeEvent(ModelEvent.RegisterAdditional event) {
+            MODEL_CREATE.execute(Runnable::run);
             MODEL_BAKE.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void onColorSetup(ColorHandlerEvent.Block event) {
+        public static void onColorSetup(RegisterColorHandlersEvent.Block event) {
             BlockRender.onPostColorSetup(event.getBlockColors());
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
+        public static void onTextureStitchEvent(TextureStitchEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 
@@ -220,9 +223,9 @@ public class ClientEvents {
             ModCore.testReload();
         }
 
-        @SubscribeEvent(priority = EventPriority.LOW)
+        /*@SubscribeEvent(priority = EventPriority.LOW)
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
-        }
+        }*/
     }
 }

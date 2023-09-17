@@ -7,7 +7,7 @@ import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private PoseStack stack;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
-        super(new TextComponent(""));
+        super(Component.literal(""));
         this.screen = screen;
         this.valid = valid;
     }

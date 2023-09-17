@@ -2,9 +2,11 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
-import net.minecraft.data.tags.BlockTagsProvider;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.TagKey;
@@ -16,7 +18,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.data.BlockTagsProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.common.data.ForgeBlockTagsProvider;
+import net.minecraftforge.common.data.ForgeItemTagsProvider;
+import net.minecraftforge.data.event.GatherDataEvent;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -150,7 +156,7 @@ public class Fuzzy {
         Set<ItemStack> items;
         try {
 
-            HolderSet.Named<Item> tag = Registry.ITEM.getTag(this.tag).orElse(null);
+            HolderSet.Named<Item> tag = BuiltInRegistries.ITEM.getTag(this.tag).orElse(null);
             if (tag == null) {
                 items = new HashSet<>();
                 ModCore.warn("Unable to locate registered tag: %s", this.tag);
@@ -210,22 +216,22 @@ public class Fuzzy {
         return ident;
     }
 
-    public static void register(DataGenerator gen, ExistingFileHelper existingFileHelper) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen, ModCore.MODID, existingFileHelper) {
+    public static void register(GatherDataEvent event, ExistingFileHelper existingFileHelper) {
+        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), ModCore.MODID, existingFileHelper) {
             @Override
-            protected void addTags() {
-                //super.addTags();
+            protected void addTags(HolderLookup.Provider p_256380_) {
+                // NOP
             }
         };
-        gen.addProvider(true, blocktagsprovider);
-        gen.addProvider(true, new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
+        event.getGenerator().addProvider(true, blocktagsprovider);
+        event.getGenerator().addProvider(true, new ItemTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), blocktagsprovider.contentsGetter(), ModCore.MODID, event.getExistingFileHelper()) {
             @Override
-            protected void addTags() {
+            public void addTags(HolderLookup.Provider provider) {
                 for (Fuzzy value : registered.values()) {
                     //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
                         TagsProvider.TagAppender<Item> builder = tag(value.tag);
                         for (Item customItem : value.customItems) {
-                            builder.add(customItem);
+                            builder.add(customItem.builtInRegistryHolder().key());
                         }
                         for (Fuzzy include : value.includes) {
                             builder.addTag(include.tag);

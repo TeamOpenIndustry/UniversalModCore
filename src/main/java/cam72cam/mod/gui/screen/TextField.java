@@ -3,7 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Predicate;
 
@@ -13,7 +13,7 @@ public class TextField extends Button {
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         super(
                 builder,
-                new EditBox(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, new TextComponent(""))
+                new EditBox(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, Component.literal(""))
         );
     }
 
@@ -28,7 +28,7 @@ public class TextField extends Button {
 
     /** Move cursor to this text field */
     public void setFocused(boolean b) {
-        internal().setFocus(b);
+        internal().setFocused(b);
     }
 
     /** Current text */

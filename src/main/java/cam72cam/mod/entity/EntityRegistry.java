@@ -41,7 +41,7 @@ public class EntityRegistry {
 
         // TODO expose updateFreq and vecUpdates
 
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
+        CommonEvents.Entity.REGISTER.subscribe(helper -> {
             EntityType.EntityFactory<ModdedEntity> factory = (et, world) -> new ModdedEntity(et, world, ctr);
             EntityType.Builder<ModdedEntity> builder = EntityType.Builder.of(factory, MobCategory.MISC)
                     .setShouldReceiveVelocityUpdates(false)
@@ -52,7 +52,7 @@ public class EntityRegistry {
                 builder = builder.fireImmune();
             }
             EntityType<? extends ModdedEntity> et = builder.build(id.toString());
-            ForgeRegistries.ENTITY_TYPES.register(id.internal, et);
+            helper.register(id.internal, et);
             registered.put(type, et);
         });
 
@@ -70,7 +70,7 @@ public class EntityRegistry {
     }
 
     public static void registerEvents() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> ForgeRegistries.ENTITY_TYPES.register(SeatEntity.ID, SeatEntity.TYPE));
+        CommonEvents.Entity.REGISTER.subscribe(helper -> helper.register(SeatEntity.ID, SeatEntity.TYPE));
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {
                 if (World.get(world) != null) {

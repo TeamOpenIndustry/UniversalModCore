@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -99,8 +99,8 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.render(new RenderState(), event.getPartialTicks());
+            if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()) {
+                func.render(new RenderState(), event.getPartialTick());
             }
         });
     }
@@ -111,7 +111,7 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()), event.getPartialTicks());
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()), event.getPartialTick());
                 }
             }
         });
@@ -138,7 +138,7 @@ public class GlobalRender {
 
     /** Return the render distance in meters */
     public static int getRenderDistance() {
-        return Minecraft.getInstance().options.renderDistance * 16;
+        return Minecraft.getInstance().options.renderDistance().get() * 16;
     }
 
 
@@ -186,7 +186,7 @@ public class GlobalRender {
                 @Override
                 public BlockPos immutable() {
                     // This is why I love java
-                    return Minecraft.getInstance().player != null ? new BlockPos(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
+                    return Minecraft.getInstance().player != null ? BlockPos.containing(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
                 }
             }, state);
         }

@@ -6,8 +6,10 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,7 +38,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 .setTrackingRange(512)
                 .setUpdateInterval(20)
                 .fireImmune()
-                .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
+                .setCustomClientFactory((msg, world) -> new SeatEntity(BuiltInRegistries.ENTITY_TYPE.byId(msg.getTypeId()), world))
                 .build(SeatEntity.ID.toString());
         return et;
     }
@@ -194,7 +196,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

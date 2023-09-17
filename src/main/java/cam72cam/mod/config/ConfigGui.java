@@ -240,7 +240,7 @@ public class ConfigGui implements IScreen {
 
     @Override
     public void draw(IScreenBuilder builder) {
-        ((Screen)builder).renderBackground(new PoseStack(), 0);
+        ((Screen)builder).renderBackground(new PoseStack());
 
         String name = "";
         ConfigGui iter = this;

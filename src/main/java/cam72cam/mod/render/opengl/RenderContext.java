@@ -2,8 +2,8 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -17,7 +17,7 @@ public class RenderContext {
         ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4 model_view = state.model_view;
-            shader.MODEL_VIEW_MATRIX.set(new Matrix4f(new float[]{
+            shader.MODEL_VIEW_MATRIX.set(new Matrix4f(
                     (float) model_view.m00,
                     (float) model_view.m01,
                     (float) model_view.m02,
@@ -34,11 +34,11 @@ public class RenderContext {
                     (float) model_view.m31,
                     (float) model_view.m32,
                     (float) model_view.m33
-            }));
+            ));
         }
         if (state.projection != null) {
             Matrix4 projection = state.projection;
-            shader.PROJECTION_MATRIX.set(new Matrix4f(new float[]{
+            shader.PROJECTION_MATRIX.set(new Matrix4f(
                     (float) projection.m00,
                     (float) projection.m01,
                     (float) projection.m02,
@@ -55,7 +55,7 @@ public class RenderContext {
                     (float) projection.m31,
                     (float) projection.m32,
                     (float) projection.m33
-            }));
+            ));
         }
 
         if (state.texture != NO_TEXTURE) {
