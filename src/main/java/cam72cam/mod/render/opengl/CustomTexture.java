@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.Config;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL32;
@@ -31,19 +32,25 @@ public abstract class CustomTexture implements Texture {
     public static void registerClientEvents() {
         // free unused textures
         ClientEvents.TICK.subscribe(() -> {
-            synchronized (textures) {
-                for (CustomTexture texture : textures) {
-                    if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isDone())) {
-                        texture.dealloc();
+            try {
+                synchronized (textures) {
+                    for (CustomTexture texture : textures) {
+                        if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isDone())) {
+                            texture.dealloc();
+                        }
                     }
                 }
+            } catch (Exception ex) {
+                ModCore.catching(ex);
             }
         });
     }
 
 
     public CustomTexture(int width, int height, int cacheSeconds) {
-        textures.add(this);
+        synchronized (textures) {
+            textures.add(this);
+        }
         this.width = width;
         this.height = height;
         this.cacheSeconds = cacheSeconds;

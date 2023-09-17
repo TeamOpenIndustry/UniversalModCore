@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraftforge.items.SlotItemHandler;
 
 import java.util.function.Consumer;
@@ -43,7 +44,7 @@ public class ServerContainerBuilder extends AbstractContainerMenu implements ICo
         this.slotsX = container.getSlotsX();
         this.slotsY = container.getSlotsY();
 
-        this.draw = container::draw;
+        this.draw = builder -> container.draw(builder, new RenderState());
         draw.accept(this);
     }
 

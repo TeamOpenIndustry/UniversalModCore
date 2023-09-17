@@ -8,7 +8,7 @@ import java.util.List;
 /** Reference IEnergy implementation */
 public class Energy implements IEnergy {
     @TagField("max")
-    private final int max;
+    private int max;
     @TagField("stored")
     private int stored;
 

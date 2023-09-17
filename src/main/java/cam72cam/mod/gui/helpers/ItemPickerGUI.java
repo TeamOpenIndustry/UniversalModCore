@@ -70,12 +70,13 @@ public class ItemPickerGUI {
             search.render(matrixStack, mouseX, mouseY, partialTicks);
 
             for (Widget button : this.renderables) {
-                if (button instanceof GuiScrollBar) continue;
-                if (scrollBar != null) {
-                    ((AbstractWidget)button).y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
-                }
-                if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                    this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                if (button instanceof ItemButton) {
+                    if (scrollBar != null) {
+                        ((AbstractWidget) button).y = buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32);
+                    }
+                    if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
+                        this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                    }
                 }
             }
         }
@@ -137,6 +138,15 @@ public class ItemPickerGUI {
             }
         }
 
+        @Override
+        public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
+            String oldSearch = search.getValue();
+            boolean value = super.charTyped(p_charTyped_1_, p_charTyped_2_);
+            if (!Objects.equals(oldSearch, search.getValue())) {
+                init();
+            }
+            return value;
+        }
         @Override
         public boolean keyPressed(int typedChar, int keyCode, int mod) {
             if (super.keyPressed(typedChar, keyCode, mod)) {

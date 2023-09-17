@@ -16,7 +16,7 @@ public class OptiFine {
             try {
                 Class.forName("Config");
                 isLoaded = true;
-            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
                 isLoaded = false;
             }
         }

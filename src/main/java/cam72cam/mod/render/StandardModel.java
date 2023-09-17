@@ -22,19 +22,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>() {
-        @Override
-        public boolean add(Pair<BlockState, BakedModel> o) {
-            worldRenderer = null;
-            return super.add(o);
-        }
-    };
+    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
@@ -85,7 +80,7 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(worldRenderer);
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {
@@ -127,21 +122,14 @@ public class StandardModel {
         renderQuads(state);
     }
 
-    private BufferBuilder worldRenderer = null;
-
     /** Render only the MC quads in this model */
     public void renderQuads(RenderState state) {
         if (models.isEmpty()) {
             return;
         }
 
-        if (worldRenderer == null) {
-            worldRenderer = new BufferBuilder(2048) {
-                @Override
-                public void discard() {
-                    //super.discard();
-                }
-            };
+        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
+            BufferBuilder worldRenderer = Tesselator.getInstance().getBuilder();
             worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
@@ -160,8 +148,6 @@ public class StandardModel {
                 quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
             worldRenderer.end();
-        }
-        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
             BufferUploader.end(worldRenderer);
         }
     }
@@ -175,6 +161,13 @@ public class StandardModel {
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
+
+        if (Tesselator.getInstance().getBuilder().building()) {
+            Tesselator.getInstance().getBuilder().end();
+            try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
+                BufferUploader.end(Tesselator.getInstance().getBuilder());
+            }
+        }
     }
 
     /** Is there anything that's not MC standard in this model? */

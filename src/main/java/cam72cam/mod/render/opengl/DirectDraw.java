@@ -14,7 +14,7 @@ public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
-        BufferBuilder builder = new BufferBuilder(1024);
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
         ShaderInstance shader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
         try (With ctx = RenderContext.apply(state)) {
