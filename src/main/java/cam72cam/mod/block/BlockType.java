@@ -46,7 +46,7 @@ public abstract class BlockType {
     }
 
     /** Wraps the minecraft construct, do not use directly. */
-    public final net.minecraft.world.level.block.Block internal;
+    public net.minecraft.world.level.block.Block internal;
 
     /** Mod/name of the block */
     public final Identifier id;
@@ -58,8 +58,10 @@ public abstract class BlockType {
      */
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
-        internal = getBlock();
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+        CommonEvents.Block.REGISTER.subscribe(() -> {
+            internal = getBlock();
+            ForgeRegistries.BLOCKS.register(internal);
+        });
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */

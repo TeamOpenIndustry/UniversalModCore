@@ -39,21 +39,23 @@ import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
-    public final Item internal;
+    public Item internal;
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
         identifier = new ResourceLocation(modID, name);
 
-        Item.Properties props = new Item.Properties().stacksTo(getStackSize());
-        if (!getCreativeTabs().isEmpty()) {
-            props = props.tab(getCreativeTabs().get(0).internal);
-        }
+        CommonEvents.Item.REGISTER.subscribe(() -> {
+            Item.Properties props = new Item.Properties().stacksTo(getStackSize());
+            if (!getCreativeTabs().isEmpty()) {
+                props = props.tab(getCreativeTabs().get(0).internal);
+            }
 
-        internal = new ItemInternal(props);
-        internal.setRegistryName(identifier);
+            internal = new ItemInternal(props);
+            internal.setRegistryName(identifier);
 
-        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+            ForgeRegistries.ITEMS.register(internal);
+        });
     }
 
     /** Creative tabs that this should be shown under */
