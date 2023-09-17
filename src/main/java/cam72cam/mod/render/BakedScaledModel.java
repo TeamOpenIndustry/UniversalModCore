@@ -8,8 +8,10 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.QuadTransformer;
+import net.minecraftforge.client.model.IQuadTransformer;
+import net.minecraftforge.client.model.QuadTransformers;
 import util.Matrix4;
 
 import java.util.HashMap;
@@ -40,7 +42,7 @@ class BakedScaledModel implements BakedModel {
     }
 
     @Override
-    public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand) {
+    public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand) {
         if (quadCache.get(side) == null) {
             Matrix4f mat = new Matrix4f(new float[] {
                     (float) transform.m00,
@@ -60,8 +62,8 @@ class BakedScaledModel implements BakedModel {
                     (float) transform.m32,
                     (float) transform.m33
             });
-            QuadTransformer qt = new QuadTransformer(new Transformation(mat));
-            quadCache.put(side, qt.processMany(source.getQuads(state, side, rand)));
+            IQuadTransformer qt = QuadTransformers.applying(new Transformation(mat));
+            quadCache.put(side, qt.process(source.getQuads(state, side, rand)));
         }
 
         return quadCache.get(side);

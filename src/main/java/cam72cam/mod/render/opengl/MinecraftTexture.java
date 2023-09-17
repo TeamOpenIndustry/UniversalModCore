@@ -9,11 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimpleResource;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -33,9 +33,11 @@ public class MinecraftTexture implements Texture {
         //noinspection ConstantConditions
         if (tex == null) {
             try {
-                Resource resource = Minecraft.getInstance().getResourceManager().getResource(id.internal);
-                texManager.register(id.internal, new SimpleTexture(id.internal));
-                tex = texManager.getTexture(id.internal);
+                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(id.internal);
+                if (resource.isPresent()) {
+                    texManager.register(id.internal, new SimpleTexture(id.internal));
+                    tex = texManager.getTexture(id.internal);
+                }
             } catch (Exception ex) {
                 // Pass
             }

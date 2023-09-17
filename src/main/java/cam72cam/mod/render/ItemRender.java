@@ -32,6 +32,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.model.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -117,7 +118,7 @@ public class ItemRender {
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
+        ClientEvents.MODEL_BAKE.subscribe((ModelEvent.RegisterAdditional event) -> event.register(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel && false) { // TODO re-enable sprite system in 1.17+

@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.api.distmarker.Dist;
@@ -52,8 +52,7 @@ public class EntityRegistry {
                 builder = builder.fireImmune();
             }
             EntityType<? extends ModdedEntity> et = builder.build(id.toString());
-            et.setRegistryName(id.internal);
-            ForgeRegistries.ENTITIES.register(et);
+            ForgeRegistries.ENTITY_TYPES.register(id.internal, et);
             registered.put(type, et);
         });
 
@@ -71,7 +70,7 @@ public class EntityRegistry {
     }
 
     public static void registerEvents() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> ForgeRegistries.ENTITIES.register(SeatEntity.TYPE));
+        CommonEvents.Entity.REGISTER.subscribe(() -> ForgeRegistries.ENTITY_TYPES.register(SeatEntity.ID, SeatEntity.TYPE));
         CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {
                 if (World.get(world) != null) {
@@ -93,7 +92,7 @@ public class EntityRegistry {
                 ModCore.error(missingResources);
                 Minecraft.getInstance().getConnection().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
                 Minecraft.getInstance().clearLevel();
-                Minecraft.getInstance().setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), new TranslatableComponent("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
+                Minecraft.getInstance().setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), Component.translatable("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }
         });

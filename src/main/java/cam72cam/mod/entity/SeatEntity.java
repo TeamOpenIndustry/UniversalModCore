@@ -38,7 +38,6 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 .fireImmune()
                 .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
                 .build(SeatEntity.ID.toString());
-        et.setRegistryName(ID);
         return et;
     }
 

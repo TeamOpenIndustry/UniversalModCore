@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
@@ -89,13 +90,13 @@ public class ClientEvents {
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
-    public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
+    public static final Event<Consumer<ModelEvent.RegisterAdditional>> MODEL_BAKE = new Event<>();
     public static final Event<Consumer<TextureStitchEvent.Pre>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
-    public static final Event<Consumer<RenderGameOverlayEvent.Text>> RENDER_DEBUG = new Event<>();
-    public static final Event<Consumer<RenderGameOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
-    public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
-    public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
+    public static final Event<Consumer<RenderGuiOverlayEvent.Post>> RENDER_DEBUG = new Event<>();
+    public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
+    public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
+    public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
 

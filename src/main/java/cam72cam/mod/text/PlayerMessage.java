@@ -1,8 +1,6 @@
 package cam72cam.mod.text;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.common.ForgeHooks;
 
 /** A message that can be sent to a player */
@@ -15,12 +13,12 @@ public class PlayerMessage {
 
     /** Untranslated */
     public static PlayerMessage direct(String msg) {
-        return new PlayerMessage(new TextComponent(msg));
+        return new PlayerMessage(Component.literal(msg));
     }
 
     /** Translated */
     public static PlayerMessage translate(String msg, Object... objects) {
-        return new PlayerMessage(new TranslatableComponent(msg, objects));
+        return new PlayerMessage(Component.translatable(msg, objects));
     }
 
     /** URL Formatted (clickable) */

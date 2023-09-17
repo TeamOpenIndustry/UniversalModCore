@@ -30,8 +30,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.client.model.data.IModelData;
-import net.minecraftforge.client.model.data.ModelDataMap;
 import net.minecraftforge.client.model.data.ModelProperty;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -116,7 +114,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 if (myState == null) {
                     myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
-                data.putString("id", ((EntityBlock)myState.getBlock()).newBlockEntity(null, null).getType().getRegistryName().toString());
+                data.putString("id", ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(((EntityBlock)myState.getBlock()).newBlockEntity(null, null).getType()).toString());
                 return myState;
             }
             return null;
@@ -164,9 +162,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                     return true;
                 }
             }, null);
-            type.setRegistryName(id.internal);
             types.put(id.toString(), type);
-            ForgeRegistries.BLOCK_ENTITIES.register(type);
+            ForgeRegistries.BLOCK_ENTITY_TYPES.register(id.internal, type);
         });
     }
 

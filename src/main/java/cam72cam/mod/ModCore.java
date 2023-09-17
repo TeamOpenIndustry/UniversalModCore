@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -350,7 +350,7 @@ public class ModCore {
         }
 
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
-        event.getGenerator().addProvider(new Recipes(event.getGenerator()));
+        event.getGenerator().addProvider(true, new Recipes(event.getGenerator()));
         Fuzzy.register(event.getGenerator(), event.getExistingFileHelper());
     }
 

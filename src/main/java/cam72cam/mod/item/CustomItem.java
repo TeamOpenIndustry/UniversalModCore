@@ -15,7 +15,6 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -51,9 +50,7 @@ public abstract class CustomItem {
         }
 
         internal = new ItemInternal(props);
-        internal.setRegistryName(identifier);
-
-        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(identifier, internal));
     }
 
     /** Creative tabs that this should be shown under */
@@ -100,7 +97,7 @@ public abstract class CustomItem {
 
     /** Identifier of this item */
     public final Identifier getRegistryName() {
-        return new Identifier(internal.getRegistryName());
+        return new Identifier(ForgeRegistries.ITEMS.getKey(internal));
     }
 
     private class ItemInternal extends Item {
@@ -113,7 +110,7 @@ public abstract class CustomItem {
         public Component getName(net.minecraft.world.item.ItemStack stack) {
             String custom = getCustomName(new ItemStack(stack));
             if (custom != null) {
-                return new TextComponent(custom);
+                return Component.literal(custom);
             }
             //return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
             return super.getName(stack);
@@ -141,7 +138,7 @@ public abstract class CustomItem {
         public final void appendHoverText(net.minecraft.world.item.ItemStack stack, @Nullable net.minecraft.world.level.Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
             super.appendHoverText(stack, worldIn, tooltip, flagIn);
             if (ModCore.hasResources) {
-                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(TextComponent::new).collect(Collectors.toList()));
+                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).collect(Collectors.toList()));
             }
         }
 

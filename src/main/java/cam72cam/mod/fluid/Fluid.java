@@ -33,7 +33,7 @@ public class Fluid {
             for (ResourceLocation key : ForgeRegistries.FLUIDS.getKeys()) {
                 if (key.getPath().equals(type)) {
                     net.minecraft.world.level.material.Fluid fluid = ForgeRegistries.FLUIDS.getValue(key);
-                    if (fluid != null && !ForgeRegistries.FLUIDS.getDefaultKey().equals(fluid.getRegistryName())) {
+                    if (fluid != null && !ForgeRegistries.FLUIDS.getDefaultKey().equals(ForgeRegistries.FLUIDS.getKey(fluid))) {
                         fluids.add(fluid);
                     }
                 }
@@ -47,11 +47,11 @@ public class Fluid {
     }
 
     public static Fluid getFluid(net.minecraft.world.level.material.Fluid fluid) {
-        return getFluid(fluid.getRegistryName().getPath());
+        return getFluid(ForgeRegistries.FLUIDS.getKey(fluid).getPath());
     }
 
     public int getDensity() {
-        return internal.get(0).getAttributes().getDensity();
+        return internal.get(0).getFluidType().getDensity();
     }
 
     public String toString() {

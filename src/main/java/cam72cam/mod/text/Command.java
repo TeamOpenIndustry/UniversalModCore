@@ -15,7 +15,7 @@ import cam72cam.mod.entity.Player;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.MessageArgument;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 
@@ -69,7 +69,7 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 
 
 		if (!ok) {
-			context.getSource().sendFailure(new TextComponent(getUsage()));
+			context.getSource().sendFailure(Component.literal(getUsage()));
 			return -1;
 		}
 

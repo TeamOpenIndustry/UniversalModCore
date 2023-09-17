@@ -7,7 +7,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
-import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -218,8 +217,8 @@ public class Fuzzy {
                 //super.addTags();
             }
         };
-        gen.addProvider(blocktagsprovider);
-        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
+        gen.addProvider(true, blocktagsprovider);
+        gen.addProvider(true, new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
             @Override
             protected void addTags() {
                 for (Fuzzy value : registered.values()) {

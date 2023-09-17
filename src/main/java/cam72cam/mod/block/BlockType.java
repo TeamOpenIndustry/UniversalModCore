@@ -59,7 +59,7 @@ public abstract class BlockType {
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
         internal = getBlock();
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(id.internal, internal));
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
@@ -152,7 +152,6 @@ public abstract class BlockType {
                     .sound(BlockType.this.getMaterial().soundType)
                     .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
                     .dynamicShape());
-            setRegistryName(BlockType.this.id.internal);
         }
 
         /** Called server side at the end of the block break call chain as cleanup */

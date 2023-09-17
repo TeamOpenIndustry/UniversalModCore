@@ -18,7 +18,7 @@ public class ChunkManager {
 
         ChunkPos chunkpos = new ChunkPos(inPos.internal());
         ServerLevel server = (ServerLevel) world.internal;
-        server.getChunkSource().registerTickingTicket(UMCTICKET, chunkpos, 3, chunkpos);
+        server.getChunkSource().addRegionTicket(UMCTICKET, chunkpos, 3, chunkpos);
     }
 
     public static void setup() {

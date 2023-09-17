@@ -13,6 +13,7 @@ import net.minecraftforge.common.crafting.ConditionalRecipe;
 import net.minecraftforge.common.crafting.conditions.ItemExistsCondition;
 import net.minecraftforge.common.crafting.conditions.NotCondition;
 import net.minecraftforge.common.crafting.conditions.TagEmptyCondition;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class Recipes extends RecipeProvider {
                     }
                     builder.pattern(line);
                 }
-                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+                ResourceLocation itemName = ForgeRegistries.ITEMS.getKey(item.internal.getItem());
                 ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
 
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {

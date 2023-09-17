@@ -33,7 +33,7 @@ public class Player extends Entity {
     }
 
     public void sendMessage(PlayerMessage o) {
-        internal.sendMessage(o.internal, Util.NIL_UUID);
+        internal.displayClientMessage(o.internal, false);
     }
 
     public boolean isCrouching() {
