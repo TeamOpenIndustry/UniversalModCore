@@ -21,6 +21,7 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
@@ -160,7 +161,11 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> example.supplier(id), new HashSet<>() {
+            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
+                TileEntity tile = example.supplier(id);
+                tile.setBlockState(state);
+                return tile;
+            }, new HashSet<>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
                     return true;
@@ -271,6 +276,11 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             tag.put("umcUpdate", umcUpdate.internal);
         }
         return tag;
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        handleUpdateTag(pkt.getTag());
     }
 
     /** Active Synchronization from markDirty */

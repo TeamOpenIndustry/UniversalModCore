@@ -109,7 +109,7 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.render(new RenderState(), event.getPartialTicks());
+                func.render(new RenderState(event.getMatrixStack()), event.getPartialTicks());
             }
         });
     }
@@ -187,7 +187,7 @@ public class GlobalRender {
                 @Override
                 public BlockPos immutable() {
                     // This is why I love java
-                    return Minecraft.getInstance().player != null ? new BlockPos(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
+                    return Minecraft.getInstance() != null && Minecraft.getInstance().player != null ? new BlockPos(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
                 }
             }, state);
         }

@@ -12,9 +12,13 @@ import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -86,6 +90,7 @@ public class ClientEvents {
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelBakeEvent>> MODEL_BAKE = new Event<>();
     public static final Event<Consumer<TextureStitchEvent.Pre>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Text>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGameOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
@@ -209,6 +214,17 @@ public class ClientEvents {
         @SubscribeEvent
         public static void optifineSucksEvent(RenderWorldLastEvent event) {
             OPTIFINE_SUCKS.execute(x -> x.accept(event));
+        }
+
+        static boolean hasHacked = false;
+        @SubscribeEvent
+        public static void onHackShaders(TickEvent.RenderTickEvent event) {
+            if (!hasHacked && event.phase == TickEvent.Phase.START) {
+                if (GameRenderer.getRendertypeCutoutShader() != null) {
+                    hasHacked = true;
+                    HACKS.execute(Runnable::run);
+                }
+            }
         }
     }
 

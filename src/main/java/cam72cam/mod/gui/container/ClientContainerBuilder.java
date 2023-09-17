@@ -66,7 +66,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public void containerTick() {
-        super.tick();
+        super.containerTick();
         if (!valid.get()) {
             this.minecraft.player.closeContainer();
         }

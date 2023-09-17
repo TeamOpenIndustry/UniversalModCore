@@ -80,7 +80,7 @@ public abstract class Particle {
                     RenderState base = new RenderState();
                     base.blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA));
                     base.alpha_test(true);
-                    GL11.glAlphaFunc(516, 0.003921569F);
+                    //TODO 1.17.1 GL11.glAlphaFunc(516, 0.003921569F);
                     base.depth_mask(ip.depthTestEnabled());
                     base.color(1, 1, 1, 1);
                     Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();

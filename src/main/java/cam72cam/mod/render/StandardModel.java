@@ -29,13 +29,7 @@ import java.util.Random;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>() {
-        @Override
-        public boolean add(Pair<BlockState, BakedModel> o) {
-            worldRendererBuffer = null;
-            return super.add(o);
-        }
-    };
+    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
@@ -86,7 +80,7 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(itemRenderer);
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {
@@ -128,17 +122,14 @@ public class StandardModel {
         renderQuads(state);
     }
 
-    private BufferBuilder worldRenderer = null;
-    private com.mojang.datafixers.util.Pair<BufferBuilder.DrawState, ByteBuffer> worldRendererBuffer = null;
-
     /** Render only the MC quads in this model */
     public void renderQuads(RenderState state) {
         if (models.isEmpty()) {
             return;
         }
 
-        if (worldRendererBuffer == null) {
-            worldRenderer = new BufferBuilder(2048);
+        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
+            BufferBuilder worldRenderer = Tesselator.getInstance().getBuilder();
             worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
@@ -157,16 +148,7 @@ public class StandardModel {
                 quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
             worldRenderer.end();
-            worldRendererBuffer = worldRenderer.popNextBuffer();
-        }
-        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-            BufferUploader.end(new BufferBuilder(0) {
-                @Override
-                public com.mojang.datafixers.util.Pair<DrawState, ByteBuffer> popNextBuffer() {
-                    // java is fun...
-                    return worldRendererBuffer;
-                }
-            });
+            BufferUploader.end(worldRenderer);
         }
     }
 
@@ -176,18 +158,14 @@ public class StandardModel {
         renderCustom(state, 0);
     }
 
-    private BufferBuilder itemRenderer = null;
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
-        if (itemRenderer == null) {
-            // This is not the best method, but is rarely used?  To be revisited
-            itemRenderer = new BufferBuilder(256);
-        }
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
-        if (itemRenderer.building()) {
-            itemRenderer.end();
+
+        if (Tesselator.getInstance().getBuilder().building()) {
+            Tesselator.getInstance().getBuilder().end();
             try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-                BufferUploader.end(itemRenderer);
+                BufferUploader.end(Tesselator.getInstance().getBuilder());
             }
         }
     }

@@ -111,7 +111,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             btn.onUpdate();
         }
 
-        screen.draw(this, new RenderState().depth_test(true));
+        screen.draw(this, new RenderState(stack).depth_test(true));
 
         // draw buttons
         super.render(stack, mouseX, mouseY, partialTicks);

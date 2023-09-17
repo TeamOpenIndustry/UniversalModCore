@@ -85,6 +85,8 @@ public class ModCore {
     /** Register a mod, must happen before UMC is loaded! */
     public static void register(Mod ctr) {
         mods.add(ctr);
+
+        proxy.event(ModEvent.CONSTRUCT, ctr);
     }
 
     /** Called during Mod Construction phase */
@@ -93,9 +95,8 @@ public class ModCore {
         instance = this;
 
         ModCore.register(new Internal());
-
         proxy.setup();
-        proxy.event(ModEvent.CONSTRUCT);
+
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
@@ -206,7 +207,7 @@ public class ModCore {
         }
 
         public void event(ModEvent event) {
-            instance.mods.forEach(m -> event(event, m));
+            mods.forEach(m -> event(event, m));
         }
         public void event(ModEvent event, Mod m) {
             m.commonEvent(event);
@@ -243,50 +244,48 @@ public class ModCore {
             }
             Config.getMaxTextureSize(); //populate
 
-            List<PackResources> packs = new ArrayList<>();
-            packs.add(new TranslationResourcePack());
-
-            for (Mod m : mods) {
-                PackResources modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
-                packs.add(modPack);
-                String configDir = FMLPaths.CONFIGDIR.get().toString();
-                new File(configDir).mkdirs();
-
-                File folder = new File(configDir + File.separator + m.modID());
-                if (folder.exists()) {
-                    if (folder.isDirectory()) {
-                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
-                        for (File file : files) {
-                            packs.add(createPack(file));
-                        }
-
-                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
-                        for (File dir : folders) {
-                            packs.add(createPack(dir));
-                        }
-                    }
-                } else {
-                    folder.mkdirs();
-                }
-                packs.add(modPack);
-            }
-
             // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-            Minecraft.getInstance().getResourcePackRepository().addPackFinder(new RepositorySource() {
-                @Override
-                public void loadPacks(Consumer<Pack> consumer, Pack.PackConstructor packInfoFactory) {
-                    for (PackResources pack : packs) {
-                        consumer.accept(new Pack(pack.getName(),
-                                true,
-                                () -> pack,
-                                new TextComponent(""),
-                                new TextComponent(""),
-                                PackCompatibility.COMPATIBLE,
-                                Pack.Position.TOP,
-                                true,
-                                PackSource.DEFAULT,
-                                true));
+            Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer, packInfoFactory) -> {
+                List<PackResources> packs = new ArrayList<>();
+                packs.add(new TranslationResourcePack());
+
+                for (Mod m : mods) {
+                    PackResources modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
+                    packs.add(modPack);
+                    String configDir = FMLPaths.CONFIGDIR.get().toString();
+                    new File(configDir).mkdirs();
+
+                    File folder = new File(configDir + File.separator + m.modID());
+                    if (folder.exists()) {
+                        if (folder.isDirectory()) {
+                            File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
+                            for (File file : files) {
+                                packs.add(createPack(file));
+                            }
+
+                            File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
+                            for (File dir : folders) {
+                                packs.add(createPack(dir));
+                            }
+                        }
+                    } else {
+                        folder.mkdirs();
                     }
+                    packs.add(modPack);
+                }
+
+
+                for (PackResources pack : packs) {
+                    consumer.accept(new Pack(pack.getName(),
+                            true,
+                            () -> pack,
+                            new TextComponent(""),
+                            new TextComponent(""),
+                            PackCompatibility.COMPATIBLE,
+                            Pack.Position.TOP,
+                            true,
+                            PackSource.DEFAULT,
+                            true));
                 }
             });
         }

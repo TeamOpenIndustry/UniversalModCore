@@ -218,9 +218,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void tick() {
-        // Moved from getBoundingBox
-        setBoundingBox(cachedCollisionBB.get(iCollision.getCollision()));
-
         iTickable.onTick();
         try {
             self.sync.send();
@@ -445,7 +442,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      *
      * @see ICollision
      */
-    /*  Moved to tick and I'm not happy about it
     @Override
     public AABB getBoundingBox() {
         if (refusedToJoin != null) {
@@ -453,7 +449,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             return super.getBoundingBox();
         }
         return cachedCollisionBB.get(iCollision.getCollision());
-    }*/
+    }
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes

@@ -1,11 +1,12 @@
 package cam72cam.mod.render;
 
-import com.mojang.blaze3d.platform.TextureUtil;
+import cam72cam.mod.render.opengl.DirectDraw;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.platform.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -15,17 +16,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** A custom sprite sheet which can span multiple texture sheets */
+/**
+ * A custom sprite sheet which can span multiple texture sheets
+ */
 public class SpriteSheet {
     public final int spriteSize;
     private final Map<Identifier, SpriteInfo> sprites = new HashMap<>();
     private final List<SpriteInfo> unallocated = new ArrayList<>();
-    /** sprite width/height in px */
+
+    /**
+     * sprite width/height in px
+     */
     public SpriteSheet(int spriteSize) {
         this.spriteSize = spriteSize;
     }
 
-    /** Create new blank sheet and add slots to unallocated */
+    /**
+     * Create new blank sheet and add slots to unallocated
+     */
     private void allocateSheet() {
         int textureID = GL11.glGenTextures();
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
@@ -41,13 +49,15 @@ public class SpriteSheet {
                     float uMax = (uPx + spriteSize) / (float) sheetSize;
                     float v = vPx / (float) sheetSize;
                     float vMax = (vPx + spriteSize) / (float) sheetSize;
-                    unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, textureID));
+                    unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, textureID, sheetSize));
                 }
             }
         }
     }
 
-    /** Allocate a slot in the sheet and write pixels to it */
+    /**
+     * Allocate a slot in the sheet and write pixels to it
+     */
     public void setSprite(Identifier id, ByteBuffer pixels) {
         if (!sprites.containsKey(id)) {
             if (unallocated.size() == 0) {
@@ -57,12 +67,20 @@ public class SpriteSheet {
         }
         SpriteInfo sprite = sprites.get(id);
 
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(sprite.texID)))) {
-            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, sprite.uPx, sprite.vPx, spriteSize, spriteSize, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-        }
+        //try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(sprite.texID)))) {
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, sprite.texID);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+
+        GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, sprite.uPx, sprite.vPx, spriteSize, spriteSize, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
+        //}
     }
 
-    /** Render the sprite represented by id (skip if unknown) */
+    /**
+     * Render the sprite represented by id (skip if unknown)
+     */
     public void renderSprite(Identifier id, RenderState state) {
         SpriteInfo sprite = sprites.get(id);
         if (sprite == null) {
@@ -71,22 +89,23 @@ public class SpriteSheet {
         state.texture(Texture.wrap(sprite.texID))
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
+        DirectDraw buffer = new DirectDraw();
+
         try (With ctx = RenderContext.apply(state)) {
-            GL11.glBegin(GL11.GL_QUADS);
-            GL11.glColor4f(1, 1, 1, 1);
-            GL11.glTexCoord2f(sprite.uMin, sprite.vMin);
-            GL11.glVertex3f(0, 0, 0);
-            GL11.glTexCoord2f(sprite.uMin, sprite.vMax);
-            GL11.glVertex3f(0, 1, 0);
-            GL11.glTexCoord2f(sprite.uMax, sprite.vMax);
-            GL11.glVertex3f(1, 1, 0);
-            GL11.glTexCoord2f(sprite.uMax, sprite.vMin);
-            GL11.glVertex3f(1, 0, 0);
-            GL11.glEnd();
-        };
+            buffer.vertex(0, 0, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMin);
+            buffer.vertex(0, 1, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMax);
+            buffer.vertex(1, 1, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMax);
+            buffer.vertex(1, 0, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMin);
+        }
+        ;
+        buffer.draw(state);
+
+
     }
 
-    /** Remove a sprite from the sheet (does not reduce used GPU memory yet) */
+    /**
+     * Remove a sprite from the sheet (does not reduce used GPU memory yet)
+     */
     public void freeSprite(Identifier id) {
         unallocated.add(sprites.remove(id));
         // TODO shrink number of sheets?
@@ -100,8 +119,9 @@ public class SpriteSheet {
         final float vMax;
         final int vPx;
         final int texID;
+        private final int sheetSize;
 
-        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, int texID) {
+        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, int texID, int sheetSize) {
             this.uMin = u;
             this.uMax = uMax;
             this.uPx = uPx;
@@ -109,6 +129,7 @@ public class SpriteSheet {
             this.vMax = vMax;
             this.vPx = vPx;
             this.texID = texID;
+            this.sheetSize = sheetSize;
         }
     }
 }

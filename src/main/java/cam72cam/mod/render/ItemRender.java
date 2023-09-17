@@ -7,6 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
@@ -45,9 +46,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -122,8 +121,8 @@ public class ItemRender {
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel && false) { // TODO re-enable sprite system in 1.17+
-            ClientEvents.RELOAD.subscribe(() -> {
+        if (model instanceof ISpriteItemModel) { // TODO re-enable sprite system in 1.17+
+            ClientEvents.HACKS.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
@@ -220,61 +219,46 @@ public class ItemRender {
         fb.clear(Minecraft.ON_OSX);
         fb.bindWrite(true);
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
+        RenderState state = new RenderState();
+        state.model_view().setIdentity();
+        state.projection().setIdentity();
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        try (With with = RenderContext.apply(state)) {
+            boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
-        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthFunc(GL11.GL_LESS);
+            GL11.glClearDepth(1);
 
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthFunc(GL11.GL_LESS);
-        GL11.glClearDepth(1);
+            model.renderCustom(new RenderState());
 
-        model.renderCustom(new RenderState());
+            fb.bindRead();
+            ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+            GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+            fb.unbindRead();
 
-        fb.bindRead();
-        ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-        fb.unbindRead();
+            fb.unbindWrite();
+            fb.destroyBuffers();
 
-        fb.unbindWrite();
-        fb.destroyBuffers();
+            GL11.glDepthFunc(oldDepth);
 
-        GL11.glDepthFunc(oldDepth);
+            iconSheet.setSprite(id, buff);
 
-        iconSheet.setSprite(id, buff);
+            try {
+                byte[] data = new byte[buff.capacity()];
+                buff.get(data);
+                Files.write(sprite.toPath(), data);
+            } catch (IOException e) {
+                ModCore.catching(e);
+                sprite.delete();
+            }
 
-        try {
-            byte[] data = new byte[buff.capacity()];
-            buff.get(data);
-            Files.write(sprite.toPath(), data);
-        } catch (IOException e) {
-            ModCore.catching(e);
-            sprite.delete();
+            if (!depthEnabled) {
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+            }
+            GL11.glDepthFunc(oldDepth);
         }
-
-        if (!depthEnabled) {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-        }
-        GL11.glDepthFunc(oldDepth);
-
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glPopMatrix();
-
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
 
         restore.close();
     }
@@ -334,7 +318,7 @@ public class ItemRender {
 
         @Override
         public ItemOverrides getOverrides() {
-            return ItemOverrides.EMPTY;
+            return new ItemOverrideListHack();
         }
 
         @Override
