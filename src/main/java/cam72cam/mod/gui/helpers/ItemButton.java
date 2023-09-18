@@ -32,8 +32,8 @@ public abstract class ItemButton extends AbstractButton {
         try (With ctx = RenderContext.apply(
                 new RenderState().translate(getX(), getY(), 0).scale(2, 2, 1)
         )) {
-            mc.getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal, 0, 0);
-            mc.getItemRenderer().renderGuiItemDecorations(new PoseStack(), font, stack.internal, 0, 0);
+            mc.getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal(), 0, 0);
+            mc.getItemRenderer().renderGuiItemDecorations(new PoseStack(), font, stack.internal(), 0, 0);
         }
 
         // Pollutes global state...

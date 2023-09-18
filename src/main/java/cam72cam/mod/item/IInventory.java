@@ -19,12 +19,12 @@ public interface IInventory {
 
             @Override
             public void set(int slot, ItemStack itemStack) {
-                inv.setStackInSlot(slot, itemStack.internal);
+                inv.setStackInSlot(slot, itemStack.internal());
             }
 
             @Override
             public ItemStack insert(int slot, ItemStack itemStack, boolean simulate) {
-                return new ItemStack(inv.insertItem(slot, itemStack.internal, simulate));
+                return new ItemStack(inv.insertItem(slot, itemStack.internal(), simulate));
             }
 
             @Override
@@ -55,7 +55,7 @@ public interface IInventory {
 
             @Override
             public void set(int slot, ItemStack itemStack) {
-                inventory.setItem(slot, itemStack.internal);
+                inventory.setItem(slot, itemStack.internal());
             }
 
             @Override
@@ -67,7 +67,7 @@ public interface IInventory {
                 net.minecraft.world.item.ItemStack current = inventory.getItem(slot);
 
                 if (current.isEmpty()) {
-                    if (!inventory.canPlaceItem(slot, itemStack.internal)) {
+                    if (!inventory.canPlaceItem(slot, itemStack.internal())) {
                         return itemStack;
                     }
                     if (!simulate) {
@@ -76,10 +76,10 @@ public interface IInventory {
                     return ItemStack.EMPTY;
                 }
 
-                if (!itemStack.internal.sameItem(current)) {
+                if (!itemStack.internal().sameItem(current)) {
                     return itemStack;
                 }
-                if (!net.minecraft.world.item.ItemStack.tagMatches(itemStack.internal, current)) {
+                if (!net.minecraft.world.item.ItemStack.tagMatches(itemStack.internal(), current)) {
                     return itemStack;
                 }
 
@@ -95,7 +95,7 @@ public interface IInventory {
                     set(slot, copy);
                 }
 
-                ItemStack remainder = new ItemStack(itemStack.internal);
+                ItemStack remainder = new ItemStack(itemStack.internal());
                 remainder.setCount(itemStack.getCount() - toMove);
                 return remainder;
             }

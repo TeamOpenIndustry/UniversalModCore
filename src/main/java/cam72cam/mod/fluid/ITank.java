@@ -22,7 +22,7 @@ public interface ITank {
      * See ImmersiveRailroading's FreightTank for an example.
      */
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        LazyOptional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal);
+        LazyOptional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal());
         if (!handler.isPresent()) {
             return null;
         }
@@ -45,7 +45,7 @@ public interface ITank {
 
             @Override
             public int fill(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal).orElse(null);
+                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal()).orElse(null);
                 temp.fill(fluidStack.internal, IFluidHandler.FluidAction.EXECUTE);
                 onUpdate.accept(new ItemStack(temp.getContainer()));
 
@@ -54,7 +54,7 @@ public interface ITank {
 
             @Override
             public FluidStack drain(FluidStack fluidStack, boolean simulate) {
-                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal).orElse(null);
+                IFluidHandlerItem temp = FluidUtil.getFluidHandler(inputCopy.copy().internal()).orElse(null);
                 temp.drain(fluidStack.internal, IFluidHandler.FluidAction.EXECUTE);
                 onUpdate.accept(new ItemStack(temp.getContainer()));
 
