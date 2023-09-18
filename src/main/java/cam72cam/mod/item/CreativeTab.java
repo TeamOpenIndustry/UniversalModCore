@@ -26,7 +26,7 @@ public class CreativeTab {
                 builder.icon(() -> stack.get().internal);
                 builder.displayItems((params, output) -> {
                     for (CustomItem customItem : inject) {
-                        for (ItemStack itemVariant : customItem.getItemVariants(null)) {
+                        for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
                             output.accept(itemVariant.internal);
                         }
                     }
@@ -40,8 +40,9 @@ public class CreativeTab {
         this.internal = tab;
     }
 
+    /*
     @Override
     public boolean equals(Object o) {
         return o instanceof CreativeTab && ((CreativeTab)o).internal == this.internal;
-    }
+    }*/
 }

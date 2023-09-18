@@ -220,10 +220,6 @@ public class ClientEvents {
             OPTIFINE_SUCKS.execute(x -> x.accept(event));
         }
 
-        @SubscribeEvent
-        public void buildContents(CreativeModeTabEvent.Register event) {
-            CREATIVE_TAB.execute(x -> x.accept(event));
-        }
         static boolean hasHacked = false;
         @SubscribeEvent
         public static void onHackShaders(TickEvent.RenderTickEvent event) {
@@ -266,5 +262,9 @@ public class ClientEvents {
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
         }*/
+        @SubscribeEvent
+        public static void buildContents(CreativeModeTabEvent.Register event) {
+            CREATIVE_TAB.execute(x -> x.accept(event));
+        }
     }
 }

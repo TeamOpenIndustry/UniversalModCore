@@ -12,6 +12,7 @@ import java.util.Locale;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -308,26 +309,6 @@ public class ModCore {
                 super("translation Hackery", false);
             }
 
-            private ResourceLocation toLang(String path) {
-                // assets/mod/location
-                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
-                String[] parts = path.split("/");
-                String type = parts[0];
-                String namespace = parts[1];
-                String prefix = String.format("%s/%s/", type, namespace);
-                path = path.replace(prefix, "").replace(".json", ".lang");
-                String lang = path.split("_")[1].replace(".lang", "");
-                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
-                String finalPath = path;
-                return new ResourceLocation(namespace, finalPath.toLowerCase(Locale.ROOT)) {
-                    @Override
-                    public String getPath() {
-                        // Very evil...
-                        return finalPath;
-                    }
-                };
-            }
-
             @org.jetbrains.annotations.Nullable
             @Override
             public IoSupplier<InputStream> getRootResource(String... p_252049_) {
@@ -337,9 +318,9 @@ public class ModCore {
             @org.jetbrains.annotations.Nullable
             @Override
             public IoSupplier<InputStream> getResource(PackType type, ResourceLocation resourcePath) {
-                if (resourcePath.getPath().contains("/lang/") && resourcePath.getPath().endsWith(".json")) {
+                if (resourcePath.getPath().contains("lang/") && resourcePath.getPath().endsWith(".json")) {
                     // Magical Translations!
-                    ResourceLocation lang = toLang(resourcePath.toString());
+                    ResourceLocation lang = new ResourceLocation(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
                     List<Resource> langFiles = Minecraft.getInstance().getResourceManager().getResourceStack(lang);
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();
