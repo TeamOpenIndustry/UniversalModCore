@@ -3,7 +3,7 @@ package #PACKAGE#;
 import cam72cam.mod.ModCore;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
-t
+
 @net.minecraftforge.fml.common.Mod(Mod.MODID)
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = Mod.MODID, bus = net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD)
 public class Mod {
