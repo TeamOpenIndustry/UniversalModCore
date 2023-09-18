@@ -21,6 +21,6 @@ description="Universal Mod API (Minecraft version agnostic)"
 [[dependencies.universalmodcore]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.2]"
+    versionRange="[1.19.4]"
     ordering="NONE"
     side="BOTH"

@@ -22,11 +22,14 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.model.data.ModelData;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -110,7 +113,7 @@ public class BlockRender {
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    model.renderCustom(new RenderState(var3).lightmap(j/15f, k/15f), partialTicks);
+                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
                     RenderType.solid().clearRenderState();
                 }
@@ -134,11 +137,11 @@ public class BlockRender {
         });
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
-            event.getModelRegistry().put(new ModelResourceLocation(block.internal.getRegistryName(), ""), new BakedModel() {
+            event.getModels().put(new ModelResourceLocation(block.id.internal, ""), new BakedModel() {
                 @Override
-                public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand, IModelData properties) {
+                public @NotNull List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData properties, @org.jetbrains.annotations.Nullable RenderType renderType) {
                     if (block instanceof BlockTypeEntity) {
-                        TileEntity data = properties.getData(TileEntity.TE_PROPERTY);
+                        TileEntity data = properties.get(TileEntity.TE_PROPERTY);
                         if (data == null || !cls.isInstance(data.instance())) {
                             System.out.println(data);
                             return EMPTY;
@@ -155,7 +158,7 @@ public class BlockRender {
                 }
 
                 @Override
-                public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+                public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState p_235039_, @org.jetbrains.annotations.Nullable Direction p_235040_, RandomSource p_235041_) {
                     return EMPTY;
                 }
 

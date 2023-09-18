@@ -76,7 +76,8 @@ public class Player extends Entity {
     }
 
     public boolean hasPermission(PermissionAction action) {
-        return PermissionAPI.getPermission((ServerPlayer) internal, action.node);
+        // TODO 1.18.2 true is probably overly permissive
+        return internal instanceof ServerPlayer ? PermissionAPI.getPermission((ServerPlayer) internal, action.node) : true;
     }
 
     public static class PermissionAction {

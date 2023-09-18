@@ -21,6 +21,7 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
@@ -31,6 +32,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.client.model.data.ModelData;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.data.ModelProperty;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.CapabilityEnergy;
@@ -157,7 +160,11 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(helper -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> example.supplier(id), new HashSet<>() {
+            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
+                TileEntity tile = example.supplier(id);
+                tile.setBlockState(state);
+                return tile;
+            }, new HashSet<>() {
                 public boolean contains(Object var1) {
                     // WHYYYYYYYYYYYYYYYY
                     return true;
@@ -266,6 +273,11 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             tag.put("umcUpdate", umcUpdate.internal);
         }
         return tag;
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        handleUpdateTag(pkt.getTag());
     }
 
     /** Active Synchronization from markDirty */
@@ -494,5 +506,14 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
     public final ModelData getModelData() {
         return ModelData.builder().with(TE_PROPERTY, this).build();
+    }
+
+    /* 1.16+ caching */
+    private final SingleCache<IBoundingBox, VoxelShape> shapeCache = new SingleCache<>((IBoundingBox box) -> Shapes.create(BoundingBox.from(box)));
+    public VoxelShape getShape() {
+        if (instance() != null) {
+            return shapeCache.get(this.instance().getBoundingBox());
+        }
+        return null;
     }
 }

@@ -4,6 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.render.opengl.RenderState;
@@ -43,6 +44,7 @@ public class OBJRender extends VBO {
          * Draw these groups in the VB
          */
         public void draw(Collection<String> groups) {
+            RenderContext.checkError();
             List<String> sorted = new ArrayList<>(groups);
             sorted.sort(Comparator.naturalOrder());
             int start = -1;
@@ -63,6 +65,7 @@ public class OBJRender extends VBO {
             if (start != stop) {
                 GL32.glDrawArrays(GL32.GL_TRIANGLES, start * 3, (stop - start) * 3);
             }
+            RenderContext.checkError();
         }
     }
 

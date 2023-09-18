@@ -3,6 +3,7 @@ package cam72cam.mod.event;
 import cam72cam.mod.ModCore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -21,6 +22,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.server.permission.PermissionAPI;
 import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
@@ -36,6 +39,7 @@ public class CommonEvents {
     public static final class World {
         public static final Event<Consumer<Level>> LOAD = new Event<>();
         public static final Event<Consumer<Level>> UNLOAD = new Event<>();
+        public static final Event<Consumer<ServerLevel>> SAVE = new Event<>();
         public static final Event<Consumer<Level>> TICK = new Event<>();
         public static final Event<Consumer<ChunkAccess>> LOAD_CHUNK = new Event<>();
     }
@@ -77,8 +81,13 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void onWorldLoad(ChunkEvent.Load event) {
+        public static void onChunkLoad(ChunkEvent.Load event) {
             World.LOAD_CHUNK.execute(x -> x.accept(event.getChunk()));
+        }
+
+        @SubscribeEvent
+        public static void onLevelSave(LevelEvent.Save event) {
+            World.SAVE.execute(x -> x.accept((ServerLevel) event.getLevel()));
         }
 
         @SubscribeEvent
@@ -113,6 +122,12 @@ public class CommonEvents {
             if (!Block.BROKEN.executeCancellable(x -> x.onBroken((Level)event.getLevel(), event.getPos(), event.getPlayer()))) {
                 event.setCanceled(true);
             }
+        }
+
+
+        @SubscribeEvent
+        public static void registerContainers(PermissionGatherEvent.Nodes event) {
+            Permissions.NODES.execute(x -> x.accept(event));
         }
 
     }

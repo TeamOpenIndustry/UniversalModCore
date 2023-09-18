@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
-    public final Item internal;
+    public Item internal;
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
@@ -50,8 +50,10 @@ public abstract class CustomItem {
             }
         }
 
-        internal = new ItemInternal(props);
-        CommonEvents.Item.REGISTER.subscribe(helper -> helper.register(identifier, internal));
+        CommonEvents.Item.REGISTER.subscribe(helper -> {
+            internal = new ItemInternal(props);
+            helper.register(identifier, internal);
+        });
     }
 
     /** Creative tabs that this should be shown under */

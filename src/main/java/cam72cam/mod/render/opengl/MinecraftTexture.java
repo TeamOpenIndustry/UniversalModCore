@@ -7,14 +7,13 @@ import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.io.InputStream;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -54,17 +53,17 @@ public class MinecraftTexture implements Texture {
                             }
 
                             @Override
-                            public boolean hasResource(ResourceLocation p_10729_) {
+                            public List<Resource> getResourceStack(ResourceLocation p_10730_) {
                                 throw new RuntimeException("INVALID");
                             }
 
                             @Override
-                            public List<Resource> getResources(ResourceLocation p_10730_) throws IOException {
+                            public Map<ResourceLocation, Resource> listResources(String p_215563_, Predicate<ResourceLocation> p_215564_) {
                                 throw new RuntimeException("INVALID");
                             }
 
                             @Override
-                            public Collection<ResourceLocation> listResources(String p_10726_, Predicate<String> p_10727_) {
+                            public Map<ResourceLocation, List<Resource>> listResourceStacks(String p_215565_, Predicate<ResourceLocation> p_215566_) {
                                 throw new RuntimeException("INVALID");
                             }
 
@@ -74,8 +73,8 @@ public class MinecraftTexture implements Texture {
                             }
 
                             @Override
-                            public Resource getResource(ResourceLocation resourceLocationIn) throws IOException {
-                                return new SimpleResource("internal", MinecraftTexture.this.id.internal, MinecraftTexture.this.id.getResourceStream(), null);
+                            public Optional<Resource> getResource(ResourceLocation resourceLocationIn) {
+                                return Optional.of(new Resource(null, MinecraftTexture.this.id::getResourceStream));
                             }
                         }, this.location);
                     }

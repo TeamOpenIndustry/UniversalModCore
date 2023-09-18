@@ -21,7 +21,7 @@ public abstract class Slider extends Button {
     }
 
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-        super(builder, new HackSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20, Component.literal(text), Component.literal(""), min, max, start, 0, 2, true));
+        super(builder, new HackSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20, Component.literal(text), Component.literal(""), min, max, start, 0, doublePrecision ? 2 : 0, true));
         ((HackSlider) this.button).onSlider = Slider.this::onSlider;
     }
 

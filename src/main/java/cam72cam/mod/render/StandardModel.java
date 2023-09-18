@@ -9,6 +9,8 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.*;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -22,19 +24,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>() {
-        @Override
-        public boolean add(Pair<BlockState, BakedModel> o) {
-            worldRenderer = null;
-            return super.add(o);
-        }
-    };
+    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
@@ -85,14 +82,14 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(worldRenderer);
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {
                     GL32.glDisable(GL32.GL_BLEND);
                 }
 
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, 0);
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, null, 0);
                 buffer.endBatch();
             }
         });
@@ -106,7 +103,7 @@ public class StandardModel {
     }
 
     /** Get the quads for the MC standard rendering */
-    List<BakedQuad> getQuads(Direction side, Random rand) {
+    List<BakedQuad> getQuads(Direction side, RandomSource rand) {
         List<BakedQuad> quads = new ArrayList<>();
         for (Pair<BlockState, BakedModel> model : models) {
             quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
@@ -127,21 +124,14 @@ public class StandardModel {
         renderQuads(state);
     }
 
-    private BufferBuilder worldRenderer = null;
-
     /** Render only the MC quads in this model */
     public void renderQuads(RenderState state) {
         if (models.isEmpty()) {
             return;
         }
 
-        if (worldRenderer == null) {
-            worldRenderer = new BufferBuilder(2048) {
-                @Override
-                public void discard() {
-                    //super.discard();
-                }
-            };
+        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
+            BufferBuilder worldRenderer = Tesselator.getInstance().getBuilder();
             worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
@@ -152,17 +142,14 @@ public class StandardModel {
                 float f1 = (float)(i >> 8 & 255) / 255.0F;
                 float f2 = (float)(i & 255) / 255.0F;
 
-                quads.addAll(model.getRight().getQuads(null, null, new Random()));
+                quads.addAll(model.getRight().getQuads(null, null, Minecraft.getInstance().font.random));
                 for (Direction facing : Direction.values()) {
-                    quads.addAll(model.getRight().getQuads(null, facing, new Random()));
+                    quads.addAll(model.getRight().getQuads(null, facing, Minecraft.getInstance().font.random));
                 }
 
-                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
+                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
-            worldRenderer.end();
-        }
-        try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-            BufferUploader.end(worldRenderer);
+            BufferUploader.draw(worldRenderer.end());
         }
     }
 
@@ -175,6 +162,12 @@ public class StandardModel {
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
+
+        if (Tesselator.getInstance().getBuilder().building()) {
+            try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
+                BufferUploader.draw(Tesselator.getInstance().getBuilder().end());
+            }
+        }
     }
 
     /** Is there anything that's not MC standard in this model? */

@@ -1,8 +1,10 @@
 package cam72cam.mod.resource;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -95,5 +97,29 @@ public class Identifier {
      */
     public InputStream getLastResourceStream() throws IOException {
         return Data.proxy.getLastResourceStream(this);
+    }
+
+    public static class IoInputStreamMod implements IoSupplier<InputStream> {
+        public final long time;
+        private final IoSupplier<InputStream> stream;
+
+        public IoInputStreamMod(IoSupplier<InputStream> inputStream, long modTime) {
+            this.stream = inputStream;
+            this.time = modTime;
+        }
+
+        @Override
+        public InputStream get() throws IOException {
+            return stream.get();
+        }
+    }
+
+    public static class InputStreamMod extends FilterInputStream {
+        public final long time;
+
+        public InputStreamMod(InputStream inputStream, long modTime) {
+            super(inputStream);
+            this.time = modTime;
+        }
     }
 }

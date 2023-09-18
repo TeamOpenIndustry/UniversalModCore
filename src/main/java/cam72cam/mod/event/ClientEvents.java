@@ -13,9 +13,13 @@ import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -38,7 +42,6 @@ public class ClientEvents {
         EntityRenderer.registerClientEvents();
         Mouse.registerClientEvents();
         GlobalRender.registerClientEvents();
-        Audio.registerClientCallbacks();
         GuiRegistry.registerClientEvents();
         World.registerClientEvnets();
         CommonEvents.Entity.REGISTER.post(() -> REGISTER_ENTITY.execute(Runnable::run));
@@ -86,8 +89,9 @@ public class ClientEvents {
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
-    public static final Event<Consumer<ModelEvent.RegisterAdditional>> MODEL_BAKE = new Event<>();
+    public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
     public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
@@ -100,6 +104,7 @@ public class ClientEvents {
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
         private static Vec3d dragPos = null;
+        private static boolean skipNextMouseInputEvent = false;
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -110,6 +115,9 @@ public class ClientEvents {
             MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
+                // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
+                // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
+                skipNextMouseInputEvent = true;
             }
         }
 
@@ -126,18 +134,43 @@ public class ClientEvents {
             onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getButton(), MouseAction.RELEASE);
         }
 
-        @SubscribeEvent
-        public static void onClick(InputEvent.MouseButton event) {
+        private static void hackInputState(int event) {
             int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
             int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
 
-            if ((event.getButton() == attackID || event.getButton() == useID) && event.getAction() == 1) {
-                Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
-                if (!DRAG.executeCancellable(x -> x.apply(button))) {
-                    //event.setCanceled(true);
-                    dragPos = new Vec3d(0, 0, 0);
-                } else if (!CLICK.executeCancellable(x -> x.apply(button))) {
-                    //event.setCanceled(true);
+            // This prevents the event from firing
+            if (event == attackID) {
+                Minecraft.getInstance().options.keyAttack.consumeClick();
+            }
+            if (event == useID) {
+                Minecraft.getInstance().options.keyUse.consumeClick();
+            }
+        }
+
+        @SubscribeEvent
+        public static void onClick(InputEvent.MouseButton event) {
+            if (skipNextMouseInputEvent) {
+                // This is the path from onGuiMouse
+                skipNextMouseInputEvent = false;
+                hackInputState(event.getButton());
+                return;
+            }
+            int attackID = Minecraft.getInstance().options.keyAttack.getKey().getValue();
+            int useID = Minecraft.getInstance().options.keyUse.getKey().getValue();
+
+            if (event.getButton() == attackID || event.getButton() == useID) {
+                if(event.getAction() == 1) {
+                    Player.Hand button = attackID == event.getButton() ? Player.Hand.SECONDARY : Player.Hand.PRIMARY;
+                    if (!DRAG.executeCancellable(x -> x.apply(button))) {
+                        //event.setCanceled(true);
+                        hackInputState(event.getButton());
+                        dragPos = new Vec3d(0, 0, 0);
+                        return;
+                    }
+                    if (!CLICK.executeCancellable(x -> x.apply(button))) {
+                        //event.setCanceled(true);
+                        hackInputState(event.getButton());
+                    }
                 } else {
                     dragPos = null;
                 }
@@ -152,12 +185,12 @@ public class ClientEvents {
             }
         }
 
-        @SubscribeEvent
         public static Vec3d getDragPos() {
             return dragPos;
         }
 
 
+        @SubscribeEvent
         public static void onDebugRender(CustomizeGuiOverlayEvent.DebugText event) {
             RENDER_DEBUG.execute(x -> x.accept(event));
         }
@@ -189,6 +222,16 @@ public class ClientEvents {
         public void buildContents(CreativeModeTabEvent.Register event) {
             CREATIVE_TAB.execute(x -> x.accept(event));
         }
+        static boolean hasHacked = false;
+        @SubscribeEvent
+        public static void onHackShaders(TickEvent.RenderTickEvent event) {
+            if (!hasHacked && event.phase == TickEvent.Phase.START) {
+                if (GameRenderer.getRendertypeCutoutShader() != null) {
+                    hasHacked = true;
+                    HACKS.execute(Runnable::run);
+                }
+            }
+        }
     }
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -197,15 +240,14 @@ public class ClientEvents {
             registerClientEvents();
         }
 
-        /*TODO 1.18.2 @SubscribeEvent
-        public static void registerModels(ModelRegistryEvent event) {
-            MODEL_CREATE.execute(Runnable::run);
-        }*/
+        @SubscribeEvent
+        public static void registerModels(ModelEvent.ModifyBakingResult event) {
+            MODEL_BAKE.execute(x -> x.accept(event));
+        }
 
         @SubscribeEvent
         public static void onModelBakeEvent(ModelEvent.RegisterAdditional event) {
             MODEL_CREATE.execute(Runnable::run);
-            MODEL_BAKE.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
@@ -216,11 +258,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onTextureStitchEvent(TextureStitchEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent.Post event) {
-            ModCore.testReload();
         }
 
         /*@SubscribeEvent(priority = EventPriority.LOW)

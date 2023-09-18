@@ -1,10 +1,13 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -80,21 +83,26 @@ public class VBO {
 
     public class Binding implements With {
         private final With restore;
+        private final RenderState state;
 
         protected Binding(RenderState state) {
+            RenderContext.checkError();
             if (vbo == -1) {
                 init();
             }
+            RenderContext.checkError();
 
             lastUsed = System.currentTimeMillis();
 
             settings.accept(state);
+            this.state = state;
 
             ShaderInstance oldShader = RenderSystem.getShader();
             int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);
             int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER_BINDING);
 
 
+            /*
             GL32.glEnableClientState(GL32.GL_VERTEX_ARRAY);
             GL32.glEnableClientState(GL32.GL_TEXTURE_COORD_ARRAY);
             GL32.glEnableClientState(GL32.GL_COLOR_ARRAY);
@@ -102,7 +110,7 @@ public class VBO {
                 GL32.glEnableClientState(GL32.GL_NORMAL_ARRAY);
             } else {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
-            }
+            }*/
 
             ShaderInstance shader = GameRenderer.getRendertypeCutoutShader();
             RenderSystem.setShader(() -> shader);
@@ -116,18 +124,19 @@ public class VBO {
                 VertexFormatElement element = elements.get(i);
                 switch (element.getUsage()) {
                     case POSITION -> {
+                        //element.setupBufferState(i, (long) vbInfo.vertexOffset * Float.BYTES, stride);
                         GL32.glEnableVertexAttribArray(i);
                         GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, false, stride, (long) vbInfo.vertexOffset * Float.BYTES);
                     }
                     case NORMAL -> {
                         if (vbInfo.hasNormals) {
                             GL32.glEnableVertexAttribArray(i);
-                            GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, false, stride, (long) vbInfo.normalOffset * Float.BYTES);
+                            GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
                         }
                     }
                     case COLOR -> {
                         GL32.glEnableVertexAttribArray(i);
-                        GL32.glVertexAttribPointer(i, 4, GL32.GL_FLOAT, false, stride, (long) vbInfo.colorOffset * Float.BYTES);
+                        GL32.glVertexAttribPointer(i, 4, GL32.GL_FLOAT, true, stride, (long) vbInfo.colorOffset * Float.BYTES);
                     }
                     case UV -> {
                         for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
@@ -152,15 +161,19 @@ public class VBO {
                     }
                 }
             }
+            RenderContext.checkError();
 
             this.restore = RenderContext.apply(state).and(() -> {
-                for (int i = 0; i < elements.size(); i++) {
-                    GL32.glDisableVertexAttribArray(i);
-                }
+                RenderContext.checkError();
+                shader.getVertexFormat().clearBufferState();
 
-                GL32.glBindVertexArray(oldVao);
-                GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
+                RenderContext.checkError();
+
+                //GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
+                //GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, 0);
+                //GL32.glBindVertexArray(oldVao);
                 RenderSystem.setShader(() -> oldShader);
+                BufferUploader.reset();
             });
         }
 
@@ -170,7 +183,7 @@ public class VBO {
         }
 
         protected With push(Consumer<RenderState> mod) {
-            RenderState state = new RenderState();
+            RenderState state = this.state.clone();
             mod.accept(state);
             return RenderContext.apply(state);
         }
@@ -180,6 +193,7 @@ public class VBO {
          */
         public void draw() {
             GL32.glDrawArrays(GL32.GL_TRIANGLES, 0, length);
+            RenderContext.checkError();
         }
     }
 

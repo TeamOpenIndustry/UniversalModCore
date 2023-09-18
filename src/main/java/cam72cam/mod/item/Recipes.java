@@ -6,7 +6,9 @@ import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.ConditionalRecipe;
@@ -24,12 +26,12 @@ import java.util.function.Consumer;
 public class Recipes extends RecipeProvider {
     private static final List<Consumer<Consumer<FinishedRecipe>>> registry = new ArrayList<>();
 
-    public Recipes(DataGenerator generatorIn) {
+    public Recipes(PackOutput generatorIn) {
         super(generatorIn);
     }
 
     @Override
-    protected void buildCraftingRecipes(Consumer<FinishedRecipe> consumer) {
+    protected void buildRecipes(Consumer<FinishedRecipe> consumer) {
         registry.forEach(fn -> fn.accept(consumer));
     }
 
@@ -47,7 +49,7 @@ public class Recipes extends RecipeProvider {
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             registry.add(out -> {
-                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(RecipeCategory.MISC, item.internal.getItem(), item.getCount());
 
                 int height = ingredients.length / width;
 

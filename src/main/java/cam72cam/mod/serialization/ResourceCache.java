@@ -2,6 +2,7 @@ package cam72cam.mod.serialization;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.resource.Identifier.InputStreamMod;
 import cam72cam.mod.util.ThrowingFunction;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -31,7 +32,7 @@ public class ResourceCache<T> {
         // TODO This might need to be cleared when MC packs are reloaded...
         private final static Map<Identifier, String> hashCache = new HashMap<>();
 
-        private final Map<Identifier, Pair<HashCode, byte[]>> resources = new HashMap<>();
+        private final Map<Identifier, Pair<String, byte[]>> resources = new HashMap<>();
         private final Set<Identifier> accessed = new HashSet<>();
 
         private static ResourceProvider fromTag(TagCompound data) {
@@ -45,7 +46,15 @@ public class ResourceCache<T> {
                         foundHash = hashCache.get(id);
                     }
                     if (foundHash == null) {
-                        foundHash = provider.get(id).getKey().toString();
+                        try (InputStream stream = id.getLastResourceStream()) {
+                            if (stream instanceof InputStreamMod) {
+                                foundHash = "MOD" + ((InputStreamMod) stream).time;
+                            } else {
+                                foundHash = provider.get(id).getKey();
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     if (!expectedHash.equals(foundHash)) {
                         return provider;
@@ -61,22 +70,25 @@ public class ResourceCache<T> {
         private TagCompound toTag() {
             Map<Identifier, String> expected = new HashMap<>();
             for (Identifier identifier : accessed) {
-                expected.put(identifier, resources.get(identifier).getKey().toString());
+                expected.put(identifier, resources.get(identifier).getKey());
             }
             return new TagCompound().setMap("resources", expected, Identifier::toString, v -> new TagCompound().setString("key", v));
         }
 
-        private Pair<HashCode, byte[]> get(Identifier id) {
+        private Pair<String, byte[]> get(Identifier id) {
             if (!resources.containsKey(id)) {
                 try (
-                        HashingInputStream source = new HashingInputStream(ResourceCache.hasher, id.getLastResourceStream());
+                        InputStream stream = id.getLastResourceStream();
+                        InputStreamMod ism = stream instanceof InputStreamMod ? (InputStreamMod)stream : null;
+                        HashingInputStream hashing =  ism == null ? new HashingInputStream(ResourceCache.hasher, stream) : null;
+                        InputStream source = hashing != null ? hashing : ism;
                         ByteArrayOutputStream sink = new ByteArrayOutputStream(1024 * 1024)
                 ) {
                     IOUtils.copy(source, sink);
-                    HashCode hash = source.hash();
+                    String hash = hashing != null ? hashing.hash().toString() : "MOD" + ism.time;
                     resources.put(id, Pair.of(hash, sink.toByteArray()));
                     synchronized (hashCache) {
-                        hashCache.put(id, hash.toString());
+                        hashCache.put(id, hash);
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -165,13 +177,13 @@ public class ResourceCache<T> {
 
         if (intermediary != null) {
             writeBuffer(file, converter.apply(intermediary).buffer);
-        } else if (!file.exists()) {
+        } else if (!file.exists() || file.length() < Integer.BYTES) {
             // This sometimes happens on windows or after a failed launch attempt.
             regenerateBuffer(file, converter);
         }
 
         return () -> {
-            if (!file.exists()) {
+            if (!file.exists() || file.length() < Integer.BYTES) {
                 // This sometimes happens on windows or after a failed launch attempt.
                 try {
                     return regenerateBuffer(file, converter);

@@ -9,6 +9,7 @@ import java.nio.FloatBuffer;
 import java.util.function.Function;
 
 import static cam72cam.mod.render.opengl.RenderContext.applyBool;
+import static cam72cam.mod.render.opengl.RenderContext.checkError;
 
 public class BlendMode {
     public static final int GL_ZERO = GL32.GL_ZERO;
@@ -56,6 +57,7 @@ public class BlendMode {
             int origSrcAlpha = GL32.glGetInteger(GL32.GL_BLEND_SRC_ALPHA);
             int origDstAlpha = GL32.glGetInteger(GL32.GL_BLEND_DST_ALPHA);
             GL32.glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
+            checkError();
             return w.and(() -> GL32.glBlendFuncSeparate(origSrcColor, origDstColor, origSrcAlpha, origDstAlpha));
         });
     }

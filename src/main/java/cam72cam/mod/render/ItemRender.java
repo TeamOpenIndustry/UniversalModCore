@@ -7,6 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
@@ -24,7 +25,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
@@ -34,7 +34,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.model.*;
 import org.lwjgl.BufferUtils;
@@ -48,8 +47,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -60,7 +58,9 @@ public class ItemRender {
     public static void register(CustomItem item, Identifier tex) {
         SimpleModelState foo = new SimpleModelState(Transformation.identity());
 
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
+        // Broken on 1.19.4
+        /*
+        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
                 new Material(TextureAtlas.LOCATION_BLOCKS, tex.internal)
         )).bake(new IModelConfiguration() {
             @Nullable
@@ -111,6 +111,7 @@ public class ItemRender {
         }, event.getModelLoader(), ForgeModelBakery.defaultTextureGetter(), foo, ItemOverrides.EMPTY, tex.internal)));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
+         */
 
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
@@ -121,11 +122,11 @@ public class ItemRender {
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe((ModelEvent.RegisterAdditional event) -> event.register(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
+        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel && false) { // TODO re-enable sprite system in 1.17+
-            ClientEvents.RELOAD.subscribe(() -> {
+        if (model instanceof ISpriteItemModel) { // TODO re-enable sprite system in 1.17+
+            ClientEvents.HACKS.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
                 for (ItemStack stack : variants) {
@@ -222,72 +223,56 @@ public class ItemRender {
         fb.clear(Minecraft.ON_OSX);
         fb.bindWrite(true);
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
+        RenderState state = new RenderState();
+        state.model_view().setIdentity();
+        state.projection().setIdentity();
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        try (With with = RenderContext.apply(state)) {
+            boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
-        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-        int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDepthFunc(GL11.GL_LESS);
+            GL11.glClearDepth(1);
 
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthFunc(GL11.GL_LESS);
-        GL11.glClearDepth(1);
+            model.renderCustom(new RenderState());
 
-        model.renderCustom(new RenderState());
+            fb.bindRead();
+            ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
+            GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+            fb.unbindRead();
 
-        fb.bindRead();
-        ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-        GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-        fb.unbindRead();
+            fb.unbindWrite();
+            fb.destroyBuffers();
 
-        fb.unbindWrite();
-        fb.destroyBuffers();
+            GL11.glDepthFunc(oldDepth);
 
-        GL11.glDepthFunc(oldDepth);
+            iconSheet.setSprite(id, buff);
 
-        iconSheet.setSprite(id, buff);
+            try {
+                byte[] data = new byte[buff.capacity()];
+                buff.get(data);
+                Files.write(sprite.toPath(), data);
+            } catch (IOException e) {
+                ModCore.catching(e);
+                sprite.delete();
+            }
 
-        try {
-            byte[] data = new byte[buff.capacity()];
-            buff.get(data);
-            Files.write(sprite.toPath(), data);
-        } catch (IOException e) {
-            ModCore.catching(e);
-            sprite.delete();
+            if (!depthEnabled) {
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+            }
+            GL11.glDepthFunc(oldDepth);
         }
-
-        if (!depthEnabled) {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-        }
-        GL11.glDepthFunc(oldDepth);
-
-        GL11.glMatrixMode(GL11.GL_TEXTURE);
-        GL11.glPopMatrix();
-
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
 
         restore.close();
     }
 
-    static Consumer<PoseStack> doRender = s -> {};
+    static BiConsumer<PoseStack, Integer> doRender = (s, i) -> {};
     public static BlockEntityWithoutLevelRenderer ISTER() {
         return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
             @Override
-            public void renderByItem(net.minecraft.world.item.ItemStack stack, ItemDisplayContext p_270899_, PoseStack matrixStack, MultiBufferSource p_108833_, int p_108834_, int p_108835_) {
-                // TODO 1.15+ do we need to set lightmap coords here?
-                doRender.accept(matrixStack);
+            public void renderByItem(net.minecraft.world.item.ItemStack stack, ItemDisplayContext p_270899_, PoseStack matrixStack, MultiBufferSource p_108833_, int combinedLight, int combinedOverlay) {
+                doRender.accept(matrixStack, combinedLight);
             }
         };
     }
@@ -342,20 +327,20 @@ public class ItemRender {
 
         @Override
         public ItemOverrides getOverrides() {
-            return ItemOverrides.EMPTY;
+            return new ItemOverrideListHack();
         }
 
         @Override
-        public BakedModel handlePerspective(TransformType cameraTransformType, PoseStack mat) {
+        public BakedModel applyTransform(ItemDisplayContext cameraTransformType, PoseStack mat, boolean applyLeftHandTransform) {
             this.type = ItemRenderType.from(cameraTransformType);
 
-            doRender = matrix -> {
+            doRender = (matrix, i) -> {
                 if (stack == null) {
                     return;
                 }
 
                 if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));
+                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack), new RenderState(matrix));
                     return ;
                 }
 
@@ -377,14 +362,17 @@ public class ItemRender {
                 if (!ModCore.isInReload()) {
                     RenderType.solid().setupRenderState();
 
-                    // TODO 1.15+ do we need to set lightmap coords here?
-
                     mat.pushPose();
                     // Maybe backwards?
-                    mat.last().pose().multiply(matrix.last().pose());
+                    mat.last().pose().mul(matrix.last().pose());
 
                     RenderState state = new RenderState(mat);
                     model.applyTransform(stack, type, state);
+
+                    int j = i % 65536;
+                    int k = i / 65536;
+                    state.lightmap(j/240f, k/240f);
+
                     //std.renderCustom();
                     std.render(state);
 
@@ -396,7 +384,7 @@ public class ItemRender {
             };
 
 
-            return ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
+            return this;//ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
         }
 
         class ItemOverrideListHack extends ItemOverrides {
