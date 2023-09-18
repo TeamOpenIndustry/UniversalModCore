@@ -174,7 +174,7 @@ public abstract class BlockType {
         public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(level, pos);
             if (world != null) {
-                return BlockType.this.onPick(world, new Vec3i(pos)).internal;
+                return BlockType.this.onPick(world, new Vec3i(pos)).internal();
             }
             return net.minecraft.world.item.ItemStack.EMPTY;
         }

@@ -207,7 +207,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        this.minecraft.getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
+        this.minecraft.getItemRenderer().renderAndDecorateItem(stack.internal(), x, y);
 
         try (With ctx = RenderContext.apply(
                 new RenderState()

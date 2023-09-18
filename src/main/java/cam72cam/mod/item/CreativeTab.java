@@ -15,7 +15,7 @@ public class CreativeTab {
         internal = new CreativeModeTab(label) {
             @Override
             public net.minecraft.world.item.ItemStack makeIcon() {
-                return stack.get().internal;
+                return stack.get().internal();
             }
         };
     }

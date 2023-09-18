@@ -29,7 +29,7 @@ public class Recipes extends RecipeProvider {
 
     @Override
     protected void buildCraftingRecipes(Consumer<FinishedRecipe> consumer) {
-        // TODO 1.18.2+ registry.forEach(fn -> fn.accept(consumer));
+        registry.forEach(fn -> fn.accept(consumer));
     }
 
     public static ShapedRecipeBuilder shapedRecipe(CustomItem item, int width, Fuzzy... ingredients) {
@@ -46,7 +46,7 @@ public class Recipes extends RecipeProvider {
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             registry.add(out -> {
-                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal.getItem(), item.getCount());
+                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(item.internal().getItem(), item.getCount());
 
                 int height = ingredients.length / width;
 
@@ -73,7 +73,7 @@ public class Recipes extends RecipeProvider {
                     }
                     builder.pattern(line);
                 }
-                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+                ResourceLocation itemName = item.internal().getItem().getRegistryName();
                 ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
 
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {

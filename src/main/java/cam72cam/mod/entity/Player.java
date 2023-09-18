@@ -50,7 +50,7 @@ public class Player extends Entity {
     }
 
     public void setHeldItem(Hand hand, ItemStack stack) {
-        internal.setItemInHand(hand.internal, stack.internal);
+        internal.setItemInHand(hand.internal, stack.internal());
     }
 
     public int getFoodLevel() {
@@ -67,7 +67,7 @@ public class Player extends Entity {
 
     /** Force the player to click a block */
     public ClickResult clickBlock(Hand hand, Vec3i pos, Vec3d hit) {
-        return ClickResult.from(getHeldItem(hand).internal.useOn(new UseOnContext(internal, hand.internal, new BlockHitResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
+        return ClickResult.from(getHeldItem(hand).internal().useOn(new UseOnContext(internal, hand.internal, new BlockHitResult(hit.internal(), Direction.DOWN, pos.internal(), false))));
     }
 
     /** What direction the player is trying to move and how fast */

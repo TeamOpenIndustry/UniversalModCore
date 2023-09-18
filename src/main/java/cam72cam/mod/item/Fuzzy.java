@@ -138,7 +138,7 @@ public class Fuzzy {
 
     /** Is the item in this stack matched by this fuzzy? */
     public boolean matches(ItemStack stack) {
-        return enumerate().stream().anyMatch(potential -> potential.internal.getItem() == stack.internal.getItem());
+        return enumerate().stream().anyMatch(potential -> potential.internal().getItem() == stack.internal().getItem());
     }
 
     /** Do any items exist in this fuzzy */
@@ -179,7 +179,7 @@ public class Fuzzy {
 
     /** Use to register an itemstack */
     public Fuzzy add(ItemStack item) {
-        add(item.internal.getItem());
+        add(item.internal().getItem());
         return this;
     }
 
