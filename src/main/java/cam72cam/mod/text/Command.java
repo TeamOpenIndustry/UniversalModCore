@@ -60,7 +60,7 @@ public abstract class Command implements com.mojang.brigadier.Command<CommandSou
 			// Is the console ?
 		}
 
-		Consumer<PlayerMessage> pm = m -> context.getSource().sendSuccess(m.internal, false);
+		Consumer<PlayerMessage> pm = m -> context.getSource().sendSuccess(() -> m.internal, false);
 		String[] args = context.getInput().split(" ");
 		// Remove command from arguments
 		args = Arrays.copyOfRange(args, 1, args.length);

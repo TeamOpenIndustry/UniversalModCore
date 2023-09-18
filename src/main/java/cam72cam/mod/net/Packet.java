@@ -44,7 +44,7 @@ public abstract class Packet {
         net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
             ctx.get().enqueueWork(() -> {
                 msg.packet.ctx = ctx.get();
-                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level);
+                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level());
                 try {
                     TagSerializer.deserialize(msg.packet.data, msg.packet, world);
                 } catch (SerializationException e) {

@@ -26,7 +26,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
@@ -184,7 +184,7 @@ public class BlockRender {
 
                 @Override
                 public TextureAtlasSprite getParticleIcon() {
-                    if (block.internal.defaultMaterialColor() == Material.METAL.getColor()) {
+                    if (block.internal.defaultMapColor() == MapColor.METAL) {
                         return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
                     }
                     return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.STONE.defaultBlockState()).getParticleIcon();

@@ -1,13 +1,12 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import com.mojang.blaze3d.vertex.PoseStack;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -22,8 +21,8 @@ public abstract class ItemButton extends AbstractButton {
     }
 
     @Override
-    public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
-        GuiComponent.fill(ms, getX(), getY(), getX() + 32, getY() + 32, 0xFFFFFFFF);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        graphics.fill(getX(), getY(), getX() + 32, getY() + 32, 0xFFFFFFFF);
         // Pollutes global state...
         // TODO 1.17.1 RenderHelper.turnBackOn();
         Minecraft mc = Minecraft.getInstance();
@@ -32,8 +31,8 @@ public abstract class ItemButton extends AbstractButton {
         try (With ctx = RenderContext.apply(
                 new RenderState().translate(getX(), getY(), 0).scale(2, 2, 1)
         )) {
-            mc.getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal, 0, 0);
-            mc.getItemRenderer().renderGuiItemDecorations(new PoseStack(), font, stack.internal, 0, 0);
+            graphics.renderItem(stack.internal, 0, 0);
+            // TODO 1.20.1 mc.getItemRenderer().renderGuiItemDecorations(new PoseStack(), font, stack.internal, 0, 0);
         }
 
         // Pollutes global state...

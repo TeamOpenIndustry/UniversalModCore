@@ -3,6 +3,7 @@ package cam72cam.mod.gui.helpers;
 import cam72cam.mod.item.ItemStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
@@ -63,11 +64,11 @@ public class ItemPickerGUI {
         }
 
         @Override
-        public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-            this.renderBackground(matrixStack);
-            super.render(matrixStack, mouseX, mouseY, partialTicks);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            this.renderBackground(graphics);
+            super.render(graphics, mouseX, mouseY, partialTicks);
 
-            search.render(matrixStack, mouseX, mouseY, partialTicks);
+            search.render(graphics, mouseX, mouseY, partialTicks);
 
             for (Renderable button : this.renderables) {
                 if (button instanceof ItemButton) {
@@ -75,7 +76,7 @@ public class ItemPickerGUI {
                         ((AbstractWidget) button).setY(buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32));
                     }
                     if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                        this.renderTooltip(matrixStack, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                        graphics.renderTooltip(font, ((ItemButton) button).stack.internal, mouseX, mouseY);
                     }
                 }
             }

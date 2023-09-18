@@ -37,7 +37,7 @@ public class Light {
     }
 
     public void setLightLevel(double lightLevel) {
-        init(internal.level, internal.position(), lightLevel);
+        init(internal.level(), internal.position(), lightLevel);
     }
 
     private void init(Level world, Vec3 pos, double lightLevel) {

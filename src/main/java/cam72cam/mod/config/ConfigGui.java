@@ -5,6 +5,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.screen.*;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.util.ArrayList;
@@ -297,7 +298,7 @@ public class ConfigGui implements IScreen {
 
     @Override
     public void draw(IScreenBuilder builder) {
-        ((Screen)builder).renderBackground(new PoseStack());
+        ((Screen)builder).renderBackground(new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource()));
 
         String name = "";
         ConfigGui iter = this;

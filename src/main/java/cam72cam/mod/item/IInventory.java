@@ -76,10 +76,10 @@ public interface IInventory {
                     return ItemStack.EMPTY;
                 }
 
-                if (!itemStack.internal.sameItem(current)) {
+                if (!net.minecraft.world.item.ItemStack.isSameItem(itemStack.internal, current)) {
                     return itemStack;
                 }
-                if (!net.minecraft.world.item.ItemStack.tagMatches(itemStack.internal, current)) {
+                if (!net.minecraft.world.item.ItemStack.isSameItemSameTags(itemStack.internal, current)) {
                     return itemStack;
                 }
 

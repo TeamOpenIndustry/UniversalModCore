@@ -2,6 +2,7 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
@@ -20,18 +21,20 @@ public class CreativeTab {
 
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
-        ClientEvents.CREATIVE_TAB.subscribe(event -> {
-            internal = event.registerCreativeModeTab(new ResourceLocation(ModCore.MODID, label), builder -> {
-                builder.title(Component.literal(label));
-                builder.icon(() -> stack.get().internal);
-                builder.displayItems((params, output) -> {
-                    for (CustomItem customItem : inject) {
-                        for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
-                            output.accept(itemVariant.internal);
-                        }
+        CommonEvents.Item.CREATIVE_TAB.subscribe(event -> {
+            CreativeModeTab.Builder builder = CreativeModeTab.builder();
+            builder.title(Component.literal(label));
+            builder.icon(() -> stack.get().internal);
+            builder.displayItems((params, output) -> {
+                for (CustomItem customItem : inject) {
+                    for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
+                        output.accept(itemVariant.internal);
                     }
-                });
+                }
             });
+
+            internal = builder.build();
+            event.register(new ResourceLocation(ModCore.MODID, label), internal);
         });
     }
 

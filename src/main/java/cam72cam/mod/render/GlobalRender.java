@@ -11,6 +11,7 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -109,7 +111,7 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()) {
-                func.render(new RenderState(event.getPoseStack()), event.getPartialTick());
+                func.render(new RenderState(event.getGuiGraphics().pose()), event.getPartialTick());
             }
         });
     }
@@ -172,7 +174,10 @@ public class GlobalRender {
                 .scale(-0.025F, -0.025F, 0.025F);
 
         try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+            //fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            int i = fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880, fontRendererIn.isBidirectional());
+            multibuffersource$buffersource.endBatch();
         }
     }
 

@@ -35,13 +35,11 @@ import net.minecraftforge.client.model.data.ModelData;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.data.ModelProperty;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -340,7 +338,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     @Override
     @Nullable
     public <T> LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+        if (capability == ForgeCapabilities.FLUID_HANDLER) {
             ITank target = getTank(Facing.from(facing));
             if (target == null) {
                 return LazyOptional.empty();
@@ -389,7 +387,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 }
             }).cast();
         }
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+        if (capability == ForgeCapabilities.ITEM_HANDLER) {
             IInventory target = getInventory(Facing.from(facing));
             if (target == null) {
                 return LazyOptional.empty();
@@ -434,7 +432,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 }
             }).cast();
         }
-        if (capability == CapabilityEnergy.ENERGY) {
+        if (capability == ForgeCapabilities.ENERGY) {
             IEnergy target = getEnergy(Facing.from(facing));
             if (target == null) {
                 return LazyOptional.empty();

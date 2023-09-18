@@ -123,7 +123,7 @@ public class GuiRegistry {
         int id = intFromName(("container" + cls.toString()));
 
         registry.put(id, event -> {
-            T entity = World.get(event.inv.player.level).getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
+            T entity = World.get(event.inv.player.level()).getBlockEntity(new Vec3i(event.entityIDorX, event.y, event.z), cls);
             if (entity == null) {
                 return null;
             }
@@ -177,11 +177,11 @@ public class GuiRegistry {
     public static <T extends Entity> EntityGUI<T> registerEntityContainer(Class<T> cls, Function<T, IContainer> ctr) {
         int id = intFromName(("container" + cls.toString()));
         registry.put(id, event -> {
-            T entity = World.get(event.inv.player.level).getEntity(event.entityIDorX, cls);
+            T entity = World.get(event.inv.player.level()).getEntity(event.entityIDorX, cls);
             if (entity == null) {
                 return null;
             }
-            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> entity == World.get(event.inv.player.level).getEntity(event.entityIDorX, cls));
+            return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> entity == World.get(event.inv.player.level()).getEntity(event.entityIDorX, cls));
         });
 
         return (player, ent) -> {

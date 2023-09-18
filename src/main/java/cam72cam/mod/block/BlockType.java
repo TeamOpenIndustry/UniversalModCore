@@ -150,7 +150,7 @@ public abstract class BlockType {
      */
     protected class BlockInternal extends net.minecraft.world.level.block.Block {
         public BlockInternal() {
-            super(Block.Properties.of(BlockType.this.getMaterial().internal)
+            super(Block.Properties.of().mapColor(getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
                     .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
                     .dynamicShape());

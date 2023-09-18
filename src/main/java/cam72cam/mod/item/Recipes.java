@@ -1,10 +1,7 @@
 package cam72cam.mod.item;
 
 
-import net.minecraft.advancements.critereon.EntityPredicate;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
-import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.advancements.critereon.*;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.FinishedRecipe;
@@ -65,7 +62,7 @@ public class Recipes extends RecipeProvider {
                             builder.unlockedBy(
                                     "has" + ingredient.toString() + idx,
                                     new InventoryChangeTrigger.TriggerInstance(
-                                            EntityPredicate.Composite.ANY,
+                                            ContextAwarePredicate.ANY,
                                             MinMaxBounds.Ints.ANY,
                                             MinMaxBounds.Ints.ANY,
                                             MinMaxBounds.Ints.ANY,

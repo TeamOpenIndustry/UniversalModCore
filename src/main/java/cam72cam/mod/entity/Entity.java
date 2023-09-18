@@ -30,7 +30,7 @@ public class Entity {
     }
 
     public World getWorld() {
-        return World.get(internal.level);
+        return World.get(internal.level());
     }
 
     /** UUID that persists across loads */
@@ -156,7 +156,7 @@ public class Entity {
     }
 
     public void kill() {
-        internal.remove(!internal.level.isClientSide ? net.minecraft.world.entity.Entity.RemovalReason.KILLED : net.minecraft.world.entity.Entity.RemovalReason.DISCARDED); // TODO MAYBE BORK
+        internal.remove(!internal.level().isClientSide ? net.minecraft.world.entity.Entity.RemovalReason.KILLED : net.minecraft.world.entity.Entity.RemovalReason.DISCARDED); // TODO MAYBE BORK
     }
 
     public final boolean isDead() {

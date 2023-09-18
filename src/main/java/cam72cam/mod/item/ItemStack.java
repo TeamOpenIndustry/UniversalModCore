@@ -26,7 +26,8 @@ public class ItemStack {
 
     /** Construct from customItem */
     public ItemStack(CustomItem item, int i) {
-        this(new net.minecraft.world.item.ItemStack(item.internal, i));
+        // TODO 1.20.1 this BREAKS SOO MUCH (also backport to 1.19.4 at least)
+        this(item.internal == null ? net.minecraft.world.item.ItemStack.EMPTY : new net.minecraft.world.item.ItemStack(item.internal, i));
     }
 
     @Deprecated
@@ -90,7 +91,7 @@ public class ItemStack {
 
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
-        return net.minecraft.world.item.ItemStack.isSame(internal, stack.internal);
+        return net.minecraft.world.item.ItemStack.isSameItem(internal, stack.internal);
     }
 
     public boolean is(Fuzzy fuzzy) {

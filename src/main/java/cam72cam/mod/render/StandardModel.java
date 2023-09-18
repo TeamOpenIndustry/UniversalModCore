@@ -49,7 +49,7 @@ public class StandardModel {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
                 .map(x -> Block.byItem(x.internal.getItem()))
-                .filter(x -> x.defaultMaterialColor() == color.internal.getMaterialColor())
+                .filter(x -> x.defaultMapColor() == color.internal.getMapColor())
                 .map(Block::defaultBlockState)
                 .findFirst().get();
 

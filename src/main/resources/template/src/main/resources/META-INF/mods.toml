@@ -17,7 +17,7 @@ displayName="#NAME#"
 [[dependencies.#ID#]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.4]"
+    versionRange="[1.20.1]"
     ordering="NONE"
     side="BOTH"
 

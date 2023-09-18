@@ -10,7 +10,7 @@ import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
@@ -23,6 +23,7 @@ import util.Matrix4;
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
+    public static GuiGraphics graphics;
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
@@ -32,7 +33,7 @@ public class GUIHelpers {
                         .texture(Texture.NO_TEXTURE)
                         .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
         )) {
-            GuiComponent.fill(new PoseStack(), x, y, x + width, y + height, color);
+            graphics.fill(x, y, x + width, y + height, color);
         }
     }
 
@@ -44,7 +45,7 @@ public class GUIHelpers {
             // X Y, U V, UW VH, W H, TW TH
             // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
             // X Y, W H, U V, UW VH, TW TH
-            GuiComponent.blit(new PoseStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
+            graphics.blit(tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
         }
     }
 
@@ -115,7 +116,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().font.draw(new PoseStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
+            graphics.drawCenteredString(Minecraft.getInstance().font, text, (x - Minecraft.getInstance().font.width(text) / 2), y, color);
         }
     }
 
@@ -142,7 +143,7 @@ public class GUIHelpers {
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(new PoseStack(), stack.internal, x, y);
+            graphics.renderItem(stack.internal, x, y);
         }
     }
 }

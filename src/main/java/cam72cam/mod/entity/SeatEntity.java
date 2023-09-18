@@ -118,7 +118,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (getPassengers().isEmpty()) {
             if (this.ticks < 20) {
                 if (!hasHadPassenger) {
-                    cam72cam.mod.entity.Entity toRide = World.get(level).getEntity(passenger, cam72cam.mod.entity.Entity.class);
+                    cam72cam.mod.entity.Entity toRide = World.get(level()).getEntity(passenger, cam72cam.mod.entity.Entity.class);
                     if (toRide != null) {
                         ModCore.debug("FORCE RIDER");
                         toRide.internal.startRiding(this, true);
@@ -151,7 +151,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public cam72cam.mod.entity.Entity getParent() {
-        cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(level()).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             return linked;
         }
@@ -168,7 +168,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void updatePassengerPreTick(net.minecraft.world.entity.Entity passenger) {
         if (lastUpdateTick != this.ticks) {
             lastUpdateTick = this.ticks;
-            cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
+            cam72cam.mod.entity.Entity linked = World.get(level()).getEntity(parent, cam72cam.mod.entity.Entity.class);
             if (linked != null && linked.internal instanceof ModdedEntity) {
                 ((ModdedEntity) linked.internal).updateSeat(this);
             }
@@ -182,7 +182,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void removePassenger(net.minecraft.world.entity.Entity passenger) {
-        cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        cam72cam.mod.entity.Entity linked = World.get(level()).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             ((ModdedEntity) linked.internal).removeSeat(this);
         }
@@ -207,7 +207,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         if (this.getPassengers().size() == 0) {
             return null;
         }
-        return World.get(level).getEntity(getPassengers().get(0));
+        return World.get(level()).getEntity(getPassengers().get(0));
     }
 
     @Override

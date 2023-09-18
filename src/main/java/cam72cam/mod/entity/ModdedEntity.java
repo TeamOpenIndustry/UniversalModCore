@@ -186,7 +186,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
-        if (cam72cam.mod.world.World.get(level) == null) {
+        if (cam72cam.mod.world.World.get(level()) == null) {
             // This can happen during a sudden disconnect...
             return;
         }
@@ -261,7 +261,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } else {
             type = DamageType.OTHER;
         }
-        iKillable.onDamage(type, wrapEnt, amount, damagesource.is(DamageTypes.OUT_OF_WORLD));
+        iKillable.onDamage(type, wrapEnt, amount, damagesource.is(DamageTypes.FELL_OUT_OF_WORLD));
 
         return false;
     }
@@ -308,13 +308,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void addPassenger(Entity entity) {
-        if (!level.isClientSide) {
-            SeatEntity seat = new SeatEntity(SeatEntity.TYPE, level);
+        if (!level().isClientSide) {
+            SeatEntity seat = new SeatEntity(SeatEntity.TYPE, level());
             seat.setup(this, entity);
             cam72cam.mod.entity.Entity passenger = self.getWorld().getEntity(entity);
             passengerPositions.put(entity.getUUID(), iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger)));
             //updateSeat(seat); Don't do this here, can cause StackOverflow
-            level.addFreshEntity(seat);
+            level().addFreshEntity(seat);
             deferredTasks.add(() -> {
                 new PassengerPositionsPacket(this).sendToObserving(self);
                 entity.startRiding(seat);
@@ -381,7 +381,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
-            if (!level.isClientSide) {
+            if (!level().isClientSide) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
             }
         }
@@ -400,7 +400,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(level.isEmptyBlock(new Vec3i(pos).internal()) && level.isEmptyBlock(new Vec3i(pos).up().internal()))) {
+                while (!(level().isEmptyBlock(new Vec3i(pos).internal()) && level().isEmptyBlock(new Vec3i(pos).up().internal()))) {
                     pos = pos.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);

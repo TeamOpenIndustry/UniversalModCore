@@ -26,7 +26,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
-import net.minecraftforge.event.CreativeModeTabEvent;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -100,8 +100,7 @@ public class ClientEvents {
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
-    public static final Event<Consumer<CreativeModeTabEvent.Register>> CREATIVE_TAB = new Event<>();
+    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -216,8 +215,10 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void optifineSucksEvent(RenderLevelLastEvent event) {
-            OPTIFINE_SUCKS.execute(x -> x.accept(event));
+        public static void optifineSucksEvent(RenderLevelStageEvent event) {
+            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+                OPTIFINE_SUCKS.execute(x -> x.accept(event));
+            }
         }
 
         static boolean hasHacked = false;
@@ -262,9 +263,5 @@ public class ClientEvents {
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
         }*/
-        @SubscribeEvent
-        public static void buildContents(CreativeModeTabEvent.Register event) {
-            CREATIVE_TAB.execute(x -> x.accept(event));
-        }
     }
 }

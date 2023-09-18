@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -55,6 +56,7 @@ public class CommonEvents {
 
     public static final class Item {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.item.Item>>> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterHelper<CreativeModeTab>>> CREATIVE_TAB = new Event<>();
     }
 
     public static final class Recipe {

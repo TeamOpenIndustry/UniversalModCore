@@ -6,6 +6,7 @@ import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -19,7 +20,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
     private Map<AbstractWidget, Button> buttonMap = new HashMap<>();
     private final Supplier<Boolean> valid;
-    private PoseStack stack;
+    private GuiGraphics graphics;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         super(Component.literal(""));
@@ -83,7 +84,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void drawCenteredString(String str, int x, int y, int color) {
-        super.drawCenteredString(stack, this.font, str, this.width / 2 + x, this.height / 4 + y, color);
+        graphics.drawCenteredString(this.font, str, this.width / 2 + x, this.height / 4 + y, color);
     }
 
     @Override
@@ -105,16 +106,17 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
-    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
-        this.stack = stack;
+    public void render(GuiGraphics graphics, int p_281550_, int p_282878_, float p_282465_) {
+        this.graphics = graphics;
+        GUIHelpers.graphics = graphics;// This is horrifying and needs to change
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
 
-        screen.draw(this, new RenderState(stack).depth_test(true));
+        screen.draw(this, new RenderState(graphics.pose()).depth_test(true));
 
         // draw buttons
-        super.render(stack, mouseX, mouseY, partialTicks);
+        super.render(graphics, p_281550_, p_282878_, p_282465_);
     }
 
     @Override
