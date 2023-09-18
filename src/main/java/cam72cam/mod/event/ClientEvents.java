@@ -10,6 +10,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;

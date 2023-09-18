@@ -364,7 +364,7 @@ public class ItemRender {
 
                     mat.pushPose();
                     // Maybe backwards?
-                    mat.last().pose().mul(matrix.last().pose());
+                    //mat.last().pose().mul(matrix.last().pose());
 
                     RenderState state = new RenderState(mat);
                     model.applyTransform(stack, type, state);

@@ -26,7 +26,7 @@ public class RenderContext {
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
-            Matrix4 model_view = state.model_view;
+            Matrix4 model_view = state.model_view.copy().transpose();
             Matrix4f target = new Matrix4f(
                     (float) model_view.m00,
                     (float) model_view.m01,
@@ -54,7 +54,7 @@ public class RenderContext {
         if (state.projection != null) {
             Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
             restore.add(() -> RenderSystem.getProjectionMatrix().set(oldProjection));
-            Matrix4 projection = state.projection;
+            Matrix4 projection = state.projection.copy().transpose();
             Matrix4f target = new Matrix4f(
                     (float) projection.m00,
                     (float) projection.m01,
