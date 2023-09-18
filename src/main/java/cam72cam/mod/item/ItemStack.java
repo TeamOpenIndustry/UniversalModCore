@@ -30,7 +30,9 @@ public class ItemStack {
 
     /** Construct from customItem */
     public ItemStack(CustomItem item, int i) {
-        supplier = () -> new net.minecraft.world.item.ItemStack(item.internal, i);
+        supplier = () -> item.internal == null ?
+                net.minecraft.world.item.ItemStack.EMPTY : //1.20.1 (-2) This will break things...
+                new net.minecraft.world.item.ItemStack(item.internal, i);
     }
 
     @Deprecated
