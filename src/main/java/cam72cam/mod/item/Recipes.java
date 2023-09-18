@@ -29,7 +29,7 @@ public class Recipes extends RecipeProvider {
 
     @Override
     protected void buildCraftingRecipes(Consumer<FinishedRecipe> consumer) {
-        registry.forEach(fn -> fn.accept(consumer));
+        // TODO 1.18.2+ registry.forEach(fn -> fn.accept(consumer));
     }
 
     public static ShapedRecipeBuilder shapedRecipe(CustomItem item, int width, Fuzzy... ingredients) {
