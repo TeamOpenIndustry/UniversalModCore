@@ -24,11 +24,11 @@ public class CreativeTab {
         CommonEvents.Item.CREATIVE_TAB.subscribe(event -> {
             CreativeModeTab.Builder builder = CreativeModeTab.builder();
             builder.title(Component.literal(label));
-            builder.icon(() -> stack.get().internal);
+            builder.icon(() -> stack.get().internal());
             builder.displayItems((params, output) -> {
                 for (CustomItem customItem : inject) {
                     for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
-                        output.accept(itemVariant.internal);
+                        output.accept(itemVariant.internal());
                     }
                 }
             });

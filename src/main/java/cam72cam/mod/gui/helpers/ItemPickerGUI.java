@@ -76,7 +76,7 @@ public class ItemPickerGUI {
                         ((AbstractWidget) button).setY(buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32));
                     }
                     if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                        graphics.renderTooltip(font, ((ItemButton) button).stack.internal, mouseX, mouseY);
+                        graphics.renderTooltip(font, ((ItemButton) button).stack.internal(), mouseX, mouseY);
                     }
                 }
             }
@@ -115,7 +115,7 @@ public class ItemPickerGUI {
             List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
                     .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
                             stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
-                            stack.internal.getTooltipLines(null, TooltipFlag.Default.NORMAL).stream()
+                            stack.internal().getTooltipLines(null, TooltipFlag.Default.NORMAL).stream()
                                     .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
                     )).collect(Collectors.toList());
             startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;

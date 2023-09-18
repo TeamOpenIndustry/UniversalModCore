@@ -406,19 +406,19 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 @Nonnull
                 @Override
                 public ItemStack getStackInSlot(int slot) {
-                    return target.get(slot).internal;
+                    return target.get(slot).internal();
                 }
 
                 @Nonnull
                 @Override
                 public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal;
+                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal();
                 }
 
                 @Nonnull
                 @Override
                 public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    return target.extract(slot, amount, simulate).internal;
+                    return target.extract(slot, amount, simulate).internal();
                 }
 
                 @Override

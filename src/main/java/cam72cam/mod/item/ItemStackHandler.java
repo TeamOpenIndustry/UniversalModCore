@@ -83,7 +83,7 @@ public class ItemStackHandler implements IInventory {
         }
         internal.setSize(inventorySize);
         for (int i = 0; i < keep.size(); i++) {
-            internal.setStackInSlot(i, keep.get(i).internal);
+            internal.setStackInSlot(i, keep.get(i).internal());
         }
         return extra;
     }
@@ -100,12 +100,12 @@ public class ItemStackHandler implements IInventory {
 
     @Override
     public void set(int slot, ItemStack stack) {
-        internal.setStackInSlot(slot, stack.internal);
+        internal.setStackInSlot(slot, stack.internal());
     }
 
     @Override
     public ItemStack insert(int slot, ItemStack stack, boolean simulate) {
-        return new ItemStack(internal.insertItem(slot, stack.internal, simulate));
+        return new ItemStack(internal.insertItem(slot, stack.internal(), simulate));
     }
 
     @Override

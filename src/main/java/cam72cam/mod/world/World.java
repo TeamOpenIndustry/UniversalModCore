@@ -483,7 +483,7 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
+        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal()));
     }
 
     /** Check if the block is currently in a loaded chunk */
@@ -529,7 +529,7 @@ public class World {
 
     /** Set a block to given stack (best guestimate) */
     public void setBlock(Vec3i pos, ItemStack stack) {
-        Block state = Block.byItem(stack.internal.getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
+        Block state = Block.byItem(stack.internal().getItem()); //TODO 1.14.4 .getStateFromMeta(stack.internal.getMetadata());
         internal.setBlockAndUpdate(pos.internal(), state.defaultBlockState());
     }
 

@@ -143,7 +143,7 @@ public class GUIHelpers {
                 .rescale_normal(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            graphics.renderItem(stack.internal, x, y);
+            graphics.renderItem(stack.internal(), x, y);
         }
     }
 }

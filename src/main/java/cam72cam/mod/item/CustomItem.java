@@ -123,7 +123,7 @@ public abstract class CustomItem {
         public void fillItemCategory(CreativeModeTab tab, NonNullList<net.minecraft.world.item.ItemStack> items) {
             CreativeTab myTab = tab != CreativeModeTab.TAB_SEARCH ? new CreativeTab(tab) : null;
             if (ModCore.hasResources) {
-                items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal).collect(Collectors.toList()));
+                items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal()).collect(Collectors.toList()));
             }
         }*/
 

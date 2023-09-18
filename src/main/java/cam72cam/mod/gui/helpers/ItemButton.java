@@ -31,7 +31,7 @@ public abstract class ItemButton extends AbstractButton {
         try (With ctx = RenderContext.apply(
                 new RenderState().translate(getX(), getY(), 0).scale(2, 2, 1)
         )) {
-            graphics.renderItem(stack.internal, 0, 0);
+            graphics.renderItem(stack.internal(), 0, 0);
             // TODO 1.20.1 mc.getItemRenderer().renderGuiItemDecorations(new PoseStack(), font, stack.internal, 0, 0);
         }
 

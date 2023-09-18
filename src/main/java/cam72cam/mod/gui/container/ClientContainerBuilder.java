@@ -208,7 +208,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         y += centerY + 1;
 
         // TODO 1.20.1 decorations?
-        graphics.renderItem(stack.internal, x, y);
+        graphics.renderItem(stack.internal(), x, y);
 
         try (With ctx = RenderContext.apply(
                 new RenderState()
