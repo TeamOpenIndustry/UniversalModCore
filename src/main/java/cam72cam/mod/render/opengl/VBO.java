@@ -3,7 +3,11 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
@@ -20,7 +24,7 @@ public class VBO {
         ClientEvents.TICK.subscribe(() -> {
             synchronized (vbos) {
                 for (VBO vbo : vbos) {
-                    if (vbo.vbo != -1 && System.currentTimeMillis() - vbo.lastUsed > 30 * 1000) {
+                    if (vbo.vbo != null && System.currentTimeMillis() - vbo.lastUsed > 30 * 1000) {
                         vbo.free();
                     }
                 }
@@ -31,14 +35,16 @@ public class VBO {
     private final Supplier<VertexBuffer> buffer;
     private final Consumer<RenderState> settings;
 
-    private int vbo;
+
+    //private int vbo;
+    private net.minecraft.client.renderer.vertex.VertexBuffer vbo;
     private int length;
     private long lastUsed;
     private VertexBuffer vbInfo;
 
     public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
-        this.vbo = -1;
+        //this.vbo = -1;
         this.settings = settings;
 
         synchronized (vbos) {
@@ -50,6 +56,60 @@ public class VBO {
         VertexBuffer vb = buffer.get();
         this.length = vb.data.length / (vb.stride);
         this.vbInfo = new VertexBuffer(0, vb.hasNormals);
+
+        BufferBuilder test = new BufferBuilder(vb.data.length);
+        test.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.ITEM);
+        for (int i = 0; i < vb.data.length; i+=vb.stride) {
+            for (VertexFormatElement element : test.getVertexFormat().getElements()) {
+                switch (element.getUsage()) {
+                    case POSITION:
+                        test.pos(
+                                vb.data[i+0 + vb.vertexOffset],
+                                vb.data[i+1 + vb.vertexOffset],
+                                vb.data[i+2 + vb.vertexOffset]
+                        );
+                        break;
+                    case NORMAL:
+                        test.normal(
+                                vb.data[i+0 + vb.normalOffset],
+                                vb.data[i+1 + vb.normalOffset],
+                                vb.data[i+2 + vb.normalOffset]
+                        );
+                        break;
+                    case COLOR:
+                        test.color(
+                                vb.data[i+0 + vb.colorOffset],
+                                vb.data[i+1 + vb.colorOffset],
+                                vb.data[i+2 + vb.colorOffset],
+                                vb.data[i+3 + vb.colorOffset]
+                        );
+                        break;
+                    case UV:
+                        test.tex(
+                                vb.data[i+0 + vb.textureOffset],
+                                vb.data[i+1 + vb.textureOffset]
+                        );
+                        break;
+                    case MATRIX:
+                        break;
+                    case BLEND_WEIGHT:
+                        break;
+                    case PADDING:
+                        break;
+                    case GENERIC:
+                        break;
+                }
+            }
+            test.endVertex();
+        }
+        test.finishDrawing();
+        vbo = new net.minecraft.client.renderer.vertex.VertexBuffer(test.getVertexFormat());
+        vbo.bufferData(test.getByteBuffer());
+/*
+
+
+
+
         FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(vb.data.length);
         buffer.put(vb.data);
         buffer.position(0);
@@ -60,7 +120,7 @@ public class VBO {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);*/
     }
 
     public Binding bind(RenderState state) {
@@ -71,7 +131,7 @@ public class VBO {
         private final With restore;
 
         protected Binding(RenderState state) {
-            if (vbo == -1) {
+            if (vbo == null) {
                 init();
             }
 
@@ -86,25 +146,47 @@ public class VBO {
                 GL11.glPopClientAttrib();
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
             });
+            vbo.bindBuffer();
 
+            VertexFormat format = DefaultVertexFormats.ITEM;
+            List<VertexFormatElement> elements = format.getElements();
+            for (int i = 0; i < elements.size(); i++) {
+                VertexFormatElement element = elements.get(i);
+                int size = element.getElementCount();
+                int type = element.getType().getGlConstant();
+                int stride = format.getSize();
+                long offset = format.getOffset(i);
 
-            GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-            GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            if (vbInfo.hasNormals) {
-                GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
-            } else {
-                GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
-            }
-
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-
-            int stride = vbInfo.stride * Float.BYTES;
-            GL11.glVertexPointer(3, GL11.GL_FLOAT, stride, (long) vbInfo.vertexOffset * Float.BYTES);
-            GL11.glTexCoordPointer(2, GL11.GL_FLOAT, stride, (long) vbInfo.textureOffset * Float.BYTES);
-            GL11.glColorPointer(4, GL11.GL_FLOAT, stride, (long) vbInfo.colorOffset * Float.BYTES);
-            if (vbInfo.hasNormals) {
-                GL11.glNormalPointer(GL11.GL_FLOAT, stride, (long) vbInfo.normalOffset * Float.BYTES);
+                switch (element.getUsage()) {
+                    case POSITION:
+                        GL11.glVertexPointer(size, type, stride, offset);
+                        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+                        break;
+                    case NORMAL:
+                        if (vbInfo.hasNormals) {
+                            GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
+                            GL11.glNormalPointer(type, stride, offset);
+                        } else {
+                            GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
+                        }
+                        break;
+                    case COLOR:
+                        GL11.glColorPointer(size, type, stride, offset);
+                        GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
+                        break;
+                    case UV:
+                        GL11.glTexCoordPointer(size, type, stride, offset);
+                        GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+                        break;
+                    case MATRIX:
+                        break;
+                    case BLEND_WEIGHT:
+                        break;
+                    case PADDING:
+                        break;
+                    case GENERIC:
+                        break;
+                }
             }
         }
 
@@ -132,9 +214,9 @@ public class VBO {
      */
     public void free() {
         synchronized (vbos) {
-            if (vbo != -1) {
-                GL15.glDeleteBuffers(vbo);
-                vbo = -1;
+            if (vbo != null) {
+                vbo.deleteGlBuffers();
+                vbo = null;
             }
         }
     }
