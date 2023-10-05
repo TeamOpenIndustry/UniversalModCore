@@ -16,6 +16,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
@@ -132,6 +133,7 @@ public class ModCoreCommand extends Command {
 	private boolean sendChunkInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
 		boolean list = false;
 		boolean debug = false;
+		boolean evict = false;
 		boolean all = false;
 		Integer cx = null;
 		Integer cz = null;
@@ -142,6 +144,9 @@ public class ModCoreCommand extends Command {
 					break;
 				case "debug":
 					debug = true;
+					break;
+				case "evict":
+					evict = true;
 					break;
 				default:
 					return false;
@@ -174,6 +179,15 @@ public class ModCoreCommand extends Command {
 
 		ChunkProviderServer provider = (ChunkProviderServer) world.internal.getChunkProvider();
 		List<Chunk> chunks = provider.getLoadedChunks().stream().filter(Chunk::isLoaded).sorted(Comparator.comparingInt(a -> a.x * 1000000 + a.z)).collect(Collectors.toList());
+		int evicted = 0;
+		if (evict) {
+			for (Chunk chunk : chunks) {
+				if (!((WorldServer)world.internal).getPlayerChunkMap().contains(chunk.x, chunk.z)) {
+					((WorldServer) world.internal).getChunkProvider().queueUnload(chunk);
+					evicted++;
+				}
+			}
+		}
 		long totalTeCount = 0;
 		long totalUmcCount = 0;
 		long totalEntityCount = 0;
@@ -234,6 +248,9 @@ public class ModCoreCommand extends Command {
 					chunks.size(), world.getId(),
 					totalTeCount, totalUmcCount, totalEntityCount)
 			));
+			if (evict) {
+				sender.accept(PlayerMessage.direct(String.format("Evicted %s chunks", evicted)));
+			}
 		}
 		return true;
 	}
