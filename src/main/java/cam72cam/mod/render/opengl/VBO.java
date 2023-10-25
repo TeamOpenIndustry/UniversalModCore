@@ -119,6 +119,7 @@ public class VBO {
                 }
             } else {
                 while (!isLoaded()) {
+                    init();
                     try {
                         Thread.sleep(1);
                     } catch (InterruptedException e) {
