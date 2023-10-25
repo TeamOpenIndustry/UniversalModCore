@@ -99,7 +99,9 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
-            TICK.execute(Runnable::run);
+            if (event.phase == TickEvent.Phase.START) {
+                TICK.execute(Runnable::run);
+            }
         }
 
         @SubscribeEvent
