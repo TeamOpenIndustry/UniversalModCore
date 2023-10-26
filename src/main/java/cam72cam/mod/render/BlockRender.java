@@ -92,7 +92,8 @@ public class BlockRender {
             }
 
             public boolean isGlobalRenderer(TileEntity te) {
-                return true;
+                // We inject TEs directly into the list since it's only added on a chunk by chunk basis
+                return false;
             }
         });
     }
