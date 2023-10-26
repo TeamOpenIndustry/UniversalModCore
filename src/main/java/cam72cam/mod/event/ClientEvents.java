@@ -77,6 +77,7 @@ public class ClientEvents {
 
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
+    public static final Event<Function<Integer, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
@@ -130,6 +131,14 @@ public class ClientEvents {
         public static void onClick(MouseEvent event) {
             int attackID = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode() + 100;
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
+
+            if (event.getButton() == -1 && event.getDwheel() != 0) {
+                if (!SCROLL.executeCancellable(x -> x.apply(event.getDwheel()))) {
+                    event.setCanceled(true);
+                    return;
+                }
+                return;
+            }
 
             if ((event.getButton() == attackID || event.getButton() == useID)) {
                 if (event.isButtonstate()) {
