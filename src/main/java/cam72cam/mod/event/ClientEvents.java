@@ -10,7 +10,6 @@ import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -59,6 +58,7 @@ public class ClientEvents {
         CLICK,
         RELEASE,
         MOVE,
+        SCROLL,
     }
 
     public static class MouseGuiEvent {
@@ -66,12 +66,14 @@ public class ClientEvents {
         public final int x;
         public final int y;
         public final int button;
+        public final int scroll;
 
-        public MouseGuiEvent(MouseAction action, int x, int y, int button) {
+        public MouseGuiEvent(MouseAction action, int x, int y, int button, int scroll) {
             this.action = action;
             this.x = x;
             this.y = y;
             this.button = button;
+            this.scroll = scroll;
         }
     }
 
@@ -121,7 +123,13 @@ public class ClientEvents {
                 // move
                 action = MouseAction.MOVE;
             }
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, GUIHelpers.getScreenHeight() - y, btn);
+
+            int scroll = org.lwjgl.input.Mouse.getEventDWheel();
+            if (scroll != 0) {
+                action = MouseAction.SCROLL;
+            }
+
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, GUIHelpers.getScreenHeight() - y, btn, scroll);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
             }
