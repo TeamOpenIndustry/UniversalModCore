@@ -413,8 +413,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.onDismountPassenger(passenger, offset);
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(self.getWorld().isAir(new Vec3i(pos)) && self.getWorld().isAir(new Vec3i(pos).up()))) {
-                    pos = pos.add(0, 1, 0);
+                Vec3d adjusted = pos;
+                for (int i = 0; i < 6; i++) {
+                    if (worldObj.isAirBlock((int) adjusted.x, (int) adjusted.y, (int) adjusted.z) && worldObj.isAirBlock((int) adjusted.x, (int) adjusted.y + 1, (int) adjusted.z)) {
+                        pos = adjusted;
+                        break;
+                    }
+                    adjusted = adjusted.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);
             }
