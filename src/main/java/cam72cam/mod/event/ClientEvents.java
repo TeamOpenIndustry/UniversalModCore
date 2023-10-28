@@ -62,6 +62,7 @@ public class ClientEvents {
         CLICK,
         RELEASE,
         MOVE,
+        SCROLL,
     }
 
     public static class MouseGuiEvent {
@@ -69,17 +70,20 @@ public class ClientEvents {
         public final int x;
         public final int y;
         public final int button;
+        public final double scroll;
 
-        public MouseGuiEvent(MouseAction action, int x, int y, int button) {
+        public MouseGuiEvent(MouseAction action, int x, int y, int button, double scroll) {
             this.action = action;
             this.x = x;
             this.y = y;
             this.button = button;
+            this.scroll = scroll;
         }
     }
 
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
+    public static final Event<Function<Double, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
@@ -100,16 +104,21 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
-            TICK.execute(Runnable::run);
+            if (event.phase == TickEvent.Phase.START) {
+                TICK.execute(Runnable::run);
+            }
         }
 
         private static void onGuiMouse(GuiScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn, event instanceof GuiScreenEvent.MouseScrollEvent ? (int) ((GuiScreenEvent.MouseScrollEvent) event).getScrollDelta() : 0);
+
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
-                // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
-                // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
-                skipNextMouseInputEvent = true;
+                if (!(event instanceof GuiScreenEvent.MouseScrollEvent)) {
+                    // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
+                    // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
+                    skipNextMouseInputEvent = true;
+                }
             }
         }
 
@@ -125,6 +134,11 @@ public class ClientEvents {
         public static void onGuiRelease(GuiScreenEvent.MouseReleasedEvent.Pre event) {
             onGuiMouse(event, event.getButton(), MouseAction.RELEASE);
         }
+        @SubscribeEvent
+        public static void onGuiScroll(GuiScreenEvent.MouseScrollEvent.Pre event) {
+            System.out.println(event.getScrollDelta());
+            onGuiMouse(event, -1, MouseAction.RELEASE);
+        }
 
         private static void hackInputState(InputEvent.MouseInputEvent event) {
             int attackID = Minecraft.getInstance().gameSettings.keyBindAttack.getKey().getKeyCode();
@@ -136,6 +150,14 @@ public class ClientEvents {
             }
             if (event.getButton() == useID) {
                 Minecraft.getInstance().gameSettings.keyBindUseItem.isPressed();
+            }
+        }
+
+        @SubscribeEvent
+        public static void onScroll(InputEvent.MouseScrollEvent event) {
+            System.out.println(event.getScrollDelta());
+            if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDelta()))) {
+                event.setCanceled(true);
             }
         }
 
