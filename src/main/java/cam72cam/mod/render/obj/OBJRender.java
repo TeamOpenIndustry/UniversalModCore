@@ -25,15 +25,21 @@ public class OBJRender extends VBO {
     }
 
     public Binding bind(RenderState state) {
-        return new Binding(state);
+        return bind(state, false);
+    }
+    public Binding bind(RenderState state, boolean waitForLoad) {
+        return new Binding(state, waitForLoad);
     }
 
     public class Binding extends VBO.Binding {
-        protected Binding(RenderState state) {
-            super(state);
+        protected Binding(RenderState state, boolean wait) {
+            super(state, wait);
         }
 
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
+            if (!isLoaded()) {
+                return;
+            }
             try (With pus = super.push(mod)) {
                 draw(groups);
             }
@@ -43,6 +49,9 @@ public class OBJRender extends VBO {
          * Draw these groups in the VB
          */
         public void draw(Collection<String> groups) {
+            if (!isLoaded()) {
+                return;
+            }
             List<String> sorted = new ArrayList<>(groups);
             sorted.sort(Comparator.naturalOrder());
             int start = -1;
