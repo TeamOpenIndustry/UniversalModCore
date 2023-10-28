@@ -66,9 +66,9 @@ public class ClientEvents {
         public final int x;
         public final int y;
         public final int button;
-        public final int scroll;
+        public final double scroll;
 
-        public MouseGuiEvent(MouseAction action, int x, int y, int button, int scroll) {
+        public MouseGuiEvent(MouseAction action, int x, int y, int button, double scroll) {
             this.action = action;
             this.x = x;
             this.y = y;
@@ -79,7 +79,7 @@ public class ClientEvents {
 
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
-    public static final Event<Function<Integer, Boolean>> SCROLL = new Event<>();
+    public static final Event<Function<Double, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
@@ -124,7 +124,7 @@ public class ClientEvents {
                 action = MouseAction.MOVE;
             }
 
-            int scroll = org.lwjgl.input.Mouse.getEventDWheel();
+            double scroll = Math.signum(org.lwjgl.input.Mouse.getEventDWheel());
             if (scroll != 0) {
                 action = MouseAction.SCROLL;
             }
@@ -141,7 +141,7 @@ public class ClientEvents {
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
 
             if (event.getButton() == -1 && event.getDwheel() != 0) {
-                if (!SCROLL.executeCancellable(x -> x.apply(event.getDwheel()))) {
+                if (!SCROLL.executeCancellable(x -> x.apply(Math.signum((double)event.getDwheel())))) {
                     event.setCanceled(true);
                     return;
                 }
