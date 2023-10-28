@@ -314,9 +314,13 @@ public class OBJModel {
         }
 
         public OBJRender.Binding bind(RenderState state) {
+            return bind(state, false);
+        }
+
+        public OBJRender.Binding bind(RenderState state, boolean waitForLoad) {
             state = state.clone();
             apply(state);
-            return vbo.bind(state);
+            return vbo.bind(state, waitForLoad);
         }
 
         public OBJRender.Builder builder() {

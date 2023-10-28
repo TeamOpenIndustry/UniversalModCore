@@ -7,9 +7,11 @@ import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -36,6 +38,17 @@ public class VBO {
     private long lastUsed;
     private VertexBuffer vbInfo;
 
+    private static final ExecutorService pool = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
+            5L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            runnable -> {
+                Thread thread = new Thread(runnable);
+                thread.setName("UMC-VertexBufferLoader");
+                thread.setPriority(Thread.MIN_PRIORITY);
+                return thread;
+            });
+    private Future<FloatBuffer> loader = null;
+
     public VBO(Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
         this.buffer = buffer;
         this.vbo = -1;
@@ -47,35 +60,73 @@ public class VBO {
     }
 
     private void init() {
-        VertexBuffer vb = buffer.get();
-        this.length = vb.data.length / (vb.stride);
-        this.vbInfo = new VertexBuffer(0, vb.hasNormals);
-        FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(vb.data.length);
-        buffer.put(vb.data);
-        buffer.position(0);
+        if (loader != null) {
+            if (loader.isDone()) {
+                try {
+                    int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
 
-        int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+                    vbo = GL15.glGenBuffers();
+                    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+                    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, loader.get(), GL15.GL_STATIC_DRAW);
 
-        vbo = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
+                    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+                loader = null;
+            }
+        } else {
+            // Start thread
+            loader = pool.submit(() -> {
+                VertexBuffer vb = buffer.get();
+                this.length = vb.data.length / (vb.stride);
+                this.vbInfo = new VertexBuffer(0, vb.hasNormals);
+                FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(vb.data.length);
+                buffer.put(vb.data);
+                buffer.position(0);
+                return buffer;
+            });
+        }
     }
 
     public Binding bind(RenderState state) {
-        return new Binding(state);
+        return bind(state, false);
+    }
+
+    public Binding bind(RenderState state, boolean waitForLoad) {
+        return new Binding(state, waitForLoad);
     }
 
     public class Binding implements With {
         private final With restore;
 
-        protected Binding(RenderState state) {
-            if (vbo == -1) {
+        public boolean isLoaded() {
+            return vbo != -1;
+        }
+
+        protected Binding(RenderState state, boolean wait) {
+            lastUsed = System.currentTimeMillis();
+
+            if (!isLoaded()) {
                 init();
             }
 
-            lastUsed = System.currentTimeMillis();
+            if (!wait) {
+                if (!isLoaded()) {
+                    restore = () -> {
+                    };
+                    return;
+                }
+            } else {
+                while (!isLoaded()) {
+                    init();
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
 
             settings.accept(state);
 
@@ -114,6 +165,9 @@ public class VBO {
         }
 
         protected With push(Consumer<RenderState> mod) {
+            if (!isLoaded()) {
+                return () -> {};
+            }
             RenderState state = new RenderState();
             mod.accept(state);
             return RenderContext.apply(state);
@@ -123,6 +177,9 @@ public class VBO {
          * Draw the entire VB
          */
         public void draw() {
+            if (!isLoaded()) {
+                return;
+            }
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, length);
         }
     }
