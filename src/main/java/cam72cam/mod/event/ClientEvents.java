@@ -82,6 +82,8 @@ public class ClientEvents {
     }
 
     public static final Event<Runnable> TICK = new Event<>();
+    @Deprecated // TODO find a better hack
+    public static final Event<Runnable> TICK_POST = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
     public static final Event<Function<Double, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
@@ -106,6 +108,9 @@ public class ClientEvents {
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase == TickEvent.Phase.START) {
                 TICK.execute(Runnable::run);
+            }
+            if (event.phase == TickEvent.Phase.END) {
+                TICK_POST.execute(Runnable::run);
             }
         }
 
