@@ -38,7 +38,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
 
         World.onTick(SeatEntity::ticker);
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientEvents.TICK.subscribe(() -> {
+        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientEvents.TICK_POST.subscribe(() -> {
             if (MinecraftClient.isReady()) {
                 ticker(MinecraftClient.getPlayer().getWorld());
             }
