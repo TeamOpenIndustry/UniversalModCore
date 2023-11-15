@@ -156,6 +156,16 @@ public class GlobalRender {
         }
     }
 
+    /** Draws text which is fixed in place and does not rotate with the player */
+    public static void drawRawText(String str, RenderState state)
+    {
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        }
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
