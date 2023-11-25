@@ -34,6 +34,10 @@ public class Player extends Entity {
         internal.addChatComponentMessage(o.internal);
     }
 
+    public void sendActionBarMessage(PlayerMessage o){
+        internal.sendStatusMessage(o.internal);
+    }
+
     public boolean isCrouching() {
         return internal.isSneaking();
     }

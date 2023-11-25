@@ -149,6 +149,36 @@ public class GlobalRender {
         }
     }
 
+    /** Draws centered text (does not rotate towards player) */
+    public static void drawRawCenteredText(String str, RenderState state)
+    {
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        }
+    }
+
+    /** Draws left-oriented text (does not rotate towards player) */
+    public static void drawRawLeftOrientedText(String str, RenderState state)
+    {
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, 0, 0, -1);
+        }
+    }
+
+    /** Draws right-oriented text (does not rotate towards player) */
+    public static void drawRawRightOrientedText(String str, RenderState state)
+    {
+        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, -1);
+        }
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
