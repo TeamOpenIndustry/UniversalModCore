@@ -10,7 +10,6 @@ import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -59,6 +58,7 @@ public class ClientEvents {
         CLICK,
         RELEASE,
         MOVE,
+        SCROLL,
     }
 
     public static class MouseGuiEvent {
@@ -66,17 +66,20 @@ public class ClientEvents {
         public final int x;
         public final int y;
         public final int button;
+        public final double scroll;
 
-        public MouseGuiEvent(MouseAction action, int x, int y, int button) {
+        public MouseGuiEvent(MouseAction action, int x, int y, int button, double scroll) {
             this.action = action;
             this.x = x;
             this.y = y;
             this.button = button;
+            this.scroll = scroll;
         }
     }
 
     public static final Event<Runnable> TICK = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> DRAG = new Event<>();
+    public static final Event<Function<Double, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
@@ -99,7 +102,9 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
-            TICK.execute(Runnable::run);
+            if (event.phase == TickEvent.Phase.START) {
+                TICK.execute(Runnable::run);
+            }
         }
 
         @SubscribeEvent
@@ -118,7 +123,13 @@ public class ClientEvents {
                 // move
                 action = MouseAction.MOVE;
             }
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, GUIHelpers.getScreenHeight() - y, btn);
+
+            double scroll = Math.signum(org.lwjgl.input.Mouse.getEventDWheel());
+            if (scroll != 0) {
+                action = MouseAction.SCROLL;
+            }
+
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, GUIHelpers.getScreenHeight() - y, btn, scroll);
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
             }
@@ -128,6 +139,14 @@ public class ClientEvents {
         public static void onClick(MouseEvent event) {
             int attackID = Minecraft.getMinecraft().gameSettings.keyBindAttack.getKeyCode() + 100;
             int useID = Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode() + 100;
+
+            if (event.getButton() == -1 && event.getDwheel() != 0) {
+                if (!SCROLL.executeCancellable(x -> x.apply(Math.signum((double)event.getDwheel())))) {
+                    event.setCanceled(true);
+                    return;
+                }
+                return;
+            }
 
             if ((event.getButton() == attackID || event.getButton() == useID)) {
                 if (event.isButtonstate()) {
