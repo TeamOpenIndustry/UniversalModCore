@@ -30,7 +30,7 @@ public class Player extends Entity {
     }
 
     public void sendActionBarMessage(PlayerMessage o){
-        internal.sendStatusMessage(o.internal, true);
+        internal.sendStatusMessage(o.internal);
     }
 
     public boolean isCrouching() {
