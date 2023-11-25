@@ -140,7 +140,6 @@ class Data {
             } catch (java.io.FileNotFoundException ex) {
                 // Ignore
             }
-            res.addAll(getFileResourceStreams(identifier));
             return unwrapResources(res);
         }
     }

@@ -188,6 +188,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see #load */
     @Override
     public final void readSpawnData(ByteBuf additionalData) {
+        if (cam72cam.mod.world.World.get(world) == null) {
+            // This can happen during a sudden disconnect...
+            return;
+        }
         TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
         load(data);
         try {
@@ -388,8 +392,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(world.isAirBlock(new Vec3i(pos).internal()) && world.isAirBlock(new Vec3i(pos).up().internal()))) {
-                    pos = pos.add(0, 1, 0);
+                Vec3d adjusted = pos;
+                for (int i = 0; i < 6; i++) {
+                    if (world.isAirBlock(new Vec3i(adjusted).internal()) && world.isAirBlock(new Vec3i(adjusted).up().internal())) {
+                        pos = adjusted;
+                        break;
+                    }
+                    adjusted = adjusted.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);
             }

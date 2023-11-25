@@ -123,28 +123,52 @@ public interface ITank {
      * Attempt to drain the inputTank into this tank
      * @return if anything was transferred
      */
-    default int drain(ITank inputTank, int max, boolean simulate) {
-        // Calculate max transfer into this tank
-        int maxTransfer = this.fill(inputTank.getContents(), true);
-        maxTransfer = Math.min(maxTransfer, max);
+    default int drain(ITank source, int max, boolean simulate) {
+        ITank dest = this;
 
+        // Max transfer into dest
+        int maxTransfer = dest.getCapacity() - dest.getContents().getAmount();
         if (maxTransfer == 0) {
-            // Out of room or empty
             return 0;
         }
 
-        // See if the other tank can hold this amount
-        FluidStack allowedTransfer = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), true);
+        // Max transferred from source
+        maxTransfer = Math.min(maxTransfer, source.getContents().getAmount());
+        if (maxTransfer == 0) {
+            return 0;
+        }
 
-        if (allowedTransfer == null || allowedTransfer.getAmount() == 0) {
+        // Limited
+        maxTransfer = Math.min(maxTransfer, max);
+        if (maxTransfer == 0) {
+            return 0;
+        }
+
+        // Simulate filling destination
+        maxTransfer = dest.fill(new FluidStack(source.getContents().getFluid(), maxTransfer), true);
+        if (maxTransfer == 0) {
+            return maxTransfer;
+        }
+
+        // Simulate draining source
+        FluidStack allowedTransfer = source.drain(new FluidStack(source.getContents().getFluid(), maxTransfer), true);
+
+        if (allowedTransfer.getAmount() == 0) {
             // Can't transfer anything
             return 0;
         }
 
-        // Either attempt or do fill
-        int transferred = this.fill(allowedTransfer, simulate);
+        if (simulate) {
+            // We can stop here, already performed all the necessary checks (probably).
+            return allowedTransfer.getAmount();
+        }
 
-        FluidStack check = inputTank.drain(new FluidStack(inputTank.getContents().getFluid(), maxTransfer), simulate);
+        // Fill dest
+        int transferred = dest.fill(allowedTransfer, false);
+        // Drain source
+        FluidStack check = source.drain(new FluidStack(source.getContents().getFluid(), transferred), false);
+
+        // If these don't agree there's probably a bug...
         if (check.getAmount() != transferred) {
             try {
                 throw new Exception("Invalid fluid transfer!");

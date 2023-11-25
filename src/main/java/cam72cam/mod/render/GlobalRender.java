@@ -42,7 +42,9 @@ public class GlobalRender {
             ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer<GlobalRenderHelper>() {
                 @Override
                 public void renderTileEntityAt(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage) {
-                    renderFuncs.forEach(r -> r.render(new RenderState(), partialTicks));
+                    Vec3d pos = GlobalRender.getCameraPos(partialTicks);
+                    RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
+                    renderFuncs.forEach(r -> r.render(state, partialTicks));
                 }
 
                 @Override
