@@ -165,7 +165,7 @@ public class GlobalRender {
     /** Draws centered text (does not rotate towards player) */
     public static void drawRawCenteredText(String str, RenderState state)
     {
-        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
@@ -175,7 +175,7 @@ public class GlobalRender {
     /** Draws left-oriented text (does not rotate towards player) */
     public static void drawRawLeftOrientedText(String str, RenderState state)
     {
-        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, 0, 0, -1);
@@ -185,7 +185,7 @@ public class GlobalRender {
     /** Draws right-oriented text (does not rotate towards player) */
     public static void drawRawRightOrientedText(String str, RenderState state)
     {
-        FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, -1);
