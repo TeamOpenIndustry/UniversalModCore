@@ -34,8 +34,9 @@ public class Player extends Entity {
         internal.addChatComponentMessage(o.internal);
     }
 
+    /** Will redirect to sendMessage() as there is no official way of sending an actionbar-message */
     public void sendActionBarMessage(PlayerMessage o){
-        internal.sendStatusMessage(o.internal);
+        sendMessage(o);
     }
 
     public boolean isCrouching() {
