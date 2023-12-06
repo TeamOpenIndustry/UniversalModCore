@@ -195,12 +195,12 @@ public class GlobalRender {
     }
 
     /**
-     * Converts rgba to single integer (can be used for methods using 'int color')
+     * Converts rgb to single 24bit-integer (can be used for methods using 'int color')
      * Values should be between 0 and 255, there is no validation.
      */
-    public static int rgbToInt(int red, int green, int blue, int alpha){
+    public static int rgbToInt(int red, int green, int blue){
 
-        return (red << 24) + (green << 16) + (blue << 8) + (alpha);
+        return 255 << 24 | red << 16 | green << 8 | blue;
     }
 
     @FunctionalInterface
