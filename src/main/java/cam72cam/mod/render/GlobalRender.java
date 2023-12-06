@@ -176,6 +176,51 @@ public class GlobalRender {
         }
     }
 
+    /** Draws centered text (does not rotate towards player) */
+    public static void drawRawCenteredText(String str, RenderState state, int color)
+    {
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+
+        state.color(1,1,1,1).alpha_test(true);
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
+        }
+    }
+
+    /** Draws left-oriented text (does not rotate towards player) */
+    public static void drawRawLeftOrientedText(String str, RenderState state, int color)
+    {
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+
+        state.color(1,1,1,1).alpha_test(true);
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, 0, 0, color);
+        }
+    }
+
+    /** Draws right-oriented text (does not rotate towards player) */
+    public static void drawRawRightOrientedText(String str, RenderState state, int color)
+    {
+        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+
+        state.color(1,1,1,1).alpha_test(true);
+
+        try (With ignored = RenderContext.apply(state)) {
+            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);
+        }
+    }
+
+    /**
+     * Converts rgb to single 24bit-integer (can be used for methods using 'int color')
+     * Values should be between 0 and 255, there is no validation.
+     */
+    public static int rgbToInt(int red, int green, int blue){
+
+        return 255 << 24 | red << 16 | green << 8 | blue;
+    }
+
     @FunctionalInterface
     public interface MouseoverEvent {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
