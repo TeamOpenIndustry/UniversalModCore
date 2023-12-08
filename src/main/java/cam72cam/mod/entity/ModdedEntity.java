@@ -400,8 +400,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
                 Vec3d pos = calculatePassengerPosition(offset);
 
-                while (!(level.isEmptyBlock(new Vec3i(pos).internal()) && level.isEmptyBlock(new Vec3i(pos).up().internal()))) {
-                    pos = pos.add(0, 1, 0);
+                Vec3d adjusted = pos;
+                for (int i = 0; i < 6; i++) {
+                    if (level.isEmptyBlock(new Vec3i(adjusted).internal()) && level.isEmptyBlock(new Vec3i(adjusted).up().internal())) {
+                        pos = adjusted;
+                        break;
+                    }
+                    adjusted = adjusted.add(0, 1, 0);
                 }
                 passenger.setPosition(pos);
             }
