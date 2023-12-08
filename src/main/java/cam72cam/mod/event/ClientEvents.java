@@ -151,7 +151,6 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiScroll(ScreenEvent.MouseScrolled.Pre event) {
-            System.out.println(event.getScrollDelta());
             onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), -1, MouseAction.RELEASE);
         }
 
@@ -170,7 +169,6 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onScroll(InputEvent.MouseScrollingEvent event) {
-            System.out.println(event.getScrollDelta());
             if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDelta()))) {
                 event.setCanceled(true);
             }
