@@ -31,6 +31,10 @@ public class Player extends Entity {
         internal.sendMessage(o.internal, Util.NIL_UUID);
     }
 
+    public void sendActionBarMessage(PlayerMessage o){
+        internal.sendStatusMessage(o.internal, true);
+    }
+
     public boolean isCrouching() {
         return internal.isCrouching();
     }
