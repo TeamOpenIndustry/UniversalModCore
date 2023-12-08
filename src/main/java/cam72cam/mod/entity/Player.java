@@ -6,6 +6,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.text.PlayerMessage;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.Direction;
@@ -32,7 +33,7 @@ public class Player extends Entity {
     }
 
     public void sendActionBarMessage(PlayerMessage o){
-        internal.sendStatusMessage(o.internal, true);
+        internal.displayClientMessage(o.internal, true);
     }
 
     public boolean isCrouching() {

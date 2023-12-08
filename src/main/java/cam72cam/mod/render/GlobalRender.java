@@ -179,36 +179,36 @@ public class GlobalRender {
     /** Draws centered text (does not rotate towards player) */
     public static void drawRawCenteredText(String str, RenderState state, int color)
     {
-        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
+            fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, color);
         }
     }
 
     /** Draws left-oriented text (does not rotate towards player) */
     public static void drawRawLeftOrientedText(String str, RenderState state, int color)
     {
-        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawString(str, 0, 0, color);
+            fontRendererIn.draw(new MatrixStack(), str, 0, 0, color);
         }
     }
 
     /** Draws right-oriented text (does not rotate towards player) */
     public static void drawRawRightOrientedText(String str, RenderState state, int color)
     {
-        FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
+        FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);
+            fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str), 0, color);
         }
     }
 
