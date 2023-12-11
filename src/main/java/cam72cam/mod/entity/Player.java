@@ -30,6 +30,10 @@ public class Player extends Entity {
         internal.sendMessage(o.internal);
     }
 
+    public void sendActionBarMessage(PlayerMessage o){
+        internal.sendStatusMessage(o.internal, true);
+    }
+
     public boolean isCrouching() {
         return internal.isSneaking();
     }
