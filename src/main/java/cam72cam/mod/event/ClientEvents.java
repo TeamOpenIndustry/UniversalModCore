@@ -98,7 +98,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
+        public void onClientTick(TickEvent.ClientTickEvent event) {
             if (MinecraftClient.isReady() && event.phase == TickEvent.Phase.START) {
                 TICK.execute(Runnable::run);
             }
