@@ -13,7 +13,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 public class MinecraftClient {
     /** Minecraft is loaded and has a loaded world */
     public static boolean isReady() {
-        return Minecraft.getMinecraft().thePlayer != null;
+        return Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld != null;
     }
 
     private static Player playerCache;

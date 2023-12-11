@@ -165,6 +165,12 @@ public class World {
         if (world == null) {
             return null;
         }
+
+        // Bspkrs helper
+        if (world.getClass().toString().contains("Fake")) {
+            return null;
+        }
+
         if (getWorld(world) == null) {
             // WTF forge
             // I should NOT need to do this
