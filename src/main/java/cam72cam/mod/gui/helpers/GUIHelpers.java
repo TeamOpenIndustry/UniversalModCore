@@ -8,9 +8,11 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
@@ -142,7 +144,11 @@ public class GUIHelpers {
         drawItem(stack, x, y, new Matrix4());
     }
 
+    private static RenderBlocks renderBlocks = new RenderBlocks();
     public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
+        if (stack.isEmpty()) {
+            return;
+        }
         RenderState state = new RenderState()
                 .color(1, 1, 1, 1)
                 .alpha_test(true)
@@ -153,7 +159,15 @@ public class GUIHelpers {
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             IItemRenderer ir = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
-            ir.renderItem(IItemRenderer.ItemRenderType.INVENTORY, stack.internal);
+            if (ir != null) {
+                ir.renderItem(IItemRenderer.ItemRenderType.INVENTORY, stack.internal);
+            } else {
+                // This is broken but does not crash...
+                Block block = Block.getBlockFromItem(stack.internal.getItem());
+                if (block != null) {
+                    renderBlocks.renderBlockAsItem(block, stack.internal.getMetadata(), 1.0f);
+                }
+            }
         }
     }
 }
