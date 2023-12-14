@@ -110,7 +110,7 @@ public class Light {
             return false;
         }
         try {
-            Class<?> optiConfig = Class.forName("Config");
+            Class<?> optiConfig = Class.forName("net.optifine.Config");
             return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             return false;

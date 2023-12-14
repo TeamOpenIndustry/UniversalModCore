@@ -19,7 +19,7 @@ public class OptiFine {
     public static boolean isLoaded() {
         if (isLoaded == null) {
             try {
-                Class.forName("Config");
+                Class.forName("net.optifine.Config");
                 isLoaded = true;
             } catch (ClassNotFoundException e) {
                 isLoaded = false;
@@ -31,7 +31,7 @@ public class OptiFine {
     public static With overrideFastRender(boolean state) {
         if (isLoaded()) {
             try {
-                boolean isFastRender = (boolean)Class.forName("Config").getDeclaredMethod("isFastRender").invoke(null);
+                boolean isFastRender = (boolean)Class.forName("net.optifine.Config").getDeclaredMethod("isFastRender").invoke(null);
                 if (isFastRender != state) {
                     BooleanOption setting = (BooleanOption) AbstractOption.class.getDeclaredField("FAST_RENDER").get(null);
                     setting.nextValue(Minecraft.getInstance().gameSettings);
