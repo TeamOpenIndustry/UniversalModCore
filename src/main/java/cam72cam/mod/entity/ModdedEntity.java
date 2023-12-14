@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
+import cam72cam.mod.entity.sync.TagSync;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -201,7 +202,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void writeSpawnData(PacketBuffer buffer) {
         TagCompound data = new TagCompound();
-        data.set("sync", self.sync);
+        TagCompound sync = new TagCompound();
+        try {
+            TagSerializer.serialize(sync, getSelf(), TagSync.class);
+        } catch (Exception e) {
+            ModCore.catching(e);
+        }
+        data.set("sync", sync);
         save(data);
         buffer.writeNbt(data.internal);
     }
