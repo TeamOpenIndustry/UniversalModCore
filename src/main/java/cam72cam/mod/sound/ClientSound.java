@@ -35,7 +35,7 @@ class ClientSound extends PositionedSound implements ITickableSound, ISound {
         ISoundEventAccessor accessor = new ISoundEventAccessor() {
             @Override
             public int func_148721_a() {
-                return -1;
+                return 1;
             }
 
             @Override
