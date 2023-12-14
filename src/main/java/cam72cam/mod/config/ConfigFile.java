@@ -329,6 +329,12 @@ public class ConfigFile {
 
             for (Class<?> scls : cls.getDeclaredClasses()) {
                 if (Modifier.isPublic(cls.getModifiers())) {
+                    try {
+                        cls.getConstructor().setAccessible(true);
+                        cls.getConstructor().newInstance();
+                    } catch (Exception e) {
+                        // Ignore.  This is how we try to force static initializers
+                    }
                     properties.add(new PropertyClass(scls));
                 }
             }
