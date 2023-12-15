@@ -1,21 +1,42 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.ModCore;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Light {
+
+    private static List<Runnable> toSpawn = new ArrayList<>();
+
     private static EntityType<LightEntity>[] types = new EntityType[16];
+
+    private static boolean hasRegistered = false;
 
     private LightEntity internal;
     private double lightLevel;
@@ -51,7 +72,8 @@ public class Light {
         EntityType<LightEntity> type = types[ll];
         internal = type.create(world);
         internal.setPosition(pos.x, pos.y, pos.z);
-        world.addEntity(internal);
+        // Add the entity next tick, this is probably in the middle of tick entity iteration and will break the iterator
+        toSpawn.add(() -> ((ClientWorld) world).addEntity(internal.getEntityId(), internal));
         this.lightLevel = lightLevel;
     }
 
@@ -66,6 +88,46 @@ public class Light {
                 et.setRegistryName(new ResourceLocation("universalmodcore:light" + i));
                 ForgeRegistries.ENTITIES.register(et);
                 types[i] = et;
+            }
+        });
+
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
+            RenderingRegistry.registerEntityRenderingHandler(LightEntity.class, entityRendererManager -> new EntityRenderer<LightEntity>(entityRendererManager) {
+                @Nullable
+                @Override
+                protected ResourceLocation getEntityTexture(LightEntity entity) {
+                    return null;
+                }
+            });
+        });
+
+        // Outside of the entity iteration loop
+        ClientEvents.TICK.subscribe(() -> {
+            toSpawn.forEach(Runnable::run);
+            toSpawn.clear();
+
+            if (!hasRegistered) {
+                if (OptiFine.isLoaded()) {
+                    // I think optifine is not calling into forge mod list correctly.  Let's force this shit.
+                    try {
+                        Class<?> dl = Class.forName("net.optifine.DynamicLights");
+                        Field initField = dl.getDeclaredField("initialized");
+                        initField.setAccessible(true);
+                        if (initField.getBoolean(null)) {
+                            // Wait for optifine to do it's own broken loading
+                            Method lmc = dl.getDeclaredMethod("loadModConfiguration", InputStream.class, String.class, String.class);
+                            lmc.setAccessible(true);
+                            Identifier id = new Identifier("universalmodcore", "optifine/dynamic_lights.properties");
+                            lmc.invoke(null, id.getResourceStream(), id.toString(), id.getDomain());
+                            hasRegistered = true;
+                        }
+                    } catch (Exception e) {
+                        ModCore.catching(e);
+                        hasRegistered = true;
+                    }
+                } else {
+                    hasRegistered = true;
+                }
             }
         });
     }
@@ -113,6 +175,7 @@ public class Light {
             Class<?> optiConfig = Class.forName("net.optifine.Config");
             return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            System.out.println("NOT ENABLED");
             return false;
         }
     }
