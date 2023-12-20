@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.1.4";
+    public static final String VERSION = "1.2.0";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
