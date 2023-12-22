@@ -11,6 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -140,7 +141,11 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    protected class BlockInternal extends net.minecraft.block.Block {
+    protected class BlockInternal extends net.minecraft.block.Block implements IBlockTypeBlock {
+        public BlockType getType() {
+            return BlockType.this;
+        }
+
         public BlockInternal() {
             super(BlockType.this.getMaterial().internal);
             BlockType type = BlockType.this;
