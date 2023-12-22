@@ -1,6 +1,6 @@
 package cam72cam.mod.world;
 
-import net.minecraft.util.DamageSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 
 /**
@@ -18,6 +18,5 @@ public interface IConditionalCollision {
      * @param damageSource Damage source that would be used to collide with the block.
      * @return Whether or not to calculate actual collision.
      */
-    boolean canCollide(World world, int posX, int posY, int posZ, DamageSource damageSource);
-
+    boolean canCollide(World world, int posX, int posY, int posZ, Entity entity);
 }
