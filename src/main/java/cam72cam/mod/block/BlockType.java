@@ -142,7 +142,11 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    protected class BlockInternal extends net.minecraft.block.Block {
+    protected class BlockInternal extends net.minecraft.block.Block implements IBlockTypeBlock {
+        public BlockType getType() {
+            return BlockType.this;
+        }
+
         public BlockInternal() {
             super(BlockType.this.getMaterial().internal);
             BlockType type = BlockType.this;
