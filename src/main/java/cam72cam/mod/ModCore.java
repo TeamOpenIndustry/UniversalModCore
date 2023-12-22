@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.2.0";
+    public static final String VERSION = "1.2.1";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
@@ -448,7 +448,6 @@ public class ModCore {
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());
-                    Light.register();
                     ConfigFile.sync(Config.class);
                     break;
                 case INITIALIZE:
@@ -472,6 +471,7 @@ public class ModCore {
                     if (Minecraft.getInstance() != null) {
                         ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
                                 stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                        Light.register();
                     }
                 case SETUP:
                     try {

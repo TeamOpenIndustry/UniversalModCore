@@ -4,6 +4,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
+import cam72cam.mod.block.IBlockTypeBlock;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Living;
@@ -658,10 +659,20 @@ public class World {
     }
 
     /** Opt in collision overriding */
-    public boolean canEntityCollideWith(Vec3i bp, String damageType) {
-        Block block = internal.getBlockState(bp.internal()).getBlock();
-        return ! (block instanceof IConditionalCollision) ||
-                ((IConditionalCollision) block).canCollide(internal, bp.internal(), internal.getBlockState(bp.internal()), new DamageSource(damageType));
+    public boolean canEntityCollideWith(Vec3i bp, Entity entity) {
+        BlockState state = internal.getBlockState(bp.internal());
+        Block block = state.getBlock();
+
+        if (block instanceof IConditionalCollision && ((IConditionalCollision) block).canCollide(internal, bp.internal(), state, entity.internal))
+            return true;
+
+        if (block instanceof IBlockTypeBlock) {
+            BlockType type = ((IBlockTypeBlock) block).getType();
+            if (type instanceof IBlockEntityCollision) {
+                return ((IBlockEntityCollision) type).canCollide(this, bp, entity);
+            }
+        }
+        return false;
     }
 
     /** Spawn a particle */
