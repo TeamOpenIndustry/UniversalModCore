@@ -430,7 +430,6 @@ public class ModCore {
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
                     Command.register(new ModCoreCommand());
-                    Light.register();
                     ConfigFile.sync(Config.class);
                     break;
                 case INITIALIZE:
@@ -454,6 +453,7 @@ public class ModCore {
                     if (Minecraft.getInstance() != null) {
                         ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
                                 stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                        Light.register();
                     }
                 case SETUP:
                     try {
