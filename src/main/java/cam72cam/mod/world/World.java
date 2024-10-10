@@ -23,6 +23,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
@@ -113,6 +114,12 @@ public class World {
             for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                    if (entity instanceof EntityPlayerMP && !this.internal.playerEntities.contains(entity)) {
+                        // if player is no longer online then remove player from loadedEntityList
+                        this.internal.loadedEntityList.remove(entity);
+                        ModCore.warn("Removing entity with uuid %s from loadedEntityList", entity.getUniqueID());
+                        return;
+                    }
                     this.onEntityAdded(entity);
                 }
             }
