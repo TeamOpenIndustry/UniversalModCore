@@ -271,6 +271,7 @@ public class ItemRender {
 
         @Override
         public void renderItem(ItemRenderType typeIn, net.minecraft.item.ItemStack item, Object... data) {
+            if (!MinecraftClient.isReady()) { return; }
             ItemStack stack = new ItemStack(item);
             if (stack.isEmpty()) {
                 return;
