@@ -87,8 +87,8 @@ public class GlobalRender {
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
-            if (MinecraftClient.getBlockMouseOver() != null) {
-                Player player = MinecraftClient.getPlayer();
+            Player player = MinecraftClient.getPlayer();
+            if (player != null && MinecraftClient.getBlockMouseOver() != null) {
                 if (!player.getHeldItem(Player.Hand.PRIMARY).isEmpty() && item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);
                 }
