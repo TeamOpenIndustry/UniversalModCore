@@ -13,7 +13,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 public class MinecraftClient {
     /** Minecraft is loaded and has a loaded world */
     public static boolean isReady() {
-        return Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld != null;
+        return Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld != null && getPlayer() != null;
     }
 
     private static Player playerCache;
@@ -41,6 +41,9 @@ public class MinecraftClient {
 
     /** Entity that you are currently looking at (distance limited) */
     public static Entity getEntityMouseOver() {
+        if (getPlayer() == null){
+            return null;
+        }
         net.minecraft.entity.Entity ent = Minecraft.getMinecraft().objectMouseOver.entityHit;
         if (ent != null) {
             return getPlayer().getWorld().getEntity(ent.getUniqueID(), Entity.class);
