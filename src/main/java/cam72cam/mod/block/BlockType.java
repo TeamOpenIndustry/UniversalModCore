@@ -14,6 +14,8 @@ import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
@@ -57,6 +59,7 @@ public abstract class BlockType {
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
         internal = getBlock();
+        RenderTypeLookup.setRenderLayer(internal, RenderType.getCutoutMipped());
         CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
     }
 

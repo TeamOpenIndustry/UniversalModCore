@@ -311,6 +311,7 @@ public class OBJModel {
                 state.specular(defTex);
             }
             state.smooth_shading(OBJModel.this.isSmoothShading);
+            state.alpha_test(true);
         }
 
         public OBJRender.Binding bind(RenderState state) {
