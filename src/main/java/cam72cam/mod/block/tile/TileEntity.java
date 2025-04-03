@@ -27,8 +27,10 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -161,13 +163,15 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
-                TileEntity tile = example.supplier(id);
-                tile.setBlockState(state);
-                return tile;
-            }, new HashSet<>() {
-                public boolean contains(Object var1) {
-                    // WHYYYYYYYYYYYYYYYY
+            BlockEntityType<TileEntity> type = new BlockEntityType<>(
+                    (pos, state) -> {
+                        BlockEntity block = instance.get();
+                        TileEntity tile = block.supplier(id);
+                        tile.setBlockState(state);
+                        return tile;
+                    }, new HashSet<>() {
+                @Override
+                public boolean contains(Object o) {
                     return true;
                 }
             }, null);
@@ -209,6 +213,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final void load(CompoundTag compound) {
         super.load(compound);
         hasTileData = true;
+        // Hack; Because of the new BlockEntity Constructor we now have to set the position manually after loading the BE
+        setPos(new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z")));
 
         TagCompound data = new TagCompound(compound);
         TagCompound instanceData = data.get("instanceData");
@@ -235,6 +241,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         super.save(compound);
 
         TagCompound data = new TagCompound(compound);
+
+        ModCore.info("TileEntity.save() called in = " + getUMCPos());
 
         if (instance() != null) {
             TagCompound instanceData = new TagCompound();
@@ -507,7 +515,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     /* Render */
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
-    public final IModelData getModelData() {
+    @Override
+    public final @Nonnull IModelData getModelData() {
         return new ModelDataMap.Builder().withInitial(TE_PROPERTY, this).build();
     }
 
