@@ -27,10 +27,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -163,15 +161,13 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(() -> {
-            BlockEntityType<TileEntity> type = new BlockEntityType<>(
-                    (pos, state) -> {
-                        BlockEntity block = instance.get();
-                        TileEntity tile = block.supplier(id);
-                        tile.setBlockState(state);
-                        return tile;
-                    }, new HashSet<>() {
-                @Override
-                public boolean contains(Object o) {
+            BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
+                TileEntity tile = example.supplier(id);
+                tile.setBlockState(state);
+                return tile;
+            }, new HashSet<>() {
+                public boolean contains(Object var1) {
+                    // WHYYYYYYYYYYYYYYYY
                     return true;
                 }
             }, null);
@@ -241,8 +237,6 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         super.save(compound);
 
         TagCompound data = new TagCompound(compound);
-
-        ModCore.info("TileEntity.save() called in = " + getUMCPos());
 
         if (instance() != null) {
             TagCompound instanceData = new TagCompound();
@@ -515,8 +509,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     /* Render */
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
-    @Override
-    public final @Nonnull IModelData getModelData() {
+    public final IModelData getModelData() {
         return new ModelDataMap.Builder().withInitial(TE_PROPERTY, this).build();
     }
 
