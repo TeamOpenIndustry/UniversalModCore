@@ -19,7 +19,7 @@ import util.Matrix4;
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
-    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
+    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("minecraft", "textures/gui/container/generic_54.png");
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
