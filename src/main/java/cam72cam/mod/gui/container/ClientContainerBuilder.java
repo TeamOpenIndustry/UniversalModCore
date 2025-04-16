@@ -12,6 +12,7 @@ import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -148,8 +149,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     @Override
     public int drawPlayerMidBar(int x, int y) {
         RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
-            super.blit(stack, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
-
+        super.blit(stack, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         return y + midBarHeight;
     }
 
@@ -157,7 +157,9 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
         RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
-            super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+        super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+
+        drawPlayerInventoryLabel(normInvOffset + paddingLeft, y - 1);
 
         return y + 96;
     }
@@ -191,7 +193,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(stack, this.font, text, x + centerX + this.imageWidth / 2, y + centerY, 14737632);
+        GuiComponent.drawCenteredString(stack, this.font, text, x + centerX + this.imageWidth / 2, y + centerY, 14737632);
     }
 
     @Override
@@ -236,6 +238,15 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         )) {
             blit(stack, x, y, 0, 16, 16, sprite);
         }
+    }
+
+    @Override
+    protected void renderLabels(PoseStack p_97808_, int p_97809_, int p_97810_) {
+        this.font.draw(p_97808_, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
+    }
+
+    private void drawPlayerInventoryLabel(int x, int y){
+        this.font.draw(stack, this.playerInventoryTitle, centerX + x, centerY + y, 4210752);
     }
 
     @Override
