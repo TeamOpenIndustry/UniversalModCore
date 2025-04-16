@@ -8,8 +8,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
-import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiComponent;
@@ -232,12 +230,8 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         }
 
         TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
-        try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
-                        .texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS)))
-        )) {
-            blit(stack, x, y, 0, 16, 16, sprite);
-        }
+        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        blit(stack, x, y, 0, 16, 16, sprite);
     }
 
     @Override
