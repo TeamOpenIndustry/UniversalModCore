@@ -8,6 +8,7 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -35,14 +36,11 @@ public class GUIHelpers {
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (With ctx = RenderContext.apply(
-                new RenderState().texture(Texture.wrap(tex))
-        )) {
-            // X Y, U V, UW VH, W H, TW TH
-            // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
-            // X Y, W H, U V, UW VH, TW TH
-            GuiComponent.blit(new PoseStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
-        }
+        // X Y, U V, UW VH, W H, TW TH
+        // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
+        // X Y, W H, U V, UW VH, TW TH
+        RenderSystem.setShaderTexture(0, tex.internal);
+        GuiComponent.blit(new PoseStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
     }
 
     /** Draw fluid block at coords */
