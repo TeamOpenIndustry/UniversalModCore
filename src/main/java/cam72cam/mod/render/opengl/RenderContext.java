@@ -112,10 +112,9 @@ public class RenderContext {
         }*/
 
         if (state.blend != null) {
-            RenderSystem.enableBlend();
+            state.blend.apply();
             restore.add(() -> {
                 state.blend.apply().run();
-                RenderSystem.disableBlend();
             });
         }
 
