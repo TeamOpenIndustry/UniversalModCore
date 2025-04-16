@@ -3,9 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
@@ -19,10 +17,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -75,22 +71,19 @@ public class StandardModel {
 
     /** Add item (think dropped item) */
     public StandardModel addItem(ItemStack stack, Matrix4 transform) {
-        custom.add((matrix, pt) -> {
-            matrix.model_view().multiply(transform);
+        BakedModel model = Minecraft.getInstance().getItemRenderer().getModel(stack.internal, null, null, 15728880);
 
-            try (With ctx = RenderContext.apply(matrix)) {
-                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-                if (oldState) {
-                    GL32.glEnable(GL32.GL_BLEND);
-                } else {
-                    GL32.glDisable(GL32.GL_BLEND);
-                }
-
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, 0);
-                buffer.endBatch();
-            }
-        });
+        models.add(Pair.of(itemToBlockState(stack), new BakedScaledModel(model, transform)));
+//        custom.add((matrix, pt) -> {
+//            matrix.model_view().multiply(transform);
+//
+//            try (With ctx = RenderContext.apply(matrix)) {
+//                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
+//                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+//                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal, ItemTransforms.TransformType.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, 0);
+//                buffer.endBatch();
+//            }
+//        });
         return this;
     }
 
