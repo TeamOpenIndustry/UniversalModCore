@@ -44,4 +44,20 @@ public class ImageUtils {
         ModCore.debug("Fetching pixels for %sx%s took %sms", image.getWidth(), image.getHeight(), (System.currentTimeMillis() - start));
         return pixels;
     }
+
+    public static int[] toBGRA(BufferedImage image) {
+        long start = System.currentTimeMillis();
+        int[] pixels = new int[image.getWidth() * image.getHeight()];
+        image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+        for (int i = 0; i < pixels.length; i++) {
+            int c_argb = pixels[i];
+            int a = c_argb >> 24 & 255;
+            int r = c_argb >> 16 & 255;
+            int g = c_argb >> 8 & 255;
+            int b = c_argb >> 0 & 255;
+            pixels[i] = (b << 24) | (g << 16) | (r << 8) | a;
+        }
+        ModCore.debug("Fetching pixels for %sx%s took %sms", image.getWidth(), image.getHeight(), (System.currentTimeMillis() - start));
+        return pixels;
+    }
 }

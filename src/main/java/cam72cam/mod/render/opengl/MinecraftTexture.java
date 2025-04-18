@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class MinecraftTexture implements Texture {
-    private final Identifier id;
+    public final Identifier id;
 
     public MinecraftTexture(Identifier id) {
         this.id = id;
