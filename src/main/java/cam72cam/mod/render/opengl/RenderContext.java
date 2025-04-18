@@ -111,13 +111,17 @@ public class RenderContext {
             restore.add(() -> GL11.glShadeModel(oldShading));
         }*/
 
+        if (state.blend != null) {
+            state.blend.apply();
+            restore.add(() -> {
+                state.blend.apply().run();
+            });
+        }
+
         shader.apply();
         checkError();
 
 
-        if (state.blend != null) {
-            restore.add(() -> state.blend.apply().run());
-        }
         return () -> restore.forEach(Runnable::run);
     }
 

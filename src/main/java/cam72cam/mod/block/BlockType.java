@@ -3,6 +3,7 @@ package cam72cam.mod.block;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
@@ -11,6 +12,8 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -60,6 +63,7 @@ public abstract class BlockType {
         this.id = new Identifier(modID, name);
         internal = getBlock();
         CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+        ClientEvents.REGISTER_BLOCK_RENDER_LAYER.subscribe(() -> ItemBlockRenderTypes.setRenderLayer(internal, RenderType.cutoutMipped()));
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */
