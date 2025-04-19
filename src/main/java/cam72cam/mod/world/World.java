@@ -370,6 +370,7 @@ public class World {
     public void setBlockEntity(Vec3i pos, BlockEntity entity) {
         if (entity != null) {
             entity.internal.setPos(pos.internal());
+            entity.internal.setBlockState(internal.getBlockState(pos.internal()));
             internal.setBlockEntity(entity.internal);
             entity.markDirty();
         } else {
