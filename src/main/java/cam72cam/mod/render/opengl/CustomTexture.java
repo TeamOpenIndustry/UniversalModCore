@@ -109,6 +109,7 @@ public abstract class CustomTexture implements Texture {
         }
 
         AbstractTexture abstractTexture = new DynamicTexture(image);
+        abstractTexture.setFilter(false, false);
         this.glID = abstractTexture.getId();
         textureLocation = new Identifier(ModCore.MODID, "tex" + glID);
 
