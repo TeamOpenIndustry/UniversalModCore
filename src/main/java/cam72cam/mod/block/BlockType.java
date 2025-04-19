@@ -193,7 +193,7 @@ public abstract class BlockType {
 
         @Override
         public RenderShape getRenderShape(BlockState state) {
-            // Don't really know why we suddenly have to switch to BESR Renderer, but somehow it fixed the problem
+            // TESR Renderer TODO OPTIONAL!@!!!!
             return RenderShape.ENTITYBLOCK_ANIMATED;
         }
 
