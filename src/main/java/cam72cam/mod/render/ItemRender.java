@@ -15,6 +15,7 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -37,6 +38,7 @@ import net.minecraftforge.client.model.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL32;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -109,6 +111,7 @@ public class ItemRender {
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
 
+        //RT make our own item model shaper ig
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
@@ -118,6 +121,7 @@ public class ItemRender {
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
+        //RT we need our own model registry, UMC items get put there and we can render them ourselves when minecraft tries to
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
@@ -197,6 +201,7 @@ public class ItemRender {
 
     /** Internal method to render a model to a framebuffer and drop it in the texture sheet */
     private static void createSprite(Identifier id, StandardModel model) {
+        RenderSystem.assertThread(RenderSystem::isOnRenderThread);
         int width = iconSheet.spriteSize;
         int height = iconSheet.spriteSize;
         File sprite = ModCore.cacheFile(new Identifier(id.getDomain(),id.getPath() + "_sprite" + iconSheet.spriteSize + ".raw"));
@@ -211,7 +216,7 @@ public class ItemRender {
                 e.printStackTrace();
             }
         }
-
+        ModCore.info("creating sprite" + id.toString());
         With restore = OptiFine.overrideFastRender(false);
 
         TextureTarget fb = new TextureTarget(width, height, true, true);
@@ -224,26 +229,23 @@ public class ItemRender {
         state.projection().setIdentity();
 
         try (With with = RenderContext.apply(state)) {
-            boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            boolean depthEnabled = GL32.glGetBoolean(GL32.GL_DEPTH_TEST);
             int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
             GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glDepthFunc(GL11.GL_LESS);
             GL11.glClearDepth(1);
+            GL11.glDepthFunc(GL11.GL_LESS);
 
             model.renderCustom(new RenderState());
 
             fb.bindRead();
             ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
             GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
+            iconSheet.setSprite(id, buff);
             fb.unbindRead();
 
             fb.unbindWrite();
             fb.destroyBuffers();
-
-            GL11.glDepthFunc(oldDepth);
-
-            iconSheet.setSprite(id, buff);
 
             try {
                 byte[] data = new byte[buff.capacity()];
@@ -259,10 +261,13 @@ public class ItemRender {
             }
             GL11.glDepthFunc(oldDepth);
         }
-
         restore.close();
+        ModCore.info("done creating sprite");
     }
 
+    //RT new render system: this needs to be replaced... badly, this is so fucking hacked
+    //  we just need to figure out how to get into the item rendering pipe
+    //  mixins, the answer is mixins
     static BiConsumer<PoseStack, Integer> doRender = (s, i) -> {};
     public static BlockEntityWithoutLevelRenderer ISTER() {
         return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
@@ -319,6 +324,11 @@ public class ItemRender {
         @Override
         public ItemOverrides getOverrides() {
             return new ItemOverrideListHack();
+        }
+
+        @Override
+        public boolean doesHandlePerspectives() {
+            return true;
         }
 
         @Override

@@ -36,7 +36,7 @@ public class OBJRender extends VBO {
         protected Binding(RenderState state, boolean wait) {
             super(state, wait);
         }
-
+        //TODO 1.17 this isn't restoring for some reason
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
             if (!isLoaded()) {
                 return;

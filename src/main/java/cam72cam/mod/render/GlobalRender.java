@@ -79,10 +79,11 @@ public class GlobalRender {
         });
         ClientEvents.TICK.subscribe(() -> {
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
-            /* TODO 1.17.1
+            // TODO 1.17.1 ask cam why set position
             if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
-            }*/
+                //grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+                grhList.get(0).setLevel(Minecraft.getInstance().player.level);
+            }
         });
 
         // Nice to have GPU info in F3

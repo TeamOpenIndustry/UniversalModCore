@@ -73,7 +73,7 @@ public class Light {
     }
 
     // Client only
-    private static class LightEntity extends Entity {
+    public static class LightEntity extends Entity {
         public LightEntity(EntityType<?> entityTypeIn, Level world) {
             super(entityTypeIn, world);
             super.noPhysics = true;

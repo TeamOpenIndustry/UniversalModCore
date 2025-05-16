@@ -103,7 +103,11 @@ public abstract class CustomItem {
         return new Identifier(internal.getRegistryName());
     }
 
-    private class ItemInternal extends Item {
+    /**
+     * Allows overriding of minecraft Item
+     * needs to be public for mixins
+     */
+    public class ItemInternal extends Item {
 
         public ItemInternal(Properties p_i48487_1_) {
             super(p_i48487_1_);

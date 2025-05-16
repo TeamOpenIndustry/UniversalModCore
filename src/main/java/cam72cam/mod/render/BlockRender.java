@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Registry for block rendering (and internal implementation)
@@ -59,7 +60,7 @@ public class BlockRender {
             Create new array to prevent CME's with poorly behaving mods
             TODO: Opt out of renderGlobal!
              */
-            /* TODO 1.17.1
+            /*TODO 1.17.1, might not be needed!!!
             List<net.minecraft.tileentity.TileEntity> tes = new ArrayList<>(Minecraft.getInstance().level.getBlockEntity()).stream()
                     .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && x.getViewDistance() > 0)
                     .collect(Collectors.toList());
@@ -69,8 +70,8 @@ public class BlockRender {
                         .collect(Collectors.toList());
             }
             Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(prev, tes);
-            prev = tes;
-             */
+            prev = tes;*/
+             
         });
     }
 
@@ -111,7 +112,7 @@ public class BlockRender {
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
+                    model.render(partialTicks, new RenderState(var3).lightmap(j/240f, k/240f));
 
                     RenderType.solid().clearRenderState();
                 }

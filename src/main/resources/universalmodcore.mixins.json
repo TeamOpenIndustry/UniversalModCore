@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "rendertrack.mixin",
+  "client": [
+    "renderintercepts.item.RenderItemIntercept",
+    "renderintercepts.entity.RenderEntityIntercept"
+  ]
+}

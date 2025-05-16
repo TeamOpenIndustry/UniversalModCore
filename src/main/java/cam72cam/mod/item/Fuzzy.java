@@ -29,21 +29,21 @@ public class Fuzzy {
     public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
 
     public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Items.STONE_SLAB);
-    public static final Fuzzy STONE_BRICK = new Fuzzy(ItemTags.STONE_BRICKS, "brickStone");
-    public static final Fuzzy SAND = new Fuzzy(Tags.Items.SAND, "sand");
+    public static final Fuzzy STONE_BRICK = new Fuzzy(ItemTags.STONE_BRICKS, "brickStone").add(Blocks.STONE_BRICKS);
+    public static final Fuzzy SAND = new Fuzzy(Tags.Items.SAND, "sand").add(Blocks.SAND);
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold");
     public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "ingots/steel").toString()), "ingotSteel");
     public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("forge", "storage_blocks/steel").toString()), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron");
-    public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron");
+    public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron").add(Blocks.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
 
     public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.NETHER_BRICKS);
-    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy(Tags.Items.GRAVEL, "gravel");
+    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy(Tags.Items.GRAVEL, "gravel").add(Blocks.GRAVEL);
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.BRICKS);
-    public static final Fuzzy COBBLESTONE = new Fuzzy(Tags.Items.COBBLESTONE, "cobblestone");
+    public static final Fuzzy COBBLESTONE = new Fuzzy(Tags.Items.COBBLESTONE, "cobblestone").add(Blocks.COBBLESTONE);
     public static final Fuzzy CONCRETE = new Fuzzy("concrete")
             .add(Blocks.WHITE_CONCRETE)
             .add(Blocks.ORANGE_CONCRETE)

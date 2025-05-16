@@ -132,8 +132,9 @@ public class ModCore {
             if (modDir.exists() && modDir.isDirectory()) {
                 for (File file : modDir.listFiles()) {
                     if (!usedCacheFiles.contains(file)) {
+                        //TODO this needs to be moved later so as to not delete sprite caches
                         ModCore.warn("Removing file cache entry: %s", file);
-                        FileUtils.deleteQuietly(file);
+                        //FileUtils.deleteQuietly(file);
                     }
                 }
             }
@@ -481,10 +482,10 @@ public class ModCore {
             switch (event) {
                 case CONSTRUCT:
                     // Instance can be null during data gen
-                    if (Minecraft.getInstance() != null) {
+                    /*if (Minecraft.getInstance() != null) {
                         ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
-                    }
+                                stage.wait(Unit.INSTANCE).thenRunAsync(ClientEvents::fireReload, gameExecutor));
+                    }*/
                 case SETUP:
                     try {
                         Minecraft.getInstance().createSearchTrees();
@@ -493,6 +494,8 @@ public class ModCore {
                     }
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
+                    ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
+                            stage.wait(Unit.INSTANCE).thenRunAsync(ClientEvents::fireReload, gameExecutor));
                     break;
             }
 

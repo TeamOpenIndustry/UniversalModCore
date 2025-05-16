@@ -8,6 +8,7 @@ buildscript {
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath 'org.spongepowered:mixingradle:0.7.+'
     }
 }
 
@@ -16,6 +17,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
 
 
 configurations {
@@ -145,6 +147,8 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+    // Apply Mixin AP
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 jar {
@@ -167,6 +171,22 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.relocated.javax.vecmath"
     finalizedBy 'reobfShadowJar'
+}
+
+mixin {
+    // MixinGradle Settings
+    add sourceSets.main, "universalmodcore.refmap.json"
+    config "universalmodcore.mixins.json"
+}
+
+// Prevent Mixin annotation processor from getting into IDEA's annotation processor settings
+// Copied from Botania
+if (System.getProperty("idea.sync.active") == "true") {
+    afterEvaluate {
+        tasks.withType(JavaCompile).all {
+            it.options.annotationProcessorPath = files()
+        }
+    }
 }
 
 assemble.dependsOn shadowJar

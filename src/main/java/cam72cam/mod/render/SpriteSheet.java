@@ -9,6 +9,7 @@ import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.TextureUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -80,6 +81,7 @@ public class SpriteSheet {
 
     /**
      * Render the sprite represented by id (skip if unknown)
+     * TODO depth test is broken here, it's drawing the void instead of the item model
      */
     public void renderSprite(Identifier id, RenderState state) {
         SpriteInfo sprite = sprites.get(id);
@@ -97,10 +99,8 @@ public class SpriteSheet {
             buffer.vertex(1, 1, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMax);
             buffer.vertex(1, 0, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMin);
         }
-        ;
+
         buffer.draw(state);
-
-
     }
 
     /**

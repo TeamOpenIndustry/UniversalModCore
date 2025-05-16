@@ -1,6 +1,8 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -24,20 +26,21 @@ public abstract class ItemButton extends AbstractButton {
     @Override
     public void render(PoseStack ms, int mouseX, int mouseY, float partialTicks) {
         GuiComponent.fill(ms, x, y, x + 32, y + 32, 0xFFFFFFFF);
-        // Pollutes global state...
-        // TODO 1.17.1 RenderHelper.turnBackOn();
         Minecraft mc = Minecraft.getInstance();
-
+        //FIXME this is really awful, we shouldn't have to do this, we need our own render system
         Font font = Minecraft.getInstance().font;
         try (With ctx = RenderContext.apply(
-                new RenderState().translate(x, y, 0).scale(2, 2, 1)
+                new RenderState()
         )) {
-            mc.getItemRenderer().renderAndDecorateItem(stack.internal, 0, 0);
-            mc.getItemRenderer().renderGuiItemDecorations(font, stack.internal, 0, 0);
+            PoseStack posestack = RenderSystem.getModelViewStack();
+            posestack.pushPose();
+            posestack.scale(2, 2, 1);
+            RenderSystem.applyModelViewMatrix();
+            mc.getItemRenderer().renderAndDecorateItem(stack.internal, x / 2, y / 2);
+            mc.getItemRenderer().renderGuiItemDecorations(font, stack.internal, x / 2, y / 2);
+            posestack.popPose();
+            RenderSystem.applyModelViewMatrix();
         }
-
-        // Pollutes global state...
-        // TODO 1.17.1 RenderHelper.turnOff();
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {

@@ -161,33 +161,33 @@ public class RenderState {
         return this.translate(vec.x, vec.y, vec.z);
     }
     public RenderState translate(double x, double y, double z) {
-        this.model_view().translate(x, y, z);
+        model_view = model_view().translate(x, y, z);
         return this;
     }
     public RenderState scale(Vec3d vec) {
         return this.scale(vec.x, vec.y, vec.z);
     }
     public RenderState scale(double x, double y, double z) {
-        this.model_view().scale(x, y, z);
+        model_view = model_view().scale(x, y, z);
         return this;
     }
     public RenderState rotate(double degrees, double x, double y, double z) {
-        this.model_view().rotate(Math.toRadians(degrees), x, y, z);
+        model_view = model_view().rotate(Math.toRadians(degrees), x, y, z);
         return this;
     }
 
     public RenderState texture(Texture tex) {
-        this.texture = tex;
+        texture = tex;
         return this;
     }
 
     public RenderState normals(Texture norm) {
-        this.normals = norm;
+        normals = norm;
         return this;
     }
 
     public RenderState specular(Texture spec) {
-        this.specular = spec;
+        specular = spec;
         return this;
     }
 
