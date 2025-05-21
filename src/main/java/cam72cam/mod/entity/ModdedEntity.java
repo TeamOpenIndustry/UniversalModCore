@@ -372,11 +372,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 passengerPositions.put(passenger.getUUID(), offset);
             }
 
-            System.out.println("Seat: " + seat);
-            System.out.println("Passenger: " + passenger);
-            System.out.println("Offset before: " + offset);
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            System.out.println("Offset: " + offset);
             if (!seat.isPassenger(passenger.internal))
                 return;
 

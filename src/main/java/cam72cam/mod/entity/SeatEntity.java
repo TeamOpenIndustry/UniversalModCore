@@ -150,7 +150,6 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
             return null;
         if (this.getPassengers().size() == 0)
             return null;
-        getPassengers().forEach(p -> System.out.println("Passengers: " + p));
         return World.get(world).getEntity(getPassengers().get(0));
     }
 
