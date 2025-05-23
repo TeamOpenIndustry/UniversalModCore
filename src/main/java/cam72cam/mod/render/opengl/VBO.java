@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 public class VBO {
     private static final List<VBO> vbos = new ArrayList<>();
+    //RT higher level manager class?
     public static void registerClientEvents() {
         // free unused textures
         ClientEvents.TICK.subscribe(() -> {
