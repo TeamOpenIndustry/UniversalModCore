@@ -365,6 +365,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
 
             seat.shouldSit = iRidable.shouldRiderSit(passenger);
+
+            if (self.getWorld().isServer) {
+                new PassengerPositionsPacket(this).sendToObserving(self);
+            }
         }
     }
 
