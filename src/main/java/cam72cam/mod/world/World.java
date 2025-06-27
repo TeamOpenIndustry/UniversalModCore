@@ -440,12 +440,19 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3i pos) {
-        dropItem(stack, new Vec3d(pos));
+        dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
     }
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.spawnEntity(new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal));
+        dropItem(stack, pos, Vec3d.ZERO);
+    }
+
+    /** Drop a stack on the ground at pos with velocity */
+    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
+        EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
+        entity.setVelocity(velocity.x, velocity.y, velocity.z);
+        internal.spawnEntity(entity);
     }
 
     /** Check if the block is currently in a loaded chunk */
