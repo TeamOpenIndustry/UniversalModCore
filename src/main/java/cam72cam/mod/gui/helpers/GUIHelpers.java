@@ -108,6 +108,18 @@ public class GUIHelpers {
         }
     }
 
+    /** Draw a left-aligned shadowed string */
+    public static void drawString(String text, int x, int y, int color) {
+        drawString(text, x, y, color, new Matrix4());
+    }
+    public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
+            Minecraft.getInstance().font.draw(new MatrixStack(), text, x, y, color);
+        }
+    }
+
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         drawCenteredString(text, x, y, color, new Matrix4());
@@ -116,8 +128,13 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
+            Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - getTextWidth(text) / 2), (float) y, color);
         }
+    }
+
+    /** Gat a string's internal width for further use */
+    public static int getTextWidth(String text) {
+        return Minecraft.getInstance().font.width(text);
     }
 
     /** Screen Width in pixels (std coords) */
