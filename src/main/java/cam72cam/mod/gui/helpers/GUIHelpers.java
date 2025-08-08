@@ -1,5 +1,6 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.util.With;
@@ -14,6 +15,9 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
@@ -164,6 +168,28 @@ public class GUIHelpers {
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openLink(String url){
+        ITextComponent component = new TextComponentString("");
+        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+        if (Minecraft.getMinecraft().currentScreen != null) {
+            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a link outside a screen: %s", url);
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openFile(String path){
+        ITextComponent component = new TextComponentString("");
+        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
+        if (Minecraft.getMinecraft().currentScreen != null) {
+            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a file outside a screen: %s", path);
         }
     }
 }
