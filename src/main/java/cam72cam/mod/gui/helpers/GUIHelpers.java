@@ -1,8 +1,10 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -179,6 +181,9 @@ public class GUIHelpers {
             Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a link outside a screen: %s", url);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.url(url));
+            }
         }
     }
 
@@ -190,6 +195,9 @@ public class GUIHelpers {
             Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a file outside a screen: %s", path);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
+            }
         }
     }
 }
