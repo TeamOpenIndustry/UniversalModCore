@@ -37,9 +37,11 @@ public class GUIHelpers {
     }
 
     /** Draw a full image (tex) at coords with given width/height */
-    public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
+    public static void texturedRect(Identifier tex, int x, int y, int width, int height, float alpha) {
         try (With ctx = RenderContext.apply(
-                new RenderState().texture(Texture.wrap(tex))
+                new RenderState().texture(Texture.wrap(tex)).color(1, 1, 1, alpha).alpha_test(true)
+                .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                .depth_test(false)
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
         }

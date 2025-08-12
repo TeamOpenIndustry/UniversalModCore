@@ -25,5 +25,6 @@ run
 *.skb
 
 *.jar
+*.log
 
 TrackAPI

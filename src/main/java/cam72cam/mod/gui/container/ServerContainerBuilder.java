@@ -4,6 +4,7 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.resource.Identifier;
 import invtweaks.api.container.ChestContainer;
 import invtweaks.api.container.ContainerSection;
 import invtweaks.api.container.ContainerSectionCallback;
@@ -215,5 +216,10 @@ public class ServerContainerBuilder extends net.minecraft.inventory.Container im
         }
 
         return itemstack;
+    }
+
+    @Override
+    public void drawImage(Identifier tex, int x, int y, int width, int height, float alpha) {
+        this.ySize = Math.max(ySize, y + height);
     }
 }

@@ -3,8 +3,12 @@ package cam72cam.mod.gui.container;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import cam72cam.mod.resource.Identifier;
 
-/** Provides a way to spec out a container piece by piece that functions both server and client side for slot synchronization */
+/**
+ * Provides a way to spec out a container piece by piece that functions both
+ * server and client side for slot synchronization
+ */
 public interface IContainerBuilder {
     /** Draw the top bar of a container window */
     int drawTopBar(int x, int y, int slots);
@@ -21,7 +25,10 @@ public interface IContainerBuilder {
     /** Draw the bottom bar of the player inv */
     int drawPlayerInventory(int currY, int horizSlots);
 
-    /** Draw a connector for when the player inv width == container width (TODO internal only?) */
+    /**
+     * Draw a connector for when the player inv width == container width (TODO
+     * internal only?)
+     */
     int drawPlayerMidBar(int x, int y);
 
     /** Draw a transparent version of this stack at these coords */
@@ -44,4 +51,7 @@ public interface IContainerBuilder {
 
     /** Draw a centered and shadowed string at coords */
     void drawCenteredString(String quantityStr, int x, int y);
+
+    /** Draw a custom image */
+    void drawImage(Identifier tex, int x, int y, int width, int height, float alpha);
 }

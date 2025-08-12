@@ -244,4 +244,9 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         super.drawScreen(mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
     }
+
+    @Override
+    public void drawImage(Identifier tex, int x, int y, int width, int height, float alpha) {
+        GUIHelpers.texturedRect(tex, x, y, width, height, alpha); 
+    }
 }

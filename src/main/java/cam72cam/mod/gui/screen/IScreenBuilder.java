@@ -18,9 +18,9 @@ public interface IScreenBuilder {
 
     /**
      * Add an image to the GUI
-     * @see cam72cam.mod.gui.helpers.GUIHelpers#texturedRect(Identifier, int, int, int, int)
+     * @see cam72cam.mod.gui.helpers.GUIHelpers#texturedRect(Identifier, int, int, int, int, alpha)
      */
-    void drawImage(Identifier tex, int x, int y, int width, int height);
+    void drawImage(Identifier tex, int x, int y, int width, int height, float alpha);
 
     /**
      * Add a tank to the GUI

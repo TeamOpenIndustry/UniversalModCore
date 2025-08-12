@@ -63,8 +63,8 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     }
 
     @Override
-    public void drawImage(Identifier tex, int x, int y, int width, int height) {
-        GUIHelpers.texturedRect(tex, this.width / 2 + x, this.height / 4 + y, width, height);
+    public void drawImage(Identifier tex, int x, int y, int width, int height, float alpha) {
+        GUIHelpers.texturedRect(tex, this.width / 2 + x, this.height / 4 + y, width, height, alpha);
     }
 
     @Override
