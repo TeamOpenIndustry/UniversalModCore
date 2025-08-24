@@ -176,6 +176,8 @@ public class World {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
             entity = new Living((EntityLiving) entityIn);
+        } else if (entityIn instanceof EntityItem) {
+            entity = new cam72cam.mod.entity.ItemEntity((EntityItem) entityIn);
         } else {
             entity = new Entity(entityIn);
         }
@@ -622,6 +624,13 @@ public class World {
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
         List<EntityItem> items = internal.getEntitiesWithinAABB(EntityItem.class, BoundingBox.from(bb));
         return items.stream().map((EntityItem::getItem)).map(ItemStack::new).collect(Collectors.toList());
+    }
+
+    /** Get dropped items within the given area in entity form*/
+    public List<cam72cam.mod.entity.ItemEntity> getDroppedItemEntities(IBoundingBox bb) {
+        return internal.getEntitiesWithinAABB(EntityItem.class, BoundingBox.from(bb)).stream()
+                       .map(itemEntity ->  this.getEntity(itemEntity.getEntityId(), cam72cam.mod.entity.ItemEntity.class))
+                       .collect(Collectors.toList());
     }
 
     /** Get a BlockInfo that can be used to overwrite a block in the future.  Does not currently include TE data */
