@@ -194,7 +194,7 @@ public abstract class BlockType {
         @Override
         public RenderShape getRenderShape(BlockState state) {
             // TESR Renderer TODO OPTIONAL!@!!!!
-            return RenderShape.MODEL;
+            return RenderShape.ENTITYBLOCK_ANIMATED;
         }
 
         protected World getWorldOrNull(BlockGetter source, BlockPos pos) {
