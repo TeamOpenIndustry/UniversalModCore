@@ -61,7 +61,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
      * We try to detect entities in this edge case and render them here to prevent the issue.
      */
     private static void renderLargeEntities(RenderState state, float partialTicks) {
-        if (GlobalRender.isTransparentPass()) {
+        if (GlobalRender.isTransparentPass() || (!MinecraftClient.isReady())) {
             return;
         }
 

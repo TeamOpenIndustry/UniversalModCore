@@ -247,6 +247,9 @@ public class ItemRender {
             if (stack == null) {
                 return EMPTY;
             }
+            if(!MinecraftClient.isReady()){
+                return EMPTY;
+            }
 
             if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
                 iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack));

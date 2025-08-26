@@ -85,7 +85,7 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+            if (MinecraftClient.isReady() && event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
                 func.render(new RenderState(), event.getPartialTicks());
             }
         });
@@ -94,7 +94,7 @@ public class GlobalRender {
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
         ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
-            if (MinecraftClient.getBlockMouseOver() != null) {
+            if (MinecraftClient.getBlockMouseOver() != null && MinecraftClient.isReady()) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);

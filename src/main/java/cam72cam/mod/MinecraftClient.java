@@ -13,7 +13,8 @@ import net.minecraft.util.math.RayTraceResult;
 public class MinecraftClient {
     /** Minecraft is loaded and has a loaded world */
     public static boolean isReady() {
-        return Minecraft.getMinecraft().player != null;
+        EntityPlayerSP internal = Minecraft.getMinecraft().player;
+        return internal != null && World.get(internal.world) != null && World.get(internal.world).getEntity(internal) != null;
     }
 
     private static Player playerCache;
@@ -23,7 +24,7 @@ public class MinecraftClient {
         if (internal == null) {
             throw new RuntimeException("Called to get the player before minecraft has actually started!");
         }
-        if (playerCache == null || internal != playerCache.internal) {
+        if ((playerCache == null || internal != playerCache.internal) && World.get(internal.world) != null && World.get(internal.world).getEntity(internal) != null) {
             playerCache = World.get(internal.world).getEntity(internal).asPlayer();
         }
         return playerCache;
