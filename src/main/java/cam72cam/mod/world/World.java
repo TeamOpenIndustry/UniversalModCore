@@ -20,6 +20,8 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -82,6 +84,14 @@ public class World {
 
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
+        //HACK for fake world created by other mods
+        if(world instanceof WorldClient
+                && (((WorldClient) world).connection == null
+                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
+            //Meaning it is a "fake world" created by other mods for rendering
+            return;
+        }
+
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
