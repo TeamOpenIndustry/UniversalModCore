@@ -16,7 +16,7 @@ public class TextUtil {
         return I18n.translateToLocalFormatted(name, objects);
     }
 
-    public Locale getClientLocal(){
+    public static Locale getClientLocal(){
         return MinecraftForgeClient.getLocale();
     }
 }
