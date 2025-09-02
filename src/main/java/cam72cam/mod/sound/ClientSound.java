@@ -142,6 +142,6 @@ class ClientSound extends PositionedSound implements ITickableSound, ISound {
 
     @Override
     public boolean isDonePlaying() {
-        return position != null && MinecraftClient.getPlayer().getPosition().distanceTo(position) > attenuationDistance;
+        return position != null && MinecraftClient.isReady() && MinecraftClient.getPlayer().getPosition().distanceTo(position) > attenuationDistance;
     }
 }
