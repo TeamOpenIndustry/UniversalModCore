@@ -46,8 +46,8 @@ minecraft {
     runDir = "run"
 
     coreMod = 'cam72cam.mod.UMCMixinLoadingPlugin'
-    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
-    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
+//    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
+//    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
     // stable_#            stables are built at the discretion of the MCP team.
@@ -58,7 +58,7 @@ minecraft {
 }
 
 repositories {
-    maven { url = 'https://repo.spongepowered.org/maven' }
+    maven { url = "https://repo.spongepowered.org/maven" }
 }
 
 configurations {
@@ -89,12 +89,12 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 	shade "curse.maven:invtweaks-223094:2482482"
 
-    embed 'org.spongepowered:mixin:0.8'
-    annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
-    annotationProcessor 'com.google.guava:guava:32.1.2-jre'
-    annotationProcessor 'com.google.code.gson:gson:2.8.9'
-    annotationProcessor 'org.spongepowered:mixin:0.8'
-    testCompile('junit:junit:4.13')
+    provided('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
+    testCompile('junit:junit:4.13.1')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
@@ -104,26 +104,22 @@ mixin {
 }
 
 jar {
+    from configurations.provided.asFileTree.files.collect {
+        zipTree(it)
+    }
     configurations.shade.each { dep ->
         from(project.zipTree(dep)){
             exclude 'META-INF', 'META-INF/**'
         }
     }
 
-    from(configurations.embed.collect {
-        it.isDirectory() ? it : zipTree(it)
-    }) {
-        exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF'
-    }
-
     manifest {
         attributes (
                 'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
-                'FMLCorePlugin': 'cam72cam.mod.UMCMixinLoadingPlugin',
-                'ForceLoadAsMod': true,
+                'TweakOrder': '0',
                 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                'MixinConfigs': 'mixins.universalmodcore.json'
+                "MixinConfigs": "mixins.universalmodcore.json"
         )
     }
 }
