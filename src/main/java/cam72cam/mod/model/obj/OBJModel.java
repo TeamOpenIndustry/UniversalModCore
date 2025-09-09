@@ -179,6 +179,85 @@ public class OBJModel {
         return groups.keySet();
     }
 
+    public List<OBJFace> getFaces(Collection<OBJGroup> groups) {
+        List<OBJFace> faces = new ArrayList<>();
+        for (OBJGroup group : groups) {
+            faces.addAll(getFace(group));
+        }
+        return faces;
+    }
+
+    public List<OBJFace> getFace(OBJGroup group) {
+        VertexBuffer buffer = vbo.buffer.get();
+        int stride = buffer.stride;
+        int vertsPerFace = buffer.vertsPerFace;
+        int vertexStart = group.faceStart * vertsPerFace;
+        int vertexStop = (group.faceStop + 1) * vertsPerFace;
+
+        float[] data = buffer.data;
+
+        List<OBJFace> faces = new ArrayList<>();
+
+        for (int vIdx = vertexStart; vIdx < vertexStop; vIdx += vertsPerFace) {
+            OBJFace face = new OBJFace();
+
+            for (int i = 0; i < vertsPerFace; i++) {
+                int baseIndex = (vIdx + i) * stride;
+
+                float vx = data[baseIndex + buffer.vertexOffset + 0];
+                float vy = data[baseIndex + buffer.vertexOffset + 1];
+                float vz = data[baseIndex + buffer.vertexOffset + 2];
+
+                float u = data[baseIndex + buffer.textureOffset + 0];
+                float v = data[baseIndex + buffer.textureOffset + 1];
+
+                Vec3d vertex = new Vec3d(vx, vy, vz);
+                face.vertices.add(vertex);
+                Vec2f uv = new Vec2f(u, v);
+                face.uv.add(uv);
+            }
+
+            if (buffer.hasNormals) {
+                int baseIndex = vIdx * stride;
+                float nx = data[baseIndex + buffer.normalOffset + 0];
+                float ny = data[baseIndex + buffer.normalOffset + 1];
+                float nz = data[baseIndex + buffer.normalOffset + 2];
+
+                face.normal = new Vec3d(nx, ny, nz);
+            } else {
+                Vec3d v0 = face.vertices.get(0);
+                Vec3d v1 = face.vertices.get(1);
+                Vec3d v2 = face.vertices.get(2);
+                face.normal = v1.subtract(v0).crossProduct(v2.subtract(v0)).normalize();
+            }
+            faces.add(face);
+        }
+
+        return faces;
+    }
+
+    /**
+     * This method returns face data as a Primitive array. <br>
+     * Use this if you need a quick efficient lookup of the faces from a OBJGroup. <br>
+     * The {@code float[]} is packed as followed: (vx, vy, vz, u, v, r, g, b, a, nx, ny, nz)
+     * @param group The group for the face lookup
+     * @return {@code Pair<distance, faceData>}
+     */
+    public Pair<Integer, float[]> getFacePrimitive(OBJGroup group) {
+        VertexBuffer buffer = vbo.buffer.get();
+        int stride = buffer.stride;
+        int vertsPerFace = buffer.vertsPerFace;
+
+        int vertexStart = group.faceStart * vertsPerFace;
+        int vertexStop = (group.faceStop + 1) * vertsPerFace;
+
+        int floatsNeeded = (vertexStop - vertexStart) * stride;
+        float[] slice = new float[floatsNeeded];
+        System.arraycopy(buffer.data, vertexStart * stride, slice, 0, floatsNeeded);
+
+        return Pair.of(stride, slice);
+    }
+
     public Vec3d minOfGroup(Iterable<String> groupNames) {
         Vec3d min = null;
         for (String group : groupNames) {
