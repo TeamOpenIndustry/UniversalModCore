@@ -63,6 +63,12 @@ public interface IBoundingBox {
     /** Does the AABB represented by these coords intersect this BB */
     boolean intersects(Vec3d min, Vec3d max);
 
+    IBoundingBox expandToFit(IBoundingBox other);
+
+    Vec3d getCenter();
+
+    boolean intersectsSegment(Vec3d start, Vec3d end);
+
     /** Is this vector within bounds */
     boolean contains(Vec3d vec);
 

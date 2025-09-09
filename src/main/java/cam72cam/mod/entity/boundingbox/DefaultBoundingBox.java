@@ -70,6 +70,57 @@ public class DefaultBoundingBox implements IBoundingBox {
     }
 
     @Override
+    public IBoundingBox expandToFit(IBoundingBox other) {
+        Vec3d min = min();
+        Vec3d max = max();
+
+        min = min != null ? min.min(other.min()) : other.min();
+        max = max != null ? max.max(other.max()) : other.max();
+
+        return IBoundingBox.from(min, max);
+    }
+
+    @Override
+    public Vec3d getCenter() {
+        return new Vec3d(internal.getCenter());
+    }
+
+    @Override
+    public boolean intersectsSegment(Vec3d startVec, Vec3d endVec) {
+        double tmin = 0.0;
+        double tmax = 1.0;
+
+        for (int i = 0; i < 2; i++) {
+            double start = i == 0 ? startVec.x : startVec.z;
+            double end = i == 0 ? endVec.x : endVec.z;
+            double boxMin = i == 0 ? internal.minX : internal.minZ;
+            double boxMax = i == 0 ? internal.maxX : internal.maxZ;
+
+            if (endVec.y < internal.minY || endVec.y > internal.maxY) return false;
+
+            double direction = end - start;
+            if (Math.abs(direction) < 1e-8) {
+                if (start < boxMin || start > boxMax) return false;
+            } else {
+                double t1 = (boxMin - start) / direction;
+                double t2 = (boxMax - start) / direction;
+
+                if (t1 > t2) {
+                    double temp = t1;
+                    t1 = t2;
+                    t2 = temp;
+                }
+
+                tmin = Math.max(tmin, t1);
+                tmax = Math.min(tmax, t2);
+
+                if (tmin > tmax) return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public boolean contains(Vec3d vec) {
         return internal.contains(vec.internal());
     }
