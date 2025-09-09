@@ -76,6 +76,8 @@ dependencies {
 
     testCompile('junit:junit:4.13')
 
+    runtime "net.minecrell:terminalconsoleappender:1.3.0"
+
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 }
 
