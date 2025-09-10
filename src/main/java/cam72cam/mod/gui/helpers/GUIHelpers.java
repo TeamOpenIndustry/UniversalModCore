@@ -27,6 +27,7 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
+        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
@@ -35,10 +36,12 @@ public class GUIHelpers {
         )) {
             AbstractGui.fill(new MatrixStack(), x, y, x + width, y + height, color);
         }
+        RenderContext.clearStage();
     }
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
+        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
         try (With ctx = RenderContext.apply(
                 new RenderState().texture(Texture.wrap(tex))
         )) {
@@ -47,6 +50,7 @@ public class GUIHelpers {
             // X Y, W H, U V, UW VH, TW TH
             AbstractGui.blit(new MatrixStack(), x, y, width, height, 0, 0, 1, 1, 1, 1);
         }
+        RenderContext.clearStage();
     }
 
     /** Draw fluid block at coords */
@@ -57,6 +61,7 @@ public class GUIHelpers {
 
     /** Draw a texture sprite at coords, tinted with col  */
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
+        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
         double zLevel = 0;
 
         try (With ctx = RenderContext.apply(
@@ -88,6 +93,7 @@ public class GUIHelpers {
             }
             tessellator.end();
         }
+        RenderContext.clearStage();
     }
 
     /** Draw the fluid in a tank with a black background at % full */
@@ -113,11 +119,13 @@ public class GUIHelpers {
         drawCenteredString(text, x, y, color, new Matrix4());
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().font.draw(new MatrixStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         }
+        RenderContext.clearStage();
     }
 
     /** Screen Width in pixels (std coords) */
@@ -136,6 +144,7 @@ public class GUIHelpers {
     }
 
     public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
+        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
         RenderState state = new RenderState()
                 .color(1, 1, 1, 1)
                 .alpha_test(false)
@@ -145,5 +154,6 @@ public class GUIHelpers {
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
         }
+        RenderContext.clearStage();
     }
 }

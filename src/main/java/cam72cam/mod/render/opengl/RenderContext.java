@@ -1,5 +1,6 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.render.OptiFine;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.GLAllocation;
@@ -77,8 +78,16 @@ public class RenderContext {
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                 });
             } else {
-                float oldX = GlStateManager.lastBrightnessX;
-                float oldY = GlStateManager.lastBrightnessY;
+                float oldX;
+                float oldY;
+                if (stages.peek() == RenderStage.ENTITY && !OptiFine.isLoaded()) {
+                    //Minecraft's lastBrightness is broken...
+                    oldX = defaultLights[0];
+                    oldY = defaultLights[1];
+                } else {
+                    oldX = GlStateManager.lastBrightnessX;
+                    oldY = GlStateManager.lastBrightnessY;
+                }
                 GlStateManager._glMultiTexCoord2f(lightmapTextureID, block * 240, sky * 240);
                 restore.add(() -> GlStateManager._glMultiTexCoord2f(lightmapTextureID, oldX, oldY));
             }
@@ -226,5 +235,32 @@ public class RenderContext {
         } else {
             GL11.glDisable(opt);
         }
+    }
+
+    //Internal
+    private static final Deque<RenderStage> stages = new ArrayDeque<>();
+    public static int[] defaultLights;
+
+    public static void setRenderStage(RenderStage stage) {
+        stages.push(stage);
+    }
+
+    public static void setDefaultLights(int j, int k) {
+        defaultLights = new int[]{j, k};
+    }
+
+    public static void clearStage() {
+        RenderStage stage = stages.pop();
+        if(stage == RenderStage.ENTITY) {
+            defaultLights = null;
+        }
+    }
+
+    public enum RenderStage {
+        BLOCK,
+        ENTITY,
+        ITEM,
+        GUI,
+        OVERLAY
     }
 }

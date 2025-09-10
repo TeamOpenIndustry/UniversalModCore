@@ -7,6 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
@@ -282,7 +283,9 @@ public class ItemRender {
         return () -> new ItemStackTileEntityRenderer() {
             @Override
             public void renderByItem(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
+                RenderContext.setRenderStage(RenderContext.RenderStage.ITEM);
                 doRender.accept(matrixStack, combinedLight);
+                RenderContext.clearStage();
             }
         };
     }

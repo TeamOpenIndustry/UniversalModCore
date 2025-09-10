@@ -6,6 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -85,20 +86,25 @@ public class BlockRender {
             ClientRegistry.bindTileEntityRenderer(TileEntity.getType(type), (ted) -> new TileEntityRenderer<TileEntity>(ted) {
                 @Override
                 public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int combinedLightIn, int var6) {
+                    RenderContext.setRenderStage(RenderContext.RenderStage.BLOCK);
                     if (ModCore.isInReload()) {
+                        RenderContext.clearStage();
                         return;
                     }
 
                     BlockEntity instance = te.instance();
                     if (instance == null) {
+                        RenderContext.clearStage();
                         return;
                     }
                     StandardModel model = render.apply(instance);
                     if (model == null) {
+                        RenderContext.clearStage();
                         return;
                     }
 
                     if (!model.hasCustom()) {
+                        RenderContext.clearStage();
                         return;
                     }
 
@@ -113,6 +119,7 @@ public class BlockRender {
                     RenderHelper.turnOff();
 
                     RenderType.solid().clearRenderState();
+                    RenderContext.clearStage();
                 }
 
                 public boolean isGlobalRenderer(TileEntity te) {
