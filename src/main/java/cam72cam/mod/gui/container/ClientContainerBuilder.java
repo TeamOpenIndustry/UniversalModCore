@@ -18,7 +18,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import org.lwjgl.opengl.GL11;
 
 import java.util.function.Supplier;
 

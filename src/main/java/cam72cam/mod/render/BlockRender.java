@@ -9,7 +9,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import cam72cam.mod.render.opengl.RenderState;
@@ -31,7 +30,6 @@ import net.minecraft.world.biome.BiomeColors;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
 import java.util.*;
