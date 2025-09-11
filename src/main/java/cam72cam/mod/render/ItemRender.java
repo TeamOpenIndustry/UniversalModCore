@@ -15,7 +15,6 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -46,7 +45,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -283,9 +281,9 @@ public class ItemRender {
         return () -> new ItemStackTileEntityRenderer() {
             @Override
             public void renderByItem(net.minecraft.item.ItemStack stack, TransformType p_239207_2_, MatrixStack matrixStack, IRenderTypeBuffer buffer, int combinedLight, int combinedOverlay) {
-                RenderContext.setRenderStage(RenderContext.RenderStage.ITEM);
+                RenderContext.pushStage(RenderContext.RenderStage.ITEM);
                 doRender.accept(matrixStack, combinedLight);
-                RenderContext.clearStage();
+                RenderContext.popStage();
             }
         };
     }

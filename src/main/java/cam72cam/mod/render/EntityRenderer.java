@@ -139,7 +139,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
     @Override
     public void render(T stock, float entityYaw, float partialTicks, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int i) {
-        RenderContext.setRenderStage(RenderContext.RenderStage.ENTITY);
+        RenderContext.pushStage(RenderContext.RenderStage.ENTITY);
         Entity self = stock.getSelf();
 
         RenderType.cutout().setupRenderState();
@@ -162,7 +162,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
         RenderHelper.turnOff();
         RenderType.cutout().clearRenderState();
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     @Nullable

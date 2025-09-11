@@ -80,7 +80,7 @@ public class RenderContext {
             } else {
                 float oldX;
                 float oldY;
-                if (stages.peek() == RenderStage.ENTITY && !OptiFine.isLoaded()) {
+                if (getCurrentStage() == RenderStage.ENTITY && !OptiFine.isLoaded()) {
                     //Minecraft's lastBrightness is broken...
                     oldX = defaultLights[0];
                     oldY = defaultLights[1];
@@ -241,18 +241,25 @@ public class RenderContext {
     private static final Deque<RenderStage> stages = new ArrayDeque<>();
     public static int[] defaultLights;
 
-    public static void setRenderStage(RenderStage stage) {
+    public static void pushStage(RenderStage stage) {
         stages.push(stage);
     }
 
-    public static void setDefaultLights(int j, int k) {
-        defaultLights = new int[]{j, k};
-    }
-
-    public static void clearStage() {
+    public static void popStage() {
         RenderStage stage = stages.pop();
         if(stage == RenderStage.ENTITY) {
             defaultLights = null;
+        }
+    }
+
+    public static RenderStage getCurrentStage() {
+        return stages.isEmpty() ? RenderStage.NONE : stages.peek();
+    }
+
+    //In ENTITY phase
+    public static void setDefaultLights(int j, int k) {
+        if (getCurrentStage() == RenderStage.ENTITY) {
+            defaultLights = new int[]{j, k};
         }
     }
 
@@ -261,6 +268,7 @@ public class RenderContext {
         ENTITY,
         ITEM,
         GUI,
-        OVERLAY
+        OVERLAY,
+        NONE
     }
 }

@@ -84,25 +84,25 @@ public class BlockRender {
             ClientRegistry.bindTileEntityRenderer(TileEntity.getType(type), (ted) -> new TileEntityRenderer<TileEntity>(ted) {
                 @Override
                 public void render(TileEntity te, float partialTicks, MatrixStack var3, IRenderTypeBuffer var4, int combinedLightIn, int var6) {
-                    RenderContext.setRenderStage(RenderContext.RenderStage.BLOCK);
+                    RenderContext.pushStage(RenderContext.RenderStage.BLOCK);
                     if (ModCore.isInReload()) {
-                        RenderContext.clearStage();
+                        RenderContext.popStage();
                         return;
                     }
 
                     BlockEntity instance = te.instance();
                     if (instance == null) {
-                        RenderContext.clearStage();
+                        RenderContext.popStage();
                         return;
                     }
                     StandardModel model = render.apply(instance);
                     if (model == null) {
-                        RenderContext.clearStage();
+                        RenderContext.popStage();
                         return;
                     }
 
                     if (!model.hasCustom()) {
-                        RenderContext.clearStage();
+                        RenderContext.popStage();
                         return;
                     }
 
@@ -117,7 +117,7 @@ public class BlockRender {
                     RenderHelper.turnOff();
 
                     RenderType.solid().clearRenderState();
-                    RenderContext.clearStage();
+                    RenderContext.popStage();
                 }
 
                 public boolean isGlobalRenderer(TileEntity te) {

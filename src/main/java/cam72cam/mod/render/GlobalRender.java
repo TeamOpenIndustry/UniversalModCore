@@ -104,9 +104,9 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
+                RenderContext.pushStage(RenderContext.RenderStage.GUI);
                 func.render(new RenderState(), event.getPartialTicks());
-                RenderContext.clearStage();
+                RenderContext.popStage();
             }
         });
     }
@@ -117,9 +117,9 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    RenderContext.setRenderStage(RenderContext.RenderStage.OVERLAY);
+                    RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getMatrix()), event.getPartialTicks());
-                    RenderContext.clearStage();
+                    RenderContext.popStage();
                 }
             }
         });
@@ -170,11 +170,11 @@ public class GlobalRender {
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
-        RenderContext.setRenderStage(RenderContext.RenderStage.OVERLAY);
+        RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
         try (With ctx = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
         }
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     /** Draws centered text (does not rotate towards player) */
@@ -184,11 +184,11 @@ public class GlobalRender {
 
         state.color(1,1,1,1).alpha_test(true);
 
-        RenderContext.setRenderStage(RenderContext.RenderStage.OVERLAY);
+        RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, color);
         }
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     /** Draws left-oriented text (does not rotate towards player) */
@@ -198,11 +198,11 @@ public class GlobalRender {
 
         state.color(1,1,1,1).alpha_test(true);
 
-        RenderContext.setRenderStage(RenderContext.RenderStage.OVERLAY);
+        RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, 0, 0, color);
         }
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     /** Draws right-oriented text (does not rotate towards player) */
@@ -212,11 +212,11 @@ public class GlobalRender {
 
         state.color(1,1,1,1).alpha_test(true);
 
-        RenderContext.setRenderStage(RenderContext.RenderStage.OVERLAY);
+        RenderContext.pushStage(RenderContext.RenderStage.OVERLAY);
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str), 0, color);
         }
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     /**

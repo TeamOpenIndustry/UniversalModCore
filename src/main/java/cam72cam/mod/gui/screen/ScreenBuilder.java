@@ -1,6 +1,5 @@
 package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -11,7 +10,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.text.StringTextComponent;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -107,7 +105,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks) {
-        RenderContext.setRenderStage(RenderContext.RenderStage.GUI);
+        RenderContext.pushStage(RenderContext.RenderStage.GUI);
         this.stack = stack;
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
@@ -117,7 +115,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
         // draw buttons
         super.render(stack, mouseX, mouseY, partialTicks);
-        RenderContext.clearStage();
+        RenderContext.popStage();
     }
 
     @Override
