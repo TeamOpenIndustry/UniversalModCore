@@ -18,13 +18,7 @@ import java.util.stream.Collectors;
 /** OreDict / Tag abstraction.  Use for item equivalence */
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy(Tags.Items.RODS_WOODEN, "stickWood").add(Items.STICK);
-    public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood")
-            .add(Blocks.ACACIA_PLANKS)
-            .add(Blocks.BIRCH_PLANKS)
-            .add(Blocks.DARK_OAK_PLANKS)
-            .add(Blocks.JUNGLE_PLANKS)
-            .add(Blocks.OAK_PLANKS)
-            .add(Blocks.SPRUCE_PLANKS);
+    public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood").add(Blocks.OAK_PLANKS);
     public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone").add(Items.REDSTONE);
     public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW);
     public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW_BLOCK);
@@ -46,90 +40,19 @@ public class Fuzzy {
     public static final Fuzzy GRAVEL_BLOCK = new Fuzzy(Tags.Items.GRAVEL, "gravel").add(Blocks.GRAVEL);
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.BRICKS);
     public static final Fuzzy COBBLESTONE = new Fuzzy(Tags.Items.COBBLESTONE, "cobblestone").add(Blocks.COBBLESTONE);
-    public static final Fuzzy CONCRETE = new Fuzzy("concrete")
-            .add(Blocks.WHITE_CONCRETE)
-            .add(Blocks.ORANGE_CONCRETE)
-            .add(Blocks.MAGENTA_CONCRETE)
-            .add(Blocks.LIGHT_BLUE_CONCRETE)
-            .add(Blocks.YELLOW_CONCRETE)
-            .add(Blocks.LIME_CONCRETE)
-            .add(Blocks.PINK_CONCRETE)
-            .add(Blocks.GRAY_CONCRETE)
-            .add(Blocks.LIGHT_GRAY_CONCRETE)
-            .add(Blocks.CYAN_CONCRETE)
-            .add(Blocks.PURPLE_CONCRETE)
-            .add(Blocks.BLUE_CONCRETE)
-            .add(Blocks.BROWN_CONCRETE)
-            .add(Blocks.GREEN_CONCRETE)
-            .add(Blocks.RED_CONCRETE)
-            .add(Blocks.BLACK_CONCRETE);
+    public static final Fuzzy CONCRETE = new Fuzzy("concrete").add(Blocks.WHITE_CONCRETE);
 
     public static final Fuzzy DIRT = new Fuzzy( "dirt").add(Items.DIRT);
-    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay")
-            .add(Blocks.WHITE_TERRACOTTA)
-            .add(Blocks.ORANGE_TERRACOTTA)
-            .add(Blocks.MAGENTA_TERRACOTTA)
-            .add(Blocks.LIGHT_BLUE_TERRACOTTA)
-            .add(Blocks.YELLOW_TERRACOTTA)
-            .add(Blocks.LIME_TERRACOTTA)
-            .add(Blocks.PINK_TERRACOTTA)
-            .add(Blocks.GRAY_TERRACOTTA)
-            .add(Blocks.LIGHT_GRAY_TERRACOTTA)
-            .add(Blocks.CYAN_TERRACOTTA)
-            .add(Blocks.PURPLE_TERRACOTTA)
-            .add(Blocks.BLUE_TERRACOTTA)
-            .add(Blocks.BROWN_TERRACOTTA)
-            .add(Blocks.GREEN_TERRACOTTA)
-            .add(Blocks.RED_TERRACOTTA)
-            .add(Blocks.BLACK_TERRACOTTA);
+    public static final Fuzzy HARDENED_CLAY = new Fuzzy("hardened_clay").add(Blocks.WHITE_TERRACOTTA);
 
-        public static final Fuzzy LOG_WOOD = new Fuzzy(ItemTags.LOGS, "logWood")
-                .add(Blocks.ACACIA_LOG)
-                .add(Blocks.BIRCH_LOG)
-                .add(Blocks.DARK_OAK_LOG)
-                .add(Blocks.JUNGLE_LOG)
-                .add(Blocks.OAK_LOG)
-                .add(Blocks.SPRUCE_LOG);
+        public static final Fuzzy LOG_WOOD = new Fuzzy(ItemTags.LOGS, "logWood").add(Blocks.OAK_LOG);
         public static final Fuzzy PAPER = new Fuzzy("paper").add(Items.PAPER);
         public static final Fuzzy BOOK = new Fuzzy("book").add(Items.BOOK);
-        public static final Fuzzy WOOL_BLOCK = new Fuzzy(ItemTags.WOOL, "wool")
-                .add(Blocks.WHITE_WOOL)
-                .add(Blocks.ORANGE_WOOL)
-                .add(Blocks.MAGENTA_WOOL)
-                .add(Blocks.LIGHT_BLUE_WOOL)
-                .add(Blocks.YELLOW_WOOL)
-                .add(Blocks.LIME_WOOL)
-                .add(Blocks.PINK_WOOL)
-                .add(Blocks.GRAY_WOOL)
-                .add(Blocks.LIGHT_GRAY_WOOL)
-                .add(Blocks.CYAN_WOOL)
-                .add(Blocks.PURPLE_WOOL)
-                .add(Blocks.BLUE_WOOL)
-                .add(Blocks.BROWN_WOOL)
-                .add(Blocks.GREEN_WOOL)
-                .add(Blocks.RED_WOOL)
-                .add(Blocks.BLACK_WOOL);
+        public static final Fuzzy WOOL_BLOCK = new Fuzzy(ItemTags.WOOL, "wool").add(Blocks.WHITE_WOOL);
         public static final Fuzzy BUCKET = new Fuzzy("bucket").add(Items.BUCKET);
         public static final Fuzzy EMERALD = new Fuzzy(Tags.Items.GEMS_EMERALD, "gemEmerald").add(Items.EMERALD);
         public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
-        public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass")
-                .add(Blocks.GLASS_PANE)
-                .add(Blocks.WHITE_STAINED_GLASS_PANE)
-                .add(Blocks.ORANGE_STAINED_GLASS_PANE)
-                .add(Blocks.MAGENTA_STAINED_GLASS_PANE)
-                .add(Blocks.LIGHT_BLUE_STAINED_GLASS_PANE)
-                .add(Blocks.YELLOW_STAINED_GLASS_PANE)
-                .add(Blocks.LIME_STAINED_GLASS_PANE)
-                .add(Blocks.PINK_STAINED_GLASS_PANE)
-                .add(Blocks.GRAY_STAINED_GLASS_PANE)
-                .add(Blocks.LIGHT_GRAY_STAINED_GLASS_PANE)
-                .add(Blocks.CYAN_STAINED_GLASS_PANE)
-                .add(Blocks.PURPLE_STAINED_GLASS_PANE)
-                .add(Blocks.BLUE_STAINED_GLASS_PANE)
-                .add(Blocks.BROWN_STAINED_GLASS_PANE)
-                .add(Blocks.GREEN_STAINED_GLASS_PANE)
-                .add(Blocks.RED_STAINED_GLASS_PANE)
-                .add(Blocks.BLACK_STAINED_GLASS_PANE);
+        public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass").add(Blocks.GLASS_PANE);
         public static final Fuzzy NAME_TAG = new Fuzzy("nameTag").add(Items.NAME_TAG);
 
     static {
@@ -198,7 +121,7 @@ public class Fuzzy {
     /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
-        return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
+        return stacks.isEmpty() ? ItemStack.EMPTY : stacks.get(0);
     }
 
     /** Use to register an itemstack */
