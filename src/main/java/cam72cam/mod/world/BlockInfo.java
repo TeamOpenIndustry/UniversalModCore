@@ -1,5 +1,6 @@
 package cam72cam.mod.world;
 
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
@@ -14,6 +15,10 @@ public class BlockInfo {
 
     BlockInfo(IBlockState state) {
         this.internal = state;
+    }
+
+    public Identifier getBlockRegistryName() {
+        return new Identifier(internal.getBlock().getRegistryName());
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<BlockInfo> {
