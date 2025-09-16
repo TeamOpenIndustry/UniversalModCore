@@ -325,29 +325,56 @@ public class ModCore {
                     if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
                         Map<String, String> translationMap = new HashMap<>();
                         for (IResource resource : Minecraft.getInstance().getResourceManager().getResources(lang)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    //Remove comment
+                                    line = line.trim();
+                                    if(line.isEmpty()) continue;
+
+                                    int comment = line.indexOf("#");
+                                    if(comment == 0) continue;
+                                    if(comment != -1) line = line.substring(0, comment);
+
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        translationMap.put(splits[0], splits[1]);
+                                        String value = unicodeEncode(splits[1].trim());
+                                        System.out.println(line);
+                                        System.out.println(value);
+                                        translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
                             }
                         }
 
-                        List<String> translations = new ArrayList<>();
+                        Set<String> translations = new HashSet<>();
                         translationMap.forEach((key, value) -> {
-                            translations.add(String.format("\"%s\": \"%s\"", key, value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            if (!key.isEmpty()) {
+                                translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            }
                         });
                         String output = "{" + String.join(",", translations) + "}";
                         return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
                     }
                 }
                 return null;
+            }
+
+            //Turn Chinese/Japanese/Korean character into Unicode form
+            public static String unicodeEncode(String string) {
+                char[] utfBytes = string.toCharArray();
+                String unicodeBytes = "";
+                for (int i = 0; i < utfBytes.length; i++) {
+                    String hexB = Integer.toHexString(utfBytes[i]);
+                    if (hexB.length() <= 2) {
+                        hexB = "00" + hexB;
+                    }
+                    unicodeBytes = unicodeBytes + "\\u" + hexB;
+                }
+                return unicodeBytes;
             }
 
             @Override
