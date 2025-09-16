@@ -338,9 +338,6 @@ public class ModCore {
 
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        String value = unicodeEncode(splits[1].trim());
-                                        System.out.println(line);
-                                        System.out.println(value);
                                         translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
@@ -361,20 +358,6 @@ public class ModCore {
                     }
                 }
                 return null;
-            }
-
-            //Turn Chinese/Japanese/Korean character into Unicode form
-            public static String unicodeEncode(String string) {
-                char[] utfBytes = string.toCharArray();
-                String unicodeBytes = "";
-                for (int i = 0; i < utfBytes.length; i++) {
-                    String hexB = Integer.toHexString(utfBytes[i]);
-                    if (hexB.length() <= 2) {
-                        hexB = "00" + hexB;
-                    }
-                    unicodeBytes = unicodeBytes + "\\u" + hexB;
-                }
-                return unicodeBytes;
             }
 
             @Override
