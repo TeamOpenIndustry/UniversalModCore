@@ -1,0 +1,4 @@
+bind single vao
+bind list of vaos
+state restore after vao bind
+BGRA size support

@@ -2,6 +2,7 @@ package rendertrack.vertex;
 
 import cam72cam.mod.ModCore;
 import com.google.common.primitives.UnsignedInteger;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL32;
 
 import java.util.List;
@@ -13,12 +14,13 @@ import java.util.List;
  */
 public class VAO {
     /** I think this is unsigned, but I'm not sure how lwjgl implements it*/
-    private int vao; //make these final?
+    private final int vao; //make these final?
     private VBO vbo;
     private EBO ebo;
     public VertexFormat format;
     private boolean inited = false;
-
+    //TODO implement VAO constructors
+    //TODO investigate taking int references instead of always creating the vao here
     /**
      * Create an empty VAO with nothing bound to it.<br>
      * Remember to attach a VBO before initing.
@@ -26,22 +28,25 @@ public class VAO {
     public VAO() {
         vao = GL32.glGenVertexArrays();
     }
-
+    //TODO descriptions might be wrong, I don't know when buffer transfers happen
     /**
-     * Create a new VAO with this VBO attached, but not yet bound in VRAM.
+     * Create a new VAO with this VBO attached, but not yet bound in GL server RAM.
      * @param vbo The vertex buffer for this array object.
      */
     public VAO(VBO vbo) {
-
+        vao = GL32.glGenVertexArrays();
+        this.vbo = vbo;
     }
 
     /**
-     * Create a new VAO with this VBO and EBO attached, but not yet bound in VRAM.
+     * Create a new VAO with this VBO and EBO attached, but not yet bound in GL server RAM.
      * @param vbo The vertex buffer for this array object.
      * @param ebo The element buffer for this array object.
      */
     public VAO(VBO vbo, EBO ebo) {
-
+        vao = GL32.glGenVertexArrays();
+        this.vbo = vbo;
+        this.ebo = ebo;
     }
 
     /**
@@ -49,26 +54,32 @@ public class VAO {
      * @param format The vertex format for this array object.
      */
     public VAO(VertexFormat format) {
-
+        vao = GL32.glGenVertexArrays();
+        this.format = format;
     }
 
     /**
-     * Create a new VAO with this VBO and vertex format attached, but not yet bound in VRAM.
+     * Create a new VAO with this VBO and vertex format attached, but not yet bound in GL server RAM.
      * @param vbo The vertex buffer for this array object.
      * @param format The vertex format for this array object.
      */
     public VAO(VBO vbo, VertexFormat format) {
-
+        vao = GL32.glGenVertexArrays();
+        this.format = format;
+        this.vbo = vbo;
     }
 
     /**
-     * Create a new VAO with this VBO, EBO, and vertex format attached, but not yet bound in VRAM.
+     * Create a new VAO with this VBO, EBO, and vertex format attached, but not yet bound in GL server RAM.
      * @param vbo The vertex buffer for this array object.
      * @param ebo The element buffer for this array object.
      * @param format The vertex format for this array object.
      */
     public VAO(VBO vbo, EBO ebo, VertexFormat format) {
-
+        vao = GL32.glGenVertexArrays();
+        this.format = format;
+        this.vbo = vbo;
+        this.ebo = ebo;
     }
 
     /**
@@ -80,6 +91,36 @@ public class VAO {
         if(inited) {
             return;
         }
+        //TODO save current state, there will be more buffers to restore when we actually implement them
+        //save current state
+        /*bound buffers are global and not tracked by the VAO, the VAO only stores the data from them needed for rendering
+        binding buffers other than the VAO is mainly just for writing pointer references to those buffers to the VAO
+        binding a different VAO will allow you to render the data attached to that VAO previously but won't rebind
+        the buffers that were bound when that VAO was last bound*/
+        int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);
+        int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER);
+        //EBO binding is attached to VAO, when you change the bound VAO it changes the EBO for you
+        GL32.glBindVertexArray(vao);
+        if(vbo != null){
+            GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo.getVbo());
+            vbo.init();//TODO investigate threading
+            vbo.freeSystemRAM();//TODO investigate system RAM management
+        } else {
+            ModCore.warn("tried to init a VAO with no VBO, don't do this!");
+        }
+        if(ebo != null) {//TODO implement EBO
+            GL32.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo.getEbo());
+        }
+        if(format != null) {
+            format.apply();
+        } else {
+            ModCore.warn("VAO inited without vertex format, defaulting to BLIT_SCREEN");
+            VertexFormats.BLIT_SCREEN.apply();
+        }
+        inited = true;
+        //restore previous state
+        GL32.glBindVertexArray(oldVao);
+        GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
     }
 
     /**
@@ -88,14 +129,16 @@ public class VAO {
      */
     public static void init(List<VAO> vaos) {
         //save current state
-
+        int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);
+        int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER);
         //init
         for(VAO array : vaos) {
+            if(array.inited) continue;
             GL32.glBindVertexArray(array.vao);
             if(array.vbo != null) {
                 GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, array.vbo.getVbo());
                 array.vbo.init();
-                array.vbo.freeRAM();
+                //array.vbo.freeRAM();
             } else {
                 ModCore.warn("tried to init a VAO with no VBO, don't do this!");
                 break;
@@ -104,13 +147,17 @@ public class VAO {
 
             }
             if(array.format != null) {
-
+                array.format.apply();
             } else {
-                //default format
+                //default format? maybe this one?
+                ModCore.warn("VAO inited without vertex format, defaulting to BLIT_SCREEN");
+                VertexFormats.BLIT_SCREEN.apply();
             }
+            array.inited = true;
         }
-
         //restore previous state
+        GL32.glBindVertexArray(oldVao);
+        GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
     }
 
     /**
@@ -119,7 +166,7 @@ public class VAO {
      * @param format vertex format to be applied
      */
     private void applyFormat(VertexFormat format) {
-
+        //depricated?
     }
 
     /**

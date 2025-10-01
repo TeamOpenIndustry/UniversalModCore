@@ -4,11 +4,13 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven { url = "https://www.lwjgl.org"}
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
         classpath 'org.spongepowered:mixingradle:0.7.+'
+        classpath "org.lwjgl:lwjgl-assimp:3.1.+"
     }
 }
 
@@ -129,6 +131,7 @@ dependencies {
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+    minecraftLibrary 'org.lwjgl:lwjgl-assimp:3.1.+'
 
     // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
     //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
