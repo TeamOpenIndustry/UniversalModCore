@@ -6,21 +6,40 @@ import net.minecraft.client.gui.GuiTextField;
 import java.util.function.Predicate;
 
 /** Base text field */
-public class TextField {
+public class TextField implements IWidget{
     protected final GuiTextField textfield;
 
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
-        this(
-                builder,
-                new GuiTextField(-1, Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height)
-        );
+        this(builder,
+             new GuiTextField(-1, Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height));
     }
 
     /** Internal, can be overridden to support custom GuiTextFields */
     protected TextField(IScreenBuilder builder, GuiTextField internal) {
         this.textfield = internal;
         builder.addTextField(this);
+    }
+
+    @Override
+    public String getText() {
+        return textfield.getText();
+    }
+
+    @Override
+    public void setText(String s) {
+        textfield.setText(s);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        textfield.setVisible(visible);
+        textfield.setEnabled(visible);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        textfield.setEnabled(enabled);
     }
 
     /** Validator that can block a string from being entered */
@@ -31,21 +50,5 @@ public class TextField {
     /** Move cursor to this text field */
     public void setFocused(boolean b) {
         textfield.setFocused(b);
-    }
-
-    /** Current text */
-    public String getText() {
-        return textfield.getText();
-    }
-
-    /** Overwrite current text */
-    public void setText(String s) {
-        textfield.setText(s);
-    }
-
-    /** Change visibility */
-    public void setVisible(Boolean visible) {
-        textfield.setVisible(visible);
-        textfield.setEnabled(visible);
     }
 }

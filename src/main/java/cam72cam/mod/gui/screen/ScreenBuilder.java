@@ -127,9 +127,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         // Copy pasta to support right / left button click
 
-        for (int i = 0; i < this.buttonList.size(); ++i) {
-            GuiButton guibutton = super.buttonList.get(i);
-
+        for (GuiButton guibutton : this.buttonList) {
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
