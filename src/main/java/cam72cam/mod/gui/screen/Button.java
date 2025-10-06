@@ -22,11 +22,23 @@ public class Button implements IWidget{
         this(builder, x, y, 200, 20, text, handler);
     }
 
+    @Deprecated
+    public Button(IScreenBuilder builder, int x, int y, String text) {
+        this(builder, x, y, 200, 20, text, (hand, button1) -> {});
+    }
+
     /** Custom width/height */
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text, BiConsumer<Player.Hand, Button> handler) {
         this(builder,
              new GuiButton(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
              handler);
+    }
+
+    @Deprecated
+    public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
+        this(builder,
+             new GuiButton(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
+             (hand, button1) -> {});
     }
 
     /** Internal ctr */

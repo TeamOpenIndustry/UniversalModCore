@@ -13,6 +13,14 @@ public class CheckBox extends Button {
               ((hand, button1) -> handler.accept(hand, (CheckBox) button1)));
     }
 
+    @Deprecated
+    public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
+        super(builder,
+              new GuiCheckBox(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, text, enabled),
+              ((hand, button1) -> {}));
+    }
+
+
     public boolean isChecked() {
         return ((GuiCheckBox) this.button).isChecked();
     }
