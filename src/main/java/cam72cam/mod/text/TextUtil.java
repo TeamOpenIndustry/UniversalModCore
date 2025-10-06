@@ -1,7 +1,8 @@
 package cam72cam.mod.text;
 
-
 import net.minecraft.util.text.translation.LanguageMap;
+
+import java.util.Locale;
 
 /** Client side translation utility */
 public class TextUtil {
@@ -12,5 +13,9 @@ public class TextUtil {
 
     public static String translate(String name, Object[] objects) {
         return String.format(LanguageMap.getInstance().translateKey(name), objects);
+    }
+
+    public static Locale getClientLocal(){
+        return MinecraftForgeClient.getLocale();
     }
 }
