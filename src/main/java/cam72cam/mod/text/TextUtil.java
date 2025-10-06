@@ -1,6 +1,7 @@
 package cam72cam.mod.text;
 
 import net.minecraft.util.text.translation.LanguageMap;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 import java.util.Locale;
 

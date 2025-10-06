@@ -21,13 +21,13 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import net.minecraft.block.*;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.LightType;
@@ -91,9 +91,9 @@ public class World {
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
         //HACK for fake world created by other mods
-        if(world.isRemote && world instanceof WorldClient
-                && (((WorldClient) world).connection == null
-                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
+        if(world.isRemote && world instanceof ClientWorld
+                && (((ClientWorld) world).connection == null
+                    || ((ClientWorld)world).connection.getClass() != ClientPlayNetHandler.class)){ //Essentials use their own fakeNetHandler
             //Meaning it is a "fake world" created by other mods for rendering
             return;
         }
