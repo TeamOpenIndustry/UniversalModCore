@@ -3,7 +3,6 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.GLX;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.BufferUtils;
@@ -199,7 +198,7 @@ public class RenderContext {
         }
 
         if(state.scissorRange != null){
-            int scaleFactor = (int) Minecraft.getInstance().mainWindow.getGuiScaleFactor();
+            int scaleFactor = (int) Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
             int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
             int x = (int) state.scissorRange.getMinX() * scaleFactor;
