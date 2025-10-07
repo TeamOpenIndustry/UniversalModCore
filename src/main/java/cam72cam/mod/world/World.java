@@ -19,16 +19,17 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -76,6 +77,14 @@ public class World {
 
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
+        //HACK for fake world created by other mods
+        if(world.isRemote && world instanceof WorldClient
+                && (((WorldClient) world).connection == null
+                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
+            //Meaning it is a "fake world" created by other mods for rendering
+            return;
+        }
+
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
@@ -134,6 +143,12 @@ public class World {
                 net.minecraft.entity.Entity entity = (net.minecraft.entity.Entity) entityObj;
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                    if (entity instanceof EntityPlayerMP && !this.internal.playerEntities.contains(entity)) {
+                        // if player is no longer online then remove player from loadedEntityList
+                        this.internal.loadedEntityList.remove(entity);
+                        ModCore.warn("Removing entity with uuid %s from loadedEntityList", entity.getUniqueID());
+                        return;
+                    }
                     this.onEntityAdded(entity);
                 }
             }
@@ -158,7 +173,6 @@ public class World {
                 }
             }
         }
-
     }
 
     /** Turn a MC world into a UMC world */
@@ -222,7 +236,6 @@ public class World {
         entitiesByClass.get(entity.getClass()).add(entity);
         entityByID.put(entityIn.getEntityId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
-
     }
 
     /**
@@ -416,7 +429,6 @@ public class World {
         double ttms = ttus * 1.0E-6D;
         return Math.min(1000.0 / ttms, 20);
     }
-
 
     /** Height of the ground for precipitation purposes at the given block */
     public Vec3i getPrecipitationHeight(Vec3i pos) {

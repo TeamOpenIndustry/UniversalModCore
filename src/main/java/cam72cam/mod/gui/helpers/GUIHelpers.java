@@ -1,7 +1,10 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -20,6 +23,9 @@ import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
@@ -185,6 +191,34 @@ public class GUIHelpers {
                 if (block != null) {
                     renderBlocks.renderBlockAsItem(block, stack.internal.getMetadata(), 1.0f);
                 }
+            }
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openLink(String url){
+        ITextComponent component = new TextComponentString("");
+        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+        if (Minecraft.getMinecraft().currentScreen != null) {
+            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a link outside a screen: %s", url);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.url(url));
+            }
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openFile(String path){
+        ITextComponent component = new TextComponentString("");
+        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
+        if (Minecraft.getMinecraft().currentScreen != null) {
+            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a file outside a screen: %s", path);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
             }
         }
     }
