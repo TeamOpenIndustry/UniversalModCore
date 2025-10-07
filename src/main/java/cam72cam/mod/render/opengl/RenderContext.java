@@ -1,7 +1,9 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBShaderObjects;
@@ -193,6 +195,19 @@ public class RenderContext {
             int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
             GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
             restore.add(() -> GL11.glShadeModel(oldShading));
+        }
+
+        if(state.scissorRange != null){
+            int scaleFactor = (int) Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+
+            int x = (int) state.scissorRange.getMinX() * scaleFactor;
+            int y = (int) state.scissorRange.getMinY() * scaleFactor;
+            int width = (int) state.scissorRange.getWidth() * scaleFactor;
+            int height = (int) state.scissorRange.getHeight() * scaleFactor;
+
+            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+            GL11.glScissor(x, screenHeight - y - height, width, height);
         }
 
         if (state.blend != null) {
