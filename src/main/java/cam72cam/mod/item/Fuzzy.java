@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy(Tags.Items.RODS_WOODEN, "stickWood").add(Items.STICK);
     public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood").add(Blocks.OAK_PLANKS);
-    public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone").add(Blocks.REDSTONE_WIRE);
+    public static final Fuzzy REDSTONE_DUST = new Fuzzy(Tags.Items.DUSTS_REDSTONE, "dustRedstone").add(Items.REDSTONE);
     public static final Fuzzy SNOW_LAYER = new Fuzzy("layerSnow").add(Blocks.SNOW);
     public static final Fuzzy SNOW_BLOCK = new Fuzzy("blockSnow").add(Blocks.SNOW_BLOCK);
     public static final Fuzzy LEAD = new Fuzzy("lead").add(Items.LEAD);
