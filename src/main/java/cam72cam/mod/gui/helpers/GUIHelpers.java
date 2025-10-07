@@ -19,7 +19,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
@@ -171,10 +170,10 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openLink(String url){
-        ITextComponent component = new StringTextComponent("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-        if (Minecraft.getInstance().currentScreen != null) {
-            Minecraft.getInstance().currentScreen.handleComponentClicked(component);
+        StringTextComponent component = new StringTextComponent("");
+        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
+        if (Minecraft.getInstance().screen != null) {
+            Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
         } else {
             ModCore.error("Trying to open a link outside a screen: %s", url);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
@@ -185,10 +184,10 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
-        ITextComponent component = new StringTextComponent("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
-        if (Minecraft.getInstance().currentScreen != null) {
-            Minecraft.getInstance().currentScreen.handleComponentClicked(component);
+        StringTextComponent component = new StringTextComponent("");
+        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path)));
+        if (Minecraft.getInstance().screen != null) {
+            Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
         } else {
             ModCore.error("Trying to open a file outside a screen: %s", path);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {

@@ -198,7 +198,7 @@ public class RenderContext {
         }
 
         if(state.scissorRange != null){
-            int scaleFactor = (int) Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
             int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
             int x = (int) state.scissorRange.getMinX() * scaleFactor;

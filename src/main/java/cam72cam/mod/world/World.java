@@ -91,7 +91,7 @@ public class World {
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
         //HACK for fake world created by other mods
-        if(world.isRemote && world instanceof ClientWorld
+        if(world.isClientSide() && world instanceof ClientWorld
                 && (((ClientWorld) world).connection == null
                     || ((ClientWorld)world).connection.getClass() != ClientPlayNetHandler.class)){ //Essentials use their own fakeNetHandler
             //Meaning it is a "fake world" created by other mods for rendering
