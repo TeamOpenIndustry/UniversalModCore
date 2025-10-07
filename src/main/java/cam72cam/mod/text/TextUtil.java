@@ -1,7 +1,9 @@
 package cam72cam.mod.text;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.Language;
+import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 import java.util.Locale;
 
@@ -17,6 +19,9 @@ public class TextUtil {
     }
 
     public static Locale getClientLocal(){
-        return MinecraftForgeClient.getLocale();
+        LanguageManager manager = Minecraft.getMinecraft().getLanguageManager();
+        Language lang = manager.getCurrentLanguage();
+        String l = lang == null ? "en-US" : lang.getLanguageCode().replace('_', '-');
+        return Locale.forLanguageTag(l);
     }
 }
