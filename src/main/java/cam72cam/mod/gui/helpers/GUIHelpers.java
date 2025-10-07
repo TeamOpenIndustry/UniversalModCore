@@ -13,21 +13,18 @@ import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.IIcon;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
+
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
@@ -197,10 +194,18 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openLink(String url){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+        URI uri = null;
+        try {
+            uri = new URI(url);
+            if (!GuiChat.supportedProtocols.contains(uri.getScheme().toLowerCase()))
+            {
+                throw new URISyntaxException(url, "Unsupported protocol: " + uri.getScheme().toLowerCase());
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
         if (Minecraft.getMinecraft().currentScreen != null) {
-            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+            openLinkInternal(uri);
         } else {
             ModCore.error("Trying to open a link outside a screen: %s", url);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
@@ -211,15 +216,24 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
         if (Minecraft.getMinecraft().currentScreen != null) {
-            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
+            openLinkInternal((new File(path)).toURI());
         } else {
             ModCore.error("Trying to open a file outside a screen: %s", path);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
                 MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
             }
+        }
+    }
+
+    private static void openLinkInternal(URI p_146407_1_)
+    {
+        try {
+            Class<?> oclass = Class.forName("java.awt.Desktop");
+            Object object = oclass.getMethod("getDesktop", new Class[0]).invoke(null);
+            oclass.getMethod("browse", new Class[] {URI.class}).invoke(object, p_146407_1_);
+        } catch (Throwable throwable) {
+            ModCore.error("Couldn't open link", throwable);
         }
     }
 }
