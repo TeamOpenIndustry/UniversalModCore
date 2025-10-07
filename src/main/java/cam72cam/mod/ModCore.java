@@ -313,23 +313,32 @@ public class ModCore {
                     if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
                         Map<String, String> translationMap = new HashMap<>();
                         for (IResource resource : Minecraft.getInstance().getResourceManager().getAllResources(lang)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    //Remove comment
+                                    line = line.trim();
+                                    int comment = line.indexOf("#");
+                                    if (line.isEmpty() || comment == 0) {
+                                        continue;
+                                    }
+
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        translationMap.put(splits[0], splits[1]);
+                                        translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
                             }
                         }
 
-                        List<String> translations = new ArrayList<>();
+                        Set<String> translations = new HashSet<>();
                         translationMap.forEach((key, value) -> {
-                            translations.add(String.format("\"%s\": \"%s\"", key, value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            if (!key.isEmpty()) {
+                                translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            }
                         });
                         String output = "{" + String.join(",", translations) + "}";
                         return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
