@@ -43,7 +43,7 @@ public class Fuzzy {
     public static final Fuzzy PAPER = new Fuzzy("paper");
     public static final Fuzzy BOOK = new Fuzzy("book").add(Items.BOOK);
     public static final Fuzzy WOOL_BLOCK = new Fuzzy("wool").add(new ItemStack(new net.minecraft.item.ItemStack(Blocks.WOOL, 1, OreDictionary.WILDCARD_VALUE)));
-    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(new ItemStack(new net.minecraft.item.ItemStack(Items.BUCKET, 1)));
+    public static final Fuzzy BUCKET = new Fuzzy("bucket").add(Items.BUCKET);
     public static final Fuzzy EMERALD = new Fuzzy("gemEmerald");
     public static final Fuzzy REDSTONE_TORCH = new Fuzzy("redstoneTorch").add(Blocks.REDSTONE_TORCH);
     public static final Fuzzy GLASS_PANE = new Fuzzy("paneGlass");

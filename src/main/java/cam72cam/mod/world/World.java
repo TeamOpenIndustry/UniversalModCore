@@ -20,9 +20,12 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
@@ -81,6 +84,14 @@ public class World {
 
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
+        //HACK for fake world created by other mods
+        if(world.isRemote && world instanceof WorldClient
+                && (((WorldClient) world).connection == null
+                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
+            //Meaning it is a "fake world" created by other mods for rendering
+            return;
+        }
+
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
@@ -113,6 +124,12 @@ public class World {
             for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                    if (entity instanceof EntityPlayerMP && !this.internal.playerEntities.contains(entity)) {
+                        // if player is no longer online then remove player from loadedEntityList
+                        this.internal.loadedEntityList.remove(entity);
+                        ModCore.warn("Removing entity with uuid %s from loadedEntityList", entity.getUniqueID());
+                        return;
+                    }
                     this.onEntityAdded(entity);
                 }
             }
