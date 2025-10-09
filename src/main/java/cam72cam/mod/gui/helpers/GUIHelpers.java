@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
@@ -28,6 +27,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
@@ -35,9 +35,9 @@ public class GUIHelpers {
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
     /**
      * Assume we're on single-thread model
-     * Internal function
+     * Internal function, don't use
      */
-    public static final Deque<Set<Runnable>> delayedRenderFunctions = new ArrayDeque<>();
+    public static final Deque<Set<BiConsumer<Integer, Integer>>> delayedRenderFunctions = new ArrayDeque<>();
     // Internal hack for using Gui functions
     private static final Gui instance = new Gui();
 
@@ -218,11 +218,11 @@ public class GUIHelpers {
      * */
     public static void drawTooltipAtCursor(List<String> content) {
         if (delayedRenderFunctions.peek() != null) {
-            delayedRenderFunctions.peek().add(() ->{
+            //For now, we only have this method delayed and should only be rendered once
+            delayedRenderFunctions.peek().clear();
+            delayedRenderFunctions.peek().add((x, y) ->{
                 int width = getScreenWidth();
                 int height = getScreenHeight();
-                int x = Mouse.getX() * width / Minecraft.getMinecraft().displayWidth;
-                int y = height - Mouse.getY() * height / Minecraft.getMinecraft().displayHeight - 1;
                 net.minecraftforge.fml.client.config.GuiUtils
                         .drawHoveringText(content, x, y, width, height, -1, Minecraft.getMinecraft().fontRenderer);
             });

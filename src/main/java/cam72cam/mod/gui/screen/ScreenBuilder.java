@@ -106,7 +106,13 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
         // draw buttons
         super.drawScreen(mouseX, mouseY, partialTicks);
-        GUIHelpers.delayedRenderFunctions.pop().forEach(Runnable::run);
+        Optional<Button> first = buttonMap.values().stream()
+                                          .filter(Button::isHovering)
+                                          .filter(button -> button.tooltips != null)
+                                          .findFirst();
+        first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
+
+        GUIHelpers.delayedRenderFunctions.pop().forEach(c -> c.accept(mouseX, mouseY));
     }
 
     @Override
