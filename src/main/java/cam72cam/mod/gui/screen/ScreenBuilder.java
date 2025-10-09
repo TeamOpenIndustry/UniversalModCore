@@ -10,10 +10,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
@@ -98,6 +95,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        GUIHelpers.delayedRenderFunctions.push(new HashSet<>());
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
@@ -108,6 +106,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
         // draw buttons
         super.drawScreen(mouseX, mouseY, partialTicks);
+        GUIHelpers.delayedRenderFunctions.pop().forEach(Runnable::run);
     }
 
     @Override

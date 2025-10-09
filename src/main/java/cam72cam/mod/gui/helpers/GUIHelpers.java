@@ -20,13 +20,24 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+import java.util.Set;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
+    /**
+     * Assume we're on single-thread model
+     * Internal function
+     */
+    public static final Deque<Set<Runnable>> delayedRenderFunctions = new ArrayDeque<>();
     // Internal hack for using Gui functions
     private static final Gui instance = new Gui();
 
@@ -198,6 +209,25 @@ public class GUIHelpers {
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
                 MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
             }
+        }
+    }
+
+    /**
+     * Draw a Minecraft-style tooltip at cursor's pos
+     * Only use in IScreen.draw()!
+     * */
+    public static void drawTooltipAtCursor(List<String> content) {
+        if (delayedRenderFunctions.peek() != null) {
+            delayedRenderFunctions.peek().add(() ->{
+                int width = getScreenWidth();
+                int height = getScreenHeight();
+                int x = Mouse.getX() * width / Minecraft.getMinecraft().displayWidth;
+                int y = height - Mouse.getY() * height / Minecraft.getMinecraft().displayHeight - 1;
+                net.minecraftforge.fml.client.config.GuiUtils
+                        .drawHoveringText(content, x, y, width, height, -1, Minecraft.getMinecraft().fontRenderer);
+            });
+        } else {
+            ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
         }
     }
 }
