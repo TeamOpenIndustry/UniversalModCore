@@ -1,12 +1,12 @@
 package cam72cam.mod.config;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.screen.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -223,6 +223,7 @@ public class ConfigGui implements IScreen {
                 widgets.add(screen -> {
                     Button btn = new Button(screen, -200, offsetI * 20, 200, 20, property.getName(), (hand, button) -> {});
                     btn.setEnabled(false);
+                    btn.setTooltip(Collections.singletonList(property.getComment()));
                     onPage.accept(finalI, btn::setVisible);
                     return btn;
                 });
