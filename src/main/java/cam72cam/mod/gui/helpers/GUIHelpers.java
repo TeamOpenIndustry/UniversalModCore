@@ -11,6 +11,7 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -23,10 +24,7 @@ import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 /** Common GUI functions that don't really fit anywhere else */
@@ -34,10 +32,10 @@ public class GUIHelpers {
     /** Standard 54 slot chest UI */
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
     /**
-     * Assume we're on single-thread model
+     * Assuming that we're on a single-thread model
      * Internal function, don't use
      */
-    public static final Deque<Set<BiConsumer<Integer, Integer>>> delayedRenderFunctions = new ArrayDeque<>();
+    private static final Deque<Map<String, BiConsumer<Integer, Integer>>> delayedRenderFunctions = new ArrayDeque<>();
     // Internal hack for using Gui functions
     private static final Gui instance = new Gui();
 
@@ -218,9 +216,8 @@ public class GUIHelpers {
      * */
     public static void drawTooltipAtCursor(List<String> content) {
         if (delayedRenderFunctions.peek() != null) {
-            //For now, we only have this method delayed and should only be rendered once
-            delayedRenderFunctions.peek().clear();
-            delayedRenderFunctions.peek().add((x, y) ->{
+            //Use map to ensure only 1 tooltip is drawn
+            delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
                 int width = getScreenWidth();
                 int height = getScreenHeight();
                 net.minecraftforge.fml.client.config.GuiUtils
@@ -228,6 +225,20 @@ public class GUIHelpers {
             });
         } else {
             ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
+        }
+    }
+
+    /** Internal */
+    public static void initDelayed() {
+        delayedRenderFunctions.push(new Object2ObjectArrayMap<>(4));
+    }
+
+    /** Internal */
+    public static void runDelayed(int mouseX, int mouseY) {
+        if (!delayedRenderFunctions.isEmpty()) {
+            delayedRenderFunctions.pop().values().forEach(consumer -> consumer.accept(mouseX, mouseY));
+        } else {
+            ModCore.error("Trying to call runDelayed without initialized state!");
         }
     }
 }

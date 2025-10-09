@@ -95,7 +95,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        GUIHelpers.delayedRenderFunctions.push(new HashSet<>());
+        GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
@@ -112,7 +112,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
                                           .findFirst();
         first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
 
-        GUIHelpers.delayedRenderFunctions.pop().forEach(c -> c.accept(mouseX, mouseY));
+        GUIHelpers.runDelayed(mouseX, mouseY);
     }
 
     @Override
