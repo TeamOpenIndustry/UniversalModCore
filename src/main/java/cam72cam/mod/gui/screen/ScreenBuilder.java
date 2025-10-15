@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.GuiButton;
@@ -15,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import static org.lwjgl.input.Keyboard.getKeyName;
 
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
@@ -116,26 +119,26 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             close();
         }
 
-        // Enter
-        if (keyCode == 28 || keyCode == 156) {
-            screen.onEnterKey(this);
+        if (this.textFields.stream().noneMatch(x -> x.textboxKeyTyped(typedChar, keyCode))) {
+            screen.onKeyType(this , Keyboard.KeyCode.valueOf(getKeyName(keyCode)));
         }
-
-        this.textFields.forEach(x -> x.textboxKeyTyped(typedChar, keyCode));
     }
 
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         // Copy pasta to support right / left button click
+        Player.Hand hand = mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
 
         for (GuiButton guibutton : this.buttonList) {
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
-                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
+                buttonMap.get(guibutton).onClick(hand);
             }
         }
 
-        this.textFields.forEach(x -> x.mouseClicked(mouseX, mouseY, mouseButton));
+        if (this.textFields.stream().noneMatch(x -> x.mouseClicked(mouseX, mouseY, mouseButton))) {
+            screen.onMouseClick(mouseX, mouseY, hand);
+        }
     }
 
     // Default overrides
