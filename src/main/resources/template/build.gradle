@@ -2,12 +2,21 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven { url = "https://teamopenindustry.cc/maven" }
-        maven { url = 'https://repo.eclipse.org/content/groups/eclipse' }
+        maven { url = "https://jcenter.bintray.com/" }
+        maven {
+            name = "forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
     }
-	dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-	}
+    dependencies {
+        classpath ('com.anatawa12.forge:ForgeGradle:1.2-1.0.+') {
+            changing = true
+        }
+    }
 }
 
 //PLUGINS//
