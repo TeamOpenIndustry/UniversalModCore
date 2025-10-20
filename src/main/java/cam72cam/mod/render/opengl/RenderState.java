@@ -10,6 +10,8 @@ import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
 import java.nio.FloatBuffer;
+import javax.annotation.Nonnull;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +25,7 @@ public class RenderState {
     protected Map<Integer, Boolean> bools = new HashMap<>();
     protected Boolean depth_mask;
     protected Boolean smooth_shading = null;
+    protected Rectangle2D scissorRange = null;
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
@@ -129,6 +132,7 @@ public class RenderState {
         this.bools = new HashMap<>(ctx.bools);
         this.depth_mask = ctx.depth_mask;
         this.smooth_shading = ctx.smooth_shading;
+        this.scissorRange = ctx.scissorRange;
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
         this.shader = ctx.shader;
@@ -167,6 +171,9 @@ public class RenderState {
     public RenderState scale(Vec3d vec) {
         return this.scale(vec.x, vec.y, vec.z);
     }
+    public RenderState scale(double factor){
+        return this.scale(factor, factor, factor);
+    }
     public RenderState scale(double x, double y, double z) {
         this.model_view().scale(x, y, z);
         return this;
@@ -201,6 +208,11 @@ public class RenderState {
     }
     public RenderState depth_test(boolean depth_test) {
         this.bools.put(GL11.GL_DEPTH_TEST, depth_test);
+        return this;
+    }
+    public RenderState scissor(boolean scissor, @Nonnull Rectangle2D range) {
+        this.bools.put(GL11.GL_SCISSOR_TEST, scissor);
+        this.scissorRange = range;
         return this;
     }
     public RenderState depth_mask(boolean depth_mask) {

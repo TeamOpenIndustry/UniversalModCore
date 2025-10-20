@@ -209,6 +209,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final void load(CompoundTag compound) {
         super.load(compound);
         hasTileData = true;
+        // Hack; Because of the new BlockEntity Constructor we now have to set the position manually after loading the BE
+        setPos(new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z")));
 
         TagCompound data = new TagCompound(compound);
         TagCompound instanceData = data.get("instanceData");

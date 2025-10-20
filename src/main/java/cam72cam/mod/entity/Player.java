@@ -13,6 +13,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
+
+import static net.minecraft.world.InteractionHand.*;
+
+import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 import net.minecraftforge.server.permission.nodes.PermissionNode;
 import net.minecraftforge.server.permission.nodes.PermissionTypes;
@@ -34,6 +38,10 @@ public class Player extends Entity {
 
     public void sendMessage(PlayerMessage o) {
         internal.sendMessage(o.internal, Util.NIL_UUID);
+    }
+
+    public void sendActionBarMessage(PlayerMessage o){
+        internal.displayClientMessage(o.internal, true);
     }
 
     public boolean isCrouching() {
@@ -105,14 +113,10 @@ public class Player extends Entity {
         }
 
         public static Hand from(InteractionHand hand) {
-            switch (hand) {
-                case MAIN_HAND:
-                    return PRIMARY;
-                case OFF_HAND:
-                    return SECONDARY;
-                default:
-                    return null;
-            }
+            return switch (hand) {
+                case MAIN_HAND -> PRIMARY;
+                case OFF_HAND -> SECONDARY;
+            };
         }
     }
 }
