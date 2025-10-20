@@ -3,9 +3,9 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.math.Vec3d;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A {@link VertexBuffer} API wrapper, make accessing geometry complete separate from backend.
@@ -127,6 +127,15 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
         public void remove() {
             Iterator.super.remove();
         }
+    }
+
+    @Override
+    public Spliterator<FaceAccessor> spliterator() {
+        return Spliterators.spliterator(iterator(), (endFace - startFace), Spliterator.SIZED | Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
+    }
+
+    public Stream<FaceAccessor> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 
     /**
