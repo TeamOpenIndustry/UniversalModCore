@@ -82,7 +82,7 @@ import java.util.stream.Collectors;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.1.4";
+    public static final String VERSION = "1.2.2";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
@@ -158,7 +158,7 @@ public class ModCore {
 	 * Used to register commands.
 	 * Moved from {@link ModCore#serverStarting serverStarting()}
 	 * </pre>
-	 * 
+	 *
 	 * @param event
 	 */
 	@SubscribeEvent
@@ -325,12 +325,19 @@ public class ModCore {
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();
                         for (Resource resource : langFiles) {
-                            try (BufferedReader reader = resource.openAsReader()) {
+                            try (BufferedReader reader = resource.openAsReader(StandardCharsets.UTF_8)) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    //Remove comment
+                                    line = line.trim();
+                                    int comment = line.indexOf("#");
+                                    if (line.isEmpty() || comment == 0) {
+                                        continue;
+                                    }
+
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        translationMap.put(splits[0], splits[1]);
+                                        translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
                             } catch (IOException e) {
@@ -338,12 +345,14 @@ public class ModCore {
                             }
                         }
 
-                        List<String> translations = new ArrayList<>();
+                        Set<String> translations = new HashSet<>();
                         translationMap.forEach((key, value) -> {
-                            translations.add(String.format("\"%s\": \"%s\"", key, value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            if (!key.isEmpty()) {
+                                translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            }
                         });
                         String output = "{" + String.join(",", translations) + "}";
                         return () -> new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
