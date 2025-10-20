@@ -19,25 +19,20 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.Facing;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.IPlantable;
@@ -92,6 +87,14 @@ public class World {
 
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(Level world) {
+        //HACK for fake world created by other mods
+        if(world.isClientSide() && world instanceof ClientLevel
+                && (((ClientLevel) world).connection == null
+                    || ((ClientLevel)world).connection.getClass() != ClientPacketListener.class)){ //Essentials use their own fakeNetHandler
+            //Meaning it is a "fake world" created by other mods for rendering
+            return;
+        }
+
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
@@ -478,12 +481,19 @@ public class World {
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3i pos) {
-        dropItem(stack, new Vec3d(pos));
+        dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
     }
 
     /** Drop a stack on the ground at pos */
     public void dropItem(ItemStack stack, Vec3d pos) {
-        internal.addFreshEntity(new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal));
+        dropItem(stack, pos, Vec3d.ZERO);
+    }
+
+    /** Drop a stack on the ground at pos with velocity */
+    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
+        net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
+        entity.setDeltaMovement(velocity.x, velocity.y, velocity.z);
+        internal.addFreshEntity(entity);
     }
 
     /** Check if the block is currently in a loaded chunk */

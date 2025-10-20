@@ -13,6 +13,12 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
 
 import static net.minecraft.world.InteractionHand.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 
@@ -31,6 +37,10 @@ public class Player extends Entity {
 
     public void sendMessage(PlayerMessage o) {
         internal.sendMessage(o.internal, Util.NIL_UUID);
+    }
+
+    public void sendActionBarMessage(PlayerMessage o){
+        internal.displayClientMessage(o.internal, true);
     }
 
     public boolean isCrouching() {

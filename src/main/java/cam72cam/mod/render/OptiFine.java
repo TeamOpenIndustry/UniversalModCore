@@ -14,7 +14,7 @@ public class OptiFine {
     public static boolean isLoaded() {
         if (isLoaded == null) {
             try {
-                Class.forName("Config");
+                Class.forName("net.optifine.Config");
                 isLoaded = true;
             } catch (Exception e) {
                 isLoaded = false;
@@ -27,7 +27,7 @@ public class OptiFine {
         /* I don't think this is needed in 1.17.+
         if (isLoaded()) {
             try {
-                boolean isFastRender = (boolean)Class.forName("Config").getDeclaredMethod("isFastRender").invoke(null);
+                boolean isFastRender = (boolean)Class.forName("net.optifine.Config").getDeclaredMethod("isFastRender").invoke(null);
                 if (isFastRender != state) {
                     BooleanOption setting = (BooleanOption) AbstractOption.class.getDeclaredField("FAST_RENDER").get(null);
                     setting.toggle(Minecraft.getInstance().options);

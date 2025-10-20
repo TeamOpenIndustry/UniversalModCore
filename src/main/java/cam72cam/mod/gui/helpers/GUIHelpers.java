@@ -1,7 +1,10 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -14,6 +17,10 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.lwjgl.opengl.GL32;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
+import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
@@ -104,6 +111,18 @@ public class GUIHelpers {
         }
     }
 
+    /** Draw a left-aligned shadowed string */
+    public static void drawString(String text, int x, int y, int color) {
+        drawString(text, x, y, color, new Matrix4());
+    }
+    public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        state.model_view().multiply(matrix);
+        try (With ctx = RenderContext.apply(state)) {
+            Minecraft.getInstance().font.draw(new MatrixStack(), text, x, y, color);
+        }
+    }
+
     /** Draw a shadowed string offset from the center of coords */
     public static void drawCenteredString(String text, int x, int y, int color) {
         drawCenteredString(text, x, y, color, new Matrix4());
@@ -114,6 +133,11 @@ public class GUIHelpers {
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().font.draw(new PoseStack(), text, (float) (x - Minecraft.getInstance().font.width(text) / 2), (float) y, color);
         }
+    }
+
+    /** Gat a string's internal width for further use */
+    public static int getTextWidth(String text) {
+        return Minecraft.getInstance().font.width(text);
     }
 
     /** Screen Width in pixels (std coords) */
@@ -140,6 +164,34 @@ public class GUIHelpers {
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openLink(String url){
+        StringTextComponent component = new StringTextComponent("");
+        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
+        if (Minecraft.getInstance().screen != null) {
+            Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
+        } else {
+            ModCore.error("Trying to open a link outside a screen: %s", url);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.url(url));
+            }
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openFile(String path){
+        StringTextComponent component = new StringTextComponent("");
+        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path)));
+        if (Minecraft.getInstance().screen != null) {
+            Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
+        } else {
+            ModCore.error("Trying to open a file outside a screen: %s", path);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
+            }
         }
     }
 }
