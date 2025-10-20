@@ -1,8 +1,8 @@
 package cam72cam.mod.text;
 
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.locale.Language;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 import java.util.Locale;
 
@@ -18,6 +18,6 @@ public class TextUtil {
     }
 
     public static Locale getClientLocal(){
-        return MinecraftForgeClient.getLocale();
+        return Minecraft.getInstance().getLanguageManager().getJavaLocale();
     }
 }

@@ -17,11 +17,9 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.minecraftforge.client.model.DynamicFluidContainerModel;
-import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -171,7 +169,7 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openLink(String url){
-        Component component = Component.literal("");
+        MutableComponent component = Component.literal("");
         component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
@@ -185,7 +183,7 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
-        Component component = Component.literal("");
+        MutableComponent component = Component.literal("");
         component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path)));
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());

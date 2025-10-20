@@ -7,12 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -20,14 +18,10 @@ import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.data.loading.DatagenModLoader;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
 import java.util.*;
@@ -71,10 +65,6 @@ import org.lwjgl.opengl.GL32;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
@@ -325,7 +315,7 @@ public class ModCore {
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();
                         for (Resource resource : langFiles) {
-                            try (BufferedReader reader = resource.openAsReader(StandardCharsets.UTF_8)) {
+                            try (BufferedReader reader = resource.openAsReader()) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
                                     //Remove comment
