@@ -16,12 +16,9 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import static net.minecraft.world.InteractionHand.*;
 
-import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 import net.minecraftforge.server.permission.nodes.PermissionNode;
 import net.minecraftforge.server.permission.nodes.PermissionTypes;
-
-import static net.minecraft.world.InteractionHand.*;
 
 /** Wrapper around EntityPlayer */
 public class Player extends Entity {
