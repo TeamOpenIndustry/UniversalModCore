@@ -3,11 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GLAllocation;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.ARBShaderObjects;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -128,6 +124,7 @@ public class RenderContext {
 
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
+            restore.add(RenderSystem::disableScissor);
         }
 
 

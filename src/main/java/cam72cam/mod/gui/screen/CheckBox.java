@@ -25,7 +25,6 @@ public abstract class CheckBox extends Button {
     }
 
     public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
-//        super(builder, x, y, 200, 20, (enabled ? "X" : "█") + " " + text);
         super(builder, new InternalCB(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 100, 20, text, enabled));
         ((InternalCB)this.button).clicker = this::onClickInternal;
     }

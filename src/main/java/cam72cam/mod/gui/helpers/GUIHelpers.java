@@ -16,11 +16,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.opengl.GL32;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.event.ClickEvent;
-import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
@@ -119,7 +117,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().font.draw(new MatrixStack(), text, x, y, color);
+            Minecraft.getInstance().font.draw(new PoseStack(), text, x, y, color);
         }
     }
 
@@ -169,7 +167,7 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openLink(String url){
-        StringTextComponent component = new StringTextComponent("");
+        TextComponent component = new TextComponent("");
         component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
@@ -183,7 +181,7 @@ public class GUIHelpers {
 
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
-        StringTextComponent component = new StringTextComponent("");
+        TextComponent component = new TextComponent("");
         component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path)));
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
