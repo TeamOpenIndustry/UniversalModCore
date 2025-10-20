@@ -499,7 +499,7 @@ public class World {
 
     /** Drop a stack on the ground at pos with velocity */
     public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
-        net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
+        net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal());
         entity.setDeltaMovement(velocity.x, velocity.y, velocity.z);
         internal.addFreshEntity(entity);
     }
