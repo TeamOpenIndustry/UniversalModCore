@@ -19,11 +19,9 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -209,9 +207,11 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final void load(CompoundTag compound) {
         super.load(compound);
         hasTileData = true;
-        // Hack; Because of the new BlockEntity Constructor we now have to set the position manually after loading the BE
-        setPos(new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z")));
-
+        //Add check here in order to avoid accessing newly created TE which doesn't have this field
+        if(compound.contains("x")){
+            // Hack; Because of the new BlockEntity Constructor we now have to set the position manually after loading the BE
+            setPos(new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z")));
+        }
         TagCompound data = new TagCompound(compound);
         TagCompound instanceData = data.get("instanceData");
         if (instanceData == null) {
