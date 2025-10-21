@@ -22,15 +22,14 @@ public class CreativeTab {
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         ClientEvents.CREATIVE_TAB.subscribe(event -> {
             internal = event.registerCreativeModeTab(new ResourceLocation(ModCore.MODID, label), builder -> {
-                builder.title(Component.literal(label));
-                builder.icon(() -> stack.get().internal());
-                builder.displayItems((params, output) -> {
-                    for (CustomItem customItem : inject) {
-                        for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
-                            output.accept(itemVariant.internal());
-                        }
-                    }
-                });
+                builder.title(Component.translatable("itemGroup." +label))
+                       .icon(() -> stack.get().internal()).displayItems((params, output) -> {
+                           for (CustomItem customItem : inject) {
+                               for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
+                                   output.accept(itemVariant.internal());
+                               }
+                           }
+                       });
             });
         });
     }
