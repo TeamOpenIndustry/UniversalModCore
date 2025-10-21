@@ -176,7 +176,9 @@ public class GlobalRender {
         try (With ctx = RenderContext.apply(state)) {
             //fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
             MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            int i = fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880, fontRendererIn.isBidirectional());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, -1, false, new Matrix4f(),
+                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       fontRendererIn.isBidirectional());
             multibuffersource$buffersource.endBatch();
         }
     }
@@ -189,7 +191,12 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, color);
+//            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, color);
+            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
+                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       fontRendererIn.isBidirectional());
+            multibuffersource$buffersource.endBatch();
         }
     }
 
@@ -201,7 +208,12 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, 0, 0, color);
+//            fontRendererIn.draw(new PoseStack(), str, 0, 0, color);
+            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, 0, 0, color, false, new Matrix4f(),
+                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       fontRendererIn.isBidirectional());
+            multibuffersource$buffersource.endBatch();
         }
     }
 
@@ -213,7 +225,12 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str), 0, color);
+//            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str), 0, color);
+            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
+                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       fontRendererIn.isBidirectional());
+            multibuffersource$buffersource.endBatch();
         }
     }
 

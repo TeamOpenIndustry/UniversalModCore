@@ -120,7 +120,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
-            Minecraft.getInstance().font.draw(new PoseStack(), text, x, y, color);
+            graphics.drawString(Minecraft.getInstance().font, text, x, y, color);
         }
     }
 
