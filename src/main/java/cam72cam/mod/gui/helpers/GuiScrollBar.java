@@ -1,16 +1,27 @@
 package cam72cam.mod.gui.helpers;
 
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraftforge.client.gui.widget.Slider;
+import net.minecraftforge.client.gui.widget.ForgeSlider;
+
+import java.util.function.Consumer;
 
 
 /** Internal scrollbar class */
-class GuiScrollBar extends Slider {
+class GuiScrollBar extends ForgeSlider {
+    private final Consumer<AbstractSliderButton> onPress;
 
-    public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr, double minVal, double maxVal, double currentVal, Button.OnPress par) {
-        // TODO 1.18.2 ForgeSlider
-        super(xPos, yPos, width, height, new TextComponent(displayStr), new TextComponent(displayStr), minVal, maxVal, currentVal, true, false, par);
+    public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr,
+                        double minVal, double maxVal, double currentVal, Consumer<AbstractSliderButton> par) {
+        super(xPos, yPos, width, height, new TextComponent(displayStr), new TextComponent(""),
+              minVal, maxVal, currentVal, 0, 4, true);
+        this.onPress = par;
+    }
+
+    @Override
+    protected void applyValue() {
+        super.applyValue();
+        onPress.accept(this);
     }
 
     /* TODO

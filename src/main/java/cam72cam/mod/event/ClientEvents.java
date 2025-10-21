@@ -12,13 +12,10 @@ import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -103,7 +100,7 @@ public class ClientEvents {
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
+//    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -236,10 +233,10 @@ public class ClientEvents {
             SOUND_LOAD.execute(x -> x.accept(event));
         }
 
-        @SubscribeEvent
-        public static void optifineSucksEvent(RenderLevelLastEvent event) {
-            OPTIFINE_SUCKS.execute(x -> x.accept(event));
-        }
+//        @SubscribeEvent
+//        public static void optifineSucksEvent(RenderLevelLastEvent event) {
+//            OPTIFINE_SUCKS.execute(x -> x.accept(event));
+//        }
 
         static boolean hasHacked = false;
         @SubscribeEvent
