@@ -5,8 +5,13 @@ on: [workflow_dispatch]
 jobs:
     build:
         runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            branch: [1.7.10-forge, 1.10.2-forge, 1.11.2-forge, 1.12.2-forge, 1.14.4-forge, 1.15.2-forge, 1.16.5-forge]
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
+              with:
+                ref: ${{ matrix.branch }}
             - uses: actions/setup-java@v1
               with:
                 java-version: '1.8' # The JDK version to make available on the path.
@@ -25,7 +30,7 @@ jobs:
               env:
                 MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
               run: ./gradlew publish -Dtarget=release
-            - uses: actions/upload-artifact@v2-preview
+            - uses: actions/upload-artifact@v4
               with:
                 name: UniversalModCore-${{ env.ref }}
                 path: build/libs/UniversalModCore-*.jar

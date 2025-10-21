@@ -25,7 +25,7 @@ jobs:
               env:
                 MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
               run: ./gradlew publish
-            - uses: actions/upload-artifact@v2-preview
+            - uses: actions/upload-artifact@v4
               with:
                 name: UniversalModCore-${{ env.ref }}
                 path: build/libs/UniversalModCore-*.jar

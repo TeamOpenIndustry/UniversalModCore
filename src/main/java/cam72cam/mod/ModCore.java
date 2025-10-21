@@ -7,12 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -20,14 +18,10 @@ import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.data.loading.DatagenModLoader;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
 import java.util.*;
@@ -71,10 +65,6 @@ import org.lwjgl.opengl.GL32;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
@@ -82,7 +72,7 @@ import java.util.stream.Collectors;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.1.4";
+    public static final String VERSION = "1.2.2";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
@@ -159,7 +149,7 @@ public class ModCore {
 	 * Used to register commands.
 	 * Moved from {@link ModCore#serverStarting serverStarting()}
 	 * </pre>
-	 * 
+	 *
 	 * @param event
 	 */
 	@SubscribeEvent
@@ -329,9 +319,16 @@ public class ModCore {
                             try (BufferedReader reader = resource.openAsReader()) {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
+                                    //Remove comment
+                                    line = line.trim();
+                                    int comment = line.indexOf("#");
+                                    if (line.isEmpty() || comment == 0) {
+                                        continue;
+                                    }
+
                                     String[] splits = line.split("=", 2);
                                     if (splits.length == 2) {
-                                        translationMap.put(splits[0], splits[1]);
+                                        translationMap.put(splits[0].trim(), splits[1].trim());
                                     }
                                 }
                             } catch (IOException e) {
@@ -339,12 +336,14 @@ public class ModCore {
                             }
                         }
 
-                        List<String> translations = new ArrayList<>();
+                        Set<String> translations = new HashSet<>();
                         translationMap.forEach((key, value) -> {
-                            translations.add(String.format("\"%s\": \"%s\"", key, value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                            translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            if (!key.isEmpty()) {
+                                translations.add(String.format("\"%s\": \"%s\"", key, value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                            }
                         });
                         String output = "{" + String.join(",", translations) + "}";
                         return () -> new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
