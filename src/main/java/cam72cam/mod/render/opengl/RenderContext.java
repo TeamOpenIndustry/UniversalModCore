@@ -7,8 +7,6 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -19,8 +17,6 @@ import java.util.List;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
-    private static final AbstractTexture light_map = Minecraft.getInstance().getTextureManager().getTexture(new ResourceLocation("dynamic/light_map_1"));
-
     private RenderContext() {
     }
 
@@ -56,7 +52,7 @@ public class RenderContext {
         }
 
         if(state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
-            restore.add(applyCull(state.bools.get(GL11.GL_DEPTH_TEST)));
+            restore.add(applyDepthTest(state.bools.get(GL11.GL_DEPTH_TEST)));
         }
 
         if (state.blend != null) {
