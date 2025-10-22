@@ -7,11 +7,10 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 public class DirectDraw {
-    private final List<VertexBuilder> verts = new ArrayList<>();
+    private final Stack<VertexBuilder> verts = new Stack<>();
 
     public void draw(RenderState state) {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
@@ -19,7 +18,8 @@ public class DirectDraw {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
         try (With ctx = RenderContext.apply(state)) {
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-            for (VertexBuilder vert : verts) {
+            while (!verts.isEmpty()){
+                VertexBuilder vert = verts.pop();
                 vert.draw(builder);
             }
             builder.end();
@@ -30,7 +30,7 @@ public class DirectDraw {
 
     public VertexBuilder vertex(double x, double y, double z) {
         VertexBuilder target = new VertexBuilder(x, y, z);
-        verts.add(target);
+        verts.push(target);
         return target;
     }
 
@@ -72,10 +72,10 @@ public class DirectDraw {
         }
 
         public VertexBuilder color(double r, double g, double b, double a) {
-            this.r = (float)r;
-            this.g = (float)g;
-            this.b = (float)b;
-            this.a = (float)a;
+            this.r = (float) Math.max(r, 0);
+            this.g = (float) Math.max(g, 0);
+            this.b = (float) Math.max(b, 0);
+            this.a = (float) Math.max(a, 0);
             return this;
         }
 
