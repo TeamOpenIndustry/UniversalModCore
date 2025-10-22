@@ -41,7 +41,7 @@ public abstract class Slider extends Button {
         super(builder, new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20,
                                                new TextComponent(text), new TextComponent(""), min, max, start, 0, doublePrecision ? 4 : 0, true));
         ((InternalForgeSlider)this.button).clicker = this::onSlider;
-        ((InternalForgeSlider)this.button).setter = this::getTextSlider;
+        ((InternalForgeSlider)this.button).setter = this::getSliderText;
     }
 
     @Override
@@ -63,9 +63,10 @@ public abstract class Slider extends Button {
     @Override
     public void setText(String text) {
         this.text = text;
+        ((InternalForgeSlider)this.button).updateMessage();
     }
 
-    private String getTextSlider() {
+    private String getSliderText() {
         return this.text;
     }
 }
