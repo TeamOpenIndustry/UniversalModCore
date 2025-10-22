@@ -7,10 +7,11 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 
-import java.util.Stack;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DirectDraw {
-    private final Stack<VertexBuilder> verts = new Stack<>();
+    private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
@@ -18,8 +19,7 @@ public class DirectDraw {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
         try (With ctx = RenderContext.apply(state)) {
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-            while (!verts.isEmpty()){
-                VertexBuilder vert = verts.pop();
+            for (VertexBuilder vert : verts) {
                 vert.draw(builder);
             }
             builder.end();
@@ -30,7 +30,7 @@ public class DirectDraw {
 
     public VertexBuilder vertex(double x, double y, double z) {
         VertexBuilder target = new VertexBuilder(x, y, z);
-        verts.push(target);
+        verts.add(target);
         return target;
     }
 
