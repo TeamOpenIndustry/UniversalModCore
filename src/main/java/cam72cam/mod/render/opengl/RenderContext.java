@@ -167,16 +167,7 @@ public class RenderContext {
     }
 
     private static Runnable applyBlend(RenderState state) {
-        boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
-        Runnable restore = state.blend.apply();
-        return () -> {
-            if(oldState) {
-                RenderSystem.enableBlend();
-            } else {
-                RenderSystem.disableBlend();
-            }
-            restore.run();
-        };
+        return state.blend.apply();
     }
 
     public static void applyBool(int opt, boolean currState) {

@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL32;
 import java.nio.FloatBuffer;
 import java.util.function.Function;
 
-import static cam72cam.mod.render.opengl.RenderContext.applyBool;
 import static cam72cam.mod.render.opengl.RenderContext.checkError;
 
 public class BlendMode {
@@ -37,8 +36,20 @@ public class BlendMode {
     private BlendMode(boolean enabled) {
         apply = w -> {
             boolean oldBlend = GL32.glGetBoolean(GL32.GL_BLEND);
-            applyBool(GL32.GL_BLEND, enabled);
-            return w.and(() -> applyBool(GL32.GL_BLEND, oldBlend));
+
+            if(enabled) {
+                RenderSystem.enableBlend();
+            } else {
+                RenderSystem.disableBlend();
+            }
+
+            return w.and(() -> {
+                if(oldBlend) {
+                    RenderSystem.enableBlend();
+                } else {
+                    RenderSystem.disableBlend();
+                }
+            });
         };
     }
     public BlendMode(int srcColor, int dstColor) {
