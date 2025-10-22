@@ -211,7 +211,6 @@ public class RenderState {
         return this;
     }
     public RenderState scissor(boolean scissor, @Nonnull Rectangle2D range) {
-        this.bools.put(GL11.GL_SCISSOR_TEST, scissor);
         this.scissorRange = range;
         return this;
     }
@@ -223,8 +222,9 @@ public class RenderState {
         this.smooth_shading = smooth_shading;
         return this;
     }
+    @Deprecated
     public RenderState rescale_normal(boolean rescale_normal) {
-        this.bools.put(GL12.GL_RESCALE_NORMAL, rescale_normal);
+//        this.bools.put(GL12.GL_RESCALE_NORMAL, rescale_normal);
         return this;
     }
     public RenderState cull_face(boolean cull_face) {

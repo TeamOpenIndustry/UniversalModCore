@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBImaging;
 import org.lwjgl.opengl.GL32;
@@ -45,8 +46,8 @@ public class BlendMode {
         apply = apply.andThen(w -> {
             int origSrcColor = GL32.glGetInteger(GL32.GL_BLEND_SRC);
             int origDstColor = GL32.glGetInteger(GL32.GL_BLEND_DST);
-            GL32.glBlendFunc(srcColor, dstColor);
-            return w.and(() -> GL32.glBlendFunc(origSrcColor, origDstColor));
+            RenderSystem.blendFunc(srcColor, dstColor);
+            return w.and(() -> RenderSystem.blendFunc(origSrcColor, origDstColor));
         });
     }
     public BlendMode(int srcColor, int dstColor, int srcAlpha, int dstAlpha) {
@@ -56,9 +57,9 @@ public class BlendMode {
             int origDstColor = GL32.glGetInteger(GL32.GL_BLEND_DST);
             int origSrcAlpha = GL32.glGetInteger(GL32.GL_BLEND_SRC_ALPHA);
             int origDstAlpha = GL32.glGetInteger(GL32.GL_BLEND_DST_ALPHA);
-            GL32.glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
+            RenderSystem.blendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
             checkError();
-            return w.and(() -> GL32.glBlendFuncSeparate(origSrcColor, origDstColor, origSrcAlpha, origDstAlpha));
+            return w.and(() -> RenderSystem.blendFuncSeparate(origSrcColor, origDstColor, origSrcAlpha, origDstAlpha));
         });
     }
 

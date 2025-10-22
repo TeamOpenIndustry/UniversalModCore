@@ -3,10 +3,12 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -17,6 +19,8 @@ import java.util.List;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    private static final AbstractTexture light_map = Minecraft.getInstance().getTextureManager().getTexture(new ResourceLocation("dynamic/light_map_1"));
+
     private RenderContext() {
     }
 
@@ -25,6 +29,62 @@ public class RenderContext {
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader = RenderSystem.getShader();
+        restore.add(applyTransform(shader, state));
+        Minecraft mc = Minecraft.getInstance();
+        mc.gameRenderer.overlayTexture().setupOverlayColor();
+        restore.add(() -> mc.gameRenderer.overlayTexture().teardownOverlayColor());
+
+        if (state.texture != NO_TEXTURE && state.texture != null) {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
+            shader.setSampler("Sampler0", state.texture.getId());
+            // TODO normal and spec
+            int oldTexture = RenderSystem.getShaderTexture(0);
+            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
+            RenderSystem.setShaderTexture(0, state.texture.getId());
+        }
+
+        if (state.color != null && shader.COLOR_MODULATOR != null) {
+            shader.COLOR_MODULATOR.set(state.color);
+            float[] oldColor = RenderSystem.getShaderColor();
+
+            RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
+            restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
+        }
+
+        if(state.bools.containsKey(GL11.GL_CULL_FACE)) {
+            restore.add(applyCull(state.bools.get(GL11.GL_CULL_FACE)));
+        }
+
+        if(state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
+            restore.add(applyCull(state.bools.get(GL11.GL_DEPTH_TEST)));
+        }
+
+        if (state.blend != null) {
+            restore.add(applyBlend(state));
+        }
+
+        if(state.scissorRange != null){
+            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
+            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+
+            int x = (int) state.scissorRange.getMinX() * scaleFactor;
+            int y = (int) state.scissorRange.getMinY() * scaleFactor;
+            int width = (int) state.scissorRange.getWidth() * scaleFactor;
+            int height = (int) state.scissorRange.getHeight() * scaleFactor;
+
+            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+            RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
+            restore.add(RenderSystem::disableScissor);
+        }
+
+
+        shader.apply();
+        checkError();
+        return () -> restore.forEach(Runnable::run);
+    }
+
+    private static Runnable applyTransform(ShaderInstance shader, RenderState state) {
+        List<Runnable> restore = new ArrayList<>();
         if (state.model_view != null) {
             Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();
             restore.add(() -> RenderSystem.getModelViewMatrix().load(oldModelView));
@@ -47,11 +107,8 @@ public class RenderContext {
                     (float) model_view.m32,
                     (float) model_view.m33
             });
-
             shader.MODEL_VIEW_MATRIX.set(target);
-
             RenderSystem.getModelViewMatrix().load(target);
-
         }
         if (state.projection != null) {
             Matrix4f oldProjection = RenderSystem.getProjectionMatrix().copy();
@@ -78,63 +135,52 @@ public class RenderContext {
             shader.PROJECTION_MATRIX.set(target);
             RenderSystem.getProjectionMatrix().load(target);
         }
-
-        if (state.texture != NO_TEXTURE && state.texture != null) {
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            shader.setSampler("Sampler0", state.texture.getId());
-            // TODO normal and spec
-            int oldTexture = RenderSystem.getShaderTexture(0);
-            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
-            RenderSystem.setShaderTexture(0, state.texture.getId());
-        }
-
-        if (state.color != null && shader.COLOR_MODULATOR != null) {
-            shader.COLOR_MODULATOR.set(state.color);
-            float[] oldColor = RenderSystem.getShaderColor();
-
-            RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
-            restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
-        }
-        /* TODO 1.17.1
-        state.bools.forEach((glId, value) -> {
-            boolean oldValue = GL11.glGetBoolean(glId);
-            applyBool(glId, value);
-            restore.add(() -> applyBool(glId, oldValue));
-        });
-        if (state.depth_mask != null) {
-            boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-            GL11.glDepthMask(state.depth_mask);
-            restore.add(() -> GL11.glDepthMask(oldDepthMask));
-        }
-
-        if (state.smooth_shading != null) {
-            int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
-            GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
-            restore.add(() -> GL11.glShadeModel(oldShading));
-        }*/
-
-        if(state.scissorRange != null){
-            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
-            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
-
-            int x = (int) state.scissorRange.getMinX() * scaleFactor;
-            int y = (int) state.scissorRange.getMinY() * scaleFactor;
-            int width = (int) state.scissorRange.getWidth() * scaleFactor;
-            int height = (int) state.scissorRange.getHeight() * scaleFactor;
-
-            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-            RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
-            restore.add(RenderSystem::disableScissor);
-        }
-
-
-        shader.apply();
-        checkError();
-
-        if (state.blend != null) {
-            restore.add(() -> state.blend.apply().run());
-        }
         return () -> restore.forEach(Runnable::run);
+    }
+
+    private static Runnable applyCull(boolean newState) {
+        boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+        if(newState) {
+            RenderSystem.enableCull();
+        } else {
+            RenderSystem.disableCull();
+        }
+        return () -> {
+            if(olcState) {
+                RenderSystem.enableCull();
+            } else {
+                RenderSystem.disableCull();
+            }
+        };
+    }
+
+    private static Runnable applyDepthTest(boolean newState) {
+        boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        if(newState) {
+            RenderSystem.enableDepthTest();
+        } else {
+            RenderSystem.disableDepthTest();
+        }
+        return () -> {
+            if(olcState) {
+                RenderSystem.enableDepthTest();
+            } else {
+                RenderSystem.disableDepthTest();
+            }
+        };
+    }
+
+    private static Runnable applyBlend(RenderState state) {
+        boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        Runnable restore = state.blend.apply();
+        return () -> {
+            if(olcState) {
+                RenderSystem.enableDepthTest();
+            } else {
+                RenderSystem.disableDepthTest();
+            }
+            restore.run();
+        };
     }
 
     public static void applyBool(int opt, boolean currState) {
