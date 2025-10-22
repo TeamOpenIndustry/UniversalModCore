@@ -135,14 +135,14 @@ public class RenderContext {
     }
 
     private static Runnable applyCull(boolean newState) {
-        boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+        boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
         if(newState) {
             RenderSystem.enableCull();
         } else {
             RenderSystem.disableCull();
         }
         return () -> {
-            if(olcState) {
+            if(oldState) {
                 RenderSystem.enableCull();
             } else {
                 RenderSystem.disableCull();
@@ -151,14 +151,14 @@ public class RenderContext {
     }
 
     private static Runnable applyDepthTest(boolean newState) {
-        boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
         if(newState) {
             RenderSystem.enableDepthTest();
         } else {
             RenderSystem.disableDepthTest();
         }
         return () -> {
-            if(olcState) {
+            if(oldState) {
                 RenderSystem.enableDepthTest();
             } else {
                 RenderSystem.disableDepthTest();
@@ -167,13 +167,13 @@ public class RenderContext {
     }
 
     private static Runnable applyBlend(RenderState state) {
-        boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        boolean oldState = GL11.glGetBoolean(GL11.GL_BLEND);
         Runnable restore = state.blend.apply();
         return () -> {
-            if(olcState) {
-                RenderSystem.enableDepthTest();
+            if(oldState) {
+                RenderSystem.enableBlend();
             } else {
-                RenderSystem.disableDepthTest();
+                RenderSystem.disableBlend();
             }
             restore.run();
         };
