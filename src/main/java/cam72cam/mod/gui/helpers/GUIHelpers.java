@@ -11,22 +11,27 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraft.network.chat.ClickEvent;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
-    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
+    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("minecraft", "textures/gui/container/generic_54.png");
     public static GuiGraphics graphics;
 
     /** Draw a solid color block */
@@ -43,14 +48,11 @@ public class GUIHelpers {
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (With ctx = RenderContext.apply(
-                new RenderState().texture(Texture.wrap(tex))
-        )) {
-            // X Y, U V, UW VH, W H, TW TH
-            // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
-            // X Y, W H, U V, UW VH, TW TH
-            graphics.blit(tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
-        }
+        // X Y, U V, UW VH, W H, TW TH
+        // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
+        // X Y, W H, U V, UW VH, TW TH
+        RenderSystem.setShaderTexture(0, tex.internal);
+        graphics.blit(tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
     }
 
     /** Draw fluid block at coords */
@@ -63,35 +65,37 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (With ctx = RenderContext.apply(
-                new RenderState()
-                        .texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS)))
-                        .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
-        )) {
-            int iW = sprite.contents().width();
-            int iH = sprite.contents().height();
+        float[] oldColor = RenderSystem.getShaderColor();
+        ShaderInstance oldShader = RenderSystem.getShader();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        RenderSystem.setShaderColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+        int iW = sprite.contents().width();
+        int iH = sprite.contents().height();
 
-            float minU = sprite.getU0();
-            float minV = sprite.getV0();
+        float minU = sprite.getU0();
+        float minV = sprite.getV0();
 
 
-            Tesselator tessellator = Tesselator.getInstance();
-            BufferBuilder buffer = tessellator.getBuilder();
-            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-            for (int offY = 0; offY < height; offY += iH) {
-                double curHeight = Math.min(iH, height - offY);
-                float maxVScaled = sprite.getV(16.0 * curHeight / iH);
-                for (int offX = 0; offX < width; offX += iW) {
-                    double curWidth = Math.min(iW, width - offX);
-                    float maxUScaled = sprite.getU(16.0 * curWidth / iW);
-                    buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).endVertex();
-                    buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).endVertex();
-                    buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).endVertex();
-                    buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).endVertex();
-                }
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder buffer = tessellator.getBuilder();
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        for (int offY = 0; offY < height; offY += iH) {
+            double curHeight = Math.min(iH, height - offY);
+            float maxVScaled = sprite.getV(16.0 * curHeight / iH);
+            for (int offX = 0; offX < width; offX += iW) {
+                double curWidth = Math.min(iW, width - offX);
+                float maxUScaled = sprite.getU(16.0 * curWidth / iW);
+                buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).endVertex();
+                buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).endVertex();
+                buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).endVertex();
+                buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).endVertex();
             }
-            tessellator.end();
         }
+        tessellator.end();
+
+        RenderSystem.setShader(() -> oldShader);
+        RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
     }
 
     /** Draw the fluid in a tank with a black background at % full */

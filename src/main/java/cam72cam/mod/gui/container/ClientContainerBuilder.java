@@ -4,13 +4,11 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import cam72cam.mod.render.opengl.Texture;
 import com.mojang.blaze3d.platform.GlStateManager;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
-import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -167,6 +165,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
             graphics.blit(CHEST_GUI_TEXTURE.internal, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         }
+        drawPlayerInventoryLabel(normInvOffset + paddingLeft, y - 1);
         return y + 96;
     }
 
@@ -246,6 +245,17 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             graphics.blit(x, y, 0, 16, 16, sprite);
         }
     }
+
+    //TODO 1.20.1
+//    //Handle here to avoid wrong label offset
+//    @Override
+//    protected void renderLabels(PoseStack p_97808_, int p_97809_, int p_97810_) {
+//        this.font.draw(p_97808_, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
+//    }
+//
+//    private void drawPlayerInventoryLabel(int x, int y){
+//        this.font.draw(stack, this.playerInventoryTitle, centerX + x, centerY + y, 4210752);
+//    }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)

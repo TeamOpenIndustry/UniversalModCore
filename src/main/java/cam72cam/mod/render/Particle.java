@@ -12,7 +12,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -128,6 +127,7 @@ public abstract class Particle {
         double z = eyes.z - posZ;
         mat.rotate(Math.toRadians(180 - Math.toDegrees(Mth.atan2(-x, z))), 0, 1, 0);
         mat.rotate(Math.toRadians(180 - Math.toDegrees(Mth.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
+        mat.rotate(Math.toRadians(180), 1, 0, 0);
     }
 
     /** Used to render multiple particles in the same function for efficiency */

@@ -3,15 +3,12 @@ package cam72cam.mod.event;
 import cam72cam.mod.ModCore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.event.TickEvent;
@@ -21,13 +18,10 @@ import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.server.permission.PermissionAPI;
 import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
@@ -102,7 +96,9 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void onWorldTick(TickEvent.LevelTickEvent event) {
-            if (event.phase == TickEvent.Phase.START && event.level != null) {
+            //Since 1.18.2 this is called both server and client
+            //We only want server side
+            if (event.phase == TickEvent.Phase.START && event.level != null && !event.level.isClientSide()) {
                 World.TICK.execute(x -> x.accept(event.level));
             }
         }

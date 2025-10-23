@@ -23,10 +23,13 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import cam72cam.mod.serialization.TagCompound;
@@ -687,12 +690,9 @@ public class World {
     /** Opt in collision overriding */
     public boolean canEntityCollideWith(Vec3i bp, String damageType) {
         Block block = internal.getBlockState(bp.internal()).getBlock();
-        // TODO 1.19.4 custom damage sources
-        return true;
-        /*
         return ! (block instanceof IConditionalCollision) ||
-                ((IConditionalCollision) block).canCollide(internal, bp.internal(), internal.getBlockState(bp.internal()), new DamageSource(damageType));
-         */
+                ((IConditionalCollision) block).canCollide(internal, bp.internal(), internal.getBlockState(bp.internal()),
+                                                           new DamageSource(Holder.direct(new DamageType(damageType, DamageScaling.NEVER, 0f))));
     }
 
     /** Spawn a particle */

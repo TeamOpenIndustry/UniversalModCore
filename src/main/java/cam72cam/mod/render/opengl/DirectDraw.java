@@ -16,9 +16,21 @@ public class DirectDraw {
     public void draw(RenderState state) {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
         ShaderInstance shader = RenderSystem.getShader();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
+        //TODO 1.19.4 figure out why
+//        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+
+        //Add missing state
+        if(state.color != null) {
+            for (VertexBuilder vert : verts) {
+                vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+            }
+        }
+
         try (With ctx = RenderContext.apply(state)) {
-            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+//            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             for (VertexBuilder vert : verts) {
                 vert.draw(builder);
             }
@@ -71,10 +83,10 @@ public class DirectDraw {
         }
 
         public VertexBuilder color(double r, double g, double b, double a) {
-            this.r = (float)r;
-            this.g = (float)g;
-            this.b = (float)b;
-            this.a = (float)a;
+            this.r = (float) Math.max(r, 0);
+            this.g = (float) Math.max(g, 0);
+            this.b = (float) Math.max(b, 0);
+            this.a = (float) Math.max(a, 0);
             return this;
         }
 

@@ -27,7 +27,7 @@ public class CreativeTab {
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         CommonEvents.Item.CREATIVE_TAB.register(label, () -> {
             CreativeModeTab.Builder builder = CreativeModeTab.builder();
-            builder.title(Component.literal(label));
+            builder.title(Component.translatable("itemGroup." +label));
             builder.icon(() -> stack.get().internal());
             builder.displayItems((params, output) -> {
                 for (CustomItem customItem : inject) {
