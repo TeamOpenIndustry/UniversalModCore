@@ -3,6 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.platform.Lighting;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -52,7 +53,30 @@ public class RenderContext {
 
             RenderSystem.getModelViewMatrix().set(target);
 
+            //TODO
+//            Lighting.setupLevel(new Matrix4f(new float[]{
+//                    (float) state.model_view.m00,
+//                    (float) state.model_view.m01,
+//                    (float) state.model_view.m02,
+//                    (float) state.model_view.m03,
+//                    (float) state.model_view.m10,
+//                    (float) state.model_view.m11,
+//                    (float) state.model_view.m12,
+//                    (float) state.model_view.m13,
+//                    (float) state.model_view.m20,
+//                    (float) state.model_view.m21,
+//                    (float) state.model_view.m22,
+//                    (float) state.model_view.m23,
+//                    (float) state.model_view.m30,
+//                    (float) state.model_view.m31,
+//                    (float) state.model_view.m32,
+//                    (float) state.model_view.m33
+//            }));
+//            RenderSystem.setupShaderLights(shader);
+
+            RenderSystem.getModelViewMatrix().set(target);
         }
+
         if (state.projection != null) {
             Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
             restore.add(() -> RenderSystem.getProjectionMatrix().set(oldProjection));
@@ -112,6 +136,42 @@ public class RenderContext {
             GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
             restore.add(() -> GL11.glShadeModel(oldShading));
         }*/
+
+        if(state.bools.containsKey(GL11.GL_CULL_FACE)) {
+            boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+            if(state.bools.get(GL11.GL_CULL_FACE)) {
+                RenderSystem.enableCull();
+            } else {
+                RenderSystem.disableCull();
+            }
+            restore.add(() -> {
+                if(olcState) {
+                    RenderSystem.enableCull();
+                } else {
+                    RenderSystem.disableCull();
+                }
+            });
+        }
+
+        if(state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
+            boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            if(state.bools.get(GL11.GL_DEPTH_TEST)) {
+                RenderSystem.enableDepthTest();
+            } else {
+                RenderSystem.disableDepthTest();
+            }
+            restore.add(() -> {
+                if(olcState) {
+                    RenderSystem.enableDepthTest();
+                } else {
+                    RenderSystem.disableDepthTest();
+                }
+            });
+        }
+
+        if (state.blend != null) {
+            restore.add(state.blend.apply());
+        }
 
         if(state.scissorRange != null){
             int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
