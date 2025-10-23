@@ -17,6 +17,14 @@ public class DirectDraw {
         BufferBuilder builder = Tesselator.getInstance().getBuilder();
         ShaderInstance shader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+
+        //Add missing state
+        if(state.color != null) {
+            for (VertexBuilder vert : verts) {
+                vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+            }
+        }
+
         try (With ctx = RenderContext.apply(state)) {
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
             for (VertexBuilder vert : verts) {
@@ -72,10 +80,10 @@ public class DirectDraw {
         }
 
         public VertexBuilder color(double r, double g, double b, double a) {
-            this.r = (float)r;
-            this.g = (float)g;
-            this.b = (float)b;
-            this.a = (float)a;
+            this.r = (float) Math.max(r, 0);
+            this.g = (float) Math.max(g, 0);
+            this.b = (float) Math.max(b, 0);
+            this.a = (float) Math.max(a, 0);
             return this;
         }
 

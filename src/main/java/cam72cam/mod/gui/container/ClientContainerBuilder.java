@@ -8,9 +8,9 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
-import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -41,8 +41,6 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     private int centerX;
     private int centerY;
     private PoseStack stack;
-
-    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Inventory p_create_2_, Component p_create_3_) {
         super(serverContainer, serverContainer.playerInventory, new TextComponent(""));
@@ -76,45 +74,40 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            super.blit(stack, centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
-            // Top Bar
-            for (int k = 1; k <= slots; k++) {
-                super.blit(stack, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
-            }
-            // Top Right Corner
-            super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        super.blit(stack, centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
+        // Top Bar
+        for (int k = 1; k <= slots; k++) {
+            this.blit(stack, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset);
         }
+        // Top Right Corner
+        super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset);
         return y + topOffset;
     }
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            x += paddingLeft;
-            if (handler != null && handler.getSlotCount() > slotID) {
-                super.blit(stack, centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
-            } else {
-                drawRect(centerX + x, centerY + y, slotSize, slotSize, 0xFF444444);
-            }
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        x += paddingLeft;
+        if (handler != null && handler.getSlotCount() > slotID) {
+            super.blit(stack, centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
+        } else {
+            drawRect(centerX + x, centerY + y, slotSize, slotSize, 0xFF444444);
         }
     }
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            // Left Side
-            super.blit(stack, centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
-            // Middle Slots
-            for (int slotID = start; slotID < start + cols; slotID++) {
-                int slotOff = (slotID - start);
-                drawSlot(handler, slotID, x + slotOff * slotSize, y);
-            }
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        // Left Side
+        super.blit(stack, centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
+        // Middle Slots
+        for (int slotID = start; slotID < start + cols; slotID++) {
+            int slotOff = (slotID - start);
+            drawSlot(handler, slotID, x + slotOff * slotSize, y);
         }
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            // Right Side
-            super.blit(stack, centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
-        }
+        // Right Side
+        super.blit(stack, centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         return y + slotSize;
     }
 
@@ -132,41 +125,38 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            // Left Bottom
-            super.blit(stack, centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
-            // Middle Bottom
-            for (int k = 1; k <= slots; k++) {
-                super.blit(stack, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
-            }
-            // Right Bottom
-            super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        // Left Bottom
+        super.blit(stack, centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
+        // Middle Bottom
+        for (int k = 1; k <= slots; k++) {
+            super.blit(stack, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset);
         }
+        // Right Bottom
+        super.blit(stack, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            super.blit(stack, centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
-        }
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        super.blit(stack, centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         return y + bottomOffset;
     }
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            super.blit(stack, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
-        }
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        super.blit(stack, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         return y + midBarHeight;
     }
 
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
-            super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
-        }
+        RenderSystem.setShaderTexture(0, CHEST_GUI_TEXTURE.internal);
+        super.blit(stack, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
+        drawPlayerInventoryLabel(normInvOffset + paddingLeft, y - 1);
         return y + 96;
     }
 
@@ -199,7 +189,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
     @Override
     public void drawCenteredString(String text, int x, int y) {
-        super.drawCenteredString(stack, this.font, text, x + centerX + this.imageWidth / 2, y + centerY, 14737632);
+        GuiComponent.drawCenteredString(stack, this.font, text, x + centerX + this.imageWidth / 2, y + centerY, 14737632);
     }
 
     @Override
@@ -238,12 +228,18 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         }
 
         TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
-        try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
-                        .texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS)))
-        )) {
-            blit(stack, x, y, 0, 16, 16, sprite);
-        }
+        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        blit(stack, x, y, 0, 16, 16, sprite);
+    }
+
+    //Handle here to avoid wrong label offset
+    @Override
+    protected void renderLabels(PoseStack p_97808_, int p_97809_, int p_97810_) {
+        this.font.draw(p_97808_, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
+    }
+
+    private void drawPlayerInventoryLabel(int x, int y){
+        this.font.draw(stack, this.playerInventoryTitle, centerX + x, centerY + y, 4210752);
     }
 
     @Override
