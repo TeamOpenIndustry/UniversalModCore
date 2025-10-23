@@ -5,7 +5,6 @@ import cam72cam.mod.item.ItemStack;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.WeightedBakedModel;
@@ -27,7 +26,6 @@ import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
@@ -69,6 +67,7 @@ public class StandardModel {
 
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
+        //TODO 1.19.4 find out why translation not working
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         if (model instanceof WeightedBakedModel weightedBakedModel) {
