@@ -602,6 +602,9 @@ public class World {
         if (block instanceof SnowLayerBlock || block == Blocks.SNOW_BLOCK) {
             return true;
         }
+        if (block instanceof PowderSnowBlock) {
+            return true;
+        }
         if (block instanceof LeavesBlock) {
             return true;
         }
