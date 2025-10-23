@@ -18,65 +18,31 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
     private RenderContext() {
-    }
-
-    public static With apply(RenderState state) {
-        RenderContext.checkError();
+    }public static With apply(RenderState state) {
+        checkError();
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader = RenderSystem.getShader();
+
         restore.add(applyTransform(shader, state));
-        Minecraft mc = Minecraft.getInstance();
-        mc.gameRenderer.overlayTexture().setupOverlayColor();
-        restore.add(() -> mc.gameRenderer.overlayTexture().teardownOverlayColor());
-
-        if (state.texture != NO_TEXTURE && state.texture != null) {
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            shader.setSampler("Sampler0", state.texture.getId());
-            // TODO normal and spec
-            int oldTexture = RenderSystem.getShaderTexture(0);
-            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
-            RenderSystem.setShaderTexture(0, state.texture.getId());
-        }
-
-        if (state.color != null && shader.COLOR_MODULATOR != null) {
-            shader.COLOR_MODULATOR.set(state.color);
-            float[] oldColor = RenderSystem.getShaderColor();
-
-            RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
-            restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
-        }
-
-        if(state.bools.containsKey(GL11.GL_CULL_FACE)) {
-            restore.add(applyCull(state.bools.get(GL11.GL_CULL_FACE)));
-        }
-
-        if(state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
-            restore.add(applyDepthTest(state.bools.get(GL11.GL_DEPTH_TEST)));
-        }
-
-        if (state.blend != null) {
-            restore.add(applyBlend(state));
-        }
-
-        if(state.scissorRange != null){
-            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
-            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
-
-            int x = (int) state.scissorRange.getMinX() * scaleFactor;
-            int y = (int) state.scissorRange.getMinY() * scaleFactor;
-            int width = (int) state.scissorRange.getWidth() * scaleFactor;
-            int height = (int) state.scissorRange.getHeight() * scaleFactor;
-
-            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-            RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
-            restore.add(RenderSystem::disableScissor);
-        }
-
+        restore.add(applyOverlayColor());
+        restore.add(applyTexture(shader, state));
+        restore.add(applyColor(shader, state));
+        restore.add(applyCull(state));
+        restore.add(applyDepthTest(state));
+        restore.add(applyBlend(state));
+        restore.add(applyScissor(state));
 
         shader.apply();
         checkError();
+
         return () -> restore.forEach(Runnable::run);
+    }
+
+    private static Runnable applyOverlayColor() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.gameRenderer.overlayTexture().setupOverlayColor();
+        return () -> mc.gameRenderer.overlayTexture().teardownOverlayColor();
     }
 
     private static Runnable applyTransform(ShaderInstance shader, RenderState state) {
@@ -134,7 +100,37 @@ public class RenderContext {
         return () -> restore.forEach(Runnable::run);
     }
 
-    private static Runnable applyCull(boolean newState) {
+    private static Runnable applyTexture(ShaderInstance shader, RenderState state) {
+        if (state.texture == NO_TEXTURE || state.texture == null) {
+            return () -> {};
+        }
+
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
+        shader.setSampler("Sampler0", state.texture.getId());
+
+        int oldTexture = RenderSystem.getShaderTexture(0);
+        RenderSystem.setShaderTexture(0, state.texture.getId());
+
+        return () -> RenderSystem.setShaderTexture(0, oldTexture);
+    }
+
+    private static Runnable applyColor(ShaderInstance shader, RenderState state) {
+        if (state.color == null || shader.COLOR_MODULATOR == null) {
+            return () -> {};
+        }
+
+        shader.COLOR_MODULATOR.set(state.color);
+        float[] oldColor = RenderSystem.getShaderColor();
+        RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
+
+        return () -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
+    }
+
+    private static Runnable applyCull(RenderState state) {
+        if (!state.bools.containsKey(GL11.GL_CULL_FACE)) {
+            return () -> {};
+        }
+        boolean newState = state.bools.get(GL11.GL_CULL_FACE);
         boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
         if(newState) {
             RenderSystem.enableCull();
@@ -150,7 +146,11 @@ public class RenderContext {
         };
     }
 
-    private static Runnable applyDepthTest(boolean newState) {
+    private static Runnable applyDepthTest(RenderState state) {
+        if (!state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
+            return () -> {};
+        }
+        boolean newState = state.bools.get(GL11.GL_DEPTH_TEST);
         boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
         if(newState) {
             RenderSystem.enableDepthTest();
@@ -167,7 +167,27 @@ public class RenderContext {
     }
 
     private static Runnable applyBlend(RenderState state) {
+        if (state.blend == null) {
+            return () -> {};
+        }
         return state.blend.apply();
+    }
+
+    private static Runnable applyScissor(RenderState state) {
+        if (state.scissorRange == null) {
+            return () -> {};
+        }
+
+        int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
+        int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+
+        int x = (int) state.scissorRange.getMinX() * scaleFactor;
+        int y = (int) state.scissorRange.getMinY() * scaleFactor;
+        int width = (int) state.scissorRange.getWidth() * scaleFactor;
+        int height = (int) state.scissorRange.getHeight() * scaleFactor;
+
+        RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
+        return RenderSystem::disableScissor;
     }
 
     public static void applyBool(int opt, boolean currState) {
@@ -177,7 +197,6 @@ public class RenderContext {
             GL32.glDisable(opt);
         }
     }
-
 
     public static void checkError() {
         int err = GL32.glGetError();
