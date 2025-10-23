@@ -122,6 +122,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         matrix.m23 = 10;//Z transform
+        graphics.pose().pushPose();
         graphics.pose().setIdentity();
         graphics.pose().mulPoseMatrix(new Matrix4f(
                 (float) matrix.m00,
@@ -144,6 +145,7 @@ public class GUIHelpers {
         int xPos = (int) (x + matrix.m03 / matrix.m00);
         int yPos = (int) (y + matrix.m13 / matrix.m11);
         graphics.drawString(Minecraft.getInstance().font, text, xPos, yPos, color);
+        graphics.pose().popPose();
     }
 
     /** Draw a shadowed string offset from the center of coords */
@@ -154,6 +156,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         matrix.m23 = 0;//Z transform
+        graphics.pose().pushPose();
         graphics.pose().setIdentity();
         graphics.pose().mulPoseMatrix(new Matrix4f(
                 (float) matrix.m00,
@@ -176,6 +179,7 @@ public class GUIHelpers {
         int xPos = (int) (x + matrix.m03 / matrix.m00);
         int yPos = (int) (y + matrix.m13 / matrix.m11);
         graphics.drawCenteredString(Minecraft.getInstance().font, text, xPos, yPos, color);
+        graphics.pose().popPose();
     }
 
     /** Gat a string's internal width for further use */
