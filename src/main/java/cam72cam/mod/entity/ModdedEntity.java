@@ -4,8 +4,6 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
-import cam72cam.mod.entity.sync.TagSync;
-import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
@@ -278,10 +276,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void remove(RemovalReason reason) {
         if (this.isAlive()) {
             super.remove(reason);
-            if (reason == RemovalReason.KILLED) { // TODO bork??
+            if (reason == RemovalReason.KILLED) {
                 iKillable.onRemoved();
             }
         }
+    }
+
+    @Override
+    public void onClientRemoval() {
+        super.onClientRemoval();
+        iKillable.onRemoved();
     }
 
     /* Ridable */

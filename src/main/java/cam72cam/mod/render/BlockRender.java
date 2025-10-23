@@ -103,9 +103,6 @@ public class BlockRender {
                         return;
                     }
 
-                    if (!model.hasCustom()) {
-                        return;
-                    }
 
                     RenderType.solid().setupRenderState();
 
@@ -113,7 +110,10 @@ public class BlockRender {
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
+                    model.renderQuads(new RenderState(var3).lightmap(j/240f, k/240f));
+                    if (model.hasCustom()) {
+                        model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
+                    }
 
                     RenderType.solid().clearRenderState();
                 }

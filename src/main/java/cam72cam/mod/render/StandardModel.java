@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.WeightedBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -24,7 +25,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -71,6 +71,9 @@ public class StandardModel {
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        if (model instanceof WeightedBakedModel weightedBakedModel) {
+            //TODO Modify result to make it not dynamic
+        }
         models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
     }
