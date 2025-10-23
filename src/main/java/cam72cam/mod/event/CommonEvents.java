@@ -18,7 +18,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.server.permission.PermissionAPI;
 import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
@@ -92,7 +91,9 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void onWorldTick(TickEvent.WorldTickEvent event) {
-            if (event.phase == TickEvent.Phase.START && event.world != null) {
+            //Since 1.18.2 this is called both server and client
+            //We only want server side
+            if (event.phase == TickEvent.Phase.START && event.world != null && !event.world.isClientSide()) {
                 World.TICK.execute(x -> x.accept(event.world));
             }
         }
