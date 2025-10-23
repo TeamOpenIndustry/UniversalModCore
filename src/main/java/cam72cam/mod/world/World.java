@@ -45,10 +45,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import org.apache.commons.lang3.NotImplementedException;
@@ -628,8 +627,8 @@ public class World {
     public IInventory getInventory(Vec3i offset, Facing dir) {
         net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
-        if (te != null && te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).isPresent()) {
-            IItemHandler inv = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face).orElse(null);
+        if (te != null && te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).isPresent()) {
+            IItemHandler inv = te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).orElse(null);
             if (inv instanceof IItemHandlerModifiable) {
                 return IInventory.from((IItemHandlerModifiable) inv);
             }
@@ -652,8 +651,8 @@ public class World {
     public List<ITank> getTank(Vec3i offset, Facing dir) {
         net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
-        if (te != null && te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).isPresent()) {
-            IFluidHandler tank = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face).orElse(null);
+        if (te != null && te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).isPresent()) {
+            IFluidHandler tank = te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).orElse(null);
             if (tank != null) {
                 return ITank.getTank(tank);
             }
