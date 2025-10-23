@@ -13,7 +13,6 @@ import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
@@ -24,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraft.network.chat.ClickEvent;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -124,7 +124,7 @@ public class GUIHelpers {
         PoseStack stack = new PoseStack();
         matrix.m23 = 10;//Z transform
         stack.setIdentity();
-        stack.mulPoseMatrix(new Matrix4f(new float[]{
+        stack.mulPoseMatrix(new Matrix4f(
                 (float) matrix.m00,
                 (float) matrix.m01,
                 (float) matrix.m02,
@@ -141,8 +141,11 @@ public class GUIHelpers {
                 (float) matrix.m31,
                 (float) matrix.m32,
                 (float) matrix.m33
-        }));
-        Minecraft.getInstance().font.draw(stack, text, x, y, color);
+        ));
+        //TODO find out why stack's translation not working
+        float xPos = (float) (x + matrix.m03 / matrix.m00);
+        float yPos = (float) (y + matrix.m13 / matrix.m11);
+        Minecraft.getInstance().font.draw(stack, text, xPos, yPos, color);
     }
 
     /** Draw a shadowed string offset from the center of coords */
@@ -153,9 +156,9 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         PoseStack stack = new PoseStack();
-        matrix.m23 = 10;//Z transform
+        matrix.m23 = 0;//Z transform
         stack.setIdentity();
-        stack.mulPoseMatrix(new Matrix4f(new float[]{
+        stack.mulPoseMatrix(new Matrix4f(
                 (float) matrix.m00,
                 (float) matrix.m01,
                 (float) matrix.m02,
@@ -172,8 +175,11 @@ public class GUIHelpers {
                 (float) matrix.m31,
                 (float) matrix.m32,
                 (float) matrix.m33
-        }));
-        Minecraft.getInstance().font.draw(stack, text, x - Minecraft.getInstance().font.width(text) / 2f, y, color);
+        ));
+        float xPos = x - Minecraft.getInstance().font.width(text) / 2f;
+        xPos += (float) (matrix.m03 / matrix.m00);
+        float yPos = (float) (y + matrix.m13 / matrix.m11);
+        Minecraft.getInstance().font.draw(stack, text, xPos, yPos, color);
     }
 
     /** Gat a string's internal width for further use */
