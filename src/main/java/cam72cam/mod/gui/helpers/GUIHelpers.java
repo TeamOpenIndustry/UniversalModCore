@@ -9,13 +9,11 @@ import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -31,19 +29,22 @@ import util.Matrix4;
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
-    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("minecraft", "textures/gui/container/generic_54.png");
-    public static GuiGraphics graphics;
+    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("minecraft",
+                                                                      "textures/gui/container/generic_54.png");
+    //Initial value
+    public static GuiGraphics graphics
+            = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().gameRenderer.renderBuffers.bufferSource());
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (With ctx = RenderContext.apply(
-                new RenderState()
-                        .color(1, 1, 1, 1)
-                        .texture(Texture.NO_TEXTURE)
-                        .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
-        )) {
+//        try (With ctx = RenderContext.apply(
+//                new RenderState()
+//                        .color(1, 1, 1, 1)
+//                        .texture(Texture.NO_TEXTURE)
+//                        .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
+//        )) {
             graphics.fill(x, y, x + width, y + height, color);
-        }
+//        }
     }
 
     /** Draw a full image (tex) at coords with given width/height */
@@ -67,35 +68,32 @@ public class GUIHelpers {
 
         float[] oldColor = RenderSystem.getShaderColor();
         ShaderInstance oldShader = RenderSystem.getShader();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
-        RenderSystem.setShaderColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
         int iW = sprite.contents().width();
         int iH = sprite.contents().height();
 
         float minU = sprite.getU0();
         float minV = sprite.getV0();
 
-
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);
             float maxVScaled = sprite.getV(16.0 * curHeight / iH);
             for (int offX = 0; offX < width; offX += iW) {
                 double curWidth = Math.min(iW, width - offX);
                 float maxUScaled = sprite.getU(16.0 * curWidth / iW);
-                buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).endVertex();
-                buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).endVertex();
+                buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
+                buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
+                buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
+                buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
             }
         }
         tessellator.end();
 
         RenderSystem.setShader(() -> oldShader);
-        RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
     }
 
     /** Draw the fluid in a tank with a black background at % full */
@@ -123,9 +121,29 @@ public class GUIHelpers {
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            graphics.drawString(Minecraft.getInstance().font, text, x, y, color);
-        }
+        matrix.m23 = 10;//Z transform
+        graphics.pose().setIdentity();
+        graphics.pose().mulPoseMatrix(new Matrix4f(
+                (float) matrix.m00,
+                (float) matrix.m01,
+                (float) matrix.m02,
+                (float) matrix.m03,
+                (float) matrix.m10,
+                (float) matrix.m11,
+                (float) matrix.m12,
+                (float) matrix.m13,
+                (float) matrix.m20,
+                (float) matrix.m21,
+                (float) matrix.m22,
+                (float) matrix.m23,
+                (float) matrix.m30,
+                (float) matrix.m31,
+                (float) matrix.m32,
+                (float) matrix.m33
+        ));
+        int xPos = (int) (x + matrix.m03 / matrix.m00);
+        int yPos = (int) (y + matrix.m13 / matrix.m11);
+        graphics.drawString(Minecraft.getInstance().font, text, xPos, yPos, color);
     }
 
     /** Draw a shadowed string offset from the center of coords */
@@ -135,9 +153,29 @@ public class GUIHelpers {
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            graphics.drawCenteredString(Minecraft.getInstance().font, text, (x - Minecraft.getInstance().font.width(text) / 2), y, color);
-        }
+        matrix.m23 = 0;//Z transform
+        graphics.pose().setIdentity();
+        graphics.pose().mulPoseMatrix(new Matrix4f(
+                (float) matrix.m00,
+                (float) matrix.m01,
+                (float) matrix.m02,
+                (float) matrix.m03,
+                (float) matrix.m10,
+                (float) matrix.m11,
+                (float) matrix.m12,
+                (float) matrix.m13,
+                (float) matrix.m20,
+                (float) matrix.m21,
+                (float) matrix.m22,
+                (float) matrix.m23,
+                (float) matrix.m30,
+                (float) matrix.m31,
+                (float) matrix.m32,
+                (float) matrix.m33
+        ));
+        int xPos = (int) (x + matrix.m03 / matrix.m00);
+        int yPos = (int) (y + matrix.m13 / matrix.m11);
+        graphics.drawCenteredString(Minecraft.getInstance().font, text, xPos, yPos, color);
     }
 
     /** Gat a string's internal width for further use */

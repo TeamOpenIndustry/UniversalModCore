@@ -4,11 +4,10 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import cam72cam.mod.render.opengl.Texture;
-import com.mojang.blaze3d.platform.GlStateManager;
 import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -208,17 +207,18 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
         // TODO 1.20.1 decorations?
         graphics.renderItem(stack.internal(), x, y);
+//        graphics.fill(RenderType.guiOverlay(), x, y, x + 16, y + 16, 0x80FFFFFF);
 
-        try (With ctx = RenderContext.apply(
-                new RenderState()
-                        .color(1, 1, 1, 1)
-                        .alpha_test(true)
-                        .depth_test(false)
-        )) {
-            GlStateManager._disableDepthTest();
-            drawRect(x, y, 16, 16, -2130706433);
-            GlStateManager._enableDepthTest();
-        }
+//        try (With ctx = RenderContext.apply(
+//                new RenderState()
+//                        .color(1, 1, 1, 1)
+//                        .alpha_test(true)
+//                        .depth_test(false)
+//        )) {
+//        GlStateManager._disableDepthTest();
+//
+//        GlStateManager._enableDepthTest();
+//        }
     }
 
     @Override
@@ -238,24 +238,18 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         }
 
         TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
-        try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
-                        .texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS)))
-        )) {
-            graphics.blit(x, y, 0, 16, 16, sprite);
-        }
+        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        graphics.blit(x, y, 0, 16, 16, sprite);
     }
 
-    //TODO 1.20.1
-//    //Handle here to avoid wrong label offset
-//    @Override
-//    protected void renderLabels(PoseStack p_97808_, int p_97809_, int p_97810_) {
-//        this.font.draw(p_97808_, this.title, (float)this.titleLabelX, (float)this.titleLabelY, 4210752);
-//    }
-//
-//    private void drawPlayerInventoryLabel(int x, int y){
-//        this.font.draw(stack, this.playerInventoryTitle, centerX + x, centerY + y, 4210752);
-//    }
+    //Handle here to avoid wrong label offset
+    @Override
+    protected void renderLabels(GuiGraphics p_281635_, int p_282681_, int p_283686_) {
+        p_281635_.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
+     }
+    private void drawPlayerInventoryLabel(int x, int y){
+        graphics.drawString(this.font, this.playerInventoryTitle, centerX + x, centerY + y, 4210752, false);
+    }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks)
