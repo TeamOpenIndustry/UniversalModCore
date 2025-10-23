@@ -1,11 +1,11 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -18,8 +18,10 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
     private RenderContext() {
-    }public static With apply(RenderState state) {
-        checkError();
+    }
+
+    public static With apply(RenderState state) {
+        RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader = RenderSystem.getShader();
@@ -70,8 +72,31 @@ public class RenderContext {
                     (float) model_view.m33
             });
             shader.MODEL_VIEW_MATRIX.set(target);
+
+            //TODO
+//            Lighting.setupLevel(new Matrix4f(new float[]{
+//                    (float) state.model_view.m00,
+//                    (float) state.model_view.m01,
+//                    (float) state.model_view.m02,
+//                    (float) state.model_view.m03,
+//                    (float) state.model_view.m10,
+//                    (float) state.model_view.m11,
+//                    (float) state.model_view.m12,
+//                    (float) state.model_view.m13,
+//                    (float) state.model_view.m20,
+//                    (float) state.model_view.m21,
+//                    (float) state.model_view.m22,
+//                    (float) state.model_view.m23,
+//                    (float) state.model_view.m30,
+//                    (float) state.model_view.m31,
+//                    (float) state.model_view.m32,
+//                    (float) state.model_view.m33
+//            }));
+//            RenderSystem.setupShaderLights(shader);
+
             RenderSystem.getModelViewMatrix().load(target);
         }
+
         if (state.projection != null) {
             Matrix4f oldProjection = RenderSystem.getProjectionMatrix().copy();
             restore.add(() -> RenderSystem.getProjectionMatrix().load(oldProjection));
@@ -186,6 +211,7 @@ public class RenderContext {
         int width = (int) state.scissorRange.getWidth() * scaleFactor;
         int height = (int) state.scissorRange.getHeight() * scaleFactor;
 
+        //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
         RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
         return RenderSystem::disableScissor;
     }
