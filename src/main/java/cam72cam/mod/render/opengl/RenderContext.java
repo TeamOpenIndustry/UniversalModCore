@@ -1,12 +1,11 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.Lighting;
-import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -188,10 +187,6 @@ public class RenderContext {
 
         shader.apply();
         checkError();
-
-        if (state.blend != null) {
-            restore.add(() -> state.blend.apply().run());
-        }
         return () -> restore.forEach(Runnable::run);
     }
 
