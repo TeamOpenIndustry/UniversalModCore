@@ -10,25 +10,17 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
-import cam72cam.mod.render.opengl.RenderContext;
-import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.sound.Audio;
 import cam72cam.mod.world.World;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -107,6 +99,7 @@ public class ClientEvents {
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
+    public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -288,5 +281,10 @@ public class ClientEvents {
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
         }*/
+
+        @SubscribeEvent
+        public static void registerBindings(RegisterKeyMappingsEvent event) {
+            KEY_MAPPING_REGISTER.execute(x -> x.accept(event));
+        }
     }
 }

@@ -1,10 +1,12 @@
 package cam72cam.mod.input;
 
 import cam72cam.mod.event.ClientEvents;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
 public class Keyboard {
@@ -125,15 +127,16 @@ public class Keyboard {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     /** Registers a keybind */
+    @OnlyIn(Dist.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         if (Minecraft.getInstance() == null) {
             System.out.println("Shake hands with danger!");
             return;
         }
-        KeyMapping key = new KeyMapping(name, keyCode.code, category);
-        //TODO 1.19.4 ClientRegistry.registerKeyBinding(key);
+        KeyMapping key = new KeyMapping(name, KeyConflictContext.UNIVERSAL, InputConstants.Type.KEYSYM, keyCode.code, category);
+
+        ClientEvents.KEY_MAPPING_REGISTER.subscribe(e -> e.register(key));
         ClientEvents.TICK.subscribe(() -> {
             if (key.isDown()) {
                 handler.run();
