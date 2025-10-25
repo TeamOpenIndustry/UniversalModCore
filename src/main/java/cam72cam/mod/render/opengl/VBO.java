@@ -1,11 +1,9 @@
 package cam72cam.mod.render.opengl;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -14,7 +12,6 @@ import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -163,7 +160,7 @@ public class VBO {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
 
-            ShaderInstance shader = GameRenderer.getRendertypeCutoutShader();
+            ShaderInstance shader = GameRenderer.getRendertypeEntityCutoutNoCullShader();
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -196,8 +193,12 @@ public class VBO {
                                     GL32.glEnableVertexAttribArray(i);
                                     GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
                                 } else if (entry.getKey().equals("UV1")) {
-                                    // TODO
+                                    GL32.glDisableVertexAttribArray(i);
+                                    GL32.glVertexAttribI2i(i, 0, 10);
                                 } else if (entry.getKey().equals("UV2")) {
+//                                    GL32.glEnableVertexAttribArray(i);
+//                                    GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.lightmapOffset * Float.BYTES);
+
                                     GL32.glDisableVertexAttribArray(i);
                                     int x = 255;
                                     int y = 255;
