@@ -5,13 +5,16 @@ import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.opengl.RenderContext;
-import cam72cam.mod.util.With;
-import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.render.opengl.VBO;
+import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -42,14 +45,20 @@ public class OBJRender extends VBO {
                 return;
             }
             try (With pus = super.push(mod)) {
-                draw(groups);
+                drawInternal(groups);
             }
+        }
+
+        //So it turns out that in 1.17+ previous applied modifier will affect next operation and so on...
+        //Why not manually add a empty modifier in order to clear it?
+        public void draw(Collection<String> groups) {
+            draw(groups, state -> state.translate(0, 0, 0));
         }
 
         /**
          * Draw these groups in the VB
          */
-        public void draw(Collection<String> groups) {
+        private void drawInternal(Collection<String> groups) {
             if (!isLoaded()) {
                 return;
             }
