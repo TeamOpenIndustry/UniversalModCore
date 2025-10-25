@@ -2,22 +2,25 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
-import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.WeightedBakedModel;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.*;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.WeightedBakedModel;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
@@ -148,7 +151,22 @@ public class StandardModel {
                     quads.addAll(model.getRight().getQuads(null, facing, new Random()));
                 }
 
-                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
+                quads.forEach(quad -> {
+                    //TODO 1.17.1 instead of manually handling how to make it back to vanilla implementation?
+                    float l = switch (quad.getDirection()) {
+                        case UP -> 1f;
+                        case NORTH, SOUTH -> 0.9f;
+                        case EAST, WEST -> 0.8f;
+                        case DOWN -> 0.6f;
+                    };
+                    if (quad.isTinted()) {
+                        worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f,
+                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
+                    } else {
+                        worldRenderer.putBulkData(new PoseStack().last(), quad, 1f, 1f, 1f, 1.0f,
+                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
+                    }
+                });
             }
             worldRenderer.end();
             BufferUploader.end(worldRenderer);
