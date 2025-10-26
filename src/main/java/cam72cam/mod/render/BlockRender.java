@@ -6,6 +6,7 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -31,7 +32,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -116,6 +116,7 @@ public class BlockRender {
                     }
 
                     RenderType.solid().clearRenderState();
+                    RenderContext.resetState();
                 }
 
                 @Override
