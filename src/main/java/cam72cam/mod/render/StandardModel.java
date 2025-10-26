@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
@@ -23,14 +22,6 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.level.block.*;
-import cam72cam.mod.render.opengl.RenderContext;
-import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
-import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.util.With;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
@@ -79,7 +70,8 @@ public class StandardModel {
 
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
-        //TODO 1.19.4 find out why translation not working
+        //TODO 1.19.4 find out why not working in gui/item/overlay
+        //Should we try to wrap it after RenderStage merged?
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         if (model instanceof WeightedBakedModel weightedBakedModel) {
@@ -87,6 +79,20 @@ public class StandardModel {
         }
         models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
+//        custom.add((matrix, pt) -> {
+//
+//            matrix.model_view().multiply(transform);
+//            BlockState state = itemToBlockState(bed);
+//            BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+//
+//            try (With ctx = RenderContext.apply(matrix)) {
+//                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+//                Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, new PoseStack(), buffer, 240 * 65536, OverlayTexture.NO_OVERLAY, ModelData.EMPTY,
+//                                                                             RenderType.cutout());
+//                buffer.endBatch();
+//            }
+//        });
+//        return this;
     }
 
     /** Add item (think dropped item) */

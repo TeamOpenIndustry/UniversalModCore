@@ -205,4 +205,11 @@ public class RenderContext {
             ModCore.error("We broke something: %s", err);
         }
     }
+
+    //Restore state
+    //TODO PR#171
+    public static void resetState() {
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1,1,1,1);
+    }
 }
