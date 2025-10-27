@@ -11,6 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -22,7 +23,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -194,7 +194,7 @@ public abstract class BlockType {
         @Override
         public RenderShape getRenderShape(BlockState state) {
             // TESR Renderer TODO OPTIONAL!@!!!!
-            return RenderShape.ENTITYBLOCK_ANIMATED;
+            return RenderShape.MODEL;
         }
 
         protected World getWorldOrNull(BlockGetter source, BlockPos pos) {
