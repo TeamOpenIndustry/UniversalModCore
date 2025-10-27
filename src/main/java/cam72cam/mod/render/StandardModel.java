@@ -151,22 +151,7 @@ public class StandardModel {
                     quads.addAll(model.getRight().getQuads(null, facing, new Random()));
                 }
 
-                quads.forEach(quad -> {
-                    //TODO 1.17.1 instead of manually handling how to make it back to vanilla implementation?
-                    float l = switch (quad.getDirection()) {
-                        case UP -> 1f;
-                        case NORTH, SOUTH -> 0.9f;
-                        case EAST, WEST -> 0.8f;
-                        case DOWN -> 0.6f;
-                    };
-                    if (quad.isTinted()) {
-                        worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f,
-                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
-                    } else {
-                        worldRenderer.putBulkData(new PoseStack().last(), quad, 1f, 1f, 1f, 1.0f,
-                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
-                    }
-                });
+                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
             worldRenderer.end();
             BufferUploader.end(worldRenderer);
