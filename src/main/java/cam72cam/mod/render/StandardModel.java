@@ -79,20 +79,6 @@ public class StandardModel {
         }
         models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
-//        custom.add((matrix, pt) -> {
-//
-//            matrix.model_view().multiply(transform);
-//            BlockState state = itemToBlockState(bed);
-//            BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-//
-//            try (With ctx = RenderContext.apply(matrix)) {
-//                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-//                Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, new PoseStack(), buffer, 240 * 65536, OverlayTexture.NO_OVERLAY, ModelData.EMPTY,
-//                                                                             RenderType.cutout());
-//                buffer.endBatch();
-//            }
-//        });
-//        return this;
     }
 
     /** Add item (think dropped item) */
@@ -167,22 +153,7 @@ public class StandardModel {
                     quads.addAll(model.getRight().getQuads(null, facing, Minecraft.getInstance().font.random));
                 }
 
-                quads.forEach(quad -> {
-                    //TODO 1.17.1 instead of manually handling how to make it back to vanilla implementation?
-                    float l = switch (quad.getDirection()) {
-                        case UP -> 1f;
-                        case NORTH, SOUTH -> 0.9f;
-                        case EAST, WEST -> 0.8f;
-                        case DOWN -> 0.6f;
-                    };
-                    if (quad.isTinted()) {
-                        worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2,
-                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
-                    } else {
-                        worldRenderer.putBulkData(new PoseStack().last(), quad, 1f, 1f, 1f,
-                                                  (int) (240*65526*l), OverlayTexture.NO_OVERLAY);
-                    }
-                });
+                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
             BufferUploader.draw(worldRenderer.end());
         }
