@@ -8,8 +8,7 @@
   "mixins": [
   ],
   "client": [
-    "MixinBlockStatePredictionHandler",
-    "MixinClientLevel"
+    "fix.block_replacement.MixinBlockStatePredictionHandler"
   ],
   "injectors": {
     "defaultRequire": 1
