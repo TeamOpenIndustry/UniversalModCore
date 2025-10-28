@@ -206,6 +206,8 @@ public class VBO {
                                         x = (int) (state.lightmap[0] * 255);
                                         y = (int) (state.lightmap[1] * 255);
                                     }
+                                    RenderContext.oldX = x;
+                                    RenderContext.oldY = y;
                                     GL32.glVertexAttribI2i(i, x, y);
                                 }
                             }

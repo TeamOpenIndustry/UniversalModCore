@@ -4,6 +4,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -13,10 +14,14 @@ import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    public static int oldX;
+    public static int oldY;
+
     private RenderContext() {
     }
 
@@ -184,6 +189,41 @@ public class RenderContext {
             restore.add(RenderSystem::disableScissor);
         }
 
+        if (state.lightmap != null) {
+            int oldX1 = oldX;
+            int oldY1 = oldY;
+
+            for (int i = 0; i < shader.getVertexFormat().getElements().size(); i++) {
+                VertexFormatElement element = shader.getVertexFormat().getElements().get(i);
+                if (element.getUsage() == VertexFormatElement.Usage.UV) {
+                    for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                        if (entry.getValue() == element && entry.getKey().equals("UV2")) {
+
+                            int x = 255;
+                            int y = 255;
+                            if (state.lightmap != null) {
+                                x = (int) (state.lightmap[0] * 255);
+                                y = (int) (state.lightmap[1] * 255);
+                            }
+                            GL32.glVertexAttribI2i(i, x, y);
+                        }
+                    }
+                }
+            }
+
+            restore.add(() -> {
+                for (int i = 0; i < shader.getVertexFormat().getElements().size(); i++) {
+                    VertexFormatElement element = shader.getVertexFormat().getElements().get(i);
+                    if (element.getUsage() == VertexFormatElement.Usage.UV) {
+                        for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                            if (entry.getValue() == element && entry.getKey().equals("UV2")) {
+                                GL32.glVertexAttribI2i(i, oldX1, oldY1);
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         shader.apply();
         checkError();
