@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "cam72cam.mod.mixin.feature",
+  "refmap": "mixins.universalmodcore.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

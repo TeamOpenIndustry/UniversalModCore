@@ -1,9 +1,11 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -11,6 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'org.spongepowered.mixin'
 
 configurations {
     shade
@@ -56,6 +59,9 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -109,6 +115,8 @@ minecraft {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -134,6 +142,20 @@ dependencies {
     testImplementation ('junit:junit:4.13')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+}
+
+mixin {
+    // Refmaps for SourceSet
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    // Configs to add to runs and jars
+    config 'mixins.universalmodcore.fix.json'
+    config 'mixins.universalmodcore.feature.json'
+
+    // Specify options for dev run configs
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
 }
 
 jar {
