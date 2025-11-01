@@ -1,5 +1,6 @@
 {
   "required": true,
+  "plugin": "cam72cam.mod.UMCMixinLoader",
   "package": "cam72cam.mod.mixin.feature",
   "refmap": "mixins.universalmodcore.refmap.json",
   "target": "@env(DEFAULT)",

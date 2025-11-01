@@ -1,10 +1,12 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
+        maven { url "https://plugins.gradle.org/m2/" }
         maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
@@ -13,6 +15,7 @@ apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.spongepowered.mixin'
 
 configurations {
@@ -117,6 +120,7 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
 
     annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -142,6 +146,7 @@ dependencies {
     testImplementation ('junit:junit:4.13')
 
     shade group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+    shade "io.github.llamalad7:mixinextras-common:0.5.0"
 }
 
 mixin {
@@ -177,6 +182,20 @@ jar {
     }
 }
 jar.finalizedBy('reobfJar')
+
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'com.llamalad7.mixinextras', "${project.group}.shade.mixinextras"
+    mergeServiceFiles()
+    finalizedBy 'reobfShadowJar'
+}
+
+assemble.dependsOn shadowJar
+
+reobf {
+    shadowJar {}
+}
 
 test {
     useJUnit()
