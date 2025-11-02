@@ -124,7 +124,7 @@ repositories {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.4-45.1.19'
+    minecraft 'net.minecraftforge:forge:1.19.4-45.4.2'
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     // you may put jars on which you depend on in ./libs
@@ -150,6 +150,10 @@ dependencies {
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
+        jarJar.ranged(it, "[0.5.0,)")
+    }
 
     minecraftLibrary group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     minecraftLibrary group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
@@ -168,6 +172,21 @@ mixin {
     debug.verbose = true
     debug.export = true
     dumpTargetOnFailure = true
+}
+
+repositories {
+    maven { url = "https://teamopenindustry.cc/maven" }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
+dependencies {
+    implementation fg.deobf("cam72cam.immersiverailroading:ImmersiveRailroading:1.19.4-forge-1.10.0-da56426")
+    implementation fg.deobf('trackapi:TrackAPI:1.19.4-forge-1.2')
 }
 
 jar {
