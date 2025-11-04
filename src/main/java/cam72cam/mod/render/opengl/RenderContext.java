@@ -25,7 +25,7 @@ public class RenderContext {
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader = RenderSystem.getShader();
-        if (state.model_view != null) {
+        if (state.model_view != null && shader.MODEL_VIEW_MATRIX != null) {
             Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();
             restore.add(() -> RenderSystem.getModelViewMatrix().load(oldModelView));
             Matrix4 model_view = state.model_view;
@@ -74,7 +74,7 @@ public class RenderContext {
             RenderSystem.getModelViewMatrix().load(target);
         }
 
-        if (state.projection != null) {
+        if (state.projection != null && shader.PROJECTION_MATRIX != null) {
             Matrix4f oldProjection = RenderSystem.getProjectionMatrix().copy();
             restore.add(() -> RenderSystem.getProjectionMatrix().load(oldProjection));
             Matrix4 projection = state.projection;
@@ -109,11 +109,15 @@ public class RenderContext {
             RenderSystem.setShaderTexture(0, state.texture.getId());
         }
 
-        if (state.color != null && shader.COLOR_MODULATOR != null) {
-            shader.COLOR_MODULATOR.set(state.color);
+        float[] color = state.color;
+        if(color == null) {
+            color = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
+        }
+        if (shader.COLOR_MODULATOR != null) {
+            shader.COLOR_MODULATOR.set(color);
             float[] oldColor = RenderSystem.getShaderColor();
 
-            RenderSystem.setShaderColor(state.color[0], state.color[1], state.color[2], state.color[3]);
+            RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
         /* TODO 1.17.1
@@ -164,6 +168,12 @@ public class RenderContext {
                     RenderSystem.disableDepthTest();
                 }
             });
+        }
+
+        if(state.depth_mask != null) {
+            //TODO overlapping cloud
+            RenderSystem.depthMask(state.depth_mask);
+            restore.add(() -> RenderSystem.depthMask(true));
         }
 
         if (state.blend != null) {
