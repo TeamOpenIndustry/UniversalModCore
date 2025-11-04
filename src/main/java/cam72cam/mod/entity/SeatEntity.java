@@ -26,7 +26,7 @@ import java.util.UUID;
 
 /** Seat construct to make multiple riders actually work */
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
-    static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
+    static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "seat");
     public static final EntityType<SeatEntity> TYPE = makeType();
 
     private static EntityType<SeatEntity> makeType() {

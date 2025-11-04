@@ -37,8 +37,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold").add(Items.GOLD_INGOT);
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(new ResourceLocation("forge", "ingots/steel")), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(new ResourceLocation("forge", "storage_blocks/steel")), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "ingots/steel")), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "storage_blocks/steel")), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron").add(Blocks.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -119,8 +119,9 @@ public class Fuzzy {
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
         this(ItemTags.create(
-                ident.contains(":") ? new ResourceLocation(ident.toLowerCase(Locale.ROOT)) :
-                        new ResourceLocation("forge", ident.toLowerCase(Locale.ROOT))
+                ident.contains(":")
+                ? ResourceLocation.parse(ident.toLowerCase(Locale.ROOT))
+                : ResourceLocation.fromNamespaceAndPath("forge", ident.toLowerCase(Locale.ROOT))
         ), ident);
     }
 

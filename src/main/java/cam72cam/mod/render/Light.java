@@ -65,7 +65,7 @@ public class Light {
                 builder.sized(0, 0);
 
                 EntityType<LightEntity> et = builder.build("light" + i);
-                et.setRegistryName(new ResourceLocation("universalmodcore:light" + i));
+                et.setRegistryName(ResourceLocation.parse("universalmodcore:light" + i));
                 ForgeRegistries.ENTITIES.register(et);
                 types[i] = et;
             }

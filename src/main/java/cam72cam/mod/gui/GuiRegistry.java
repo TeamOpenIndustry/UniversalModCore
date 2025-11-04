@@ -45,7 +45,7 @@ public class GuiRegistry {
             (id, inv, data) -> registry.get(data.readInt()).apply(new CreateEvent(id, inv, data.readInt(), data.readInt(), data.readInt())))
     );
     static {
-        TYPE.setRegistryName(new ResourceLocation(ModCore.MODID, "alltheguis"));
+        TYPE.setRegistryName(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "alltheguis"));
     }
 
     public static void registerEvents() {

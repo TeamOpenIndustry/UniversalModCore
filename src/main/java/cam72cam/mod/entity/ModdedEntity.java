@@ -206,7 +206,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public EntityType<?> getType() {
-        return legacyId == null ? super.getType() : ForgeRegistries.ENTITIES.getValue(new ResourceLocation(legacyId));
+        return legacyId == null ? super.getType() : ForgeRegistries.ENTITIES.getValue(ResourceLocation.parse(legacyId));
     }
 
     /* ITickable */

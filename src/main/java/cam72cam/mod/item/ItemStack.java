@@ -35,7 +35,7 @@ public class ItemStack {
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.world.item.ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(item)), i));
+        this(new net.minecraft.world.item.ItemStack(ForgeRegistries.ITEMS.getValue(ResourceLocation.parse(item)), i));
     }
 
     public net.minecraft.world.item.ItemStack internal() {
