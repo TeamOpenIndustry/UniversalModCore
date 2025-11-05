@@ -14,11 +14,13 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.FileResourcePack;
-import net.minecraft.client.resources.FolderResourcePack;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.minecraft.client.resources.*;
+import net.minecraft.client.resources.data.IMetadataSection;
+import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -32,17 +34,18 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.annotation.Nullable;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
@@ -52,12 +55,12 @@ public class ModCore {
     public static final String VERSION = "1.2.2";
     public static ModCore instance;
 
-    private List<Mod> mods = new ArrayList<>();
+    private static List<Mod> mods = new ArrayList<>();
     private Logger logger;
 
     /** Register a mod, must happen before UMC is loaded! */
     public static void register(Mod ctr) {
-        instance.mods.add(ctr);
+        mods.add(ctr);
         proxy.event(ModEvent.CONSTRUCT, ctr);
     }
 
@@ -173,6 +176,7 @@ public class ModCore {
                 Config.getMaxTextureSize(); //populate
 
                 List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+                packs.add(new TranslationResourcePack());
 
                 String configDir = Loader.instance().getConfigDir().toString();
                 new File(configDir).mkdirs();
@@ -201,6 +205,101 @@ public class ModCore {
             }
             super.event(event, m);
             m.clientEvent(event);
+        }
+
+        //Reverse wrapper for 1.12 and lower to support json translation
+        private static class TranslationResourcePack extends AbstractResourcePack  {
+            public TranslationResourcePack() {
+                super(null);
+            }
+
+            private ResourceLocation toJson(String path) {
+                // assets/mod/location
+                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
+                String[] parts = path.split("/");
+                String type = parts[0];
+                String namespace = parts[1];
+                String prefix = String.format("%s/%s/", type, namespace);
+                path = path.replace(prefix, "").replace(".lang", ".json");
+                String lang = path.split("_")[1].replace(".json", "");
+                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
+                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
+                    @Override
+                    public String getPath() {
+                        // Very evil...
+                        return path;
+                    }
+                };
+            }
+
+            @Override
+            protected InputStream getInputStreamByName(String resourcePath) throws IOException {
+                if(resourcePath.contains("pack.mcmeta")) {
+                    return new ByteArrayInputStream("{}".getBytes());
+                }
+
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".lang")) {
+                    // Magical Translations!
+                    ResourceLocation json = toJson(resourcePath);
+                    if (hasResource(json)) {
+                        Map<String, String> translationMap = new HashMap<>();
+                        for (IResource resource : Minecraft.getMinecraft().getResourceManager().getAllResources(json)) {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+                                JsonElement root = new JsonParser().parse(reader);
+                                root.getAsJsonObject().entrySet().stream()
+                                    .map(entry -> Pair.of(entry.getKey(), entry.getValue().getAsString()))
+                                    .forEach(p -> translationMap.put(p.getKey(), p.getValue()));
+                            }
+                        }
+
+                        StringBuilder builder = new StringBuilder();
+                        translationMap.forEach((k, v) -> {
+                            builder.append(k).append('=').append(v).append(System.lineSeparator());
+                        });
+
+                        return new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected boolean hasResourceName(String resourcePath) {
+                if (resourcePath.contains("pack.mcmeta")) {
+                    return true;
+                }
+
+                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".lang")) {
+                    ResourceLocation lang = toJson(resourcePath);
+                    return hasResource(lang);
+                }
+                return false;
+            }
+
+            @Override
+            public Set<String> getResourceDomains() {
+                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
+            }
+
+            @Override
+            public String getPackName() {
+                return "Translation Hackery";
+            }
+
+            @Nullable
+            @Override
+            public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException {
+                return super.getPackMetadata(metadataSerializer, metadataSectionName);
+            }
+
+            private static boolean hasResource(ResourceLocation location) {
+                try {
+                    Minecraft.getMinecraft().getResourceManager().getResource(location);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
         }
 
         @SideOnly(Side.CLIENT)
