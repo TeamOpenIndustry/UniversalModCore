@@ -9,8 +9,9 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import net.minecraft.nbt.NBTBase;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** TagCompound that auto-serializes an entity's @TagSync fields from server to client */
 public class EntitySync extends TagCompound {
@@ -43,6 +44,20 @@ public class EntitySync extends TagCompound {
         }
 
         TagSerializer.serialize(this, entity, TagSync.class);
+        Set<String> forceUpdates = Arrays.stream(entity.getClass().getDeclaredFields())
+                                         .filter(field -> field.getType().equals(float.class)
+                                                 || field.getType().equals(double.class)
+                                                 || field.getType().equals(Float.class)
+                                                 || field.getType().equals(Double.class))
+                                         .filter(field -> {
+                                             TagSync annotation = field.getAnnotation(TagSync.class);
+                                             if (annotation != null) {
+                                                 return annotation.forceSync();
+                                             }
+                                             return false;
+                                         })
+                                         .map(Field::getName)
+                                         .collect(Collectors.toSet());
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
@@ -54,14 +69,16 @@ public class EntitySync extends TagCompound {
                 if (newVal.equals(oldVal)) {
                     continue;
                 }
-                if (oldVal.getId() == 5) {
-                    if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < 0.001) {
-                        continue;
+                if (!forceUpdates.contains(key)) {
+                    if (oldVal.getId() == 5) {
+                        if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < 0.001) {
+                            continue;
+                        }
                     }
-                }
-                if (oldVal.getId() == 6) {
-                    if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < 0.00001) {
-                        continue;
+                    if (oldVal.getId() == 6) {
+                        if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < 0.00001) {
+                            continue;
+                        }
                     }
                 }
             }
