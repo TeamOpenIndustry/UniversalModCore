@@ -102,13 +102,13 @@ public class BlockRender {
                         return;
                     }
 
-                    RenderType.getSolid().setupRenderState();
+                    RenderType.getCutoutMipped().setupRenderState();
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
-                    RenderType.getSolid().clearRenderState();
+                    RenderType.getCutoutMipped().clearRenderState();
                 }
 
                 public boolean isGlobalRenderer(TileEntity te) {
