@@ -24,11 +24,9 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
@@ -441,20 +439,24 @@ public class World {
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3i pos) {
-        dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3i pos) {
+        return dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3d pos) {
-        dropItem(stack, pos, Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos) {
+        return dropItem(stack, pos, Vec3d.ZERO);
     }
 
-    /** Drop a stack on the ground at pos with velocity */
-    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
+    /** Drop a stack on the ground at pos with velocity.
+     * <p>
+     * Note that if system property <code>forge.debugBlockSnapshot</code> is true and forge is capturing block snapshot, item entity will not be spawned and this method will return null!
+     */
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
         entity.setVelocity(velocity.x, velocity.y, velocity.z);
         internal.spawnEntity(entity);
+        return getEntity(entity.getUniqueID(), ItemEntity.class);
     }
 
     /** Check if the block is currently in a loaded chunk */
