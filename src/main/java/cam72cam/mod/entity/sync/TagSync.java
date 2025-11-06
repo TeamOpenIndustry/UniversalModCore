@@ -10,5 +10,8 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TagSync {
-    boolean forceSync() default true;
+    /**
+     * Should a float change less than 0.001 or a double change less than 0.00001 be synchronized?
+     */
+    boolean forceSync() default false;
 }

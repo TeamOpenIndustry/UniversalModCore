@@ -9,7 +9,6 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import net.minecraft.nbt.NBTBase;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,6 +19,8 @@ public class EntitySync extends TagCompound {
     private int interval;
     // Previous entry (for calculating diff / needs update)
     private TagCompound old;
+    //Cache for TagSync.forceUpdate
+    private static final Map<Class<?>, Set<String>> forceUpdateMapper = new HashMap<>();
 
     /** Track properties on entity */
     public EntitySync(CustomEntity entity) {
@@ -44,20 +45,21 @@ public class EntitySync extends TagCompound {
         }
 
         TagSerializer.serialize(this, entity, TagSync.class);
-        Set<String> forceUpdates = Arrays.stream(entity.getClass().getDeclaredFields())
-                                         .filter(field -> field.getType().equals(float.class)
-                                                 || field.getType().equals(double.class)
-                                                 || field.getType().equals(Float.class)
-                                                 || field.getType().equals(Double.class))
-                                         .filter(field -> {
-                                             TagSync annotation = field.getAnnotation(TagSync.class);
-                                             if (annotation != null) {
-                                                 return annotation.forceSync();
-                                             }
-                                             return false;
-                                         })
-                                         .map(Field::getName)
-                                         .collect(Collectors.toSet());
+        Set<String> forceUpdates = forceUpdateMapper.computeIfAbsent(entity.getClass(), clazz ->
+                Arrays.stream(clazz.getDeclaredFields())
+                      .filter(field -> {
+                          TagSync tagSync = field.getAnnotation(TagSync.class);
+                          TagField tagField = field.getAnnotation(TagField.class);
+                          if (tagField != null && tagSync != null) {
+                              return tagSync.forceSync();
+                          }
+                          return false;
+                      })
+                      .map(field -> {
+                          TagField tagField = field.getAnnotation(TagField.class);
+                          return tagField.value();
+                      })
+                      .collect(Collectors.toSet()));
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
