@@ -21,12 +21,12 @@ public class Identifier {
 
     /** Parse identifier from string (domain:path) */
     public Identifier(String ident) {
-        this(new ResourceLocation(ident.toLowerCase(Locale.ROOT)));
+        this(ResourceLocation.parse(ident.toLowerCase(Locale.ROOT)));
     }
 
     /** Standard constructor */
     public Identifier(String domain, String path) {
-        this(new ResourceLocation(domain.toLowerCase(Locale.ROOT), path.toLowerCase(Locale.ROOT)));
+        this(ResourceLocation.fromNamespaceAndPath(domain.toLowerCase(Locale.ROOT), path.toLowerCase(Locale.ROOT)));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class Identifier {
 
     /**
      * Get another path within this identifier's directory
-     *
+     * <p>
      * Example:
      * this: domain:some/path/object.file
      * path: other.file
