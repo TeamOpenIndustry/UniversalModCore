@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "cam72cam.mod.mixin.fix",
+  "refmap": "mixins.universalmodcore.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "MixinEntitySectionStorage"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
