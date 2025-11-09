@@ -66,7 +66,7 @@ public class Light {
                 builder.sized(0, 0);
 
                 EntityType<LightEntity> et = builder.build("light" + i);
-                helper.register(new ResourceLocation("universalmodcore:light" + i), et);
+                helper.register(ResourceLocation.parse("universalmodcore:light" + i), et);
                 types[i] = et;
             }
         });

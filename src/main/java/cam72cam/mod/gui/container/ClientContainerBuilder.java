@@ -237,7 +237,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             spriteId = "minecraft:block/fire_1";
         }
 
-        TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(new ResourceLocation(spriteId));
+        TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(spriteId));
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         graphics.blit(x, y, 0, 16, 16, sprite);
     }

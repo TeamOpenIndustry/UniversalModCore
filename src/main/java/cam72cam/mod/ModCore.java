@@ -311,7 +311,7 @@ public class ModCore {
             public IoSupplier<InputStream> getResource(PackType type, ResourceLocation resourcePath) {
                 if (resourcePath.getPath().contains("lang/") && resourcePath.getPath().endsWith(".json")) {
                     // Magical Translations!
-                    ResourceLocation lang = new ResourceLocation(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
+                    ResourceLocation lang = ResourceLocation.fromNamespaceAndPath(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
                     List<Resource> langFiles = Minecraft.getInstance().getResourceManager().getResourceStack(lang);
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();

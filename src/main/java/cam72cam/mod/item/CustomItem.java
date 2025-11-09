@@ -41,7 +41,7 @@ public abstract class CustomItem {
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
-        identifier = new ResourceLocation(modID, name);
+        identifier = ResourceLocation.fromNamespaceAndPath(modID, name);
 
         Item.Properties props = new Item.Properties().stacksTo(getStackSize());
         if (!getCreativeTabs().isEmpty()) {

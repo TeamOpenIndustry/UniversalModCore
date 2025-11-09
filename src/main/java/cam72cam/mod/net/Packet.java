@@ -32,7 +32,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public abstract class Packet {
     private static final String VERSION = "1.0";
     private static final SimpleChannel net = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation("universalmodcore", "cam72cam.mod"),
+            ResourceLocation.fromNamespaceAndPath("universalmodcore", "cam72cam.mod"),
             () -> VERSION,
             VERSION::equals,
             VERSION::equals
