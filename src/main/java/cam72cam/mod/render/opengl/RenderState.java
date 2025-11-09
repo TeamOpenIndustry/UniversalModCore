@@ -5,13 +5,14 @@ import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
-import java.nio.FloatBuffer;
 import javax.annotation.Nonnull;
 import java.awt.geom.Rectangle2D;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class RenderState {
     private static FloatBuffer mbuf = FloatBuffer.wrap(new float[16]);
 
     public RenderState() {
-        if (RenderSystem.isOnRenderThread()) {
+        if (FMLEnvironment.dist.isClient() && RenderSystem.isOnRenderThread()) {
             mbuf.position(0);
             RenderSystem.getModelViewMatrix().store(mbuf);
             this.model_view = new Matrix4(
