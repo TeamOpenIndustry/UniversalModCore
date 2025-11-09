@@ -152,6 +152,10 @@ public class RenderContext {
             shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         }
 
+        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
+            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
+        }
+
         if (shader.COLOR_MODULATOR != null) {
             shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
         }
@@ -171,6 +175,10 @@ public class RenderContext {
 
         if (shader.FOG_COLOR != null) {
             shader.FOG_COLOR.set(RenderSystem.getShaderFogColor());
+        }
+
+        if (shader.FOG_SHAPE != null) {
+            shader.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
         }
 
         if (shader.TEXTURE_MATRIX != null) {
