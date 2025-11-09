@@ -27,16 +27,16 @@ public class RenderContext {
 
         ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
-            Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();
-            restore.add(() -> RenderSystem.getModelViewMatrix().load(oldModelView));
-            Matrix4f target = state.model_view.convertToMoj();
+            Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
+            restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
+            Matrix4f target = state.model_view.copy().transpose().convertToMoj();
             RenderSystem.getModelViewMatrix().set(target);
         }
 
         if (state.projection != null) {
-            Matrix4f oldProjection = RenderSystem.getProjectionMatrix().copy();
-            restore.add(() -> RenderSystem.getProjectionMatrix().load(oldProjection));
-            Matrix4f target = state.projection.convertToMoj();
+            Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
+            restore.add(() -> RenderSystem.getProjectionMatrix().set(oldProjection));
+            Matrix4f target = state.projection.copy().transpose().convertToMoj();
             RenderSystem.getProjectionMatrix().set(target);
         }
 
@@ -132,8 +132,7 @@ public class RenderContext {
         }
 
         //TODO Better lighting
-        Matrix4f matrix4f = new Matrix4f();
-        matrix4f.setIdentity();
+        Matrix4f matrix4f = new Matrix4f().identity();
         Lighting.setupLevel(matrix4f);
         applyShaderFields(shader);
 

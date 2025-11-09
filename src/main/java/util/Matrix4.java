@@ -476,8 +476,8 @@ public class Matrix4
 		return new Matrix4(s.slerp(e, percent).getMatrix());
 	}
 
-	public com.mojang.math.Matrix4f convertToMoj() {
-		return new com.mojang.math.Matrix4f(new float[]{
+	public org.joml.Matrix4f convertToMoj() {
+		return new org.joml.Matrix4f(
 				(float) this.m00,
 				(float) this.m01,
 				(float) this.m02,
@@ -494,7 +494,7 @@ public class Matrix4
 				(float) this.m31,
 				(float) this.m32,
 				(float) this.m33
-		});
+		);
 	}
 
 	@Override
