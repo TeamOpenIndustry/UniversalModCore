@@ -77,7 +77,7 @@ public class Recipes extends RecipeProvider {
                     builder.pattern(line);
                 }
                 ResourceLocation itemName = ForgeRegistries.ITEMS.getKey(item.internal().getItem());
-                ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
+                ResourceLocation name = ResourceLocation.fromNamespaceAndPath(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
 
                 if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
                     ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();

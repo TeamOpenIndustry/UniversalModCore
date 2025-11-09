@@ -47,7 +47,7 @@ public class GuiRegistry {
     );
 
     public static void registerEvents() {
-        CommonEvents.CONTAINER_REGISTRY.subscribe(helper -> helper.register(new ResourceLocation(ModCore.MODID, "alltheguis"), TYPE));
+        CommonEvents.CONTAINER_REGISTRY.subscribe(helper -> helper.register(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "alltheguis"), TYPE));
     }
 
 

@@ -21,7 +21,7 @@ public class CreativeTab {
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         ClientEvents.CREATIVE_TAB.subscribe(event -> {
-            internal = event.registerCreativeModeTab(new ResourceLocation(ModCore.MODID, label), builder -> {
+            internal = event.registerCreativeModeTab(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, label), builder -> {
                 builder.title(Component.translatable("itemGroup." +label))
                        .icon(() -> stack.get().internal()).displayItems((params, output) -> {
                            for (CustomItem customItem : inject) {
