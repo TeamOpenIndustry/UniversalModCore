@@ -4,16 +4,15 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraftforge.common.util.LazyOptional;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.util.Lazy;
 import org.joml.Matrix4f;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
 import javax.annotation.Nonnull;
 import java.awt.geom.Rectangle2D;
-import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -36,7 +35,7 @@ public class RenderState {
     private static float[] mbuf = new float[16];
 
     //Avoid potential server-side load
-    private static final LazyOptional<Consumer<RenderState>> clientInitializer = LazyOptional.of(() -> (state) -> {
+    private static final Lazy<Consumer<RenderState>> clientInitializer = Lazy.of(() -> (state) -> {
         if(!RenderSystem.isOnRenderThread()) return;RenderSystem.getModelViewMatrix().get(mbuf);
         state.model_view = new Matrix4(
                 mbuf[0],
@@ -80,7 +79,7 @@ public class RenderState {
 
     public RenderState() {
         if (FMLEnvironment.dist.isClient() && RenderSystem.isOnRenderThread()) {
-            clientInitializer.ifPresent(consumer -> consumer.accept(this));
+            clientInitializer.get().accept(this);
         }
     }
 

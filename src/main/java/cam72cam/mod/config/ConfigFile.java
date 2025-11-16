@@ -1,7 +1,7 @@
 package cam72cam.mod.config;
 
-import net.minecraftforge.fml.loading.FMLPaths;
 import cam72cam.mod.ModCore;
+import net.neoforged.fml.loading.FMLPaths;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;

@@ -5,16 +5,18 @@ license="LGPL"
 
 [[mods]]
 modId="universalmodcore"
-version="${file.jarVersion}"
+version="1.2.2"
 displayName="Universal Mod Core"
 displayURL="https://github.com/TeamOpenIndustry/UniversalModCore"
 authors="cam72cam"
-description="Universal Mod API (Minecraft version agnostic)"
+description='''
+Universal Mod API (Minecraft version agnostic)
+'''
 
 [[dependencies.universalmodcore]]
     modId="neoforge"
     type='required'
-    versionRange="[20.4.251,)"
+    versionRange="[20.4.250,)"
     ordering="NONE"
     side="BOTH"
 

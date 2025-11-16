@@ -18,9 +18,10 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.Facing;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -32,7 +33,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -42,14 +42,13 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.IPlantable;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
@@ -145,10 +144,12 @@ public class World {
     }
 
     private void checkLoadedEntities() {
-        Iterable<net.minecraft.world.entity.Entity> internalEntities = DistExecutor.runForDist(
-                () -> this::clientEntities,
-                () -> this::serverEntities
-        );
+        Iterable<net.minecraft.world.entity.Entity> internalEntities;
+        if (FMLEnvironment.dist.isClient()) {
+            internalEntities = clientEntities();
+        } else {
+            internalEntities = serverEntities();
+        }
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.world.entity.Entity entity : internalEntities) {
@@ -406,7 +407,7 @@ public class World {
             return 20;
         }
 
-        long[] ttl = internal.getServer().tickTimes;
+        long[] ttl = internal.getServer().getTickTimesNanos();
 
         sampleSize = Math.min(sampleSize, ttl.length);
         double ttus = 0;
@@ -628,12 +629,17 @@ public class World {
 
     /** Get the inventory at this block (accessed from given side) */
     public IInventory getInventory(Vec3i offset, Facing dir) {
-        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
-        Direction face = dir != null ? dir.internal : null;
-        if (te != null && te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).isPresent()) {
-            IItemHandler inv = te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).orElse(null);
-            if (inv instanceof IItemHandlerModifiable) {
-                return IInventory.from((IItemHandlerModifiable) inv);
+		if (dir != null) {
+			IItemHandler capability = internal.getCapability(TileEntity.ITEM_HANDLER_BLOCK, offset.internal(), dir.internal);
+            if (capability instanceof IItemHandlerModifiable) {
+                return IInventory.from((IItemHandlerModifiable) capability);
+            }
+		} else {
+            for(Facing facing : Facing.values()){
+                IItemHandler capability = internal.getCapability(TileEntity.ITEM_HANDLER_BLOCK, offset.internal(), facing.internal);
+                if (capability instanceof IItemHandlerModifiable) {
+                    return IInventory.from((IItemHandlerModifiable) capability);
+                }
             }
         }
         return null;
@@ -652,12 +658,17 @@ public class World {
 
     /** Get the tank at this block (accessed from given side) */
     public List<ITank> getTank(Vec3i offset, Facing dir) {
-        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
-        Direction face = dir != null ? dir.internal : null;
-        if (te != null && te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).isPresent()) {
-            IFluidHandler tank = te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).orElse(null);
-            if (tank != null) {
-                return ITank.getTank(tank);
+        if (dir != null) {
+            IFluidHandler capability = internal.getCapability(TileEntity.FLUID_HANDLER_BLOCK, offset.internal(), dir.internal);
+            if (capability != null) {
+                return ITank.getTank(capability);
+            }
+        } else {
+            for(Facing facing : Facing.values()){
+                IFluidHandler capability = internal.getCapability(TileEntity.FLUID_HANDLER_BLOCK, offset.internal(), facing.internal);
+                if (capability != null) {
+                    return ITank.getTank(capability);
+                }
             }
         }
         return null;

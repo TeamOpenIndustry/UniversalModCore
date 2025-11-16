@@ -1,6 +1,6 @@
 package cam72cam.mod.energy;
 
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 public interface IEnergy {
     static IEnergy from(IEnergyStorage internal) {

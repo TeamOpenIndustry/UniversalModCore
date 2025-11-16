@@ -44,7 +44,7 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
         umcVersion += "-unknown"
     }
 }
-version = "1.20.1-forge-" + umcVersion
+version = "1.20.4-neoforge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
@@ -110,7 +110,7 @@ repositories {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    implementation "net.neoforged:neoforge:20.4.251"
+    implementation "net.neoforged:neoforge:20.4.250"
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"

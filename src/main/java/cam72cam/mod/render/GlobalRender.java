@@ -10,29 +10,17 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.neoforged.neoforge.client.gui.overlay.VanillaGuiOverlay;
 import org.joml.Matrix4f;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 /** Global Render Registry and helper functions */
@@ -41,55 +29,56 @@ public class GlobalRender {
     private static List<RenderFunction> renderFuncs = new ArrayList<>();
 
     // This is required before new GRH()
-    static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<>(GlobalRenderHelper::new, new HashSet<>(), null) {
-        @Override
-        public boolean isValid(BlockState block_1) {
-            return true;
-        }
-    };
 
-    // Internal hack
-    private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
+//    static BlockEntityType<GlobalRenderHelper> grhtype = new BlockEntityType<>(GlobalRenderHelper::new, new HashSet<>(), null) {
+//        @Override
+//        public boolean isValid(BlockState block_1) {
+//            return true;
+//        }
+//    };
+//
+//    // Internal hack
+//    private static List<BlockEntity> grhList = Collections.singletonList(new GlobalRenderHelper(null, null));
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
-        // Beacon like hack for always running a single global render during the TE render phase
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            try {
-                BlockEntityRenderers.register(grhtype, (ted) -> new BlockEntityRenderer<>() {
-                    @Override
-                    public int getViewDistance() {
-                        return Integer.MAX_VALUE;
-                    }
-
-                    @Override
-                    public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
-                        // TODO 1.15+ do we need to set lightmap coords here?
-                        BlockPos off = te.getBlockPos();
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
-                    }
-
-                    @Override
-                    public boolean shouldRenderOffScreen(GlobalRenderHelper te) {
-                        return true;
-                    }
-                });
-            } catch (ExceptionInInitializerError ex) {
-                // data generator pass
-                System.out.println("Shake hands with danger");
-            }
-        });
-        ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
-            /* TODO 1.17.1
-            if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
-            }*/
-        });
-
+        //TODO mixinify
+//        Beacon like hack for always running a single global render during the TE render phase
+//        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
+//            try {
+//                BlockEntityRenderers.register(grhtype, (ted) -> new BlockEntityRenderer<>() {
+//                    @Override
+//                    public int getViewDistance() {
+//                        return Integer.MAX_VALUE;
+//                    }
+//
+//                    @Override
+//                    public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
+//                        // TODO 1.15+ do we need to set lightmap coords here?
+//                        BlockPos off = te.getBlockPos();
+//                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
+//                    }
+//
+//                    @Override
+//                    public boolean shouldRenderOffScreen(GlobalRenderHelper te) {
+//                        return true;
+//                    }
+//                });
+//            } catch (ExceptionInInitializerError ex) {
+//                // data generator pass
+//                System.out.println("Shake hands with danger");
+//            }
+//        });
+//        ClientEvents.TICK.subscribe(() -> {
+//            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
+//            /* TODO 1.17.1
+//            if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
+//                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
+//            }*/
+//        });
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
-            if (Minecraft.getInstance().options.renderDebug && GPUInfo.hasGPUInfo()) {
+            if (Minecraft.getInstance().getDebugOverlay().showDebugScreen() && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.getRight().size(); i++) {
                     if (event.getRight().get(i).startsWith("Display: ")) {
@@ -245,46 +234,46 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
-    public static class GlobalRenderHelper extends BlockEntity {
-        public GlobalRenderHelper(BlockPos pos, BlockState state) {
-            super(grhtype, new BlockPos(0, 0, 0) {
-                @Override
-                public BlockPos immutable() {
-                    // This is why I love java
-                    return Minecraft.getInstance() != null && Minecraft.getInstance().player != null ? BlockPos.containing(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
-                }
-            }, state);
-        }
-
-        @Override
-        public boolean hasLevel() {
-            return true;
-        }
-
-        @Nullable
-        @Override
-        public Level getLevel() {
-            return Minecraft.getInstance().level;
-        }
-
-
-
-        public net.minecraft.world.phys.AABB getRenderBoundingBox() {
-            return INFINITE_EXTENT_AABB;
-        }
-
-        /* Moved to renderer
-        @Override
-        public double getViewDistance() {
-            return Double.POSITIVE_INFINITY;
-        }*/
-
-        public double getDistanceSq(double x, double y, double z) {
-            return 1;
-        }
-
-        public BlockState getBlockState() {
-            return Blocks.AIR.defaultBlockState();
-        }
-    }
+//    public static class GlobalRenderHelper extends BlockEntity {
+//        public GlobalRenderHelper(BlockPos pos, BlockState state) {
+//            super(grhtype, new BlockPos(0, 0, 0) {
+//                @Override
+//                public BlockPos immutable() {
+//                    // This is why I love java
+//                    return Minecraft.getInstance() != null && Minecraft.getInstance().player != null ? BlockPos.containing(Minecraft.getInstance().player.getEyePosition(0)) : ZERO;
+//                }
+//            }, state);
+//        }
+//
+//        @Override
+//        public boolean hasLevel() {
+//            return true;
+//        }
+//
+//        @Nullable
+//        @Override
+//        public Level getLevel() {
+//            return Minecraft.getInstance().level;
+//        }
+//
+//
+//
+//        public net.minecraft.world.phys.AABB getRenderBoundingBox() {
+//            return TileEntity.INFINITE_EXTENT_AABB;
+//        }
+//
+//        /* Moved to renderer
+//        @Override
+//        public double getViewDistance() {
+//            return Double.POSITIVE_INFINITY;
+//        }*/
+//
+//        public double getDistanceSq(double x, double y, double z) {
+//            return 1;
+//        }
+//
+//        public BlockState getBlockState() {
+//            return Blocks.AIR.defaultBlockState();
+//        }
+//    }
 }

@@ -5,30 +5,24 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 
 import java.util.List;
 import java.util.UUID;
 
 /** Seat construct to make multiple riders actually work */
-public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
-    static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "seat");
+public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
+    static final ResourceLocation ID = ResourceLocation.tryBuild(ModCore.MODID, "seat");
     public static final EntityType<SeatEntity> TYPE = makeType();
 
     private static EntityType<SeatEntity> makeType() {
@@ -38,18 +32,20 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 .setTrackingRange(512)
                 .setUpdateInterval(20)
                 .fireImmune()
-                .setCustomClientFactory((msg, world) -> new SeatEntity(BuiltInRegistries.ENTITY_TYPE.byId(msg.getTypeId()), world))
+//                .setCustomClientFactory((msg, world) -> new SeatEntity(BuiltInRegistries.ENTITY_TYPE.byId(msg.getTypeId()), world))
                 .build(SeatEntity.ID.toString());
         return et;
     }
 
     static {
         World.onTick(SeatEntity::ticker);
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientEvents.TICK_POST.subscribe(() -> {
-            if (MinecraftClient.isReady()) {
-                ticker(MinecraftClient.getPlayer().getWorld());
-            }
-        }));
+        if (FMLEnvironment.dist.isClient()) {
+            ClientEvents.TICK_POST.subscribe(() -> {
+                if (MinecraftClient.isReady()) {
+                    ticker(MinecraftClient.getPlayer().getWorld());
+                }
+            });
+        }
     }
 
     private static void ticker(World world) {
@@ -159,8 +155,9 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public double getPassengersRidingOffset() {
-        return 0;
+    public Vec3 getPassengerRidingPosition(Entity entity) {
+        Vec3 vec3 = super.getPassengerRidingPosition(entity);
+        return new Vec3(vec3.x, 0, vec3.z);
     }
 
     int lastUpdateTick = -1;
@@ -195,10 +192,10 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return livingEntity.position();
     }
 
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
+//    @Override
+//    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+//        return NetworkHooks.getEntitySpawningPacket(this);
+//    }
 
     public cam72cam.mod.entity.Entity getEntityPassenger() {
         if (!this.isAlive()) {

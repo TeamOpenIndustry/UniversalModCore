@@ -2,11 +2,11 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.fluids.FluidUtil;
 
 import java.util.function.Supplier;
 
@@ -37,7 +37,7 @@ public class ItemStack {
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.world.item.ItemStack(ForgeRegistries.ITEMS.getValue(ResourceLocation.parse(item)), i));
+        this(new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(item)), i));
     }
 
     public net.minecraft.world.item.ItemStack internal() {
@@ -66,7 +66,7 @@ public class ItemStack {
 
     /** Serialize */
     public TagCompound toTag() {
-        return new TagCompound(internal().serializeNBT());
+        return new TagCompound(internal().save(new CompoundTag()));
     }
 
     /** Items in this stack */
@@ -126,7 +126,7 @@ public class ItemStack {
 
     /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
-        return ForgeHooks.getBurnTime(internal(), RecipeType.SMELTING);
+        return internal().getBurnTime(RecipeType.SMELTING);
     }
 
     /** Max count of the stack */

@@ -3,13 +3,13 @@ package cam72cam.mod.gui.container;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
+import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
-import cam72cam.mod.render.opengl.RenderState;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

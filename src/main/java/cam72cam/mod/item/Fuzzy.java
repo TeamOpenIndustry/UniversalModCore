@@ -4,25 +4,20 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.data.BlockTagsProvider;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.common.data.ForgeBlockTagsProvider;
-import net.minecraftforge.common.data.ForgeItemTagsProvider;
-import net.minecraftforge.data.event.GatherDataEvent;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.data.BlockTagsProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,8 +37,10 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold").add(Items.GOLD_INGOT);
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "ingots/steel")), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "storage_blocks/steel")), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(
+			Objects.requireNonNull(ResourceLocation.tryBuild("forge", "ingots/steel"))), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(
+			Objects.requireNonNull(ResourceLocation.tryBuild("forge", "storage_blocks/steel"))), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron").add(Blocks.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -124,9 +121,9 @@ public class Fuzzy {
     /** Create fuzzy with this name */
     private Fuzzy(String ident) {
         this(ItemTags.create(
-                ident.contains(":")
-                ? ResourceLocation.parse(ident.toLowerCase(Locale.ROOT))
-                : ResourceLocation.fromNamespaceAndPath("forge", ident.toLowerCase(Locale.ROOT))
+				Objects.requireNonNull(ident.contains(":")
+									   ? ResourceLocation.tryParse(ident.toLowerCase(Locale.ROOT))
+									   : ResourceLocation.tryBuild("forge", ident.toLowerCase(Locale.ROOT)))
         ), ident);
     }
 

@@ -2,13 +2,13 @@ package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.gui.widget.ForgeSlider;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 import java.util.function.Supplier;
 
 /** Standard slider */
 public abstract class Slider extends Button {
     /** Internal wrapper to add onSlider Hook */
-    private static class InternalForgeSlider extends ForgeSlider {
+    private static class InternalForgeSlider extends ExtendedSlider {
         private Runnable clicker = () -> {};
         private Supplier<String> setter = () -> "";
 
@@ -51,11 +51,11 @@ public abstract class Slider extends Button {
     public abstract void onSlider();
 
     public int getValueInt() {
-        return ((ForgeSlider) button).getValueInt();
+        return ((ExtendedSlider) button).getValueInt();
     }
 
     public double getValue() {
-        return ((ForgeSlider) button).getValue();
+        return ((ExtendedSlider) button).getValue();
     }
 
     @Override

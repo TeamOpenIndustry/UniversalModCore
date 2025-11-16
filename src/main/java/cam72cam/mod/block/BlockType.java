@@ -1,5 +1,6 @@
 package cam72cam.mod.block;
 
+import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -28,7 +29,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -61,6 +62,17 @@ public abstract class BlockType {
         CommonEvents.Block.REGISTER.subscribe(helper -> {
             internal = getBlock();
             helper.register(id.internal, internal);
+        });
+
+        CommonEvents.Block.REGISTER_CAPABILITY.subscribe(event -> {
+            event.registerBlock(Capabilities.ItemHandler.BLOCK,
+                                (level, pos, state, be, side) -> {
+                                    if (be instanceof TileEntity tile) {
+                                        return tile.getItemHandler(side);
+                                    }
+                                    return null;
+                                },
+                                internal);
         });
     }
 
@@ -171,7 +183,7 @@ public abstract class BlockType {
         }
 
         @Override
-        public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
+        public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(level, pos);
             if (world != null) {
                 return BlockType.this.onPick(world, new Vec3i(pos)).internal();

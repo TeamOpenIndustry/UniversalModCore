@@ -2,9 +2,9 @@ package cam72cam.mod.model.obj;
 
 import cam72cam.mod.resource.Identifier;
 import cpw.mods.modlauncher.Launcher;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLLoader;
-import org.apache.commons.io.FileUtils;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLLoader;
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 

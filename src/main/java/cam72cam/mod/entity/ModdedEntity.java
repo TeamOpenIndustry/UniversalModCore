@@ -8,24 +8,22 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
+import cam72cam.mod.util.SingleCache;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import cam72cam.mod.util.SingleCache;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -33,7 +31,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Internal class which extends MC's Entity.  Do not use directly */
-public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
+public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     // Reference to the entity that this is representing
     private CustomEntity self;
 
@@ -215,7 +213,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public EntityType<?> getType() {
-        return legacyId == null ? super.getType() : ForgeRegistries.ENTITY_TYPES.getValue(ResourceLocation.parse(legacyId));
+        return legacyId == null ? super.getType() : BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(legacyId));
     }
 
     /* ITickable */
@@ -504,10 +502,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return cachedRenderBB.get(iCollision.getCollision());
     }
 
-    @Override
-    public net.minecraft.network.protocol.Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
+    //No more need to
+//    @Override
+//    public net.minecraft.network.protocol.Packet<ClientGamePacketListener> getAddEntityPacket() {
+//        return NetworkHooks.getEntitySpawningPacket(this);
+//    }
 
     /* Hacks */
     /** Needed for right click, probably a forge or MC bug */
@@ -527,9 +526,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
         if (self.allowsDefaultMovement()) {
-            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements);
         }
     }
 

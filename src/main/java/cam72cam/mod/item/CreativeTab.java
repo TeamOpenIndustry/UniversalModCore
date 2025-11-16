@@ -5,7 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ public class CreativeTab {
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
         ResourceKey<CreativeModeTab> key = lastTab;
-        RegistryObject<CreativeModeTab> register = CommonEvents.Item.CREATIVE_TAB.register(label, () -> {
+        DeferredHolder<CreativeModeTab, CreativeModeTab> register = CommonEvents.Item.CREATIVE_TAB.register(label, () -> {
             CreativeModeTab.Builder builder = CreativeModeTab.builder();
             builder.title(Component.translatable("itemGroup." + label));
             builder.icon(() -> stack.get().internal());

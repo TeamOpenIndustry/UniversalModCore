@@ -12,7 +12,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
@@ -66,7 +65,7 @@ public class Light {
                 builder.sized(0, 0);
 
                 EntityType<LightEntity> et = builder.build("light" + i);
-                helper.register(ResourceLocation.parse("universalmodcore:light" + i), et);
+                helper.register(Objects.requireNonNull(ResourceLocation.tryParse("universalmodcore:light" + i)), et);
                 types[i] = et;
             }
         });

@@ -1,7 +1,9 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.render.GlobalRender;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -11,18 +13,20 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.ChunkEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegisterEvent;
-import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
-import net.minecraftforge.server.permission.events.PermissionGatherEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
+import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.RegisterEvent;
+import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
+import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
 
@@ -44,6 +48,7 @@ public class CommonEvents {
 
     public static final class Block {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.level.block.Block>>> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterCapabilitiesEvent>> REGISTER_CAPABILITY = new Event<>();
         public static final Event<EventBusForge.BlockBrokenEvent> BROKEN = new Event<>();
     }
 
@@ -69,6 +74,10 @@ public class CommonEvents {
 
     public static final class Permissions {
         public static final Event<Consumer<PermissionGatherEvent.Nodes>> NODES = new Event<>();
+    }
+
+    public static final class Networking {
+        public static final Event<Consumer<IPayloadRegistrar>> REGISTER_PACKET = new Event<>();
     }
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -137,15 +146,29 @@ public class CommonEvents {
     public static final class EventBusMod {
         static {
             registerEvents();
+            GlobalRender.registerClientEvents();
         }
 
         @SubscribeEvent
         public static void registerBlocks(RegisterEvent event) {
-            event.register(ForgeRegistries.Keys.BLOCKS, helper -> Block.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.BLOCK_ENTITY_TYPES, helper -> Tile.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.ITEMS, helper -> Item.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.ENTITY_TYPES, helper -> Entity.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.MENU_TYPES, helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.BLOCK.key(), helper -> Block.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.BLOCK_ENTITY_TYPE.key(), helper -> Tile.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.ITEM.key(), helper -> Item.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.ENTITY_TYPE.key(), helper -> Entity.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.MENU.key(), helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
+        }
+
+        @SubscribeEvent
+        public static void registerCapability(RegisterCapabilitiesEvent event) {
+            Block.REGISTER_CAPABILITY.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerPacket(RegisterPayloadHandlerEvent event) {
+            final IPayloadRegistrar registrar = event.registrar(ModCore.MODID)
+                                                     .versioned("1.0")
+                                                     .optional();
+            Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
         }
     }
 }

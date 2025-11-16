@@ -28,8 +28,9 @@ import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -122,6 +123,14 @@ public class BlockRender {
                 @Override
                 public boolean shouldRenderOffScreen(TileEntity te) {
                     return true;
+                }
+
+                @Override
+                public AABB getRenderBoundingBox(TileEntity blockEntity) {
+                    if (blockEntity.instance() != null) {
+                        return blockEntity.bbCache.get(blockEntity.instance().getRenderBoundingBox());
+                    }
+                    return INFINITE_EXTENT_AABB;
                 }
             });
         });

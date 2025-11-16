@@ -1,7 +1,7 @@
 package cam72cam.mod.gui;
 
 import cam72cam.mod.ModCore;
-import net.minecraftforge.fml.StartupMessageManager;
+import net.neoforged.fml.StartupMessageManager;
 
 /** Wrapper around game loading bar, only functional on certain MC versions / loaders */
 public class Progress {

@@ -1,13 +1,14 @@
 package cam72cam.mod.gui.helpers;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraftforge.client.gui.widget.ForgeSlider;
-import java.util.function.Consumer;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
+
+import java.util.function.Consumer;
 
 
 /** Internal scrollbar class */
-class GuiScrollBar extends ForgeSlider {
+class GuiScrollBar extends ExtendedSlider {
     private final Consumer<AbstractSliderButton> onPress;
 
     public GuiScrollBar(int id, int xPos, int yPos, int width, int height, String displayStr,

@@ -1,6 +1,6 @@
 package cam72cam.mod.item;
 
-import net.minecraftforge.common.ToolActions;
+import net.neoforged.neoforge.common.ToolActions;
 
 /** What class a tool fits into */
 public enum ToolType {
@@ -8,9 +8,9 @@ public enum ToolType {
     AXE(ToolActions.AXE_DIG),
     SHOVEL(ToolActions.SHOVEL_DIG),
     ;
-    public final net.minecraftforge.common.ToolAction internal;
+    public final net.neoforged.neoforge.common.ToolAction internal;
 
-    ToolType(net.minecraftforge.common.ToolAction internal) {
+    ToolType(net.neoforged.neoforge.common.ToolAction internal) {
         this.internal = internal;
     }
 

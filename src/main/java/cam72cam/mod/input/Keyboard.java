@@ -4,9 +4,9 @@ import cam72cam.mod.event.ClientEvents;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.settings.KeyConflictContext;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
 public class Keyboard {

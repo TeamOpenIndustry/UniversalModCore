@@ -1,36 +1,5 @@
 package cam72cam.mod;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.logging.LogUtils;
-import net.minecraft.FileUtil;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.packs.resources.IoSupplier;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.data.loading.DatagenModLoader;
-import net.minecraft.server.packs.*;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
-import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.server.packs.resources.Resource;
-import java.util.*;
-
-import net.minecraft.resources.*;
-import net.minecraftforge.fml.ModList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
@@ -46,31 +15,60 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.logging.LogUtils;
+import net.minecraft.FileUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.*;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.data.loading.DatagenModLoader;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL32;
 
 import javax.annotation.Nullable;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
-@net.minecraftforge.fml.common.Mod(ModCore.MODID)
+@net.neoforged.fml.common.Mod(ModCore.MODID)
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
@@ -90,22 +88,21 @@ public class ModCore {
     }
 
     /** Called during Mod Construction phase */
-    public ModCore() {
+    public ModCore(IEventBus modEventBus, Dist dist) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
 
         ModCore.register(new Internal());
         proxy.setup();
 
-
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::postInit);
+        modEventBus.addListener(this::preInit);
+        modEventBus.addListener(this::init);
+        modEventBus.addListener(this::postInit);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
-        CommonEvents.Item.CREATIVE_TAB.register(FMLJavaModLoadingContext.get().getModEventBus());
+        CommonEvents.Item.CREATIVE_TAB.register(modEventBus);
 
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this);
     }
 
     /** INIT Phase (Forge) */
@@ -200,7 +197,7 @@ public class ModCore {
         }
     }
 
-    private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+    private static Proxy proxy = FMLEnvironment.dist.isClient() ? new ClientProxy() : new ServerProxy();
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
@@ -278,9 +275,18 @@ public class ModCore {
                     consumer.accept(Pack.create(pack.packId(),
                             Component.literal(""),
                             true,
-                            s -> pack,
-                            new Pack.Info(Component.literal(""), 13, FeatureFlagSet.of()),
-                            PackType.SERVER_DATA,
+                            new Pack.ResourcesSupplier() {
+                                @Override
+                                public PackResources openPrimary(String s) {
+                                    return pack;
+                                }
+
+                                @Override
+                                public PackResources openFull(String s, Pack.Info info) {
+                                    return pack;
+                                }
+                            },
+                            new Pack.Info(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
                             Pack.Position.TOP,
                             true,
                             PackSource.DEFAULT
@@ -311,7 +317,7 @@ public class ModCore {
             public IoSupplier<InputStream> getResource(PackType type, ResourceLocation resourcePath) {
                 if (resourcePath.getPath().contains("lang/") && resourcePath.getPath().endsWith(".json")) {
                     // Magical Translations!
-                    ResourceLocation lang = ResourceLocation.fromNamespaceAndPath(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
+                    ResourceLocation lang = ResourceLocation.tryBuild(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
                     List<Resource> langFiles = Minecraft.getInstance().getResourceManager().getResourceStack(lang);
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();
@@ -403,7 +409,7 @@ public class ModCore {
             private final File path;
 
             public UMCFilePack(File fileIn) {
-                super(fileIn.getName(), fileIn, false);
+				super(fileIn.getName(), new SharedZipFileAccess(fileIn), false, "");
                 this.path = fileIn;
             }
 

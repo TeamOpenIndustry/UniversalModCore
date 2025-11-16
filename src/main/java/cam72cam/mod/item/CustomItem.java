@@ -13,20 +13,18 @@ import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -41,7 +39,7 @@ public abstract class CustomItem {
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
-        identifier = ResourceLocation.fromNamespaceAndPath(modID, name);
+        identifier = ResourceLocation.tryBuild(modID, name);
 
         Item.Properties props = new Item.Properties().stacksTo(getStackSize());
         if (!getCreativeTabs().isEmpty()) {
@@ -100,7 +98,7 @@ public abstract class CustomItem {
 
     /** Identifier of this item */
     public final Identifier getRegistryName() {
-        return new Identifier(ForgeRegistries.ITEMS.getKey(internal));
+        return new Identifier(BuiltInRegistries.ITEM.getKey(internal));
     }
 
     private class ItemInternal extends Item {

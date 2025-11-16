@@ -10,7 +10,7 @@ displayName="#NAME#"
 [[dependencies.#ID#]]
     modId="forge"
     type='required'
-    versionRange="[20.4.251,)"
+    versionRange="[20.4.1,)"
     ordering="NONE"
     side="BOTH"
 

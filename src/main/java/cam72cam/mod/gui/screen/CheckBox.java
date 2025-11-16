@@ -2,8 +2,9 @@ package cam72cam.mod.gui.screen;
 
 
 import cam72cam.mod.entity.Player;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
@@ -14,7 +15,7 @@ public abstract class CheckBox extends Button {
         private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalCB(int xIn, int yIn, int widthIn, int heightIn, String msg, boolean enabled) {
-            super(xIn, yIn, widthIn, heightIn, Component.literal(msg), enabled);
+            super(xIn, yIn, Component.literal(msg), Minecraft.getInstance().font, enabled, (checkbox, b) -> {});
         }
 
         @Override

@@ -1,7 +1,7 @@
 package cam72cam.mod.text;
 
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.ForgeHooks;
+import net.neoforged.neoforge.common.CommonHooks;
 
 /** A message that can be sent to a player */
 public class PlayerMessage {
@@ -23,6 +23,6 @@ public class PlayerMessage {
 
     /** URL Formatted (clickable) */
     public static PlayerMessage url(String url) {
-        return new PlayerMessage(ForgeHooks.newChatWithLinks(url));
+        return new PlayerMessage(CommonHooks.newChatWithLinks(url));
     }
 }
