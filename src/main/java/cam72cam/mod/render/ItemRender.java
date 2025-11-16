@@ -25,11 +25,11 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -58,7 +58,7 @@ public class ItemRender {
         SimpleModelState foo = new SimpleModelState(ImmutableMap.of());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                new Material(TextureAtlas.LOCATION_BLOCKS, tex.internal)
+                new Material(InventoryMenu.BLOCK_ATLAS, tex.internal)
         )).bake(new IModelConfiguration() {
             @Nullable
             @Override
@@ -121,7 +121,7 @@ public class ItemRender {
         ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel) { // TODO re-enable sprite system in 1.17+
+        if (model instanceof ISpriteItemModel) {
             ClientEvents.HACKS.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
@@ -213,6 +213,7 @@ public class ItemRender {
         }
 
         With restore = OptiFine.overrideFastRender(false);
+        RenderType.cutout().setupRenderState();
 
         TextureTarget fb = new TextureTarget(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
@@ -260,6 +261,7 @@ public class ItemRender {
             GL11.glDepthFunc(oldDepth);
         }
 
+        RenderType.cutout().clearRenderState();
         restore.close();
     }
 
