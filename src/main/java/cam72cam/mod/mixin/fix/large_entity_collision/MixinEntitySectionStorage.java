@@ -1,4 +1,4 @@
-package cam72cam.mod.mixin.fix;
+package cam72cam.mod.mixin.fix.large_entity_collision;
 
 import cam72cam.mod.entity.ModdedEntity;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;

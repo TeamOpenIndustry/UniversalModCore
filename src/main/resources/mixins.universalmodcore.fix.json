@@ -6,7 +6,7 @@
   "minVersion": "0.8.2",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "MixinEntitySectionStorage"
+    "large_entity_collision.MixinEntitySectionStorage"
   ],
   "client": [
   ],
