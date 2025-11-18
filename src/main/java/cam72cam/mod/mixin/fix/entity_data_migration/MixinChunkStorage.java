@@ -40,9 +40,10 @@ public class MixinChunkStorage {
 
     @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtUtils;update(Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/util/datafix/DataFixTypes;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/nbt/CompoundTag;"))
     public CompoundTag reInject(DataFixer p_129214_, DataFixTypes p_129215_, CompoundTag p_129216_, int p_129217_, @Share("tag") LocalRef<ListTag> tag) {
-        //We want to capture it
         CompoundTag compoundTag = NbtUtils.update(p_129214_, p_129215_, p_129216_, p_129217_);
-        compoundTag.put("entities", tag.get());
+        if (tag.get() != null) {
+            compoundTag.put("entities", tag.get());
+        }
         return compoundTag;
     }
 }
