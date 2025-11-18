@@ -30,8 +30,8 @@ import java.util.function.Supplier;
 @Mixin(ChunkStorage.class)
 public class MixinChunkStorage {
     @Inject(method = "upgradeChunkTag", at = @At("HEAD"))
-    public void inject1(ResourceKey<Level> p_188289_, Supplier<DimensionDataStorage> p_188290_, CompoundTag p_188291_, Optional<ResourceKey<Codec<? extends ChunkGenerator>>> p_188292_,
-                        CallbackInfoReturnable<CompoundTag> cir, @Share("tag") LocalRef<ListTag> tag) {
+    public void captureEntitiesTag(ResourceKey<Level> p_188289_, Supplier<DimensionDataStorage> p_188290_, CompoundTag p_188291_, Optional<ResourceKey<Codec<? extends ChunkGenerator>>> p_188292_,
+                                   CallbackInfoReturnable<CompoundTag> cir, @Share("tag") LocalRef<ListTag> tag) {
         if(p_188291_.contains("Level")
            && p_188291_.getCompound("Level").contains("Entities")) {
             tag.set(p_188291_.getCompound("Level").getList("Entities", CompoundTag.TAG_COMPOUND));
@@ -39,17 +39,10 @@ public class MixinChunkStorage {
     }
 
     @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtUtils;update(Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/util/datafix/DataFixTypes;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/nbt/CompoundTag;"))
-    public CompoundTag red(DataFixer p_129214_, DataFixTypes p_129215_, CompoundTag p_129216_, int p_129217_, @Share("tag1") LocalRef<CompoundTag> tagLocalRef) {
+    public CompoundTag reInject(DataFixer p_129214_, DataFixTypes p_129215_, CompoundTag p_129216_, int p_129217_, @Share("tag") LocalRef<ListTag> tag) {
         //We want to capture it
-        CompoundTag tag = NbtUtils.update(p_129214_, p_129215_, p_129216_, p_129217_);
-        tagLocalRef.set(tag);
-        return tag;
-    }
-
-    @Inject(method = "upgradeChunkTag", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/nbt/NbtUtils;update(Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/util/datafix/DataFixTypes;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/nbt/CompoundTag;"))
-    public void inject(ResourceKey<Level> p_188289_, Supplier<DimensionDataStorage> p_188290_, CompoundTag p_188291_, Optional<ResourceKey<Codec<? extends ChunkGenerator>>> p_188292_,
-                       CallbackInfoReturnable<CompoundTag> cir, @Share("tag1") LocalRef<CompoundTag> tagLocalRef, @Share("tag") LocalRef<ListTag> tag) {
-        CompoundTag tag1 = tagLocalRef.get();
-        tag1.put("entities", tag.get());
+        CompoundTag compoundTag = NbtUtils.update(p_129214_, p_129215_, p_129216_, p_129217_);
+        compoundTag.put("entities", tag.get());
+        return compoundTag;
     }
 }
