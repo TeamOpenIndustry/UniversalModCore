@@ -1,10 +1,13 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
+        maven { url "https://plugins.gradle.org/" }
         maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
     }
 	dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.2'
+        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
         classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
 	}
 }
@@ -16,6 +19,7 @@ configurations {
 
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.spongepowered.mixin'
 
 repositories {
@@ -45,7 +49,7 @@ minecraft {
     version = "1.12.2-14.23.5.2847"
     runDir = "run"
 
-    coreMod = 'cam72cam.mod.UMCMixinLoadingPlugin'
+    coreMod = 'cam72cam.mod.UMCMixinPlugin'
 //    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
 //    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
     // the mappings can be changed at any time, and must be in the following format.
@@ -59,11 +63,6 @@ minecraft {
 
 repositories {
     maven { url = "https://repo.spongepowered.org/maven" }
-}
-
-configurations {
-    embed
-    compile.extendsFrom(embed)
 }
 
 dependencies {
@@ -89,7 +88,7 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 	shade "curse.maven:invtweaks-223094:2482482"
 
-    provided('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+    shade('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
@@ -104,15 +103,6 @@ mixin {
 }
 
 jar {
-    from configurations.provided.asFileTree.files.collect {
-        zipTree(it)
-    }
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
-        }
-    }
-
     manifest {
         attributes (
                 'FMLAT': 'UniversalModCore_at.cfg',
@@ -121,6 +111,16 @@ jar {
                 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
                 "MixinConfigs": "mixins.universalmodcore.json"
         )
+    }
+
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+
+        from(project.zipTree(dep)){
+            include 'META-INF/services', 'META-INF/services/**'
+        }
     }
 }
 
@@ -143,6 +143,15 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+}
+
+shadowJar {
+    classifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'com.llamalad7.mixinextras', "${project.group}.shade.mixinextras"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    finalizedBy 'reobfShadowJar'
 }
 
 test {
