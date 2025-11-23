@@ -16,8 +16,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
@@ -162,17 +161,18 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getInstance().fontRenderer;
 
         state = state.clone()
-                .lighting(false)
-                .depth_test(false)
-                .color(1, 1, 1, 1)
                 .translate(pos.x, pos.y, pos.z)
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
-        try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
+        Matrix4f matrix4f = state.model_view().convertToMoj();
+        try (With ctx = RenderContext.apply(new RenderState().lighting(false).depth_test(false))) {
+            IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
+            fontRendererIn.renderString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1,
+                                        false, matrix4f, buffer, true, 0, 15728640);
+            buffer.finish();
         }
     }
 
