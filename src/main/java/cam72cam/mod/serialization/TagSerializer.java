@@ -61,14 +61,7 @@ public class TagSerializer {
                     String fieldName = tag.value().isEmpty() ? field.getName() : tag.value();
 
                     if (Modifier.isFinal(field.getModifiers())) {
-                        ModCore.warn("A mod is trying to deserialize a tag into a final field %s.  This should never have been implemented and will be removed in future versions.  You have been warned.", fieldName);
-                        try {
-                            Field modifiersField = Field.class.getDeclaredField("modifiers");
-                            modifiersField.setAccessible(true);
-                            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-                        } catch (NoSuchFieldException | IllegalAccessException e) {
-                            throw new SerializationException(String.format("Unable to access field %s in class %s", fieldName, cls), e);
-                        }
+                        throw new SerializationException(String.format("A mod is trying to deserialize a tag into a final field %s.  This should never have been implemented and will be removed in future versions.  You have been warned.", fieldName));
                     }
 
                     TagMapped mapped = field.getType().getAnnotation(TagMapped.class);
