@@ -61,7 +61,7 @@ public class TagSerializer {
                     String fieldName = tag.value().isEmpty() ? field.getName() : tag.value();
 
                     if (Modifier.isFinal(field.getModifiers())) {
-                        throw new SerializationException(String.format("A mod is trying to deserialize a tag into a final field %s.  This should never have been implemented and will be removed in future versions.  You have been warned.", fieldName));
+                        throw new SerializationException(String.format("A mod is trying to deserialize a tag into a final field %s.  This should never have been implemented.", fieldName));
                     }
 
                     TagMapped mapped = field.getType().getAnnotation(TagMapped.class);
