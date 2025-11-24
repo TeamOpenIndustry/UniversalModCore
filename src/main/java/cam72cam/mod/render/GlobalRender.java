@@ -11,6 +11,8 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -162,17 +164,18 @@ public class GlobalRender {
         Font fontRendererIn = Minecraft.getInstance().font;
 
         state = state.clone()
-                .lighting(false)
-                .depth_test(false)
-                .color(1, 1, 1, 1)
                 .translate(pos.x, pos.y, pos.z)
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
-        try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+        Matrix4f matrix4f = state.model_view().convertToMoj();
+        try (With ctx = RenderContext.apply(new RenderState().lighting(false).depth_test(false))) {
+            MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1,
+                                        false, matrix4f, buffer, true, 0, 15728640);
+            buffer.endBatch();
         }
     }
 
