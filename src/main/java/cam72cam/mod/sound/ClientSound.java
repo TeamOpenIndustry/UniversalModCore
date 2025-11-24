@@ -3,11 +3,9 @@ package cam72cam.mod.sound;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.Sound;
-import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
@@ -36,7 +34,7 @@ class ClientSound extends AbstractSoundInstance implements TickableSoundInstance
         this.looping = repeats;
 
         //We will handle it separately
-        this.attenuation = AttenuationType.NONE;
+        this.attenuation = Attenuation.NONE;
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
