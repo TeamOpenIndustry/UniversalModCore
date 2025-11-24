@@ -5,6 +5,7 @@ import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -15,6 +16,7 @@ import java.awt.geom.Rectangle2D;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class RenderState {
     protected Matrix4 model_view = null;
@@ -33,49 +35,55 @@ public class RenderState {
 
     private static FloatBuffer mbuf = FloatBuffer.wrap(new float[16]);
 
-    public RenderState() {
-        if (FMLEnvironment.dist.isClient() && RenderSystem.isOnRenderThread()) {
-            mbuf.position(0);
-            RenderSystem.getModelViewMatrix().store(mbuf);
-            this.model_view = new Matrix4(
-                    mbuf.get(0),
-                    mbuf.get(1),
-                    mbuf.get(2),
-                    mbuf.get(3),
-                    mbuf.get(4),
-                    mbuf.get(5),
-                    mbuf.get(6),
-                    mbuf.get(7),
-                    mbuf.get(8),
-                    mbuf.get(9),
-                    mbuf.get(10),
-                    mbuf.get(11),
-                    mbuf.get(12),
-                    mbuf.get(13),
-                    mbuf.get(14),
-                    mbuf.get(15)
-            ).transpose();
+    //Avoid potential server-side load
+    private static final Lazy<Consumer<RenderState>> clientInitializer = Lazy.of(() -> (state) -> {
+        if(!RenderSystem.isOnRenderThread()) return;
+        mbuf.position(0);
+        RenderSystem.getModelViewMatrix().store(mbuf);
+        state.model_view = new Matrix4(
+                mbuf.get(0),
+                mbuf.get(1),
+                mbuf.get(2),
+                mbuf.get(3),
+                mbuf.get(4),
+                mbuf.get(5),
+                mbuf.get(6),
+                mbuf.get(7),
+                mbuf.get(8),
+                mbuf.get(9),
+                mbuf.get(10),
+                mbuf.get(11),
+                mbuf.get(12),
+                mbuf.get(13),
+                mbuf.get(14),
+                mbuf.get(15)
+        ).transpose();
 
-            mbuf.position(0);
-            RenderSystem.getProjectionMatrix().store(mbuf);
-            this.projection = new Matrix4(
-                    mbuf.get(0),
-                    mbuf.get(1),
-                    mbuf.get(2),
-                    mbuf.get(3),
-                    mbuf.get(4),
-                    mbuf.get(5),
-                    mbuf.get(6),
-                    mbuf.get(7),
-                    mbuf.get(8),
-                    mbuf.get(9),
-                    mbuf.get(10),
-                    mbuf.get(11),
-                    mbuf.get(12),
-                    mbuf.get(13),
-                    mbuf.get(14),
-                    mbuf.get(15)
-            ).transpose();
+        mbuf.position(0);
+        RenderSystem.getProjectionMatrix().store(mbuf);
+        state.projection = new Matrix4(
+                mbuf.get(0),
+                mbuf.get(1),
+                mbuf.get(2),
+                mbuf.get(3),
+                mbuf.get(4),
+                mbuf.get(5),
+                mbuf.get(6),
+                mbuf.get(7),
+                mbuf.get(8),
+                mbuf.get(9),
+                mbuf.get(10),
+                mbuf.get(11),
+                mbuf.get(12),
+                mbuf.get(13),
+                mbuf.get(14),
+                mbuf.get(15)
+        ).transpose();
+    });
+
+    public RenderState() {
+        if (FMLEnvironment.dist.isClient()) {
+            clientInitializer.get().accept(this);
         }
     }
 
