@@ -477,8 +477,8 @@ public class Matrix4
 		return new Matrix4(s.slerp(e, percent).getMatrix());
 	}
 
-    public net.minecraft.client.renderer.Matrix4f convertToMoj() {
-        return new net.minecraft.client.renderer.Matrix4f(new float[]{
+    public net.minecraft.util.math.vector.Matrix4f convertToMoj() {
+        return new net.minecraft.util.math.vector.Matrix4f(new float[]{
                 (float) this.m00,
                 (float) this.m01,
                 (float) this.m02,

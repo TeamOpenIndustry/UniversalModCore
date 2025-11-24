@@ -30,7 +30,7 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
         this.looping = repeats;
 
         //We will handle it separately
-        this.attenuationType = AttenuationType.NONE;
+        this.attenuation = AttenuationType.NONE;
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
