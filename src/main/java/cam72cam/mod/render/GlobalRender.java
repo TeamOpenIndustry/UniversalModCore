@@ -19,6 +19,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.culling.ClippingHelper;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
@@ -27,6 +29,7 @@ import net.minecraft.client.settings.PointOfView;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -162,17 +165,18 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
         state = state.clone()
-                .lighting(false)
-                .depth_test(false)
-                .color(1, 1, 1, 1)
                 .translate(pos.x, pos.y, pos.z)
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F);
 
-        try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+        Matrix4f matrix4f = state.model_view().convertToMoj();
+        try (With ctx = RenderContext.apply(new RenderState().lighting(false).depth_test(false))) {
+            IRenderTypeBuffer.Impl buffer = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1,
+                                        false, matrix4f, buffer, true, 0, 15728640);
+            buffer.endBatch();
         }
     }
 

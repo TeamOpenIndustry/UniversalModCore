@@ -29,6 +29,8 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
         this.pitch = 1;
         this.looping = repeats;
 
+        //We will handle it separately
+        this.attenuationType = AttenuationType.NONE;
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
@@ -76,11 +78,15 @@ class ClientSound extends LocatableSound implements ITickableSound, ISound {
     @Override
     public void tick() {
         float dampenLevel = 1;
+        double v = MinecraftClient.getPlayer().getPosition().distanceTo(position);
         if (MinecraftClient.getPlayer().getRiding() != null) {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
+            this.volume = currentVolume * this.scale * dampenLevel;
+        } else if (v <= attenuationDistance) {
+            this.volume = currentVolume * this.scale;
+            float v0 = (float) (v / attenuationDistance);
+            volume *= (1 - v0);
         }
-
-        this.volume = currentVolume * this.scale * dampenLevel;
 
         if (position == null || velocity == null) {
             pitch = currentPitch / scale;
