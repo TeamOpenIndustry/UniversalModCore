@@ -105,7 +105,7 @@ public class BlockRender {
                         return;
                     }
 
-                    RenderType.solid().setupRenderState();
+                    RenderType.cutoutMipped().setupRenderState();
 
                     //TODO bork 1.17.1? RenderHelper.turnBackOn();
 
@@ -113,7 +113,7 @@ public class BlockRender {
                     int k = combinedLightIn / 65536;
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
 
-                    RenderType.solid().clearRenderState();
+                    RenderType.cutoutMipped().clearRenderState();
                 }
 
                 @Override

@@ -19,6 +19,7 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -28,7 +29,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.data.IModelData;
@@ -46,7 +46,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -117,7 +120,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 if (myState == null) {
                     myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
-                data.putString("id", ((EntityBlock)myState.getBlock()).newBlockEntity(null, null).getType().getRegistryName().toString());
+                BlockPos pos = new BlockPos(data.getInt("x"), data.getInt("y"), data.getInt("z"));
+                data.putString("id", ((EntityBlock)myState.getBlock()).newBlockEntity(pos, null).getType().getRegistryName().toString());
                 return myState;
             }
             return null;
