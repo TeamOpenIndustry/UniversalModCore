@@ -164,22 +164,19 @@ public class GlobalRender {
         Font fontRendererIn = Minecraft.getInstance().font;
 
         state = state.clone()
-                .lighting(false)
-                .depth_test(false)
-                .color(1, 1, 1, 1)
-                .translate(pos.x, pos.y, pos.z)
-                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
-                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
-                .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F);
+                     .lighting(false)
+                     .depth_test(false)
+                     .color(1, 1, 1, 1)
+                     .translate(pos.x, pos.y, pos.z)
+                     .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                     .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                     .scale(scale, scale, scale)
+                     .scale(-0.025F, -0.025F, 0.025F);
 
         try (With ctx = RenderContext.apply(state)) {
-            //fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, -1, false, new Matrix4f(),
-                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
-                                       fontRendererIn.isBidirectional());
-            multibuffersource$buffersource.endBatch();
+            MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            buffer.endBatch();
         }
     }
 
