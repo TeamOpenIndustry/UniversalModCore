@@ -129,9 +129,10 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         registerLegacyTE(new Identifier(ModCore.MODID, "hack"));
 
         CommonEvents.World.LOAD_CHUNK.subscribe(chunk -> {
-            if(chunk instanceof LevelChunk) {
-                return;
-            }
+            //TODO figure out if still needed in 1.19+
+//            if(chunk instanceof LevelChunk) {
+//                return;
+//            }
             for (BlockPos pos : chunk.getBlockEntitiesPos()) {
                 CompoundTag data = chunk.getBlockEntityNbt(pos);
                 for (Function<CompoundTag, BlockState> migration : migrations) {
