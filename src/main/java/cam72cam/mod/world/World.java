@@ -488,7 +488,8 @@ public class World {
     /** Drop a stack on the ground at pos with velocity */
     public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         ItemEntity entity = new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
-        entity.setVelocity(velocity.x, velocity.y, velocity.z);
+        entity.addVelocity(velocity.x, velocity.y, velocity.z);
+        entity.velocityChanged = true;
         internal.addEntity(entity);
     }
 
