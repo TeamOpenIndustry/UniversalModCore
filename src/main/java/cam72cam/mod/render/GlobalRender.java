@@ -43,7 +43,7 @@ public class GlobalRender {
                 @Override
                 public void render(GlobalRenderHelper te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
                     Vec3d pos = GlobalRender.getCameraPos(partialTicks);
-                    RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
+                    RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z).stage(RenderContext.Stage.OVERLAY);
                     renderFuncs.forEach(r -> r.render(state, partialTicks));
                 }
 
@@ -86,7 +86,7 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.render(new RenderState(), event.getPartialTicks());
+                func.render(new RenderState().stage(RenderContext.Stage.GUI), event.getPartialTicks());
             }
         });
     }
@@ -97,7 +97,8 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(),
+                              new RenderState().stage(RenderContext.Stage.OVERLAY), partialTicks);
                 }
             }
         });
@@ -110,10 +111,10 @@ public class GlobalRender {
 
     /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
-        net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().getRenderViewEntity();
-        double d0 = playerrRender.lastTickPosX + (playerrRender.posX - playerrRender.lastTickPosX) * partialTicks;
-        double d1 = playerrRender.lastTickPosY + (playerrRender.posY - playerrRender.lastTickPosY) * partialTicks;
-        double d2 = playerrRender.lastTickPosZ + (playerrRender.posZ - playerrRender.lastTickPosZ) * partialTicks;
+        net.minecraft.entity.Entity playerRender = Minecraft.getMinecraft().getRenderViewEntity();
+        double d0 = playerRender.lastTickPosX + (playerRender.posX - playerRender.lastTickPosX) * partialTicks;
+        double d1 = playerRender.lastTickPosY + (playerRender.posY - playerRender.lastTickPosY) * partialTicks;
+        double d2 = playerRender.lastTickPosZ + (playerRender.posZ - playerRender.lastTickPosZ) * partialTicks;
         return new Vec3d(d0, d1, d2);
     }
 
@@ -151,7 +152,8 @@ public class GlobalRender {
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F);
+                .scale(-0.025F, -0.025F, 0.025F)
+                .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
@@ -163,7 +165,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
@@ -176,6 +178,7 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
         state.color(1,1,1,1).alpha_test(true);
+        state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, 0, 0, color);
@@ -187,7 +190,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);
