@@ -114,7 +114,7 @@ public class Entity {
     public Vec3d getPositionEyes() {
         Vec3d pos = checkRidingPosition();
         if(pos != null) {
-            return pos;
+            return pos.add(0, internal.getEyeHeight(), 0);
         }
 
         if (eyeCache == null || (

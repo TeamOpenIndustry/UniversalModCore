@@ -109,6 +109,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
+        //TODO Apply offset on join
 
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
@@ -293,6 +294,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return iRidable.canFitPassenger(self.getWorld().getEntity(passenger));
     }
 
+    /** Since 1.14 we can't get rider's world position simply as it returns their riding entity's position */
+    public Vec3d calculateRiderWorldPosition(cam72cam.mod.entity.Entity entity) {
+        if (passengerPositions.containsKey(entity.getUUID())) {
+            return calculatePassengerPosition(passengerPositions.get(entity.getUUID()));
+        }
+        return null;
+    }
+
     /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
         return passenger.getPosition().subtract(self.getPosition()).rotateYaw(self.getRotationYaw());
@@ -397,7 +406,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
-            other.internal.passengerPositions.remove(entity.getUUID());
+            seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
+            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
             }
