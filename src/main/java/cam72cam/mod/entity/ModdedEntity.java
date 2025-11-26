@@ -102,14 +102,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * Deserializes data into this, self, and calls self.load.
      * @see IWorldData
      */
-    private final void load(TagCompound data) {
+    private void load(TagCompound data) {
         // Deserialize data into this using annotations
         try {
             TagSerializer.deserialize(data, this);
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
-        //TODO Apply offset on join
 
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
@@ -144,6 +143,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } else {
             iWorldData.load(selfData);
         }
+
+        this.passengerPositions.forEach((k, v) -> {
+            cam72cam.mod.entity.Entity entity = cam72cam.mod.world.World.get(world).getEntity(k, cam72cam.mod.entity.Entity.class);
+            if(entity != null) {
+                entity.setPosition(calculatePassengerPosition(v));
+            }
+        });
     }
 
     /** @see #save */
@@ -296,6 +302,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** Since 1.14 we can't get rider's world position simply as it returns their riding entity's position */
     public Vec3d calculateRiderWorldPosition(cam72cam.mod.entity.Entity entity) {
+        //This should work without pitch applied now
         if (passengerPositions.containsKey(entity.getUUID())) {
             return calculatePassengerPosition(passengerPositions.get(entity.getUUID()));
         }
@@ -314,7 +321,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Don't actually add passengers to the Entity, add a seat which follows the entity instead.
-     *
+     * <p>
      * Only functions on the server.
      *
      * @see IRidable#getMountOffset
