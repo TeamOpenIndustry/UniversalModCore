@@ -178,8 +178,9 @@ jar {
 //    finalizedBy 'reobfShadowJar'
 //}
 
-tasks.named("jarJar") {
-    archiveClassifier = ''
+tasks.named('jarJar', Jar) {
+    from sourceSets.main.java
+    classifier ''
 }
 
 assemble.dependsOn tasks.named("jarJar")
@@ -199,6 +200,7 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             jarJar.component(it)
+
             artifact jar
 //            artifact shadowJar
             artifact sourcesJar
