@@ -172,7 +172,7 @@ jar {
 
 task jarJarRelease {
     group = 'jarjar'
-    finalizedBy tasks.jarJar
+    finalizedBy 'reobfJarJar'
 }
 
 tasks.named('jarJar', Jar) {
