@@ -170,13 +170,13 @@ jar {
     }
 }
 
-shadowJar {
-    archiveClassifier = ''
-    configurations = [project.configurations.shade]
+//shadowJar {
+//    archiveClassifier = ''
+//    configurations = [project.configurations.shade]
 //    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
 //    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
-    finalizedBy 'reobfShadowJar'
-}
+//    finalizedBy 'reobfShadowJar'
+//}
 
 tasks.named("jarJar") {
     archiveClassifier = ''
@@ -197,8 +197,10 @@ test {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            from components.java
+            jarJar.component(it)
             artifact jar
-            artifact shadowJar
+//            artifact shadowJar
             artifact sourcesJar
             artifactId archivesBaseName
         }
