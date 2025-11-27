@@ -186,6 +186,7 @@ assemble.dependsOn tasks.named("jarJar")
 
 reobf {
     jarJar {}
+    shadowJar {}
 }
 
 test {
@@ -197,7 +198,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
-//            artifact shadowJar
+            artifact shadowJar
             artifact sourcesJar
             artifactId archivesBaseName
         }
