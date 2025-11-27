@@ -170,16 +170,12 @@ jar {
     }
 }
 
-//shadowJar {
-//    archiveClassifier = ''
-//    configurations = [project.configurations.shade]
-//    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
-//    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
-//    finalizedBy 'reobfShadowJar'
-//}
+task jarJarRelease {
+    group = 'jarjar'
+    finalizedBy tasks.jarJar
+}
 
 tasks.named('jarJar', Jar) {
-    from sourceSets.main.java
     classifier ''
 }
 
@@ -187,7 +183,6 @@ assemble.dependsOn tasks.named("jarJar")
 
 reobf {
     jarJar {}
-    shadowJar {}
 }
 
 test {
@@ -198,13 +193,11 @@ test {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+
             from components.java
             jarJar.component(it)
-
-            artifact jar
-//            artifact shadowJar
-            artifact sourcesJar
-            artifactId archivesBaseName
+            fg.component(it)
         }
     }
     repositories {
