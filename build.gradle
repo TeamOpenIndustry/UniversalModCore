@@ -204,8 +204,11 @@ publishing {
             artifactId = archivesBaseName
 
             from components.java
-//            jarJar.component(it)
             fg.component(it)
+
+            artifact tasks.jarJar {
+                classifier ''
+            }
         }
     }
     repositories {
