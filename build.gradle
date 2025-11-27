@@ -204,7 +204,7 @@ publishing {
             artifactId = archivesBaseName
 
             from components.java
-            jarJar.component(it)
+//            jarJar.component(it)
             fg.component(it)
         }
     }
