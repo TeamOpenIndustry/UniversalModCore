@@ -1,9 +1,7 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
@@ -45,6 +43,9 @@ archivesBaseName = "UniversalModCore"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+
+jarJar.enable()
+
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   Snapshot are built nightly.
@@ -143,10 +144,15 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    minecraftLibrary group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
-    shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    shade group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
+    minecraftLibrary(group: 'org.lz4', name: 'lz4-java', version: '1.8.0')
+    minecraftLibrary(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
+
+    implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
+        jarJar.ranged(it, "[1.5.2,)")
+    })
+    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
+        jarJar.ranged(it, "[1.8.0,)")
+    })
 }
 
 jar {
@@ -167,15 +173,19 @@ jar {
 shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.shade]
-    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
-    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
+//    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
+//    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
     finalizedBy 'reobfShadowJar'
 }
 
-assemble.dependsOn shadowJar
+tasks.named("jarJar") {
+    archiveClassifier = ''
+}
+
+assemble.dependsOn tasks.named("jarJar")
 
 reobf {
-    shadowJar {}
+    jarJar {}
 }
 
 test {
