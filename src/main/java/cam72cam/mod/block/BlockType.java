@@ -151,6 +151,7 @@ public abstract class BlockType {
             super(Block.Properties.of(BlockType.this.getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
                     .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .noOcclusion()
                     .dynamicShape());
             setRegistryName(BlockType.this.id.internal);
         }
