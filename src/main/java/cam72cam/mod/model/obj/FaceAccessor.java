@@ -4,6 +4,7 @@ import cam72cam.mod.math.Vec3d;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -12,7 +13,7 @@ import java.util.stream.StreamSupport;
  */
 public class FaceAccessor implements Iterable<FaceAccessor> {
     // Cache VBOs to avoid costly re-fetching, even if they are removed it won't cause too much waste(1-2 MB)
-    private static final HashMap<String, VertexBuffer> vbos = new HashMap<>();
+    private static final ConcurrentHashMap<String, VertexBuffer> vbos = new ConcurrentHashMap<>();
     private final OBJModel model;
 
     /**
