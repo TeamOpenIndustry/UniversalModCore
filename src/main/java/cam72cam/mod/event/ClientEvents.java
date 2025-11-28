@@ -17,6 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
@@ -25,6 +26,9 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -100,7 +104,7 @@ public class ClientEvents {
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
-    public static final Event<Consumer<CreativeModeTabEvent.Register>> CREATIVE_TAB = new Event<>();
+    public static final Event<BiConsumer<CreativeModeTabEvent.Register, List<Object>>> CREATIVE_TAB = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -284,7 +288,9 @@ public class ClientEvents {
         }*/
         @SubscribeEvent
         public static void buildContents(CreativeModeTabEvent.Register event) {
-            CREATIVE_TAB.execute(x -> x.accept(event));
+            List<Object> after = new ArrayList<>();
+            after.add(CreativeModeTabs.SPAWN_EGGS);
+            CREATIVE_TAB.execute(x -> x.accept(event, after));
         }
 
         @SubscribeEvent
