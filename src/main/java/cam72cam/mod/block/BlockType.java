@@ -153,6 +153,7 @@ public abstract class BlockType {
             super(Block.Properties.create(BlockType.this.getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
                     .hardnessAndResistance(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .notSolid()
                     .variableOpacity());
             setRegistryName(BlockType.this.id.internal);
         }
