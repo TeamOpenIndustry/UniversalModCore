@@ -8,6 +8,7 @@ import cam72cam.mod.block.IBlockTypeBlock;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
@@ -27,11 +28,9 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
@@ -272,6 +271,34 @@ public class World {
             }
         }
         return list;
+    }
+
+    /**
+     * Find UMC Entities which within the BB and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb, Class<T> type) {
+        return getEntitiesWithinBB(bb, (T val) -> true, type);
+    }
+
+    /**
+     * Find UMC Entities which within the BB, match the filter and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
+        List<ModdedEntity> entitiesWithinAABB = internal.getEntitiesWithinAABB(ModdedEntity.class,
+                                    bb instanceof DefaultBoundingBox
+                                    ? ((DefaultBoundingBox)bb).internal
+                                    : new AxisAlignedBB(bb.min().internal(), bb.max().internal()));
+
+        return entitiesWithinAABB.stream()
+                                 .map(this::getEntity)
+                                 .filter(type::isInstance)
+                                 .map(type::cast)
+                                 .filter(filter)
+                                 .collect(Collectors.toList());
     }
 
     /** Add a constructed entity to the world */

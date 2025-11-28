@@ -5,7 +5,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
-    protected final AxisAlignedBB internal;
+    public final AxisAlignedBB internal;
     private Vec3d minCached;
     private Vec3d maxCached;
 
