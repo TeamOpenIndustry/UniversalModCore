@@ -1,13 +1,11 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
-import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraftforge.registries.DeferredRegister;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +16,8 @@ import java.util.function.Supplier;
 public class CreativeTab {
     public CreativeModeTab internal;
 
+    private static ResourceKey<CreativeModeTab> lastTab = CreativeModeTabs.SPAWN_EGGS;
+
 
     // TODO expose existing creative tabs as constants to be used by mods
 
@@ -25,9 +25,10 @@ public class CreativeTab {
 
     /** */
     public CreativeTab(String label, Supplier<ItemStack> stack) {
-        CommonEvents.Item.CREATIVE_TAB.register(label, () -> {
+        ResourceKey<CreativeModeTab> key = lastTab;
+        RegistryObject<CreativeModeTab> register = CommonEvents.Item.CREATIVE_TAB.register(label, () -> {
             CreativeModeTab.Builder builder = CreativeModeTab.builder();
-            builder.title(Component.translatable("itemGroup." +label));
+            builder.title(Component.translatable("itemGroup." + label));
             builder.icon(() -> stack.get().internal());
             builder.displayItems((params, output) -> {
                 for (CustomItem customItem : inject) {
@@ -36,10 +37,12 @@ public class CreativeTab {
                     }
                 }
             });
+            builder.withTabsBefore(key);
 
             internal = builder.build();
             return internal;
         });
+        lastTab = register.getKey();
     }
 
     /** Wraps minecraft's tabs, don't use directly */
