@@ -49,6 +49,11 @@ public class Entity {
 
     private Vec3d posCache;
     public Vec3d getPosition() {
+        Vec3d pos = checkRidingPosition();
+        if(pos != null) {
+            return pos;
+        }
+
         if (posCache == null || (
                 posCache.x != internal.getX() ||
                 posCache.y != internal.getY() ||
@@ -110,6 +115,11 @@ public class Entity {
 
     Vec3d eyeCache;
     public Vec3d getPositionEyes() {
+        Vec3d pos = checkRidingPosition();
+        if(pos != null) {
+            return pos.add(0, internal.getEyeHeight(), 0);
+        }
+
         if (eyeCache == null || (
                 eyeCache.x != internal.getX() ||
                 eyeCache.y != internal.getY() + internal.getEyeHeight() ||
@@ -118,6 +128,17 @@ public class Entity {
             eyeCache = new Vec3d(internal.getX(), internal.getY() + internal.getEyeHeight(), internal.getZ());
         }
         return eyeCache;
+    }
+
+    private Vec3d checkRidingPosition() {
+        if (this.getRiding() != null && this.getRiding().internal instanceof ModdedEntity) {
+            ModdedEntity entity = (ModdedEntity) this.getRiding().internal;
+            Vec3d vec3d = entity.calculateRiderWorldPosition(this);
+            if(vec3d != null) {
+                return vec3d;
+            }
+        }
+        return null;
     }
 
 

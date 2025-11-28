@@ -153,6 +153,7 @@ public abstract class BlockType {
             super(Block.Properties.of().mapColor(getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
                     .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                    .noOcclusion()
                     .dynamicShape());
         }
 

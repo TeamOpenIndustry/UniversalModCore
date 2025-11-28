@@ -4,6 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraftforge.common.util.LazyOptional;
 import org.joml.Matrix4f;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
@@ -15,6 +16,7 @@ import java.awt.geom.Rectangle2D;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class RenderState {
     protected Matrix4 model_view = null;
@@ -33,47 +35,52 @@ public class RenderState {
 
     private static float[] mbuf = new float[16];
 
+    //Avoid potential server-side load
+    private static final LazyOptional<Consumer<RenderState>> clientInitializer = LazyOptional.of(() -> (state) -> {
+        if(!RenderSystem.isOnRenderThread()) return;RenderSystem.getModelViewMatrix().get(mbuf);
+        state.model_view = new Matrix4(
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
+        ).transpose();
+
+        RenderSystem.getProjectionMatrix().get(mbuf);
+        state.projection = new Matrix4(
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
+        ).transpose();
+    });
+
     public RenderState() {
         if (FMLEnvironment.dist.isClient() && RenderSystem.isOnRenderThread()) {
-            RenderSystem.getModelViewMatrix().get(mbuf);
-            this.model_view = new Matrix4(
-                    mbuf[0],
-                    mbuf[1],
-                    mbuf[2],
-                    mbuf[3],
-                    mbuf[4],
-                    mbuf[5],
-                    mbuf[6],
-                    mbuf[7],
-                    mbuf[8],
-                    mbuf[9],
-                    mbuf[10],
-                    mbuf[11],
-                    mbuf[12],
-                    mbuf[13],
-                    mbuf[14],
-                    mbuf[15]
-            ).transpose();
-
-            RenderSystem.getProjectionMatrix().get(mbuf);
-            this.projection = new Matrix4(
-                    mbuf[0],
-                    mbuf[1],
-                    mbuf[2],
-                    mbuf[3],
-                    mbuf[4],
-                    mbuf[5],
-                    mbuf[6],
-                    mbuf[7],
-                    mbuf[8],
-                    mbuf[9],
-                    mbuf[10],
-                    mbuf[11],
-                    mbuf[12],
-                    mbuf[13],
-                    mbuf[14],
-                    mbuf[15]
-            ).transpose();
+            clientInitializer.ifPresent(consumer -> consumer.accept(this));
         }
     }
 
