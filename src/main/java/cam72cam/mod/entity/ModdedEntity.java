@@ -103,7 +103,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * Deserializes data into this, self, and calls self.load.
      * @see IWorldData
      */
-    private final void load(TagCompound data) {
+    private void load(TagCompound data) {
         // Deserialize data into this using annotations
         try {
             TagSerializer.deserialize(data, this);
@@ -144,6 +144,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } else {
             iWorldData.load(selfData);
         }
+
+        this.passengerPositions.forEach((k, v) -> {
+            cam72cam.mod.entity.Entity entity = cam72cam.mod.world.World.get(level).getEntity(k, cam72cam.mod.entity.Entity.class);
+            if(entity != null) {
+                entity.setPosition(calculatePassengerPosition(v));
+            }
+        });
     }
 
     /** @see #save */
@@ -294,6 +301,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return iRidable.canFitPassenger(self.getWorld().getEntity(passenger));
     }
 
+    /** Since 1.14 we can't get rider's world position simply as it returns their riding entity's position */
+    public Vec3d calculateRiderWorldPosition(cam72cam.mod.entity.Entity entity) {
+        //This should work without pitch applied now
+        if (passengerPositions.containsKey(entity.getUUID())) {
+            return calculatePassengerPosition(passengerPositions.get(entity.getUUID()));
+        }
+        return null;
+    }
+
     /** Passenger offset from entity center rotated by entity yaw */
     private Vec3d calculatePassengerOffset(cam72cam.mod.entity.Entity passenger) {
         return passenger.getPosition().subtract(self.getPosition()).rotateYaw(self.getRotationYaw());
@@ -306,7 +322,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Don't actually add passengers to the Entity, add a seat which follows the entity instead.
-     *
+     * <p>
      * Only functions on the server.
      *
      * @see IRidable#getMountOffset
@@ -333,13 +349,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     List<cam72cam.mod.entity.Entity> getActualPassengers() {
         return seats.stream()
-                .map(SeatEntity::getEntityPassenger)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                    .map(SeatEntity::getEntityPassenger)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
     }
 
     /**
      * Helper function that updates a seat's position and it's rider's position
+     *
+     * @see SeatEntity#updatePassenger
      */
     void updateSeat(SeatEntity seat) {
         if (!seats.contains(seat)) {
@@ -347,30 +365,41 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
-        if (passenger != null) {
-            Vec3d offset = passengerPositions.get(passenger.getUUID());
-            // Weird case around player joining with a different UUID during debugging
+        if (passenger == null) return;
+
+        Vec3d offset = passengerPositions.get(passenger.getUUID());
+
+        if (!level.isClientSide) {
             if (offset == null) {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
-                passengerPositions.put(passenger.getUUID(), offset);
             }
-
             offset = iRidable.onPassengerUpdate(passenger, offset);
             if (!seat.hasPassenger(passenger.internal)) {
                 return;
             }
-
             passengerPositions.put(passenger.getUUID(), offset);
+        }
 
-            Vec3d pos = calculatePassengerPosition(offset);
+        if (offset == null) return;
 
-            passenger.setPosition(pos);
-            passenger.setVelocity(new Vec3d(getDeltaMovement()));
+        Vec3d pos = calculatePassengerPosition(offset);
+        Vec3d motion = new Vec3d(getDeltaMovement());
+
+        if (seat.getId() < passenger.internal.getId()) {
+            pos = pos.add(motion);
+        }
+        passenger.setPosition(pos);
+        if (!level.isClientSide) {
+            passenger.setVelocity(motion);
+        }
 
             float delta = yRot - yRotO;
             passenger.internal.yRot = passenger.internal.yRot + delta;
 
-            seat.shouldSit = iRidable.shouldRiderSit(passenger);
+        seat.shouldSit = iRidable.shouldRiderSit(passenger);
+
+        if (!level.isClientSide) {
+            new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
 
@@ -385,7 +414,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
-            other.internal.passengerPositions.remove(entity.getUUID());
+            seat.setPos(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
+            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
             if (!level.isClientSide) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
             }
@@ -523,8 +553,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         @Override
         public TagAccessor<Map<UUID, Vec3d>> apply(Class<Map<UUID, Vec3d>> type, String fieldName, TagField tag) {
             return new TagAccessor<>(
-                (d, o) -> d.setMap(fieldName, o, UUID::toString, (Vec3d pos) -> new TagCompound().setVec3d("pos", pos)),
-                d -> d.getMap(fieldName, UUID::fromString, t -> t.getVec3d("pos"))
+                    (d, o) -> d.setMap(fieldName, o, UUID::toString, (Vec3d pos) -> new TagCompound().setVec3d("pos", pos)),
+                    d -> d.getMap(fieldName, UUID::fromString, t -> t.getVec3d("pos"))
             );
         }
     }
