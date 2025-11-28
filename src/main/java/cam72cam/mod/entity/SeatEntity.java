@@ -139,8 +139,8 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     public void setup(ModdedEntity moddedEntity, Entity passenger) {
         this.parent = moddedEntity.getUniqueID();
-        this.setPosition(moddedEntity.getPosX(), moddedEntity.getPosY(), moddedEntity.getPosZ());
         this.passenger = passenger.getUniqueID();
+        this.setPosition(passenger.getPosX(), passenger.getPosX(), passenger.getPosX());
     }
 
     public void moveTo(ModdedEntity moddedEntity) {
