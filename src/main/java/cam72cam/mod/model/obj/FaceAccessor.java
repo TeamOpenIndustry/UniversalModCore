@@ -4,6 +4,7 @@ import cam72cam.mod.math.Vec3d;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -12,7 +13,7 @@ import java.util.stream.StreamSupport;
  */
 public class FaceAccessor implements Iterable<FaceAccessor> {
     // Cache VBOs to avoid costly re-fetching, even if they are removed it won't cause too much waste(1-2 MB)
-    private static final HashMap<String, VertexBuffer> vbos = new HashMap<>();
+    private static final ConcurrentHashMap<String, VertexBuffer> vbos = new ConcurrentHashMap<>();
     private final OBJModel model;
 
     /**
@@ -166,60 +167,60 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
         }
 
         public float x() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.vertexOffset];
         }
 
         public float y() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 1];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.vertexOffset + 1];
         }
 
         public float z() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 2];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.vertexOffset + 2];
         }
 
         public float u() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 3];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.textureOffset];
         }
 
         public float v() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 4];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.textureOffset + 1];
         }
 
         public float r() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 5];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.colorOffset];
         }
 
         public float g() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 6];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.colorOffset + 1];
         }
 
         public float b() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 7];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.colorOffset + 2];
         }
 
         public float a() {
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 8];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.colorOffset + 3];
         }
 
         public float nx() {
             if (!vbo.hasNormals) {
                 return 0;
             }
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 9];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.normalOffset];
         }
 
         public float ny() {
             if (!vbo.hasNormals) {
                 return 0;
             }
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 10];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.normalOffset + 1];
         }
 
         public float nz() {
             if (!vbo.hasNormals) {
                 return 0;
             }
-            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + 11];
+            return vbo.data[(currentFaceIndex * 3 + vertOffset) * vbo.stride + vbo.normalOffset + 2];
         }
     }
 }
