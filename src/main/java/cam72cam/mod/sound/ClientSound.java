@@ -82,15 +82,14 @@ class ClientSound extends AbstractSoundInstance implements TickableSoundInstance
     @Override
     public void tick() {
         float dampenLevel = 1;
-        double v = MinecraftClient.getPlayer().getPosition().distanceTo(position);
+
         if (MinecraftClient.getPlayer().getRiding() != null) {
             dampenLevel = MinecraftClient.getPlayer().getRiding().getRidingSoundModifier();
-            this.volume = currentVolume * this.scale * dampenLevel;
-        } else if (v <= attenuationDistance) {
-            this.volume = currentVolume * this.scale;
-            float v0 = (float) (v / attenuationDistance);
-            volume *= (1 - v0);
         }
+
+        float linear = (float) Math.max(0, 1 - MinecraftClient.getPlayer().getPosition().distanceTo(this.position) / this.attenuationDistance);
+
+        this.volume = currentVolume * this.scale * dampenLevel * linear;
 
         if (position == null || velocity == null) {
             pitch = currentPitch / scale;
