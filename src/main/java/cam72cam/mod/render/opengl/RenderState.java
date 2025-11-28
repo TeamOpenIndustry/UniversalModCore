@@ -4,7 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import cpw.mods.util.Lazy;
+import net.minecraftforge.common.util.LazyOptional;
 import org.joml.Matrix4f;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.lwjgl.opengl.GL11;
@@ -36,7 +36,7 @@ public class RenderState {
     private static float[] mbuf = new float[16];
 
     //Avoid potential server-side load
-    private static final Lazy<Consumer<RenderState>> clientInitializer = Lazy.of(() -> (state) -> {
+    private static final LazyOptional<Consumer<RenderState>> clientInitializer = LazyOptional.of(() -> (state) -> {
         if(!RenderSystem.isOnRenderThread()) return;RenderSystem.getModelViewMatrix().get(mbuf);
         state.model_view = new Matrix4(
                 mbuf[0],
@@ -80,7 +80,7 @@ public class RenderState {
 
     public RenderState() {
         if (FMLEnvironment.dist.isClient() && RenderSystem.isOnRenderThread()) {
-            clientInitializer.get().accept(this);
+            clientInitializer.ifPresent(consumer -> consumer.accept(this));
         }
     }
 
