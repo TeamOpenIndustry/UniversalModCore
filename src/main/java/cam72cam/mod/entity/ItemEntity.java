@@ -23,6 +23,10 @@ public class ItemEntity extends Entity {
         return new ItemStack(internal.getItem());
     }
 
+    public void setContent(ItemStack stack) {
+        internal.setItem(stack.internal);
+    }
+
     /**
      * Retrieves the owner of this item entity. Only the owner can pick it up.
      *
