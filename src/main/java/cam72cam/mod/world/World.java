@@ -288,7 +288,7 @@ public class World {
      * More performant when region is known
      * */
     public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
-        List<ModdedEntity> entitiesWithinAABB = internal.getEntitiesWithinAABB(ModdedEntity.class,
+        List<net.minecraft.entity.Entity> entitiesWithinAABB = internal.getEntitiesWithinAABB(net.minecraft.entity.Entity.class,
                                     bb instanceof DefaultBoundingBox
                                     ? ((DefaultBoundingBox)bb).internal
                                     : new AxisAlignedBB(bb.min().internal(), bb.max().internal()));
