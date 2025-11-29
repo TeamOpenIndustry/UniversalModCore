@@ -173,7 +173,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onClick(InputEvent.MouseButton event) {
+        public static void onClick(InputEvent.MouseButton.Pre event) {
             if (skipNextMouseInputEvent) {
                 // This is the path from onGuiMouse
                 skipNextMouseInputEvent = false;
