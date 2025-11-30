@@ -42,6 +42,7 @@ public class RenderState {
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
         this.shader = ctx.shader;
+        this.stage = ctx.stage;
     }
 
     public RenderState clone() {
