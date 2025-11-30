@@ -18,7 +18,6 @@ import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
@@ -45,6 +44,8 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -58,14 +59,10 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.lwjgl.opengl.GL32;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -229,10 +226,8 @@ public class ModCore {
             }
 
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                RenderSystem.recordRenderCall(() -> {
-                        MaxTextureSize = GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE);
-                        ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
-                });
+                MaxTextureSize = RenderSystem.maxSupportedTextureSize();
+                ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
 
