@@ -4,9 +4,12 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.MathHelper;
 import util.Matrix4;
 
@@ -112,6 +115,24 @@ public abstract class Particle {
         mat.rotate(Math.toRadians(180 - Math.toDegrees(MathHelper.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
     }
 
+    public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
+        int extraArgument = 0;
+
+        if (vanilla == VanillaParticles.DIRT_DUST) {
+            extraArgument = Block.getStateId(Blocks.DIRT.getDefaultState());
+        } else if (vanilla == VanillaParticles.SAND_DUST) {
+            extraArgument = Block.getStateId(Blocks.SAND.getDefaultState());
+        }
+
+        net.minecraft.client.particle.Particle particle;
+        particle = Minecraft.getMinecraft().effectRenderer.spawnEffectParticle(
+                vanilla.internal.getParticleID(), pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z, extraArgument);
+
+        if (particle != null) {
+            particle.multipleParticleScaleBy(scale);
+        }
+    }
+
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
@@ -130,6 +151,30 @@ public abstract class Particle {
             this.pos = pos;
             this.motion = motion;
             this.lifespan = lifespan;
+        }
+    }
+
+    public enum VanillaParticles { //TODO Naming
+        RAIN(EnumParticleTypes.WATER_DROP),
+        DIRT_DUST(EnumParticleTypes.BLOCK_DUST),
+        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
+        FALLING_DUST(EnumParticleTypes.FALLING_DUST),
+        HEART(EnumParticleTypes.HEART),
+        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
+        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
+        EXPLOSION(EnumParticleTypes.EXPLOSION_HUGE),
+        HIT(EnumParticleTypes.DAMAGE_INDICATOR),
+        TOTEM(EnumParticleTypes.TOTEM),
+        REDSTONE(EnumParticleTypes.REDSTONE),
+        FLAME(EnumParticleTypes.FLAME),
+        LAVA(EnumParticleTypes.LAVA),
+        ENCHANTMENT_TABLE(EnumParticleTypes.ENCHANTMENT_TABLE),
+        ;
+
+        private EnumParticleTypes internal;
+
+        VanillaParticles(EnumParticleTypes type) {
+            this.internal = type;
         }
     }
 }
