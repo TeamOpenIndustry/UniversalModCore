@@ -38,8 +38,9 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     public void inject(AABB pBoundingBox, Consumer<EntitySection<T>> pSection, CallbackInfo ci) {
         this.sections.values().stream()
                      .filter(e -> e.getStatus().isAccessible())
-                     .filter(e -> e.getEntities().anyMatch(entity -> entity.getClass().equals(ModdedEntity.class)
-                             && ((ModdedEntity)entity).getBoundingBox().intersects(pBoundingBox)))
+                     .filter(e -> e.storage.find(ModdedEntity.class)
+                                                          .stream()
+                                                          .anyMatch(m -> m.getBoundingBox().intersects(pBoundingBox)))
                      .forEach(pSection);
     }
 }
