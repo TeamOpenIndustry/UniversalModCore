@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 /**
  * Registry and Abstraction for Particles
- *
+ * <p>
  * Try not to allocate anything for each render frame...
  * */
 public abstract class Particle {
@@ -116,6 +116,8 @@ public abstract class Particle {
     }
 
     public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
+        if (scale < 1E-7) return;
+
         int extraArgument = 0;
 
         if (vanilla == VanillaParticles.DIRT_DUST) {
@@ -154,24 +156,30 @@ public abstract class Particle {
         }
     }
 
-    public enum VanillaParticles { //TODO Naming
-        RAIN(EnumParticleTypes.WATER_DROP),
+    public enum VanillaParticles {ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
+        BUBBLE(EnumParticleTypes.WATER_BUBBLE),
+        CRITICAL_HIT(EnumParticleTypes.CRIT),
+        CRITICAL_MAGIC_HIT(EnumParticleTypes.CRIT_MAGIC),
         DIRT_DUST(EnumParticleTypes.BLOCK_DUST),
-        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
-        FALLING_DUST(EnumParticleTypes.FALLING_DUST),
-        HEART(EnumParticleTypes.HEART),
-        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
-        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
         EXPLOSION(EnumParticleTypes.EXPLOSION_HUGE),
-        HIT(EnumParticleTypes.DAMAGE_INDICATOR),
-        TOTEM(EnumParticleTypes.TOTEM),
-        REDSTONE(EnumParticleTypes.REDSTONE),
         FLAME(EnumParticleTypes.FLAME),
+        HAPPY_VILLAGER(EnumParticleTypes.VILLAGER_HAPPY),
+        HEART(EnumParticleTypes.HEART),
         LAVA(EnumParticleTypes.LAVA),
-        ENCHANTMENT_TABLE(EnumParticleTypes.ENCHANTMENT_TABLE),
+        LAVA_DROP(EnumParticleTypes.DRIP_LAVA),
+        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
+        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
+        NOTE(EnumParticleTypes.NOTE),
+        REDSTONE(EnumParticleTypes.REDSTONE),
+        RUNE(EnumParticleTypes.ENCHANTMENT_TABLE),
+        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
+        SNOWBALL_BREAKING(EnumParticleTypes.SNOWBALL),
+        SNOW_SHOVEL(EnumParticleTypes.SNOW_SHOVEL),
+        WATER_DRIP(EnumParticleTypes.DRIP_WATER),
+        WATER_SPLASH(EnumParticleTypes.WATER_SPLASH)
         ;
 
-        private EnumParticleTypes internal;
+        private final EnumParticleTypes internal;
 
         VanillaParticles(EnumParticleTypes type) {
             this.internal = type;
