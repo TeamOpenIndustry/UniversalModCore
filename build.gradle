@@ -173,11 +173,6 @@ tasks.jarJar {
 
 tasks.register('jarJarRelease') {
     group = 'jarjar'
-    doLast {
-        tasks.jarJar {
-            classifier = ''
-        }
-    }
     finalizedBy tasks.jarJar
 }
 
@@ -199,7 +194,6 @@ publishing {
         register('mavenJava', MavenPublication) {
             artifactId = archivesBaseName
             from components.java
-            artifact(tasks.jarJar)
         }
     }
     repositories {
