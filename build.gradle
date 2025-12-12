@@ -177,8 +177,8 @@ tasks.register('jarJarRelease') {
 
 tasks.withType(Jar).configureEach {
     if (archiveClassifier.get() == 'all') {
-        //treat jar-in-jar file as main
-        archiveClassifier.set('')
+//        //treat jar-in-jar file as main
+//        archiveClassifier.set('')
     }
 }
 
