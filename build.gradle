@@ -165,25 +165,24 @@ jar {
     }
 }
 
+tasks.jarJar {
+    // main jar = slim + jar-in-jar deps
+    archiveClassifier.set("")
+    dependsOn tasks.jar
+}
+
 tasks.register('jarJarRelease') {
     group = 'jarjar'
-    doLast {
-        tasks.jarJar {
-            classifier = ''
-        }
-    }
     finalizedBy tasks.jarJar
 }
 
 tasks.withType(Jar).configureEach {
     if (archiveClassifier.get() == 'all') {
-        //treat jar-in-jar file as main
-        archiveClassifier.set('')
+        enabled = false
     }
 }
 
-
-assemble.dependsOn tasks.named("jarJar")
+assemble.dependsOn tasks.jarJar
 
 test {
     useJUnit()
@@ -192,14 +191,9 @@ test {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        register('mavenJava', MavenPublication) {
             artifactId = archivesBaseName
-
             from components.java
-
-//            artifact tasks.jarJar {
-//                classifier ''
-//            }
         }
     }
     repositories {
