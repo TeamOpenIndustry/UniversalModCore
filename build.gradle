@@ -165,6 +165,12 @@ jar {
     }
 }
 
+tasks.jarJar {
+    // main jar = slim + jar-in-jar deps
+    archiveClassifier.set("")
+    dependsOn tasks.jar
+}
+
 tasks.register('jarJarRelease') {
     group = 'jarjar'
     doLast {
@@ -181,8 +187,7 @@ tasks.withType(Jar).configureEach {
     }
 }
 
-
-assemble.dependsOn tasks.named("jarJar")
+assemble.dependsOn tasks.jarJar
 
 test {
     useJUnit()
@@ -191,14 +196,10 @@ test {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        register('mavenJava', MavenPublication) {
             artifactId = archivesBaseName
-
             from components.java
-
-            artifact (tasks.jarJar) {
-                archiveClassifier.set("")
-            }
+            artifact(tasks.jarJar)
         }
     }
     repositories {
