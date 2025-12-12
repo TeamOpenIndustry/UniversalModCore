@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[31,)"
+loaderVersion="[2,)"
 license="TODO"
 
 [[mods]]
@@ -9,15 +9,15 @@ displayName="#NAME#"
 
 [[dependencies.#ID#]]
     modId="forge"
-    mandatory=true
-    versionRange="[47.4,)"
+    type='required'
+    versionRange="[20.4.251,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.#ID#]]
     modId="minecraft"
-    mandatory=true
-    versionRange="[1.20.1]"
+    type='required'
+    versionRange="[1.20.4]"
     ordering="NONE"
     side="BOTH"
 

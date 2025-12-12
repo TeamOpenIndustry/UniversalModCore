@@ -1,11 +1,11 @@
 package #PACKAGE#;
 
 import cam72cam.mod.ModCore;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.data.event.GatherDataEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 
-@net.minecraftforge.fml.common.Mod(Mod.MODID)
-@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = Mod.MODID, bus = net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD)
+@net.neoforged.fml.common.Mod(Mod.MODID)
+@net.neoforged.fml.common.Mod.EventBusSubscriber(modid = Mod.MODID, bus = net.neoforged.fml.common.Mod.EventBusSubscriber.Bus.MOD)
 public class Mod {
     public static final String MODID = "#ID#";
 

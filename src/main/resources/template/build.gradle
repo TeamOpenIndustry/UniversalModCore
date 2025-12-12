@@ -1,16 +1,22 @@
 //BUILDSCRIPT//
 buildscript {
     repositories {
-        maven { url = "https://maven.minecraftforge.net/" }
+        maven {
+            name "neoforgedReleases"
+            url "https://maven.neoforged.net/releases"
+        }
+        maven { url "https://plugins.gradle.org/m2/" }
         mavenCentral()
     }
 	dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
+        classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
+        classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
 	}
 }
 
 //PLUGINS//
-apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'net.neoforged.gradle.userdev'
+apply plugin: 'net.neoforged.gradle.common'
 apply plugin: 'eclipse'
 
 //MINECRAFT//
@@ -26,42 +32,28 @@ sourceSets {
 }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-minecraft {
-    mappings channel: 'official', version: '1.20.1'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                #ID# {
-                    source sourceSets.main
-                }
-            }
-        }
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
 
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                #ID# {
-                    source sourceSets.main
-                }
-            }
-        }
+        modSource project.sourceSets.main
+    }
 
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', '#ID#', '--all', '--output', file('src/generated/resources/')
-            mods {
-                #ID# {
-                    source sourceSets.main
-                }
-            }
-        }
+    client {
+        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
+    }
+
+    server {
+        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
+        argument '--nogui'
+    }
+
+    gameTestServer {
+        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
+    }
+
+    data {arguments.addAll '--mod', '#ID#', '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
 
@@ -69,9 +61,9 @@ minecraft {
 #UMC_REPO#
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.1.46'
+    implementation "net.neoforged:neoforge:20.4.251"
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    implementation fg.deobf(#UMC_DEPENDENCY#)
+    implementation #UMC_DEPENDENCY#
 }
 
 //JAR//
@@ -88,7 +80,6 @@ jar {
         ])
     }
 }
-jar.finalizedBy('reobfJar')
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
