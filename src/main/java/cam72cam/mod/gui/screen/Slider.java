@@ -26,7 +26,7 @@ public abstract class Slider extends Button {
 
         @Override
         protected void updateMessage() {
-            if (setter != null && !setter.get().isEmpty()) {
+            if (setter != null && setter.get() != null && !setter.get().isEmpty()) {
                 this.setMessage(new TextComponent(setter.get()));
             } else {
                 super.updateMessage();
