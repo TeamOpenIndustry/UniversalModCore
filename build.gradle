@@ -177,8 +177,7 @@ tasks.register('jarJarRelease') {
 
 tasks.withType(Jar).configureEach {
     if (archiveClassifier.get() == 'all') {
-//        //treat jar-in-jar file as main
-//        archiveClassifier.set('')
+        enabled = false
     }
 }
 
@@ -197,9 +196,9 @@ publishing {
 
             from components.java
 
-//            artifact tasks.jarJar {
-//                classifier ''
-//            }
+            artifact (tasks.jarJar) {
+                archiveClassifier.set("")
+            }
         }
     }
     repositories {
