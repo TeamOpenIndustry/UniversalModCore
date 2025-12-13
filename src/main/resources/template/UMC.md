@@ -1,1 +1,1 @@
-You don't need to run anything manually, NoeGradle has done them for you
+You don't need to run anything manually, NeoGradle has done them for you

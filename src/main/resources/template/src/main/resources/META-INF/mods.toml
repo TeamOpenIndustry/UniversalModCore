@@ -8,7 +8,7 @@ version="${file.jarVersion}"
 displayName="#NAME#"
 
 [[dependencies.#ID#]]
-    modId="forge"
+    modId="neoforge"
     type='required'
     versionRange="[20.4.1,)"
     ordering="NONE"
