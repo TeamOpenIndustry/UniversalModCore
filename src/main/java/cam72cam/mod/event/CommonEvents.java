@@ -1,6 +1,7 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.net.Packet;
 import cam72cam.mod.render.GlobalRender;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -166,7 +167,7 @@ public class CommonEvents {
         @SubscribeEvent
         public static void registerPacket(RegisterPayloadHandlerEvent event) {
             final IPayloadRegistrar registrar = event.registrar(ModCore.MODID)
-                                                     .versioned("1.0")
+                                                     .versioned(Packet.VERSION)
                                                      .optional();
             Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
         }

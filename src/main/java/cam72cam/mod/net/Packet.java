@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  * @see TagSerializer
  */
 public abstract class Packet {
-    private static final String VERSION = "1.0";
+    public static final String VERSION = "1.0";
     // Packet class name -> Packet Constructor
     private static Map<String, Supplier<Packet>> types = new HashMap<>();
 
@@ -48,49 +48,74 @@ public abstract class Packet {
 
     /** How to register a packet (do in CONSTRUCT phase) */
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
-        types.put(sup.get().getClass().toString(), sup);
+        String pktClass = sup.get().getClass().toString();
+        if (types.containsKey(pktClass)) {
+            //Already registered, goodbye
+            return;
+        }
+        types.put(pktClass, sup);
         ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
         CommonEvents.Networking.REGISTER_PACKET.subscribe(iPayloadRegistrar ->
-                                iPayloadRegistrar.play(name, Message::new, handler -> {
-                                    switch (dir) {
-                                        case ClientToServer -> handler.server((msg, context) -> {
-                                            World world1 = World.get(context.player().get().level());
-											try {
-												TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-											} catch (SerializationException e) {
-                                                ModCore.catching(e);
-                                                return;
-											}
-                                            if (msg.packet.getPlayer() == null) {
-                                                try {
-                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                                } catch (Exception e) {
-                                                    ModCore.catching(e);
-                                                    return;
-                                                }
-                                            }
-											msg.packet.handle();
-                                        });
-                                        case ServerToClient -> handler.client((msg, context) -> {
-                                            World world1 = MinecraftClient.getPlayer().getWorld();
+                                iPayloadRegistrar.common(name, Message::new, handler -> {
+                                    handler.server((msg, context) -> {
+                                        World world1 = World.get(context.player().get().level());
+                                        try {
+                                            TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
+                                        } catch (SerializationException e) {
+                                            ModCore.catching(e);
+                                            return;
+                                        }
+                                        if (msg.packet.getPlayer() == null) {
                                             try {
-                                                TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-                                            } catch (SerializationException e) {
+                                                throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                                            } catch (Exception e) {
                                                 ModCore.catching(e);
                                                 return;
                                             }
-                                            if (msg.packet.getPlayer() == null) {
-                                                try {
-                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                                } catch (Exception e) {
-                                                    ModCore.catching(e);
-                                                    return;
-                                                }
+                                        }
+                                        msg.packet.handle();
+                                    }).client((msg, context) -> {
+                                        World world1 = MinecraftClient.getPlayer().getWorld();
+                                        try {
+                                            TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
+                                        } catch (SerializationException e) {
+                                            ModCore.catching(e);
+                                            return;
+                                        }
+                                        if (msg.packet.getPlayer() == null) {
+                                            try {
+                                                throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                                            } catch (Exception e) {
+                                                ModCore.catching(e);
+                                                return;
                                             }
-                                            msg.packet.handle();
-                                        });
-                                    }
+                                        }
+                                        msg.packet.handle();
+                                    });
                                 }));
+
+//        net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
+//            ctx.get().enqueueWork(() -> {
+//                msg.packet.ctx = ctx.get();
+//                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level());
+//                try {
+//                    TagSerializer.deserialize(msg.packet.data, msg.packet, world);
+//                } catch (SerializationException e) {
+//                    ModCore.catching(e);
+//                    return;
+//                }
+//                if (msg.packet.getPlayer() == null) {
+//                    try {
+//                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+//                    } catch (Exception e) {
+//                        ModCore.catching(e);
+//                        return;
+//                    }
+//                }
+//                msg.packet.handle();
+//            });
+//            ctx.get().setPacketHandled(true);
+//        });
     }
 
     /** Called after deserialization */
