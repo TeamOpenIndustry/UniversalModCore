@@ -46,6 +46,7 @@ public abstract class Packet {
     @TagField("umcWorld")
     private World world;
 
+    //TODO Fix 1.20.4 desync issue
     /** How to register a packet (do in CONSTRUCT phase) */
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         String pktClass = sup.get().getClass().toString();
@@ -57,41 +58,53 @@ public abstract class Packet {
         ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
         CommonEvents.Networking.REGISTER_PACKET.subscribe(iPayloadRegistrar ->
                                 iPayloadRegistrar.common(name, Message::new, handler -> {
-                                    handler.server((msg, context) -> {
-                                        World world1 = World.get(context.player().get().level());
-                                        try {
-                                            TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-                                        } catch (SerializationException e) {
-                                            ModCore.catching(e);
-                                            return;
-                                        }
-                                        if (msg.packet.getPlayer() == null) {
+                                    switch (dir) {
+                                        case ClientToServer -> handler.server((msg, context) -> {
+                                            World world1 = World.get(context.player().get().level());
                                             try {
-                                                throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                            } catch (Exception e) {
+                                                TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
+                                            } catch (SerializationException e) {
                                                 ModCore.catching(e);
                                                 return;
                                             }
-                                        }
-                                        msg.packet.handle();
-                                    }).client((msg, context) -> {
-                                        World world1 = MinecraftClient.getPlayer().getWorld();
-                                        try {
-                                            TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-                                        } catch (SerializationException e) {
-                                            ModCore.catching(e);
-                                            return;
-                                        }
-                                        if (msg.packet.getPlayer() == null) {
+                                            if (msg.packet.getPlayer() == null) {
+                                                try {
+                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                                                } catch (Exception e) {
+                                                    ModCore.catching(e);
+                                                    return;
+                                                }
+                                            }
+                                            context.workHandler().submitAsync(msg.packet::handle).exceptionally(e -> {
+                                                ModCore.catching(e);
+                                                return null;
+                                            });
+                                        });
+                                        case ServerToClient -> handler.client((msg, context) -> {
+                                            if (!MinecraftClient.isReady()) {
+                                                return;
+                                            }
+                                            World world1 = MinecraftClient.getPlayer().getWorld();
                                             try {
-                                                throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                            } catch (Exception e) {
+                                                TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
+                                            } catch (SerializationException e) {
                                                 ModCore.catching(e);
                                                 return;
                                             }
-                                        }
-                                        msg.packet.handle();
-                                    });
+                                            if (msg.packet.getPlayer() == null) {
+                                                try {
+                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                                                } catch (Exception e) {
+                                                    ModCore.catching(e);
+                                                    return;
+                                                }
+                                            }
+                                            context.workHandler().submitAsync(msg.packet::handle).exceptionally(e -> {
+                                                ModCore.catching(e);
+                                                return null;
+                                            });
+                                        });
+                                    }
                                 }));
 
 //        net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
@@ -173,7 +186,7 @@ public abstract class Packet {
 
         public Message(Packet pkt) {
             this.packet = pkt;
-            this.location = ResourceLocation.tryBuild(ModCore.MODID, pkt.getClass().getName().toLowerCase(Locale.ROOT));
+            this.location = ResourceLocation.tryBuild(ModCore.MODID, pkt.getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
         }
 
         public Message(FriendlyByteBuf buff) {

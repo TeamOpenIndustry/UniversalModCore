@@ -73,6 +73,22 @@ public abstract class BlockType {
                                     return null;
                                 },
                                 internal);
+            event.registerBlock(Capabilities.FluidHandler.BLOCK,
+                                (level, pos, state, be, side) -> {
+                                    if (be instanceof TileEntity tile) {
+                                        return tile.getFluidHandler(side);
+                                    }
+                                    return null;
+                                },
+                                internal);
+            event.registerBlock(Capabilities.EnergyStorage.BLOCK,
+                                (level, pos, state, be, side) -> {
+                                    if (be instanceof TileEntity tile) {
+                                        return tile.getEnergyStorage(side);
+                                    }
+                                    return null;
+                                },
+                                internal);
         });
     }
 
