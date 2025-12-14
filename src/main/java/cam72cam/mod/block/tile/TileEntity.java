@@ -347,15 +347,15 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     }*/
 
     public static final BlockCapability<IItemHandler, Direction> ITEM_HANDLER_BLOCK =
-            BlockCapability.create(new ResourceLocation(ModCore.MODID, "item_handler"),
+            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "item_handler"),
                                    IItemHandler.class, Direction.class);
 
     public static final BlockCapability<IFluidHandler, Direction> FLUID_HANDLER_BLOCK =
-            BlockCapability.create(new ResourceLocation(ModCore.MODID, "fluid_handler"),
+            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "fluid_handler"),
                                    IFluidHandler.class, Direction.class);
 
     public static final BlockCapability<IEnergyStorage, Direction> ENERGY_HANDLER_BLOCK =
-            BlockCapability.create(new ResourceLocation(ModCore.MODID, "energy_handler"),
+            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "energy_handler"),
                                    IEnergyStorage.class, Direction.class);
 
     public IItemHandler getItemHandler(@Nullable Direction side) {
