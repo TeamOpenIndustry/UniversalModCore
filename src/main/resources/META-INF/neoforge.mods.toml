@@ -16,13 +16,13 @@ Universal Mod API (Minecraft version agnostic)
 [[dependencies.universalmodcore]]
     modId="neoforge"
     type='required'
-    versionRange="[20.4.250,)"
+    versionRange="[21.1.216,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.universalmodcore]]
     modId="minecraft"
     type='required'
-    versionRange="[1.20.4]"
+    versionRange="[1.21.1]"
     ordering="NONE"
     side="BOTH"
