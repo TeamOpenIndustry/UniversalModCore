@@ -5,7 +5,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 @net.neoforged.fml.common.Mod(Mod.MODID)
-@net.neoforged.fml.common.Mod.EventBusSubscriber(modid = Mod.MODID, bus = net.neoforged.fml.common.Mod.EventBusSubscriber.Bus.MOD)
+@net.neoforged.fml.common.EventBusSubscriber(modid = Mod.MODID)
 public class Mod {
     public static final String MODID = "#ID#";
 
