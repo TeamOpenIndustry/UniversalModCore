@@ -161,7 +161,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         BlockEntity example = instance.get();
 
         // Force legacy registration
-        example.supplier(id);
+//        example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(helper -> {
             BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
