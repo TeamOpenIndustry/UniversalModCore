@@ -17,19 +17,23 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
+import cam72cam.mod.util.RegistryUtil;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -91,7 +95,9 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             public BlockPos immutable() {
                 return this; // BAHAHAHAHA
             }
-        }, null);
+        },
+        new StateDefinition.Builder<Block, BlockState>(BuiltInRegistries.BLOCK.get(id.internal))
+                .create(Block::defaultBlockState, BlockState::new).any());
         instance = registry.get(id.toString()).get();
         instance.internal = this;
     }
@@ -210,6 +216,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     @Override
     public final void loadAdditional(CompoundTag compound, HolderLookup.Provider provider) {
         super.loadAdditional(compound, provider);
+        RegistryUtil.update(provider);
         hasTileData = true;
         //Add check here in order to avoid accessing newly created TE which doesn't have this field
         if(compound.contains("x")){
@@ -239,6 +246,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     @Override
     public void saveAdditional(CompoundTag compound, HolderLookup.Provider provider) {
         super.saveAdditional(compound, provider);
+        RegistryUtil.update(provider);
 
         TagCompound data = new TagCompound(compound);
 
@@ -267,6 +275,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         return getUpdateTag(false, provider);
     }
     public final CompoundTag getUpdateTag(boolean writeUpdate, HolderLookup.Provider provider) {
+        RegistryUtil.update(provider);
         CompoundTag tag = super.getUpdateTag(provider);
         if (this.isLoaded()) {
             this.saveAdditional(tag, provider);
@@ -291,6 +300,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     /** Active Synchronization from markDirty */
     @Override
     public final void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
+        RegistryUtil.update(provider);
         try {
             this.loadAdditional(tag, provider);
             if (instance() != null) {

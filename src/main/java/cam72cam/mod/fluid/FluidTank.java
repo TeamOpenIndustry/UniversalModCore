@@ -4,7 +4,7 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 import cam72cam.mod.serialization.TagMapper;
-import cam72cam.mod.util.Util;
+import cam72cam.mod.util.RegistryUtil;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.util.HashSet;
@@ -93,11 +93,11 @@ public class FluidTank implements ITank {
     }
 
     public TagCompound write(TagCompound tag) {
-        return new TagCompound(internal.writeToNBT(Util.getDefaultRegistry(), tag.internal));
+        return new TagCompound(internal.writeToNBT(RegistryUtil.defaultRegistry(), tag.internal));
     }
 
     public void read(TagCompound tag) {
-        internal.readFromNBT(Util.getDefaultRegistry(), tag.internal);
+        internal.readFromNBT(RegistryUtil.defaultRegistry(), tag.internal);
     }
 
     static class Mapper implements TagMapper<FluidTank> {

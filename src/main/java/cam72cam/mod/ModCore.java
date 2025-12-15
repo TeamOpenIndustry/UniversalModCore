@@ -401,7 +401,7 @@ public class ModCore {
             public static IoSupplier<InputStream> getResource(ResourceLocation p_250145_, Path p_251046_) {
                 try {
                     List<String> list = FileUtil.decomposePath(p_250145_.getPath()).getPartialOrThrow();
-                    String s = list.getFirst();
+                    String s = String.join("\\", list);
                     Path path = FileUtil.resolvePath(p_251046_, List.of(s));
                     return Files.exists(path)
                            ? new Identifier.IoInputStreamMod(IoSupplier.create(path), path.toFile().lastModified())

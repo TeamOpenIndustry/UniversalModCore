@@ -2,7 +2,7 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
-import cam72cam.mod.util.Util;
+import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -30,7 +30,8 @@ public class ItemStack {
     //TODO How do we handle 1.20.5 NBT Removal?
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.world.item.ItemStack.parseOptional(Util.getDefaultRegistry(), nbt.internal));
+        this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.defaultRegistry(),
+                                                              (nbt.hasKey("id") && nbt.getString("id").equals("minecraft:air")) ? new CompoundTag() : nbt.internal));
     }
 
     /** Construct from customItem */
@@ -71,7 +72,10 @@ public class ItemStack {
 
     /** Serialize */
     public TagCompound toTag() {
-        return new TagCompound((CompoundTag) internal().save(Util.getDefaultRegistry()));
+        if (internal().isEmpty()) {
+            return new TagCompound();
+        }
+        return new TagCompound((CompoundTag) internal().save(RegistryUtil.defaultRegistry()));
     }
 
     /** Items in this stack */

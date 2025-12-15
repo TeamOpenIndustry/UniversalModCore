@@ -86,29 +86,6 @@ public abstract class Packet {
                 });
             });
         });
-
-//        net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
-//            ctx.get().enqueueWork(() -> {
-//                msg.packet.ctx = ctx.get();
-//                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level());
-//                try {
-//                    TagSerializer.deserialize(msg.packet.data, msg.packet, world);
-//                } catch (SerializationException e) {
-//                    ModCore.catching(e);
-//                    return;
-//                }
-//                if (msg.packet.getPlayer() == null) {
-//                    try {
-//                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-//                    } catch (Exception e) {
-//                        ModCore.catching(e);
-//                        return;
-//                    }
-//                }
-//                msg.packet.handle();
-//            });
-//            ctx.get().setPacketHandled(true);
-//        });
     }
 
     /** Called after deserialization */
@@ -171,12 +148,17 @@ public abstract class Packet {
 
         public Message(Packet pkt) {
             this.packet = pkt;
-            this.location = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, pkt.getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
-            this.type = new Type<>(location);
+            initLocation();
         }
 
         public Message(CompoundTag buff) {
             fromTag(buff);
+            initLocation();
+        }
+
+        private void initLocation() {
+            this.location = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, packet.getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
+            this.type = new Type<>(location);
         }
 
         public void fromTag(CompoundTag buf) {
