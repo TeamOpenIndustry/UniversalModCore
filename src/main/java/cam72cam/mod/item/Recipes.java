@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
@@ -8,14 +9,15 @@ import net.minecraft.data.recipes.RecipeProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /** Recipe registration */
 public class Recipes extends RecipeProvider {
     private static final List<Consumer<RecipeOutput>> registry = new ArrayList<>();
 
-    public Recipes(PackOutput generatorIn) {
-        super(generatorIn);
+    public Recipes(PackOutput generatorIn, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+        super(generatorIn, lookupProvider);
     }
 
     @Override

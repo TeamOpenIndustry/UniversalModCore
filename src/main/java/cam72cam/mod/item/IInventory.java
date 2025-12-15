@@ -79,7 +79,7 @@ public interface IInventory {
                 if (!net.minecraft.world.item.ItemStack.isSameItem(itemStack.internal(), current)) {
                     return itemStack;
                 }
-                if (!net.minecraft.world.item.ItemStack.isSameItemSameTags(itemStack.internal(), current)) {
+                if (!net.minecraft.world.item.ItemStack.isSameItemSameComponents(itemStack.internal(), current)) {
                     return itemStack;
                 }
 

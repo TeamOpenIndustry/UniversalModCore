@@ -87,6 +87,6 @@ public class Mouse {
     }
 
     public static Vec3d getDrag() {
-        return ClientEvents.ClientEventBusForge.getDragPos();
+        return ClientEvents.ClientEventBus.getDragPos();
     }
 }

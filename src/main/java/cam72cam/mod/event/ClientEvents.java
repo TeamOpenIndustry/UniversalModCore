@@ -20,14 +20,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.ICancellableEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
-import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -98,26 +95,32 @@ public class ClientEvents {
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
-    public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
+    public static final Event<Consumer<RenderGuiLayerEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
     public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
+    public static final Event<Consumer<RegisterClientExtensionsEvent>> CLIENT_EXTENSIONS_REGISTER = new Event<>();
+    public static final Event<Consumer<RegisterMenuScreensEvent>> MENU_SCREENS_REGISTER = new Event<>();
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-    public static class ClientEventBusForge {
+    @EventBusSubscriber(modid = ModCore.MODID, value = Dist.CLIENT)
+    public static class ClientEventBus {
         private static Vec3d dragPos = null;
         private static boolean skipNextMouseInputEvent = false;
 
+        static {
+            registerClientEvents();
+        }
+
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase == TickEvent.Phase.START) {
-                TICK.execute(Runnable::run);
-            }
-            if (event.phase == TickEvent.Phase.END) {
-                TICK_POST.execute(Runnable::run);
-            }
+        public static void onClientTick(ClientTickEvent.Pre event) {
+            TICK.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void onClientTick(ClientTickEvent.Post event) {
+            TICK_POST.execute(Runnable::run);
         }
 
         private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
@@ -201,7 +204,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onFrame(TickEvent.RenderTickEvent event) {
+        public static void onFrame(RenderFrameEvent.Pre event) {
             if (dragPos != null) {
                 //Minecraft.getMinecraft().mouseHelper.mouseXYChange();
                 dragPos = dragPos.add(Minecraft.getInstance().mouseHandler.getXVelocity(), Minecraft.getInstance().mouseHandler.getYVelocity(), 0);
@@ -219,7 +222,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onOverlayEvent(RenderGuiOverlayEvent.Pre event) {
+        public static void onOverlayEvent(RenderGuiLayerEvent.Pre event) {
             RENDER_OVERLAY.execute(x -> x.accept(event));
         }
 
@@ -241,20 +244,13 @@ public class ClientEvents {
 
         static boolean hasHacked = false;
         @SubscribeEvent
-        public static void onHackShaders(TickEvent.RenderTickEvent event) {
-            if (!hasHacked && event.phase == TickEvent.Phase.START) {
+        public static void onHackShaders(RenderFrameEvent.Pre event) {
+            if (!hasHacked/* && event.phase == TickEvent.Phase.START*/) {
                 if (GameRenderer.getRendertypeCutoutShader() != null) {
                     hasHacked = true;
                     HACKS.execute(Runnable::run);
                 }
             }
-        }
-    }
-
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientEventBusMod {
-        static {
-            registerClientEvents();
         }
 
         @SubscribeEvent
@@ -292,6 +288,16 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerBindings(RegisterKeyMappingsEvent event) {
             KEY_MAPPING_REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
+            CLIENT_EXTENSIONS_REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerMenuScreen(RegisterMenuScreensEvent event) {
+            MENU_SCREENS_REGISTER.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent

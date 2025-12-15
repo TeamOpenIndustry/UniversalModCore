@@ -15,7 +15,7 @@ public abstract class CheckBox extends Button {
         private Consumer<Player.Hand> clicker = hand -> {};
 
         public InternalCB(int xIn, int yIn, int widthIn, int heightIn, String msg, boolean enabled) {
-            super(xIn, yIn, Component.literal(msg), Minecraft.getInstance().font, enabled, (checkbox, b) -> {});
+            super(xIn, yIn, widthIn, Component.literal(msg), Minecraft.getInstance().font, enabled, (checkbox, b) -> {});
         }
 
         @Override

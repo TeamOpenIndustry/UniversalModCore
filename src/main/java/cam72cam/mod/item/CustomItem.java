@@ -3,6 +3,7 @@ package cam72cam.mod.item;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -26,12 +27,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
@@ -105,6 +103,14 @@ public abstract class CustomItem {
 
         public ItemInternal(Properties p_i48487_1_) {
             super(p_i48487_1_);
+            ClientEvents.CLIENT_EXTENSIONS_REGISTER.subscribe(e -> {
+                e.registerItem(new IClientItemExtensions() {
+                    @Override
+                    public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                        return ItemRender.ISTER();
+                    }
+                }, this);
+            });
         }
 
         @Override
@@ -136,10 +142,10 @@ public abstract class CustomItem {
 
         @Override
         @OnlyIn(Dist.CLIENT)
-        public final void appendHoverText(net.minecraft.world.item.ItemStack stack, @Nullable net.minecraft.world.level.Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-            super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        public void appendHoverText(net.minecraft.world.item.ItemStack stack, Item.TooltipContext context, List<Component> components, TooltipFlag flagIn) {
+            super.appendHoverText(stack, context, components, flagIn);
             if (ModCore.hasResources) {
-                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).collect(Collectors.toList()));
+                components.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).toList());
             }
         }
 
@@ -153,16 +159,16 @@ public abstract class CustomItem {
             onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
             return super.use(world, player, hand);
         }
-
-        @Override
-        public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-            consumer.accept(new IClientItemExtensions() {
-                @Override
-                public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                    return ItemRender.ISTER();
-                }
-            });
-        }
+//See constructor
+//        @Override
+//        public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+//            consumer.accept(new IClientItemExtensions() {
+//                @Override
+//                public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+//                    return ItemRender.ISTER();
+//                }
+//            });
+//        }
     }
     /**
      * Helper for serializing / deserializing data on a stack

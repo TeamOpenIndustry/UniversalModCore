@@ -39,13 +39,13 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.common.IPlantable;
+import net.neoforged.neoforge.common.SpecialPlantable;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
@@ -367,7 +367,7 @@ public class World {
         TagCompound data = TileEntity.legacyConverter(datain);
         // TODO 1.16 null state
         BlockPos blockpos = new BlockPos(data.internal.getInt("x"), data.internal.getInt("y"), data.internal.getInt("z"));
-        TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, null, data.internal);
+        TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, null, data.internal, internal.registryAccess());
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
@@ -510,7 +510,7 @@ public class World {
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i parent) {
         ChunkAccess chunk = internal.getChunkSource().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
-        return (chunk != null && chunk.getStatus() == ChunkStatus.FULL)
+        return (chunk != null && chunk.getPersistedStatus() == ChunkStatus.FULL)
                 && internal.isLoaded(parent.internal());
     }
 
@@ -596,7 +596,7 @@ public class World {
         if (block instanceof BushBlock) {
             return true;
         }
-        if (block instanceof IPlantable) {
+        if (block.asItem() instanceof SpecialPlantable) {
             return true;
         }
         if (block instanceof LiquidBlock) {

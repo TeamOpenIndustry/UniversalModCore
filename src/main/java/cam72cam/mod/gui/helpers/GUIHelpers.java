@@ -11,10 +11,7 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -80,21 +77,21 @@ public class GUIHelpers {
         float minV = sprite.getV0();
 
         Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);
             float maxVScaled = sprite.getV((float) (16.0 * curHeight / iH));
             for (int offX = 0; offX < width; offX += iW) {
                 double curWidth = Math.min(iW, width - offX);
                 float maxUScaled = sprite.getU((float) (16.0 * curWidth / iW));
-                buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
+                buffer.addVertex((float) (x + offX), (float) (y + offY), (float) zLevel).setUv(minU, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX), (float) (y + offY + curHeight), (float) zLevel).setUv(minU, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY + curHeight), (float) zLevel).setUv(maxUScaled, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY), (float) zLevel).setUv(maxUScaled, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
             }
         }
-        tessellator.end();
+        //TODO Am I right?
+        BufferUploader.draw(buffer.buildOrThrow());
 
         RenderSystem.setShader(() -> oldShader);
     }
@@ -127,7 +124,7 @@ public class GUIHelpers {
         matrix.m23 = 10;//Z transform
         graphics.pose().pushPose();
         graphics.pose().setIdentity();
-        graphics.pose().mulPoseMatrix(new Matrix4f(
+        graphics.pose().mulPose(new Matrix4f(
                 (float) matrix.m00,
                 (float) matrix.m01,
                 (float) matrix.m02,
@@ -161,7 +158,7 @@ public class GUIHelpers {
         matrix.m23 = 0;//Z transform
         graphics.pose().pushPose();
         graphics.pose().setIdentity();
-        graphics.pose().mulPoseMatrix(new Matrix4f(
+        graphics.pose().mulPose(new Matrix4f(
                 (float) matrix.m00,
                 (float) matrix.m01,
                 (float) matrix.m02,

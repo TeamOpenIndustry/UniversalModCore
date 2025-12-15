@@ -16,12 +16,12 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.WeightedBakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL32;
@@ -88,7 +88,7 @@ public class StandardModel {
 
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {
@@ -137,8 +137,7 @@ public class StandardModel {
         }
 
         try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-            BufferBuilder worldRenderer = Tesselator.getInstance().getBuilder();
-            worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            BufferBuilder worldRenderer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
                 List<BakedQuad> quads = new ArrayList<>();
@@ -153,9 +152,9 @@ public class StandardModel {
                     quads.addAll(model.getRight().getQuads(null, facing, Minecraft.getInstance().font.random));
                 }
 
-                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 12 << 4, OverlayTexture.NO_OVERLAY));
+                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0F, 12 << 4, OverlayTexture.NO_OVERLAY));
             }
-            BufferUploader.draw(worldRenderer.end());
+            BufferUploader.draw(worldRenderer.buildOrThrow());
         }
     }
 
@@ -169,9 +168,9 @@ public class StandardModel {
     public void renderCustom(RenderState state, float partialTicks) {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
 
-        if (Tesselator.getInstance().getBuilder().building()) {
+        if (!Minecraft.getInstance().renderBuffers().bufferSource().startedBuilders.isEmpty()) {
             try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-                BufferUploader.draw(Tesselator.getInstance().getBuilder().end());
+                Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
             }
         }
     }

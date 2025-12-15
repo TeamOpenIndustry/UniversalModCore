@@ -15,15 +15,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
@@ -78,10 +78,10 @@ public class CommonEvents {
     }
 
     public static final class Networking {
-        public static final Event<Consumer<IPayloadRegistrar>> REGISTER_PACKET = new Event<>();
+        public static final Event<Consumer<PayloadRegistrar>> REGISTER_PACKET = new Event<>();
     }
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @EventBusSubscriber(modid = ModCore.MODID)
     public static final class EventBusForge {
         // World
         @SubscribeEvent
@@ -105,11 +105,11 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void onWorldTick(TickEvent.LevelTickEvent event) {
+        public static void onWorldTick(LevelTickEvent.Pre event) {
             //Since 1.18.2 this is called both server and client
             //We only want server side
-            if (event.phase == TickEvent.Phase.START && event.level != null && !event.level.isClientSide()) {
-                World.TICK.execute(x -> x.accept(event.level));
+            if (!event.getLevel().isClientSide()) {
+                World.TICK.execute(x -> x.accept(event.getLevel()));
             }
         }
 
@@ -143,7 +143,7 @@ public class CommonEvents {
 
     }
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = ModCore.MODID)
     public static final class EventBusMod {
         static {
             registerEvents();
@@ -165,10 +165,10 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void registerPacket(RegisterPayloadHandlerEvent event) {
-            final IPayloadRegistrar registrar = event.registrar(ModCore.MODID)
-                                                     .versioned(Packet.VERSION)
-                                                     .optional();
+        public static void registerPacket(RegisterPayloadHandlersEvent event) {
+            final PayloadRegistrar registrar = event.registrar(ModCore.MODID)
+                                                    .versioned(Packet.VERSION)
+                                                    .optional();
             Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
         }
     }

@@ -21,8 +21,7 @@ import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -31,7 +30,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -210,8 +208,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public final void load(CompoundTag compound) {
-        super.load(compound);
+    public final void loadAdditional(CompoundTag compound, HolderLookup.Provider provider) {
+        super.loadAdditional(compound, provider);
         hasTileData = true;
         //Add check here in order to avoid accessing newly created TE which doesn't have this field
         if(compound.contains("x")){
@@ -239,8 +237,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public void saveAdditional(CompoundTag compound) {
-        super.saveAdditional(compound);
+    public void saveAdditional(CompoundTag compound, HolderLookup.Provider provider) {
+        super.saveAdditional(compound, provider);
 
         TagCompound data = new TagCompound(compound);
 
@@ -260,18 +258,18 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     /** Active Synchronization from markDirty */
     @Override
     public final ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this, e -> getUpdateTag(true));
+        return ClientboundBlockEntityDataPacket.create(this, (e, access) -> getUpdateTag(true, access));
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final CompoundTag getUpdateTag() {
-        return getUpdateTag(false);
+    public final CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        return getUpdateTag(false, provider);
     }
-    public final CompoundTag getUpdateTag(boolean writeUpdate) {
-        CompoundTag tag = super.getUpdateTag();
+    public final CompoundTag getUpdateTag(boolean writeUpdate, HolderLookup.Provider provider) {
+        CompoundTag tag = super.getUpdateTag(provider);
         if (this.isLoaded()) {
-            this.saveAdditional(tag);
+            this.saveAdditional(tag, provider);
             TagCompound umcUpdate = new TagCompound();
             if (writeUpdate) {
                 try {
@@ -286,15 +284,15 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        handleUpdateTag(pkt.getTag());
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider provider) {
+        handleUpdateTag(pkt.getTag(), provider);
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void handleUpdateTag(CompoundTag tag) {
+    public final void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
         try {
-            this.load(tag);
+            this.loadAdditional(tag, provider);
             if (instance() != null) {
                 if (tag.contains("umcUpdate")) {
                     try {
@@ -448,7 +446,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 if (target.getContents().internal.isEmpty()) {
                     return FluidStack.EMPTY;
                 }
-                return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), action.simulate()).internal;
+                return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal.getFluid(), maxDrain)), action.simulate()).internal;
             }
         };
     }

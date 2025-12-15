@@ -11,8 +11,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
-import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
 
 /**
@@ -100,7 +100,7 @@ public abstract class BlockEntity {
 
     /** @return the data that would be written to disk on world save */
     public TagCompound getData() {
-        TagCompound data = new TagCompound(internal.saveWithFullMetadata());
+        TagCompound data = new TagCompound(internal.saveWithFullMetadata(getWorld().internal.registryAccess()));
         return data;
     }
 

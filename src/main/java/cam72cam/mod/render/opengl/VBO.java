@@ -3,7 +3,6 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -167,10 +166,10 @@ public class VBO {
 
             int stride = vbInfo.stride * Float.BYTES;
 
-            ImmutableList<VertexFormatElement> elements = shader.getVertexFormat().getElements();
+            List<VertexFormatElement> elements = shader.getVertexFormat().getElements();
             for (int i = 0; i < elements.size(); i++) {
                 VertexFormatElement element = elements.get(i);
-                switch (element.getUsage()) {
+                switch (element.usage()) {
                     case POSITION -> {
                         //element.setupBufferState(i, (long) vbInfo.vertexOffset * Float.BYTES, stride);
                         GL32.glEnableVertexAttribArray(i);

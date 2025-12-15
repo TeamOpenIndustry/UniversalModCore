@@ -10,14 +10,13 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.neoforged.neoforge.client.gui.overlay.VanillaGuiOverlay;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -99,8 +98,8 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()) {
-                func.render(new RenderState(event.getGuiGraphics().pose()), event.getPartialTick());
+            if (event.getName().equals(VanillaGuiLayers.HOTBAR)) {
+                func.render(new RenderState(event.getGuiGraphics().pose()), event.getPartialTick().getRealtimeDeltaTicks());
             }
         });
     }
@@ -111,7 +110,7 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal().getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()), event.getPartialTick());
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()), event.getDeltaTracker().getRealtimeDeltaTicks());
                 }
             }
         });
@@ -163,7 +162,7 @@ public class GlobalRender {
                      .scale(-0.025F, -0.025F, 0.025F);
 
         try (With ctx = RenderContext.apply(state)) {
-            MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
             buffer.endBatch();
         }
@@ -178,7 +177,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
 //            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            MultiBufferSource.BufferSource multibuffersource$buffersource = Minecraft.getInstance().renderBuffers().bufferSource();
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
                                        multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
@@ -195,7 +194,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
 //            fontRendererIn.draw(new PoseStack(), str, 0, 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            MultiBufferSource.BufferSource multibuffersource$buffersource = Minecraft.getInstance().renderBuffers().bufferSource();
             fontRendererIn.drawInBatch(str, 0, 0, color, false, new Matrix4f(),
                                        multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
@@ -212,7 +211,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
 //            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str), 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            MultiBufferSource.BufferSource multibuffersource$buffersource = Minecraft.getInstance().renderBuffers().bufferSource();
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
                                        multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());

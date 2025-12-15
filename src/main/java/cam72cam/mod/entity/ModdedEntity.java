@@ -11,7 +11,8 @@ import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -189,7 +190,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see #load */
     @Override
-    public final void readSpawnData(FriendlyByteBuf additionalData) {
+    public final void readSpawnData(RegistryFriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         if (cam72cam.mod.world.World.get(level()) == null) {
             // This can happen during a sudden disconnect...
@@ -204,7 +205,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public final void writeSpawnData(FriendlyByteBuf buffer) {
+    public final void writeSpawnData(RegistryFriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.set("sync", self.sync);
         save(data);
@@ -273,8 +274,8 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see IKillable */
     @Override
-    protected void defineSynchedData() {
-
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        //TODO 1.21.1
     }
 
     @Override

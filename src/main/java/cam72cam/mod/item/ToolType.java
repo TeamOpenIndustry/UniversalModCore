@@ -1,16 +1,17 @@
 package cam72cam.mod.item;
 
-import net.neoforged.neoforge.common.ToolActions;
+import net.neoforged.neoforge.common.ItemAbilities;
+import net.neoforged.neoforge.common.ItemAbility;
 
 /** What class a tool fits into */
 public enum ToolType {
-    PICKAXE(ToolActions.PICKAXE_DIG),
-    AXE(ToolActions.AXE_DIG),
-    SHOVEL(ToolActions.SHOVEL_DIG),
+    PICKAXE(ItemAbilities.PICKAXE_DIG),
+    AXE(ItemAbilities.AXE_DIG),
+    SHOVEL(ItemAbilities.SHOVEL_DIG),
     ;
-    public final net.neoforged.neoforge.common.ToolAction internal;
+    public final net.neoforged.neoforge.common.ItemAbility internal;
 
-    ToolType(net.neoforged.neoforge.common.ToolAction internal) {
+    ToolType(ItemAbility internal) {
         this.internal = internal;
     }
 

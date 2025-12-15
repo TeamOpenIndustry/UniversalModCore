@@ -6,7 +6,8 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -89,7 +90,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    protected void defineSynchedData() {
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
 
     }
 
@@ -208,7 +209,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public void writeSpawnData(FriendlyByteBuf buffer) {
+    public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
@@ -216,7 +217,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public void readSpawnData(FriendlyByteBuf additionalData) {
+    public void readSpawnData(RegistryFriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");

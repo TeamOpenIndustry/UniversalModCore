@@ -29,8 +29,6 @@ import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.neoforged.api.distmarker.Dist;
@@ -42,6 +40,7 @@ import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.CreativeModeTabRegistry;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.data.loading.DatagenModLoader;
@@ -53,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL32;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -62,9 +60,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
@@ -272,24 +267,26 @@ public class ModCore {
 
 
                 for (PackResources pack : packs) {
-                    consumer.accept(Pack.create(pack.packId(),
-                            Component.literal(""),
-                            true,
+                    //TODO 1.21.1
+                    PackLocationInfo info = new PackLocationInfo(pack.packId(),
+                                                                 Component.literal(""),
+                                                                 PackSource.BUILT_IN,
+                                                                 Optional.empty());
+                    consumer.accept(new Pack(
+                            info,
                             new Pack.ResourcesSupplier() {
                                 @Override
-                                public PackResources openPrimary(String s) {
+                                public PackResources openPrimary(PackLocationInfo p_326301_) {
                                     return pack;
                                 }
 
                                 @Override
-                                public PackResources openFull(String s, Pack.Info info) {
+                                public PackResources openFull(PackLocationInfo p_326241_, Pack.Metadata p_325959_) {
                                     return pack;
                                 }
                             },
-                            new Pack.Info(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
-                            Pack.Position.TOP,
-                            true,
-                            PackSource.DEFAULT
+                            new Pack.Metadata(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
+                            new PackSelectionConfig(true, Pack.Position.TOP, true)
                             ));
                 }
             });
@@ -303,7 +300,10 @@ public class ModCore {
 
         private static class TranslationResourcePack extends AbstractPackResources {
             public TranslationResourcePack() {
-                super("translation Hackery", false);
+                super(new PackLocationInfo("translation Hackery",
+                                           Component.literal("translation Hackery"),
+                                           PackSource.BUILT_IN,
+                                           Optional.empty()));
             }
 
             @org.jetbrains.annotations.Nullable
@@ -384,7 +384,11 @@ public class ModCore {
             private final Path root;
 
             public UMCFolderPack(File folder) {
-                super(folder.getName(), folder.toPath(), false);
+                super(new PackLocationInfo(folder.getName(),
+                                           Component.literal(folder.getName()),
+                                           PackSource.BUILT_IN,
+                                           Optional.empty()),
+                      folder.toPath());
                 this.root = folder.toPath();
             }
 
@@ -395,13 +399,17 @@ public class ModCore {
             }
 
             public static IoSupplier<InputStream> getResource(ResourceLocation p_250145_, Path p_251046_) {
-                return FileUtil.decomposePath(p_250145_.getPath()).get().map((p_251647_) -> {
-                    Path path = FileUtil.resolvePath(p_251046_, p_251647_);
-                    return Files.exists(path) ? new Identifier.IoInputStreamMod(() -> Files.newInputStream(path), path.toFile().lastModified()) : null;
-                }, (p_248714_) -> {
-                    LogUtils.getLogger().error("Invalid path {}: {}", p_250145_, p_248714_.message());
+                try {
+                    List<String> list = FileUtil.decomposePath(p_250145_.getPath()).getPartialOrThrow();
+                    String s = list.getFirst();
+                    Path path = FileUtil.resolvePath(p_251046_, List.of(s));
+                    return Files.exists(path)
+                           ? new Identifier.IoInputStreamMod(IoSupplier.create(path), path.toFile().lastModified())
+                           : null;
+                } catch (IllegalStateException|IndexOutOfBoundsException e) {
+                    LogUtils.getLogger().error("Invalid path {}", p_250145_);
                     return null;
-                });
+                }
             }
         }
 
@@ -409,7 +417,11 @@ public class ModCore {
             private final File path;
 
             public UMCFilePack(File fileIn) {
-				super(fileIn.getName(), new SharedZipFileAccess(fileIn), false, "");
+				super(new PackLocationInfo(fileIn.getName(),
+                                           Component.literal(fileIn.getName()),
+                                           PackSource.BUILT_IN,
+                                           Optional.empty()),
+                      new SharedZipFileAccess(fileIn), "");
                 this.path = fileIn;
             }
 
@@ -485,7 +497,7 @@ public class ModCore {
                     }
                 case SETUP:
                     try {
-                        Minecraft.getInstance().createSearchTrees();
+                        CreativeModeTabRegistry.recalculateItemCreativeModeTabs();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
@@ -503,7 +515,7 @@ public class ModCore {
 
     public static void genData(String MODID, GatherDataEvent event) {
         CommonEvents.Recipe.REGISTER.execute(Runnable::run);
-        event.getGenerator().addProvider(true, new Recipes(event.getGenerator().getPackOutput()));
+        event.getGenerator().addProvider(true, new Recipes(event.getGenerator().getPackOutput(), event.getLookupProvider()));
         Fuzzy.register(event, event.getExistingFileHelper());
     }
 

@@ -130,7 +130,7 @@ public class BlockRender {
                     if (blockEntity.instance() != null) {
                         return blockEntity.bbCache.get(blockEntity.instance().getRenderBoundingBox());
                     }
-                    return INFINITE_EXTENT_AABB;
+                    return TileEntity.INFINITE_EXTENT_AABB;
                 }
             });
         });

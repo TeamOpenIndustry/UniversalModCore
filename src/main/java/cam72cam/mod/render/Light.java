@@ -6,7 +6,9 @@ import cam72cam.mod.world.World;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -79,7 +81,7 @@ public class Light {
         }
 
         @Override
-        protected void defineSynchedData() {
+        protected void defineSynchedData(SynchedEntityData.Builder builder) {
 
         }
 
@@ -94,7 +96,7 @@ public class Light {
         }
 
         @Override
-        public Packet<ClientGamePacketListener> getAddEntityPacket() {
+        public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity p_352110_) {
             return null;
         }
     }

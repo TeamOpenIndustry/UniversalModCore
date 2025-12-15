@@ -38,7 +38,7 @@ class ClientSound extends AbstractSoundInstance implements TickableSoundInstance
         this.attenuationDistance = attenuationDistance;
         this.scale = scale;
 
-        this.sound = new Sound(getLocation().toString(), r -> 1, r -> 1,  1, Sound.Type.FILE, false, false, (int) attenuationDistance) {
+        this.sound = new Sound(getLocation(), r -> 1, r -> 1,  1, Sound.Type.FILE, false, false, (int) attenuationDistance) {
             @Override
             public ResourceLocation getPath() {
                 return soundId;
@@ -112,7 +112,7 @@ class ClientSound extends AbstractSoundInstance implements TickableSoundInstance
                 appliedPitch *= 1 - (newDist - origDist) * dopplerScale;
             }
             if (rollingPitch.size() > 5) {
-                rollingPitch.remove(0);
+                rollingPitch.removeFirst();
             }
             rollingPitch.add(appliedPitch / scale);
             pitch = (float)rollingPitch.stream().mapToDouble(x -> x).average().getAsDouble();

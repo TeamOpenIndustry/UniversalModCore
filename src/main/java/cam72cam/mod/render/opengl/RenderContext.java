@@ -132,8 +132,8 @@ public class RenderContext {
         }
 
         //TODO Better lighting
-        Matrix4f matrix4f = new Matrix4f().identity();
-        Lighting.setupLevel(matrix4f);
+//        Matrix4f matrix4f = new Matrix4f().identity();
+        Lighting.setupLevel();
         applyShaderFields(shader);
 
         shader.apply();
@@ -151,9 +151,9 @@ public class RenderContext {
             shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         }
 
-        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
-            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
-        }
+//        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
+//            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
+//        }
 
         if (shader.COLOR_MODULATOR != null) {
             shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());

@@ -1,7 +1,7 @@
 package cam72cam.mod.gui;
 
 import cam72cam.mod.ModCore;
-import net.neoforged.fml.StartupMessageManager;
+import net.neoforged.fml.loading.progress.StartupNotificationManager;
 
 /** Wrapper around game loading bar, only functional on certain MC versions / loaders */
 public class Progress {
@@ -28,12 +28,12 @@ public class Progress {
             this.name = name;
             this.steps = steps;
             this.at = 0;
-            StartupMessageManager.addModMessage(name + " 0%");
+            StartupNotificationManager.addModMessage(name + " 0%");
         }
 
         public void step(String name) {
             at += 1;
-            StartupMessageManager.addModMessage(this.name + " " + (at * 100 / steps) + "% : " + name);
+            StartupNotificationManager.addModMessage(this.name + " " + (at * 100 / steps) + "% : " + name);
             ModCore.info(this.name + " " + (at * 100 / steps) + "%% : " + name);
         }
     }

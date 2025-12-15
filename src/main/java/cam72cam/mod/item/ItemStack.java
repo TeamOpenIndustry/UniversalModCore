@@ -2,9 +2,13 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.util.Util;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.fluids.FluidUtil;
 
@@ -23,9 +27,10 @@ public class ItemStack {
         this.supplier = null;
     }
 
+    //TODO How do we handle 1.20.5 NBT Removal?
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.world.item.ItemStack.of(nbt.internal));
+        this(net.minecraft.world.item.ItemStack.parseOptional(Util.getDefaultRegistry(), nbt.internal));
     }
 
     /** Construct from customItem */
@@ -49,15 +54,15 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
-        if (internal().getTag() == null) {
-            internal().setTag(new TagCompound().internal);
+        if (internal().get(DataComponents.CUSTOM_DATA) == null) {
+            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
         }
-        return new TagCompound(internal().getTag());
+        return new TagCompound(internal().get(DataComponents.CUSTOM_DATA).getUnsafe());
     }
 
     /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
-        internal().setTag(data.internal);
+        internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
     }
 
     public ItemStack copy() {
@@ -66,7 +71,7 @@ public class ItemStack {
 
     /** Serialize */
     public TagCompound toTag() {
-        return new TagCompound(internal().save(new CompoundTag()));
+        return new TagCompound((CompoundTag) internal().save(Util.getDefaultRegistry()));
     }
 
     /** Items in this stack */
@@ -146,11 +151,11 @@ public class ItemStack {
 
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
-        internal().hurtAndBreak(i, player.internal, (s) -> {});
+        internal().hurtAndBreak(i, (ServerLevel) player.internal.level(), player.internal, (s) -> {});
     }
 
     /** Completely null out the tag compound */
     public void clearTagCompound() {
-        internal().setTag(null);
+        internal().set(DataComponents.CUSTOM_DATA, null);
     }
 }
