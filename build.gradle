@@ -143,11 +143,11 @@ dependencies {
             prefer "1.5.2"
         }
     })
-    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '[1.8.0,)'){
-        version {
-            prefer "1.8.0"
-        }
-    })
+//    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '[1.8.0,)'){
+//        version {
+//            prefer "1.8.0"
+//        }
+//    })
 }
 
 jar {
