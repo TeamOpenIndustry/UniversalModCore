@@ -61,7 +61,7 @@ runs {
 #UMC_REPO#
 
 dependencies {
-    implementation "net.neoforged:neoforge:20.4.251"
+    implementation "net.neoforged:neoforge:21.1.216"
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
     implementation #UMC_DEPENDENCY#
 }
