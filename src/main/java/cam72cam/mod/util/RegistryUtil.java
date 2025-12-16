@@ -13,12 +13,13 @@ public class RegistryUtil {
     }
 
     public static HolderLookup.Provider defaultRegistry() {
-        if(FMLLoader.getDist().isClient()) {
-            if (Minecraft.getInstance().getConnection() != null) {
+        try {
+            if (FMLLoader.getDist().isClient()) {
                 return Minecraft.getInstance().getConnection().registryAccess();
             }
+            return ServerLifecycleHooks.getCurrentServer().registryAccess();
+        } catch (Throwable e) {
             return registries.get();
         }
-        return ServerLifecycleHooks.getCurrentServer().registryAccess();
     }
 }

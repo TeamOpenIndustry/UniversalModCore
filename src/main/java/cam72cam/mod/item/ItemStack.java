@@ -56,7 +56,7 @@ public class ItemStack {
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
         if (internal().get(DataComponents.CUSTOM_DATA) == null) {
-            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
+            return new TagCompound();
         }
         return new TagCompound(internal().get(DataComponents.CUSTOM_DATA).getUnsafe());
     }
