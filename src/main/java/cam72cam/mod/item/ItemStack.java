@@ -55,15 +55,17 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
+        //TODO move to our own data component
         if (internal().get(DataComponents.CUSTOM_DATA) == null) {
-            return new TagCompound();
+            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
         }
-        return new TagCompound(internal().get(DataComponents.CUSTOM_DATA).getUnsafe());
+        CustomData customData = internal().get(DataComponents.CUSTOM_DATA);
+        return new TagCompound(customData == null ? new CompoundTag() : customData.getUnsafe());
     }
 
     /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
-        internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
+        internal().set(DataComponents.CUSTOM_DATA, CustomData.of(data.internal));
     }
 
     public ItemStack copy() {
