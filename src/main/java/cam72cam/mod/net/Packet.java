@@ -15,13 +15,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -60,40 +63,62 @@ public abstract class Packet {
         }
         types.put(pktClass, sup);
         ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
-        CustomPacketPayload.Type<Message> type = new CustomPacketPayload.Type<Message>(name);
+        CustomPacketPayload.Type<Message> type = new CustomPacketPayload.Type<>(name);
         CommonEvents.Networking.REGISTER_PACKET.subscribe(reg -> {
-            reg.commonBidirectional(type, Message.codec, (message, ctx) -> {
-                ctx.enqueueWork(() -> {
-                    World world = (ctx.protocol().isPlay() && ctx.flow().isClientbound())
-                                  ? MinecraftClient.getPlayer().getWorld()
-                                  : World.get(ctx.player().level());
+            reg.commonBidirectional(type, Message.codec, (msg, context) -> {
+                context.enqueueWork(() -> {
+                    msg.packet.ctx = context;
+                    Packet newPacket = copyFreshPacket(msg);
                     try {
-                        TagSerializer.deserialize(message.packet.data, message.packet, world);
+                        //Convert to server world
+                        //The same reason as copyFreshPacket below
+                        World world = World.get(msg.packet.getWorld().getId(), false);
+                        TagSerializer.deserialize(msg.packet.data, newPacket, world);
                     } catch (SerializationException e) {
                         ModCore.catching(e);
                         return;
                     }
-                    if (message.packet.getPlayer() == null) {
+                    newPacket.ctx = context;
+                    if (newPacket.getPlayer() == null) {
                         try {
                             throw new Exception(
-                                    String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                                    String.format("Invalid Packet %s: missing player", newPacket.getClass()));
                         } catch (Exception e) {
                             ModCore.catching(e);
                             return;
                         }
                     }
-                    message.packet.handle();
+                    newPacket.handle();
                 });
             });
         });
     }
+
+    //Since 1.20.4 NeoForge will use the identical packet object for networking in singleplayer
+    //Good optimization but bad for UMC
+    //Create a new copy to avoid modifying original packet object
+    private static Packet copyFreshPacket(Message msg) {
+        Packet newPacket;
+        try {
+            Constructor<? extends Packet> constructor =
+                    msg.packet.getClass().getDeclaredConstructor();
+            constructor.setAccessible(true);
+            newPacket = constructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException |
+                 InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        return newPacket;
+    }
+
+    IPayloadContext ctx;
 
     /** Called after deserialization */
     protected abstract void handle();
 
     /** Only valid during handle */
     protected final World getWorld() {
-        if (FMLEnvironment.dist.isClient()) {
+        if (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND) {
             return getPlayer().getWorld();
         }
         return world;
@@ -101,7 +126,7 @@ public abstract class Packet {
 
     /** Only valid during handle */
     protected final Player getPlayer() {
-        return FMLEnvironment.dist.isClient()
+        return (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND)
                ? MinecraftClient.getPlayer()
                : player;
     }
@@ -130,10 +155,10 @@ public abstract class Packet {
         PacketDistributor.sendToAllPlayers(new Message(this));
     }
 
-	/** Send from server to player */
-	public void sendToPlayer(Player player) {
+    /** Send from server to player */
+    public void sendToPlayer(Player player) {
         PacketDistributor.sendToPlayer((ServerPlayer) player.internal, new Message(this));
-	}
+    }
 
     /** Forge message construct.  Do not use directly */
     public static class Message implements CustomPacketPayload {
@@ -149,6 +174,15 @@ public abstract class Packet {
         public Message(Packet pkt) {
             this.packet = pkt;
             initLocation();
+
+            //Set up data in advance for single player
+            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            try {
+                TagSerializer.serialize(packet.data, packet);
+
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
 
         public Message(CompoundTag buff) {
@@ -169,13 +203,6 @@ public abstract class Packet {
         }
 
         public static CompoundTag write(Message message) {
-            message.packet.data.setString("cam72cam.mod.pktid", message.packet.getClass().toString());
-            try {
-                TagSerializer.serialize(message.packet.data, message.packet);
-
-            } catch (SerializationException e) {
-                ModCore.catching(e);
-            }
             return message.packet.data.internal;
         }
 

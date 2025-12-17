@@ -95,8 +95,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             public BlockPos immutable() {
                 return this; // BAHAHAHAHA
             }
-        },
-        new StateDefinition.Builder<Block, BlockState>(BuiltInRegistries.BLOCK.get(id.internal))
+        }, new StateDefinition.Builder<Block, BlockState>(BuiltInRegistries.BLOCK.get(id.internal))
                 .create(Block::defaultBlockState, BlockState::new).any());
         instance = registry.get(id.toString()).get();
         instance.internal = this;
