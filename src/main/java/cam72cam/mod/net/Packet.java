@@ -12,12 +12,15 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -60,46 +63,55 @@ public abstract class Packet {
                                 iPayloadRegistrar.common(name, Message::new, handler -> {
                                     switch (dir) {
                                         case ClientToServer -> handler.server((msg, context) -> {
-                                            World world1 = World.get(context.player().get().level());
-                                            try {
-                                                TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-                                            } catch (SerializationException e) {
-                                                ModCore.catching(e);
-                                                return;
-                                            }
-                                            if (msg.packet.getPlayer() == null) {
+                                            context.workHandler().submitAsync(() -> {
+                                                msg.packet.ctx = context;
+                                                Packet newPacket = copyFreshPacket(msg);
                                                 try {
-                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                                } catch (Exception e) {
+                                                    //Convert to server world
+                                                    //The same reason as copyFreshPacket below
+                                                    World world = World.get(msg.packet.getWorld().getId(), false);
+                                                    TagSerializer.deserialize(msg.packet.data, newPacket, world);
+                                                } catch (SerializationException e) {
                                                     ModCore.catching(e);
                                                     return;
                                                 }
-                                            }
-                                            context.workHandler().submitAsync(msg.packet::handle).exceptionally(e -> {
+                                                newPacket.ctx = context;
+                                                if (newPacket.getPlayer() == null) {
+                                                    try {
+                                                        throw new Exception(String.format("Invalid Packet %s: missing player", newPacket.getClass()));
+                                                    } catch (Exception e) {
+                                                        ModCore.catching(e);
+                                                        return;
+                                                    }
+                                                }
+
+                                                newPacket.handle();
+                                            }).exceptionally(e -> {
                                                 ModCore.catching(e);
                                                 return null;
                                             });
                                         });
                                         case ServerToClient -> handler.client((msg, context) -> {
-                                            if (!MinecraftClient.isReady()) {
-                                                return;
-                                            }
-                                            World world1 = MinecraftClient.getPlayer().getWorld();
-                                            try {
-                                                TagSerializer.deserialize(msg.packet.data, msg.packet, world1);
-                                            } catch (SerializationException e) {
-                                                ModCore.catching(e);
-                                                return;
-                                            }
-                                            if (msg.packet.getPlayer() == null) {
+                                            context.workHandler().submitAsync(() -> {
+                                                msg.packet.ctx = context;
+                                                Packet newPacket = copyFreshPacket(msg);
                                                 try {
-                                                    throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                                                } catch (Exception e) {
+                                                    TagSerializer.deserialize(msg.packet.data, newPacket, msg.packet.getWorld());
+                                                } catch (SerializationException e) {
                                                     ModCore.catching(e);
                                                     return;
                                                 }
-                                            }
-                                            context.workHandler().submitAsync(msg.packet::handle).exceptionally(e -> {
+                                                newPacket.ctx = context;
+                                                if (newPacket.getPlayer() == null) {
+                                                    try {
+                                                        throw new Exception(String.format("Invalid Packet %s: missing player", newPacket.getClass()));
+                                                    } catch (Exception e) {
+                                                        ModCore.catching(e);
+                                                        return;
+                                                    }
+                                                }
+                                                newPacket.handle();
+                                            }).exceptionally(e -> {
                                                 ModCore.catching(e);
                                                 return null;
                                             });
@@ -131,12 +143,31 @@ public abstract class Packet {
 //        });
     }
 
+    //Since 1.20.4 NeoForge will use the identical packet object for networking in singleplayer
+    //Good optimization but bad for UMC
+    //Create a new copy to avoid modifying original packet object
+    private static Packet copyFreshPacket(Message msg) {
+        Packet newPacket;
+        try {
+            Constructor<? extends Packet> constructor =
+                    msg.packet.getClass().getDeclaredConstructor();
+            constructor.setAccessible(true);
+            newPacket = constructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException |
+                 InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        return newPacket;
+    }
+
+    IPayloadContext ctx;
+
     /** Called after deserialization */
     protected abstract void handle();
 
     /** Only valid during handle */
     protected final World getWorld() {
-        if (FMLEnvironment.dist.isClient()) {
+        if (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND) {
             return getPlayer().getWorld();
         }
         return world;
@@ -144,7 +175,7 @@ public abstract class Packet {
 
     /** Only valid during handle */
     protected final Player getPlayer() {
-        return FMLEnvironment.dist.isClient()
+        return (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND)
                ? MinecraftClient.getPlayer()
                : player;
     }
@@ -187,6 +218,15 @@ public abstract class Packet {
         public Message(Packet pkt) {
             this.packet = pkt;
             this.location = ResourceLocation.tryBuild(ModCore.MODID, pkt.getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
+
+            //Set up data in advance for single player
+            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            try {
+                TagSerializer.serialize(packet.data, packet);
+
+            } catch (SerializationException e) {
+                ModCore.catching(e);
+            }
         }
 
         public Message(FriendlyByteBuf buff) {
@@ -202,13 +242,6 @@ public abstract class Packet {
 
         @Override
         public void write(FriendlyByteBuf buf) {
-            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
-            try {
-                TagSerializer.serialize(packet.data, packet);
-
-            } catch (SerializationException e) {
-                ModCore.catching(e);
-            }
             buf.writeNbt(packet.data.internal);
         }
 
