@@ -65,10 +65,8 @@ public abstract class Packet {
                                             context.workHandler().submitAsync(() -> {
                                                 msg.packet.ctx = context;
                                                 Packet newPacket = copyFreshPacket(msg);
+                                                World world = World.get(context.player().get().level());
                                                 try {
-                                                    //Convert to server world
-                                                    //The same reason as copyFreshPacket below
-                                                    World world = World.get(msg.packet.getWorld().getId(), false);
                                                     TagSerializer.deserialize(msg.packet.data, newPacket, world);
                                                 } catch (SerializationException e) {
                                                     ModCore.catching(e);
@@ -95,7 +93,7 @@ public abstract class Packet {
                                                 msg.packet.ctx = context;
                                                 Packet newPacket = copyFreshPacket(msg);
                                                 try {
-                                                    TagSerializer.deserialize(msg.packet.data, newPacket, msg.packet.getWorld());
+                                                    TagSerializer.deserialize(msg.packet.data, newPacket, MinecraftClient.getPlayer().getWorld());
                                                 } catch (SerializationException e) {
                                                     ModCore.catching(e);
                                                     return;
