@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Damage type wrapper
  * <p>
- * Note that they should be treated as constants and created as soon as possible
+ * Note that in order to make this work on 1.21.1 and upper, <code>DamageType</code>s should be treated as constants and created as soon as possible (like CONSTRUCT phase)
  */
 public class DamageType {
     public static final DamageType FIRE = new DamageType("fire");
