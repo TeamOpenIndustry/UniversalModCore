@@ -2,6 +2,7 @@ package cam72cam.mod.world;
 
 import cam72cam.mod.entity.ModdedEntity;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.util.math.BlockPos;
@@ -138,29 +139,29 @@ public class WorldEntityTracker {
     private static class LongBiMultiMap {
         private final Long2ObjectOpenHashMap<LongOpenHashSet> keyToValues
                 = new Long2ObjectOpenHashMap<>();
-        private final Long2ObjectOpenHashMap<LongOpenHashSet> valueToKeys
+        private final Long2ObjectOpenHashMap<LongArraySet> valueToKeys
                 = new Long2ObjectOpenHashMap<>();
 
         public void put(long key, long value) {
-            keyToValues.computeIfAbsent(key, k -> new LongOpenHashSet()).add(value);
-            valueToKeys.computeIfAbsent(value, v -> new LongOpenHashSet()).add(key);
+            keyToValues.computeIfAbsent(key, k -> new LongOpenHashSet(245)).add(value);
+            valueToKeys.computeIfAbsent(value, v -> new LongArraySet(4)).add(key);
         }
 
         //DON't MODIFY RETURNED SET!
         //If you want please clone()
-        public LongOpenHashSet getKeys(long value) {
-            LongOpenHashSet set = valueToKeys.get(value);
-            return set != null ? set : new LongOpenHashSet();
+        public Set<Long> getKeys(long value) {
+            LongArraySet set = valueToKeys.get(value);
+            return set != null ? set : new LongArraySet();
         }
 
-        public LongOpenHashSet removeKey(long key) {
+        public Set<Long> removeKey(long key) {
             LongOpenHashSet values = keyToValues.remove(key);
             if (values == null) {
-                return new LongOpenHashSet();
+                return new LongArraySet();
             }
 
             for (long value : values) {
-                LongOpenHashSet keys = valueToKeys.get(value);
+                LongArraySet keys = valueToKeys.get(value);
                 if (keys != null) {
                     keys.remove(key);
                     if (keys.isEmpty()) {
