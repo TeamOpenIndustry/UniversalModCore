@@ -34,6 +34,10 @@ public class Slider extends Button {
         this.handler.accept(Player.Hand.PRIMARY, this);
     }
 
+    public void setValue(double value) {
+        ((GuiSlider)button).setValue(value);
+    }
+
     public int getValueInt() {
         return ((GuiSlider) button).getValueInt();
     }
