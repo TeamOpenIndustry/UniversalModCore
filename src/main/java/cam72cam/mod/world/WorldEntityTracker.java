@@ -33,22 +33,22 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long pos = ChunkPos.asLong(entity.getPosition());
-        int x = entity.chunkCoordX;
-        int y = entity.chunkCoordY;
-        int z = entity.chunkCoordZ;
+        long chunk = ChunkPos.asLong(entity.getPosition());
+        int x = ChunkPos.x(chunk);
+        int y = ChunkPos.y(chunk);
+        int z = ChunkPos.z(chunk);
 
         lock.writeLock().lock();
         try {
-            Set<ModdedEntity> moddedEntities = umcEntities.get(pos);
+            Set<ModdedEntity> moddedEntities = umcEntities.get(chunk);
             if (moddedEntities == null) {
                 moddedEntities = new ObjectArraySet<>();
-                umcEntities.put(pos, moddedEntities);
+                umcEntities.put(chunk, moddedEntities);
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
                         for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
-                            scanningRange.put(pos, ChunkPos.asLong(i, k, j));
+                            scanningRange.put(chunk, ChunkPos.asLong(i, k, j));
                         }
                     }
                 }
