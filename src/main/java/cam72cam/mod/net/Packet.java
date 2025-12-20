@@ -53,7 +53,6 @@ public abstract class Packet {
     @TagField("umcWorld")
     private World world;
 
-    //TODO Fix 1.20.4 desync issue
     /** How to register a packet (do in CONSTRUCT phase) */
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
         String pktClass = sup.get().getClass().toString();

@@ -15,6 +15,9 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.joml.Matrix4f;
@@ -54,8 +57,10 @@ public class GlobalRender {
 //                    @Override
 //                    public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
 //                        // TODO 1.15+ do we need to set lightmap coords here?
+//                        RenderType.cutoutMipped().setupRenderState();
 //                        BlockPos off = te.getBlockPos();
 //                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
+//                        RenderType.cutoutMipped().clearRenderState();
 //                    }
 //
 //                    @Override
