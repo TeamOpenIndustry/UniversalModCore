@@ -340,34 +340,42 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         }
 
         cam72cam.mod.entity.Entity passenger = seat.getEntityPassenger();
-        if (passenger != null) {
-            Vec3d offset = passengerPositions.get(passenger.getUUID());
-            // Weird case around player joining with a different UUID during debugging
+        if (passenger == null) return;
+
+        Vec3d offset = passengerPositions.get(passenger.getUUID());
+
+        if (!world.isRemote) {
             if (offset == null) {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
-                passengerPositions.put(passenger.getUUID(), offset);
             }
-
             offset = iRidable.onPassengerUpdate(passenger, offset);
             if (!seat.isPassenger(passenger.internal)) {
                 return;
             }
-
             passengerPositions.put(passenger.getUUID(), offset);
+        }
 
-            Vec3d pos = calculatePassengerPosition(offset);
+        if (offset == null) return;
 
-            if (world.loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
-                pos = pos.add(motionX, motionY, motionZ);
-            }
+        Vec3d pos = calculatePassengerPosition(offset);
+        Vec3d motion = new Vec3d(motionX, motionY, motionZ);
 
-            passenger.setPosition(pos);
-            passenger.setVelocity(new Vec3d(motionX, motionY, motionZ));
+        if (world.loadedEntityList.indexOf(seat) < world.loadedEntityList.indexOf(passenger.internal)) {
+            pos = pos.add(motion);
+        }
 
-            float delta = rotationYaw - prevRotationYaw;
-            passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+        passenger.setPosition(pos);
+        if (!world.isRemote) {
+            passenger.setVelocity(motion);
+        }
 
-            seat.shouldSit = iRidable.shouldRiderSit(passenger);
+        float delta = rotationYaw - prevRotationYaw;
+        passenger.internal.rotationYaw = passenger.internal.rotationYaw + delta;
+
+        seat.shouldSit = iRidable.shouldRiderSit(passenger);
+
+        if (!world.isRemote) {
+            new PassengerPositionsPacket(this).sendToObserving(self);
         }
     }
 
