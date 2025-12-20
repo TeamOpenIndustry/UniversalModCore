@@ -157,14 +157,14 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz" //lz4
-    finalizedBy 'reobfShadowJar'
+//    finalizedBy 'reobfShadowJar'
 }
 
 assemble.dependsOn shadowJar
 
-reobf {
-    shadowJar {}
-}
+//reobf {
+//    shadowJar {}
+//}
 
 test {
     useJUnit()
