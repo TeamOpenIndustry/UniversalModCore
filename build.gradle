@@ -43,9 +43,6 @@ archivesBaseName = "UniversalModCore"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
-
-jarJar.enable()
-
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   Snapshot are built nightly.
@@ -144,15 +141,8 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary(group: 'org.lz4', name: 'lz4-java', version: '1.8.0')
-    minecraftLibrary(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
-
-    implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
-        jarJar.ranged(it, "[1.5.2,)")
-    })
-    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
-        jarJar.ranged(it, "[1.8.0,)")
-    })
+    minecraftLibrary (shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
+    minecraftLibrary (shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
 jar {
@@ -170,33 +160,18 @@ jar {
     }
 }
 
-task jarJarRelease {
-    group = 'jarjar'
-    doLast {
-        tasks.jarJar {
-            classifier = ''
-        }
-    }
-    finalizedBy tasks.jarJar
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz" //lz4
+    finalizedBy 'reobfShadowJar'
 }
 
-tasks.named('jarJar', Jar) {
-    classifier ''
-}
-
-tasks.withType(Jar).configureEach {
-    if (archiveClassifier.get() == 'all') {
-        enabled = false
-    }
-}
-
-jar.finalizedBy('reobfJar')
-tasks.jarJar.finalizedBy('reobfJarJar')
-
-//assemble.dependsOn tasks.named("jarJar")
+assemble.dependsOn shadowJar
 
 reobf {
-    jarJar {}
+    shadowJar {}
 }
 
 test {
@@ -207,14 +182,10 @@ test {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = archivesBaseName
-
-            from components.java
-            fg.component(it)
-
-            artifact tasks.jarJar {
-                classifier ''
-            }
+            artifact jar
+            artifact shadowJar
+            artifact sourcesJar
+            artifactId archivesBaseName
         }
     }
     repositories {
