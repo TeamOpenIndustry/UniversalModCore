@@ -701,6 +701,8 @@ public class World {
         internal.setBlockAndUpdate(pos.internal(), info.internal);
     }
 
+    //TODO hook in the DamageType which takes json
+    // DeferredRegister.create(Registries.DAMAGE_TYPE, ModCore.MODID).;
     /** Opt in collision overriding */
     public boolean canEntityCollideWith(Vec3i bp, String damageType) {
         Block block = internal.getBlockState(bp.internal()).getBlock();

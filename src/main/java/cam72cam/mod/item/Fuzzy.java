@@ -2,6 +2,7 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -217,7 +218,8 @@ public class Fuzzy {
     public static void register(GatherDataEvent event, ExistingFileHelper existingFileHelper) {
         BlockTagsProvider blocktagsprovider = new BlockTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), ModCore.MODID, existingFileHelper) {
             @Override
-            protected void addTags(HolderLookup.Provider p_256380_) {
+            protected void addTags(HolderLookup.Provider provider) {
+                RegistryUtil.update(provider);
                 // NOP
             }
         };
@@ -225,6 +227,7 @@ public class Fuzzy {
         event.getGenerator().addProvider(true, new ItemTagsProvider(event.getGenerator().getPackOutput(), event.getLookupProvider(), blocktagsprovider.contentsGetter(), ModCore.MODID, event.getExistingFileHelper()) {
             @Override
             public void addTags(HolderLookup.Provider provider) {
+                RegistryUtil.update(provider);
                 for (Fuzzy value : registered.values()) {
                     //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
                         TagsProvider.TagAppender<Item> builder = tag(value.tag);

@@ -69,10 +69,9 @@ public abstract class Packet {
                 context.enqueueWork(() -> {
                     msg.packet.ctx = context;
                     Packet newPacket = copyFreshPacket(msg);
+                    World world = (context.protocol().isPlay() && context.flow() == PacketFlow.CLIENTBOUND)
+                                  ? MinecraftClient.getPlayer().getWorld() : World.get(context.player().level());
                     try {
-                        //Convert to server world
-                        //The same reason as copyFreshPacket below
-                        World world = World.get(msg.packet.getWorld().getId(), false);
                         TagSerializer.deserialize(msg.packet.data, newPacket, world);
                     } catch (SerializationException e) {
                         ModCore.catching(e);
