@@ -11,7 +11,7 @@ buildscript {
 //        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
         classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
-        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath "com.gradleup.shadow:shadow-gradle-plugin:9.2.2"
     }
 }
 
@@ -20,7 +20,7 @@ apply plugin: 'net.neoforged.gradle.common'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 
 configurations {
