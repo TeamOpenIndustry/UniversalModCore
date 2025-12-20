@@ -506,9 +506,8 @@ public class World {
 	    }
 
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
-        entity.motionX = velocity.x;
-        entity.motionY = velocity.y;
-        entity.motionZ = velocity.z;
+        entity.addVelocity(velocity.x, velocity.y, velocity.z);
+        entity.velocityChanged = true;
         internal.spawnEntityInWorld(entity);
     }
 
