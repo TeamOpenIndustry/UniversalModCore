@@ -144,14 +144,14 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary(group: 'org.lz4', name: 'lz4-java', version: '1.8.0')
+    minecraftLibrary(group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
     minecraftLibrary(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
 
     implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'){
         jarJar.ranged(it, "[1.5.2,)")
     })
-    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '1.8.0'){
-        jarJar.ranged(it, "[1.8.0,)")
+    implementation(jarJar(group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'){
+        jarJar.ranged(it, "[1.10.2,)")
     })
 }
 
