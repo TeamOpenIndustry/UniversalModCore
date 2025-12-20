@@ -51,8 +51,6 @@ archivesBaseName = "UniversalModCore"
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
-jarJar.enable()
-
 // Default run configurations.
 // These can be tweaked, removed, or duplicated as needed.
 runs {
@@ -135,19 +133,8 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-//    minecraftLibrary(group: 'org.lz4', name: 'lz4-java', version: '1.8.0')
-//    minecraftLibrary(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
-
-    implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '[1.5.2,)'){
-        version {
-            prefer "1.5.2"
-        }
-    })
-    implementation(jarJar(group: 'org.lz4', name: 'lz4-java', version: '[1.8.0,)'){
-        version {
-            prefer "1.8.0"
-        }
-    })
+    implementation(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
+    implementation(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
 jar {
@@ -165,24 +152,19 @@ jar {
     }
 }
 
-tasks.jarJar {
-    // main jar = slim + jar-in-jar deps
-    archiveClassifier.set("")
-    dependsOn tasks.jar
+shadowJar {
+    archiveClassifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz" //lz4
+    finalizedBy 'reobfShadowJar'
 }
 
-tasks.register('jarJarRelease') {
-    group = 'jarjar'
-    finalizedBy tasks.jarJar
-}
+assemble.dependsOn shadowJar
 
-tasks.withType(Jar).configureEach {
-    if (archiveClassifier.get() == 'all') {
-        enabled = false
-    }
+reobf {
+    shadowJar {}
 }
-
-assemble.dependsOn tasks.jarJar
 
 test {
     useJUnit()
@@ -191,9 +173,11 @@ test {
 
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
-            artifactId = archivesBaseName
-            from components.java
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifact shadowJar
+            artifact sourcesJar
+            artifactId archivesBaseName
         }
     }
     repositories {

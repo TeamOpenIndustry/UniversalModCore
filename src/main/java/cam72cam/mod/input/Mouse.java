@@ -32,9 +32,8 @@ public class Mouse {
 
             Entity entity = MinecraftClient.getEntityMouseOver();
             if (entity != null && entity.internal instanceof ModdedEntity && entity instanceof IClickable) {
-                double d0 = 36.0D;
                 // Invert MC's built in logic for entity distance (assumes small entities)
-                if (MinecraftClient.getPlayer().internal.distanceToSqr(entity.internal) >= d0) {
+                if (!MinecraftClient.getPlayer().internal.canReach(entity.internal, 3)) {
                     if (((IClickable)entity).onClick(MinecraftClient.getPlayer(), button) == ClickResult.ACCEPTED) {
                         new MousePressPacket(button, entity).sendToServer();
                     }
