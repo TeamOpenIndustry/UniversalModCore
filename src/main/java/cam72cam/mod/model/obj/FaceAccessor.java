@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * A {@link VertexBuffer} API wrapper, make accessing geometry complete separate from backend.
+ * A {@link VertexBuffer} API wrapper, making accessing geometry completely separated from backend.
  */
 public class FaceAccessor implements Iterable<FaceAccessor> {
     // Cache VBOs to avoid costly re-fetching, even if they are removed it won't cause too much waste(1-2 MB)
