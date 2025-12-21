@@ -3,7 +3,7 @@ buildscript {
         maven { url = "https://maven.minecraftforge.net/" }
     }
 	dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.2'
+        classpath "net.minecraftforge.gradle:ForgeGradle:2.3.2"
 	}
 }
 
@@ -21,7 +21,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.2.2"
+String umcVersion = mod_version
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -29,54 +29,24 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
         umcVersion += "-unknown"
     }
 }
-version = "1.12.2-forge-" + umcVersion
-group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "UniversalModCore"
 
-sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
+version = "1.12.2-forge-" + umcVersion
+group = mod_group
+archivesBaseName = mod_name
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = "1.8"
 
 minecraft {
-    version = "1.12.2-14.23.5.2847"
+    version = "${minecraft_version}-${forge_version}"
     runDir = "run"
-    
-    // the mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   snapshot are built nightly.
-    // stable_#            stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "stable_39"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    mappings = mappings_version
 }
 
 dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-      
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
-    // except that these dependencies get remapped to your current MCP mappings
-    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
 	shade "curse.maven:invtweaks-223094:2482482"
 
-    testCompile('junit:junit:4.13')
-
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
+    testCompile('junit:junit:4.13.1')
 }
 
 jar {
@@ -86,27 +56,23 @@ jar {
         }
     }
     manifest {
-        attributes 'FMLAT': 'UniversalModCore_at.cfg'
+        attributes 'FMLAT': "${mod_name}_at.cfg"
     }
 }
 jar.finalizedBy('reobfJar')
 
 processResources {
-    // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", "${minecraft_version}-${forge_version}"
 
-    // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        include "mcmod.info"
+        expand "version": project.version, "mcversion": "${minecraft_version}-${forge_version}"
     }
         
     // copy everything else except the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        exclude "mcmod.info"
     }
 }
 
@@ -134,10 +100,10 @@ publishing {
     }
 }
 
-task ('showBuildInfo') {
+task showBuildInfo {
     doLast {
         System.out.println("Build Uploaded to Maven at: ")
-        System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${version}/UniversalModCore-${version}.jar")
+        System.out.println("https://teamopenindustry.cc/maven/${mod_group.replace('.', '/')}/${mod_name}/${version}/${mod_name}-${version}.jar")
     }
 }
 
