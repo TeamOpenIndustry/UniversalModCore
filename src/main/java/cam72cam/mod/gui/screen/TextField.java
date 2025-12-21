@@ -22,13 +22,13 @@ public class TextField implements IWidget{
     }
 
     @Override
-    public String getText() {
-        return textfield.getText();
+    public void setText(String s) {
+        textfield.setText(s);
     }
 
     @Override
-    public void setText(String s) {
-        textfield.setText(s);
+    public String getText() {
+        return textfield.getText();
     }
 
     @Override
@@ -38,8 +38,18 @@ public class TextField implements IWidget{
     }
 
     @Override
+    public boolean isVisible() {
+        return textfield.getVisible();
+    }
+
+    @Override
     public void setEnabled(boolean enabled) {
         textfield.setEnabled(enabled);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return textfield.isEnabled;
     }
 
     /** Validator that can block a string from being entered */

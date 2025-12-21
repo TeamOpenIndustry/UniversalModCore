@@ -49,13 +49,13 @@ public class Button implements IWidget{
     }
 
     @Override
-    public String getText() {
-        return button.displayString;
+    public void setText(String text) {
+        button.displayString = text;
     }
 
     @Override
-    public void setText(String text) {
-        button.displayString = text;
+    public String getText() {
+        return button.displayString;
     }
 
     @Override
@@ -64,8 +64,18 @@ public class Button implements IWidget{
     }
 
     @Override
+    public boolean isVisible() {
+        return button.visible;
+    }
+
+    @Override
     public void setEnabled(boolean b) {
         button.enabled = b;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return button.enabled;
     }
 
     /** Internal click handler*/
