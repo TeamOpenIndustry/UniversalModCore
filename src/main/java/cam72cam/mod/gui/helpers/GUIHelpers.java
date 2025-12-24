@@ -46,6 +46,7 @@ public class GUIHelpers {
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
                         .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                        .stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawRect(x, y, x + width, y + height, color);
         }
@@ -54,7 +55,7 @@ public class GUIHelpers {
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
         try (With ctx = RenderContext.apply(
-                new RenderState().texture(Texture.wrap(tex))
+                new RenderState().texture(Texture.wrap(tex)).stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
         }
@@ -91,6 +92,7 @@ public class GUIHelpers {
                 new RenderState()
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
+                        .stage(RenderContext.Stage.GUI)
         )) {
             int iW = sprite.getIconWidth();
             int iH = sprite.getIconHeight();
@@ -124,6 +126,14 @@ public class GUIHelpers {
         }
     }
 
+    /** Draw a shadowed string offset from the center of coords */
+    public static void drawCenteredString(String text, int x, int y, int color) {
+        drawCenteredString(text, x, y, color, new Matrix4());
+    }
+    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color, matrix);
+    }
+
     /** Draw a left-aligned shadowed string */
     public static void drawString(String text, int x, int y, int color) {
         drawString(text, x, y, color, new Matrix4());
@@ -131,22 +141,10 @@ public class GUIHelpers {
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
+        state.stage(RenderContext.Stage.GUI);
         try (With ctx = RenderContext.apply(state)) {
             GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, color);
-        }
-    }
-
-    /** Draw a shadowed string offset from the center of coords */
-    public static void drawCenteredString(String text, int x, int y, int color) {
-        drawCenteredString(text, x, y, color, new Matrix4());
-    }
-    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
-        state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            GlStateManager.color(1, 1, 1, 0);
-            Minecraft.getMinecraft().fontRenderer.drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color);
         }
     }
 
@@ -176,6 +174,9 @@ public class GUIHelpers {
                 .alpha_test(false)
                 .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
                 .rescale_normal(true);
+        //If it's handled by us then it'll be set to ITEM_IN_GUI later
+        //Otherwise we don't care
+//              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
