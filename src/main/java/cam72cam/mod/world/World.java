@@ -65,6 +65,8 @@ public class World {
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
 
+    public final WorldEntityTracker tracker = new WorldEntityTracker();
+
     /* World Initialization */
 
     private World(net.minecraft.world.World world) {
@@ -189,6 +191,7 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
+            tracker.join((ModdedEntity) entityIn);
         } else if (entityIn instanceof EntityPlayer) {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
@@ -216,6 +219,9 @@ public class World {
         }
         entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUniqueID());
+        if (entity instanceof ModdedEntity){
+            tracker.leave((ModdedEntity) entity);
+        }
     }
 
     /* Entity Methods */

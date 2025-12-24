@@ -6,6 +6,7 @@
   "minVersion": "0.8.2",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "feat.large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
   ]
