@@ -198,7 +198,6 @@ public class RenderContext {
         }
 
         if(state.scissorRange != null){
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
             int scaleFactor = new ScaledResolution(Minecraft.getMinecraft()).getScaleFactor();
             int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
@@ -209,7 +208,6 @@ public class RenderContext {
 
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             GL11.glScissor(x, screenHeight - y - height, width, height);
-            restore.add(() -> GL11.glDisable(GL11.GL_SCISSOR_TEST));
         }
 
         if (state.blend != null) {

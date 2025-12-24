@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.GuiButton;
@@ -11,11 +12,10 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
+
+import static org.lwjgl.input.Keyboard.getKeyName;
 
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
@@ -99,6 +99,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
@@ -110,6 +111,13 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
         // draw buttons
         super.drawScreen(mouseX, mouseY, partialTicks);
+        Optional<Button> first = buttonMap.values().stream()
+                                          .filter(Button::isHovering)
+                                          .filter(button -> button.tooltips != null)
+                                          .findFirst();
+        first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
+
+        GUIHelpers.runDelayed(mouseX, mouseY);
     }
 
     @Override
@@ -118,28 +126,26 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             close();
         }
 
-        // Enter
-        if (keyCode == 28 || keyCode == 156) {
-            screen.onEnterKey(this);
+        if (this.textFields.stream().noneMatch(x -> x.textboxKeyTyped(typedChar, keyCode))) {
+            screen.onKeyType(this , Keyboard.KeyCode.valueOf(getKeyName(keyCode)));
         }
-
-        this.textFields.forEach(x -> x.textboxKeyTyped(typedChar, keyCode));
     }
 
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         // Copy pasta to support right / left button click
+        Player.Hand hand = mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
 
-        for (int i = 0; i < this.buttonList.size(); ++i) {
-            GuiButton guibutton = super.buttonList.get(i);
-
+        for (GuiButton guibutton : this.buttonList) {
             if (guibutton.mousePressed(this.mc, mouseX, mouseY)) {
                 this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
-                buttonMap.get(guibutton).onClick(mouseButton == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);
+                buttonMap.get(guibutton).onClick(hand);
             }
         }
 
-        this.textFields.forEach(x -> x.mouseClicked(mouseX, mouseY, mouseButton));
+        if (this.textFields.stream().noneMatch(x -> x.mouseClicked(mouseX, mouseY, mouseButton))) {
+            screen.onMouseClick(mouseX, mouseY, hand);
+        }
     }
 
     // Default overrides
