@@ -11,7 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TagSync {
     /**
-     * Should a float change less than 0.001 or a double change less than 0.00001 be synchronized?
+     * Minimum float precision change required for synchronization. Default is 0.001(10 ^ -3), max is 1, min is 10^-8
      */
-    boolean forceSync() default false;
+    int floatPrecision() default 3;
+
+    /**
+     * Minimum double precision change required for synchronization. Default is 0.00001(10 ^ -5), max is 1, min is 10^-8
+     */
+    int doublePrecision() default 5;
 }
