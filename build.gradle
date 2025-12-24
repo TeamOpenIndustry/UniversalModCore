@@ -4,10 +4,12 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -16,6 +18,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
 
 
 configurations {
@@ -60,6 +63,9 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -118,7 +124,8 @@ repositories {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.4-45.1.19'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    minecraft 'net.minecraftforge:forge:1.19.4-45.4.0'
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -143,10 +150,21 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    minecraftLibrary group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    minecraftLibrary group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
-    shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    shade group: 'org.lz4', name: 'lz4-java', version: '1.8.0'
+    minecraftLibrary (shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
+    minecraftLibrary (shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
+}
+
+mixin {
+    // Refmaps for each SourceSet
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    // Configs to add to runs and jars
+    config 'mixins.universalmodcore.json'
+
+    // Specify options for dev run configs
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
 }
 
 jar {
@@ -168,7 +186,7 @@ shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
-    relocate 'org.lz4.lz4-java', "${project.group}.shade.lz4-java"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz" //lz4
     finalizedBy 'reobfShadowJar'
 }
 

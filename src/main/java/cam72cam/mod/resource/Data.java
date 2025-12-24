@@ -10,7 +10,6 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -144,8 +143,17 @@ class Data {
 
     public static class ServerProxy extends DataProxy {
         private InputStream getEmbeddedResourceStream(Identifier location) throws IOException {
-            URL url = this.getClass().getResource(pathString(location, true));
-            return url != null ? this.getClass().getResourceAsStream(pathString(location, true)) : null;
+            //Since 1.17 Minecraft has been forcing us to use Java16, and ForgeGradle here will auto generate a module name for us
+            //So we can no longer access mods' assets
+            //This isn't needed for MC 1.16- running on modern Java, but essential for projects built on Java9+
+            String name = pathString(location, true);
+
+            ClassLoader cl = this.getClass().getClassLoader();
+            if (cl == null) {
+                return ClassLoader.getSystemResourceAsStream(name);
+            } else {
+                return cl.getResourceAsStream(name);
+            }
         }
 
         @Override

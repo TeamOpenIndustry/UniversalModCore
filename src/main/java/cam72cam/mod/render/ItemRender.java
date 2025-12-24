@@ -142,7 +142,7 @@ public class ItemRender {
         ClientEvents.MODEL_BAKE.subscribe(event -> event.getModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
-        if (model instanceof ISpriteItemModel) { // TODO re-enable sprite system in 1.17+
+        if (model instanceof ISpriteItemModel) {
             ClientEvents.HACKS.subscribe(() -> {
                 List<ItemStack> variants = item.getItemVariants(null);
                 Progress.Bar bar = Progress.push(item.getClass().getSimpleName() + " Icon", variants.size());
@@ -234,6 +234,7 @@ public class ItemRender {
         }
 
         With restore = OptiFine.overrideFastRender(false);
+        RenderType.cutout().setupRenderState();
 
         TextureTarget fb = new TextureTarget(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
@@ -281,6 +282,7 @@ public class ItemRender {
             GL11.glDepthFunc(oldDepth);
         }
 
+        RenderType.cutout().clearRenderState();
         restore.close();
     }
 
