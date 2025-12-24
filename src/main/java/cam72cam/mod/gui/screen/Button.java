@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.GuiButton;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /** Base interactable GUI element */
@@ -17,14 +18,16 @@ public class Button implements IWidget{
     /** Internal MC obj */
     protected final GuiButton button;
 
+    protected List<String> tooltips;
+
     /** Default width/height */
     public Button(IScreenBuilder builder, int x, int y, String text, BiConsumer<Player.Hand, Button> handler) {
-        this(builder, x, y, 200, 20, text, handler);
-    }
+            this(builder, x, y, 200, 20, text, handler);
+        }
 
     @Deprecated
     public Button(IScreenBuilder builder, int x, int y, String text) {
-        this(builder, x, y, 200, 20, text, (hand, button1) -> {});
+            this(builder, x, y, 200, 20, text, (hand, button1) -> {});
     }
 
     /** Custom width/height */
@@ -73,6 +76,10 @@ public class Button implements IWidget{
         button.enabled = b;
     }
 
+    public void setTooltip(List<String> content) {
+        this.tooltips = content;
+    }
+
     @Override
     public boolean isEnabled() {
         return button.enabled;
@@ -91,5 +98,9 @@ public class Button implements IWidget{
     /** Override the text color */
     public void setTextColor(int i) {
         button.packedFGColour = i;
+    }
+
+    public boolean isHovering() {
+        return button.isMouseOver();
     }
 }

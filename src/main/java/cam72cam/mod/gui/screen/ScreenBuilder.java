@@ -11,10 +11,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static org.lwjgl.input.Keyboard.getKeyName;
@@ -101,6 +98,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
@@ -111,6 +109,13 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
         // draw buttons
         super.drawScreen(mouseX, mouseY, partialTicks);
+        Optional<Button> first = buttonMap.values().stream()
+                                          .filter(Button::isHovering)
+                                          .filter(button -> button.tooltips != null)
+                                          .findFirst();
+        first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
+
+        GUIHelpers.runDelayed(mouseX, mouseY);
     }
 
     @Override
