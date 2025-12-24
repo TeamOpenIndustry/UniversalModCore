@@ -20,9 +20,12 @@ import cam72cam.mod.util.Facing;
 import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
@@ -62,6 +65,8 @@ public class World {
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
 
+    public final WorldEntityTracker tracker = new WorldEntityTracker();
+
     /* World Initialization */
 
     private World(net.minecraft.world.World world) {
@@ -81,6 +86,14 @@ public class World {
 
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
+        //HACK for fake world created by other mods
+        if(world.isRemote && world instanceof WorldClient
+                && (((WorldClient) world).connection == null
+                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
+            //Meaning it is a "fake world" created by other mods for rendering
+            return;
+        }
+
         if (getWorld(world) == null) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
@@ -113,6 +126,12 @@ public class World {
             for (net.minecraft.entity.Entity entity : this.internal.loadedEntityList) {
                 if (!this.entityByID.containsKey(entity.getEntityId())) {
                     ModCore.warn("Adding entity that was not wrapped correctly %s - %s", entity.getUniqueID(), entity);
+                    if (entity instanceof EntityPlayerMP && !this.internal.playerEntities.contains(entity)) {
+                        // if player is no longer online then remove player from loadedEntityList
+                        this.internal.loadedEntityList.remove(entity);
+                        ModCore.warn("Removing entity with uuid %s from loadedEntityList", entity.getUniqueID());
+                        return;
+                    }
                     this.onEntityAdded(entity);
                 }
             }
@@ -172,6 +191,7 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
+            tracker.join((ModdedEntity) entityIn);
         } else if (entityIn instanceof EntityPlayer) {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
@@ -199,6 +219,9 @@ public class World {
         }
         entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUniqueID());
+        if (entity instanceof ModdedEntity){
+            tracker.leave((ModdedEntity) entity);
+        }
     }
 
     /* Entity Methods */
@@ -451,7 +474,8 @@ public class World {
     /** Drop a stack on the ground at pos with velocity */
     public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
-        entity.setVelocity(velocity.x, velocity.y, velocity.z);
+        entity.addVelocity(velocity.x, velocity.y, velocity.z);
+        entity.velocityChanged = true;
         internal.spawnEntity(entity);
     }
 
