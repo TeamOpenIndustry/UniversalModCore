@@ -3,39 +3,85 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.GuiButton;
 
+import java.util.function.BiConsumer;
+
 /** Base interactable GUI element */
-public abstract class Button {
+public class Button implements IWidget{
+    /**
+     * Handler consumer, called upon clicked
+     * Hand -> PRIMARY is a left-click, SECONDARY is a right-click
+     * Button -> Reference of self, as it may not be fully constructed
+     */
+    protected BiConsumer<Player.Hand, Button> handler;
+
     /** Internal MC obj */
     protected final GuiButton button;
 
     /** Default width/height */
+    public Button(IScreenBuilder builder, int x, int y, String text, BiConsumer<Player.Hand, Button> handler) {
+        this(builder, x, y, 200, 20, text, handler);
+    }
+
+    @Deprecated
     public Button(IScreenBuilder builder, int x, int y, String text) {
-        this(builder, x, y, 200, 20, text);
+        this(builder, x, y, 200, 20, text, (hand, button1) -> {});
     }
 
     /** Custom width/height */
+    public Button(IScreenBuilder builder, int x, int y, int width, int height, String text, BiConsumer<Player.Hand, Button> handler) {
+        this(builder,
+             new GuiButton(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
+             handler);
+    }
+
+    @Deprecated
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
-        this(builder, new GuiButton(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
+        this(builder,
+             new GuiButton(-1, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
+             (hand, button1) -> {});
     }
 
     /** Internal ctr */
-    protected Button(IScreenBuilder builder, GuiButton button) {
+    protected Button(IScreenBuilder builder, GuiButton button, BiConsumer<Player.Hand, Button> handler) {
         this.button = button;
         builder.addButton(this);
+        this.handler = handler;
     }
 
-    /** Currently displayed text */
-    public String getText() {
-        return button.displayString;
-    }
-
-    /** Override current text */
+    @Override
     public void setText(String text) {
         button.displayString = text;
     }
 
-    /** Click handler that must be implemented */
-    public abstract void onClick(Player.Hand hand);
+    @Override
+    public String getText() {
+        return button.displayString;
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        button.visible = b;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return button.visible;
+    }
+
+    @Override
+    public void setEnabled(boolean b) {
+        button.enabled = b;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return button.enabled;
+    }
+
+    /** Internal click handler*/
+    public void onClick(Player.Hand hand) {
+        this.handler.accept(hand, this);
+    }
 
     /** Called every screen draw */
     public void onUpdate() {
@@ -46,16 +92,4 @@ public abstract class Button {
     public void setTextColor(int i) {
         button.packedFGColour = i;
     }
-
-    /** Set the button visible or not */
-    public void setVisible(boolean b) {
-        button.visible = b;
-    }
-
-    /** enable or disable the button */
-    public void setEnabled(boolean b) {
-        button.enabled = b;
-    }
-
-    ;
 }
