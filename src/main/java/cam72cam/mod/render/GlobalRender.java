@@ -11,11 +11,13 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -26,6 +28,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -63,8 +66,10 @@ public class GlobalRender {
                     @Override
                     public void render(GlobalRenderHelper te, float partialTicks, PoseStack matrixStack, MultiBufferSource iRenderTypeBuffer, int i, int i1) {
                         // TODO 1.15+ do we need to set lightmap coords here?
+                        RenderType.cutoutMipped().setupRenderState();
                         BlockPos off = te.getBlockPos();
                         renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
+                        RenderType.cutoutMipped().clearRenderState();
                     }
 
                     @Override
@@ -162,17 +167,19 @@ public class GlobalRender {
         Font fontRendererIn = Minecraft.getInstance().font;
 
         state = state.clone()
-                .lighting(false)
-                .depth_test(false)
-                .color(1, 1, 1, 1)
-                .translate(pos.x, pos.y, pos.z)
-                .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
-                .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
-                .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F);
+                     .lighting(false)
+                     .depth_test(false)
+                     .color(1, 1, 1, 1)
+                     .translate(pos.x, pos.y, pos.z)
+                     .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
+                     .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
+                     .scale(scale, scale, scale)
+                     .scale(-0.025F, -0.025F, 0.025F);
 
         try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, -1);
+            MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            buffer.endBatch();
         }
     }
 

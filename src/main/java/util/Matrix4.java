@@ -8,7 +8,6 @@ import javax.vecmath.Vector3f;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.nio.FloatBuffer;
 
 /**
  * Copyright (C) 2013 Chicken-Bones
@@ -475,6 +474,27 @@ public class Matrix4
 		TRSRTransformation s = new TRSRTransformation(from.toMatrix4f());
 		TRSRTransformation e = new TRSRTransformation(to.toMatrix4f());
 		return new Matrix4(s.slerp(e, percent).getMatrix());
+	}
+
+	public org.joml.Matrix4f convertToMoj() {
+		return new org.joml.Matrix4f(
+				(float) this.m00,
+				(float) this.m01,
+				(float) this.m02,
+				(float) this.m03,
+				(float) this.m10,
+				(float) this.m11,
+				(float) this.m12,
+				(float) this.m13,
+				(float) this.m20,
+				(float) this.m21,
+				(float) this.m22,
+				(float) this.m23,
+				(float) this.m30,
+				(float) this.m31,
+				(float) this.m32,
+				(float) this.m33
+		);
 	}
 
 	@Override

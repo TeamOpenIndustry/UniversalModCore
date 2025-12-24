@@ -47,6 +47,8 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -60,11 +62,11 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.lwjgl.opengl.GL32;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
@@ -227,10 +229,8 @@ public class ModCore {
             }
 
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                RenderSystem.recordRenderCall(() -> {
-                        MaxTextureSize = GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE);
-                        ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
-                });
+                MaxTextureSize = RenderSystem.maxSupportedTextureSize();
+                ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
 
@@ -310,7 +310,7 @@ public class ModCore {
             public IoSupplier<InputStream> getResource(PackType type, ResourceLocation resourcePath) {
                 if (resourcePath.getPath().contains("lang/") && resourcePath.getPath().endsWith(".json")) {
                     // Magical Translations!
-                    ResourceLocation lang = new ResourceLocation(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
+                    ResourceLocation lang = ResourceLocation.fromNamespaceAndPath(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
                     List<Resource> langFiles = Minecraft.getInstance().getResourceManager().getResourceStack(lang);
                     if (!langFiles.isEmpty()) {
                         Map<String, String> translationMap = new HashMap<>();
