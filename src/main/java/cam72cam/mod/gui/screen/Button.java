@@ -52,18 +52,23 @@ public class Button implements IWidget{
     }
 
     @Override
-    public String getText() {
-        return button.displayString;
-    }
-
-    @Override
     public void setText(String text) {
         button.displayString = text;
     }
 
     @Override
+    public String getText() {
+        return button.displayString;
+    }
+
+    @Override
     public void setVisible(boolean b) {
         button.visible = b;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return button.visible;
     }
 
     @Override
@@ -73,6 +78,11 @@ public class Button implements IWidget{
 
     public void setTooltip(List<String> content) {
         this.tooltips = content;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return button.enabled;
     }
 
     /** Internal click handler*/

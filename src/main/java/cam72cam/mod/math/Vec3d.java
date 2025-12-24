@@ -92,6 +92,14 @@ public class Vec3d {
         return new Vec3d(Math.max(x, other.x), Math.max(y, other.y), Math.max(z, other.z));
     }
 
+    public double dotProduct(Vec3d other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z;
+    }
+
+    public Vec3d crossProduct(Vec3d other) {
+        return new Vec3d(this.y * other.z - this.z * other.y, this.z * other.x - this.x * other.z, this.x * other.y - this.y * other.x);
+    }
+
     @Override
     public String toString() {
         return String.format("(%s, %s, %s)", this.x, this.y, this.z);

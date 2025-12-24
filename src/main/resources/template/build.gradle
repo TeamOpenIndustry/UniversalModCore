@@ -27,6 +27,7 @@ minecraft {
 #UMC_REPO#
 
 dependencies {
+    runtime "net.minecrell:terminalconsoleappender:1.3.0"
     compile #UMC_DEPENDENCY#
 }
 

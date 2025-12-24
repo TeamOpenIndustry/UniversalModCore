@@ -12,6 +12,7 @@ import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.Light;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
+import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
@@ -49,7 +50,7 @@ import java.util.List;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.2.1";
+    public static final String VERSION = "1.2.2";
     public static ModCore instance;
 
     private List<Mod> mods = new ArrayList<>();
@@ -262,7 +263,7 @@ public class ModCore {
                     ChunkManager.setup();
                     break;
                 case SETUP:
-                    World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
+//                    World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     GuiRegistry.registration();
                     break;
@@ -354,10 +355,7 @@ public class ModCore {
 
     /** Get a file for name in the UMC cache dir */
     public static synchronized File cacheFile(Identifier id) {
-        File configDir = Loader.instance().getConfigDir();
-        if (configDir == null) {
-            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
-        }
+        File configDir = MinecraftFiles.getConfigDir();
         File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 

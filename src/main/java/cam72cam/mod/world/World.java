@@ -8,6 +8,7 @@ import cam72cam.mod.block.IBlockTypeBlock;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
@@ -27,11 +28,9 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
@@ -65,6 +64,8 @@ public class World {
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
 
+    public final WorldEntityTracker tracker = new WorldEntityTracker();
+
     /* World Initialization */
 
     private World(net.minecraft.world.World world) {
@@ -85,7 +86,7 @@ public class World {
     /** Load world hander, sets up maps and internal handlers */
     private static void loadWorld(net.minecraft.world.World world) {
         //HACK for fake world created by other mods
-        if(world instanceof WorldClient
+        if(world.isRemote && world instanceof WorldClient
                 && (((WorldClient) world).connection == null
                     || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
             //Meaning it is a "fake world" created by other mods for rendering
@@ -189,6 +190,7 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
+            tracker.join((ModdedEntity) entityIn);
         } else if (entityIn instanceof EntityPlayer) {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
@@ -216,6 +218,9 @@ public class World {
         }
         entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUniqueID());
+        if (entity instanceof ModdedEntity){
+            tracker.leave((ModdedEntity) entity);
+        }
     }
 
     /* Entity Methods */
@@ -272,6 +277,34 @@ public class World {
             }
         }
         return list;
+    }
+
+    /**
+     * Find UMC Entities which within the BB and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb, Class<T> type) {
+        return getEntitiesWithinBB(bb, (T val) -> true, type);
+    }
+
+    /**
+     * Find UMC Entities which within the BB, match the filter and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
+        List<net.minecraft.entity.Entity> entitiesWithinAABB = internal.getEntitiesWithinAABB(net.minecraft.entity.Entity.class,
+                                    bb instanceof DefaultBoundingBox
+                                    ? ((DefaultBoundingBox)bb).internal
+                                    : new AxisAlignedBB(bb.min().internal(), bb.max().internal()));
+
+        return entitiesWithinAABB.stream()
+                                 .map(this::getEntity)
+                                 .filter(type::isInstance)
+                                 .map(type::cast)
+                                 .filter(filter)
+                                 .collect(Collectors.toList());
     }
 
     /** Add a constructed entity to the world */
@@ -468,7 +501,8 @@ public class World {
     /** Drop a stack on the ground at pos with velocity */
     public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
-        entity.setVelocity(velocity.x, velocity.y, velocity.z);
+        entity.addVelocity(velocity.x, velocity.y, velocity.z);
+        entity.velocityChanged = true;
         internal.spawnEntity(entity);
     }
 
