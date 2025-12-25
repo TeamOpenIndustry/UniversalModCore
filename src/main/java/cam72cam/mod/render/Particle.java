@@ -156,7 +156,8 @@ public abstract class Particle {
         }
     }
 
-    public enum VanillaParticles {ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
+    public enum VanillaParticles {
+        ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
         BUBBLE(EnumParticleTypes.WATER_BUBBLE),
         CRITICAL_HIT(EnumParticleTypes.CRIT),
         CRITICAL_MAGIC_HIT(EnumParticleTypes.CRIT_MAGIC),
