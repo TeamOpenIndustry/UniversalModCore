@@ -4,14 +4,12 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
-import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.particles.*;
 import net.minecraft.util.math.MathHelper;
 import util.Matrix4;
 
@@ -121,17 +119,23 @@ public abstract class Particle {
     public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
         if (scale < 1E-7) return;
 
-        int extraArgument = 0;
-
-        if (vanilla == VanillaParticles.DIRT_DUST) {
-            extraArgument = Block.getStateId(Blocks.DIRT.getDefaultState());
-        } else if (vanilla == VanillaParticles.SAND_DUST) {
-            extraArgument = Block.getStateId(Blocks.SAND.getDefaultState());
+        IParticleData data;
+        switch (vanilla) {
+            case SAND_DUST:
+                data = new BlockParticleData(vanilla.internal, Blocks.SAND.getDefaultState());
+                break;
+            case DIRT_DUST:
+                data = new BlockParticleData(vanilla.internal, Blocks.DIRT.getDefaultState());
+                break;
+            case REDSTONE:
+                data = new RedstoneParticleData(1, 1, 1, 1);
+                break;
+            default:
+                data = (BasicParticleType) vanilla.internal;
+                break;
         }
-
-        net.minecraft.client.particle.Particle particle;
-        particle = Minecraft.getMinecraft().effectRenderer.spawnEffectParticle(
-                vanilla.internal.getParticleID(), pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z, extraArgument);
+        net.minecraft.client.particle.Particle particle =
+                Minecraft.getInstance().particles.addParticle(data, pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
 
         if (particle != null) {
             particle.multipleParticleScaleBy(scale);
@@ -159,33 +163,34 @@ public abstract class Particle {
         }
     }
 
-    public enum VanillaParticles {ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
-        BUBBLE(EnumParticleTypes.WATER_BUBBLE),
-        CRITICAL_HIT(EnumParticleTypes.CRIT),
-        CRITICAL_MAGIC_HIT(EnumParticleTypes.CRIT_MAGIC),
-        DIRT_DUST(EnumParticleTypes.BLOCK_DUST),
-        EXPLOSION(EnumParticleTypes.EXPLOSION_HUGE),
-        FLAME(EnumParticleTypes.FLAME),
-        HAPPY_VILLAGER(EnumParticleTypes.VILLAGER_HAPPY),
-        HEART(EnumParticleTypes.HEART),
-        LAVA(EnumParticleTypes.LAVA),
-        LAVA_DROP(EnumParticleTypes.DRIP_LAVA),
-        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
-        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
-        NOTE(EnumParticleTypes.NOTE),
-        REDSTONE(EnumParticleTypes.REDSTONE),
-        RUNE(EnumParticleTypes.ENCHANTMENT_TABLE),
-        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
-        SNOWBALL_BREAKING(EnumParticleTypes.SNOWBALL),
-        SNOW_SHOVEL(EnumParticleTypes.SNOW_SHOVEL),
-        WATER_DRIP(EnumParticleTypes.DRIP_WATER),
-        WATER_SPLASH(EnumParticleTypes.WATER_SPLASH)
+    public enum VanillaParticles {ANGRY_VILLAGER(ParticleTypes.ANGRY_VILLAGER),
+        BUBBLE(ParticleTypes.BUBBLE),
+        CRITICAL_HIT(ParticleTypes.CRIT),
+        CRITICAL_MAGIC_HIT(ParticleTypes.ENCHANTED_HIT),
+        DIRT_DUST(ParticleTypes.BLOCK),
+        EXPLOSION(ParticleTypes.EXPLOSION),
+        FLAME(ParticleTypes.FLAME),
+        HAPPY_VILLAGER(ParticleTypes.HAPPY_VILLAGER),
+        HEART(ParticleTypes.HEART),
+        LAVA(ParticleTypes.LAVA),
+        LAVA_DROP(ParticleTypes.DRIPPING_LAVA),
+        LARGE_SMOKE(ParticleTypes.LARGE_SMOKE),
+        NORMAL_SMOKE(ParticleTypes.SMOKE),
+        NOTE(ParticleTypes.NOTE),
+        REDSTONE(ParticleTypes.DUST),
+        RUNE(ParticleTypes.ENCHANT),
+        SAND_DUST(ParticleTypes.BLOCK),
+        SNOWBALL_BREAKING(ParticleTypes.ITEM_SNOWBALL),
+        SNOW_SHOVEL(ParticleTypes.ITEM_SNOWBALL), //Removed in 1.14
+        WATER_DRIP(ParticleTypes.DRIPPING_WATER),
+        WATER_SPLASH(ParticleTypes.SPLASH)
         ;
 
-        private final EnumParticleTypes internal;
+        private final ParticleType internal;
 
-        VanillaParticles(EnumParticleTypes type) {
+        VanillaParticles(ParticleType type) {
             this.internal = type;
+
         }
     }
 }

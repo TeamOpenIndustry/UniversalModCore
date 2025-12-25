@@ -1,62 +1,49 @@
 package cam72cam.mod;
 
 import com.llamalad7.mixinextras.MixinExtrasBootstrap;
-import net.minecraftforge.fml.relauncher.CoreModManager;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ITransformationService;
+import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
-import javax.annotation.Nullable;
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.CodeSource;
-import java.util.Map;
+import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
-@IFMLLoadingPlugin.MCVersion("1.12.2")
-public class UMCMixinPlugin implements IFMLLoadingPlugin {
+public class UMCMixinPlugin implements ITransformationService {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
         MixinExtrasBootstrap.init();
         Mixins.addConfiguration("mixins.universalmodcore.json");
+    }
 
-        CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
-        if (codeSource != null) {
-            URL location = codeSource.getLocation();
-            try {
-                File file = new File(location.toURI());
-                if (file.isFile()) {
-                    CoreModManager.getIgnoredMods().remove(file.getName());
-                }
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        }
+    @Nonnull
+    @Override
+    public String name() {
+        return "UniversalModCoreMixinInitializer";
     }
 
     @Override
-    public String[] getASMTransformerClass() {
-        return new String[0];
-    }
-
-    @Override
-    public String getModContainerClass() {
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public String getSetupClass() {
-        return null;
-    }
-
-    @Override
-    public void injectData(Map<String, Object> data) {
+    public void initialize(IEnvironment iEnvironment) {
 
     }
 
     @Override
-    public String getAccessTransformerClass() {
-        return null;
+    public void beginScanning(IEnvironment iEnvironment) {
+
+    }
+
+    @Override
+    public void onLoad(IEnvironment iEnvironment, Set<String> set) throws IncompatibleEnvironmentException {
+
+    }
+
+    @Nonnull
+    @Override
+    public List<ITransformer> transformers() {
+        return Collections.emptyList();
     }
 }

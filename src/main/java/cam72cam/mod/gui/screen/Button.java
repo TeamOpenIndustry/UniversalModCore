@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 /** Base interactable GUI element */
-public abstract class Button implements IWidget{
+public class Button implements IWidget{
     /**
      * Handler consumer, called upon clicked
      * Hand -> PRIMARY is a left-click, SECONDARY is a right-click

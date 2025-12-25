@@ -8,18 +8,18 @@ import net.minecraft.block.SoundType;
 public enum Material {
     METAL(net.minecraft.block.material.Material.IRON, SoundType.METAL),
     WOOL(net.minecraft.block.material.Material.CARPET, SoundType.CLOTH),
-    GRASS(net.minecraft.block.material.Material.GRASS, SoundType.PLANT),
-    DIRT(net.minecraft.block.material.Material.GROUND, SoundType.GROUND),
+    GRASS(net.minecraft.block.material.Material.ORGANIC, SoundType.PLANT),
+    DIRT(net.minecraft.block.material.Material.EARTH, SoundType.GROUND),
     WOOD(net.minecraft.block.material.Material.WOOD, SoundType.WOOD),
     STONE(net.minecraft.block.material.Material.ROCK, SoundType.STONE),
     LEAF(net.minecraft.block.material.Material.LEAVES, SoundType.PLANT),
     PLANT(net.minecraft.block.material.Material.PLANTS, SoundType.PLANT),
-    VINE(net.minecraft.block.material.Material.VINE, SoundType.PLANT),
+    VINE(net.minecraft.block.material.Material.TALL_PLANTS, SoundType.PLANT),
     SAND(net.minecraft.block.material.Material.SAND, SoundType.SAND),
     GLASS(net.minecraft.block.material.Material.GLASS, SoundType.GLASS),
     ICE(net.minecraft.block.material.Material.ICE, SoundType.GLASS),
     /** Will melt under high sky light*/
-    SNOW(net.minecraft.block.material.Material.CRAFTED_SNOW, SoundType.SNOW),
+    SNOW(net.minecraft.block.material.Material.SNOW_BLOCK, SoundType.SNOW),
     CLAY(net.minecraft.block.material.Material.CLAY, SoundType.STONE),
     ;
 

@@ -1,18 +1,14 @@
 package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
-import net.minecraftforge.fml.client.config.GuiCheckBox;
 
-import cam72cam.mod.entity.Player;
 import net.minecraft.client.gui.widget.button.CheckboxButton;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import java.util.function.BiConsumer;
-
 /** Basic checkbox */
-public abstract class CheckBox extends Button {
+public class CheckBox extends Button {
     /** Internal onPress wrapper as Forge doesn't have corresponding hook */
     private static class InternalCB extends CheckboxButton {
         private Consumer<Player.Hand> clicker = hand -> {};

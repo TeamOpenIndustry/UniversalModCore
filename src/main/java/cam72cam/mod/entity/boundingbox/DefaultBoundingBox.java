@@ -91,7 +91,7 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public boolean intersectsSegment(Vec3d startVec, Vec3d endVec) {
-        return internal.calculateIntercept(startVec.internal(), endVec.internal()) != null;
+        return internal.rayTrace(startVec.internal(), endVec.internal()).isPresent();
     }
 
     @Override

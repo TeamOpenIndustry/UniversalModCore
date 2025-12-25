@@ -69,4 +69,8 @@ public class TextField implements IWidget{
     public void setFocused(boolean b) {
         internal().setFocused2(b);
     }
+
+    /** Called every screen draw */
+    public void onUpdate() {
+    }
 }

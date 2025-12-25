@@ -50,8 +50,6 @@ archivesBaseName = "UniversalModCore"
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 minecraft {
-    //TODO
-    coreMod = 'cam72cam.mod.UMCMixinPlugin'
     // The mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   Snapshot are built nightly.
     // stable_#            Stables are built at the discretion of the MCP team.
@@ -149,7 +147,7 @@ dependencies {
         exclude module: 'gson'
     }
     shade('io.github.llamalad7:mixinextras-common:0.5.0')
-    testCompile('junit:junit:4.13.1')
+    testImplementation ('junit:junit:4.13.1')
 //    No need in FG3+
 //    runtime "net.minecrell:terminalconsoleappender:1.3.0"
 

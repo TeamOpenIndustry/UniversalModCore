@@ -1,24 +1,19 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.File;
 
 public class MinecraftFiles {
     /** Get base game (.minecraft) directory */
     public static File getMinecraftDir() {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().getDataDirectory().getAbsoluteFile();
+        return FMLPaths.GAMEDIR.get().toFile();
     }
 
     /** Get config directory */
     public static File getConfigDir() {
-        File configDir = Loader.instance().getConfigDir();
-        if (configDir == null) {
-            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
-        }
-        return configDir;
+        return FMLPaths.CONFIGDIR.get().toFile();
     }
 
     /**
@@ -26,6 +21,9 @@ public class MinecraftFiles {
      * @return Null on Client, the world's folder on server
      */
     public static File getSaveDir(World world) {
-        return world.internal.getSaveHandler().getWorldDirectory().getAbsoluteFile();
+        if (world.internal.getServer() != null) {
+            return world.internal.getServer().getDataDirectory();
+        }
+        return null;
     }
 }
