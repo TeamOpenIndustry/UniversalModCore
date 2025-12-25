@@ -4,10 +4,14 @@ import cam72cam.mod.ModCore;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.ContainerType;
+import cam72cam.mod.entity.ModdedEntity;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
@@ -97,6 +101,17 @@ public class CommonEvents {
         public static void onEntityJoin(EntityJoinWorldEvent event) {
             if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getWorld(), event.getEntity()))) {
                 event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringChunk event) {
+            if (event.getEntity() instanceof ModdedEntity) {
+                ModdedEntity modded = (ModdedEntity) event.getEntity();
+                cam72cam.mod.world.World.get(modded.world).tracker
+                        .move(modded,
+                              ChunkPos.asLong(event.getOldChunkX(), event.getOldChunkZ()),
+                              ChunkPos.asLong(event.getNewChunkX(), event.getNewChunkZ()));
             }
         }
 

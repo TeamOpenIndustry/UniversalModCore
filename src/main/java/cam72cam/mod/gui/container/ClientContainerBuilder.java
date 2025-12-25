@@ -40,7 +40,9 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     private int centerX;
     private int centerY;
 
-    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
+    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1)
+                                                                      .texture(Texture.wrap(CHEST_GUI_TEXTURE))
+                                                                      .stage(RenderContext.Stage.GUI);
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, PlayerInventory p_create_2_, ITextComponent p_create_3_) {
         super(serverContainer, serverContainer.playerInventory, new StringTextComponent(""));
@@ -53,7 +55,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             //this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
             this.centerX = (this.width - this.xSize) / 2;
@@ -215,6 +217,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
                         .color(1, 1, 1, 1)
                         .alpha_test(true)
                         .depth_test(false)
+                        .stage(RenderContext.Stage.GUI)
         )) {
             GlStateManager.enableAlphaTest();
             GlStateManager.disableDepthTest();
@@ -229,7 +232,7 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
         y += centerY + 1;
 
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             fill(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
@@ -243,8 +246,10 @@ public class ClientContainerBuilder extends ContainerScreen<ServerContainerBuild
 
         TextureAtlasSprite sprite = minecraft.getTextureMap().getAtlasSprite(spriteId);
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState()
+                        .color(1, 1, 1, 1)
                         .texture(Texture.wrap(new Identifier(AtlasTexture.LOCATION_BLOCKS_TEXTURE)))
+                        .stage(RenderContext.Stage.GUI)
         )) {
             blit(x, y, 0, 16, 16, sprite);
         }

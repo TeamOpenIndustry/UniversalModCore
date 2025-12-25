@@ -3,6 +3,8 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,7 +14,10 @@ import net.minecraft.util.text.StringTextComponent;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
+
+import static org.lwjgl.input.Keyboard.getKeyName;
 
 public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
@@ -104,14 +109,23 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
+        GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
 
-        screen.draw(this, new RenderState());
+
+        screen.draw(this, new RenderState().stage(RenderContext.Stage.GUI));
 
         // draw buttons
         super.render(mouseX, mouseY, partialTicks);
+        Optional<Button> first = buttonMap.values().stream()
+                                          .filter(Button::isHovering)
+                                          .filter(button -> button.tooltips != null)
+                                          .findFirst();
+        first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
+
+        GUIHelpers.runDelayed(mouseX, mouseY);
     }
 
     @Override
