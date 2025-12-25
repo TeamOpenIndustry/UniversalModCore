@@ -25,7 +25,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
-    private RenderContext.Stage stage;
+    protected RenderContext.Stage stage;
 
     public RenderState() {
     }

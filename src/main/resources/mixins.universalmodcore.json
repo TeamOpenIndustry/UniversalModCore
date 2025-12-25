@@ -7,7 +7,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "feat.large_entity_collision.MixinVanillaWorld",
-    "feature.global_renderer.MixinRenderGlobal"
+    "feat.global_renderer.MixinRenderGlobal"
   ],
   "client": [
   ]

@@ -1,4 +1,4 @@
-package cam72cam.mod.mixin.feature.global_renderer;
+package cam72cam.mod.mixin.feat.global_renderer;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.GlobalRender;
