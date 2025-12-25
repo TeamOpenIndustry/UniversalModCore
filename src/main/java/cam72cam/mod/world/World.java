@@ -195,6 +195,8 @@ public class World {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
             entity = new Living((EntityLiving) entityIn);
+        } else if (entityIn instanceof EntityItem) {
+            entity = new cam72cam.mod.entity.ItemEntity((EntityItem) entityIn);
         } else {
             entity = new Entity(entityIn);
         }
@@ -489,21 +491,25 @@ public class World {
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3i pos) {
-        dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3i pos) {
+        return dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3d pos) {
-        dropItem(stack, pos, Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos) {
+        return dropItem(stack, pos, Vec3d.ZERO);
     }
 
-    /** Drop a stack on the ground at pos with velocity */
-    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
+    /** Drop a stack on the ground at pos with velocity.
+     * <p>
+     * Note that if system property <code>forge.debugBlockSnapshot</code> is true and forge is capturing block snapshot, item entity will not be spawned and this method will return null!
+     */
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
         entity.addVelocity(velocity.x, velocity.y, velocity.z);
         entity.velocityChanged = true;
         internal.spawnEntity(entity);
+        return getEntity(entity.getUniqueID(), ItemEntity.class);
     }
 
     /** Check if the block is currently in a loaded chunk */
