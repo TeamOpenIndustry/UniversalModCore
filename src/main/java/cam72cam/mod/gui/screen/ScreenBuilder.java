@@ -99,6 +99,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     @Override
     public void init() {
         buttonMap.clear();
+        textFieldMap.clear();
         screen.init(this);
     }
 

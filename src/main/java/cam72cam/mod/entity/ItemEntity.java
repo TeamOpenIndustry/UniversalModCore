@@ -2,15 +2,14 @@ package cam72cam.mod.entity;
 
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.world.World;
-import net.minecraft.entity.item.EntityItem;
 
 /**
  * Represents an item entity in the world, wrapping Minecraft's EntityItem.
  */
 public class ItemEntity extends Entity {
-    public final EntityItem internal;
+    public final net.minecraft.entity.item.ItemEntity internal;
 
-    public ItemEntity(EntityItem entity) {
+    public ItemEntity(net.minecraft.entity.item.ItemEntity entity) {
         super(entity);
         this.internal = entity;
     }
@@ -37,13 +36,13 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getOwner() == null || this.internal.getEntityWorld().getPlayerEntityByName(internal.getOwner()) == null) {
+        if (internal.getOwnerId() == null || this.internal.getEntityWorld().getPlayerByUuid(internal.getOwnerId()) == null) {
             return null;
         }
 
         return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld()
-                                            .getPlayerEntityByName(internal.getOwner())).asPlayer();
+                    .getEntity(this.internal.getEntityWorld().getPlayerByUuid(internal.getOwnerId()))
+                    .asPlayer();
     }
 
     /**
@@ -53,7 +52,7 @@ public class ItemEntity extends Entity {
      */
     public void setOwner(Player player) {
         if (isValid()) {
-            internal.setOwner(player.internal.getName());
+            internal.setOwnerId(player.internal.getUniqueID());
         }
     }
 
@@ -67,12 +66,12 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getThrower() == null || this.internal.getEntityWorld().getPlayerEntityByName(internal.getThrower()) == null) {
+        if (internal.getThrowerId() == null || this.internal.getEntityWorld().getPlayerByUuid(internal.getThrowerId()) == null) {
             return null;
         }
         return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld()
-                                            .getPlayerEntityByName(internal.getThrower())).asPlayer();
+                    .getEntity(this.internal.getEntityWorld().getPlayerByUuid(internal.getThrowerId()))
+                    .asPlayer();
     }
 
     /**
@@ -102,6 +101,6 @@ public class ItemEntity extends Entity {
      * If false, operations on this entity will be no-ops.
      */
     public boolean isValid() {
-        return internal != null && !internal.isDead;
+        return internal != null && internal.isAlive();
     }
 }

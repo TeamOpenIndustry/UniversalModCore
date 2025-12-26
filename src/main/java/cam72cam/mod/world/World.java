@@ -6,10 +6,7 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.IBlockTypeBlock;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.Entity;
-import cam72cam.mod.entity.Living;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -25,7 +22,6 @@ import net.minecraft.block.*;
 import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
@@ -218,8 +214,8 @@ public class World {
             entity = new Player((PlayerEntity) entityIn);
         } else if (entityIn instanceof LivingEntity) {
             entity = new Living((LivingEntity) entityIn);
-        } else if (entityIn instanceof ItemEntity) {
-            entity = new cam72cam.mod.entity.ItemEntity((ItemEntity) entityIn);
+        } else if (entityIn instanceof net.minecraft.entity.item.ItemEntity) {
+            entity = new ItemEntity((net.minecraft.entity.item.ItemEntity) entityIn);
         } else {
             entity = new Entity(entityIn);
         }
@@ -528,11 +524,12 @@ public class World {
      * Note that if system property <code>forge.debugBlockSnapshot</code> is true and forge is capturing block snapshot, item entity will not be spawned and this method will return null!
      */
     public ItemEntity dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
-        ItemEntity entity = new ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
+        net.minecraft.entity.item.ItemEntity entity =
+                new net.minecraft.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal);
         entity.addVelocity(velocity.x, velocity.y, velocity.z);
         entity.velocityChanged = true;
         internal.addEntity(entity);
-        return getEntity(entity.getUniqueID(), cam72cam.mod.entity.ItemEntity.class);
+        return getEntity(entity.getUniqueID(), ItemEntity.class);
     }
 
     /** Check if the block is currently in a loaded chunk */
@@ -701,8 +698,9 @@ public class World {
 
     /** Get dropped items within the given area */
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<ItemEntity> items = internal.getEntitiesWithinAABB(ItemEntity.class, BoundingBox.from(bb));
-        return items.stream().map((ItemEntity::getItem)).map(ItemStack::new).collect(Collectors.toList());
+        List<net.minecraft.entity.item.ItemEntity> items =
+                internal.getEntitiesWithinAABB(net.minecraft.entity.item.ItemEntity.class, BoundingBox.from(bb));
+        return items.stream().map(net.minecraft.entity.item.ItemEntity::getItem).map(ItemStack::new).collect(Collectors.toList());
     }
 
     /** Get a BlockInfo that can be used to overwrite a block in the future.  Does not currently include TE data */
