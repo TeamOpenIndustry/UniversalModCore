@@ -63,12 +63,12 @@ public class Button implements IWidget{
 
     /** Default width/height */
     public Button(IScreenBuilder builder, int x, int y, String text, BiConsumer<Player.Hand, Button> handler) {
-            this(builder, x, y, 200, 20, text, handler);
-        }
+        this(builder, x, y, 200, 20, text, handler);
+    }
 
     @Deprecated
     public Button(IScreenBuilder builder, int x, int y, String text) {
-            this(builder, x, y, 200, 20, text, (hand, button1) -> {});
+        this(builder, x, y, 200, 20, text, (hand, button1) -> {});
     }
 
     /** Custom width/height */
@@ -90,6 +90,9 @@ public class Button implements IWidget{
         this.button = button;
         builder.addButton(this);
         this.handler = handler;
+        if (this.button instanceof InternalButton) {
+            ((InternalButton) this.button).clicker = this::onClickInternal;
+        }
     }
 
     @Override
@@ -150,8 +153,6 @@ public class Button implements IWidget{
     }
 
     public boolean isHovering() {
-//        return button.isMouseOver();
-        return false;
-        //TODO
+        return button.isMouseOver(Minecraft.getInstance().mouseHelper.getMouseX(), Minecraft.getInstance().mouseHelper.getMouseY());
     }
 }

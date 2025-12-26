@@ -49,7 +49,7 @@ public class CheckBox extends Button {
         super.onClickInternal(hand);
     }
 
-    public void setChecked() {
-        ((CheckboxButton)button).onPress();
+    public void setChecked(boolean val) {
+        ((CheckboxButton) button).checked = val;
     }
 }

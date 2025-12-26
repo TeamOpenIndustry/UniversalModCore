@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderGlobal {
     @Inject(method = "updateCameraAndRender",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldRenderer;checkMatrixStack(Lcom/mojang/blaze3d/matrix/MatrixStack;)V", ordinal = 1))
-    public void injectRenderGLobal(MatrixStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
+    public void injectRenderGlobal(MatrixStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
                                    ActiveRenderInfo info, GameRenderer gameRenderer, LightTexture light,
                                    Matrix4f matrix, CallbackInfo ci) {
         Vec3d pos = GlobalRender.getCameraPos(partialTicks);
