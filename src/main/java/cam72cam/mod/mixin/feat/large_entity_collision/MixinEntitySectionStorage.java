@@ -31,7 +31,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     @Final
     private Long2ObjectMap<EntitySection<T>> sections;
 
-    @Inject(method = "forEachAccessibleSection", at = @At("HEAD"))
+    @Inject(method = "forEachAccessibleNonEmptySection", at = @At("HEAD"))
     public void init(AABB p_156878_, Consumer<EntitySection<T>> p_156879_, CallbackInfo ci,
                      @Share("level") LocalRef<WorldEntityTracker> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef) {
         //Try to get corresponding level of the search
@@ -44,7 +44,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
         });
     }
 
-    @Inject(method = "forEachAccessibleSection", at = @At(value = "INVOKE_ASSIGN", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;",
+    @Inject(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE_ASSIGN", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;",
             shift = At.Shift.BY, by = 2), remap = false) //To capture the EntitySection
     public void capture(AABB p_156878_, Consumer<EntitySection<T>> p_156879_, CallbackInfo ci,
                         @Share("level")LocalRef<WorldEntityTracker> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef,
@@ -57,7 +57,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
         }
     }
 
-    @Inject(method = "forEachAccessibleSection", at = @At("RETURN"))
+    @Inject(method = "forEachAccessibleNonEmptySection", at = @At("RETURN"))
     public void finish(AABB p_156878_, Consumer<EntitySection<T>> p_156879_, CallbackInfo ci,
                        @Share("level")LocalRef<WorldEntityTracker> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef) {
         if (levelLocalRef.get() != null) {

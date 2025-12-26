@@ -23,7 +23,7 @@ public class ItemEntity extends Entity {
     }
 
     public void setContent(ItemStack stack) {
-        internal.setItem(stack.internal);
+        internal.setItem(stack.internal());
     }
 
     /**

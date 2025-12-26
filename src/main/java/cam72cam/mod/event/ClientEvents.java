@@ -105,7 +105,7 @@ public class ClientEvents {
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
+//    public static final Event<Consumer<RenderLevelLastEvent>> OPTIFINE_SUCKS = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -238,10 +238,10 @@ public class ClientEvents {
             SOUND_LOAD.execute(x -> x.accept(event));
         }
 
-        @SubscribeEvent
-        public static void optifineSucksEvent(RenderLevelLastEvent event) {
-            OPTIFINE_SUCKS.execute(x -> x.accept(event));
-        }
+//        @SubscribeEvent
+//        public static void optifineSucksEvent(RenderLevelLastEvent event) {
+//            OPTIFINE_SUCKS.execute(x -> x.accept(event));
+//        }
 
         static boolean hasHacked = false;
         @SubscribeEvent
@@ -290,7 +290,7 @@ public class ClientEvents {
         public static void registerVanillaShader(RegisterShadersEvent event) {
             try {
                 event.registerShader(new ShaderInstance(event.getResourceManager(),
-                                                        new ResourceLocation("umc_core"),
+                                                        ResourceLocation.parse("umc_core"),
                                                         DefaultVertexFormat.NEW_ENTITY), instance -> {
                     RenderContext.UMC_CORE = instance;
                 });

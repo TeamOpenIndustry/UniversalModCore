@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import java.util.function.Consumer;
 
 /** Standard slider */
-public abstract class Slider extends Button {
+public class Slider extends Button {
     /** Internal wrapper to add onSlider Hook */
     private static class InternalForgeSlider extends ForgeSlider {
         private Runnable clicker = () -> {};
@@ -44,7 +44,7 @@ public abstract class Slider extends Button {
     public Slider(IScreenBuilder builder, int x, int y, int width, int height, String text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
         super(builder,
               new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height,
-                                                                 new TextComponent(text), new TextComponent(""), min, max, start, doublePrecision, true, null),
+                                      new TextComponent(text), new TextComponent(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
               ((hand, button1) -> handler.accept((Slider) button1)));
         ((InternalForgeSlider)this.button).clicker = this::onSlider;
         ((InternalForgeSlider)this.button).setter = this::getSliderText;
@@ -54,7 +54,8 @@ public abstract class Slider extends Button {
     @Deprecated
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
         super(builder,
-              new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20, new TextComponent(text), new TextComponent(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
+              new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20,
+                                      new TextComponent(text), new TextComponent(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
               ((hand, button1) -> {}));
         ((InternalForgeSlider)this.button).clicker = this::onSlider;
         ((InternalForgeSlider)this.button).setter = this::getSliderText;
