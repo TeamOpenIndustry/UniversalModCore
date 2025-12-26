@@ -99,6 +99,7 @@ public class VBO {
 
     public class Binding implements With {
         private final With restore;
+        private final RenderContext.Stage stage;
 
         public boolean isLoaded() {
             return vbo != -1;
@@ -106,6 +107,7 @@ public class VBO {
 
         protected Binding(RenderState state, boolean wait) {
             lastUsed = System.currentTimeMillis();
+            stage = state.stage;
 
             if (!isLoaded()) {
                 init();
@@ -168,7 +170,7 @@ public class VBO {
             if (!isLoaded()) {
                 return () -> {};
             }
-            RenderState state = new RenderState();
+            RenderState state = new RenderState().stage(stage);
             mod.accept(state);
             return RenderContext.apply(state);
         }
