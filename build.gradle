@@ -106,6 +106,7 @@ mixin {
 }
 
 jar {
+    classifier = 'slim'
     manifest {
         attributes (
                 'FMLAT': 'UniversalModCore_at.cfg',
@@ -165,6 +166,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact shadowJar
             artifact sourceJar
             artifactId archivesBaseName
         }
