@@ -1,13 +1,13 @@
 package cam72cam.mod.config;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.screen.*;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -28,12 +28,9 @@ public class ConfigGui implements IScreen {
             int finalI = i;
             ConfigFile.ConfigInstance ci = new ConfigFile.ConfigInstance(type);
             ci.read();
-            widgets.add(screen -> new Button(screen, 0 - 100,  finalI * 20, 200, 20, type.getSimpleName()) {
-                @Override
-                public void onClick(Player.Hand hand) {
-                    Minecraft.getInstance().setScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci), () -> true));
-                }
-            });
+            widgets.add(screen -> new Button(screen, 0 - 100,  finalI * 20, 200, 20, type.getSimpleName(), (hand, button) -> {
+                Minecraft.getInstance().setScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, ci.pc, ci), () -> true));
+            }));
             i++;
         }
     }
@@ -49,18 +46,15 @@ public class ConfigGui implements IScreen {
         };
 
 
-        int i = -1;
+        final int[] i = {-1};
         for (ConfigFile.Property property : pc.properties) {
-            int finalI = i+1;
-            int offsetI = ((i+1) % 8)-1;
+            int finalI = i[0] +1;
+            int offsetI = ((i[0] +1) % 8)-1;
             if (property instanceof ConfigFile.PropertyClass) {
                 widgets.add(screen -> {
-                    Button btn = new Button(screen, 0 - 100, offsetI * 20, 200, 20, property.getName()) {
-                        @Override
-                        public void onClick(Player.Hand hand) {
-                            Minecraft.getInstance().setScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci), () -> true));
-                        }
-                    };
+                    Button btn = new Button(screen, 0 - 100, offsetI * 20, 200, 20,
+                                            property.getName(),
+                                            (hand, button) -> Minecraft.getInstance().setScreen(new ScreenBuilder(new ConfigGui(ConfigGui.this, (ConfigFile.PropertyClass) property, ci), () -> true)));
                     onPage.accept(finalI, btn::setVisible);
                     return btn;
                 });
@@ -90,40 +84,34 @@ public class ConfigGui implements IScreen {
                     } else if (prop.field.get(null) instanceof Boolean) {
                         Boolean val = prop.field.getBoolean(null);
                         widgets.add(screen -> {
-                            Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString()) {
-                                @Override
-                                public void onClick(Player.Hand hand) {
-                                    Boolean value = !Boolean.parseBoolean(this.getText());
-                                    this.setText(value.toString());
-                                    try {
-                                        prop.field.setBoolean(null, value);
-                                        ci.write();
-                                    } catch (IllegalAccessException e) {
-                                        e.printStackTrace();
-                                    }
+                            Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString(),(hand, button) -> {
+                                Boolean value = !Boolean.parseBoolean(button.getText());
+                                button.setText(value.toString());
+                                try {
+                                    prop.field.setBoolean(null, value);
+                                    ci.write();
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
                                 }
-                            };
+                            });
                             onPage.accept(finalI, btn::setVisible);
                             return btn;
                         });
                     } else if (prop.field.getType().isEnum()) {
                         Enum val = (Enum) prop.field.get(null);
                         Enum[] arry = (Enum[]) prop.field.getType().getEnumConstants();
+                        final Enum[] curr = {val};
                         widgets.add(screen -> {
-                            Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString()) {
-                                Enum curr = val;
-                                @Override
-                                public void onClick(Player.Hand hand) {
-                                    curr = arry[(curr.ordinal()+1) % arry.length];
-                                    this.setText(curr.toString());
-                                    try {
-                                        prop.field.set(null, curr);
-                                        ci.write();
-                                    } catch (IllegalAccessException e) {
-                                        e.printStackTrace();
-                                    }
+                            Button btn = new Button(screen, -1, offsetI * 20, 200, 20, val.toString(), (hand, button) -> {
+                                curr[0] = arry[(curr[0].ordinal()+1) % arry.length];
+                                button.setText(curr[0].toString());
+                                try {
+                                    prop.field.set(null, curr[0]);
+                                    ci.write();
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
                                 }
-                            };
+                            });
                             onPage.accept(finalI, btn::setVisible);
                             return btn;
                         });
@@ -145,18 +133,16 @@ public class ConfigGui implements IScreen {
                                 onPage.accept(finalI, tf::setVisible);
                                 return tf;
                             } else {
-                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, true) {
-                                    @Override
-                                    public void onSlider() {
-                                        setText(String.format("%.2f", getValue()));
-                                        try {
-                                            prop.field.set(null, getValue());
-                                            ci.write();
-                                        } catch (IllegalAccessException | NumberFormatException e) {
-                                            ModCore.catching(e);
-                                        }
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(),
+                                                      val, true, slider -> {
+                                    slider.setText(String.format("%.2f", slider.getValue()));
+                                    try {
+                                        prop.field.set(null, slider.getValue());
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        ModCore.catching(e);
                                     }
-                                };
+                                });
                                 s.onSlider();
                                 onPage.accept(finalI, s::setVisible);
                                 return s;
@@ -180,18 +166,16 @@ public class ConfigGui implements IScreen {
                                 onPage.accept(finalI, tf::setVisible);
                                 return tf;
                             } else {
-                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, false) {
-                                    @Override
-                                    public void onSlider() {
-                                        setText(String.format("%.2f", getValue()));
-                                        try {
-                                            prop.field.set(null, (float)getValue());
-                                            ci.write();
-                                        } catch (IllegalAccessException | NumberFormatException e) {
-                                            ModCore.catching(e);
-                                        }
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(),
+                                                      val, false, slider -> {
+                                    slider.setText(String.format("%.2f", slider.getValue()));
+                                    try {
+                                        prop.field.set(null, (float)slider.getValue());
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        ModCore.catching(e);
                                     }
-                                };
+                                });
                                 s.onSlider();
                                 onPage.accept(finalI, s::setVisible);
                                 return s;
@@ -215,18 +199,16 @@ public class ConfigGui implements IScreen {
                                 onPage.accept(finalI, tf::setVisible);
                                 return tf;
                             } else {
-                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(), val, true) {
-                                    @Override
-                                    public void onSlider() {
-                                        setText(getValueInt() + "");
-                                        try {
-                                            prop.field.set(null, getValueInt());
-                                            ci.write();
-                                        } catch (IllegalAccessException | NumberFormatException e) {
-                                            ModCore.catching(e);
-                                        }
+                                Slider s = new Slider(screen, 1, offsetI * 20 + 1, "", range.min(), range.max(),
+                                                      val, true, slider -> {
+                                    slider.setText(slider.getValueInt() + "");
+                                    try {
+                                        prop.field.set(null, slider.getValueInt());
+                                        ci.write();
+                                    } catch (IllegalAccessException | NumberFormatException e) {
+                                        ModCore.catching(e);
                                     }
-                                };
+                                });
                                 s.onSlider();
                                 onPage.accept(finalI, s::setVisible);
                                 return s;
@@ -240,35 +222,26 @@ public class ConfigGui implements IScreen {
                     continue;
                 }
                 widgets.add(screen -> {
-                    Button btn = new Button(screen, -200, offsetI * 20, 200, 20, property.getName()) {
-                        @Override
-                        public void onClick(Player.Hand hand) {
-
-                        }
-                    };
+                    Button btn = new Button(screen, -200, offsetI * 20, 200, 20, property.getName(), (hand, button) -> {});
                     btn.setEnabled(false);
+                    btn.setTooltip(Collections.singletonList(property.getComment()));
                     onPage.accept(finalI, btn::setVisible);
                     return btn;
                 });
             }
 
-            i++;
+            i[0]++;
         }
 
-        int pages = (int) Math.ceil((i+1) / 8.0f);
-        widgets.add(screen -> new Button(screen, 0 - 100,  150, 200, 20, "Page: 1/" + pages) {
-            int i = 0;
-
-            @Override
-            public void onClick(Player.Hand hand) {
-                i++;
-                if (i >= pages) {
-                    i = 0;
-                }
-                this.setText(String.format("Page: %s/%s", i+1, pages));
-                pageEvent.forEach(x -> x.accept(i));
+        int pages = (int) Math.ceil((i[0] +1) / 8.0f);
+        widgets.add(screen -> new Button(screen, 0 - 100,  150, 200, 20, "Page: 1/" + pages, (hand, button) -> {
+            i[0]++;
+            if (i[0] >= pages) {
+                i[0] = 0;
             }
-        });
+            button.setText(String.format("Page: %s/%s", i[0] +1, pages));
+            pageEvent.forEach(x -> x.accept(i[0]));
+        }));
     }
 
     @Override

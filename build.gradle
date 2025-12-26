@@ -1,13 +1,14 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -16,7 +17,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
-
+apply plugin: 'org.spongepowered.mixin'
 
 configurations {
     shade
@@ -28,7 +29,9 @@ java {
 }
 
 repositories {
-    mavenCentral()
+    maven {
+        url "https://cursemaven.com"
+    }
 }
 
 String umcVersion = "1.2.2"
@@ -43,7 +46,7 @@ version = "1.16.5-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
@@ -60,6 +63,10 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
+            //Enable mixin-ed dependency in deobfuscated environment
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -76,6 +83,10 @@ minecraft {
         }
 
         server {
+            //Enable mixin-ed dependency in deobfuscated environment
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -114,6 +125,10 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+repositories {
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.34'
     // you may put jars on which you depend on in ./libs
@@ -136,11 +151,24 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
+    annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
 
     shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    testImplementation ('junit:junit:4.13')
+    testImplementation ('junit:junit:4.13.1')
 
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
+}
+
+mixin {
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    config 'mixins.universalmodcore.json'
+
+    //Dev environment setup
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
 }
 
 jar {
@@ -153,15 +181,23 @@ jar {
             "Implementation-Title": project.name,
             "Implementation-Version": umcVersion,
             "Implementation-Vendor" :"",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
+
+jar.finalizedBy('reobfJar')
 
 shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.relocated.javax.vecmath"
+    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
+    //Don't do this
+//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
     finalizedBy 'reobfShadowJar'
 }
 

@@ -11,77 +11,26 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.settings.PointOfView;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 /** Global Render Registry and helper functions */
 public class GlobalRender {
     // Fire these off every tick
-    private static List<RenderFunction> renderFuncs = new ArrayList<>();
-
-    // This is required before new GRH()
-    static TileEntityType<GlobalRenderHelper> grhtype = new TileEntityType<GlobalRenderHelper>(GlobalRenderHelper::new, new HashSet<>(), null) {
-        @Override
-        public boolean isValid(Block block_1) {
-            return true;
-        }
-    };
-
-    // Internal hack
-    private static List<TileEntity> grhList = Collections.singletonList(new GlobalRenderHelper());
+    private static final List<RenderFunction> renderFuncs = new ArrayList<>();
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
-        // Beacon like hack for always running a single global render during the TE render phase
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            try {
-                ClientRegistry.bindTileEntityRenderer(grhtype, (ted) -> new TileEntityRenderer<GlobalRenderHelper>(ted) {
-                    @Override
-                    public void render(GlobalRenderHelper te, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer iRenderTypeBuffer, int i, int i1) {
-                        // TODO 1.15+ do we need to set lightmap coords here?
-                        BlockPos off = te.getBlockPos();
-                        renderFuncs.forEach(r -> r.render(new RenderState(matrixStack).translate(-off.getX(), -off.getY(), -off.getZ()), partialTicks));
-                    }
-
-                    @Override
-                    public boolean shouldRenderOffScreen(GlobalRenderHelper te) {
-                        return true;
-                    }
-                });
-            } catch (ExceptionInInitializerError ex) {
-                // data generator pass
-                System.out.println("Shake hands with danger");
-            }
-        });
-        ClientEvents.TICK.subscribe(() -> {
-            Minecraft.getInstance().levelRenderer.updateGlobalBlockEntities(grhList, grhList);
-            if (Minecraft.getInstance().player != null) {  // May be able to get away with running this every N ticks?
-                grhList.get(0).setLevelAndPosition(Minecraft.getInstance().player.level, new BlockPos(Minecraft.getInstance().player.getEyePosition(0)));
-            }
-        });
-
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getInstance().options.renderDebug && GPUInfo.hasGPUInfo()) {
@@ -106,7 +55,7 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.render(new RenderState(), event.getPartialTicks());
+                func.render(new RenderState().stage(RenderContext.Stage.GUI), event.getPartialTicks());
             }
         });
     }
@@ -117,7 +66,8 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(), new RenderState(event.getMatrix()), event.getPartialTicks());
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(),
+                              new RenderState(event.getMatrix()).stage(RenderContext.Stage.OVERLAY), event.getPartialTicks());
                 }
             }
         });
@@ -163,7 +113,8 @@ public class GlobalRender {
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F);
+                .scale(-0.025F, -0.025F, 0.025F)
+                .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         Matrix4f matrix4f = state.model_view().convertToMoj();
         try (With ctx = RenderContext.apply(new RenderState().lighting(false).depth_test(false))) {
@@ -179,7 +130,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str) / 2, 0, color);
@@ -192,6 +143,7 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
         state.color(1,1,1,1).alpha_test(true);
+        state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, 0, 0, color);
@@ -203,7 +155,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getInstance().font;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.draw(new MatrixStack(), str, -fontRendererIn.width(str), 0, color);
@@ -224,40 +176,8 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
-    public static class GlobalRenderHelper extends TileEntity {
-
-        public GlobalRenderHelper() {
-            super(grhtype);
-        }
-
-        @Override
-        public boolean hasLevel() {
-            return true;
-        }
-
-        @Nullable
-        @Override
-        public World getLevel() {
-            return Minecraft.getInstance().level;
-        }
-
-
-
-        public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
-            return INFINITE_EXTENT_AABB;
-        }
-
-        @Override
-        public double getViewDistance() {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        public double getDistanceSq(double x, double y, double z) {
-            return 1;
-        }
-
-        public BlockState getBlockState() {
-            return Blocks.AIR.defaultBlockState();
-        }
+    /** Internal, don't use*/
+    public static void renderGlobalFuncs(RenderState state, float partialTicks) {
+        renderFuncs.forEach(r -> r.render(state, partialTicks));
     }
 }

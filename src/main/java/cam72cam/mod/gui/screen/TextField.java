@@ -8,22 +8,64 @@ import net.minecraft.util.text.StringTextComponent;
 import java.util.function.Predicate;
 
 /** Base text field */
-public class TextField extends Button {
+public class TextField implements IWidget{
+    protected final TextFieldWidget textfield;
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
-        super(
-                builder,
-                new TextFieldWidget(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, new StringTextComponent(""))
-        );
+        this(builder,
+              new TextFieldWidget(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height,
+                                  new StringTextComponent("")));
+    }
+
+    /** Internal, can be overridden to support custom GuiTextFields */
+    protected TextField(IScreenBuilder builder, TextFieldWidget internal) {
+        this.textfield = internal;
+        builder.addTextField(this);
     }
 
     TextFieldWidget internal() {
-        return (TextFieldWidget) button;
+        return textfield;
+    }
+
+    @Override
+    public void setText(String s) {
+        textfield.setValue(s);
+    }
+
+    @Override
+    public String getText() {
+        return textfield.getValue();
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        textfield.setVisible(visible);
+        textfield.setEditable(visible);
+    }
+
+    @Deprecated
+    public void setVisible(Boolean visible) {
+        this.setVisible(visible.booleanValue());
+    }
+
+    @Override
+    public boolean isVisible() {
+        return textfield.isVisible();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        textfield.setEditable(enabled);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return textfield.active;
     }
 
     /** Validator that can block a string from being entered */
     public void setValidator(Predicate<String> filter) {
-        internal().setFilter(filter::test);
+        internal().setFilter(filter);
     }
 
     /** Move cursor to this text field */
@@ -31,24 +73,7 @@ public class TextField extends Button {
         internal().setFocus(b);
     }
 
-    /** Current text */
-    public String getText() {
-        return internal().getValue();
-    }
-
-    /** Overwrite current text */
-    public void setText(String s) {
-        internal().setValue(s);
-    }
-
-    /** Change visibility */
-    public void setVisible(Boolean visible) {
-        internal().setVisible(visible);
-        internal().setEditable(visible);
-    }
-
-    @Override
-    public void onClick(Player.Hand hand) {
-
+    /** Called every screen draw */
+    public void onUpdate() {
     }
 }

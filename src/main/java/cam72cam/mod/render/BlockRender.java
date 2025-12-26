@@ -8,14 +8,13 @@ import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
+import cam72cam.mod.render.opengl.RenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import cam72cam.mod.render.opengl.RenderState;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.model.BakedQuad;
@@ -30,7 +29,6 @@ import net.minecraft.world.biome.BiomeColors;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -106,7 +104,7 @@ public class BlockRender {
 
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
+                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f).stage(RenderContext.Stage.BLOCK), partialTicks);
 
                     RenderType.cutoutMipped().clearRenderState();
                 }
@@ -116,7 +114,6 @@ public class BlockRender {
                 }
             });
         });
-
     }
 
     // TODO version for non TE blocks
