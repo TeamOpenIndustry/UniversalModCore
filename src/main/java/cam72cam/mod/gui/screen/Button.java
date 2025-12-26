@@ -154,6 +154,6 @@ public class Button implements IWidget{
     }
 
     public boolean isHovering() {
-        return button.isMouseOver(Minecraft.getInstance().mouseHelper.getMouseX(), Minecraft.getInstance().mouseHelper.getMouseY());
+        return button.isMouseOver(Minecraft.getInstance().mouseHandler.xpos(), Minecraft.getInstance().mouseHandler.ypos());
     }
 }

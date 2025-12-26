@@ -51,6 +51,6 @@ public class CheckBox extends Button {
     }
 
     public void setChecked(boolean val) {
-        ((CheckboxButton) button).checked = val;
+        ((CheckboxButton) button).selected = val;
     }
 }
