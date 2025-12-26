@@ -2,9 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.OptiFine;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
@@ -19,6 +17,9 @@ import java.util.List;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    //Modified from rendertype_entity_cutout, fix model normal
+    public static ShaderInstance UMC_CORE;
+
     public static float lastLightX;
     public static float lastLightY;
 
@@ -112,7 +113,6 @@ public class RenderContext {
         }
 
         if(state.depth_mask != null) {
-            //TODO overlapping cloud
             RenderSystem.depthMask(state.depth_mask);
             restore.add(() -> RenderSystem.depthMask(true));
         }
@@ -135,10 +135,6 @@ public class RenderContext {
             restore.add(RenderSystem::disableScissor);
         }
 
-        //TODO Better lighting
-        Matrix4f matrix4f = new Matrix4f();
-        matrix4f.setIdentity();
-        Lighting.setupLevel(matrix4f);
         applyShaderFields(shader);
 
         shader.apply();

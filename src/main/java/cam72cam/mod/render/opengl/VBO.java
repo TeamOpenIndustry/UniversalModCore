@@ -161,8 +161,17 @@ public class VBO {
             } else {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
-
-            ShaderInstance shader = GameRenderer.getRendertypeEntityCutoutShader();
+            ShaderInstance shader;
+            if (state.stage != null) {
+                shader = switch (state.stage) {
+                    case BLOCK -> GameRenderer.getRendertypeCutoutShader();
+                    case GUI -> GameRenderer.getBlockShader();
+                    //TODO Only when shader pack not enabled
+                    default -> RenderContext.UMC_CORE;
+                };
+            } else {
+                shader = GameRenderer.getRendertypeEntityCutoutShader();
+            }
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -198,9 +207,6 @@ public class VBO {
                                     GL32.glDisableVertexAttribArray(i);
                                     GL32.glVertexAttribI2i(i, 0, 10);
                                 } else if (entry.getKey().equals("UV2")) {
-//                                    GL32.glEnableVertexAttribArray(i);
-//                                    GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.lightmapOffset * Float.BYTES);
-
                                     GL32.glDisableVertexAttribArray(i);
                                     int x = 255;
                                     int y = 255;
