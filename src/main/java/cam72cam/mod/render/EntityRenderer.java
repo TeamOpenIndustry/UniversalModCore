@@ -24,6 +24,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.LightType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -156,6 +157,9 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
         state.stage(RenderContext.Stage.ENTITY);
+        //Set up our own light state
+        RenderContext.lastLightX = j / 240f;
+        RenderContext.lastLightY = k / 240f;
 
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
