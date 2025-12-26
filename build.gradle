@@ -115,21 +115,6 @@ jar {
                 "MixinConfigs": "mixins.universalmodcore.json"
         )
     }
-
-    def serviceDir = file("$buildDir/tmp/services_cleanup/META-INF/services")
-    serviceDir.deleteDir()
-    serviceDir.mkdirs()
-
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
-        }
-        zipTree(dep).matching {
-            include 'META-INF/services/*'
-        }.each { serviceFile ->
-            new File(serviceDir, serviceFile.name) << serviceFile.getText("UTF-8") << '\n'
-        }
-    }
 }
 
 jar.finalizedBy('reobfJar')
