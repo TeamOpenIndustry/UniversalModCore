@@ -3,22 +3,40 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import net.minecraft.network.chat.TextComponent;
 
-/** Standard slider */
-public abstract class Slider extends Button {
+import java.util.function.Consumer;
 
+/** Standard slider */
+public class Slider extends Button {
+    public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
+        this(builder, x, y, 150, 20, text, min, max, start, doublePrecision, handler);
+    }
+
+    public Slider(IScreenBuilder builder, int x, int y, int width, int height, String text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
+        super(builder,
+              new net.minecraftforge.fmlclient.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height,
+                            new TextComponent(text), new TextComponent(""), min, max, start, doublePrecision, true, null),
+              ((hand, button1) -> handler.accept((Slider) button1)));
+        ((net.minecraftforge.fmlclient.gui.widget.Slider) this.button).parent = slider -> Slider.this.onSlider();
+    }
+
+
+    @Deprecated
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-        super(builder, new net.minecraftforge.fmlclient.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new TextComponent(text), min, max, start, b -> {}, null));
+        super(builder,
+              new net.minecraftforge.fmlclient.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new TextComponent(text), min, max, start, b -> {}, null),
+              ((hand, button1) -> {}));
         ((net.minecraftforge.fmlclient.gui.widget.Slider) this.button).showDecimal = doublePrecision;
         ((net.minecraftforge.fmlclient.gui.widget.Slider) this.button).parent = slider -> Slider.this.onSlider();
     }
 
-    @Override
-    public void onClick(Player.Hand hand) {
-
+    /** Called when the slider value is changed */
+    public void onSlider() {
+        this.handler.accept(Player.Hand.PRIMARY, this);
     }
 
-    /** Called when the slider value is changed */
-    public abstract void onSlider();
+    public void setValue(double value) {
+        ((net.minecraftforge.fmlclient.gui.widget.Slider)button).setValue(value);
+    }
 
     public int getValueInt() {
         return ((net.minecraftforge.fmlclient.gui.widget.Slider) button).getValueInt();

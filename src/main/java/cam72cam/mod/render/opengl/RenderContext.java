@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.OptiFine;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
@@ -18,6 +19,9 @@ import java.util.List;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    public static float lastLightX;
+    public static float lastLightY;
+
     private RenderContext() {
     }
 
@@ -203,5 +207,22 @@ public class RenderContext {
         if (err != 0) {
             ModCore.error("We broke something: %s", err);
         }
+    }
+
+    public enum Stage {
+        BLOCK,
+
+        ENTITY,
+
+        ITEM_SPRITE_TEX,
+        ITEM_IN_WORLD,
+        ITEM_IN_GUI,
+
+        GUI,
+
+        OVERLAY,      //Mouseover...
+        OVERLAY_TEXT, //Name plates...
+
+        NONE
     }
 }

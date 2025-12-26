@@ -179,6 +179,10 @@ public class OBJModel {
         return groups.keySet();
     }
 
+    public FaceAccessor getFaceAccessor() {
+        return new FaceAccessor(this);
+    }
+
     public Vec3d minOfGroup(Iterable<String> groupNames) {
         Vec3d min = null;
         for (String group : groupNames) {

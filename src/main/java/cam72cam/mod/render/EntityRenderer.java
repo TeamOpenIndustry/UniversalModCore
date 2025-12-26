@@ -5,6 +5,8 @@ import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -13,6 +15,19 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.culling.ClippingHelper;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.LightType;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -130,14 +145,16 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderType.cutout().setupRenderState();
 
-        //TODO bork 1.17.1? RenderHelper.turnBackOn();
-
         int j = i % 65536;
         int k = i / 65536;
         RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
+        state.stage(RenderContext.Stage.ENTITY);
+        //Set up our own light state
+        RenderContext.lastLightX = j / 240f;
+        RenderContext.lastLightY = k / 240f;
 
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);

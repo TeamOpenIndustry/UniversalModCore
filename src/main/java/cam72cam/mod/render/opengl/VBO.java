@@ -118,6 +118,8 @@ public class VBO {
 
 
         protected Binding(RenderState state, boolean wait) {
+            lastUsed = System.currentTimeMillis();
+
             if (!isLoaded()) {
                 init();
             }

@@ -14,6 +14,7 @@ import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
@@ -21,14 +22,25 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.fmlclient.gui.GuiUtils;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
+
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("minecraft", "textures/gui/container/generic_54.png");
+    /**
+     * Assuming that we're on a single-thread model
+     * Internal function, don't use
+     */
+    private static final Deque<Map<String, BiConsumer<Integer, Integer>>> delayedRenderFunctions = new ArrayDeque<>();
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
@@ -37,6 +49,7 @@ public class GUIHelpers {
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
                         .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
+                        .stage(RenderContext.Stage.GUI)
         )) {
             GuiComponent.fill(new PoseStack(), x, y, x + width, y + height, color);
         }
@@ -122,24 +135,7 @@ public class GUIHelpers {
         PoseStack stack = new PoseStack();
         matrix.m23 = 10;//Z transform
         stack.setIdentity();
-        stack.mulPoseMatrix(new Matrix4f(new float[]{
-                (float) matrix.m00,
-                (float) matrix.m01,
-                (float) matrix.m02,
-                (float) matrix.m03,
-                (float) matrix.m10,
-                (float) matrix.m11,
-                (float) matrix.m12,
-                (float) matrix.m13,
-                (float) matrix.m20,
-                (float) matrix.m21,
-                (float) matrix.m22,
-                (float) matrix.m23,
-                (float) matrix.m30,
-                (float) matrix.m31,
-                (float) matrix.m32,
-                (float) matrix.m33
-        }));
+        stack.mulPoseMatrix(matrix.convertToMoj());
         Minecraft.getInstance().font.draw(stack, text, x, y, color);
     }
 
@@ -153,24 +149,7 @@ public class GUIHelpers {
         PoseStack stack = new PoseStack();
         matrix.m23 = 10;//Z transform
         stack.setIdentity();
-        stack.mulPoseMatrix(new Matrix4f(new float[]{
-                (float) matrix.m00,
-                (float) matrix.m01,
-                (float) matrix.m02,
-                (float) matrix.m03,
-                (float) matrix.m10,
-                (float) matrix.m11,
-                (float) matrix.m12,
-                (float) matrix.m13,
-                (float) matrix.m20,
-                (float) matrix.m21,
-                (float) matrix.m22,
-                (float) matrix.m23,
-                (float) matrix.m30,
-                (float) matrix.m31,
-                (float) matrix.m32,
-                (float) matrix.m33
-        }));
+        stack.mulPoseMatrix(matrix.convertToMoj());
         Minecraft.getInstance().font.draw(stack, text, x - Minecraft.getInstance().font.width(text) / 2f, y, color);
     }
 
@@ -200,6 +179,9 @@ public class GUIHelpers {
                 .alpha_test(false)
                 .blend(new BlendMode(GL32.GL_SRC_ALPHA, GL32.GL_ONE_MINUS_SRC_ALPHA))
                 .rescale_normal(true);
+        //If it's handled by us then it'll be set to ITEM_IN_GUI later
+        //Otherwise we don't care
+//              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
@@ -231,6 +213,40 @@ public class GUIHelpers {
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
                 MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
             }
+        }
+    }
+
+    /**
+     * Draw a Minecraft-style tooltip at cursor's pos
+     * Only use in IScreen.draw()!
+     * */
+    public static void drawTooltipAtCursor(List<String> content) {
+        if (delayedRenderFunctions.peek() != null) {
+            //Use map to ensure only 1 tooltip is drawn
+            delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
+                int width = getScreenWidth();
+                int height = getScreenHeight();
+                List<FormattedText> properties = content.stream()
+                                                        .map(TextComponent::new)
+                                                        .collect(Collectors.toList());
+                GuiUtils.drawHoveringText(new PoseStack(), properties, x, y, width, height, -1, Minecraft.getInstance().font);
+            });
+        } else {
+            ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
+        }
+    }
+
+    /** Internal */
+    public static void initDelayed() {
+        delayedRenderFunctions.push(new Object2ObjectArrayMap<>(4));
+    }
+
+    /** Internal */
+    public static void runDelayed(int mouseX, int mouseY) {
+        if (!delayedRenderFunctions.isEmpty()) {
+            delayedRenderFunctions.pop().values().forEach(consumer -> consumer.accept(mouseX, mouseY));
+        } else {
+            ModCore.error("Trying to call runDelayed without initialized state!");
         }
     }
 }

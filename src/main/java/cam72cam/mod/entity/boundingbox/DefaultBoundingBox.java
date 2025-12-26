@@ -1,12 +1,17 @@
 package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+
+import java.util.Collections;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
     protected final AABB internal;
     private Vec3d minCached;
+    private Vec3d centerCached;
     private Vec3d maxCached;
 
     public DefaultBoundingBox(AABB internal) {
@@ -19,6 +24,14 @@ public class DefaultBoundingBox implements IBoundingBox {
             minCached = new Vec3d(internal.minX, internal.minY, internal.minZ);
         }
         return minCached;
+    }
+
+    @Override
+    public Vec3d center() {
+        if (centerCached == null) {
+            centerCached = new Vec3d(internal.getCenter());
+        }
+        return centerCached;
     }
 
     @Override
@@ -67,6 +80,24 @@ public class DefaultBoundingBox implements IBoundingBox {
     @Override
     public boolean intersects(Vec3d min, Vec3d max) {
         return internal.intersects(min.x, min.y, min.z, max.x, max.y, max.z);
+    }
+
+    @Override
+    public IBoundingBox expandToFit(IBoundingBox other) {
+        Vec3d min = min();
+        Vec3d max = max();
+
+        min = min.min(other.min());
+        max = max.max(other.max());
+
+        return IBoundingBox.from(min, max);
+    }
+
+    @Override
+    public boolean intersectsSegment(Vec3d startVec, Vec3d endVec) {
+        BlockHitResult result = AABB.clip(Collections.singleton(internal),
+                                          startVec.internal(), endVec.internal(), BlockPos.ZERO);
+        return result != null;
     }
 
     @Override
