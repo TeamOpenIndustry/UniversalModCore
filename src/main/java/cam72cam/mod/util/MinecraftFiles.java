@@ -4,6 +4,8 @@ import cam72cam.mod.world.World;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class MinecraftFiles {
     /** Get base game (.minecraft) directory */
@@ -13,7 +15,11 @@ public class MinecraftFiles {
 
     /** Get config directory */
     public static File getConfigDir() {
-        return FMLPaths.CONFIGDIR.get().toFile();
+        Path path = FMLPaths.CONFIGDIR.get();
+        if (path == null) {
+            path = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
+        }
+        return path.toFile();
     }
 
     /**
