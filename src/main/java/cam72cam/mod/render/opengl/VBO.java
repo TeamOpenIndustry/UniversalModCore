@@ -6,12 +6,15 @@ import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,16 @@ public class VBO {
                         vbo.free();
                     }
                 }
+            }
+        });
+        ClientEvents.REGISTER_SHADER.subscribe(event -> {
+            try {
+                event.registerShader(new ShaderInstance(event.getResourceManager(),
+                                                        new ResourceLocation("umc_core"),
+                                                        DefaultVertexFormat.NEW_ENTITY),
+                                     instance -> RenderContext.UMC_CORE = instance);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         });
     }
