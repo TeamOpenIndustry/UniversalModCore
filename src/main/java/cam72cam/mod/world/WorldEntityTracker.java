@@ -33,7 +33,7 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.getPosition());
+        long chunk = ChunkPos.asLong(entity.blockPosition());
         int x = ChunkPos.x(chunk);
         int y = ChunkPos.y(chunk);
         int z = ChunkPos.z(chunk);
@@ -60,7 +60,7 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        BlockPos pos = entity.getPosition();
+        BlockPos pos = entity.blockPosition();
         long sec = ChunkPos.asLong(pos);
 
         lock.writeLock().lock();
@@ -93,7 +93,7 @@ public class WorldEntityTracker {
                 }
             }
 
-            long chunk = ChunkPos.asLong(entity.getPosition());
+            long chunk = ChunkPos.asLong(entity.blockPosition());
             int x = ChunkPos.x(chunk);
             int y = ChunkPos.y(chunk);
             int z = ChunkPos.z(chunk);

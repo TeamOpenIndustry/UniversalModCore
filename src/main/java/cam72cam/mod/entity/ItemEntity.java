@@ -36,12 +36,12 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getOwnerId() == null || this.internal.getEntityWorld().getPlayerByUuid(internal.getOwnerId()) == null) {
+        if (internal.getOwner() == null || this.internal.level.getPlayerByUUID(internal.getOwner()) == null) {
             return null;
         }
 
-        return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld().getPlayerByUuid(internal.getOwnerId()))
+        return World.get(this.internal.level)
+                    .getEntity(this.internal.level.getPlayerByUUID(internal.getOwner()))
                     .asPlayer();
     }
 
@@ -52,7 +52,7 @@ public class ItemEntity extends Entity {
      */
     public void setOwner(Player player) {
         if (isValid()) {
-            internal.setOwnerId(player.internal.getUniqueID());
+            internal.setOwner(player.internal.getUUID());
         }
     }
 
@@ -66,11 +66,11 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getThrowerId() == null || this.internal.getEntityWorld().getPlayerByUuid(internal.getThrowerId()) == null) {
+        if (internal.getThrower() == null || this.internal.level.getPlayerByUUID(internal.getThrower()) == null) {
             return null;
         }
-        return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld().getPlayerByUuid(internal.getThrowerId()))
+        return World.get(this.internal.level)
+                    .getEntity(this.internal.level.getPlayerByUUID(internal.getThrower()))
                     .asPlayer();
     }
 
@@ -81,7 +81,7 @@ public class ItemEntity extends Entity {
      */
     public void setPickupDelay(int ticks) {
         if (isValid()) {
-            internal.setPickupDelay(ticks);
+            internal.setPickUpDelay(ticks);
         }
 
     }
@@ -91,7 +91,7 @@ public class ItemEntity extends Entity {
      */
     public void setNoDespawn() {
         if (isValid()) {
-            internal.setNoDespawn();
+            internal.age = -32768;
         }
 
     }

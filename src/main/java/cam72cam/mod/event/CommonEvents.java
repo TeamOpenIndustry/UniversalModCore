@@ -109,7 +109,7 @@ public class CommonEvents {
         public static void onEntityTransfer(EntityEvent.EnteringChunk event) {
             if (event.getEntity() instanceof ModdedEntity) {
                 ModdedEntity modded = (ModdedEntity) event.getEntity();
-                cam72cam.mod.world.World.get(modded.world).tracker
+                cam72cam.mod.world.World.get(modded.level).tracker
                         .move(modded,
                               ChunkPos.asLong(event.getOldChunkX(), event.getOldChunkZ()),
                               ChunkPos.asLong(event.getNewChunkX(), event.getNewChunkZ()));

@@ -2,6 +2,10 @@ package cam72cam.mod.entity.boundingbox;
 
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+
+import java.util.Collections;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
@@ -91,7 +95,9 @@ public class DefaultBoundingBox implements IBoundingBox {
 
     @Override
     public boolean intersectsSegment(Vec3d startVec, Vec3d endVec) {
-        return internal.rayTrace(startVec.internal(), endVec.internal()).isPresent();
+        BlockRayTraceResult result = AxisAlignedBB.clip(Collections.singleton(internal), startVec.internal(),
+                                                      endVec.internal(), BlockPos.ZERO);
+        return result != null;
     }
 
     @Override
