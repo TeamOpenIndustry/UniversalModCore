@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
+import net.minecraftforge.fml.client.gui.GuiUtils;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
@@ -221,8 +222,7 @@ public class GUIHelpers {
             delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
                 int width = getScreenWidth();
                 int height = getScreenHeight();
-                net.minecraftforge.fml.client.config.GuiUtils
-                        .drawHoveringText(content, x, y, width, height, -1, Minecraft.getInstance().fontRenderer);
+                GuiUtils.drawHoveringText(content, x, y, width, height, -1, Minecraft.getInstance().fontRenderer);
             });
         } else {
             ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");

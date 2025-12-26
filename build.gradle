@@ -150,7 +150,7 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    annotationProcessor('org.spongepowered:mixin:0.8.3')
+    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
     annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
 
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
