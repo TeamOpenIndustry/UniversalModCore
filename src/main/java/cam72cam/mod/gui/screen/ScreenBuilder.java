@@ -1,22 +1,24 @@
 package cam72cam.mod.gui.screen;
 
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.text.StringTextComponent;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
-    private Map<Widget, Button> buttonMap = new HashMap<>();
+    private final Map<Widget, Button> buttonMap = new HashMap<>();
+    private final Map<TextFieldWidget, TextField> textFieldMap = new HashMap<>();
     private final Supplier<Boolean> valid;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
@@ -54,9 +56,12 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     public void addButton(Button btn) {
         super.addButton(btn.internal());
         this.buttonMap.put(btn.internal(), btn);
-        if (btn instanceof TextField) {
-            this.setFocused(btn.internal());
-        }
+    }
+
+    @Override
+    public void addTextField(TextField textField) {
+        super.addButton(textField.internal());
+        this.textFieldMap.put(textField.internal(), textField);
     }
 
     @Override
@@ -89,29 +94,37 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         this.minecraft.displayGuiScreen(this);
     }
 
-    @Override
-    public void addTextField(TextField textField) {
-        addButton(textField);
-    }
-
     // GuiScreen
 
     @Override
     public void init() {
         buttonMap.clear();
+        textFieldMap.clear();
         screen.init(this);
     }
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
+        GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
+        for (TextField field : textFieldMap.values()) {
+            field.onUpdate();
+        }
 
-        screen.draw(this, new RenderState());
+
+        screen.draw(this, new RenderState().stage(RenderContext.Stage.GUI));
 
         // draw buttons
         super.render(mouseX, mouseY, partialTicks);
+        Optional<Button> first = buttonMap.values().stream()
+                                          .filter(Button::isHovering)
+                                          .filter(button -> button.tooltips != null)
+                                          .findFirst();
+        first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
+
+        GUIHelpers.runDelayed(mouseX, mouseY);
     }
 
     @Override

@@ -1,9 +1,14 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net/" }
+        maven { url "https://plugins.gradle.org/" }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
     }
 	dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
+        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -11,6 +16,8 @@ apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
 
 configurations {
     shade
@@ -22,7 +29,9 @@ java {
 }
 
 repositories {
-    mavenCentral()
+    maven {
+        url "https://cursemaven.com"
+    }
 }
 
 String umcVersion = "1.2.2"
@@ -56,6 +65,10 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
+            //Enable mixin-ed dependency in deobfuscated environment
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -72,6 +85,10 @@ minecraft {
         }
 
         server {
+            //Enable mixin-ed dependency in deobfuscated environment
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -107,6 +124,10 @@ minecraft {
     }
 }
 
+repositories {
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.15.2-31.2.57'
     // you may put jars on which you depend on in ./libs
@@ -129,14 +150,28 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    annotationProcessor('org.spongepowered:mixin:0.8.3')
+    annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
 
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    testImplementation ('junit:junit:4.13')
+    testImplementation ('junit:junit:4.13.1')
 
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
 }
 
+mixin {
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    config 'mixins.universalmodcore.json'
+
+    //Dev environment setup
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
+}
+
 jar {
+    archiveClassifier = 'slim'
     manifest {
         attributes([
             "Specification-Title": "universalmodcore",
@@ -148,13 +183,27 @@ jar {
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
-        }
-    }
 }
+
 jar.finalizedBy('reobfJar')
+
+shadowJar {
+    classifier = ''
+    configurations = [project.configurations.shade]
+    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
+    //Don't do this
+//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    finalizedBy 'reobfShadowJar'
+}
+
+assemble.dependsOn shadowJar
+
+reobf {
+    shadowJar {}
+}
 
 test {
     useJUnit()
@@ -165,6 +214,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact shadowJar
             artifact sourcesJar
             artifactId archivesBaseName
         }

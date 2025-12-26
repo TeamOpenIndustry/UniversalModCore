@@ -8,8 +8,18 @@ import cam72cam.mod.entity.Player;
 
 import java.util.function.Consumer;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+
 /** Base interactable GUI element */
-public abstract class Button {
+public class Button implements IWidget{
+    /**
+     * Handler consumer, called upon clicked
+     * Hand -> PRIMARY is a left-click, SECONDARY is a right-click
+     * Button -> Reference of self, as it may not be fully constructed
+     */
+    protected BiConsumer<Player.Hand, Button> handler;
+
     protected final Widget button;
 
     /** Internal MC obj */
@@ -49,29 +59,40 @@ public abstract class Button {
         }
     }
 
+    protected List<String> tooltips;
+
     /** Default width/height */
+    public Button(IScreenBuilder builder, int x, int y, String text, BiConsumer<Player.Hand, Button> handler) {
+            this(builder, x, y, 200, 20, text, handler);
+        }
+
+    @Deprecated
     public Button(IScreenBuilder builder, int x, int y, String text) {
-        this(builder, x, y, 200, 20, text);
+            this(builder, x, y, 200, 20, text, (hand, button1) -> {});
     }
 
     /** Custom width/height */
+    public Button(IScreenBuilder builder, int x, int y, int width, int height, String text, BiConsumer<Player.Hand, Button> handler) {
+        this(builder,
+             new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
+             handler);
+    }
+
+    @Deprecated
     public Button(IScreenBuilder builder, int x, int y, int width, int height, String text) {
-        this(builder, new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text));
-        ((InternalButton)this.button).clicker = this::onClickInternal;
+        this(builder,
+             new InternalButton(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height, text),
+             (hand, button1) -> {});
     }
 
     /** Internal ctr */
-    Button(IScreenBuilder builder, Widget button) {
+    Button(IScreenBuilder builder, Widget button, BiConsumer<Player.Hand, Button> handler) {
         this.button = button;
         builder.addButton(this);
+        this.handler = handler;
     }
 
-    /** Currently displayed text */
-    public String getText() {
-        return button.getMessage();
-    }
-
-    /** Override current text */
+    @Override
     public void setText(String text) {
         button.setMessage(text);
     }
@@ -84,8 +105,39 @@ public abstract class Button {
         return button;
     }
 
-    /** Click handler that must be implemented */
-    public abstract void onClick(Player.Hand hand);
+    @Override
+    public String getText() {
+        return button.getMessage();
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        button.visible = b;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return button.visible;
+    }
+
+    @Override
+    public void setEnabled(boolean b) {
+        button.active = b;
+    }
+
+    public void setTooltip(List<String> content) {
+        this.tooltips = content;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return button.active;
+    }
+
+    /** Internal click handler*/
+    public void onClick(Player.Hand hand) {
+        this.handler.accept(hand, this);
+    }
 
     /** Called every screen draw */
     public void onUpdate() {
@@ -97,15 +149,9 @@ public abstract class Button {
         button.setFGColor(i);
     }
 
-    /** Set the button visible or not */
-    public void setVisible(boolean b) {
-        button.visible = b;
+    public boolean isHovering() {
+//        return button.isMouseOver();
+        return false;
+        //TODO
     }
-
-    /** enable or disable the button */
-    public void setEnabled(boolean b) {
-        button.active = b;
-    }
-
-    ;
 }
