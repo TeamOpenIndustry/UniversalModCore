@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -167,8 +168,9 @@ public class VBO {
                     case BLOCK -> GameRenderer.getRendertypeCutoutShader();
                     case GUI -> GameRenderer.getBlockShader();
                     case ITEM_IN_WORLD -> GameRenderer.getRendertypeEntityCutoutShader();
-                    //TODO Only when shader pack not enabled
-                    default -> RenderContext.UMC_CORE;
+                    default -> ShaderHelper.isIrisShaderEnabled()
+                               ? GameRenderer.getRendertypeEntityCutoutShader()
+                               : RenderContext.UMC_CORE;
                 };
             } else {
                 shader = GameRenderer.getRendertypeEntityCutoutShader();
