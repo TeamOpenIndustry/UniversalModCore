@@ -130,16 +130,16 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderType.cutout().setupRenderState();
 
-        int j = i % 65536;
-        int k = i / 65536;
-        RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
+        int j = (i >> 4) & 0xF;
+        int k = (i >> 20) & 0xF;
+        RenderState state = new RenderState(p_225623_4_).lightmap(j / 15f, k / 15f);
         state.rotate(180 - entityYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(), 1, 0, 0);
         state.rotate(-90, 0, 1, 0);
         state.stage(RenderContext.Stage.ENTITY);
         //Set up our own light state
-        RenderContext.lastLightX = j / 240f;
-        RenderContext.lastLightY = k / 240f;
+        RenderContext.lastLightX = j / 15f;
+        RenderContext.lastLightY = k / 15f;
 
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);

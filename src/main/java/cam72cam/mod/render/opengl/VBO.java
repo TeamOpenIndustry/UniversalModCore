@@ -166,6 +166,7 @@ public class VBO {
                 shader = switch (state.stage) {
                     case BLOCK -> GameRenderer.getRendertypeCutoutShader();
                     case GUI -> GameRenderer.getBlockShader();
+                    case ITEM_IN_WORLD -> GameRenderer.getRendertypeEntityCutoutShader();
                     //TODO Only when shader pack not enabled
                     default -> RenderContext.UMC_CORE;
                 };
