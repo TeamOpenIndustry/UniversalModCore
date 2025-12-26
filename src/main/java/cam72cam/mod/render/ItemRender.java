@@ -47,6 +47,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.Objects;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -172,6 +174,11 @@ public class ItemRender {
         /** Apply GL transformations based on the render context */
         default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
+            if (type == ItemRenderType.GUI) {
+                ctx.stage(RenderContext.Stage.ITEM_IN_GUI);
+            } else {
+                ctx.stage(RenderContext.Stage.ITEM_IN_WORLD);
+            }
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
@@ -232,7 +239,7 @@ public class ItemRender {
             GL11.glDepthFunc(GL11.GL_LESS);
             GL11.glClearDepth(1);
 
-            model.renderCustom(new RenderState());
+            model.renderCustom(new RenderState().stage(RenderContext.Stage.ITEM_SPRITE_TEX));
 
             fb.bindRead();
             ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);

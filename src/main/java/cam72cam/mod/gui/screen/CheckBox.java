@@ -1,14 +1,15 @@
 package cam72cam.mod.gui.screen;
 
-
 import cam72cam.mod.entity.Player;
+
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.network.chat.TextComponent;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** Basic checkbox */
-public abstract class CheckBox extends Button {
+public class CheckBox extends Button {
     /** Internal onPress wrapper as Forge doesn't have corresponding hook */
     private static class InternalCB extends Checkbox {
         private Consumer<Player.Hand> clicker = hand -> {};
@@ -24,8 +25,17 @@ public abstract class CheckBox extends Button {
         }
     }
 
+    public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled, BiConsumer<Player.Hand, CheckBox> handler) {
+        super(builder,
+              new InternalCB(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 100, 20, text, enabled),
+              ((hand, button1) -> handler.accept(hand, (CheckBox) button1)));
+    }
+
+    @Deprecated
     public CheckBox(IScreenBuilder builder, int x, int y, String text, boolean enabled) {
-        super(builder, new InternalCB(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 100, 20, text, enabled));
+        super(builder,
+              new InternalCB(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 100, 20, text, enabled),
+              ((hand, button1) -> {}));
         ((InternalCB)this.button).clicker = this::onClickInternal;
     }
 
@@ -38,7 +48,7 @@ public abstract class CheckBox extends Button {
         super.onClickInternal(hand);
     }
 
-    public void setChecked() {
-        ((Checkbox)button).onPress();
+    public void setChecked(boolean val) {
+        ((Checkbox) button).selected = val;
     }
 }

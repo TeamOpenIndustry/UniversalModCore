@@ -2,20 +2,24 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
@@ -26,6 +30,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -279,6 +284,19 @@ public class ClientEvents {
         @SubscribeEvent(priority = EventPriority.LOW)
         public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
             //REGISTER_ENTITY.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void registerVanillaShader(RegisterShadersEvent event) {
+            try {
+                event.registerShader(new ShaderInstance(event.getResourceManager(),
+                                                        new ResourceLocation("umc_core"),
+                                                        DefaultVertexFormat.NEW_ENTITY), instance -> {
+                    RenderContext.UMC_CORE = instance;
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

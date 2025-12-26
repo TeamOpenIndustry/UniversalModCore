@@ -6,8 +6,9 @@ import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.BlockTypeEntity;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
@@ -107,11 +108,9 @@ public class BlockRender {
 
                     RenderType.cutoutMipped().setupRenderState();
 
-                    //TODO bork 1.17.1? RenderHelper.turnBackOn();
-
                     int j = combinedLightIn % 65536;
                     int k = combinedLightIn / 65536;
-                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f), partialTicks);
+                    model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f).stage(RenderContext.Stage.BLOCK), partialTicks);
 
                     RenderType.cutoutMipped().clearRenderState();
                 }
@@ -122,7 +121,6 @@ public class BlockRender {
                 }
             });
         });
-
     }
 
     // TODO version for non TE blocks

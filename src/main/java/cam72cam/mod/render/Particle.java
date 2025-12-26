@@ -6,11 +6,14 @@ import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.core.particles.*;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import util.Matrix4;
 
@@ -21,7 +24,7 @@ import java.util.function.Function;
 
 /**
  * Registry and Abstraction for Particles
- *
+ * <p>
  * Try not to allocate anything for each render frame...
  * */
 public abstract class Particle {
@@ -79,7 +82,6 @@ public abstract class Particle {
                     RenderState base = new RenderState();
                     base.blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA));
                     base.alpha_test(true);
-                    //TODO 1.17.1 GL11.glAlphaFunc(516, 0.003921569F);
                     base.depth_mask(ip.depthTestEnabled());
                     base.color(1, 1, 1, 1);
                     Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
@@ -130,6 +132,23 @@ public abstract class Particle {
         mat.rotate(Math.toRadians(180), 1, 0, 0);
     }
 
+    public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
+        if (scale < 1E-7) return;
+
+        ParticleOptions options = switch (vanilla) {
+            case SAND_DUST -> new BlockParticleOption(vanilla.internal, Blocks.SAND.defaultBlockState());
+            case DIRT_DUST -> new BlockParticleOption(vanilla.internal, Blocks.DIRT.defaultBlockState());
+            case REDSTONE -> new DustParticleOptions(new Vector3f(1, 1, 1), 1);
+            default -> (ParticleOptions) vanilla.internal;
+        };
+        net.minecraft.client.particle.Particle particle =
+                Minecraft.getInstance().particleEngine.createParticle(options, pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
+
+        if (particle != null) {
+            particle.scale(scale);
+        }
+    }
+
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
@@ -148,6 +167,37 @@ public abstract class Particle {
             this.pos = pos;
             this.motion = motion;
             this.lifespan = lifespan;
+        }
+    }
+
+    public enum VanillaParticles {
+        ANGRY_VILLAGER(ParticleTypes.ANGRY_VILLAGER),
+        BUBBLE(ParticleTypes.BUBBLE),
+        CRITICAL_HIT(ParticleTypes.CRIT),
+        CRITICAL_MAGIC_HIT(ParticleTypes.ENCHANTED_HIT),
+        DIRT_DUST(ParticleTypes.BLOCK),
+        EXPLOSION(ParticleTypes.EXPLOSION),
+        FLAME(ParticleTypes.FLAME),
+        HAPPY_VILLAGER(ParticleTypes.HAPPY_VILLAGER),
+        HEART(ParticleTypes.HEART),
+        LAVA(ParticleTypes.LAVA),
+        LAVA_DROP(ParticleTypes.DRIPPING_LAVA),
+        LARGE_SMOKE(ParticleTypes.LARGE_SMOKE),
+        NORMAL_SMOKE(ParticleTypes.SMOKE),
+        NOTE(ParticleTypes.NOTE),
+        REDSTONE(ParticleTypes.DUST),
+        RUNE(ParticleTypes.ENCHANT),
+        SAND_DUST(ParticleTypes.BLOCK),
+        SNOWBALL_BREAKING(ParticleTypes.ITEM_SNOWBALL),
+        SNOW_SHOVEL(ParticleTypes.ITEM_SNOWBALL), //Removed in 1.14
+        WATER_DRIP(ParticleTypes.DRIPPING_WATER),
+        WATER_SPLASH(ParticleTypes.SPLASH)
+        ;
+
+        private final ParticleType internal;
+
+        VanillaParticles(ParticleType type) {
+            this.internal = type;
         }
     }
 }

@@ -71,6 +71,8 @@ minecraft {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.2.10'
     implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+//    No need in FG3+
+//    runtime "net.minecrell:terminalconsoleappender:1.3.0"
     implementation fg.deobf(#UMC_DEPENDENCY#)
 }
 
