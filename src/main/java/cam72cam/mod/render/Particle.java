@@ -163,7 +163,8 @@ public abstract class Particle {
         }
     }
 
-    public enum VanillaParticles {ANGRY_VILLAGER(ParticleTypes.ANGRY_VILLAGER),
+    public enum VanillaParticles {
+        ANGRY_VILLAGER(ParticleTypes.ANGRY_VILLAGER),
         BUBBLE(ParticleTypes.BUBBLE),
         CRITICAL_HIT(ParticleTypes.CRIT),
         CRITICAL_MAGIC_HIT(ParticleTypes.ENCHANTED_HIT),
@@ -190,7 +191,6 @@ public abstract class Particle {
 
         VanillaParticles(ParticleType type) {
             this.internal = type;
-
         }
     }
 }

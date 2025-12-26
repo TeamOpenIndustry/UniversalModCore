@@ -166,6 +166,7 @@ mixin {
 }
 
 jar {
+    classifier = 'slim'
     manifest {
         attributes([
             "Specification-Title": "universalmodcore",
@@ -176,21 +177,6 @@ jar {
             "Implementation-Vendor" :"",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
-    }
-
-    def serviceDir = file("$buildDir/tmp/services_cleanup/META-INF/services")
-    serviceDir.deleteDir()
-    serviceDir.mkdirs()
-
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
-        }
-        zipTree(dep).matching {
-            include 'META-INF/services/*'
-        }.each { serviceFile ->
-            new File(serviceDir, serviceFile.name) << serviceFile.getText("UTF-8") << '\n'
-        }
     }
 }
 
@@ -223,6 +209,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact shadowJar
             artifact sourcesJar
             artifactId archivesBaseName
         }
