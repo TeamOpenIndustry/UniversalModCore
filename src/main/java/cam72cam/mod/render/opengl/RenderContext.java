@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.OptiFine;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
@@ -18,6 +19,9 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
     private static FloatBuffer fourFloatBuffer;
+
+    public static float lastLightX;
+    public static float lastLightY;
 
     private RenderContext() {
     }
@@ -79,10 +83,19 @@ public class RenderContext {
                     applyBool(GL11.GL_TEXTURE_2D, oldTexEnabled);
                 });
             } else {
-                float oldX = GlStateManager.lastBrightnessX;
-                float oldY = GlStateManager.lastBrightnessY;
+                float oldX;
+                float oldY;
+                if (state.stage == Stage.ENTITY && !OptiFine.isLoaded()) {
+                    //Minecraft's lastBrightness is broken...
+                    //But OptiFine patched that
+                    oldX = lastLightX;
+                    oldY = lastLightY;
+                } else {
+                    oldX = GlStateManager.lastBrightnessX;
+                    oldY = GlStateManager.lastBrightnessY;
+                }
                 GlStateManager.multiTexCoord2f(lightmapTextureID, block * 240, sky * 240);
-                restore.add(() -> GlStateManager.multiTexCoord2f(lightmapTextureID, oldX, oldY));
+                restore.add(() -> GlStateManager.multiTexCoord2f(lightmapTextureID, oldX * 240, oldY * 240));
             }
         }
 
