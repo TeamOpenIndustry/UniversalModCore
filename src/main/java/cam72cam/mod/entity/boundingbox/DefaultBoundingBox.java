@@ -104,4 +104,8 @@ public class DefaultBoundingBox implements IBoundingBox {
     public boolean contains(Vec3d vec) {
         return internal.contains(vec.internal());
     }
+
+    public AABB getInternal() {
+        return internal;
+    }
 }

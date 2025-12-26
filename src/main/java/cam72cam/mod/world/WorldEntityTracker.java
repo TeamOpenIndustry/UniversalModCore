@@ -5,7 +5,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 
 import java.util.Collection;
 import java.util.Map;
@@ -15,7 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Track UMC Entities and handle inter chunk collision
- * @see cam72cam.mod.mixin.feat.large_entity_collision.MixinVanillaWorld
+ * @see cam72cam.mod.mixin.feat.large_entity_collision.MixinEntitySectionStorage
  */
 public class WorldEntityTracker {
     //Good enough for now...We'd assume there's no more ridiculous ones
@@ -33,10 +34,10 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.blockPosition());
-        int x = ChunkPos.x(chunk);
-        int y = ChunkPos.y(chunk);
-        int z = ChunkPos.z(chunk);
+        long chunk = SectionPos.asLong(entity.blockPosition());
+        int x = SectionPos.x(chunk);
+        int y = SectionPos.y(chunk);
+        int z = SectionPos.z(chunk);
 
         lock.writeLock().lock();
         try {
@@ -48,7 +49,7 @@ public class WorldEntityTracker {
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
                         for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
-                            scanningRange.put(chunk, ChunkPos.asLong(i, k, j));
+                            scanningRange.put(chunk, SectionPos.asLong(i, k, j));
                         }
                     }
                 }
@@ -61,7 +62,7 @@ public class WorldEntityTracker {
 
     public void leave(ModdedEntity entity) {
         BlockPos pos = entity.blockPosition();
-        long sec = ChunkPos.asLong(pos);
+        long sec = SectionPos.asLong(pos);
 
         lock.writeLock().lock();
         try {
@@ -93,10 +94,10 @@ public class WorldEntityTracker {
                 }
             }
 
-            long chunk = ChunkPos.asLong(entity.blockPosition());
-            int x = ChunkPos.x(chunk);
-            int y = ChunkPos.y(chunk);
-            int z = ChunkPos.z(chunk);
+            long chunk = SectionPos.asLong(entity.blockPosition());
+            int x = SectionPos.x(chunk);
+            int y = SectionPos.y(chunk);
+            int z = SectionPos.z(chunk);
 
             moddedEntities = umcEntities.get(newSection);
             if (moddedEntities == null) {
@@ -106,7 +107,7 @@ public class WorldEntityTracker {
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
                         for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
-                            scanningRange.put(newSection, ChunkPos.asLong(i, k, j));
+                            scanningRange.put(newSection, SectionPos.asLong(i, k, j));
                         }
                     }
                 }
@@ -118,7 +119,7 @@ public class WorldEntityTracker {
         }
     }
 
-    public Set<Long> queryPotentialPackedChunkPos(long pos) {
+    public Set<Long> queryPotentialPackedSectionPos(long pos) {
         lock.readLock().lock();
         try {
             return scanningRange.getKeys(pos);

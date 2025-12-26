@@ -1,6 +1,7 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.ModdedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -9,14 +10,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.ContainerType;
-import cam72cam.mod.entity.ModdedEntity;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityEvent;
@@ -113,8 +106,7 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void onEntityTransfer(EntityEvent.EnteringSection event) {
-            if (event.getEntity() instanceof ModdedEntity) {
-                ModdedEntity modded = (ModdedEntity) event.getEntity();
+            if (event.getEntity() instanceof ModdedEntity modded) {
                 cam72cam.mod.world.World.get(modded.level).tracker
                         .move(modded,
                               event.getPackedOldPos(),

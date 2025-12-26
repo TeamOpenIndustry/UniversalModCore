@@ -7,9 +7,9 @@ import cam72cam.mod.world.World;
  * Represents an item entity in the world, wrapping Minecraft's EntityItem.
  */
 public class ItemEntity extends Entity {
-    public final net.minecraft.entity.item.ItemEntity internal;
+    public final net.minecraft.world.entity.item.ItemEntity internal;
 
-    public ItemEntity(net.minecraft.entity.item.ItemEntity entity) {
+    public ItemEntity(net.minecraft.world.entity.item.ItemEntity entity) {
         super(entity);
         this.internal = entity;
     }

@@ -155,7 +155,7 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
-    annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
+    minecraftLibrary(annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0')))
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'

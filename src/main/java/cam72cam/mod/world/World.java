@@ -16,9 +16,10 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.Facing;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -26,7 +27,6 @@ import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -46,7 +46,6 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -318,9 +317,9 @@ public class World {
      * More performant when region is known
      * */
     public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
-        List<net.minecraft.world.entity.Entity> entitiesWithinAABB = internal.getEntitiesOfClass(net.minecraft.entity.Entity.class,
+        List<net.minecraft.world.entity.Entity> entitiesWithinAABB = internal.getEntitiesOfClass(net.minecraft.world.entity.Entity.class,
                                     bb instanceof DefaultBoundingBox
-                                    ? ((DefaultBoundingBox)bb).internal
+                                    ? ((DefaultBoundingBox)bb).getInternal()
                                     : new AABB(bb.min().internal(), bb.max().internal()));
 
         return entitiesWithinAABB.stream()
