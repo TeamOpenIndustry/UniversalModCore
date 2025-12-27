@@ -32,7 +32,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
-    protected RenderContext.Stage stage;
+    public RenderContext.Stage stage;
 
     private static FloatBuffer mbuf = FloatBuffer.wrap(new float[16]);
 

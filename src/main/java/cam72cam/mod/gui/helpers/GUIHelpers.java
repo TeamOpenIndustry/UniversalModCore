@@ -4,13 +4,13 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.text.PlayerMessage;
-import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.text.PlayerMessage;
+import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -222,10 +222,10 @@ public class GUIHelpers {
         if (delayedRenderFunctions.peek() != null && Minecraft.getInstance().screen != null) {
             //Use map to ensure only 1 tooltip is drawn
             delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
-                List<Component> properties = content.stream()
+                List<Component> components = content.stream()
                                                     .map(TextComponent::new)
                                                     .collect(Collectors.toList());
-                Minecraft.getInstance().screen.renderTooltip(new PoseStack(), properties, Optional.empty(), x, y, Minecraft.getInstance().font);
+                Minecraft.getInstance().screen.renderTooltip(new PoseStack(), components, Optional.empty(), x, y, Minecraft.getInstance().font);
             });
         } else {
             ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
