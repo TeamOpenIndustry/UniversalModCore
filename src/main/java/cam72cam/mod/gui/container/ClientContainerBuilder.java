@@ -52,7 +52,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     @Override
     protected void renderBg(PoseStack stack, float partialTicks, int mouseX, int mouseY) {
         try (With ctx = RenderContext.apply(
-                new RenderState(stack).color(1, 1, 1, 1)
+                new RenderState(stack).color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             //this.minecraft.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
             this.centerX = (this.width - this.imageWidth) / 2;
@@ -203,6 +203,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
                         .color(1, 1, 1, 1)
                         .alpha_test(true)
                         .depth_test(false)
+                        .stage(RenderContext.Stage.GUI)
         )) {
             GlStateManager._disableDepthTest();
             drawRect(x, y, 16, 16, -2130706433);
@@ -216,7 +217,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         y += centerY + 1;
 
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             fill(new PoseStack(), x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
         }

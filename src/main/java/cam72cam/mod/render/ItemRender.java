@@ -171,6 +171,11 @@ public class ItemRender {
         /** Apply GL transformations based on the render context */
         default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
+            if (type == ItemRenderType.GUI) {
+                ctx.stage(RenderContext.Stage.ITEM_IN_GUI);
+            } else {
+                ctx.stage(RenderContext.Stage.ITEM_IN_WORLD);
+            }
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
@@ -231,7 +236,7 @@ public class ItemRender {
             GL11.glDepthFunc(GL11.GL_LESS);
             GL11.glClearDepth(1);
 
-            model.renderCustom(new RenderState());
+            model.renderCustom(new RenderState().stage(RenderContext.Stage.ITEM_SPRITE_TEX));
 
             fb.bindRead();
             ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
@@ -369,6 +374,8 @@ public class ItemRender {
                     int j = i % 65536;
                     int k = i / 65536;
                     state.lightmap(j/240f, k/240f);
+                    RenderContext.lastLightX = j;
+                    RenderContext.lastLightY = k;
 
                     //std.renderCustom();
                     std.render(state);

@@ -29,11 +29,14 @@ import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
     private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
+    //Special hack for in-gui/item block model(quads)
+    private final Map<Pair<BlockState, BakedModel>, LitRenderFunc> inGuiBlock = new HashMap<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
@@ -55,7 +58,9 @@ public class StandardModel {
                 .findFirst().get();
 
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
+        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
+        models.add(pair);
+        inGuiBlock.put(pair, getRenderFunc(new net.minecraft.world.item.ItemStack(state.getBlock().asItem()), transform));
         return this;
     }
 
@@ -77,7 +82,9 @@ public class StandardModel {
         if (model instanceof WeightedBakedModel weightedBakedModel) {
             //TODO Modify result to make it not dynamic
         }
-        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
+        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
+        models.add(pair);
+        inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
     }
 
@@ -141,6 +148,15 @@ public class StandardModel {
             worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
+                if ((state.stage == RenderContext.Stage.GUI
+                        || state.stage == RenderContext.Stage.ITEM_IN_WORLD
+                        || state.stage == RenderContext.Stage.ITEM_IN_GUI
+                        || state.stage == RenderContext.Stage.OVERLAY)
+                    && inGuiBlock.containsKey(model)) {
+                    //Skip here as block's quad behave bad in those consequences
+                    continue;
+                }
+
                 List<BakedQuad> quads = new ArrayList<>();
 
                 int i = Minecraft.getInstance().getBlockColors().getColor(model.getLeft(), null, null, 0);
@@ -168,6 +184,16 @@ public class StandardModel {
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
+        if (state.stage != null) {
+            switch (state.stage) {
+                case GUI, ITEM_IN_GUI, OVERLAY ->
+                        inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, 15728880));
+                case ITEM_IN_WORLD -> {
+                    int light = (int) (RenderContext.lastLightY * 65536 + RenderContext.lastLightX);
+                    inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, light));
+                }
+            }
+        }
 
         if (Tesselator.getInstance().getBuilder().building()) {
             try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
@@ -179,5 +205,36 @@ public class StandardModel {
     /** Is there anything that's not MC standard in this model? */
     public boolean hasCustom() {
         return !custom.isEmpty();
+    }
+
+    private static LitRenderFunc getRenderFunc(net.minecraft.world.item.ItemStack stack, Matrix4 transform) {
+        return (matrix, pt, light) -> {
+            matrix.model_view().multiply(transform).translate(0.5, 0.5, 0.5);
+
+            Block block = Block.byItem(stack.getItem());
+            if (block instanceof RotatedPillarBlock) {
+                //Rotate to Z direction
+                matrix.model_view().rotate(Math.toRadians(90), 1, 0, 0);
+            }
+            try (With ctx = RenderContext.apply(matrix)) {
+                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                if (oldState) {
+                    GL32.glEnable(GL32.GL_BLEND);
+                } else {
+                    GL32.glDisable(GL32.GL_BLEND);
+                }
+
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack, ItemDisplayContext.NONE,
+                                                                       light, OverlayTexture.NO_OVERLAY,
+                                                                       new PoseStack(), buffer, null, 0);
+                buffer.endBatch();
+            }
+        };
+    }
+
+    @FunctionalInterface
+    private static interface LitRenderFunc {
+        void render(RenderState state, float partialTick, int light);
     }
 }
