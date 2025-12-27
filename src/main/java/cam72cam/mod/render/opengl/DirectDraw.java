@@ -21,7 +21,9 @@ public class DirectDraw {
         //Add missing state
         if(state.color != null) {
             for (VertexBuilder vert : verts) {
-                vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+                if (vert.r == null) {
+                    vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+                }
             }
         }
 
