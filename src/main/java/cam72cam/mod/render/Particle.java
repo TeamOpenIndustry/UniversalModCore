@@ -6,7 +6,6 @@ import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -15,6 +14,7 @@ import net.minecraft.core.particles.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import util.Matrix4;
 
 import java.util.ArrayList;

@@ -24,9 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -233,7 +230,7 @@ public class GUIHelpers {
             //Use map to ensure only 1 tooltip is drawn
             delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
                 List<Component> components = content.stream()
-                                                    .map(TextComponent::new)
+                                                    .map(Component::literal)
                                                     .collect(Collectors.toList());
                 Minecraft.getInstance().screen.renderTooltip(new PoseStack(), components, Optional.empty(), x, y, Minecraft.getInstance().font);
             });

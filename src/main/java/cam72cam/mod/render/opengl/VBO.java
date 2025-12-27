@@ -39,7 +39,7 @@ public class VBO {
         });
         ClientEvents.REGISTER_SHADER.subscribe(event -> {
             try {
-                event.registerShader(new ShaderInstance(event.getResourceManager(),
+                event.registerShader(new ShaderInstance(event.getResourceProvider(),
                                                         ResourceLocation.parse("umc_core"),
                                                         DefaultVertexFormat.NEW_ENTITY),
                                      instance -> RenderContext.UMC_CORE = instance);

@@ -36,12 +36,12 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getOwner() == null || this.internal.level.getPlayerByUUID(internal.getOwner()) == null) {
+        if (internal.target == null || this.internal.level.getPlayerByUUID(internal.target) == null) {
             return null;
         }
 
         return World.get(this.internal.level)
-                    .getEntity(this.internal.level.getPlayerByUUID(internal.getOwner()))
+                    .getEntity(this.internal.level.getPlayerByUUID(internal.target))
                     .asPlayer();
     }
 
@@ -52,7 +52,7 @@ public class ItemEntity extends Entity {
      */
     public void setOwner(Player player) {
         if (isValid()) {
-            internal.setOwner(player.internal.getUUID());
+            internal.target = player.internal.getUUID();
         }
     }
 
@@ -66,11 +66,11 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getThrower() == null || this.internal.level.getPlayerByUUID(internal.getThrower()) == null) {
+        if (internal.thrower == null || this.internal.level.getPlayerByUUID(internal.thrower) == null) {
             return null;
         }
         return World.get(this.internal.level)
-                    .getEntity(this.internal.level.getPlayerByUUID(internal.getThrower()))
+                    .getEntity(this.internal.level.getPlayerByUUID(internal.thrower))
                     .asPlayer();
     }
 

@@ -6,7 +6,6 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Codec;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
@@ -38,9 +37,9 @@ public class MixinChunkStorage {
         }
     }
 
-    @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtUtils;update(Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/util/datafix/DataFixTypes;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/nbt/CompoundTag;"))
-    public CompoundTag reInject(DataFixer p_129214_, DataFixTypes p_129215_, CompoundTag p_129216_, int p_129217_, @Share("tag") LocalRef<ListTag> tag) {
-        CompoundTag compoundTag = NbtUtils.update(p_129214_, p_129215_, p_129216_, p_129217_);
+    @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/datafix/DataFixTypes;updateToCurrentVersion(Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/nbt/CompoundTag;"))
+    public CompoundTag reInject(DataFixTypes instance, DataFixer p_265583_, CompoundTag p_265401_, int p_265111_, @Share("tag") LocalRef<ListTag> tag) {
+        CompoundTag compoundTag = instance.updateToCurrentVersion(p_265583_, p_265401_, p_265111_);
         if (tag.get() != null) {
             compoundTag.put("entities", tag.get());
         }
