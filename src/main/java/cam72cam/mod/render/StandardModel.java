@@ -215,7 +215,7 @@ public class StandardModel {
             }
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {

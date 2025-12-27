@@ -28,7 +28,7 @@ public class MinecraftFiles {
      */
     public static File getSaveDir(World world) {
         if (world.internal.getServer() != null) {
-            return world.internal.getServer().getServerDirectory();
+            return world.internal.getServer().getServerDirectory().toFile();
         }
         return null;
     }

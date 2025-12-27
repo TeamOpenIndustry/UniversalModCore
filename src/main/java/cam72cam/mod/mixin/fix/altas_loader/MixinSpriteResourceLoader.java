@@ -25,7 +25,7 @@ public class MixinSpriteResourceLoader {
         if(p_261709_.getPath().equals("blocks")) {
             //Only hack into main sprite
             TextureStitchEvent event = new TextureStitchEvent(list);
-            net.neoforged.fml.ModLoader.get().postEvent(event);
+            net.neoforged.fml.ModLoader.postEvent(event);
         }
     }
 }

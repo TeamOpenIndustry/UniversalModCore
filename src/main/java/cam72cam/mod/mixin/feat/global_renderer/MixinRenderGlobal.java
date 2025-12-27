@@ -4,8 +4,10 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -20,13 +22,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderGlobal {
     @Inject(method = "renderLevel",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;checkPoseStack(Lcom/mojang/blaze3d/vertex/PoseStack;)V", ordinal = 1))
-    public void injectRenderGlobal(PoseStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
-                                   Camera info, GameRenderer gameRenderer, LightTexture light,
-                                   Matrix4f matrix, CallbackInfo ci) {
+    public void injectRenderGlobal(DeltaTracker delta, boolean outline, Camera camera, GameRenderer gameRenderer,
+                                   LightTexture lightTexture, Matrix4f matrix4f1, Matrix4f matrix, CallbackInfo ci,
+                                   @Local PoseStack pose) {
         RenderType.cutoutMipped().setupRenderState();
-        Vec3d pos = GlobalRender.getCameraPos(partialTicks);
-        RenderState state = new RenderState(stack).translate(-pos.x, -pos.y, -pos.z);
-        GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
+        Vec3d pos = GlobalRender.getCameraPos(delta.getGameTimeDeltaTicks());
+        RenderState state = new RenderState(pose).translate(-pos.x, -pos.y, -pos.z);
+        GlobalRender.renderGlobalFuncs(state.clone(), delta.getGameTimeDeltaTicks());
         RenderType.cutoutMipped().clearRenderState();
         RenderContext.resetState();
     }

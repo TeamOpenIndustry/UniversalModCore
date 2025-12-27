@@ -177,7 +177,7 @@ public class VBO {
             ShaderInstance shader;
             if (state.stage != null) {
                 shader = switch (state.stage) {
-                    case GUI -> GameRenderer.getPositionTexLightmapColorShader();
+                    case GUI -> GameRenderer.getPositionTexColorShader();
                     case ITEM_IN_WORLD -> GameRenderer.getRendertypeEntityCutoutShader();
                     default -> ShaderHelper.isIrisShaderEnabled()
                                ? GameRenderer.getRendertypeEntityCutoutShader()

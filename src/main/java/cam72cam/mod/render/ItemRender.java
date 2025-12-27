@@ -34,6 +34,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.model.ExtraFaceData;
 import net.neoforged.neoforge.client.model.ItemLayerModel;
 import net.neoforged.neoforge.client.model.SimpleModelState;
 import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
@@ -67,7 +68,7 @@ public class ItemRender {
         SimpleModelState foo = new SimpleModelState(Transformation.identity());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
-            Map<ResourceLocation, BakedModel> models = event.getModels();
+            Map<ModelResourceLocation, BakedModel> models = event.getModels();
             ModelResourceLocation location = new ModelResourceLocation(item.getRegistryName().internal, "");
             Material mat = new Material(InventoryMenu.BLOCK_ATLAS, tex.internal);
             ItemLayerModel model = new ItemLayerModel(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
@@ -127,7 +128,7 @@ public class ItemRender {
                 AtlasSet.StitchResult atlasset$stitchresult = collect.get(mat.atlasLocation());
                 TextureAtlasSprite textureatlassprite = atlasset$stitchresult.getSprite(mat.texture());
                 return Objects.requireNonNullElseGet(textureatlassprite, atlasset$stitchresult::missing);
-            }, foo, ItemOverrides.EMPTY, tex.internal));
+            }, foo, ItemOverrides.EMPTY/*, tex.internal*/));
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(list -> list.addSprite(tex.internal));
