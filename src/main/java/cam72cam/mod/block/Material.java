@@ -1,21 +1,33 @@
 package cam72cam.mod.block;
 
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.MapColor;
 
 /**
  * Wraps minecraft's material enum
- *
- * TODO pull in the rest of the options here that are availible across all supported MC versions
  */
 public enum Material {
-    METAL(net.minecraft.world.level.material.MapColor.METAL, SoundType.METAL),
-    WOOL(net.minecraft.world.level.material.MapColor.WOOL, SoundType.WOOL),
+    METAL(MapColor.METAL, SoundType.METAL),
+    WOOL(MapColor.WOOL, SoundType.WOOL),
+    GRASS(MapColor.GRASS, SoundType.GRASS),
+    DIRT(MapColor.DIRT, SoundType.GRAVEL),
+    WOOD(MapColor.WOOD, SoundType.WOOD),
+    STONE(MapColor.STONE, SoundType.STONE),
+    LEAF(MapColor.PLANT, SoundType.GRASS),
+    PLANT(MapColor.PLANT, SoundType.GRASS),
+    VINE(MapColor.PLANT, SoundType.VINE),
+    SAND(MapColor.SAND, SoundType.SAND),
+    GLASS(MapColor.NONE, SoundType.GLASS),
+    ICE(MapColor.ICE, SoundType.GLASS),
+    /** Will melt under high sky light*/
+    SNOW(MapColor.SNOW, SoundType.SNOW),
+    CLAY(MapColor.CLAY, SoundType.STONE),
     ;
 
-    protected final net.minecraft.world.level.material.MapColor internal;
-    protected final SoundType soundType;
+    final MapColor internal;
+    final SoundType soundType;
 
-    Material(net.minecraft.world.level.material.MapColor internal, SoundType soundType) {
+    Material(MapColor internal, SoundType soundType) {
         this.internal = internal;
         this.soundType = soundType;
     }

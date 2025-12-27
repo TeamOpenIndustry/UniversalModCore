@@ -31,6 +31,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
+    public RenderContext.Stage stage;
 
     private static float[] mbuf = new float[16];
 
@@ -139,6 +140,7 @@ public class RenderState {
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
         this.shader = ctx.shader;
+        this.stage = ctx.stage;
     }
 
     public RenderState clone() {
@@ -244,6 +246,10 @@ public class RenderState {
     }
     public RenderState shader(OptiFine.Shaders shader) {
         this.shader = shader;
+        return this;
+    }
+    public RenderState stage(RenderContext.Stage stage) {
+        this.stage = stage;
         return this;
     }
 }

@@ -3,9 +3,11 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.Lighting;
+import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
@@ -14,10 +16,17 @@ import org.lwjgl.opengl.GL32;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    //Modified from rendertype_entity_cutout, fix model normal
+    public static ShaderInstance UMC_CORE;
+
+    public static float lastLightX;
+    public static float lastLightY;
+
     private RenderContext() {
     }
 
@@ -57,25 +66,27 @@ public class RenderContext {
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
-        /* TODO 1.17.1
-        state.bools.forEach((glId, value) -> {
-            boolean oldValue = GL11.glGetBoolean(glId);
-            applyBool(glId, value);
-            restore.add(() -> applyBool(glId, oldValue));
-        });
-        if (state.depth_mask != null) {
-            boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
-            GL11.glDepthMask(state.depth_mask);
-            restore.add(() -> GL11.glDepthMask(oldDepthMask));
+
+        if (state.lightmap != null) {
+            float block = state.lightmap[0];
+            float sky = state.lightmap[1];
+            float oldX;
+            float oldY;
+            if (state.stage == Stage.ENTITY) {
+                oldX = lastLightX;
+                oldY = lastLightY;
+            } else {
+//                oldX = GlStateManager.lastBrightnessX;
+//                oldY = GlStateManager.lastBrightnessY;
+                //TODO Add our own tracer
+                oldX = 1;
+                oldY = 1;
+            }
+            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
+            restore.add(() -> setupLightMap(shader, oldX, oldY));
         }
 
-        if (state.smooth_shading != null) {
-            int oldShading = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
-            GL11.glShadeModel(state.smooth_shading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
-            restore.add(() -> GL11.glShadeModel(oldShading));
-        }*/
-
-        if(state.bools.containsKey(GL11.GL_CULL_FACE)) {
+        if (state.bools.containsKey(GL11.GL_CULL_FACE)) {
             boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
             if(state.bools.get(GL11.GL_CULL_FACE)) {
                 RenderSystem.enableCull();
@@ -91,7 +102,7 @@ public class RenderContext {
             });
         }
 
-        if(state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
+        if (state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
             boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
             if(state.bools.get(GL11.GL_DEPTH_TEST)) {
                 RenderSystem.enableDepthTest();
@@ -107,8 +118,7 @@ public class RenderContext {
             });
         }
 
-        if(state.depth_mask != null) {
-            //TODO overlapping cloud
+        if (state.depth_mask != null) {
             RenderSystem.depthMask(state.depth_mask);
             restore.add(() -> RenderSystem.depthMask(true));
         }
@@ -131,9 +141,6 @@ public class RenderContext {
             restore.add(RenderSystem::disableScissor);
         }
 
-        //TODO Better lighting
-//        Matrix4f matrix4f = new Matrix4f().identity();
-        Lighting.setupLevel();
         applyShaderFields(shader);
 
         shader.apply();
@@ -196,6 +203,22 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
+    private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
+        List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
+        for (int i = 0; i < elements1.size(); i++) {
+            VertexFormatElement element = elements1.get(i);
+            if (element.usage() == VertexFormatElement.Usage.UV) {
+                for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
+                        int x = (int) (oldX * 255);
+                        int y = (int) (oldY * 255);
+                        GL32.glVertexAttribI2i(i, x, y);
+                    }
+                }
+            }
+        }
+    }
+
     public static void applyBool(int opt, boolean currState) {
         if (currState) {
             GL32.glEnable(opt);
@@ -212,8 +235,23 @@ public class RenderContext {
         }
     }
 
-    //Restore state
-    //TODO 1.19.4 & PR#171
+    public enum Stage {
+        BLOCK,
+
+        ENTITY,
+
+        ITEM_SPRITE_TEX,
+        ITEM_IN_WORLD,
+        ITEM_IN_GUI,
+
+        GUI,
+
+        OVERLAY,      //Mouseover...
+        OVERLAY_TEXT, //Name plates...
+
+        NONE
+    }
+
     public static void resetState() {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1,1,1,1);

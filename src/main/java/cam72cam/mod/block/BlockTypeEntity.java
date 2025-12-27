@@ -157,7 +157,7 @@ public abstract class BlockTypeEntity extends BlockType {
         return 0;
     }
 
-    protected class BlockTypeInternal extends BlockInternal implements EntityBlock {
+    public class BlockTypeInternal extends BlockInternal implements EntityBlock {
         @Override
         public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(BlockPos p_153215_, BlockState p_153216_) {
             TileEntity tile = constructBlockEntity().supplier(id);

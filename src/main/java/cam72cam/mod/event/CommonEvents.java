@@ -2,7 +2,7 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.net.Packet;
-import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.entity.ModdedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +17,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.entity.EntityEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
@@ -124,6 +125,16 @@ public class CommonEvents {
             }
         }
 
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringSection event) {
+            if (event.getEntity() instanceof ModdedEntity modded) {
+                cam72cam.mod.world.World.get(modded.level()).tracker
+                        .move(modded,
+                              event.getPackedOldPos(),
+                              event.getPackedNewPos());
+            }
+        }
+
         @FunctionalInterface
         public interface BlockBrokenEvent {
             boolean onBroken(Level world, BlockPos pos, Player player);
@@ -147,7 +158,6 @@ public class CommonEvents {
     public static final class EventBusMod {
         static {
             registerEvents();
-            GlobalRender.registerClientEvents();
         }
 
         @SubscribeEvent

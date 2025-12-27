@@ -13,6 +13,7 @@ import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
+import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -476,7 +477,7 @@ public class ModCore {
                 case INITIALIZE:
                     break;
                 case SETUP:
-                    CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
+//                    CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
                     break;
                 case FINALIZE:
                     ChunkManager.setup();
@@ -578,10 +579,7 @@ public class ModCore {
 
     /** Get a file for name in the UMC cache dir */
     public static synchronized File cacheFile(Identifier id) {
-        Path configDir = FMLPaths.CONFIGDIR.get();
-        if (configDir == null) {
-            configDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft");
-        }
+        Path configDir = MinecraftFiles.getConfigDir().toPath();
         File cacheDir = Paths.get(configDir.getParent().toFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 
