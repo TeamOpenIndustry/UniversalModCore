@@ -178,7 +178,7 @@ public class VBO {
             ShaderInstance shader;
             if (state.stage != null) {
                 shader = switch (state.stage) {
-                    case GUI -> GameRenderer.getRendertypeCutoutShader();
+                    case GUI -> GameRenderer.getPositionTexLightmapColorShader();
                     case ITEM_IN_WORLD -> GameRenderer.getRendertypeEntityCutoutShader();
                     default -> ShaderHelper.isIrisShaderEnabled()
                                ? GameRenderer.getRendertypeEntityCutoutShader()
@@ -229,7 +229,7 @@ public class VBO {
                                         x = (int) (state.lightmap[0] * 255);
                                         y = (int) (state.lightmap[1] * 255);
                                     }
-                                    GL32.glVertexAttribI2i(i, x, y);
+                                    GL32.glVertexAttribI2i(i, 255, 255);
                                 }
                             }
                         }
