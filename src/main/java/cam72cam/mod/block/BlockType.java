@@ -148,7 +148,7 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    protected class BlockInternal extends net.minecraft.world.level.block.Block {
+    public class BlockInternal extends net.minecraft.world.level.block.Block {
         public BlockInternal() {
             super(Block.Properties.of().mapColor(getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)

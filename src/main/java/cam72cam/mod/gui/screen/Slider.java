@@ -5,8 +5,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.gui.widget.ForgeSlider;
 import java.util.function.Supplier;
 
+import java.util.function.Consumer;
+
 /** Standard slider */
-public abstract class Slider extends Button {
+public class Slider extends Button {
     /** Internal wrapper to add onSlider Hook */
     private static class InternalForgeSlider extends ForgeSlider {
         private Runnable clicker = () -> {};
@@ -33,22 +35,38 @@ public abstract class Slider extends Button {
     }
 
     private String text;
+    public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
+        this(builder, x, y, 150, 20, text, min, max, start, doublePrecision, handler);
+    }
 
-    public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-//        super(builder, new net.minecraftforge.client.gui.widget.Slider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, new TextComponent(text), min, max, start, b -> {}, null));
-        super(builder, new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20,
-                                               Component.literal(text), Component.literal(""), min, max, start, 0, doublePrecision ? 4 : 0, true));
+    public Slider(IScreenBuilder builder, int x, int y, int width, int height, String text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
+        super(builder,
+              new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height,
+                                      Component.literal(text), Component.literal(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
+              ((hand, button1) -> handler.accept((Slider) button1)));
         ((InternalForgeSlider)this.button).clicker = this::onSlider;
         ((InternalForgeSlider)this.button).setter = this::getSliderText;
     }
 
-    @Override
-    public void onClick(Player.Hand hand) {
 
+    @Deprecated
+    public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
+        super(builder,
+              new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20,
+                                      Component.literal(text), Component.literal(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
+              ((hand, button1) -> {}));
+        ((InternalForgeSlider)this.button).clicker = this::onSlider;
+        ((InternalForgeSlider)this.button).setter = this::getSliderText;
     }
 
     /** Called when the slider value is changed */
-    public abstract void onSlider();
+    public void onSlider() {
+        this.handler.accept(Player.Hand.PRIMARY, this);
+    }
+
+    public void setValue(double value) {
+        ((InternalForgeSlider)button).setValue(value);
+    }
 
     public int getValueInt() {
         return ((ForgeSlider) button).getValueInt();

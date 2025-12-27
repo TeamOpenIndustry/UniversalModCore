@@ -1,6 +1,7 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.entity.ModdedEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -16,6 +17,7 @@ import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
@@ -111,6 +113,16 @@ public class CommonEvents {
         public static void onEntityJoin(EntityJoinLevelEvent event) {
             if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getLevel(), event.getEntity()))) {
                 event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringSection event) {
+            if (event.getEntity() instanceof ModdedEntity modded) {
+                cam72cam.mod.world.World.get(modded.level).tracker
+                        .move(modded,
+                              event.getPackedOldPos(),
+                              event.getPackedNewPos());
             }
         }
 

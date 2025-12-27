@@ -5,11 +5,9 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
-import cam72cam.mod.entity.Entity;
-import cam72cam.mod.entity.Living;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.Player;
+import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
@@ -18,8 +16,12 @@ import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.Facing;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,8 +33,6 @@ import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
-import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -41,6 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -50,7 +51,6 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -76,6 +76,8 @@ public class World {
     private final Map<Integer, Entity> entityByID = new HashMap<>();
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
+
+    public final WorldEntityTracker tracker = new WorldEntityTracker();
 
     /* World Initialization */
 
@@ -215,10 +217,13 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
+            tracker.join((ModdedEntity) entityIn);
         } else if (entityIn instanceof net.minecraft.world.entity.player.Player) {
             entity = new Player((net.minecraft.world.entity.player.Player) entityIn);
         } else if (entityIn instanceof LivingEntity) {
             entity = new Living((LivingEntity) entityIn);
+        } else if (entityIn instanceof net.minecraft.world.entity.item.ItemEntity) {
+            entity = new ItemEntity((net.minecraft.world.entity.item.ItemEntity) entityIn);
         } else {
             entity = new Entity(entityIn);
         }
@@ -242,6 +247,9 @@ public class World {
         }
         entityByID.remove(entity.getId());
         entityByUUID.remove(entity.getUUID());
+        if (entity instanceof ModdedEntity){
+            tracker.leave((ModdedEntity) entity);
+        }
     }
 
     /* Entity Methods */
@@ -300,6 +308,34 @@ public class World {
         return list;
     }
 
+    /**
+     * Find UMC Entities which within the BB and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb, Class<T> type) {
+        return getEntitiesWithinBB(bb, (T val) -> true, type);
+    }
+
+    /**
+     * Find UMC Entities which within the BB, match the filter and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
+        List<net.minecraft.world.entity.Entity> entitiesWithinAABB = internal.getEntitiesOfClass(net.minecraft.world.entity.Entity.class,
+                                    bb instanceof DefaultBoundingBox
+                                    ? ((DefaultBoundingBox)bb).getInternal()
+                                    : new AABB(bb.min().internal(), bb.max().internal()));
+
+        return entitiesWithinAABB.stream()
+                                 .map(this::getEntity)
+                                 .filter(type::isInstance)
+                                 .map(type::cast)
+                                 .filter(filter)
+                                 .collect(Collectors.toList());
+    }
+
     /** Add a constructed entity to the world */
     public boolean spawnEntity(Entity ent) {
         return internal.addFreshEntity(ent.internal);
@@ -332,7 +368,7 @@ public class World {
                 .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
                 .map(x -> (T) ((TileEntity) x).instance())
                 .collect(Collectors.toList());*/
-        throw new NotImplementedException("TODO remove from UMC!");
+        throw new UnsupportedOperationException("TODO remove from UMC!");
     }
 
     /** Get a block entity at the position, assuming type */
@@ -495,15 +531,20 @@ public class World {
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3d pos) {
-        dropItem(stack, pos, Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos) {
+        return dropItem(stack, pos, Vec3d.ZERO);
     }
 
-    /** Drop a stack on the ground at pos with velocity */
-    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
-        net.minecraft.world.entity.item.ItemEntity entity = new net.minecraft.world.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal());
+    /** Drop a stack on the ground at pos with velocity.
+     * <p>
+     * Note that if system property <code>forge.debugBlockSnapshot</code> is true and forge is capturing block snapshot, item entity will not be spawned and this method will return null!
+     */
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
+        net.minecraft.world.entity.item.ItemEntity entity =
+                new net.minecraft.world.entity.item.ItemEntity(internal, pos.x, pos.y, pos.z, stack.internal());
         entity.setDeltaMovement(velocity.x, velocity.y, velocity.z);
         internal.addFreshEntity(entity);
+        return getEntity(entity.getUUID(), ItemEntity.class);
     }
 
     /** Check if the block is currently in a loaded chunk */
@@ -675,8 +716,9 @@ public class World {
 
     /** Get dropped items within the given area */
     public List<ItemStack> getDroppedItems(IBoundingBox bb) {
-        List<ItemEntity> items = internal.getEntitiesOfClass(ItemEntity.class, BoundingBox.from(bb));
-        return items.stream().map((ItemEntity::getItem)).map(ItemStack::new).collect(Collectors.toList());
+        List<net.minecraft.world.entity.item.ItemEntity> items =
+                internal.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, BoundingBox.from(bb));
+        return items.stream().map(net.minecraft.world.entity.item.ItemEntity::getItem).map(ItemStack::new).collect(Collectors.toList());
     }
 
     /** Get a BlockInfo that can be used to overwrite a block in the future.  Does not currently include TE data */
