@@ -145,7 +145,8 @@ public class StandardModel {
             for (Pair<BlockState, BakedModel> model : models) {
                 if ((state.stage == RenderContext.Stage.GUI
                         || state.stage == RenderContext.Stage.ITEM_IN_WORLD
-                        || state.stage == RenderContext.Stage.ITEM_IN_GUI)
+                        || state.stage == RenderContext.Stage.ITEM_IN_GUI
+                        || state.stage == RenderContext.Stage.OVERLAY)
                     && inGuiBlock.containsKey(model)) {
                     //Skip here as block's quad behave bad in those consequences
                     continue;
@@ -163,8 +164,7 @@ public class StandardModel {
                     quads.addAll(model.getRight().getQuads(null, facing, new Random()));
                 }
 
-                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f,
-                                                                0/*15 << 20 | 15 << 4*/, OverlayTexture.NO_OVERLAY));
+                quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0f, 0, OverlayTexture.NO_OVERLAY));
             }
             worldRenderer.end();
             BufferUploader.end(worldRenderer);
@@ -182,7 +182,7 @@ public class StandardModel {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
         if (state.stage != null) {
             switch (state.stage) {
-                case GUI, ITEM_IN_GUI ->
+                case GUI, ITEM_IN_GUI, OVERLAY ->
                         inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, 15728880));
                 case ITEM_IN_WORLD -> {
                     int light = (int) (RenderContext.lastLightY * 65536 + RenderContext.lastLightX);
@@ -208,10 +208,14 @@ public class StandardModel {
         return (matrix, pt, light) -> {
             matrix.model_view().multiply(transform).translate(0.5, 0.5, 0.5);
 
+            Block block = Block.byItem(stack.getItem());
+            if (block instanceof RotatedPillarBlock) {
+                //Rotate to Z direction
+                matrix.model_view().rotate(Math.toRadians(90), 1, 0, 0);
+            }
             try (With ctx = RenderContext.apply(matrix)) {
                 boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(
-                        Tesselator.getInstance().getBuilder());
+                MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
                 if (oldState) {
                     GL32.glEnable(GL32.GL_BLEND);
                 } else {
