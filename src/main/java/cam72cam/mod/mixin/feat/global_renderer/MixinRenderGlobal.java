@@ -2,6 +2,7 @@ package cam72cam.mod.mixin.feat.global_renderer;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
@@ -27,5 +28,6 @@ public class MixinRenderGlobal {
         RenderState state = new RenderState(stack).translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
         RenderType.cutoutMipped().clearRenderState();
+        RenderContext.resetState();
     }
 }

@@ -249,8 +249,6 @@ public class RenderContext {
         NONE
     }
 
-    //Restore state
-    //TODO 1.19.4 & PR#171
     public static void resetState() {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1,1,1,1);

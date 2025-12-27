@@ -75,8 +75,6 @@ public class StandardModel {
 
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
-        //TODO 1.19.4 find out why not working in gui/item/overlay
-        //Should we try to wrap it after RenderStage merged?
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         if (model instanceof WeightedBakedModel weightedBakedModel) {
