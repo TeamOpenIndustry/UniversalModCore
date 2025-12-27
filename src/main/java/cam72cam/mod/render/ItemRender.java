@@ -47,8 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.Objects;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -372,6 +370,8 @@ public class ItemRender {
                     int j = i % 65536;
                     int k = i / 65536;
                     state.lightmap(j/240f, k/240f);
+                    RenderContext.lastLightX = j;
+                    RenderContext.lastLightY = k;
 
                     //std.renderCustom();
                     std.render(state);

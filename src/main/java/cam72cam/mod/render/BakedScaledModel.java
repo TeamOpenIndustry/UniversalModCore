@@ -5,9 +5,9 @@ import com.mojang.math.Transformation;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.QuadTransformer;
 import util.Matrix4;
@@ -19,7 +19,7 @@ import java.util.Random;
 
 /**
  * Internal class to scale an existing Baked Model
- *
+ * <p>
  * Do not use directly
  */
 class BakedScaledModel implements BakedModel {
@@ -42,24 +42,7 @@ class BakedScaledModel implements BakedModel {
     @Override
     public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand) {
         if (quadCache.get(side) == null) {
-            Matrix4f mat = new Matrix4f(new float[] {
-                    (float) transform.m00,
-                    (float) transform.m01,
-                    (float) transform.m02,
-                    (float) transform.m03,
-                    (float) transform.m10,
-                    (float) transform.m11,
-                    (float) transform.m12,
-                    (float) transform.m13,
-                    (float) transform.m20,
-                    (float) transform.m21,
-                    (float) transform.m22,
-                    (float) transform.m23,
-                    (float) transform.m30,
-                    (float) transform.m31,
-                    (float) transform.m32,
-                    (float) transform.m33
-            });
+            Matrix4f mat = transform.convertToMoj();
             QuadTransformer qt = new QuadTransformer(new Transformation(mat));
             quadCache.put(side, qt.processMany(source.getQuads(state, side, rand)));
         }
