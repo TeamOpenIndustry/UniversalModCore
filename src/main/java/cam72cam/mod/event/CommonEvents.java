@@ -2,10 +2,10 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.world.ChunkPos;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -121,8 +121,8 @@ public class CommonEvents {
                 ModdedEntity modded = (ModdedEntity) event.getEntity();
                 cam72cam.mod.world.World.get(modded.world).tracker
                         .move(modded,
-                              ChunkPos.asLong(event.getOldChunkX(), event.getOldChunkZ()),
-                              ChunkPos.asLong(event.getNewChunkX(), event.getNewChunkZ()));
+                              ChunkPos.asLong(event.getOldChunkX(), 0, event.getOldChunkZ()),
+                              ChunkPos.asLong(event.getNewChunkX(), 0, event.getNewChunkZ()));
             }
         }
     }
