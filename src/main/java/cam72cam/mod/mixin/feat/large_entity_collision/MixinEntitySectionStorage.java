@@ -40,7 +40,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
         any.flatMap(entitySectionEntry -> entitySectionEntry.getValue().getEntities().filter(
                 e -> e instanceof net.minecraft.world.entity.Entity).findFirst())
            .ifPresent(e -> {
-                levelLocalRef.set(World.get(((net.minecraft.world.entity.Entity)e).level).tracker);
+                levelLocalRef.set(World.get(((net.minecraft.world.entity.Entity)e).level()).tracker);
                 setLocalRef.set(new LongArraySet());
             });
     }

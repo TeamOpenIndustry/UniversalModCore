@@ -36,12 +36,12 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.target == null || this.internal.level.getPlayerByUUID(internal.target) == null) {
+        if (internal.target == null || this.internal.level().getPlayerByUUID(internal.target) == null) {
             return null;
         }
 
-        return World.get(this.internal.level)
-                    .getEntity(this.internal.level.getPlayerByUUID(internal.target))
+        return World.get(this.internal.level())
+                    .getEntity(this.internal.level().getPlayerByUUID(internal.target))
                     .asPlayer();
     }
 
@@ -66,11 +66,11 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.thrower == null || this.internal.level.getPlayerByUUID(internal.thrower) == null) {
+        if (internal.thrower == null || this.internal.level().getPlayerByUUID(internal.thrower) == null) {
             return null;
         }
-        return World.get(this.internal.level)
-                    .getEntity(this.internal.level.getPlayerByUUID(internal.thrower))
+        return World.get(this.internal.level())
+                    .getEntity(this.internal.level().getPlayerByUUID(internal.thrower))
                     .asPlayer();
     }
 

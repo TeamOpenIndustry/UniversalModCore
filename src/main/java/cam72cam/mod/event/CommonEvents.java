@@ -119,7 +119,7 @@ public class CommonEvents {
         @SubscribeEvent
         public static void onEntityTransfer(EntityEvent.EnteringSection event) {
             if (event.getEntity() instanceof ModdedEntity modded) {
-                cam72cam.mod.world.World.get(modded.level).tracker
+                cam72cam.mod.world.World.get(modded.level()).tracker
                         .move(modded,
                               event.getPackedOldPos(),
                               event.getPackedNewPos());
