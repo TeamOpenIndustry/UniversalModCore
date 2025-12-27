@@ -4,16 +4,15 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.text.PlayerMessage;
-import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.text.PlayerMessage;
+import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -22,9 +21,8 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraftforge.fmlclient.gui.GuiUtils;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -221,15 +219,13 @@ public class GUIHelpers {
      * Only use in IScreen.draw()!
      * */
     public static void drawTooltipAtCursor(List<String> content) {
-        if (delayedRenderFunctions.peek() != null) {
+        if (delayedRenderFunctions.peek() != null && Minecraft.getInstance().screen != null) {
             //Use map to ensure only 1 tooltip is drawn
             delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
-                int width = getScreenWidth();
-                int height = getScreenHeight();
-                List<FormattedText> properties = content.stream()
-                                                        .map(TextComponent::new)
-                                                        .collect(Collectors.toList());
-                GuiUtils.drawHoveringText(new PoseStack(), properties, x, y, width, height, -1, Minecraft.getInstance().font);
+                List<Component> components = content.stream()
+                                                    .map(TextComponent::new)
+                                                    .collect(Collectors.toList());
+                Minecraft.getInstance().screen.renderTooltip(new PoseStack(), components, Optional.empty(), x, y, Minecraft.getInstance().font);
             });
         } else {
             ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
