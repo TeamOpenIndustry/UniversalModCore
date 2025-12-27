@@ -5,6 +5,7 @@ import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -13,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
+import util.Matrix4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,6 +138,12 @@ public class RenderContext {
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
             restore.add(RenderSystem::disableScissor);
+        }
+
+        if (state.stage == Stage.ITEM_SPRITE_TEX) {
+            Matrix4 matrix4 = new Matrix4();
+            matrix4.rotate(Math.toRadians(90), 0, 1, 0);
+            Lighting.setupLevel(matrix4.convertToMoj());
         }
 
         applyShaderFields(shader);
