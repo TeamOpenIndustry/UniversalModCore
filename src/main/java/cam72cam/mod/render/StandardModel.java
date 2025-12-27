@@ -79,7 +79,7 @@ public class StandardModel {
         }
         Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
         models.add(pair);
-        inGuiBlock.put(pair, getRenderFunc(bed.internal, transform));
+        inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
     }
 
