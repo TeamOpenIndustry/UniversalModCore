@@ -6,12 +6,15 @@ buildscript {
             url "https://maven.neoforged.net/releases"
         }
         maven { url "https://plugins.gradle.org/m2/" }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
     }
     dependencies {
 //        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
         classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
         classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -21,7 +24,7 @@ apply plugin: 'net.neoforged.gradle.common'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
-
+apply plugin: 'org.spongepowered.mixin'
 
 configurations {
     shade
@@ -33,7 +36,9 @@ java {
 }
 
 repositories {
-    mavenCentral()
+    maven {
+        url "https://cursemaven.com"
+    }
 }
 
 String umcVersion = "1.2.2"
@@ -56,6 +61,10 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 runs {
     // applies to all the run configs below
     configureEach {
+        //Enable mixin-ed dependency in deobfuscated environment
+        systemProperty "mixin.env.remapRefMap", "true"
+        systemProperty "mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg"
+
         // Recommended logging data for a userdev environment
         // The markers can be added/remove as needed separated by commas.
         // "SCAN": For mods scan.
@@ -77,6 +86,10 @@ runs {
     }
 
     server {
+        //Enable mixin-ed dependency in deobfuscated environment
+        systemProperty "mixin.env.remapRefMap", "true"
+        systemProperty "mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg"
+
         systemProperty 'neoforge.enabledGameTestNamespaces', 'universalmodcore'
         argument '--nogui'
     }
@@ -107,6 +120,10 @@ repositories {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+repositories {
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
 dependencies {
     implementation "net.neoforged:neoforge:20.4.250"
     // you may put jars on which you depend on in ./libs
@@ -129,12 +146,25 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
+    annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0')
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
     implementation(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
     implementation(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
+}
+
+mixin {
+    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+
+    config 'mixins.universalmodcore.json'
+
+    //Dev environment setup
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
 }
 
 jar {
@@ -147,7 +177,7 @@ jar {
             "Implementation-Title": project.name,
             "Implementation-Version": umcVersion,
             "Implementation-Vendor" :"",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
@@ -157,6 +187,10 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz" //lz4
+    //Don't do this
+//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
 //    finalizedBy 'reobfShadowJar'
 }
 

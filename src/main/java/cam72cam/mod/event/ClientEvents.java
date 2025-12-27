@@ -2,6 +2,8 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
+import cam72cam.mod.event.platform.TextureStitchEvent;
+import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
@@ -97,12 +99,13 @@ public class ClientEvents {
     public static final Event<Consumer<TextureAtlasStitchedEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
+    public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
+//    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -233,11 +236,16 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void optifineSucksEvent(RenderLevelStageEvent event) {
-            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
-                OPTIFINE_SUCKS.execute(x -> x.accept(event));
-            }
+        public static void onSoundLoad(SoundEngineLoadEvent event) {
+            SOUND_LOAD.execute(x -> x.accept(event));
         }
+
+//        @SubscribeEvent
+//        public static void optifineSucksEvent(RenderLevelStageEvent event) {
+//            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+//                OPTIFINE_SUCKS.execute(x -> x.accept(event));
+//            }
+//        }
 
         static boolean hasHacked = false;
         @SubscribeEvent
@@ -295,8 +303,8 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onSoundLoad(SoundEngineLoadEvent event) {
-            SOUND_LOAD.execute(x -> x.accept(event));
+        public static void registerVanillaShader(RegisterShadersEvent event) {
+            REGISTER_SHADER.execute(x -> x.accept(event));
         }
     }
 }

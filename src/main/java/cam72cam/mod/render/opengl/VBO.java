@@ -2,16 +2,20 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +35,16 @@ public class VBO {
                         vbo.free();
                     }
                 }
+            }
+        });
+        ClientEvents.REGISTER_SHADER.subscribe(event -> {
+            try {
+                event.registerShader(new ShaderInstance(event.getResourceProvider(),
+                                                        ResourceLocation.parse("umc_core"),
+                                                        DefaultVertexFormat.NEW_ENTITY),
+                                     instance -> RenderContext.UMC_CORE = instance);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         });
     }
@@ -118,6 +132,8 @@ public class VBO {
 
 
         protected Binding(RenderState state, boolean wait) {
+            lastUsed = System.currentTimeMillis();
+
             if (!isLoaded()) {
                 init();
             }
@@ -159,8 +175,18 @@ public class VBO {
             } else {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
-
-            ShaderInstance shader = GameRenderer.getRendertypeEntityCutoutShader();
+            ShaderInstance shader;
+            if (state.stage != null) {
+                shader = switch (state.stage) {
+                    case GUI -> GameRenderer.getPositionTexLightmapColorShader();
+                    case ITEM_IN_WORLD -> GameRenderer.getRendertypeEntityCutoutShader();
+                    default -> ShaderHelper.isIrisShaderEnabled()
+                               ? GameRenderer.getRendertypeEntityCutoutShader()
+                               : RenderContext.UMC_CORE;
+                };
+            } else {
+                shader = GameRenderer.getRendertypeEntityCutoutShader();
+            }
             RenderSystem.setShader(() -> shader);
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -196,9 +222,6 @@ public class VBO {
                                     GL32.glDisableVertexAttribArray(i);
                                     GL32.glVertexAttribI2i(i, 0, 10);
                                 } else if (entry.getKey().equals("UV2")) {
-//                                    GL32.glEnableVertexAttribArray(i);
-//                                    GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.lightmapOffset * Float.BYTES);
-
                                     GL32.glDisableVertexAttribArray(i);
                                     int x = 255;
                                     int y = 255;
@@ -206,7 +229,7 @@ public class VBO {
                                         x = (int) (state.lightmap[0] * 255);
                                         y = (int) (state.lightmap[1] * 255);
                                     }
-                                    GL32.glVertexAttribI2i(i, x, y);
+                                    GL32.glVertexAttribI2i(i, 255, 255);
                                 }
                             }
                         }
