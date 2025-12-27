@@ -21,8 +21,10 @@ public class MixinRenderGlobal {
     public void injectRenderGlobal(PoseStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
                                    Camera info, GameRenderer gameRenderer, LightTexture light,
                                    Matrix4f matrix, CallbackInfo ci) {
+        RenderType.cutoutMipped().setupRenderState();
         Vec3d pos = GlobalRender.getCameraPos(partialTicks);
-        RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
+        RenderState state = new RenderState(stack).translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
+        RenderType.cutoutMipped().clearRenderState();
     }
 }

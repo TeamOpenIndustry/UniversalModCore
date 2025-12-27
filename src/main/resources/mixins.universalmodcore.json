@@ -6,6 +6,7 @@
   "minVersion": "0.8.2",
   "plugin": "cam72cam.mod.UMCMixinPlugin",
   "compatibilityLevel": "JAVA_8",
+  "priority": 1300,
   "mixins": [
     "feat.global_renderer.MixinRenderGlobal",
     "feat.large_entity_collision.MixinEntitySectionStorage"
