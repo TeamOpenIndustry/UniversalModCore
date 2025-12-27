@@ -112,8 +112,7 @@ jar {
                 'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
                 'TweakOrder': '0',
-                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                "MixinConfigs": "mixins.universalmodcore.json"
+                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
         )
     }
 }

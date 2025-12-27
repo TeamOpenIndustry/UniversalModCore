@@ -18,7 +18,8 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
         MixinExtrasBootstrap.init();
-        Mixins.addConfiguration("mixins.universalmodcore.json");
+        Mixins.addConfiguration("mixins.feat.universalmodcore.json");
+        Mixins.addConfiguration("mixins.fix.universalmodcore.json");
 
         CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
         if (codeSource != null) {
