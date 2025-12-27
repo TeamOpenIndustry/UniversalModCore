@@ -10,6 +10,9 @@ import cam72cam.mod.render.opengl.RenderState;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Matrix3f;
+import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -106,14 +109,34 @@ public class OBJRender extends VBO {
                 require(buff.length);
 
                 if (m != null) {
+                    Matrix3f normalMat = new Matrix3f(
+                            (float) m.m00, (float) m.m01, (float) m.m02,
+                            (float) m.m10, (float) m.m11, (float) m.m12,
+                            (float) m.m20, (float) m.m21, (float) m.m22
+                    );
+                    normalMat.invert();
+                    normalMat.transpose();
                     for (int i = 0; i < buff.length; i += vb.stride) {
                         float x = buff[i+0];
                         float y = buff[i+1];
                         float z = buff[i+2];
-                        Vec3d v = m.apply(new Vec3d(x, y, z));
-                        buff[i+0] = (float) v.x;
-                        buff[i+1] = (float) v.y;
-                        buff[i+2] = (float) v.z;
+                        Vector3f v = new Vector3f(x, y, z);
+                        m.apply(v);
+                        buff[i+0] = v.x;
+                        buff[i+1] = v.y;
+                        buff[i+2] = v.z;
+
+                        if (vb.hasNormals) {
+                            float nx = buff[i+0+vb.normalOffset];
+                            float ny = buff[i+1+vb.normalOffset];
+                            float nz = buff[i+2+vb.normalOffset];
+                            Vector3f n = new Vector3f(nx, ny, nz);
+                            normalMat.transform(n);
+                            n.normalize();
+                            buff[i+0+vb.normalOffset] = n.x;
+                            buff[i+1+vb.normalOffset] = n.y;
+                            buff[i+2+vb.normalOffset] = n.z;
+                        }
                     }
                 }
 
