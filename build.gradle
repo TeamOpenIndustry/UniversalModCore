@@ -14,7 +14,7 @@ buildscript {
         classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
         classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+//        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
@@ -24,7 +24,8 @@ apply plugin: 'net.neoforged.gradle.common'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.spongepowered.mixin'
+//apply plugin: 'org.spongepowered.mixin'
+//apply plugin: 'net.neoforged.gradle.mixin'
 
 configurations {
     shade
@@ -65,6 +66,8 @@ runs {
         systemProperty "mixin.env.remapRefMap", "true"
         systemProperty "mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg"
 
+        systemProperty "mixin.debug.verbose", "true"
+        systemProperty "mixin.debug.export", "true"
         // Recommended logging data for a userdev environment
         // The markers can be added/remove as needed separated by commas.
         // "SCAN": For mods scan.
@@ -86,10 +89,6 @@ runs {
     }
 
     server {
-        //Enable mixin-ed dependency in deobfuscated environment
-        systemProperty "mixin.env.remapRefMap", "true"
-        systemProperty "mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg"
-
         systemProperty 'neoforge.enabledGameTestNamespaces', 'universalmodcore'
         argument '--nogui'
     }
@@ -146,8 +145,8 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
-    annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0')
+//    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
+//    annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0')
 
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
@@ -156,16 +155,16 @@ dependencies {
     implementation(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
-mixin {
-    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
-
-    config 'mixins.universalmodcore.json'
-
-    //Dev environment setup
-    debug.verbose = true
-    debug.export = true
-    dumpTargetOnFailure = true
-}
+//mixin {
+//    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+//
+//    config 'mixins.universalmodcore.json'
+//
+//    //Dev environment setup
+//    debug.verbose = true
+//    debug.export = true
+//    dumpTargetOnFailure = true
+//}
 
 jar {
     archiveClassifier = 'slim'

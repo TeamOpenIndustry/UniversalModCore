@@ -5,7 +5,6 @@ import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.event.platform.TextureStitchEvent;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.BlockRender;
@@ -27,9 +26,6 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
 import net.neoforged.neoforge.event.TickEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -96,7 +92,7 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureAtlasStitchedEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
@@ -235,10 +231,11 @@ public class ClientEvents {
             RenderContext.resetState();
         }
 
-        @SubscribeEvent
-        public static void onSoundLoad(SoundEngineLoadEvent event) {
-            SOUND_LOAD.execute(x -> x.accept(event));
-        }
+        //Call in Mod Bus
+//        @SubscribeEvent
+//        public static void onSoundLoad(SoundEngineLoadEvent event) {
+//            SOUND_LOAD.execute(x -> x.accept(event));
+//        }
 
 //        @SubscribeEvent
 //        public static void optifineSucksEvent(RenderLevelStageEvent event) {
@@ -281,7 +278,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureAtlasStitchedEvent event) {
+        public static void onTextureStitchEvent(TextureStitchEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 
@@ -305,6 +302,11 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerVanillaShader(RegisterShadersEvent event) {
             REGISTER_SHADER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void onSoundLoad(SoundEngineLoadEvent event) {
+            SOUND_LOAD.execute(x -> x.accept(event));
         }
     }
 }

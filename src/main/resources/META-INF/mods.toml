@@ -13,6 +13,9 @@ description='''
 Universal Mod API (Minecraft version agnostic)
 '''
 
+[[mixins]]
+config="mixins.universalmodcore.json"
+
 [[dependencies.universalmodcore]]
     modId="neoforge"
     type='required'

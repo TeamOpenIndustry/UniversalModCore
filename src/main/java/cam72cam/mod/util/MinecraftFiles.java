@@ -1,7 +1,7 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.world.World;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.File;
 import java.nio.file.Path;
