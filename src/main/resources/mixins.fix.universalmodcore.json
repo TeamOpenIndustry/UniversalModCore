@@ -7,6 +7,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1301,
   "mixins": [
+    "entity_data_migration.MixinChunkStorage"
   ],
   "client": [
     "direct_draw_call.MixinLevelRenderer"
