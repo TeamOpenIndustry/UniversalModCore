@@ -3,8 +3,6 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
-import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -12,6 +10,8 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -148,9 +148,12 @@ public class RenderContext {
         }
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
-            Matrix4 matrix4 = new Matrix4();
-            matrix4.rotate(Math.toRadians(90), 0, 1, 0);
-            Lighting.setupLevel(matrix4.convertToMoj());
+            Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
+//            Lighting.setupLevel(matrix4.convertToMoj());
+            Vector4f transformd0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
+            Vector4f transformd1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
+            RenderSystem.setShaderLights(new Vector3f(transformd0.x(), transformd0.y(), transformd0.z()),
+                                         new Vector3f(transformd1.x(), transformd1.y(), transformd1.z()));
         }
 
         applyShaderFields(shader);
