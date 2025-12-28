@@ -22,6 +22,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -309,8 +310,6 @@ public class ModCore {
         public void commonEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
-
-
                     Packet.register(EntitySync.EntitySyncPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
@@ -326,7 +325,7 @@ public class ModCore {
                     ChunkManager.setup();
                     break;
                 case SETUP:
-                    World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
+//                    World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, 32);
 
                     GuiRegistry.registration();
                     break;
@@ -435,15 +434,7 @@ public class ModCore {
 
     /** Get a file for name in the UMC cache dir */
     public static synchronized File cacheFile(Identifier id) {
-        File configDir;
-        try {
-            configDir = Loader.instance().getConfigDir();
-        } catch (ClassCastException ex) {
-            configDir = null;
-        }
-        if (configDir == null) {
-            configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
-        }
+        File configDir = MinecraftFiles.getConfigDir();
         File cacheDir = Paths.get(configDir.getParentFile().getPath(), "cache", id.getDomain()).toFile();
         cacheDir.mkdirs();
 

@@ -12,8 +12,8 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.Set;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /** TagCompound that auto-serializes an entity's @TagSync fields from server to client */
 public class EntitySync extends TagCompound {
@@ -22,6 +22,10 @@ public class EntitySync extends TagCompound {
     private int interval;
     // Previous entry (for calculating diff / needs update)
     private TagCompound old;
+    //Cache for TagSync.floatPrecision and doublePrecision
+    private static final Map<Class<?>, Map<String, Integer>> precisionMapper = new HashMap<>();
+    //lookup table for precisions, 9 is fine
+    private static final double[] syncs = new double[]{1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.00000001, 0.000000001};
 
     /** Track properties on entity */
     public EntitySync(CustomEntity entity) {
@@ -46,6 +50,32 @@ public class EntitySync extends TagCompound {
         }
 
         TagSerializer.serialize(this, entity, TagSync.class);
+        Map<String, Integer> precision = precisionMapper.computeIfAbsent(entity.getClass(), clazz -> {
+            List<Field> allFields = new ArrayList<>();
+            //Get all fields recursively
+            for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
+                allFields.addAll(Arrays.asList(c.getDeclaredFields()));
+            }
+            return allFields.stream()
+                            .filter(field -> {
+                                TagSync tagSync = field.getAnnotation(TagSync.class);
+                                TagField tagField = field.getAnnotation(TagField.class);
+                                return tagField != null && tagSync != null;
+                            })
+                            .collect(HashMap::new,
+                                     (m, f) -> {
+                                         TagSync tag = f.getAnnotation(TagSync.class);
+                                         TagField tagField = f.getAnnotation(TagField.class);
+                                         Class<?> type = f.getType();
+
+                                         if (type == float.class || type == Float.class) {
+                                             m.put(tagField.value(), Math.max(0, Math.min(tag.floatPrecision(), 8)));
+                                         } else if (type == double.class || type == Double.class) {
+                                             m.put(tagField.value(), Math.max(0, Math.min(tag.doublePrecision(), 8)));
+                                         }
+                                     },
+                                     HashMap::putAll);
+        });
 
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
@@ -58,12 +88,12 @@ public class EntitySync extends TagCompound {
                     continue;
                 }
                 if (oldVal.getId() == 5) {
-                    if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < 0.001) {
+                    if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < syncs[precision.get(key)]) {
                         continue;
                     }
                 }
                 if (oldVal.getId() == 6) {
-                    if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < 0.00001) {
+                    if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < syncs[precision.get(key)]) {
                         continue;
                     }
                 }
@@ -84,7 +114,7 @@ public class EntitySync extends TagCompound {
             });
         }
 
-        if (sync.internal.getKeySet().size() != 0) {
+        if (!sync.internal.getKeySet().isEmpty()) {
             old = new TagCompound((NBTTagCompound) this.internal.copy());
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }

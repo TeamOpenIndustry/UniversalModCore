@@ -4,7 +4,11 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.client.renderer.Tessellator;
 import util.Matrix4;
 
@@ -15,7 +19,7 @@ import java.util.function.Function;
 
 /**
  * Registry and Abstraction for Particles
- *
+ * <p>
  * Try not to allocate anything for each render frame...
  * */
 public abstract class Particle {
@@ -111,6 +115,26 @@ public abstract class Particle {
         mat.rotate(Math.toRadians(180 - Math.toDegrees(Math.atan2(Math.sqrt(z * z + x * x), y))) + 90, 1, 0, 0);
     }
 
+    public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
+        if (scale < 1E-7) return;
+
+        int extraArgument = 0;
+
+        if (vanilla == VanillaParticles.DIRT_DUST) {
+            extraArgument = Block.getStateId(Blocks.DIRT.getDefaultState());
+        } else if (vanilla == VanillaParticles.SAND_DUST) {
+            extraArgument = Block.getStateId(Blocks.SAND.getDefaultState());
+        }
+
+        net.minecraft.client.particle.Particle particle;
+        particle = Minecraft.getMinecraft().effectRenderer.spawnEffectParticle(
+                vanilla.internal.getParticleID(), pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z, extraArgument);
+
+        if (particle != null) {
+            particle.multipleParticleScaleBy(scale);
+        }
+    }
+
     /** Used to render multiple particles in the same function for efficiency */
     @FunctionalInterface
     public interface MultiRenderer<I extends Particle> {
@@ -129,6 +153,37 @@ public abstract class Particle {
             this.pos = pos;
             this.motion = motion;
             this.lifespan = lifespan;
+        }
+    }
+
+    public enum VanillaParticles {
+        ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
+        BUBBLE(EnumParticleTypes.WATER_BUBBLE),
+        CRITICAL_HIT(EnumParticleTypes.CRIT),
+        CRITICAL_MAGIC_HIT(EnumParticleTypes.CRIT_MAGIC),
+        DIRT_DUST(EnumParticleTypes.BLOCK_DUST),
+        EXPLOSION(EnumParticleTypes.EXPLOSION_HUGE),
+        FLAME(EnumParticleTypes.FLAME),
+        HAPPY_VILLAGER(EnumParticleTypes.VILLAGER_HAPPY),
+        HEART(EnumParticleTypes.HEART),
+        LAVA(EnumParticleTypes.LAVA),
+        LAVA_DROP(EnumParticleTypes.DRIP_LAVA),
+        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
+        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
+        NOTE(EnumParticleTypes.NOTE),
+        REDSTONE(EnumParticleTypes.REDSTONE),
+        RUNE(EnumParticleTypes.ENCHANTMENT_TABLE),
+        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
+        SNOWBALL_BREAKING(EnumParticleTypes.SNOWBALL),
+        SNOW_SHOVEL(EnumParticleTypes.SNOW_SHOVEL),
+        WATER_DRIP(EnumParticleTypes.DRIP_WATER),
+        WATER_SPLASH(EnumParticleTypes.WATER_SPLASH)
+        ;
+
+        private final EnumParticleTypes internal;
+
+        VanillaParticles(EnumParticleTypes type) {
+            this.internal = type;
         }
     }
 }

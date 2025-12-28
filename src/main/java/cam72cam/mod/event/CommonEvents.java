@@ -1,9 +1,12 @@
 package cam72cam.mod.event;
 
+import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.world.ChunkPos;
 import cam72cam.mod.math.Vec3i;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -88,6 +91,17 @@ public class CommonEvents {
         public void onEntityJoin(EntityJoinWorldEvent event) {
             if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.world, event.entity))) {
                 event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringChunk event) {
+            if (event.entity instanceof ModdedEntity) {
+                ModdedEntity modded = (ModdedEntity) event.entity;
+                cam72cam.mod.world.World.get(modded.worldObj).tracker
+                        .move(modded,
+                              ChunkPos.asLong(event.oldChunkX, 0, event.oldChunkZ),
+                              ChunkPos.asLong(event.newChunkX, 0, event.newChunkZ));
             }
         }
     }

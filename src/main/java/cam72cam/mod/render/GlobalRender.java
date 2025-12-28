@@ -31,30 +31,6 @@ public class GlobalRender {
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
-        // Beacon like hack for always running a single global render during the TE render phase
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> {
-            ClientRegistry.bindTileEntitySpecialRenderer(GlobalRenderHelper.class, new TileEntitySpecialRenderer() {
-                @Override
-                public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
-                    Vec3d pos = GlobalRender.getCameraPos(partialTicks);
-                    RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
-                    renderFuncs.forEach(r -> r.render(state, partialTicks));
-                }
-            });
-        });
-        GlobalRenderHelper grh = new GlobalRenderHelper();
-        ClientEvents.TICK.subscribe(() -> {
-            if (Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.worldObj != null) {  // May be able to get away with running this every N ticks?
-                Vec3i eyes = new Vec3i(MinecraftClient.getPlayer().getPositionEyes());
-                grh.xCoord = eyes.x;
-                grh.yCoord = eyes.y;
-                grh.zCoord = eyes.z;
-                grh.setWorldObj(Minecraft.getMinecraft().thePlayer.worldObj);
-                Minecraft.getMinecraft().renderGlobal.tileEntities.remove(grh);
-                Minecraft.getMinecraft().renderGlobal.tileEntities.add(grh);
-            }
-        });
-
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
@@ -79,7 +55,7 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (MinecraftClient.isReady() && event.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
-                func.render(new RenderState(), event.partialTicks);
+                func.render(new RenderState().stage(RenderContext.Stage.OVERLAY), event.partialTicks);
             }
         });
     }
@@ -90,7 +66,8 @@ public class GlobalRender {
             Player player = MinecraftClient.getPlayer();
             if (player != null && MinecraftClient.getBlockMouseOver() != null) {
                 if (!player.getHeldItem(Player.Hand.PRIMARY).isEmpty() && item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(), new RenderState(), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(),
+                              new RenderState().stage(RenderContext.Stage.OVERLAY), partialTicks);
                 }
             }
         });
@@ -103,10 +80,10 @@ public class GlobalRender {
 
     /** Get global position of the player's eyes (with partialTicks taken into account) */
     public static Vec3d getCameraPos(float partialTicks) {
-        net.minecraft.entity.Entity playerrRender = Minecraft.getMinecraft().renderViewEntity;
-        double d0 = playerrRender.lastTickPosX + (playerrRender.posX - playerrRender.lastTickPosX) * partialTicks;
-        double d1 = playerrRender.lastTickPosY + (playerrRender.posY - playerrRender.lastTickPosY) * partialTicks;
-        double d2 = playerrRender.lastTickPosZ + (playerrRender.posZ - playerrRender.lastTickPosZ) * partialTicks;
+        net.minecraft.entity.Entity playerRender = Minecraft.getMinecraft().renderViewEntity;
+        double d0 = playerRender.lastTickPosX + (playerRender.posX - playerRender.lastTickPosX) * partialTicks;
+        double d1 = playerRender.lastTickPosY + (playerRender.posY - playerRender.lastTickPosY) * partialTicks;
+        double d2 = playerRender.lastTickPosZ + (playerRender.posZ - playerRender.lastTickPosZ) * partialTicks;
         return new Vec3d(d0, d1, d2);
     }
 
@@ -142,7 +119,8 @@ public class GlobalRender {
                 .rotate(-viewerYaw, 0.0F, 1.0F, 0.0F)
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
-                .scale(-0.025F, -0.025F, 0.025F);
+                .scale(-0.025F, -0.025F, 0.025F)
+                .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
@@ -154,7 +132,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
@@ -167,6 +145,7 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
 
         state.color(1,1,1,1).alpha_test(true);
+        state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, 0, 0, color);
@@ -178,7 +157,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRendererObj;
 
-        state.color(1,1,1,1).alpha_test(true);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);
@@ -199,27 +178,8 @@ public class GlobalRender {
         void render(Player player, ItemStack stack, Vec3i pos, Vec3d offset, RenderState state, float partialTicks);
     }
 
-    public static class GlobalRenderHelper extends TileEntity {
-
-        @Override
-        public net.minecraft.util.AxisAlignedBB getRenderBoundingBox() {
-            return INFINITE_EXTENT_AABB;
-        }
-
-        @Override
-        public double getMaxRenderDistanceSquared() {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        @Override
-        public double getDistanceSq(double x, double y, double z) {
-            return 1;
-        }
-
-        @Override
-        public boolean shouldRenderInPass(int pass) {
-            return true;
-        }
-
+    /** Internal, don't use*/
+    public static void renderGlobalFuncs(RenderState state, float partialTicks) {
+        renderFuncs.forEach(r -> r.render(state, partialTicks));
     }
 }

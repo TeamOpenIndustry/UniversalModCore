@@ -5,8 +5,9 @@ import net.minecraft.util.AxisAlignedBB;
 
 /** Default implementation of IBoundingBox, do not use directly! */
 public class DefaultBoundingBox implements IBoundingBox {
-    protected final AxisAlignedBB internal;
+    public final AxisAlignedBB internal;
     private Vec3d minCached;
+    private Vec3d centerCached;
     private Vec3d maxCached;
 
     public DefaultBoundingBox(AxisAlignedBB internal) {
@@ -25,6 +26,14 @@ public class DefaultBoundingBox implements IBoundingBox {
             minCached = new Vec3d(internal.minX, internal.minY, internal.minZ);
         }
         return minCached;
+    }
+
+    @Override
+    public Vec3d center() {
+        if (centerCached == null) {
+            centerCached = new Vec3d(internal.getCenter());
+        }
+        return centerCached;
     }
 
     @Override
@@ -80,6 +89,22 @@ public class DefaultBoundingBox implements IBoundingBox {
     @Override
     public boolean intersects(Vec3d min, Vec3d max) {
         return internal.intersectsWith(AxisAlignedBB.getBoundingBox(min.x, min.y, min.z, max.x, max.y, max.z));
+    }
+
+    @Override
+    public IBoundingBox expandToFit(IBoundingBox other) {
+        Vec3d min = min();
+        Vec3d max = max();
+
+        min = min.min(other.min());
+        max = max.max(other.max());
+
+        return IBoundingBox.from(min, max);
+    }
+
+    @Override
+    public boolean intersectsSegment(Vec3d startVec, Vec3d endVec) {
+        return internal.calculateIntercept(startVec.internal(), endVec.internal()) != null;
     }
 
     @Override

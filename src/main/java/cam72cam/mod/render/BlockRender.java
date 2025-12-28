@@ -4,6 +4,7 @@ import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.block.BlockType;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
@@ -79,7 +80,8 @@ public class BlockRender {
                 if (!model.hasCustom()) {
                     return;
                 }
-                model.renderCustom(new RenderState().translate(x, y, z), partialTicks);
+
+                model.renderCustom(new RenderState().translate(x, y, z).stage(RenderContext.Stage.BLOCK), partialTicks);
             }
         });
     }

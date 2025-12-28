@@ -40,6 +40,9 @@ public interface IBoundingBox {
     /** Smaller corner of the BB */
     Vec3d min();
 
+    /** Center of the BB */
+    Vec3d center();
+
     /** Larger corner of the BB */
     Vec3d max();
 
@@ -63,6 +66,12 @@ public interface IBoundingBox {
 
     /** Does the AABB represented by these coords intersect this BB */
     boolean intersects(Vec3d min, Vec3d max);
+
+    /** Expand this BB to contain another BB */
+    IBoundingBox expandToFit(IBoundingBox other);
+
+    /** Does the line represented by these coords intersect this BB */
+    boolean intersectsSegment(Vec3d start, Vec3d end);
 
     /** Is this vector within bounds */
     boolean contains(Vec3d vec);

@@ -8,6 +8,7 @@ import cam72cam.mod.block.IBlockTypeBlock;
 import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.*;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
+import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
@@ -57,6 +58,8 @@ public class World {
     private final Map<Integer, Entity> entityByID = new HashMap<>();
     private final Map<UUID, Entity> entityByUUID = new HashMap<>();
     private final Map<Class<?>, List<Entity>> entitiesByClass = new HashMap<>();
+
+    public final WorldEntityTracker tracker = new WorldEntityTracker();
 
     /* World Initialization */
 
@@ -225,10 +228,13 @@ public class World {
         Entity entity;
         if (entityIn instanceof ModdedEntity) {
             entity = ((ModdedEntity) entityIn).getSelf();
+            tracker.join((ModdedEntity) entityIn);
         } else if (entityIn instanceof EntityPlayer) {
             entity = new Player((EntityPlayer) entityIn);
         } else if (entityIn instanceof EntityLiving) {
             entity = new Living((EntityLiving) entityIn);
+        } else if (entityIn instanceof EntityItem) {
+            entity = new cam72cam.mod.entity.ItemEntity((EntityItem) entityIn);
         } else {
             entity = new Entity(entityIn);
         }
@@ -252,6 +258,9 @@ public class World {
         }
         entityByID.remove(entity.getEntityId());
         entityByUUID.remove(entity.getUniqueID());
+        if (entity instanceof ModdedEntity){
+            tracker.leave((ModdedEntity) entity);
+        }
     }
 
     /* Entity Methods */
@@ -308,6 +317,34 @@ public class World {
             }
         }
         return list;
+    }
+
+    /**
+     * Find UMC Entities which within the BB and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb, Class<T> type) {
+        return getEntitiesWithinBB(bb, (T val) -> true, type);
+    }
+
+    /**
+     * Find UMC Entities which within the BB, match the filter and are of the given type
+     * <p>
+     * More performant when region is known
+     * */
+    public <T extends Entity> List<T> getEntitiesWithinBB(IBoundingBox bb , Predicate<T> filter, Class<T> type) {
+        List<net.minecraft.entity.Entity> entitiesWithinAABB = internal.getEntitiesWithinAABB(net.minecraft.entity.Entity.class,
+                                    bb instanceof DefaultBoundingBox
+                                    ? ((DefaultBoundingBox)bb).internal
+                                    : AxisAlignedBB.getBoundingBox(bb.min().x, bb.min().y, bb.min().z, bb.max().x, bb.max().y, bb.max().z));
+
+        return entitiesWithinAABB.stream()
+                                 .map(this::getEntity)
+                                 .filter(type::isInstance)
+                                 .map(type::cast)
+                                 .filter(filter)
+                                 .collect(Collectors.toList());
     }
 
     /** Add a constructed entity to the world */
@@ -490,25 +527,25 @@ public class World {
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3i pos) {
-        dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3i pos) {
+        return dropItem(stack, new Vec3d(pos), Vec3d.ZERO);
     }
 
     /** Drop a stack on the ground at pos */
-    public void dropItem(ItemStack stack, Vec3d pos) {
-        dropItem(stack, pos, Vec3d.ZERO);
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos) {
+        return dropItem(stack, pos, Vec3d.ZERO);
     }
 
-    /** Drop a stack on the ground at pos with velocity */
-    public void dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
-        if (stack.isEmpty()) {
-		    return;
-	    }
-
+    /** Drop a stack on the ground at pos with velocity.
+     * <p>
+     * Note that if system property <code>forge.debugBlockSnapshot</code> is true and forge is capturing block snapshot, item entity will not be spawned and this method will return null!
+     */
+    public ItemEntity dropItem(ItemStack stack, Vec3d pos, Vec3d velocity) {
         EntityItem entity = new EntityItem(internal, pos.x, pos.y, pos.z, stack.internal);
         entity.addVelocity(velocity.x, velocity.y, velocity.z);
         entity.velocityChanged = true;
         internal.spawnEntityInWorld(entity);
+        return getEntity(entity.getUniqueID(), ItemEntity.class);
     }
 
     /** Check if the block is currently in a loaded chunk */

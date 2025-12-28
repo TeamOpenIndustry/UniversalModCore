@@ -1,6 +1,10 @@
 package cam72cam.mod.world;
 
 import cam72cam.mod.math.Vec3i;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
@@ -16,10 +20,45 @@ public class ChunkPos {
         chunkZ = chunk.zPosition;
     }
 
+    public ChunkPos(Entity entity) {
+        this(entity.worldObj, new Vec3i(entity.posX, entity.posY, entity.posZ));
+    }
+
     public ChunkPos(World world, Integer cx, Integer cz) {
         dim = world.provider.dimensionId;
         chunkX = cx;
         chunkZ = cz;
+    }
+
+    //Minecraft(1.17+) way of storing ChunkPos, added Y axis than 1.12 ChunkPos
+    //Backported for unified storaging way
+    //Don't mix this up with net.minecraft.util.math.ChunkPos
+    public static long asLong(int x, int y, int z) {
+        long i = 0L;
+        i |= ((long)x & 4194303L) << 42;
+        i |= ((long)y & 1048575L) << 0;
+        i |= ((long)z & 4194303L) << 20;
+        return i;
+    }
+
+    public static long asLong(BlockPos pos) {
+        return asLong(MathHelper.floor(pos.getX()/16d), MathHelper.floor(pos.getY()/16d), MathHelper.floor(pos.getZ()/16d));
+    }
+
+    public static long asLong(Vec3d pos) {
+        return asLong(MathHelper.floor(pos.xCoord/16d), MathHelper.floor(pos.yCoord/16d), MathHelper.floor(pos.zCoord/16d));
+    }
+
+    public static int x(long packed) {
+        return (int) (packed << 0 >> 42);
+    }
+
+    public static int y(long packed) {
+        return (int) (packed << 44 >> 44);
+    }
+
+    public static int z(long packed) {
+        return (int) (packed << 22 >> 42);
     }
 
     @Override
