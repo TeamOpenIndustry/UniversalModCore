@@ -5,6 +5,7 @@ import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -13,8 +14,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
+import util.Matrix4;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,8 @@ public class RenderContext {
 
     public static float lastLightX;
     public static float lastLightY;
+
+    private static final List<Runnable> deferredCall = new LinkedList<>();
 
     private RenderContext() {
     }
@@ -103,6 +108,7 @@ public class RenderContext {
             boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
             if(state.bools.get(GL11.GL_DEPTH_TEST)) {
                 RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(GL11.GL_LEQUAL);
             } else {
                 RenderSystem.disableDepthTest();
             }
@@ -136,6 +142,12 @@ public class RenderContext {
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
             restore.add(RenderSystem::disableScissor);
+        }
+
+        if (state.stage == Stage.ITEM_SPRITE_TEX) {
+            Matrix4 matrix4 = new Matrix4();
+            matrix4.rotate(Math.toRadians(90), 0, 1, 0);
+            Lighting.setupLevel(matrix4.convertToMoj());
         }
 
         applyShaderFields(shader);
@@ -224,7 +236,6 @@ public class RenderContext {
         }
     }
 
-
     public static void checkError() {
         int err = GL32.glGetError();
         if (err != 0) {
@@ -232,10 +243,23 @@ public class RenderContext {
         }
     }
 
+    public static void addDeferred(Runnable runnable) {
+        deferredCall.add(runnable);
+    }
+
+    public static boolean hasDeferred() {
+        return !deferredCall.isEmpty();
+    }
+
+    public static void flushDeferred() {
+        deferredCall.forEach(Runnable::run);
+        deferredCall.clear();
+    }
+
     public enum Stage {
         BLOCK,
 
-        ENTITY,
+        ENTITY, //Also particles
 
         ITEM_SPRITE_TEX,
         ITEM_IN_WORLD,

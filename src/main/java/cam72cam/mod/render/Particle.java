@@ -3,6 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -84,6 +85,7 @@ public abstract class Particle {
                     base.alpha_test(true);
                     base.depth_mask(ip.depthTestEnabled());
                     base.color(1, 1, 1, 1);
+                    base.stage(RenderContext.Stage.ENTITY);
                     Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
 
                     Vec3 vec3d = renderInfo.getPosition();

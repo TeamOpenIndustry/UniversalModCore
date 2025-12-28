@@ -14,26 +14,35 @@ public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
-        ShaderInstance shader = RenderSystem.getShader();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        Runnable render = () -> {
+            BufferBuilder builder = Tesselator.getInstance().getBuilder();
+            ShaderInstance shader = RenderSystem.getShader();
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
 
-        //Add missing state
-        if(state.color != null) {
-            for (VertexBuilder vert : verts) {
-                vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+            //Add missing state
+            if (state.color != null) {
+                for (VertexBuilder vert : verts) {
+                    if (vert.r == null) {
+                        vert.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+                    }
+                }
             }
-        }
 
-        try (With ctx = RenderContext.apply(state)) {
-            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-            for (VertexBuilder vert : verts) {
-                vert.draw(builder);
+            try (With ctx = RenderContext.apply(state)) {
+                builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+                for (VertexBuilder vert : verts) {
+                    vert.draw(builder);
+                }
+                builder.end();
+                BufferUploader.end(builder);
             }
-            builder.end();
-            BufferUploader.end(builder);
+            RenderSystem.setShader(() -> shader);
+        };
+        if (state.stage != RenderContext.Stage.ENTITY) {
+            render.run();
+        } else {
+            RenderContext.addDeferred(render);
         }
-        RenderSystem.setShader(() -> shader);
     }
 
     public VertexBuilder vertex(double x, double y, double z) {
@@ -104,6 +113,7 @@ public class DirectDraw {
             } else {
                 part = part.normal(1, 1, 1);
             }
+            part.uv2(15,15);
             part.endVertex();
         }
     }
