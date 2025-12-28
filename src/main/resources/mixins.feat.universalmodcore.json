@@ -3,7 +3,7 @@
   "package": "cam72cam.mod.mixin.feat",
   "refmap": "mixins.universalmodcore.refmap.json",
   "target": "@env(DEFAULT)",
-  "minVersion": "0.8.2",
+  "minVersion": "0.7.11",
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1300,
   "mixins": [
