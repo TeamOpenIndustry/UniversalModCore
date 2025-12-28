@@ -1,6 +1,6 @@
 package cam72cam.mod;
 
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
+//import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.launch.MixinBootstrap;
@@ -17,7 +17,7 @@ import java.util.Map;
 public class UMCMixinPlugin implements IFMLLoadingPlugin {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
-        MixinExtrasBootstrap.init();
+//        MixinExtrasBootstrap.init();
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
 
