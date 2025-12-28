@@ -10,6 +10,8 @@
     "entity_data_migration.MixinChunkStorage"
   ],
   "client": [
+    "altas_loader.MixinSpriteResourceLoader",
+    "block_replacement.MixinBlockStatePredictionHandler",
     "direct_draw_call.MixinLevelRenderer"
   ]
 }
