@@ -31,7 +31,7 @@ public class DefaultBoundingBox implements IBoundingBox {
     @Override
     public Vec3d center() {
         if (centerCached == null) {
-            centerCached = new Vec3d(internal.getCenter());
+            centerCached = new Vec3d((internal.maxX + internal.minX) / 2, (internal.maxY + internal.minY) / 2, (internal.maxZ + internal.minZ) / 2);
         }
         return centerCached;
     }

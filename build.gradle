@@ -12,7 +12,6 @@ buildscript {
             changing = true
         }
         classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
-        classpath 'org.spongepowered:mixingradle:0.5-SNAPSHOT'
     }
 }
 
@@ -25,7 +24,6 @@ configurations {
 
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.spongepowered.mixin'
 
 repositories {
     maven {
@@ -52,7 +50,7 @@ minecraft {
     version = "1.7.10-10.13.4.1614-1.7.10"
     runDir = "run"
 
-    coreMod = 'cam72cam.mod.UMCMixinPlugin'
+//    coreMod = 'cam72cam.mod.UMCMixinPlugin'
 //    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
 //    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
     // the mappings can be changed at any time, and must be in the following format.
@@ -66,6 +64,10 @@ minecraft {
 
 repositories {
     maven { url = "https://repo.spongepowered.org/maven" }
+    maven {
+        name = "aikar"
+        url = "https://repo.aikar.co/content/groups/aikar/"
+    }
 }
 
 dependencies {
@@ -97,18 +99,20 @@ dependencies {
     testCompile('junit:junit:4.13.1')
 
     runtime "net.minecrell:terminalconsoleappender:1.3.0"
+//    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.0.2'
 
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
 }
 
-mixin {
-    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
-}
+//mixin {
+//    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+//}
 
 jar {
     classifier = 'slim'
     manifest {
         attributes (
+                'FMLCorePlugin': 'cam72cam.mod.UMCMixinPlugin',
                 'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
                 'TweakOrder': '0',
@@ -147,7 +151,7 @@ shadowJar {
 //    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
-    finalizedBy 'reobfShadowJar'
+//    finalizedBy 'reobfshadow'
 }
 
 assemble.dependsOn shadowJar
@@ -166,7 +170,6 @@ publishing {
         mavenJava(MavenPublication) {
             artifact jar
             artifact shadowJar
-            artifact sourceJar
             artifactId archivesBaseName
         }
     }

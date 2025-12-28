@@ -1,10 +1,12 @@
 package cam72cam.mod.mixin.feat.large_entity_collision;
 
 import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.ChunkPos;
 import com.google.common.base.Predicate;
+import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,37 +25,38 @@ import java.util.stream.Collectors;
 @Mixin(World.class)
 public abstract class MixinVanillaWorld {
     @Shadow
-    protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
-
-    @Shadow
     public abstract Chunk getChunkFromChunkCoords(int chunkX, int chunkZ);
 
-    @Inject(method = "getEntitiesInAABBexcluding", at = @At("RETURN"))
-    public void injectEntitySearch0(Entity entityIn, AxisAlignedBB aabb, Predicate<? super Entity> filter,
+    @Shadow
+    protected abstract boolean chunkExists(int p_72916_1_, int p_72916_2_);
+
+    @Inject(method = "getEntitiesWithinAABBExcludingEntity(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/AxisAlignedBB;Lnet/minecraft/command/IEntitySelector;)Ljava/util/List;",
+            at = @At("RETURN"))
+    public void injectEntitySearch0(Entity entityIn, AxisAlignedBB aabb, IEntitySelector filter,
                                     CallbackInfoReturnable<List<Entity>> cir) {
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);
                 int z = ChunkPos.z(packed);
-                if (this.isChunkLoaded(x, z, true)) {
+                if (this.chunkExists(x, z)) {
                     //Search entities on our own instead of by Chunk class
                     result.addAll(world.tracker.queryEntities(packed)
                                                .stream()
-                                               .filter(e -> e.getEntityBoundingBox() != null
+                                               .filter(e -> e.getBoundingBox() != null
                                                        && e != entityIn
-                                                       && (filter == null || filter.apply(e))
-                                                       && e.getEntityBoundingBox().intersectsWith(aabb))
+                                                       && (filter == null || filter.isEntityApplicable(e))
+                                                       && e.getBoundingBox().intersectsWith(aabb))
                                                .collect(Collectors.toList()));
                 }
             }
         }
     }
 
-    @Inject(method = "getEntitiesWithinAABB(Ljava/lang/Class;Lnet/minecraft/util/math/AxisAlignedBB;Lcom/google/common/base/Predicate;)Ljava/util/List;", at = @At("RETURN"))
-    public void injectEntitySearch1(Class<? extends Entity> clazz, AxisAlignedBB aabb, Predicate<? super Entity> filter,
+    @Inject(method = "selectEntitiesWithinAABB", at = @At("RETURN"))
+    public void injectEntitySearch1(Class<? extends Entity> clazz, AxisAlignedBB aabb, IEntitySelector filter,
                                     CallbackInfoReturnable<List<Entity>> cir) {
         if (!ModdedEntity.class.isAssignableFrom(clazz)) {
             //Target is not a UMC entity, nothing needed to do here
@@ -62,18 +65,18 @@ public abstract class MixinVanillaWorld {
 
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);
                 int z = ChunkPos.z(packed);
-                if (this.isChunkLoaded(x, z, true)) {
+                if (this.chunkExists(x, z)) {
                     //Search entities on our own instead of by Chunk class
                     result.addAll(world.tracker.queryEntities(packed)
                                                .stream()
-                                               .filter(e -> e.getCollisionBoundingBox() != null
-                                                       && (filter == null || filter.apply(e))
-                                                       && e.getEntityBoundingBox().intersectsWith(aabb))
+                                               .filter(e -> e.getBoundingBox() != null
+                                                       && (filter == null || filter.isEntityApplicable(e))
+                                                       && e.getBoundingBox().intersectsWith(aabb))
                                                .collect(Collectors.toList()));
                 }
             }

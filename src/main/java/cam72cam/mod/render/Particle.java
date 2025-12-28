@@ -5,10 +5,11 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.particle.*;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.init.Items;
 import net.minecraft.client.renderer.Tessellator;
 import util.Matrix4;
 
@@ -116,23 +117,23 @@ public abstract class Particle {
     }
 
     public static void renderVanilla(VanillaParticles vanilla, Vec3d pos, Vec3d velocity, float scale) {
-        if (scale < 1E-7) return;
-
-        int extraArgument = 0;
-
-        if (vanilla == VanillaParticles.DIRT_DUST) {
-            extraArgument = Block.getStateId(Blocks.DIRT.getDefaultState());
-        } else if (vanilla == VanillaParticles.SAND_DUST) {
-            extraArgument = Block.getStateId(Blocks.SAND.getDefaultState());
+        if (scale < 1E-7
+                || !MinecraftClient.isReady()
+                || MinecraftClient.getPlayer() == null
+                || MinecraftClient.getPlayer().getWorld() == null) {
+            return;
         }
 
-        net.minecraft.client.particle.Particle particle;
-        particle = Minecraft.getMinecraft().effectRenderer.spawnEffectParticle(
-                vanilla.internal.getParticleID(), pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z, extraArgument);
+        EntityFX particle;
+//        particle = Minecraft.getMinecraft().effectRenderer.spawnEffectParticle(
+//                vanilla.internal.getParticleID(), pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z, extraArgument);
+        particle = vanilla.internal.create(MinecraftClient.getPlayer().getWorld().internal, pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
 
         if (particle != null) {
             particle.multipleParticleScaleBy(scale);
         }
+
+        Minecraft.getMinecraft().effectRenderer.addEffect(particle);
     }
 
     /** Used to render multiple particles in the same function for efficiency */
@@ -157,33 +158,89 @@ public abstract class Particle {
     }
 
     public enum VanillaParticles {
-        ANGRY_VILLAGER(EnumParticleTypes.VILLAGER_ANGRY),
-        BUBBLE(EnumParticleTypes.WATER_BUBBLE),
-        CRITICAL_HIT(EnumParticleTypes.CRIT),
-        CRITICAL_MAGIC_HIT(EnumParticleTypes.CRIT_MAGIC),
-        DIRT_DUST(EnumParticleTypes.BLOCK_DUST),
-        EXPLOSION(EnumParticleTypes.EXPLOSION_HUGE),
-        FLAME(EnumParticleTypes.FLAME),
-        HAPPY_VILLAGER(EnumParticleTypes.VILLAGER_HAPPY),
-        HEART(EnumParticleTypes.HEART),
-        LAVA(EnumParticleTypes.LAVA),
-        LAVA_DROP(EnumParticleTypes.DRIP_LAVA),
-        LARGE_SMOKE(EnumParticleTypes.SMOKE_LARGE),
-        NORMAL_SMOKE(EnumParticleTypes.SMOKE_NORMAL),
-        NOTE(EnumParticleTypes.NOTE),
-        REDSTONE(EnumParticleTypes.REDSTONE),
-        RUNE(EnumParticleTypes.ENCHANTMENT_TABLE),
-        SAND_DUST(EnumParticleTypes.BLOCK_DUST),
-        SNOWBALL_BREAKING(EnumParticleTypes.SNOWBALL),
-        SNOW_SHOVEL(EnumParticleTypes.SNOW_SHOVEL),
-        WATER_DRIP(EnumParticleTypes.DRIP_WATER),
-        WATER_SPLASH(EnumParticleTypes.WATER_SPLASH)
+        ANGRY_VILLAGER(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) -> {
+                    EntityFX entityfx = new EntityHeartFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion);
+                    entityfx.setParticleTextureIndex(81);
+                    entityfx.setRBGColorF(1.0F, 1.0F, 1.0F);
+                    return entityfx;
+                }
+        ),
+        BUBBLE(EntityBubbleFX::new),
+        CRITICAL_HIT(EntityCritFX::new),
+        CRITICAL_MAGIC_HIT(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) -> {
+                    EntityFX entityfx = new EntityCritFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion);
+                    entityfx.setRBGColorF(entityfx.getRedColorF() * 0.3F, entityfx.getGreenColorF() * 0.8F, entityfx.getBlueColorF());
+                    entityfx.nextTextureIndexX();
+                    return entityfx;
+                }
+        ),
+        DIRT_DUST(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) -> {
+                    Block block = Blocks.dirt;
+                    return new EntityBlockDustFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion, block, 2).applyRenderColor(2);
+                }
+        ),
+        EXPLOSION(EntityExplodeFX::new),
+        FLAME(EntityFlameFX::new),
+        HAPPY_VILLAGER(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) -> {
+                    EntityFX entityfx = new EntityAuraFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion);
+                    entityfx.setParticleTextureIndex(82);
+                    entityfx.setRBGColorF(1.0F, 1.0F, 1.0F);
+                    return entityfx;
+                }
+        ),
+        HEART(EntityHeartFX::new),
+        LAVA(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntityLavaFX(world, xPos, yPos, zPos)
+        ),
+        LAVA_DROP(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntityDropParticleFX(world, xPos, yPos, zPos, Material.lava)
+
+        ),
+        LARGE_SMOKE(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntitySmokeFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion, 2.5F)
+        ),
+        NORMAL_SMOKE(EntitySmokeFX::new),
+        NOTE(EntityNoteFX::new),
+        REDSTONE(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntityReddustFX(world, xPos, yPos, zPos, 1, 1, 1, 1)
+        ),
+        RUNE(EntityEnchantmentTableParticleFX::new),
+        SAND_DUST(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) -> {
+                    Block block = Blocks.sand;
+                    return new EntityBlockDustFX(world, xPos, yPos, zPos, xMotion, yMotion, zMotion, block, 2).applyRenderColor(2);
+                }
+        ),
+        SNOWBALL_BREAKING(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntityBreakingFX(world, xPos, yPos, zPos, Items.snowball)
+        ),
+        SNOW_SHOVEL(EntitySnowShovelFX::new),
+        WATER_DRIP(
+                (world, xPos, yPos, zPos, xMotion, yMotion, zMotion) ->
+                        new EntityDropParticleFX(world, xPos, yPos, zPos, Material.water)
+
+        ),
+        WATER_SPLASH(EntitySplashFX::new)
         ;
 
-        private final EnumParticleTypes internal;
+        final ParticleFactory internal;
 
-        VanillaParticles(EnumParticleTypes type) {
+        VanillaParticles(ParticleFactory type) {
             this.internal = type;
         }
+    }
+
+    @FunctionalInterface
+    private interface ParticleFactory {
+        EntityFX create(net.minecraft.world.World world, double xPos, double yPos, double zPos, double xMotion, double yMotion, double zMotion);
     }
 }

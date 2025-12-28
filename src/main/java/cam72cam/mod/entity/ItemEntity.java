@@ -37,13 +37,13 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getOwner() == null || this.internal.getEntityWorld().getPlayerEntityByName(internal.getOwner()) == null) {
+        if (internal.getOwner() == null || this.internal.worldObj.getPlayerEntityByName(internal.getOwner()) == null) {
             return null;
         }
 
-        return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld()
-                                            .getPlayerEntityByName(internal.getOwner())).asPlayer();
+        return World.get(this.internal.worldObj)
+                    .getEntity(this.internal.worldObj.getPlayerEntityByName(internal.getOwner()))
+                    .asPlayer();
     }
 
     /**
@@ -53,7 +53,7 @@ public class ItemEntity extends Entity {
      */
     public void setOwner(Player player) {
         if (isValid()) {
-            internal.setOwner(player.internal.getName());
+            internal.setOwner(player.internal.getCommandSenderName());
         }
     }
 
@@ -67,12 +67,12 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.getThrower() == null || this.internal.getEntityWorld().getPlayerEntityByName(internal.getThrower()) == null) {
+        if (internal.getThrower() == null || this.internal.worldObj.getPlayerEntityByName(internal.getThrower()) == null) {
             return null;
         }
-        return World.get(this.internal.world)
-                    .getEntity(this.internal.getEntityWorld()
-                                            .getPlayerEntityByName(internal.getThrower())).asPlayer();
+        return World.get(this.internal.worldObj)
+                    .getEntity(this.internal.worldObj.getPlayerEntityByName(internal.getThrower()))
+                    .asPlayer();
     }
 
     /**
@@ -82,7 +82,7 @@ public class ItemEntity extends Entity {
      */
     public void setPickupDelay(int ticks) {
         if (isValid()) {
-            internal.setPickupDelay(ticks);
+            internal.delayBeforeCanPickup = ticks;
         }
 
     }
@@ -92,7 +92,7 @@ public class ItemEntity extends Entity {
      */
     public void setNoDespawn() {
         if (isValid()) {
-            internal.setNoDespawn();
+            internal.lifespan = Integer.MAX_VALUE;
         }
 
     }

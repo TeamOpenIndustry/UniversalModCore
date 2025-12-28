@@ -1,14 +1,8 @@
 package cam72cam.mod.world;
 
 import cam72cam.mod.entity.ModdedEntity;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArraySet;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.util.math.BlockPos;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -16,13 +10,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Track UMC Entities and handle inter chunk collision
  * @see cam72cam.mod.mixin.feat.large_entity_collision.MixinVanillaWorld
  */
+//TODO We need fastutil!
 public class WorldEntityTracker {
     //Good enough for now...We'd assume there's no more ridiculous ones
     //Horizontal distance (48 blocks)
     private static final int HORIZONTAL_SEARCH_RADIUS_CHUNKS = 3;
     //Vertical distance (32 blocks)
     private static final int VERTICAL_SEARCH_RADIUS_CHUNKS = 2;
-    private final Map<Long, Set<ModdedEntity>> umcEntities = new Long2ObjectOpenHashMap<>();
+    private final Map<Long, Set<ModdedEntity>> umcEntities = new HashMap<>();
     //K are chunks containing UMC entities, V are neighbor chunks(245 per now) that this entity may extend to
     //Query value to see which chunk may contain possible colliding entities
     private final LongBiMultiMap scanningRange = new LongBiMultiMap();
@@ -32,7 +27,7 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.getPosition());
+        long chunk = ChunkPos.asLong(entity.posX, entity.posY, entity.posZ);
         int x = ChunkPos.x(chunk);
         int y = ChunkPos.y(chunk);
         int z = ChunkPos.z(chunk);
@@ -41,7 +36,7 @@ public class WorldEntityTracker {
         try {
             Set<ModdedEntity> moddedEntities = umcEntities.get(chunk);
             if (moddedEntities == null) {
-                moddedEntities = new ObjectArraySet<>();
+                moddedEntities = new HashSet<>();
                 umcEntities.put(chunk, moddedEntities);
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
@@ -59,8 +54,7 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        BlockPos pos = entity.getPosition();
-        long sec = ChunkPos.asLong(pos);
+        long sec = ChunkPos.asLong(entity.posX, entity.posY, entity.posZ);
 
         lock.writeLock().lock();
         try {
@@ -92,14 +86,14 @@ public class WorldEntityTracker {
                 }
             }
 
-            long chunk = ChunkPos.asLong(entity.getPosition());
+            long chunk = ChunkPos.asLong(entity.posX, entity.posY, entity.posZ);
             int x = ChunkPos.x(chunk);
             int y = ChunkPos.y(chunk);
             int z = ChunkPos.z(chunk);
 
             moddedEntities = umcEntities.get(newSection);
             if (moddedEntities == null) {
-                moddedEntities = new ObjectArraySet<>();
+                moddedEntities = new HashSet<>();
                 umcEntities.put(newSection, moddedEntities);
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
@@ -136,31 +130,29 @@ public class WorldEntityTracker {
     }
 
     private static class LongBiMultiMap {
-        private final Long2ObjectOpenHashMap<LongArraySet> keyToValues
-                = new Long2ObjectOpenHashMap<>();
-        private final Long2ObjectOpenHashMap<LongArraySet> valueToKeys
-                = new Long2ObjectOpenHashMap<>();
+        private final HashMap<Long, Set<Long>> keyToValues = new HashMap<>();
+        private final HashMap<Long, Set<Long>> valueToKeys = new HashMap<>();
 
         public void put(long key, long value) {
-            keyToValues.computeIfAbsent(key, k -> new LongArraySet(245)).add(value);
-            valueToKeys.computeIfAbsent(value, v -> new LongArraySet(4)).add(key);
+            keyToValues.computeIfAbsent(key, k -> new HashSet<>(245)).add(value);
+            valueToKeys.computeIfAbsent(value, v -> new HashSet<>(4)).add(key);
         }
 
         //DON't MODIFY RETURNED SET!
         //If you want please clone()
         public Set<Long> getKeys(long value) {
-            LongArraySet set = valueToKeys.get(value);
-            return set != null ? set : new LongArraySet();
+            Set<Long> set = valueToKeys.get(value);
+            return set != null ? set : new HashSet<>();
         }
 
         public Set<Long> removeKey(long key) {
-            LongArraySet values = keyToValues.remove(key);
+            Set<Long> values = keyToValues.remove(key);
             if (values == null) {
-                return new LongArraySet();
+                return new HashSet<>();
             }
 
             for (long value : values) {
-                LongArraySet keys = valueToKeys.get(value);
+                Set<Long> keys = valueToKeys.get(value);
                 if (keys != null) {
                     keys.remove(key);
                     if (keys.isEmpty()) {

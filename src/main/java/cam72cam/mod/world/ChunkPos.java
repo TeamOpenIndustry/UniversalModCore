@@ -1,10 +1,10 @@
 package cam72cam.mod.world;
 
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
@@ -41,12 +41,16 @@ public class ChunkPos {
         return i;
     }
 
-    public static long asLong(BlockPos pos) {
-        return asLong(MathHelper.floor(pos.getX()/16d), MathHelper.floor(pos.getY()/16d), MathHelper.floor(pos.getZ()/16d));
+    public static long asLong(AxisAlignedBB aabb) {
+        return asLong(new Vec3d((aabb.maxX + aabb.minX) / 2, (aabb.maxY + aabb.minY) / 2, (aabb.maxZ + aabb.minZ) / 2));
     }
 
     public static long asLong(Vec3d pos) {
-        return asLong(MathHelper.floor(pos.xCoord/16d), MathHelper.floor(pos.yCoord/16d), MathHelper.floor(pos.zCoord/16d));
+        return asLong(MathHelper.floor_double(pos.x/16d), MathHelper.floor_double(pos.y/16d), MathHelper.floor_double(pos.z/16d));
+    }
+
+    public static long asLong(double x, double y, double z) {
+        return asLong(MathHelper.floor_double(x/16d), MathHelper.floor_double(y/16d), MathHelper.floor_double(z/16d));
     }
 
     public static int x(long packed) {

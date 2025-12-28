@@ -1,8 +1,8 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Loader;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
 
 import java.io.File;
 
@@ -14,7 +14,12 @@ public class MinecraftFiles {
 
     /** Get config directory */
     public static File getConfigDir() {
-        File configDir = Loader.instance().getConfigDir();
+        File configDir;
+        try {
+            configDir = Loader.instance().getConfigDir();
+        } catch (ClassCastException ex) {
+            configDir = null;
+        }
         if (configDir == null) {
             configDir = new File(System.getProperty("java.io.tmpdir"), "minecraft");
         }
