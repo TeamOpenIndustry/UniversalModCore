@@ -11,6 +11,7 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -23,10 +24,18 @@ import net.minecraft.util.text.event.ClickEvent;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
+import java.util.*;
+import java.util.function.BiConsumer;
+
 /** Common GUI functions that don't really fit anywhere else */
 public class GUIHelpers {
     /** Standard 54 slot chest UI */
     public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
+    /**
+     * Assuming that we're on a single-thread model
+     * Internal function, don't use
+     */
+    private static final Deque<Map<String, BiConsumer<Integer, Integer>>> delayedRenderFunctions = new ArrayDeque<>();
     // Internal hack for using Gui functions
     private static final Gui instance = new Gui();
 
@@ -37,6 +46,7 @@ public class GUIHelpers {
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
                         .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                        .stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawRect(x, y, x + width, y + height, color);
         }
@@ -45,7 +55,7 @@ public class GUIHelpers {
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
         try (With ctx = RenderContext.apply(
-                new RenderState().texture(Texture.wrap(tex))
+                new RenderState().texture(Texture.wrap(tex)).stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
         }
@@ -82,6 +92,7 @@ public class GUIHelpers {
                 new RenderState()
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
+                        .stage(RenderContext.Stage.GUI)
         )) {
             int iW = sprite.getIconWidth();
             int iH = sprite.getIconHeight();
@@ -115,6 +126,14 @@ public class GUIHelpers {
         }
     }
 
+    /** Draw a shadowed string offset from the center of coords */
+    public static void drawCenteredString(String text, int x, int y, int color) {
+        drawCenteredString(text, x, y, color, new Matrix4());
+    }
+    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
+        drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color, matrix);
+    }
+
     /** Draw a left-aligned shadowed string */
     public static void drawString(String text, int x, int y, int color) {
         drawString(text, x, y, color, new Matrix4());
@@ -122,22 +141,10 @@ public class GUIHelpers {
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
+        state.stage(RenderContext.Stage.GUI);
         try (With ctx = RenderContext.apply(state)) {
             GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, color);
-        }
-    }
-
-    /** Draw a shadowed string offset from the center of coords */
-    public static void drawCenteredString(String text, int x, int y, int color) {
-        drawCenteredString(text, x, y, color, new Matrix4());
-    }
-    public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
-        state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            GlStateManager.color(1, 1, 1, 0);
-            Minecraft.getMinecraft().fontRenderer.drawString(text, x - Minecraft.getMinecraft().fontRenderer.getStringWidth(text) / 2, y, color);
         }
     }
 
@@ -167,6 +174,9 @@ public class GUIHelpers {
                 .alpha_test(false)
                 .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
                 .rescale_normal(true);
+        //If it's handled by us then it'll be set to ITEM_IN_GUI later
+        //Otherwise we don't care
+//              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
@@ -198,6 +208,38 @@ public class GUIHelpers {
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
                 MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
             }
+        }
+    }
+
+    /**
+     * Draw a Minecraft-style tooltip at cursor's pos
+     * Only use in IScreen.draw()!
+     * */
+    public static void drawTooltipAtCursor(List<String> content) {
+        if (delayedRenderFunctions.peek() != null) {
+            //Use map to ensure only 1 tooltip is drawn
+            delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
+                int width = getScreenWidth();
+                int height = getScreenHeight();
+                net.minecraftforge.fml.client.config.GuiUtils
+                        .drawHoveringText(content, x, y, width, height, -1, Minecraft.getMinecraft().fontRenderer);
+            });
+        } else {
+            ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");
+        }
+    }
+
+    /** Internal */
+    public static void initDelayed() {
+        delayedRenderFunctions.push(new Object2ObjectArrayMap<>(4));
+    }
+
+    /** Internal */
+    public static void runDelayed(int mouseX, int mouseY) {
+        if (!delayedRenderFunctions.isEmpty()) {
+            delayedRenderFunctions.pop().values().forEach(consumer -> consumer.accept(mouseX, mouseY));
+        } else {
+            ModCore.error("Trying to call runDelayed without initialized state!");
         }
     }
 }

@@ -36,7 +36,9 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     private int centerX;
     private int centerY;
 
-    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1).texture(Texture.wrap(CHEST_GUI_TEXTURE));
+    private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1)
+                                                                      .texture(Texture.wrap(CHEST_GUI_TEXTURE))
+                                                                      .stage(RenderContext.Stage.GUI);
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
@@ -49,7 +51,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             //this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
             this.centerX = (this.width - this.xSize) / 2;
@@ -211,6 +213,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
                         .color(1, 1, 1, 1)
                         .alpha_test(true)
                         .depth_test(false)
+                        .stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawRect(x, y, x + 16, y + 16, -2130706433);
         }
@@ -222,7 +225,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         y += centerY + 1;
 
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
             // Reset the state manager color
@@ -231,8 +234,10 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
         try (With ctx = RenderContext.apply(
-                new RenderState().color(1, 1, 1, 1)
+                new RenderState()
+                        .color(1, 1, 1, 1)
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
+                        .stage(RenderContext.Stage.GUI)
         )) {
             super.drawTexturedModalRect(x, y, sprite, 16, 16);
         }
