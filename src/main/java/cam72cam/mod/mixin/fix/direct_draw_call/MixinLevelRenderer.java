@@ -40,6 +40,8 @@ public class MixinLevelRenderer {
     public void allowDepthMask(boolean p_69459_) {
         if (RenderContext.hasDeferred()) {
             RenderSystem.depthMask(true);
+        } else {
+            RenderSystem.depthMask(p_69459_);
         }
     }
 
@@ -47,6 +49,8 @@ public class MixinLevelRenderer {
     public void allowBoarderDepthMask(boolean p_69459_) {
         if (RenderContext.hasDeferred()) {
             RenderSystem.depthMask(true);
+        } else {
+            RenderSystem.depthMask(p_69459_);
         }
     }
 }
