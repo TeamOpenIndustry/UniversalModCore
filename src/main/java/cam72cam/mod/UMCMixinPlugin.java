@@ -17,7 +17,8 @@ public class UMCMixinPlugin implements ITransformationService {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
         MixinExtrasBootstrap.init();
-        Mixins.addConfiguration("mixins.universalmodcore.json");
+        Mixins.addConfiguration("mixins.feat.universalmodcore.json");
+        Mixins.addConfiguration("mixins.fix.universalmodcore.json");
     }
 
     @Nonnull
