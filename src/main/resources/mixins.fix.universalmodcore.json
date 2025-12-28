@@ -9,5 +9,6 @@
   "mixins": [
   ],
   "client": [
+    "direct_draw_call.MixinLevelRenderer"
   ]
 }

@@ -239,6 +239,10 @@ public class RenderContext {
         deferredCall.add(runnable);
     }
 
+    public static boolean hasDeferred() {
+        return !deferredCall.isEmpty();
+    }
+
     public static void flushDeferred() {
         deferredCall.forEach(Runnable::run);
         deferredCall.clear();

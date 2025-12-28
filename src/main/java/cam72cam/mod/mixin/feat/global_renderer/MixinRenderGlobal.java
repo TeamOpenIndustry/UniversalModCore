@@ -2,13 +2,10 @@ package cam72cam.mod.mixin.feat.global_renderer;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.GlobalRender;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -31,22 +28,5 @@ public class MixinRenderGlobal {
         RenderState state = new RenderState(stack).translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
         RenderType.cutoutMipped().clearRenderState();
-    }
-
-    //For DirectDraw call
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderDebug(Lnet/minecraft/client/Camera;)V"))
-    public void renderDeferred(PoseStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
-                               Camera info, GameRenderer gameRenderer, LightTexture light,
-                               Matrix4f matrix, CallbackInfo ci) {
-        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.disableBlend();
-
-        RenderContext.flushDeferred();
-
-        RenderSystem.depthMask(true);
-        RenderSystem.disableBlend();
-        Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
     }
 }
