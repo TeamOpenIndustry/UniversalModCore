@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "cam72cam.mod.mixin.fix",
+  "refmap": "mixins.universalmodcore.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.2",
+  "compatibilityLevel": "JAVA_8",
+  "mixinPriority": 1301,
+  "mixins": [
+    "entity_data_migration.MixinChunkStorage"
+  ],
+  "client": [
+    "altas_loader.MixinSpriteResourceLoader",
+    "block_replacement.MixinBlockStatePredictionHandler",
+    "direct_draw_call.MixinLevelRenderer"
+  ]
+}
