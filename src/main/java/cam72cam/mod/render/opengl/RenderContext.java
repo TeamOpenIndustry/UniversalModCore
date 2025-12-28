@@ -242,4 +242,21 @@ public class RenderContext {
             GL11.glDisable(opt);
         }
     }
+
+    public enum Stage {
+        BLOCK,
+
+        ENTITY,
+
+        ITEM_SPRITE_TEX,
+        ITEM_IN_WORLD,
+        ITEM_IN_GUI,
+
+        GUI,
+
+        OVERLAY,      //Mouseover...
+        OVERLAY_TEXT, //Name plates...
+
+        NONE
+    }
 }
