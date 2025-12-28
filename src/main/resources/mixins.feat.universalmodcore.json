@@ -6,7 +6,7 @@
   "minVersion": "0.8.2",
   "plugin": "cam72cam.mod.UMCMixinPlugin",
   "compatibilityLevel": "JAVA_8",
-  "priority": 1300,
+  "mixinPriority": 1300,
   "mixins": [
     "global_renderer.MixinRenderGlobal",
     "large_entity_collision.MixinVanillaWorld"
