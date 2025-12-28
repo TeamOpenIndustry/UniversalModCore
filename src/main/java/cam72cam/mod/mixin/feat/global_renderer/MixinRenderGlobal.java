@@ -15,7 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RenderGlobal.class)
 public class MixinRenderGlobal {
     @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;disableLightmap(D)V"))
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;disableLightmap(D)V"),
+            remap = false)
     public void injectRenderGlobal(EntityLivingBase entity, ICamera camera, float partialTicks, CallbackInfo ci) {
         Vec3d pos = GlobalRender.getCameraPos(partialTicks);
         RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);

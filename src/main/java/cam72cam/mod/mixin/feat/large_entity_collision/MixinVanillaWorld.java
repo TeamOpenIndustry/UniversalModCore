@@ -31,7 +31,7 @@ public abstract class MixinVanillaWorld {
     protected abstract boolean chunkExists(int p_72916_1_, int p_72916_2_);
 
     @Inject(method = "getEntitiesWithinAABBExcludingEntity(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/AxisAlignedBB;Lnet/minecraft/command/IEntitySelector;)Ljava/util/List;",
-            at = @At("RETURN"))
+            at = @At("RETURN"), remap = false)
     public void injectEntitySearch0(Entity entityIn, AxisAlignedBB aabb, IEntitySelector filter,
                                     CallbackInfoReturnable<List<Entity>> cir) {
         List<Entity> result = cir.getReturnValue();
@@ -55,7 +55,7 @@ public abstract class MixinVanillaWorld {
         }
     }
 
-    @Inject(method = "selectEntitiesWithinAABB", at = @At("RETURN"))
+    @Inject(method = "selectEntitiesWithinAABB", at = @At("RETURN"), remap = false)
     public void injectEntitySearch1(Class<? extends Entity> clazz, AxisAlignedBB aabb, IEntitySelector filter,
                                     CallbackInfoReturnable<List<Entity>> cir) {
         if (!ModdedEntity.class.isAssignableFrom(clazz)) {
