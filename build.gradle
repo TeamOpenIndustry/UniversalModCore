@@ -55,7 +55,7 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    // TODO Stable my ass! mappings channel: 'stable', version: '60-1.15'
+    // Stable mcp mapping for 1.15 isn't usable
     mappings channel: 'snapshot', version: '20201108-1.15.1'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
@@ -162,7 +162,8 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
-    config 'mixins.universalmodcore.json'
+    config 'mixins.feat.universalmodcore.json'
+    config 'mixins.fix.universalmodcore.json'
 
     //Dev environment setup
     debug.verbose = true
