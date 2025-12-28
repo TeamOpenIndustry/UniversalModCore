@@ -163,7 +163,8 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
-    config 'mixins.universalmodcore.json'
+    config 'mixins.feat.universalmodcore.json'
+    config 'mixins.fix.universalmodcore.json'
 
     //Dev environment setup
     debug.verbose = true
@@ -191,7 +192,7 @@ jar.finalizedBy('reobfJar')
 shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.shade]
-    relocate 'javax.vecmath', "${project.group}.relocated.javax.vecmath"
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
     //Don't do this

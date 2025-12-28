@@ -13,7 +13,7 @@ public class UMCMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         MixinExtrasBootstrap.init();
-    }
+     }
 
     @Override
     public String getRefMapperConfig() {
