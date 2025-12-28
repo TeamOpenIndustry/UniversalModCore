@@ -20,11 +20,11 @@ public class ItemEntity extends Entity {
             return ItemStack.EMPTY;
         }
 
-        return new ItemStack(internal.getItem());
+        return new ItemStack(internal.getEntityItem());
     }
 
     public void setContent(ItemStack stack) {
-        internal.setItem(stack.internal);
+        internal.setEntityItemStack(stack.internal);
     }
 
     /**

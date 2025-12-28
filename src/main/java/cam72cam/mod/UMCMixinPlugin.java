@@ -13,7 +13,7 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.Map;
 
-@IFMLLoadingPlugin.MCVersion("1.11.2")
+@IFMLLoadingPlugin.MCVersion("1.10.2")
 public class UMCMixinPlugin implements IFMLLoadingPlugin {
     public UMCMixinPlugin() {
         MixinBootstrap.init();

@@ -45,7 +45,7 @@ public abstract class MixinVanillaWorld {
                                                .filter(e -> e.getEntityBoundingBox() != null
                                                        && e != entityIn
                                                        && (filter == null || filter.apply(e))
-                                                       && e.getEntityBoundingBox().intersects(aabb))
+                                                       && e.getEntityBoundingBox().intersectsWith(aabb))
                                                .collect(Collectors.toList()));
                 }
             }
@@ -73,7 +73,7 @@ public abstract class MixinVanillaWorld {
                                                .stream()
                                                .filter(e -> e.getCollisionBoundingBox() != null
                                                        && (filter == null || filter.apply(e))
-                                                       && e.getEntityBoundingBox().intersects(aabb))
+                                                       && e.getEntityBoundingBox().intersectsWith(aabb))
                                                .collect(Collectors.toList()));
                 }
             }

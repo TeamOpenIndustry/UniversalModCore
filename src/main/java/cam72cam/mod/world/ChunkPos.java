@@ -45,7 +45,7 @@ public class ChunkPos {
     }
 
     public static long asLong(Vec3d pos) {
-        return asLong(MathHelper.floor(pos.x/16d), MathHelper.floor(pos.y/16d), MathHelper.floor(pos.z/16d));
+        return asLong(MathHelper.floor(pos.xCoord/16d), MathHelper.floor(pos.yCoord/16d), MathHelper.floor(pos.zCoord/16d));
     }
 
     public static int x(long packed) {
