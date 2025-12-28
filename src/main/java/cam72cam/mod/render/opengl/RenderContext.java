@@ -17,6 +17,7 @@ import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,8 @@ public class RenderContext {
 
     public static float lastLightX;
     public static float lastLightY;
+
+    private static final List<Runnable> deferredCall = new LinkedList<>();
 
     private RenderContext() {
     }
@@ -105,6 +108,7 @@ public class RenderContext {
             boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
             if(state.bools.get(GL11.GL_DEPTH_TEST)) {
                 RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(GL11.GL_LEQUAL);
             } else {
                 RenderSystem.disableDepthTest();
             }
@@ -224,7 +228,6 @@ public class RenderContext {
         }
     }
 
-
     public static void checkError() {
         int err = GL32.glGetError();
         if (err != 0) {
@@ -232,10 +235,19 @@ public class RenderContext {
         }
     }
 
+    public static void addDeferred(Runnable runnable) {
+        deferredCall.add(runnable);
+    }
+
+    public static void flushDeferred() {
+        deferredCall.forEach(Runnable::run);
+        deferredCall.clear();
+    }
+
     public enum Stage {
         BLOCK,
 
-        ENTITY,
+        ENTITY, //Also particles
 
         ITEM_SPRITE_TEX,
         ITEM_IN_WORLD,
