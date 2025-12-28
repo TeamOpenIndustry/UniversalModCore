@@ -11,5 +11,6 @@
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
+    "textfield_click.MixinGuiTextField"
   ]
 }

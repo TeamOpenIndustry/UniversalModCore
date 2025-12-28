@@ -11,7 +11,6 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -231,7 +230,7 @@ public class GUIHelpers {
 
     /** Internal */
     public static void initDelayed() {
-        delayedRenderFunctions.push(new Object2ObjectArrayMap<>(4));
+        delayedRenderFunctions.push(new HashMap<>(4));
     }
 
     /** Internal */

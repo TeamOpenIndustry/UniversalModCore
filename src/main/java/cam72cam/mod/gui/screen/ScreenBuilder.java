@@ -3,6 +3,7 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.mixin.accessor.AGuiTextField;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderState;
@@ -144,7 +145,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             }
         }
 
-        if (this.textFields.stream().noneMatch(x -> x.mouseClicked(mouseX, mouseY, mouseButton))) {
+        if (this.textFields.stream().noneMatch(x -> AGuiTextField.from(x).mouseClicked(mouseX, mouseY, mouseButton))) {
             screen.onMouseClick(mouseX, mouseY, hand);
         }
     }

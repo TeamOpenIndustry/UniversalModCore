@@ -26,7 +26,7 @@ public abstract class MixinVanillaWorld {
     protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
 
     @Shadow
-    public abstract Chunk getChunk(int chunkX, int chunkZ);
+    public abstract Chunk getChunkFromChunkCoords(int chunkX, int chunkZ);
 
     @Inject(method = "getEntitiesInAABBexcluding", at = @At("RETURN"))
     public void injectEntitySearch0(Entity entityIn, AxisAlignedBB aabb, Predicate<? super Entity> filter,

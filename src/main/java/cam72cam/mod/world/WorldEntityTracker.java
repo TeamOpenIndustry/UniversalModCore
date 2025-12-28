@@ -3,7 +3,6 @@ package cam72cam.mod.world;
 import cam72cam.mod.entity.ModdedEntity;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.util.math.BlockPos;
 
@@ -137,13 +136,13 @@ public class WorldEntityTracker {
     }
 
     private static class LongBiMultiMap {
-        private final Long2ObjectOpenHashMap<LongOpenHashSet> keyToValues
+        private final Long2ObjectOpenHashMap<LongArraySet> keyToValues
                 = new Long2ObjectOpenHashMap<>();
         private final Long2ObjectOpenHashMap<LongArraySet> valueToKeys
                 = new Long2ObjectOpenHashMap<>();
 
         public void put(long key, long value) {
-            keyToValues.computeIfAbsent(key, k -> new LongOpenHashSet(245)).add(value);
+            keyToValues.computeIfAbsent(key, k -> new LongArraySet(245)).add(value);
             valueToKeys.computeIfAbsent(value, v -> new LongArraySet(4)).add(key);
         }
 
@@ -155,7 +154,7 @@ public class WorldEntityTracker {
         }
 
         public Set<Long> removeKey(long key) {
-            LongOpenHashSet values = keyToValues.remove(key);
+            LongArraySet values = keyToValues.remove(key);
             if (values == null) {
                 return new LongArraySet();
             }

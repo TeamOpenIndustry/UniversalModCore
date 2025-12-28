@@ -7,7 +7,6 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.nbt.NBTBase;
 
 import java.lang.reflect.Field;
@@ -60,7 +59,7 @@ public class EntitySync extends TagCompound {
                                 TagField tagField = field.getAnnotation(TagField.class);
                                 return tagField != null && tagSync != null;
                             })
-                            .collect(Object2IntOpenHashMap::new,
+                            .collect(HashMap::new,
                                      (m, f) -> {
                                          TagSync tag = f.getAnnotation(TagSync.class);
                                          TagField tagField = f.getAnnotation(TagField.class);
@@ -72,7 +71,7 @@ public class EntitySync extends TagCompound {
                                              m.put(tagField.value(), Math.max(0, Math.min(tag.doublePrecision(), 8)));
                                          }
                                      },
-                                     Object2IntOpenHashMap::putAll);
+                                     HashMap::putAll);
         });
 
         TagCompound sync = new TagCompound();
