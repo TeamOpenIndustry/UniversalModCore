@@ -12,6 +12,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -235,6 +236,21 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
+
+            //Clear passengerPositions entries
+            //For some reason we have them persist even after dismount
+            ObjectArraySet<UUID> set = new ObjectArraySet<>();
+            passengerPositions.forEach(((k, v) -> {
+                if (seats.stream().noneMatch(seatEntity ->
+                                                     seatEntity.getEntityPassenger() != null
+                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
+                    set.add(k);
+                }
+            }));
+            set.forEach(passengerPositions::remove);
+        } else {
+            //A fast fallback
+            passengerPositions.clear();
         }
     }
 
