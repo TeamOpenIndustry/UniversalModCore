@@ -1,0 +1,10 @@
+package cam72cam.mod.render;
+
+import org.lwjgl.opengl.ARBShaderObjects;
+
+/** For Internal use only */
+public class ShaderHelper {
+    public static boolean isShaderPackEnabled() {
+        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+    }
+}
