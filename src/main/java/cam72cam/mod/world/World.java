@@ -338,14 +338,6 @@ public class World {
         return null;
     }
 
-    /** Get all block entities of the given type */
-    public <T extends BlockEntity> List<T> getBlockEntities(Class<T> cls) {
-        return internal.loadedTileEntityList.stream()
-                .filter(x -> x instanceof TileEntity && ((TileEntity) x).isLoaded() && cls.isInstance(((TileEntity) x).instance()))
-                .map(x -> (T) ((TileEntity) x).instance())
-                .collect(Collectors.toList());
-    }
-
     /** Get a block entity at the position, assuming type */
     public <T extends BlockEntity> T getBlockEntity(Vec3i pos, Class<T> cls) {
         TileEntity te = getTileEntity(pos, TileEntity.class);
