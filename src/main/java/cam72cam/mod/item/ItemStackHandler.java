@@ -113,16 +113,6 @@ public class ItemStackHandler implements IInventory {
         return internal.getSlotLimit(slot);
     }
 
-    @Deprecated
-    public TagCompound save() {
-        return new TagCompound(internal.serializeNBT());
-    }
-
-    @Deprecated
-    public void load(TagCompound items) {
-        internal.deserializeNBT(items.internal);
-    }
-
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
         @Override
         public TagAccessor<ItemStackHandler> apply(Class<ItemStackHandler> type, String fieldName, TagField tag) throws SerializationException {

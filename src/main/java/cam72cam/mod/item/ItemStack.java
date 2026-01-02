@@ -27,11 +27,6 @@ public class ItemStack {
         this(new net.minecraft.item.ItemStack(item.internal, i));
     }
 
-    @Deprecated
-    public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.item.ItemStack(Item.getByNameOrId(item), i, meta));
-    }
-
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
         if (internal.getTagCompound() == null) {

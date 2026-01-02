@@ -248,15 +248,6 @@ public abstract class BlockType {
             return BlockType.this.isConnectable();
         }
 
-        @Deprecated
-        @Override
-        public BlockFaceShape getBlockFaceShape(IBlockAccess p_193383_1_, IBlockState p_193383_2_, BlockPos p_193383_3_, EnumFacing p_193383_4_) {
-            if (BlockType.this.isConnectable()) {
-                return super.getBlockFaceShape(p_193383_1_, p_193383_2_, p_193383_3_, p_193383_4_);
-            }
-            return BlockFaceShape.UNDEFINED;
-        }
-
         public boolean tryBreak(net.minecraft.world.World world, BlockPos pos, EntityPlayer player) {
             return BlockType.this.tryBreak(World.get(world), new Vec3i(pos), new Player(player));
         }
