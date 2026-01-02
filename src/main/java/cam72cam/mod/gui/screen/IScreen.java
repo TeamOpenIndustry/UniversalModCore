@@ -8,14 +8,8 @@ public interface IScreen {
     /** Called when screen is initially constructed */
     void init(IScreenBuilder screen);
 
-    @Deprecated
-    default void onEnterKey(IScreenBuilder builder) { }
     /** Called when any key is pressed outside textfield */
-    default void onKeyType(IScreenBuilder builder, Keyboard.KeyCode keyCode){
-        if (keyCode == Keyboard.KeyCode.NUMPADENTER || keyCode == Keyboard.KeyCode.RETURN) {
-            onEnterKey(builder);
-        }
-    }
+    void onKeyType(IScreenBuilder builder, Keyboard.KeyCode keyCode);
 
     /**
      * Called when player click his mouse outside textfield
@@ -28,10 +22,6 @@ public interface IScreen {
     /** Called during close */
     void onClose();
 
-    @Deprecated
-    default void draw(IScreenBuilder builder) { }
     /** Called once per screen draw */
-    default void draw(IScreenBuilder builder, RenderState state) {
-        draw(builder);
-    }
+    void draw(IScreenBuilder builder, RenderState state);
 }

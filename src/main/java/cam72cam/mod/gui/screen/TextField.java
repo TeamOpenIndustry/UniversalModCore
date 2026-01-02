@@ -37,11 +37,6 @@ public class TextField implements IWidget{
         textfield.setEnabled(visible);
     }
 
-    @Deprecated
-    public void setVisible(Boolean visible) {
-        this.setVisible(visible.booleanValue());
-    }
-
     @Override
     public boolean isVisible() {
         return textfield.getVisible();
