@@ -1,6 +1,8 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.platform.RegisterBlockTagEvent;
+import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.ContainerType;
@@ -41,6 +43,7 @@ public class CommonEvents {
     public static final class Block {
         public static final Event<Runnable> REGISTER = new Event<>();
         public static final Event<EventBusForge.BlockBrokenEvent> BROKEN = new Event<>();
+        public static final Event<Consumer<RegisterBlockTagEvent>> TAGS = new Event<>();
     }
 
     public static final class Tile {
@@ -49,6 +52,7 @@ public class CommonEvents {
 
     public static final class Item {
         public static final Event<Runnable> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterItemTagEvent>> TAGS = new Event<>();
     }
 
     public static final class Recipe {
@@ -156,6 +160,16 @@ public class CommonEvents {
         @SubscribeEvent
         public static void registerContainers(RegistryEvent.Register<ContainerType<?>> event) {
             CONTAINER_REGISTRY.execute(x -> x.accept(event.getRegistry()));
+        }
+
+        @SubscribeEvent
+        public static void registerItemTag(RegisterBlockTagEvent event) {
+            Block.TAGS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerItemTag(RegisterItemTagEvent event) {
+            Item.TAGS.execute(x -> x.accept(event));
         }
     }
 }
