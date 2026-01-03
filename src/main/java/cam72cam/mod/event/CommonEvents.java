@@ -95,7 +95,7 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void onEntityTransfer(EntityEvent.EnteringChunk event) {
+        public void onEntityTransfer(EntityEvent.EnteringChunk event) {
             if (event.entity instanceof ModdedEntity) {
                 ModdedEntity modded = (ModdedEntity) event.entity;
                 cam72cam.mod.world.World.get(modded.worldObj).tracker

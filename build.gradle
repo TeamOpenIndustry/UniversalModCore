@@ -6,12 +6,15 @@ buildscript {
         maven { url "https://plugins.gradle.org/" }
         maven { url = 'https://repo.spongepowered.org/maven' }
         mavenCentral()
+        maven {
+            url = "https://jitpack.io"
+        }
     }
     dependencies {
-        classpath ('com.anatawa12.forge:ForgeGradle:1.2-1.0.+') {
-            changing = true
+        classpath('com.github.GTNewHorizons:ForgeGradle:1.2.11') {
+            // This transitive dependency breaks plugins for some reason. Only GTNH-FG has this issue.
+            exclude group: "org.eclipse.equinox"
         }
-        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
     }
 }
 
@@ -23,7 +26,6 @@ configurations {
 }
 
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     maven {
@@ -92,33 +94,53 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 	shade "curse.maven:invtweaks-223094:2431302"
-
-    shade('org.spongepowered:mixin:0.7.11-SNAPSHOT')
+    shade('org.spongepowered:mixin:0.7.11-SNAPSHOT'){
+        setTransitive false
+        exclude group: 'org.apache.logging.log4j'
+    }
 
 //    shade('io.github.llamalad7:mixinextras-common:0.5.0')
     testCompile('junit:junit:4.13.1')
 
-    runtime "net.minecrell:terminalconsoleappender:1.3.0"
+//    runtime "net.minecrell:terminalconsoleappender:1.3.0"
 //    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.0.2'
 
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
 }
 
-//mixin {
-//    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
-//}
+def tempDir = System.getenv("RUNNER_TEMP") == null ? tasks.compileJava.temporaryDir : System.getenv("RUNNER_TEMP")
+
+ext.outRefMapFile = "${tempDir}/mixins.universalmodcore.refmap.json"
+
+def outSrgFile = "${tempDir}/outSrg.srg"
+
+afterEvaluate {
+    tasks.compileJava.options.compilerArgs += ["-AreobfSrgFile=${tasks.reobf.srg}", "-AoutSrgFile=${outSrgFile}", "-AoutRefMapFile=${outRefMapFile}"];
+}
+
+reobf {
+    addExtraSrgFile outSrgFile
+}
 
 jar {
-    classifier = 'slim'
+    classifier = ''
     manifest {
         attributes (
                 'FMLCorePlugin': 'cam72cam.mod.UMCMixinPlugin',
                 'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
+                "ForceLoadAsMod": true,
                 'TweakOrder': '0',
                 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
         )
     }
+
+    from {
+        configurations.shade.collect {
+            zipTree(it)
+        }
+    }
+    from outRefMapFile;
 }
 
 jar.finalizedBy('reobf')
@@ -142,24 +164,6 @@ processResources {
     }
 }
 
-shadowJar {
-    classifier = ''
-    configurations = [project.configurations.shade]
-    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
-    relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
-    //Don't do this
-//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    mergeServiceFiles()
-//    finalizedBy 'reobfshadow'
-}
-
-assemble.dependsOn shadowJar
-
-reobf {
-    shadowJar {}
-}
-
 test {
     useJUnit()
     maxHeapSize = '1G'
@@ -169,7 +173,6 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
-            artifact shadowJar
             artifactId archivesBaseName
         }
     }

@@ -21,18 +21,18 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
 
-//        CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
-//        if (codeSource != null) {
-//            URL location = codeSource.getLocation();
-//            try {
-//                File file = new File(location.toURI());
-//                if (file.isFile()) {
-//                    CoreModManager.remove(file.getName());
-//                }
-//            } catch (URISyntaxException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
+        if (codeSource != null) {
+            URL location = codeSource.getLocation();
+            try {
+                File file = new File(location.toURI());
+                if (file.isFile()) {
+                    CoreModManager.getReparseableCoremods().add(file.getName());
+                }
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
