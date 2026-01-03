@@ -160,7 +160,8 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
-    config 'mixins.universalmodcore.json'
+    config 'mixins.feat.universalmodcore.json'
+    config 'mixins.fix.universalmodcore.json'
 
     //Dev environment setup
     debug.verbose = true
