@@ -96,6 +96,7 @@ public abstract class Particle {
 
                     if (renderer == null) {
                         RenderState state = base.clone();
+                        state.stage(RenderContext.Stage.ENTITY);
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {

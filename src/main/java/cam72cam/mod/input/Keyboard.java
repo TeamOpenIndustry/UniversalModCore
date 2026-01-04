@@ -2,6 +2,7 @@ package cam72cam.mod.input;
 
 import cam72cam.mod.event.ClientEvents;
 import net.minecraft.client.KeyMapping;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -123,8 +124,15 @@ public class Keyboard {
 
         KeyCode(int code) {
             this.code = code;
+            keycodes.put(code, this);
+        }
+
+        public static KeyCode of(int code) {
+            return keycodes.get(code);
         }
     }
+
+    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
 
     @OnlyIn(Dist.CLIENT)
     /** Registers a keybind */

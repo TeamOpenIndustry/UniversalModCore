@@ -1,7 +1,9 @@
 package cam72cam.mod.gui.screen;
 
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
@@ -112,9 +114,6 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
-        for (TextField field : textFieldMap.values()) {
-            field.onUpdate();
-        }
 
         screen.draw(this, new RenderState(stack).depth_test(true).stage(RenderContext.Stage.GUI));
 
@@ -139,12 +138,15 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        // Enter
-        if (keyCode == 28 || keyCode == 156) {
-            screen.onEnterKey(this);
-            return true;
-        }
-        return false;
+        screen.onKeyType(this, Keyboard.KeyCode.of(keyCode));
+        return true;
+    }
+
+    @Override
+    public boolean mouseClicked(double x, double y, int button) {
+        Player.Hand hand = button == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
+        screen.onMouseClick((int) x, (int) y, hand);
+        return true;
     }
 
     // Default overrides

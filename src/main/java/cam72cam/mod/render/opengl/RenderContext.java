@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -13,6 +14,7 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;

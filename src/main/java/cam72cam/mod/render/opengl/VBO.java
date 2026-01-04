@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -95,7 +96,7 @@ public class VBO {
                     GL32.glBindVertexArray(oldVao);
                     GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("Cannot create VBO: ", e);
                 }
                 loader = null;
             }
@@ -179,8 +180,9 @@ public class VBO {
                 shader = switch (state.stage) {
                     case GUI -> GameRenderer.getBlockShader();
                     case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
-                    //TODO Only when shader pack not enabled
-                    default -> RenderContext.UMC_CORE;
+                    default -> ShaderHelper.isShaderPackEnabled()
+                               ? GameRenderer.getRendertypeEntityCutoutShader()
+                               : RenderContext.UMC_CORE;
                 };
             } else {
                 shader = GameRenderer.getRendertypeEntityCutoutShader();
