@@ -164,7 +164,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
         if (this.textFieldMap.keySet().stream().noneMatch(txt -> {
             if (txt.mouseClicked(x, y, button)) {
-                txt.setFocus(true);
+                txt.setFocused(true);
                 return true;
             }
             return false;
