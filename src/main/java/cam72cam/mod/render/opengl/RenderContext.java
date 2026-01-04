@@ -2,12 +2,14 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -35,11 +37,19 @@ public class RenderContext {
     private RenderContext() {
     }
 
+    //In 1.19.4 with oculus 1.5.2 if we enter a world for the first time with shader applied all rendering get corrupted
+    //I'd assume that's their fault as 1.20.1 oculus 1.8.0 behaves well
     public static With apply(RenderState state) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader = RenderSystem.getShader();
+        ShaderInstance shader;
+        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
+        if (vanillaEmissive) {
+            shader = GameRenderer.getRendertypeBeaconBeamShader();
+        } else {
+            shader = RenderSystem.getShader();
+        }
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -72,9 +82,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null) {
-            float block = state.lightmap[0];
-            float sky = state.lightmap[1];
+        if (state.lightmap != null && !vanillaEmissive) {
             float oldX;
             float oldY;
             if (state.stage == Stage.ENTITY) {
@@ -225,8 +233,8 @@ public class RenderContext {
             if (element.usage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        int x = (int) (oldX * 255);
-                        int y = (int) (oldY * 255);
+                        int x = (int) (oldX * 240);
+                        int y = (int) (oldY * 240);
                         GL32.glVertexAttribI2i(i, x, y);
                     }
                 }
