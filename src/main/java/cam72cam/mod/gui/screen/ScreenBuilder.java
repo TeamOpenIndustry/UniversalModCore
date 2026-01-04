@@ -135,14 +135,21 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        screen.onKeyType(this, Keyboard.KeyCode.of(keyCode));
+        screen.onKeyType(this, Keyboard.KeyCode.of(typedChar));
         return true;
     }
 
     @Override
     public boolean mouseClicked(double x, double y, int button) {
         Player.Hand hand = button == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
-        screen.onMouseClick((int) x, (int) y, hand);
+
+        if (this.buttonMap.keySet().stream().anyMatch(btn -> btn.mouseClicked(x, y, button))) {
+            return true;
+        }
+
+        if (this.textFieldMap.keySet().stream().noneMatch(txt -> txt.mouseClicked(x, y, button))) {
+            screen.onMouseClick((int) x, (int) y, hand);
+        }
         return true;
     }
 
