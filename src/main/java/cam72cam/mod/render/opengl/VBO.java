@@ -96,7 +96,7 @@ public class VBO {
                     GL32.glBindVertexArray(oldVao);
                     GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("Cannot create VBO: ", e);
                 }
                 loader = null;
             }
@@ -180,7 +180,7 @@ public class VBO {
                 shader = switch (state.stage) {
                     case GUI -> GameRenderer.getPositionTexLightmapColorShader();
                     case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
-                    default -> ShaderHelper.isIrisShaderEnabled()
+                    default -> ShaderHelper.isShaderPackEnabled()
                                ? GameRenderer.getRendertypeEntityCutoutShader()
                                : RenderContext.UMC_CORE;
                 };
