@@ -11,12 +11,9 @@ import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix3f;
+import javax.vecmath.SingularMatrixException;
 import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.function.Consumer;
@@ -127,7 +124,11 @@ public class OBJRender extends VBO {
                             (float) m.m10, (float) m.m11, (float) m.m12,
                             (float) m.m20, (float) m.m21, (float) m.m22
                     );
-                    normalMat.invert();
+                    try {
+                        normalMat.invert();
+                    } catch (SingularMatrixException ignore) {
+                        //Nothing to do here
+                    }
                     normalMat.transpose();
                     for (int i = 0; i < buff.length; i += vb.stride) {
                         float x = buff[i+0];
