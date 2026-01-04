@@ -2,12 +2,12 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.render.OptiFine;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import util.Matrix4;
@@ -63,7 +63,7 @@ public class RenderContext {
             restore.add(bound::restore);
         }
 
-        boolean shaderActive = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+        boolean shaderActive = ShaderHelper.isShaderPackEnabled();
         int standardTextureID = GL13.GL_TEXTURE0;
         int lightmapTextureID = GL13.GL_TEXTURE2;
         int normalTextureID = GL13.GL_TEXTURE1;

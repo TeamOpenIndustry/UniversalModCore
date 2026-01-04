@@ -10,13 +10,14 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
+import cam72cam.mod.util.SingleCache;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
-import cam72cam.mod.util.SingleCache;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -246,6 +247,21 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(getPosX(), getPosY(), getPosZ()));
+
+            //Clear passengerPositions entries
+            //For some reason we have them persist even after dismount
+            ObjectArraySet<UUID> set = new ObjectArraySet<>();
+            passengerPositions.forEach(((k, v) -> {
+                if (seats.stream().noneMatch(seatEntity ->
+                                                     seatEntity.getEntityPassenger() != null
+                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
+                    set.add(k);
+                }
+            }));
+            set.forEach(passengerPositions::remove);
+        } else {
+            //A fast fallback
+            passengerPositions.clear();
         }
     }
 
@@ -471,7 +487,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     /* ICollision NOTE: set width/height if implementing LivingEntity */
-    /** @see #getEntityBoundingBox() */
+    /** @see #getBoundingBox() */
     @Override
     public AxisAlignedBB getCollisionBoundingBox() {
         return getBoundingBox();
