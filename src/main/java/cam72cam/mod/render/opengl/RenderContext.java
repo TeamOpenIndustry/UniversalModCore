@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -11,7 +12,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -39,7 +42,13 @@ public class RenderContext {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader = RenderSystem.getShader();
+        ShaderInstance shader;
+        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
+        if (vanillaEmissive) {
+            shader = GameRenderer.getRendertypeBeaconBeamShader();
+        } else {
+            shader = RenderSystem.getShader();
+        }
         if (state.model_view != null) {
             Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();
             restore.add(() -> RenderSystem.getModelViewMatrix().load(oldModelView));
@@ -72,9 +81,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null) {
-            float block = state.lightmap[0];
-            float sky = state.lightmap[1];
+        if (state.lightmap != null && !vanillaEmissive) {
             float oldX;
             float oldY;
             if (state.stage == Stage.ENTITY) {
@@ -219,8 +226,8 @@ public class RenderContext {
             if (element.getUsage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        int x = (int) (oldX * 255);
-                        int y = (int) (oldY * 255);
+                        int x = (int) (oldX * 240);
+                        int y = (int) (oldY * 240);
                         GL32.glVertexAttribI2i(i, x, y);
                     }
                 }
