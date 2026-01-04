@@ -135,8 +135,18 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        screen.onKeyType(this, Keyboard.KeyCode.of(typedChar));
+        if (this.textFieldMap.keySet().stream()
+                             .noneMatch(txt -> txt.keyPressed(typedChar, keyCode, mods))) {
+            screen.onKeyType(this, Keyboard.KeyCode.of(typedChar));
+        }
+
         return true;
+    }
+
+    @Override
+    public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
+        return this.textFieldMap.keySet().stream()
+                             .anyMatch(txt -> txt.charTyped(p_charTyped_1_, p_charTyped_2_));
     }
 
     @Override
@@ -147,7 +157,13 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        if (this.textFieldMap.keySet().stream().noneMatch(txt -> txt.mouseClicked(x, y, button))) {
+        if (this.textFieldMap.keySet().stream().noneMatch(txt -> {
+            if (txt.mouseClicked(x, y, button)) {
+                txt.setFocused2(true);
+                return true;
+            }
+            return false;
+        })) {
             screen.onMouseClick((int) x, (int) y, hand);
         }
         return true;

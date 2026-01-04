@@ -63,8 +63,8 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(),
-                              new RenderState().translate(0, -1, 0).stage(RenderContext.Stage.OVERLAY), partialTicks);
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(),
+                              new RenderState().stage(RenderContext.Stage.OVERLAY), partialTicks);
                 }
             }
         });
