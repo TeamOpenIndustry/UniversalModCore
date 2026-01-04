@@ -5,6 +5,10 @@ import org.lwjgl.opengl.ARBShaderObjects;
 /** For Internal use only */
 public class ShaderHelper {
     public static boolean isShaderPackEnabled() {
-        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+        return isOptiFineEnabled();
+    }
+
+    public static boolean isOptiFineEnabled() {
+        return OptiFine.isLoaded() && ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
     }
 }

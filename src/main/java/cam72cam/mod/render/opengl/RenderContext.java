@@ -1,13 +1,13 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import util.Matrix4;
@@ -60,7 +60,7 @@ public class RenderContext {
             restore.add(bound::restore);
         }
 
-        boolean shaderActive = ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+        boolean shaderActive = ShaderHelper.isShaderPackEnabled();
 
         if (state.lightmap != null) {
             float block = state.lightmap[0];
