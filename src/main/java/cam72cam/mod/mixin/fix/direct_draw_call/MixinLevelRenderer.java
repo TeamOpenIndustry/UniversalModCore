@@ -1,5 +1,6 @@
 package cam72cam.mod.mixin.fix.direct_draw_call;
 
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.render.opengl.RenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -38,7 +39,7 @@ public class MixinLevelRenderer {
     //Enable depthMask if we have something special to render
     @Redirect(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
     public void allowDepthMask(boolean p_69459_) {
-        if (RenderContext.hasDeferred()) {
+        if (RenderContext.hasDeferred() && !ShaderHelper.isIrisShaderEnabled()) {
             RenderSystem.depthMask(true);
         } else {
             RenderSystem.depthMask(p_69459_);
@@ -47,7 +48,7 @@ public class MixinLevelRenderer {
 
     @Redirect(method = "renderWorldBorder", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
     public void allowBoarderDepthMask(boolean p_69459_) {
-        if (RenderContext.hasDeferred()) {
+        if (RenderContext.hasDeferred() && !ShaderHelper.isIrisShaderEnabled()) {
             RenderSystem.depthMask(true);
         } else {
             RenderSystem.depthMask(p_69459_);
