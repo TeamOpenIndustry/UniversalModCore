@@ -7,7 +7,6 @@ import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +70,7 @@ public class VBO {
 
                     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("Cannot create VBO: ", e);
                 }
                 loader = null;
             }

@@ -3,6 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -98,6 +99,7 @@ public abstract class Particle {
 
                     if (renderer == null) {
                         RenderState state = base.clone();
+                        state.stage(RenderContext.Stage.ENTITY);
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
