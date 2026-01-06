@@ -178,7 +178,8 @@ public class VBO {
             ShaderInstance shader;
             if (state.stage != null) {
                 shader = switch (state.stage) {
-                    case GUI -> GameRenderer.getPositionTexLightmapColorShader();
+                    //DirectDraw will set their shader respectively
+                    case GUI -> GameRenderer.getPositionTexColorShader();
                     case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
                     default -> ShaderHelper.isShaderPackEnabled()
                                ? GameRenderer.getRendertypeEntityCutoutShader()
@@ -238,7 +239,7 @@ public class VBO {
             }
             RenderContext.checkError();
 
-            this.restore = RenderContext.apply(state).and(() -> {
+            this.restore = RenderContext.apply(state, true).and(() -> {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
 
@@ -263,7 +264,7 @@ public class VBO {
             }
             RenderState state = this.state.clone();
             mod.accept(state);
-            return RenderContext.apply(state);
+            return RenderContext.apply(state, true);
         }
 
         /**
