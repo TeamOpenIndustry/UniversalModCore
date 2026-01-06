@@ -179,7 +179,8 @@ public class VBO {
             if (state.stage != null) {
                 shader = switch (state.stage) {
                     //DirectDraw will set their shader respectively
-                    case GUI -> GameRenderer.getPositionTexColorShader();
+                    //TODO 1.20.1 why track model in GUI all black with UMC_CORE, while fine with Position_Tex shader?
+//                    case GUI -> GameRenderer.getRendertypeArmorEntityGlintShader();
                     case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
                     default -> ShaderHelper.isShaderPackEnabled()
                                ? GameRenderer.getRendertypeEntityCutoutShader()
