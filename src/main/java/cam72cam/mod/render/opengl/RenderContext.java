@@ -37,15 +37,18 @@ public class RenderContext {
     private RenderContext() {
     }
 
-    //In 1.19.4 with oculus 1.5.2 if we enter a world for the first time with shader applied all rendering get corrupted
-    //I'd assume that's their fault as 1.20.1 oculus 1.8.0 behaves well
     public static With apply(RenderState state) {
+        return apply(state, false);
+    }
+
+    /** Internal, use the method above */
+    public static With apply(RenderState state, boolean useBeaconShader) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader;
         boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
-        if (vanillaEmissive) {
+        if (vanillaEmissive && useBeaconShader) {
             shader = GameRenderer.getRendertypeBeaconBeamShader();
         } else {
             shader = RenderSystem.getShader();

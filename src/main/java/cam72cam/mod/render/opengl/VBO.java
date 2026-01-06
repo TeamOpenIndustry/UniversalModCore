@@ -177,6 +177,7 @@ public class VBO {
             ShaderInstance shader;
             if (state.stage != null) {
                 shader = switch (state.stage) {
+                    //DirectDraw will set their shader respectively
                     case GUI -> GameRenderer.getPositionTexColorShader();
                     case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
                     default -> ShaderHelper.isShaderPackEnabled()
@@ -191,6 +192,12 @@ public class VBO {
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
 
             int stride = vbInfo.stride * Float.BYTES;
+
+            //Could we have a better way?
+            if (state.stage == RenderContext.Stage.GUI) {
+                state.lightmap(0.9f, 0.9f)
+                     .color(1, 1, 1, 1);
+            }
 
             List<VertexFormatElement> elements = shader.getVertexFormat().getElements();
             for (int i = 0; i < elements.size(); i++) {
@@ -222,11 +229,11 @@ public class VBO {
                                     GL32.glVertexAttribI2i(i, 0, 10);
                                 } else if (entry.getKey().equals("UV2")) {
                                     GL32.glDisableVertexAttribArray(i);
-                                    int x = 255;
-                                    int y = 255;
+                                    int x = 240;
+                                    int y = 240;
                                     if (state.lightmap != null) {
-                                        x = (int) (state.lightmap[0] * 255);
-                                        y = (int) (state.lightmap[1] * 255);
+                                        x = (int) (state.lightmap[0] * 240);
+                                        y = (int) (state.lightmap[1] * 240);
                                     }
                                     GL32.glVertexAttribI2i(i, x, y);
                                 }
@@ -237,7 +244,7 @@ public class VBO {
             }
             RenderContext.checkError();
 
-            this.restore = RenderContext.apply(state).and(() -> {
+            this.restore = RenderContext.apply(state, true).and(() -> {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
 
@@ -262,7 +269,7 @@ public class VBO {
             }
             RenderState state = this.state.clone();
             mod.accept(state);
-            return RenderContext.apply(state);
+            return RenderContext.apply(state, true);
         }
 
         /**
