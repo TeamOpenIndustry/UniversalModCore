@@ -2,7 +2,6 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -14,7 +13,6 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -65,7 +63,8 @@ public class RenderContext {
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            // TODO normal and spec
+            //As Iris doesn't exist on 1.17 we can't create PBR handler here
+            //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
             restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
             RenderSystem.setShaderTexture(0, state.texture.getId());
