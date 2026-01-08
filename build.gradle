@@ -164,6 +164,12 @@ dependencies {
     minecraftLibrary(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
+dependencies {
+    //Iris
+    implementation fg.deobf("curse.maven:embeddium-908741:5322305")
+    implementation fg.deobf("curse.maven:oculus-581495:4578744")
+}
+
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 

@@ -303,6 +303,10 @@ public class OBJModel {
             }
 
 
+            if (lodSize == -1) {
+                //A fallback for auto detect
+                lodSize = defaultLodSize;
+            }
 
             if (lodSize == defaultLodSize && OBJModel.this.normals.containsKey(texName)) {
                 state.normals(OBJModel.this.normals.get(texName).synchronous(wait));

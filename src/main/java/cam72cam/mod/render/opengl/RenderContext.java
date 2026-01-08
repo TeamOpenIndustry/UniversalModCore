@@ -31,6 +31,8 @@ public class RenderContext {
     public static float lastLightX;
     public static float lastLightY;
 
+    public static ThreadLocal<RenderState> currentState = new ThreadLocal<>();
+
     private static final List<Runnable> deferredCall = new LinkedList<>();
 
     private RenderContext() {
@@ -62,12 +64,14 @@ public class RenderContext {
         }
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
+            currentState.set(state);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            //As Iris doesn't exist on 1.17 we can't create PBR handler here
+            //Normal and Specular handled in mixin.feat.iris_pbr
             //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
             restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
             RenderSystem.setShaderTexture(0, state.texture.getId());
+            currentState.remove();
         }
 
         {
@@ -80,6 +84,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
+        //TODO Without Iris there may be some kinds of light bug like 1.16 era...figure out why
         if (state.lightmap != null && !vanillaEmissive) {
             float oldX;
             float oldY;
