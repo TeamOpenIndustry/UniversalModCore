@@ -247,21 +247,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
-
-            //Clear passengerPositions entries
-            //For some reason we have them persist even after dismount
-            ObjectArraySet<UUID> set = new ObjectArraySet<>();
-            passengerPositions.forEach(((k, v) -> {
-                if (seats.stream().noneMatch(seatEntity ->
-                                                     seatEntity.getEntityPassenger() != null
-                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
-                    set.add(k);
-                }
-            }));
-            set.forEach(passengerPositions::remove);
-        } else {
-            //A fast fallback
-            passengerPositions.clear();
         }
     }
 
@@ -389,7 +374,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || !seat.isPassenger(passenger.internal)) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -431,8 +418,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             other.internal.seats.add(seat);
             seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
             other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
+            this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
