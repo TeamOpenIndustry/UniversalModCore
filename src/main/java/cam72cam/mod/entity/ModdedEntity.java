@@ -232,8 +232,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
         }
 
-        seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
-        seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
+        if (!seats.isEmpty()) {
+            seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
+            seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
+        }
     }
 
     /* Player Interact */
