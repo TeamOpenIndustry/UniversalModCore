@@ -12,7 +12,6 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -233,25 +232,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Unable to send sync data for %s - %s", this, self.sync);
         }
 
-        if (!seats.isEmpty()) {
-            seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
-            seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
-
-            //Clear passengerPositions entries
-            //For some reason we have them persist even after dismount
-            ObjectArraySet<UUID> set = new ObjectArraySet<>();
-            passengerPositions.forEach(((k, v) -> {
-                if (seats.stream().noneMatch(seatEntity ->
-                                                     seatEntity.getEntityPassenger() != null
-                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
-                    set.add(k);
-                }
-            }));
-            set.forEach(passengerPositions::remove);
-        } else {
-            //A fast fallback
-            passengerPositions.clear();
-        }
+        seats.removeAll(seats.stream().filter(x -> x.isDead).collect(Collectors.toList()));
+        seats.forEach(seat -> seat.setPosition(posX, posY, posZ));
     }
 
     /* Player Interact */
@@ -362,7 +344,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || !seat.isPassenger(passenger.internal)) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -404,8 +388,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
+            this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
