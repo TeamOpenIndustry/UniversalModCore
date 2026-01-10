@@ -417,7 +417,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
-            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
+            other.internal.passengerPositions.remove(entity.getUUID());
             this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);

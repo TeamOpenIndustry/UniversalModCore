@@ -3,7 +3,6 @@ package cam72cam.mod.entity;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.Entity;
@@ -19,7 +18,6 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.network.NetworkHooks;
 
-import java.util.List;
 import java.util.UUID;
 
 /** Seat construct to make multiple riders actually work */
@@ -35,23 +33,6 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
                 .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.getByValue(msg.getTypeId()), world))
                 .build(SeatEntity.ID.toString())
                 .setRegistryName(ID);
-
-
-        World.onTick(SeatEntity::ticker);
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> ClientEvents.TICK_POST.subscribe(() -> {
-            if (MinecraftClient.isReady()) {
-                ticker(MinecraftClient.getPlayer().getWorld());
-            }
-        }));
-    }
-
-    private static void ticker(World world) {
-        for (cam72cam.mod.entity.Entity entity : world.getEntities(e -> e.internal instanceof SeatEntity, cam72cam.mod.entity.Entity.class)) {
-            List<Entity> passengers = entity.internal.getPassengers();
-            if (!passengers.isEmpty()) {
-                ((SeatEntity) entity.internal).updatePassengerPreTick(passengers.get(0));
-            }
-        }
     }
 
     // What it's a part of
@@ -156,15 +137,11 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
         return 0;
     }
 
-    int lastUpdateTick = -1;
-    //@Override
-    public final void updatePassengerPreTick(net.minecraft.entity.Entity passenger) {
-        if (lastUpdateTick != this.ticks) {
-            lastUpdateTick = this.ticks;
-            cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
-            if (linked != null && linked.internal instanceof ModdedEntity) {
-                ((ModdedEntity) linked.internal).updateSeat(this);
-            }
+    @Override
+    public void updatePassenger(Entity p_184232_1_) {
+        cam72cam.mod.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.mod.entity.Entity.class);
+        if (linked != null && linked.internal instanceof ModdedEntity) {
+            ((ModdedEntity) linked.internal).updateSeat(this);
         }
     }
 
