@@ -387,12 +387,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-//        if (seat.getEntityId() < passenger.internal.getEntityId()) {
-//            pos = pos.add(motion);
+        //TODO 1.14.4 Could this cause further bug? If so how to fix? If not should this be backported to 1.12?
+//        if (this.getEntityId() < passenger.internal.getEntityId()) {
+            pos = pos.add(motion);
 //        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
-            passenger.setVelocity(motion);
+//            passenger.setVelocity(motion);
         }
 
         float delta = rotationYaw - prevRotationYaw;
