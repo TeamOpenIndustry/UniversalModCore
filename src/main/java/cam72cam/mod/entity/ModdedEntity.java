@@ -387,9 +387,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        if (seat.getEntityId() < passenger.internal.getEntityId()) {
-            pos = pos.add(motion);
-        }
+//        if (seat.getEntityId() < passenger.internal.getEntityId()) {
+//            pos = pos.add(motion);
+//        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
             passenger.setVelocity(motion);
@@ -498,7 +498,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes
-     * TODO provide a way of specifying a render bounding box without a collision bounding box
+     * TODO provide a way of specifying a render bounding box without a custom_bb_collision bounding box
      * @see ICollision
      */
     @Override
