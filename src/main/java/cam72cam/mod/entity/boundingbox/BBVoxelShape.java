@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class BBVoxelShape extends VoxelShape {
+    //Though I don't understand what doe this mean...
     private static final VoxelShape FULL_CUBE1 = Util.make(() -> {
         VoxelShapePart lvt_0_1_ = new BitSetVoxelShapePart(200, 200, 200, -100, -100, -100, 99, 99, 99);
         for (int i = -100; i <= 99; i++) {
@@ -57,21 +58,24 @@ public class BBVoxelShape extends VoxelShape {
         } else if (Math.abs(desiredOffset) < 1.0E-7D) {
             return 0.0D;
         } else {
-//            if (bb.intersects(collisionBox.minX, collisionBox.minY, collisionBox.minZ, collisionBox.maxX, collisionBox.maxY, collisionBox.maxZ)) {
-                switch (movementAxis) {
-                    case FORWARD:
-//                        return bb.internal.calculateZOffset(IBoundingBox.from(collisionBox), desiredOffset);
-                    case NONE:
-//                        return bb.internal.calculateXOffset(IBoundingBox.from(collisionBox), desiredOffset);
+            boolean colliding = bb.intersects(collisionBox.minX, collisionBox.minY, collisionBox.minZ, collisionBox.maxX, collisionBox.maxY, collisionBox.maxZ);
+            boolean willZCollide = !colliding
+                    && bb.intersects(collisionBox.minX, collisionBox.minY, collisionBox.minZ + desiredOffset, collisionBox.maxX, collisionBox.maxY, collisionBox.maxZ + desiredOffset);
+            boolean willXCollide = !colliding
+                    && bb.intersects(collisionBox.minX + desiredOffset, collisionBox.minY, collisionBox.minZ, collisionBox.maxX + desiredOffset, collisionBox.maxY, collisionBox.maxZ);
+            switch (movementAxis) {
+                case FORWARD: //Z
+                case NONE: //X
+                    if (willXCollide || willZCollide) {
+                        return 0;
+                    } else {
                         return desiredOffset;
-                    case BACKWARD:
-                    default:
-                        double v = bb.internal.calculateYOffset(IBoundingBox.from(collisionBox), desiredOffset);
-                        return v + 0.05;
-                }
-//            } else {
-//                return 0;
-//            }
+                    }
+                case BACKWARD: //Y
+                default:
+                    //Add a small offset so jump won't get blocked
+                    return bb.internal.calculateYOffset(IBoundingBox.from(collisionBox), desiredOffset) + 0.01;
+            }
         }
     }
 
