@@ -4,6 +4,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.world.ChunkPos;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -24,9 +25,6 @@ import java.util.stream.Collectors;
 @Mixin(World.class)
 public abstract class MixinVanillaWorld {
     @Shadow
-    public abstract Chunk getChunk(int chunkX, int chunkZ);
-
-    @Shadow
     public abstract IChunk getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull);
 
     @Inject(method = "getEntitiesInAABBexcluding", at = @At("RETURN"))
@@ -34,7 +32,8 @@ public abstract class MixinVanillaWorld {
                                     CallbackInfoReturnable<List<Entity>> cir) {
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(
+                ChunkPos.asLong(new Vec3d((aabb.minX + aabb.maxX) / 2, (aabb.minY + aabb.maxY) / 2, (aabb.minZ + aabb.maxZ) / 2)));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);
@@ -64,7 +63,8 @@ public abstract class MixinVanillaWorld {
 
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(
+                ChunkPos.asLong(new Vec3d((aabb.minX + aabb.maxX) / 2, (aabb.minY + aabb.maxY) / 2, (aabb.minZ + aabb.maxZ) / 2)));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);

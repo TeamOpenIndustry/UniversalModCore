@@ -11,7 +11,6 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -247,21 +246,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPosition(getPosX(), getPosY(), getPosZ()));
-
-            //Clear passengerPositions entries
-            //For some reason we have them persist even after dismount
-            ObjectArraySet<UUID> set = new ObjectArraySet<>();
-            passengerPositions.forEach(((k, v) -> {
-                if (seats.stream().noneMatch(seatEntity ->
-                                                     seatEntity.getEntityPassenger() != null
-                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
-                    set.add(k);
-                }
-            }));
-            set.forEach(passengerPositions::remove);
-        } else {
-            //A fast fallback
-            passengerPositions.clear();
         }
     }
 
@@ -389,7 +373,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || !seat.isPassenger(passenger.internal)) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -400,12 +386,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        if (seat.getEntityId() < passenger.internal.getEntityId()) {
+        //TODO 1.14.4 Could this cause further bug? If so how to fix? If not should this be backported to 1.12?
+//        if (this.getEntityId() < passenger.internal.getEntityId()) {
             pos = pos.add(motion);
-        }
+//        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
-            passenger.setVelocity(motion);
+//            passenger.setVelocity(motion);
         }
 
         float delta = rotationYaw - prevRotationYaw;
@@ -430,9 +417,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
-            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
+            other.internal.passengerPositions.remove(entity.getUUID());
+            this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
@@ -509,7 +498,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes
-     * TODO provide a way of specifying a render bounding box without a collision bounding box
+     * TODO provide a way of specifying a render bounding box without a custom_bb_collision bounding box
      * @see ICollision
      */
     @Override
