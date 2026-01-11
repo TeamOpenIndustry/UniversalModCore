@@ -63,23 +63,22 @@ public class BoundingBox extends AxisAlignedBB {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
-    /* Interactions */
-    /*
-    @Override
+    /**
+     * Interactions
+     * @see cam72cam.mod.mixin.fix.custom_bb_collision.MixinVoxelShapes
+     * @see CustomVoxelShape
+     * */
     public double calculateXOffset(AxisAlignedBB other, double offsetX) {
         return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
     }
 
-    @Override
     public double calculateYOffset(AxisAlignedBB other, double offsetY) {
         return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
     }
 
-    @Override
     public double calculateZOffset(AxisAlignedBB other, double offsetZ) {
         return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
     }
-    */
 
     @Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {

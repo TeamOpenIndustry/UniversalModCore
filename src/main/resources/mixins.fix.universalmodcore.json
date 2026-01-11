@@ -7,7 +7,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1301,
   "mixins": [
-    "collision.MixinVoxelShapes"
+    "custom_bb_collision.MixinVoxelShapes"
   ],
   "client": [
   ]
