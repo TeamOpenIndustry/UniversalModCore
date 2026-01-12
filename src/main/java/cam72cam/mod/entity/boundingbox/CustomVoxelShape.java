@@ -2,10 +2,11 @@ package cam72cam.mod.entity.boundingbox;
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.util.AxisRotation;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.shapes.*;
+import net.minecraft.core.AxisCycle;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,27 +16,27 @@ public class CustomVoxelShape extends VoxelShape {
     private final BoundingBox bb;
 
     public CustomVoxelShape(BoundingBox boundingBox) {
-        super(VoxelShapes.block().shape);
+        super(Shapes.block().shape);
         this.bb = boundingBox;
     }
 
     @Override
-    public AxisAlignedBB bounds() {
+    public AABB bounds() {
         return this.bb;
     }
 
     @Override
-    public List<AxisAlignedBB> toAabbs() {
+    public List<AABB> toAabbs() {
         return Collections.singletonList(bb);
     }
 
-    @Override
-    protected boolean isFullWide(double p_211542_1_, double p_211542_3_, double p_211542_5_) {
-        return bb.contains(p_211542_1_, p_211542_3_, p_211542_5_);
-    }
+//    @Override
+//    protected boolean isFullWide(double p_211542_1_, double p_211542_3_, double p_211542_5_) {
+//        return bb.contains(p_211542_1_, p_211542_3_, p_211542_5_);
+//    }
 
     @Override
-    protected double collideX(AxisRotation movementAxis, AxisAlignedBB collisionBox, double desiredOffset) {
+    protected double collideX(AxisCycle movementAxis, AABB collisionBox, double desiredOffset) {
         if (this.isEmpty()) {
             return desiredOffset;
         } else if (Math.abs(desiredOffset) < 1.0E-7D) {
@@ -73,15 +74,14 @@ public class CustomVoxelShape extends VoxelShape {
 
     @Override
     protected DoubleList getCoords(Direction.Axis axis) {
-        switch(axis) {
-            case X:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minX, bb.maxX}, shape.getSize(Direction.Axis.X) + 1));
-            case Y:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minY, bb.maxY}, shape.getSize(Direction.Axis.Y) + 1));
-            case Z:
-                return DoubleArrayList.wrap(Arrays.copyOf(new double[]{bb.minZ, bb.maxZ}, shape.getSize(Direction.Axis.Z) + 1));
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (axis) {
+            case X -> DoubleArrayList.wrap(
+                    Arrays.copyOf(new double[]{bb.minX, bb.maxX}, shape.getSize(Direction.Axis.X) + 1));
+            case Y -> DoubleArrayList.wrap(
+                    Arrays.copyOf(new double[]{bb.minY, bb.maxY}, shape.getSize(Direction.Axis.Y) + 1));
+            case Z -> DoubleArrayList.wrap(
+                    Arrays.copyOf(new double[]{bb.minZ, bb.maxZ}, shape.getSize(Direction.Axis.Z) + 1));
+            default -> throw new IllegalArgumentException();
+        };
     }
 }
