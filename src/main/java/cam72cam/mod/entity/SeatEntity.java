@@ -8,6 +8,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,12 +33,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     private static EntityType<SeatEntity> makeType() {
         EntityType.EntityFactory<SeatEntity> ctr = SeatEntity::new;
         EntityType<SeatEntity> et = EntityType.Builder.of(ctr, MobCategory.MISC)
-                .setShouldReceiveVelocityUpdates(false)
-                .setTrackingRange(512)
-                .setUpdateInterval(20)
-                .fireImmune()
-                .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
-                .build(SeatEntity.ID.toString());
+                    .setShouldReceiveVelocityUpdates(false)
+                    .setTrackingRange(512)
+                    .setUpdateInterval(20)
+                    .fireImmune()
+                    .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
+                    .build(SeatEntity.ID.toString());
         et.setRegistryName(ID);
         return et;
     }
@@ -183,7 +184,11 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void removePassenger(net.minecraft.world.entity.Entity passenger) {
         cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
-            ((ModdedEntity) linked.internal).removeSeat(this);
+            if (!(passenger instanceof ServerPlayer serverPlayer && serverPlayer.hasDisconnected())) {
+                //We want to preserve ModdedEntity's passenger data on player disconnect
+                //TODO Does this have bug on dedicated server?
+                ((ModdedEntity) linked.internal).removeSeat(this);
+            }
         }
         super.removePassenger(passenger);
     }
