@@ -3,13 +3,13 @@ package cam72cam.mod.entity;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
@@ -32,12 +32,12 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     private static EntityType<SeatEntity> makeType() {
         EntityType.IFactory<SeatEntity> ctr = SeatEntity::new;
         EntityType<SeatEntity> et = EntityType.Builder.of(ctr, EntityClassification.MISC)
-                .setShouldReceiveVelocityUpdates(false)
-                .setTrackingRange(512)
-                .setUpdateInterval(20)
-                .fireImmune()
-                .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
-                .build(SeatEntity.ID.toString());
+                                                      .setShouldReceiveVelocityUpdates(false)
+                                                      .setTrackingRange(512)
+                                                      .setUpdateInterval(20)
+                                                      .fireImmune()
+                                                      .setCustomClientFactory((msg, world) -> new SeatEntity(Registry.ENTITY_TYPE.byId(msg.getTypeId()), world))
+                                                      .build(SeatEntity.ID.toString());
         et.setRegistryName(ID);
         return et;
     }
@@ -183,7 +183,11 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     public final void removePassenger(net.minecraft.entity.Entity passenger) {
         cam72cam.mod.entity.Entity linked = World.get(level).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
-            ((ModdedEntity) linked.internal).removeSeat(this);
+            if (!(passenger instanceof ServerPlayerEntity && ((ServerPlayerEntity)passenger).hasDisconnected())) {
+                //We want to preserve ModdedEntity's passenger data on player disconnect
+                //TODO Does this have bug on dedicated server?
+                ((ModdedEntity) linked.internal).removeSeat(this);
+            }
         }
         super.removePassenger(passenger);
     }
