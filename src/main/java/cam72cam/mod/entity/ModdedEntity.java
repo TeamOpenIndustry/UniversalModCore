@@ -386,13 +386,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        //TODO 1.14.4 Could this cause further bug? If so how to fix? If not should this be backported to 1.12?
+        //TODO 1.14.4 Do we still need this?
 //        if (this.getEntityId() < passenger.internal.getEntityId()) {
-            pos = pos.add(motion);
+//            pos = pos.add(motion);
 //        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
-//            passenger.setVelocity(motion);
+            passenger.setVelocity(motion);
         }
 
         float delta = rotationYaw - prevRotationYaw;
@@ -416,8 +416,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
-            seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
-            other.internal.passengerPositions.remove(entity.getUUID());
+            Vec3d realPos = calculateRiderWorldPosition(entity);
+            seat.setPosition(realPos.x, realPos.y, realPos.z);
+            //Same as calculatePassengerOffset, just use Vec3d directly
+            Vec3d offset = realPos.subtract(other.getPosition()).rotateYaw(other.getRotationYaw());
+            offset = other.internal.iRidable.getMountOffset(entity, offset);
+            other.internal.passengerPositions.put(entity.getUUID(), offset);
             this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
