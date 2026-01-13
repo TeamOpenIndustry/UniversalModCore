@@ -299,7 +299,7 @@ public class World {
         List<net.minecraft.entity.Entity> entitiesWithinAABB = internal.getEntitiesWithinAABB(net.minecraft.entity.Entity.class,
                                     bb instanceof DefaultBoundingBox
                                     ? ((DefaultBoundingBox)bb).internal
-                                    : new AxisAlignedBB(bb.min().internal(), bb.max().internal()));
+                                    : new AxisAlignedBB(bb.min().x, bb.min().y, bb.min().z, bb.max().x, bb.max().y, bb.max().z));
 
         return entitiesWithinAABB.stream()
                                  .map(this::getEntity)

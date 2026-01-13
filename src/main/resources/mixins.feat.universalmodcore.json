@@ -2,15 +2,16 @@
   "required": true,
   "package": "cam72cam.mod.mixin.feat",
   "refmap": "mixins.universalmodcore.refmap.json",
+  "plugin": "cam72cam.mod.UMCMixinExtrasLoader",
   "target": "@env(DEFAULT)",
   "minVersion": "0.7.11",
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1300,
   "mixins": [
-    "global_renderer.MixinRenderGlobal",
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
+    "global_renderer.MixinRenderGlobal"
     "textfield_click.MixinGuiTextField"
   ]
 }
