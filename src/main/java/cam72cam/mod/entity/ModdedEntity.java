@@ -350,7 +350,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /**
      * Helper function that updates a seat's position and it's rider's position
      * 
-     * @see SeatEntity#updatePassenger 
+     * @see SeatEntity#updatePassenger
      */
     void updateSeat(SeatEntity seat) {
         if (!seats.contains(seat)) {
@@ -367,7 +367,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (seat.riddenByEntity != passenger.internal) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || seat.riddenByEntity != passenger.internal) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -412,8 +414,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
             other.internal.passengerPositions.remove(entity.getUUID());
+            this.passengerPositions.remove(entity.getUUID());
             if (!worldObj.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
