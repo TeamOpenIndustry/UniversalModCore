@@ -34,7 +34,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.2.2"
+String umcVersion = "1.2.3"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -162,6 +162,12 @@ dependencies {
 
     minecraftLibrary(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
     minecraftLibrary(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
+}
+
+dependencies {
+    //Iris
+    implementation fg.deobf("curse.maven:embeddium-908741:5322305")
+    implementation fg.deobf("curse.maven:oculus-581495:4578744")
 }
 
 mixin {

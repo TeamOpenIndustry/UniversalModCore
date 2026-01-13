@@ -2,7 +2,6 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -31,6 +30,8 @@ public class RenderContext {
 
     public static float lastLightX;
     public static float lastLightY;
+
+    public static ThreadLocal<RenderState> currentState = new ThreadLocal<>();
 
     private static final List<Runnable> deferredCall = new LinkedList<>();
 
@@ -68,11 +69,14 @@ public class RenderContext {
         }
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
+            currentState.set(state);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            // TODO normal and spec
+            //Normal and Specular handled in mixin.feat.iris_pbr
+            //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
             restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
             RenderSystem.setShaderTexture(0, state.texture.getId());
+            currentState.remove();
         }
 
         {
@@ -85,6 +89,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
+        //TODO Without Iris there may be some kinds of light bug like 1.16 era...figure out why
         if (state.lightmap != null && !vanillaEmissive) {
             float oldX;
             float oldY;

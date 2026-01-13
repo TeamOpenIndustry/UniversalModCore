@@ -199,9 +199,17 @@ public class RenderState {
         return this;
     }
 
+    public Texture getNormals() {
+        return normals;
+    }
+
     public RenderState specular(Texture spec) {
         this.specular = spec;
         return this;
+    }
+
+    public Texture getSpecular() {
+        return specular;
     }
 
     public RenderState lighting(boolean lighting) {
