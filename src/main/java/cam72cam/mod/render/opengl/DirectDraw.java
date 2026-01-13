@@ -18,8 +18,6 @@ public class DirectDraw {
             BufferBuilder builder = Tesselator.getInstance().getBuilder();
             ShaderInstance shader = RenderSystem.getShader();
             //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
-            //TODO 1.19.4 figure out why
-//        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 
             //Add missing state
@@ -32,7 +30,6 @@ public class DirectDraw {
             }
 
             try (With ctx = RenderContext.apply(state)) {
-//            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
                 builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
                 for (VertexBuilder vert : verts) {
                     vert.draw(builder);

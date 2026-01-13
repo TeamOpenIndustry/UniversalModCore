@@ -5,7 +5,7 @@ license="LGPL"
 
 [[mods]]
 modId="universalmodcore"
-version="${file.jarVersion}"
+version="1.2.3"
 displayName="Universal Mod Core"
 displayURL="https://github.com/TeamOpenIndustry/UniversalModCore"
 authors="cam72cam"
