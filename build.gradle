@@ -166,8 +166,8 @@ dependencies {
 
 dependencies {
     //Iris
-    implementation fg.deobf("curse.maven:rubidium-574856:4448053")
-    implementation fg.deobf("curse.maven:oculus-581495:4451142")
+    implementation fg.deobf("curse.maven:embeddium-908741:5630140")
+    implementation fg.deobf("curse.maven:oculus-581495:6020952")
 }
 
 mixin {

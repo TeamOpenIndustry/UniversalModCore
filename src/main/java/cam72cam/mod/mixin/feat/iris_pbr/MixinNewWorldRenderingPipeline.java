@@ -3,8 +3,8 @@ package cam72cam.mod.mixin.feat.iris_pbr;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
-import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
-import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.texture.pbr.PBRTextureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * PBR handler for RenderContext (optional)
  */
 @Pseudo
-@Mixin(value = NewWorldRenderingPipeline.class, remap = false)
+@Mixin(value = IrisRenderingPipeline.class, remap = false)
 public class MixinNewWorldRenderingPipeline {
     @Shadow
     private int currentNormalTexture;
