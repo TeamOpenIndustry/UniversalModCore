@@ -11,7 +11,7 @@
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
-    "global_renderer.MixinRenderGlobal"
+    "global_renderer.MixinRenderGlobal",
     "textfield_click.MixinGuiTextField"
   ]
 }

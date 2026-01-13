@@ -1,7 +1,6 @@
 package cam72cam.mod;
 
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
-import org.objectweb.asm.tree.ClassNode;
+//import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -12,7 +11,7 @@ import java.util.Set;
 public class UMCMixinExtrasLoader implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
-        MixinExtrasBootstrap.init();
+//        MixinExtrasBootstrap.init();
     }
 
     @Override
@@ -36,12 +35,12 @@ public class UMCMixinExtrasLoader implements IMixinConfigPlugin {
     }
 
     @Override
-    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public void preApply(String targetClassName, org.spongepowered.asm.lib.tree.ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
 
     }
 
     @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public void postApply(String targetClassName, org.spongepowered.asm.lib.tree.ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
 
     }
 }
