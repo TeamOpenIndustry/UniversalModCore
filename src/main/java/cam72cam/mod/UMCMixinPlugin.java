@@ -17,7 +17,6 @@ import java.util.Map;
 public class UMCMixinPlugin implements IFMLLoadingPlugin {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
-        MixinExtrasBootstrap.init();
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
 
