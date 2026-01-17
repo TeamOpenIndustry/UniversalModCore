@@ -1,6 +1,5 @@
 package cam72cam.mod;
 
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformationService;
 import cpw.mods.modlauncher.api.ITransformer;
@@ -16,7 +15,6 @@ import java.util.Set;
 public class UMCMixinPlugin implements ITransformationService {
     public UMCMixinPlugin() {
         MixinBootstrap.init();
-        MixinExtrasBootstrap.init();
         Mixins.addConfiguration("mixins.feat.universalmodcore.json");
         Mixins.addConfiguration("mixins.fix.universalmodcore.json");
     }

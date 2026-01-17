@@ -1,10 +1,9 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.data.DataGenerator;
-import net.minecraft.data.ItemTagsProvider;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tags.ItemTags;
@@ -172,6 +171,7 @@ public class Fuzzy {
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
         customItems.add(item);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), item));
         return this;
     }
 
@@ -183,30 +183,16 @@ public class Fuzzy {
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
         includes.add(other);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), other.tag));
         return this;
+    }
+
+    public Tag<Item> getTag() {
+        return tag;
     }
 
     @Override
     public String toString() {
         return ident;
-    }
-
-    public static void register(DataGenerator gen) {
-        gen.addProvider(new ItemTagsProvider(gen) {
-            @Override
-            protected void registerTags() {
-                for (Fuzzy value : registered.values()) {
-                    if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        Tag.Builder<Item> builder = getBuilder(value.tag);
-                        for (Item customItem : value.customItems) {
-                            builder.add(customItem);
-                        }
-                        for (Fuzzy include : value.includes) {
-                            builder.add(include.tag);
-                        }
-                    }
-                }
-            }
-        });
     }
 }

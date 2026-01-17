@@ -7,6 +7,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1300,
   "mixins": [
+    "data_registry.MixinAdvancement",
+    "data_registry.MixinRecipeManager",
+    "data_registry.MixinTagCollection",
+    "global_renderer.MixinRenderGlobal",
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
