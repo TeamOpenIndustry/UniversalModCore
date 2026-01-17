@@ -25,12 +25,15 @@ public class MixinTagCollection {
     @Inject(method = "lambda$reload$3", at = @At("RETURN"), remap = false)
     public void postTagReload(IResourceManager p_lambda$reload$3_1_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
         Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
-        if (this.resourceLocationPrefix.contains("block")) {
-            RegisterBlockTagEvent event = new RegisterBlockTagEvent(map);
-            ModLoader.get().postEvent(event);
-        } else if (this.resourceLocationPrefix.contains("item")) {
-            RegisterItemTagEvent event = new RegisterItemTagEvent(map);
-            ModLoader.get().postEvent(event);
+        switch (this.resourceLocationPrefix) {
+            case "tags/blocks":
+                RegisterBlockTagEvent blockTagEvent = new RegisterBlockTagEvent(map);
+                ModLoader.get().postEvent(blockTagEvent);
+                return;
+            case "tags/items":
+                RegisterItemTagEvent itemTagEvent = new RegisterItemTagEvent(map);
+                ModLoader.get().postEvent(itemTagEvent);
+                return;
         }
     }
 }
