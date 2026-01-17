@@ -34,7 +34,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.2.2"
+String umcVersion = "1.2.3"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -160,7 +160,8 @@ dependencies {
 mixin {
     add sourceSets.main, 'mixins.universalmodcore.refmap.json'
 
-    config 'mixins.universalmodcore.json'
+    config 'mixins.feat.universalmodcore.json'
+    config 'mixins.fix.universalmodcore.json'
 
     //Dev environment setup
     debug.verbose = true

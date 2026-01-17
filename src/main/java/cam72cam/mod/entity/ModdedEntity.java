@@ -10,13 +10,13 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
+import cam72cam.mod.util.SingleCache;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
-import cam72cam.mod.util.SingleCache;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -373,7 +373,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.isPassenger(passenger.internal)) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || !seat.isPassenger(passenger.internal)) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -384,9 +386,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getMotion());
 
-        if (seat.getEntityId() < passenger.internal.getEntityId()) {
-            pos = pos.add(motion);
-        }
+        //TODO 1.14.4 Do we still need this?
+//        if (this.getEntityId() < passenger.internal.getEntityId()) {
+//            pos = pos.add(motion);
+//        }
         passenger.setPosition(pos);
         if (!world.isRemote) {
             passenger.setVelocity(motion);
@@ -413,10 +416,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
-            seat.setPosition(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
-            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
+            Vec3d realPos = calculateRiderWorldPosition(entity);
+            seat.setPosition(realPos.x, realPos.y, realPos.z);
+            //Same as calculatePassengerOffset, just use Vec3d directly
+            Vec3d offset = realPos.subtract(other.getPosition()).rotateYaw(other.getRotationYaw());
+            offset = other.internal.iRidable.getMountOffset(entity, offset);
+            other.internal.passengerPositions.put(entity.getUUID(), offset);
+            this.passengerPositions.remove(entity.getUUID());
             if (!world.isRemote) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
@@ -471,7 +480,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     /* ICollision NOTE: set width/height if implementing LivingEntity */
-    /** @see #getEntityBoundingBox() */
+    /** @see #getBoundingBox() */
     @Override
     public AxisAlignedBB getCollisionBoundingBox() {
         return getBoundingBox();
@@ -493,7 +502,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes
-     * TODO provide a way of specifying a render bounding box without a collision bounding box
+     * TODO provide a way of specifying a render bounding box without a custom_bb_collision bounding box
      * @see ICollision
      */
     @Override

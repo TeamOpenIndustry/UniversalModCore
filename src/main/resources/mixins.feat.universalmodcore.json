@@ -14,5 +14,6 @@
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
+    "global_renderer.MixinRenderGlobal"
   ]
 }

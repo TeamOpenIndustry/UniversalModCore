@@ -1,7 +1,9 @@
 package cam72cam.mod.gui.screen;
 
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
@@ -109,10 +111,6 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
         }
-        for (TextField field : textFieldMap.values()) {
-            field.onUpdate();
-        }
-
 
         screen.draw(this, new RenderState().stage(RenderContext.Stage.GUI));
 
@@ -137,12 +135,38 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        // Enter
-        if (keyCode == 28 || keyCode == 156) {
-            screen.onEnterKey(this);
+        if (this.textFieldMap.keySet().stream()
+                             .noneMatch(txt -> txt.keyPressed(typedChar, keyCode, mods))) {
+            screen.onKeyType(this, Keyboard.KeyCode.of(typedChar));
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
+        return this.textFieldMap.keySet().stream()
+                             .anyMatch(txt -> txt.charTyped(p_charTyped_1_, p_charTyped_2_));
+    }
+
+    @Override
+    public boolean mouseClicked(double x, double y, int button) {
+        Player.Hand hand = button == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
+
+        if (this.buttonMap.keySet().stream().anyMatch(btn -> btn.mouseClicked(x, y, button))) {
             return true;
         }
-        return false;
+
+        if (this.textFieldMap.keySet().stream().noneMatch(txt -> {
+            if (txt.mouseClicked(x, y, button)) {
+                txt.setFocused2(true);
+                return true;
+            }
+            return false;
+        })) {
+            screen.onMouseClick((int) x, (int) y, hand);
+        }
+        return true;
     }
 
     // Default overrides
