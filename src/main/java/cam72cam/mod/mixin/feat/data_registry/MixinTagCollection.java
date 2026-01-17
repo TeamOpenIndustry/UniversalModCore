@@ -7,7 +7,6 @@ import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagCollection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModLoader;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +23,7 @@ public class MixinTagCollection {
     private String resourceLocationPrefix;
 
     @Inject(method = "lambda$reload$3", at = @At("RETURN"), remap = false)
-    public void onRegisterTag(IResourceManager p_lambda$reload$3_1_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
+    public void postTagReload(IResourceManager p_lambda$reload$3_1_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
         Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
         if (this.resourceLocationPrefix.contains("block")) {
             RegisterBlockTagEvent event = new RegisterBlockTagEvent(map);

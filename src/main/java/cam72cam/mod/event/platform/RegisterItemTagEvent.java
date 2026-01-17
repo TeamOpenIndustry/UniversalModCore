@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public class RegisterItemTagEvent extends Event {
-    private Map<ResourceLocation, Tag.Builder<?>> map;
+    private final Map<ResourceLocation, Tag.Builder<?>> map;
 
     public RegisterItemTagEvent(Map<ResourceLocation, Tag.Builder<?>> map) {
         this.map = map;
@@ -29,7 +29,7 @@ public class RegisterItemTagEvent extends Event {
 
     public void registerTag(ResourceLocation ident, Tag<Item> includes) {
         Tag.Builder<Item> builder = (Tag.Builder<Item>) map.getOrDefault(ident, Tag.Builder.create());
-        builder.add(includes);
+        includes.getEntries().forEach(builder::add);
         map.put(ident, builder);
     }
 }

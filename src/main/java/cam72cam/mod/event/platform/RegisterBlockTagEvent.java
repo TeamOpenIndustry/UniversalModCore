@@ -1,7 +1,6 @@
 package cam72cam.mod.event.platform;
 
 import net.minecraft.block.Block;
-import net.minecraft.item.Item;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.Event;
@@ -10,7 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public class RegisterBlockTagEvent extends Event {
-    private Map<ResourceLocation, Tag.Builder<?>> map;
+    private final Map<ResourceLocation, Tag.Builder<?>> map;
 
     public RegisterBlockTagEvent(Map<ResourceLocation, Tag.Builder<?>> map) {
         this.map = map;
@@ -30,7 +29,7 @@ public class RegisterBlockTagEvent extends Event {
 
     public void registerTag(ResourceLocation ident, Tag<Block> includes) {
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
-        builder.add(includes);
+        includes.getEntries().forEach(builder::add);
         map.put(ident, builder);
     }
 }

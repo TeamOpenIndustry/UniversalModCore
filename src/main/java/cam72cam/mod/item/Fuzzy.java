@@ -187,6 +187,10 @@ public class Fuzzy {
         return this;
     }
 
+    public Tag<Item> getTag() {
+        return tag;
+    }
+
     @Override
     public String toString() {
         return ident;
