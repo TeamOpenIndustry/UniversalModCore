@@ -195,4 +195,9 @@ public class Fuzzy {
     public String toString() {
         return ident;
     }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
 }

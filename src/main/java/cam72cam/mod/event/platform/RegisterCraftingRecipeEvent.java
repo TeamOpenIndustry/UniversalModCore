@@ -31,17 +31,8 @@ public class RegisterCraftingRecipeEvent extends Event {
         ResourceLocation itemName = target.internal.getItem().getRegistryName();
         ResourceLocation name = new ResourceLocation(itemName.getNamespace(), itemName.getPath()
                 + ingredients.hashCode() + dependencies.hashCode() + conflicts.hashCode());
-        boolean dependencyNotMet = dependencies.stream().anyMatch(f -> {
-            return f.enumerate().stream().anyMatch(item ->
-                                                           !ForgeRegistries.ITEMS.containsKey(item.internal.getItem().getRegistryName()))
-                    || f.getTag().getAllElements().isEmpty();
-        });
-
-        boolean hasConflict = conflicts.stream().anyMatch(f -> {
-            return f.enumerate().stream().anyMatch(item ->
-                                                           ForgeRegistries.ITEMS.containsKey(item.internal.getItem().getRegistryName()))
-                    || !f.getTag().getAllElements().isEmpty();
-        });
+        boolean dependencyNotMet = dependencies.stream().anyMatch(f -> f.getTag().getAllElements().isEmpty());
+        boolean hasConflict = conflicts.stream().anyMatch(f -> !f.getTag().getAllElements().isEmpty());
 
         if (dependencyNotMet || hasConflict) {
             ModCore.info("Requirements not met, skipping UMC recipe %s", name.toString());
@@ -65,6 +56,6 @@ public class RegisterCraftingRecipeEvent extends Event {
             ResourceLocation ad = new ResourceLocation(name.getNamespace(), "unlock" + name.getPath());
             event.registerRecipeTrigger(ad, name, ingredients.toArray(new Fuzzy[0]));
         });
-        map.getOrDefault(IRecipeType.CRAFTING, ImmutableMap.builder()).put(name, recipe);
+        map.computeIfAbsent(IRecipeType.CRAFTING, o -> ImmutableMap.builder()).put(name, recipe);
     }
 }
