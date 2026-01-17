@@ -21,9 +21,9 @@ public class RegisterBlockTagEvent extends Event {
         }
     }
 
-    public void registerTag(ResourceLocation ident, Block item) {
+    public void registerTag(ResourceLocation ident, Block block) {
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
-        builder.add(item);
+        builder.add(block);
         map.put(ident, builder);
     }
 
