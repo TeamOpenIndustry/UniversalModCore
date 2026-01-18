@@ -41,13 +41,9 @@ public class OBJFace {
             this.uv = accessor.uvAsVec2f();
         }
 
-        protected Vertex() {}
-
         public Vertex scale(double factor) {
-            Vertex scaled = new Vertex();
-            scaled.pos = pos.scale(factor);
-            scaled.uv = uv;
-            return scaled;
+            Vec3d newPos = pos.scale(factor);
+            return new Vertex(newPos, uv);
         }
     }
 }
