@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -48,7 +49,9 @@ public class RenderContext {
         List<Runnable> restore = new ArrayList<>();
 
         ShaderInstance shader;
-        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
+        boolean vanillaEmissive = state.lightmap != null
+                                  && state.lightmap[0] == 1 && state.lightmap[1] == 1
+                                  && !ShaderHelper.isShaderPackEnabled();
         if (vanillaEmissive && useBeaconShader) {
             shader = GameRenderer.getRendertypeBeaconBeamShader();
         } else {
