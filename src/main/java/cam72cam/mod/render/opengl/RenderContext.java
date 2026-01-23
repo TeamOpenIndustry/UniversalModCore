@@ -33,9 +33,13 @@ public class RenderContext {
             restore.add(() -> GL11.glMatrixMode(GL11.GL_MODELVIEW));
         }
         if (state.model_view != null) {
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
             multMatrix(state.model_view.copy().transpose());
-            restore.add(GL11::glPopMatrix);
+            restore.add(() -> {
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+                GL11.glPopMatrix();
+            });
         }
         if (state.projection != null) {
             // Since we use the projection matrix so little, we assume that we are always defaulted to MODELVIEW
