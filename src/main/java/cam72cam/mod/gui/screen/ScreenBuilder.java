@@ -136,6 +136,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             close();
             return true;
         }
+        //See cam72cam.mod.mixin.fix.screen_navigation.MixinScreen
         if (super.keyPressed(typedChar, keyCode, mods)) {
             return true;
         }
