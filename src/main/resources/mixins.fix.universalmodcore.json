@@ -13,6 +13,7 @@
   "client": [
     "altas_loader.MixinSpriteResourceLoader",
     "block_replacement.MixinBlockStatePredictionHandler",
-    "direct_draw_call.MixinLevelRenderer"
+    "direct_draw_call.MixinLevelRenderer",
+    "screen_navigation.MixinScreen"
   ]
 }
