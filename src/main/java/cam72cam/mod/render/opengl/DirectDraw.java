@@ -14,7 +14,6 @@ public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
-        //TODO Have some weird bugs in 1.17.1...but non-exist in 1.18.2
         Runnable render = () -> {
             BufferBuilder builder = Tesselator.getInstance().getBuilder();
             ShaderInstance shader = RenderSystem.getShader();
