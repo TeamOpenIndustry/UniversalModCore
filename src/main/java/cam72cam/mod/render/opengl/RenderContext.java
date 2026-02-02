@@ -40,7 +40,13 @@ public class RenderContext {
         return apply(state, false);
     }
 
-    /** Internal, use the method above */
+    /**
+     *  Internal, use the method above
+     *  <p>
+     *  In some 1.19.4+ cases we can't use beacon shader but in other cases have to, so we added an alternative here
+     *  <p>
+     *  Assuming that only OBJ-related need beacon shader for now
+     */
     public static With apply(RenderState state, boolean useBeaconShader) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
