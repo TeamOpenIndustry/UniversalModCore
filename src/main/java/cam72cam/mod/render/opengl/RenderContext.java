@@ -18,10 +18,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
@@ -87,7 +84,7 @@ public class RenderContext {
             if (color == null) {
                 color = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
             }
-            float[] oldColor = RenderSystem.getShaderColor();
+            float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
