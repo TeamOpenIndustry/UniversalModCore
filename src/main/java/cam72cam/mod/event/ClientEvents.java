@@ -144,7 +144,7 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiDrag(ScreenEvent.MouseDragged.Pre event) {
-            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getMouseButton(), MouseAction.RELEASE);
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getMouseButton(), MouseAction.MOVE);
         }
         @SubscribeEvent
         public static void onGuiRelease(ScreenEvent.MouseButtonReleased.Pre event) {
