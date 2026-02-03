@@ -119,11 +119,11 @@ public class ClientEvents {
         }
 
         private static void onGuiMouse(ScreenEvent.MouseInputEvent event, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn, event instanceof ScreenEvent.MouseScrollEvent ? (int) ((ScreenEvent.MouseScrollEvent) event).getScrollDelta() : 0);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, (int) event.getMouseX(), (int) event.getMouseY(), btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrollEvent) event).getScrollDelta() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
-                if (!(event instanceof ScreenEvent.MouseScrollEvent)) {
+                if (action != MouseAction.SCROLL) {
                     // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
                     // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
                     skipNextMouseInputEvent = true;
@@ -145,7 +145,7 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiScroll(ScreenEvent.MouseScrollEvent.Pre event) {
-            onGuiMouse(event, -1, MouseAction.RELEASE);
+            onGuiMouse(event, -1, MouseAction.SCROLL);
         }
 
         private static void hackInputState(InputEvent.MouseInputEvent event) {
