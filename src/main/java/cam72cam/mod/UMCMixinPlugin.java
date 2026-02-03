@@ -1,5 +1,6 @@
 package cam72cam.mod;
 
+import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.launch.MixinBootstrap;
@@ -24,11 +25,13 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
             URL location = codeSource.getLocation();
             try {
                 File file = new File(location.toURI());
-                if (file.isFile()) {
+                if (file.isFile() && !CoreModManager.getReparseableCoremods().contains(file.getName())) {
+                    //Due to FML's bad behavior on processing FMLCorePluginContainsFMLMod we add here manually
                     CoreModManager.getIgnoredMods().remove(file.getName());
+                    CoreModManager.getReparseableCoremods().add(file.getName());
                 }
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                FMLLog.getLogger().warn(e);
             }
         }
     }
