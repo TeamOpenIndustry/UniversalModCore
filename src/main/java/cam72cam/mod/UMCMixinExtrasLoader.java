@@ -9,11 +9,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class UMCMixinPlugin implements IMixinConfigPlugin {
+public class UMCMixinExtrasLoader implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         MixinExtrasBootstrap.init();
-     }
+    }
 
     @Override
     public String getRefMapperConfig() {
