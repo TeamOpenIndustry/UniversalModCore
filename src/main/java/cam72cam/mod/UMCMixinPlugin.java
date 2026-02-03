@@ -1,6 +1,5 @@
 package cam72cam.mod;
 
-import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformationService;
 import cpw.mods.modlauncher.api.ITransformer;
