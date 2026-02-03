@@ -1,6 +1,5 @@
 package cam72cam.mod.serialization;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.world.World;
 
 import javax.annotation.Nullable;
@@ -61,7 +60,7 @@ public class TagSerializer {
                     String fieldName = tag.value().isEmpty() ? field.getName() : tag.value();
 
                     if (Modifier.isFinal(field.getModifiers())) {
-                        throw new SerializationException(String.format("A mod is trying to deserialize a tag into a final field %s.  This should never have been implemented.", fieldName));
+                        throw new SerializationException(String.format("A mod is trying to deserialize a tag into a final field %s.%s.  This is not supported.", cls.getName(), field.getName()));
                     }
 
                     TagMapped mapped = field.getType().getAnnotation(TagMapped.class);
