@@ -28,7 +28,8 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
                 if (file.isFile() && !CoreModManager.getReparseableCoremods().contains(file.getName())) {
                     //Due to FML's bad behavior on processing FMLCorePluginContainsFMLMod we add here manually
                     CoreModManager.getIgnoredMods().remove(file.getName());
-                    CoreModManager.getReparseableCoremods().add(file.getName());
+                    //Seems like only needed in 1.12...I hate that
+//                    CoreModManager.getReparseableCoremods().add(file.getName());
                 }
             } catch (URISyntaxException e) {
                 FMLLog.getLogger().warn(e);
