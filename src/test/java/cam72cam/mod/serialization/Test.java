@@ -436,7 +436,7 @@ public class Test {
     }
 
     @TagField
-    private final Integer hidden = 0;
+    private Integer hidden = 0;
 
     @org.junit.Test
     public void testHidden() throws SerializationException {
@@ -465,7 +465,7 @@ public class Test {
 
     @TagMapped(CustomMapper.class)
     public static class CustomClass {
-        private final Integer field;
+        private Integer field;
 
         public CustomClass(Integer integer) {
             this.field = integer;
