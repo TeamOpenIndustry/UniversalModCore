@@ -2,6 +2,7 @@ package cam72cam.mod;
 
 import cpw.mods.fml.relauncher.CoreModManager;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.fml.common.FMLLog;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -28,7 +29,7 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
                     CoreModManager.getReparseableCoremods().add(file.getName());
                 }
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                FMLLog.getLogger().warn(e);
             }
         }
     }
