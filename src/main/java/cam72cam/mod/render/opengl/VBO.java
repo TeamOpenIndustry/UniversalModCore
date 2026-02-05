@@ -10,7 +10,9 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
@@ -189,6 +191,8 @@ public class VBO {
                 shader = GameRenderer.getRendertypeEntityCutoutShader();
             }
             RenderSystem.setShader(() -> shader);
+
+            RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS).setupRenderState();
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
 
@@ -247,6 +251,8 @@ public class VBO {
 
             this.restore = RenderContext.apply(state, true).and(() -> {
                 RenderContext.checkError();
+
+                RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS).clearRenderState();
                 shader.getVertexFormat().clearBufferState();
 
                 RenderContext.checkError();
