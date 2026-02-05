@@ -12,8 +12,8 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.InventoryMenu;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
@@ -177,6 +177,8 @@ public class VBO {
             } else {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
+
+            RenderType renderType;
             ShaderInstance shader;
             if (state.stage != null) {
                 shader = switch (state.stage) {
@@ -187,12 +189,22 @@ public class VBO {
                                ? GameRenderer.getRendertypeEntityCutoutShader()
                                : RenderContext.UMC_CORE;
                 };
+
+                renderType = switch (state.stage) {
+                    case GUI -> null;
+                    default -> RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
+                };
             } else {
                 shader = GameRenderer.getRendertypeEntityCutoutShader();
+                renderType = RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
             }
+
+            if (renderType != null) {
+                renderType.setupRenderState();
+            }
+
             RenderSystem.setShader(() -> shader);
 
-            RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS).setupRenderState();
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
 
@@ -252,7 +264,10 @@ public class VBO {
             this.restore = RenderContext.apply(state, true).and(() -> {
                 RenderContext.checkError();
 
-                RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS).clearRenderState();
+                if (renderType != null) {
+                    renderType.clearRenderState();
+                }
+
                 shader.getVertexFormat().clearBufferState();
 
                 RenderContext.checkError();
