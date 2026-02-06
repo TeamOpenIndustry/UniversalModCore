@@ -4,14 +4,19 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderState;
 
+import javax.annotation.Nullable;
+
 public interface IScreen {
     /** Called when screen is initially constructed */
     void init(IScreenBuilder screen);
 
     @Deprecated
     default void onEnterKey(IScreenBuilder builder) { }
-    /** Called when any key is pressed outside textfield */
-    default void onKeyType(IScreenBuilder builder, Keyboard.KeyCode keyCode){
+    /**
+     * Called when any key is pressed outside textfield
+     * @param keyCode The typed key's code, or null if not recognizable
+     * */
+    default void onKeyType(IScreenBuilder builder, @Nullable Keyboard.KeyCode keyCode){
         if (keyCode == Keyboard.KeyCode.NUMPADENTER || keyCode == Keyboard.KeyCode.RETURN) {
             onEnterKey(builder);
         }

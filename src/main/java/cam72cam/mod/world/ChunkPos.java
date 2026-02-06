@@ -40,8 +40,17 @@ public class ChunkPos {
         return i;
     }
 
+    //For 1.16- It turned out processing Y will take much more unnecessary effort...
+    public static long asLongExcludeY(BlockPos pos) {
+        return asLong(new BlockPos(pos.getX(), 0, pos.getZ()));
+    }
+
     public static long asLong(BlockPos pos) {
         return asLong(MathHelper.floor(pos.getX()/16d), MathHelper.floor(pos.getY()/16d), MathHelper.floor(pos.getZ()/16d));
+    }
+
+    public static long asLongExcludeY(Vec3d pos) {
+        return asLong(new Vec3d(pos.x, 0, pos.z));
     }
 
     public static long asLong(Vec3d pos) {
