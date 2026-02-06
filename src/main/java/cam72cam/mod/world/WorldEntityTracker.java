@@ -32,7 +32,7 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.getPosition());
+        long chunk = ChunkPos.asLongExcludeY(entity.getPosition());
         int x = ChunkPos.x(chunk);
         int y = ChunkPos.y(chunk);
         int z = ChunkPos.z(chunk);
@@ -46,9 +46,11 @@ public class WorldEntityTracker {
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+                        //Handle Y below 1.17 is likely to cause more bug
+                        int k = 0;
                             scanningRange.put(chunk, ChunkPos.asLong(i, k, j));
-                        }
+//                        }
                     }
                 }
             }
@@ -59,7 +61,7 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.getPosition());
+        long chunk = ChunkPos.asLongExcludeY(entity.getPosition());
 
         lock.writeLock().lock();
         try {
@@ -97,7 +99,7 @@ public class WorldEntityTracker {
                 }
             }
 
-            long chunk = ChunkPos.asLong(entity.getPosition());
+            long chunk = ChunkPos.asLongExcludeY(entity.getPosition());
             int x = ChunkPos.x(chunk);
             int y = ChunkPos.y(chunk);
             int z = ChunkPos.z(chunk);
@@ -109,9 +111,10 @@ public class WorldEntityTracker {
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+                            int k = 0;
                             scanningRange.put(newSection, ChunkPos.asLong(i, k, j));
-                        }
+//                        }
                     }
                 }
             }
