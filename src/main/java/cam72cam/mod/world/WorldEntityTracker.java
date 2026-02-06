@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.Collection;
 import java.util.Map;
@@ -60,20 +59,19 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        BlockPos pos = entity.getPosition();
-        long sec = ChunkPos.asLong(pos);
+        long chunk = ChunkPos.asLong(entity.getPosition());
 
         lock.writeLock().lock();
         try {
-            if (!umcEntities.containsKey(sec)) {
+            if (!umcEntities.containsKey(chunk)) {
                 return;
             }
-            Collection<ModdedEntity> moddedEntities = umcEntities.get(sec);
+            Collection<ModdedEntity> moddedEntities = umcEntities.get(chunk);
             moddedEntities.remove(entity);
 
             if (moddedEntities.isEmpty()) {
-                umcEntities.remove(sec);
-                scanningRange.removeKey(sec);
+                umcEntities.remove(chunk);
+                scanningRange.removeKey(chunk);
             }
         } finally {
             lock.writeLock().unlock();
@@ -83,6 +81,12 @@ public class WorldEntityTracker {
     public void move(ModdedEntity entity, long oldSection, long newSection) {
         lock.writeLock().lock();
         try {
+            if (!umcEntities.containsKey(oldSection)) {
+                //Newly added, no need to process here
+                //Let join handle it
+                return;
+            }
+
             // remove from old section
             Set<ModdedEntity> moddedEntities = umcEntities.get(oldSection);
             if (moddedEntities != null) {
