@@ -1,12 +1,17 @@
 package cam72cam.mod.input;
 
 import cam72cam.mod.event.ClientEvents;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
+
 public class Keyboard {
+    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
+
     public enum KeyCode {
         ESCAPE(org.lwjgl.input.Keyboard.KEY_ESCAPE),
         NUM1(org.lwjgl.input.Keyboard.KEY_1),
@@ -121,6 +126,11 @@ public class Keyboard {
 
         KeyCode(int code) {
             this.code = code;
+            keycodes.put(code, this);
+        }
+
+        public static @Nullable KeyCode of(int code) {
+            return keycodes.get(code);
         }
     }
 
