@@ -41,16 +41,21 @@ public class ChunkPos {
         return i;
     }
 
+    //For 1.16- It turned out processing Y will take much more unnecessary effort...
+    public static long asLongExcludeY(AxisAlignedBB aabb) {
+        return asLong(new Vec3d((aabb.maxX + aabb.minX) / 2, 0, (aabb.maxZ + aabb.minZ) / 2)));
+    }
+
     public static long asLong(AxisAlignedBB aabb) {
         return asLong(new Vec3d((aabb.maxX + aabb.minX) / 2, (aabb.maxY + aabb.minY) / 2, (aabb.maxZ + aabb.minZ) / 2));
     }
 
-    public static long asLong(Vec3d pos) {
-        return asLong(MathHelper.floor_double(pos.x/16d), MathHelper.floor_double(pos.y/16d), MathHelper.floor_double(pos.z/16d));
+    public static long asLongExcludeY(Vec3d pos) {
+        return asLong(new Vec3d(pos.x, 0, pos.y));
     }
 
-    public static long asLong(double x, double y, double z) {
-        return asLong(MathHelper.floor_double(x/16d), MathHelper.floor_double(y/16d), MathHelper.floor_double(z/16d));
+    public static long asLong(Vec3d pos) {
+        return asLong(MathHelper.floor_double(pos.x/16d), MathHelper.floor_double(pos.y/16d), MathHelper.floor_double(pos.z/16d));
     }
 
     public static int x(long packed) {

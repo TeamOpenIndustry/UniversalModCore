@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static org.lwjgl.input.Keyboard.getKeyName;
-
 @SideOnly(Side.CLIENT)
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
@@ -135,7 +133,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         }
 
         if (this.textFields.stream().noneMatch(x -> x.textboxKeyTyped(typedChar, keyCode))) {
-            screen.onKeyType(this , Keyboard.KeyCode.valueOf(getKeyName(keyCode)));
+            screen.onKeyType(this, Keyboard.KeyCode.of(keyCode));
         }
     }
 

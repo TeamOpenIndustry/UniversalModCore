@@ -6,7 +6,11 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.settings.KeyBinding;
 
+import java.util.HashMap;
+
 public class Keyboard {
+    private static final HashMap<Integer, KeyCode> keycodes = new HashMap<>();
+
     public enum KeyCode {
         ESCAPE(org.lwjgl.input.Keyboard.KEY_ESCAPE),
         NUM1(org.lwjgl.input.Keyboard.KEY_1),
@@ -121,6 +125,11 @@ public class Keyboard {
 
         KeyCode(int code) {
             this.code = code;
+            keycodes.put(code, this);
+        }
+
+        public static KeyCode of(int code) {
+            return keycodes.get(code);
         }
     }
 
