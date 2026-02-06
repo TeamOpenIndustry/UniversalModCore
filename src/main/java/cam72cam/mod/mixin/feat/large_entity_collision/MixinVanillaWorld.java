@@ -1,14 +1,11 @@
 package cam72cam.mod.mixin.feat.large_entity_collision;
 
 import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.ChunkPos;
-import com.google.common.base.Predicate;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,8 +30,7 @@ public abstract class MixinVanillaWorld {
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
         //We don't handle Y coordinate in 1.16-
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(
-                ChunkPos.asLongExcludeY(new Vec3d((aabb.minX + aabb.maxX) / 2, (aabb.minY + aabb.maxY) / 2, (aabb.minZ + aabb.maxZ) / 2)));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLongExcludeY(aabb));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);
@@ -64,8 +60,7 @@ public abstract class MixinVanillaWorld {
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
         //We don't handle Y coordinate in 1.16-
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(
-                ChunkPos.asLongExcludeY(new Vec3d((aabb.minX + aabb.maxX) / 2, (aabb.minY + aabb.maxY) / 2, (aabb.minZ + aabb.maxZ) / 2)));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLongExcludeY(aabb));
         if (!collection.isEmpty()) {
             for (long packed : collection) {
                 int x = ChunkPos.x(packed);
