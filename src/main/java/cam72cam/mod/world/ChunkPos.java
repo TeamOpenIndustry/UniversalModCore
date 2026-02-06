@@ -43,7 +43,7 @@ public class ChunkPos {
 
     //For 1.16- It turned out processing Y will take much more unnecessary effort...
     public static long asLongExcludeY(AxisAlignedBB aabb) {
-        return asLong(new Vec3d((aabb.maxX + aabb.minX) / 2, 0, (aabb.maxZ + aabb.minZ) / 2)));
+        return asLong(new Vec3d((aabb.maxX + aabb.minX) / 2, 0, (aabb.maxZ + aabb.minZ) / 2));
     }
 
     public static long asLong(AxisAlignedBB aabb) {
