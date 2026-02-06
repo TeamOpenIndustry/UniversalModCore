@@ -50,7 +50,7 @@ public class ChunkPos {
     }
 
     public static long asLongExcludeY(Vec3d pos) {
-        return asLong(new Vec3d(pos.x, 0, pos.z));
+        return asLong(new Vec3d(pos.xCoord, 0, pos.zCoord));
     }
 
     public static long asLong(Vec3d pos) {
