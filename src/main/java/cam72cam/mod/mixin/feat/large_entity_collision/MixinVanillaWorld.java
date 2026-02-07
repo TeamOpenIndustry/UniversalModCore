@@ -38,7 +38,7 @@ public abstract class MixinVanillaWorld implements IWorld {
                                     CallbackInfoReturnable<List<Entity>> cir) {
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLongExcludeY(aabb.getCenter()));
         AbstractChunkProvider provider = this.getChunkSource();
         if (!collection.isEmpty()) {
             for (long packed : collection) {
@@ -92,7 +92,7 @@ public abstract class MixinVanillaWorld implements IWorld {
 
         List<Entity> result = cir.getReturnValue();
         cam72cam.mod.world.World world = cam72cam.mod.world.World.get((World) (Object) this);
-        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLong(aabb.getCenter()));
+        Set<Long> collection = world.tracker.queryPotentialPackedChunkPos(ChunkPos.asLongExcludeY(aabb.getCenter()));
         AbstractChunkProvider provider = this.getChunkSource();
         if (!collection.isEmpty()) {
             for (long packed : collection) {

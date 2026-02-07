@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class WorldEntityTracker {
     public WorldEntityTracker() {}
 
     public void join(ModdedEntity entity) {
-        long chunk = ChunkPos.asLong(entity.blockPosition());
+        long chunk = ChunkPos.asLongExcludeY(entity.blockPosition());
         int x = ChunkPos.x(chunk);
         int y = ChunkPos.y(chunk);
         int z = ChunkPos.z(chunk);
@@ -47,9 +46,11 @@ public class WorldEntityTracker {
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+                        //Handle Y below 1.17 is likely to cause more bug
+                        int k = 0;
                             scanningRange.put(chunk, ChunkPos.asLong(i, k, j));
-                        }
+//                        }
                     }
                 }
             }
@@ -60,20 +61,19 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        BlockPos pos = entity.blockPosition();
-        long sec = ChunkPos.asLong(pos);
+        long chunk = ChunkPos.asLongExcludeY(entity.blockPosition());
 
         lock.writeLock().lock();
         try {
-            if (!umcEntities.containsKey(sec)) {
+            if (!umcEntities.containsKey(chunk)) {
                 return;
             }
-            Collection<ModdedEntity> moddedEntities = umcEntities.get(sec);
+            Collection<ModdedEntity> moddedEntities = umcEntities.get(chunk);
             moddedEntities.remove(entity);
 
             if (moddedEntities.isEmpty()) {
-                umcEntities.remove(sec);
-                scanningRange.removeKey(sec);
+                umcEntities.remove(chunk);
+                scanningRange.removeKey(chunk);
             }
         } finally {
             lock.writeLock().unlock();
@@ -83,6 +83,12 @@ public class WorldEntityTracker {
     public void move(ModdedEntity entity, long oldSection, long newSection) {
         lock.writeLock().lock();
         try {
+            if (!umcEntities.containsKey(oldSection)) {
+                //Newly added, no need to process here
+                //Let join handle it
+                return;
+            }
+
             // remove from old section
             Set<ModdedEntity> moddedEntities = umcEntities.get(oldSection);
             if (moddedEntities != null) {
@@ -93,7 +99,7 @@ public class WorldEntityTracker {
                 }
             }
 
-            long chunk = ChunkPos.asLong(entity.blockPosition());
+            long chunk = ChunkPos.asLongExcludeY(entity.blockPosition());
             int x = ChunkPos.x(chunk);
             int y = ChunkPos.y(chunk);
             int z = ChunkPos.z(chunk);
@@ -105,9 +111,10 @@ public class WorldEntityTracker {
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
+                            int k = 0;
                             scanningRange.put(newSection, ChunkPos.asLong(i, k, j));
-                        }
+//                        }
                     }
                 }
             }
