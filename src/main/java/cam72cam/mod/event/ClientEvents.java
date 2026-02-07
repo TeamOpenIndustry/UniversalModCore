@@ -101,7 +101,7 @@ public class ClientEvents {
     public static final Event<Consumer<DrawSelectionEvent.HighlightBlock>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-    public static final Event<Consumer<RenderWorldLastEvent>> OPTIFINE_SUCKS = new Event<>();
+    public static final Event<Consumer<RenderWorldLastEvent>> RENDER_LEVEL_POST = new Event<>();
 
     @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ClientEventBusForge {
@@ -236,7 +236,7 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void optifineSucksEvent(RenderWorldLastEvent event) {
-            OPTIFINE_SUCKS.execute(x -> x.accept(event));
+            RENDER_LEVEL_POST.execute(x -> x.accept(event));
         }
 
         static boolean hasHacked = false;

@@ -1,21 +1,33 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.EntityRegistry;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.world.World;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Entity Rendering Registry */
@@ -39,6 +51,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
                 ModCore.info("Optifine not detected, phew");
             }
         });*/
+
+        ClientEvents.RENDER_LEVEL_POST.subscribe(EntityRenderer::renderLargeEntities);
     }
 
     public static void registerClientEvents() {
@@ -69,15 +83,13 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         renderers.put(type, render);
     }
 
-    /** Fixed in 1.15? Minecraft yes! Optifine Broke it!
-     * Sooo this is a fun one...
-     *
-     * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
-     * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
-     * We try to detect entities in this edge case and render them here to prevent the issue.
-     *
+    /**
+     * So this is a fun one...
+     * <p>
+     * Our <code>WorldEntityTracker</code> only work on server side which mean we can't sync entity bb data
+     * to client... so enable the wrapper here to allow proper rendering for large entities when connected to dedicated server
+     * @see cam72cam.mod.world.WorldEntityTracker
      */
-    /*
     private static void renderLargeEntities(RenderWorldLastEvent event) {
         if (GlobalRender.isTransparentPass()) {
             return;
@@ -94,7 +106,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         double camY = vec3d.y();
         double camZ = vec3d.z();
 
-        ClippingHelper camera = new ClippingHelper(event.getMatrixStack().last().pose(), event.getProjectionMatrix());
+        Frustum camera = new Frustum(event.getMatrixStack().last().pose(), event.getProjectionMatrix());
         camera.prepare(camX, camY, camZ);
 
         World world = MinecraftClient.getPlayer().getWorld();
@@ -113,16 +125,16 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
             AABB chunk = new AABB(min.internal(), max.internal());
             if (!camera.isVisible(chunk) && camera.isVisible(entity.internal.getBoundingBoxForCulling())) {
                 net.minecraft.world.entity.Entity entityIn = entity.internal;
-                double d0 = MathHelper.lerp(partialTicks, entityIn.xo, entityIn.getX());
-                double d1 = MathHelper.lerp(partialTicks, entityIn.yo, entityIn.getY());
-                double d2 = MathHelper.lerp(partialTicks, entityIn.zo, entityIn.getZ());
-                float f = MathHelper.lerp(partialTicks, entityIn.yRotO, entityIn.yRot);
+                double d0 = Mth.lerp(partialTicks, entityIn.xo, entityIn.getX());
+                double d1 = Mth.lerp(partialTicks, entityIn.yo, entityIn.getY());
+                double d2 = Mth.lerp(partialTicks, entityIn.zo, entityIn.getZ());
+                float f = Mth.lerp(partialTicks, entityIn.yRotO, entityIn.getYRot());
                 renderManager.render(entityIn, d0 - camX, d1 - camY, d2 - camZ, f, partialTicks, event.getMatrixStack(), Minecraft.getInstance().renderBuffers().bufferSource(), renderManager.getPackedLightCoords(entityIn, partialTicks));
             }
         }
 
         Minecraft.getInstance().getProfiler().pop();
-    }*/
+    }
 
     @Override
     public void render(T stock, float entityYaw, float partialTicks, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
