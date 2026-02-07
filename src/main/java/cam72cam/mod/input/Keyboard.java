@@ -9,7 +9,11 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fmlclient.registry.ClientRegistry;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
+
 public class Keyboard {
+    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
+
     public enum KeyCode {
         ESCAPE(GLFW.GLFW_KEY_ESCAPE),
         NUM1(GLFW.GLFW_KEY_1),
@@ -127,15 +131,13 @@ public class Keyboard {
             keycodes.put(code, this);
         }
 
-        public static KeyCode of(int code) {
+        public static @Nullable KeyCode of(int code) {
             return keycodes.get(code);
         }
     }
 
-    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
-
-    @OnlyIn(Dist.CLIENT)
     /** Registers a keybind */
+    @OnlyIn(Dist.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         if (Minecraft.getInstance() == null) {
             System.out.println("Shake hands with danger!");

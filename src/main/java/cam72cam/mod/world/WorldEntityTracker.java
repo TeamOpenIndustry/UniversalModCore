@@ -61,20 +61,19 @@ public class WorldEntityTracker {
     }
 
     public void leave(ModdedEntity entity) {
-        BlockPos pos = entity.blockPosition();
-        long sec = SectionPos.asLong(pos);
+        long chunk = SectionPos.asLong(entity.blockPosition());
 
         lock.writeLock().lock();
         try {
-            if (!umcEntities.containsKey(sec)) {
+            if (!umcEntities.containsKey(chunk)) {
                 return;
             }
-            Collection<ModdedEntity> moddedEntities = umcEntities.get(sec);
+            Collection<ModdedEntity> moddedEntities = umcEntities.get(chunk);
             moddedEntities.remove(entity);
 
             if (moddedEntities.isEmpty()) {
-                umcEntities.remove(sec);
-                scanningRange.removeKey(sec);
+                umcEntities.remove(chunk);
+                scanningRange.removeKey(chunk);
             }
         } finally {
             lock.writeLock().unlock();
@@ -84,6 +83,12 @@ public class WorldEntityTracker {
     public void move(ModdedEntity entity, long oldSection, long newSection) {
         lock.writeLock().lock();
         try {
+            if (!umcEntities.containsKey(oldSection)) {
+                //Newly added, no need to process here
+                //Let join handle it
+                return;
+            }
+
             // remove from old section
             Set<ModdedEntity> moddedEntities = umcEntities.get(oldSection);
             if (moddedEntities != null) {
