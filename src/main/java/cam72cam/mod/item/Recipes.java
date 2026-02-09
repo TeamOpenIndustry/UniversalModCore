@@ -29,7 +29,7 @@ public class Recipes {
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             this.target = item;
             this.width = width;
-            this.ingredients = Arrays.asList(ingredients);
+            this.ingredients = new ArrayList<>(Arrays.asList(ingredients));
 
             CommonEvents.Recipe.REGISTER.subscribe(this::register);
         }
