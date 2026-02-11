@@ -22,7 +22,7 @@ public class MixinTagCollection {
     @Final
     private String resourceLocationPrefix;
 
-    @Inject(method = "lambda$reload$3", at = @At("RETURN"), remap = false)
+    @Inject(method = "lambda$reload$3", at = @At("RETURN"))
     public void postTagReload(IResourceManager p_lambda$reload$3_1_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
         Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
         switch (this.resourceLocationPrefix) {
