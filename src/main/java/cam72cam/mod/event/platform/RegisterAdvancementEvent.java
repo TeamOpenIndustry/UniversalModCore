@@ -25,6 +25,8 @@ public class RegisterAdvancementEvent extends Event {
     public void registerRecipeTrigger(ResourceLocation advancementIdent, ResourceLocation recipe, Fuzzy... trigger) {
         Advancement.Builder builder = Advancement.Builder.builder().withParentId(RECIPE_ROOT);
 
+        Criterion alreadyHasRecipe = new Criterion(new RecipeUnlockedTrigger.Instance(recipe));
+        builder.withCriterion("already_has_recipe", alreadyHasRecipe);
         for (int i = 0; i < trigger.length; i++) {
             Fuzzy ingredient = trigger[i];
             if (ingredient == null || ingredient.getTag() == null) continue;
