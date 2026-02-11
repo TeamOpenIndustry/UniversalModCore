@@ -186,7 +186,7 @@ public class CommonEvents {
         @SubscribeEvent
         public static void registerAdvancements(RegisterAdvancementEvent event) {
             CommonEvents.Recipe.RECIPE_TRIGGERS.get().forEach(x -> x.accept(event));
-            CommonEvents.Recipe.RECIPE_TRIGGERS.set(new ArrayList<>());
+            CommonEvents.Recipe.RECIPE_TRIGGERS.get().clear();
         }
     }
 }
