@@ -157,8 +157,8 @@ public class Fuzzy {
     }
 
     /** Use to register an itemstack */
-    public Fuzzy add(ItemStack item) {
-        add(item.internal.getItem());
+    public Fuzzy add(ItemStack itemStack) {
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), itemStack));
         return this;
     }
 
@@ -194,10 +194,5 @@ public class Fuzzy {
     @Override
     public String toString() {
         return ident;
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
     }
 }

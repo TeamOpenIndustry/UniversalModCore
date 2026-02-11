@@ -2,11 +2,15 @@ package cam72cam.mod.item;
 
 
 import cam72cam.mod.event.CommonEvents;
-import cam72cam.mod.event.platform.RegisterCraftingRecipeEvent;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.ShapedRecipe;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /** Recipe registration */
 public class Recipes {
@@ -22,16 +26,29 @@ public class Recipes {
         private final List<Fuzzy> dependencies = new ArrayList<>();
         private final List<Fuzzy> conflicts = new ArrayList<>();
 
-        private final ItemStack target;
-        private final int width;
-        private final List<Fuzzy> ingredients;
-
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
-            this.target = item;
-            this.width = width;
-            this.ingredients = new ArrayList<>(Arrays.asList(ingredients));
+            CommonEvents.Recipe.REGISTER.subscribe(event -> {
+                boolean dependencyNotMet = dependencies.stream().anyMatch(f -> f.getTag().getAllElements().isEmpty());
+                boolean hasConflict = conflicts.stream().anyMatch(f -> !f.getTag().getAllElements().isEmpty());
 
-            CommonEvents.Recipe.REGISTER.subscribe(this::register);
+                if (dependencyNotMet || hasConflict) {
+                    // Don't register recipe
+                    return;
+                }
+                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+
+                int height = ingredients.length / width;
+                NonNullList<Ingredient> result = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
+                for (int i = 0; i < ingredients.length; i++) {
+                    Fuzzy ingredient = ingredients[i];
+                    if (ingredient != null && !ingredient.isEmpty()) {
+                        result.set(i, new Ingredient(Stream.of(new Ingredient.TagList(ingredient.getTag()))));
+                    }
+                }
+
+                ShapedRecipe recipe = new ShapedRecipe(itemName, "", width, height, result, item.internal);
+                event.registerCraftingRecipe(recipe, ingredients);
+            });
         }
 
         public ShapedRecipeBuilder require(Fuzzy ...dependencies) {
@@ -42,10 +59,6 @@ public class Recipes {
         public ShapedRecipeBuilder conflicts(Fuzzy ...conflicts) {
             this.conflicts.addAll(Arrays.asList(conflicts));
             return this;
-        }
-
-        private void register(RegisterCraftingRecipeEvent event) {
-            event.register(target, width, ingredients, dependencies, conflicts);
         }
     }
 }

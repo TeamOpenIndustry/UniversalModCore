@@ -22,12 +22,14 @@ public class RegisterBlockTagEvent extends Event {
     }
 
     public void registerTag(ResourceLocation ident, Block block) {
+        //Safe casting verified by event poster
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
         builder.add(block);
         map.put(ident, builder);
     }
 
     public void registerTag(ResourceLocation ident, Tag<Block> includes) {
+        //Safe casting verified by event poster
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
         includes.getEntries().forEach(builder::add);
         map.put(ident, builder);

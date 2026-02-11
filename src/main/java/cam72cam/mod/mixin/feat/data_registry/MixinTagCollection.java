@@ -23,7 +23,7 @@ public class MixinTagCollection {
     private String resourceLocationPrefix;
 
     @Inject(method = "lambda$reload$3", at = @At("RETURN"))
-    public void postTagReload(IResourceManager p_lambda$reload$3_1_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
+    public void postTagReload(IResourceManager manager, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
         Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
         switch (this.resourceLocationPrefix) {
             case "tags/blocks":
@@ -34,6 +34,8 @@ public class MixinTagCollection {
                 RegisterItemTagEvent itemTagEvent = new RegisterItemTagEvent(map);
                 ModLoader.get().postEvent(itemTagEvent);
                 return;
+            default:
+                //Waiting for more...
         }
     }
 }
