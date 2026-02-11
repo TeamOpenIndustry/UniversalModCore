@@ -8,6 +8,9 @@ import net.minecraftforge.eventbus.api.Event;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * Fired when block tag datapacks are reloaded
+ */
 public class RegisterBlockTagEvent extends Event {
     private final Map<ResourceLocation, Tag.Builder<?>> map;
 

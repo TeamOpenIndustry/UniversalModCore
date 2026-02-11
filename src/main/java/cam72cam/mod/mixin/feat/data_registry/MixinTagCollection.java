@@ -16,6 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
+/**
+ * Used for posting <code>RegisterBlockTagEvent</code> and <code>RegisterItemTagEvent</code>
+ * @see RegisterBlockTagEvent
+ * @see RegisterItemTagEvent
+ */
 @Mixin(TagCollection.class)
 public class MixinTagCollection {
     @Shadow
@@ -26,6 +31,7 @@ public class MixinTagCollection {
     public void postTagReload(IResourceManager manager, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
         Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
         switch (this.resourceLocationPrefix) {
+            //Change me when minecraft version changes
             case "tags/blocks":
                 RegisterBlockTagEvent blockTagEvent = new RegisterBlockTagEvent(map);
                 ModLoader.get().postEvent(blockTagEvent);

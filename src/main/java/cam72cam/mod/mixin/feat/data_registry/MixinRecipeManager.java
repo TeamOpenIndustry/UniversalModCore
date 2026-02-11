@@ -1,6 +1,6 @@
 package cam72cam.mod.mixin.feat.data_registry;
 
-import cam72cam.mod.event.platform.RegisterCraftingRecipeEvent;
+import cam72cam.mod.event.platform.RegisterRecipeEvent;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -18,7 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 
-
+/**
+ * Used for posting <code>RegisterRecipeEvent</code>
+ * @see RegisterRecipeEvent
+ */
 @Mixin(RecipeManager.class)
 public class MixinRecipeManager {
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/resources/IResourceManager;Lnet/minecraft/profiler/IProfiler;)V",
@@ -26,7 +29,7 @@ public class MixinRecipeManager {
     public void postRecipeReload(Map<ResourceLocation, JsonObject> splashList, IResourceManager resourceManagerIn,
                                  IProfiler profilerIn, CallbackInfo ci,
                                  @Local(ordinal = 1) Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> mapLocalRef) {
-        RegisterCraftingRecipeEvent event = new RegisterCraftingRecipeEvent(mapLocalRef);
+        RegisterRecipeEvent event = new RegisterRecipeEvent(mapLocalRef);
         ModLoader.get().postEvent(event);
     }
 }

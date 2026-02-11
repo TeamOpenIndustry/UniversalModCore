@@ -17,7 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 
 /**
- * Used for injecting recipe unlock conditions for now
+ * Used for posting <code>RegisterAdvancementEvent</code>
+ * @see RegisterAdvancementEvent
  */
 @Mixin(AdvancementManager.class)
 public class MixinAdvancement {

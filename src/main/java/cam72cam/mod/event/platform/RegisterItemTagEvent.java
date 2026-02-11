@@ -9,6 +9,9 @@ import net.minecraftforge.eventbus.api.Event;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * Fired when item tag datapacks are reloaded
+ */
 public class RegisterItemTagEvent extends Event {
     private final Map<ResourceLocation, Tag.Builder<?>> map;
 

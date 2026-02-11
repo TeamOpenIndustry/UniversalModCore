@@ -11,6 +11,9 @@ import net.minecraftforge.eventbus.api.Event;
 
 import java.util.Map;
 
+/**
+ * Fired when advancement datapacks are reloaded
+ */
 public class RegisterAdvancementEvent extends Event {
     private static final ResourceLocation RECIPE_ROOT = new ResourceLocation("minecraft:recipes/root");
     private final Map<ResourceLocation, Advancement.Builder> map;

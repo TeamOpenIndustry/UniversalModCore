@@ -3,7 +3,7 @@ package cam72cam.mod.event;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.platform.RegisterAdvancementEvent;
 import cam72cam.mod.event.platform.RegisterBlockTagEvent;
-import cam72cam.mod.event.platform.RegisterCraftingRecipeEvent;
+import cam72cam.mod.event.platform.RegisterRecipeEvent;
 import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -60,9 +60,9 @@ public class CommonEvents {
     }
 
     public static final class Recipe {
-        public static final Event<Consumer<RegisterCraftingRecipeEvent>> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterRecipeEvent>> REGISTER = new Event<>();
         //TODO make event listener refreshable
-        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> RECIPE_LISTENER = ThreadLocal.withInitial(ArrayList::new);
+        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> POST_RECIPE = ThreadLocal.withInitial(ArrayList::new);
     }
 
     public static final class Entity {
@@ -179,14 +179,14 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void registerCraftingRecipe(RegisterCraftingRecipeEvent event) {
+        public static void registerCraftingRecipe(RegisterRecipeEvent event) {
             CommonEvents.Recipe.REGISTER.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
         public static void registerRecipeTrigger(RegisterAdvancementEvent event) {
-            CommonEvents.Recipe.RECIPE_LISTENER.get().forEach(x -> x.accept(event));
-            CommonEvents.Recipe.RECIPE_LISTENER.set(new ArrayList<>());
+            CommonEvents.Recipe.POST_RECIPE.get().forEach(x -> x.accept(event));
+            CommonEvents.Recipe.POST_RECIPE.set(new ArrayList<>());
         }
     }
 }

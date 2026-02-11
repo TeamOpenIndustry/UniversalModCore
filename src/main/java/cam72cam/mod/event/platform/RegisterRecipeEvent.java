@@ -11,16 +11,19 @@ import net.minecraftforge.eventbus.api.Event;
 
 import java.util.Map;
 
-public class RegisterCraftingRecipeEvent extends Event {
+/**
+ * Fired when recipe datapacks are reloaded
+ */
+public class RegisterRecipeEvent extends Event {
     Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map;
 
-    public RegisterCraftingRecipeEvent(Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map) {
+    public RegisterRecipeEvent(Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map) {
         this.map = map;
     }
 
     public void registerCraftingRecipe(ShapedRecipe recipe, Fuzzy... triggers) {
         //Register corresponding unlocking advancement
-        CommonEvents.Recipe.RECIPE_LISTENER.get().add(event -> {
+        CommonEvents.Recipe.POST_RECIPE.get().add(event -> {
             ResourceLocation advancement = new ResourceLocation(recipe.getId().getNamespace(), "unlock" + recipe.getId().getPath());
             event.registerRecipeTrigger(advancement, recipe.getId(), triggers);
         });
