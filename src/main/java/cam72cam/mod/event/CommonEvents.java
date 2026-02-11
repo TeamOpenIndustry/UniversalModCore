@@ -62,7 +62,7 @@ public class CommonEvents {
     public static final class Recipe {
         public static final Event<Consumer<RegisterRecipeEvent>> REGISTER = new Event<>();
         //TODO make event listener refreshable
-        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> POST_RECIPE = ThreadLocal.withInitial(ArrayList::new);
+        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> RECIPE_TRIGGERS = ThreadLocal.withInitial(ArrayList::new);
     }
 
     public static final class Entity {
@@ -169,24 +169,24 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void registerItemTag(RegisterBlockTagEvent event) {
+        public static void registerBlockTags(RegisterBlockTagEvent event) {
             Block.TAGS.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void registerItemTag(RegisterItemTagEvent event) {
+        public static void registerItemTags(RegisterItemTagEvent event) {
             Item.TAGS.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void registerCraftingRecipe(RegisterRecipeEvent event) {
+        public static void registerRecipes(RegisterRecipeEvent event) {
             CommonEvents.Recipe.REGISTER.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
-        public static void registerRecipeTrigger(RegisterAdvancementEvent event) {
-            CommonEvents.Recipe.POST_RECIPE.get().forEach(x -> x.accept(event));
-            CommonEvents.Recipe.POST_RECIPE.set(new ArrayList<>());
+        public static void registerAdvancements(RegisterAdvancementEvent event) {
+            CommonEvents.Recipe.RECIPE_TRIGGERS.get().forEach(x -> x.accept(event));
+            CommonEvents.Recipe.RECIPE_TRIGGERS.set(new ArrayList<>());
         }
     }
 }
