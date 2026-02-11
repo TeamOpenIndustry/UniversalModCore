@@ -183,6 +183,7 @@ public class Fuzzy {
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
         includes.add(other);
+        //TODO Does ordering matter?
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), other.tag));
         return this;
     }

@@ -10,7 +10,6 @@ import net.minecraft.util.ResourceLocation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 /** Recipe registration */
 public class Recipes {
@@ -28,25 +27,31 @@ public class Recipes {
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
             CommonEvents.Recipe.REGISTER.subscribe(event -> {
-                boolean dependencyNotMet = dependencies.stream().anyMatch(f -> f.getTag().getAllElements().isEmpty());
-                boolean hasConflict = conflicts.stream().anyMatch(f -> !f.getTag().getAllElements().isEmpty());
-
-                if (dependencyNotMet || hasConflict) {
-                    // Don't register recipe
-                    return;
+                for (Fuzzy dependency : dependencies) {
+                    if (dependency.enumerate().isEmpty()) {
+                        // Don't register recipe
+                        return;
+                    }
                 }
-                ResourceLocation itemName = item.internal.getItem().getRegistryName();
-
-                int height = ingredients.length / width;
-                NonNullList<Ingredient> result = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
-                for (int i = 0; i < ingredients.length; i++) {
-                    Fuzzy ingredient = ingredients[i];
-                    if (ingredient != null && !ingredient.isEmpty()) {
-                        result.set(i, new Ingredient(Stream.of(new Ingredient.TagList(ingredient.getTag()))));
+                for (Fuzzy conflict : conflicts) {
+                    if (!conflict.enumerate().isEmpty()) {
+                        // Don't register recipe
+                        return;
                     }
                 }
 
-                ShapedRecipe recipe = new ShapedRecipe(itemName, "", width, height, result, item.internal);
+                ResourceLocation itemName = item.internal.getItem().getRegistryName();
+
+                int height = ingredients.length / width;
+                NonNullList<Ingredient> input = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
+                for (int i = 0; i < ingredients.length; i++) {
+                    Fuzzy ingredient = ingredients[i];
+                    if (ingredient != null && !ingredient.isEmpty()) {
+                        input.set(i, Ingredient.fromTag(ingredient.getTag()));
+                    }
+                }
+
+                ShapedRecipe recipe = new ShapedRecipe(itemName, "", width, height, input, item.internal);
                 event.registerCraftingRecipe(recipe, ingredients);
             });
         }
