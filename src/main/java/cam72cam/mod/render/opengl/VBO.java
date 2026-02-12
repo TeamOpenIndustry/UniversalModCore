@@ -242,7 +242,7 @@ public class VBO {
             }
             RenderContext.checkError();
 
-            this.restore = RenderContext.apply(state, true).and(() -> {
+            this.restore = RenderContext.apply(state).and(() -> {
                 RenderContext.checkError();
                 shader.getVertexFormat().clearBufferState();
 
@@ -267,7 +267,7 @@ public class VBO {
             }
             RenderState state = this.state.clone();
             mod.accept(state);
-            return RenderContext.apply(state, true);
+            return RenderContext.apply(state);
         }
 
         /**

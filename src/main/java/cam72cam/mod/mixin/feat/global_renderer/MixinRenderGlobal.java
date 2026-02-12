@@ -29,6 +29,5 @@ public class MixinRenderGlobal {
         RenderState state = new RenderState(stack).translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
         RenderType.cutoutMipped().clearRenderState();
-        RenderContext.resetState();
     }
 }

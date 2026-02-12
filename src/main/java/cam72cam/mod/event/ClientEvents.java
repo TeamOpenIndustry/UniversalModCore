@@ -234,7 +234,6 @@ public class ClientEvents {
             // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event));
             RenderType.cutout().clearRenderState();
-            RenderContext.resetState();
         }
 
         @SubscribeEvent
