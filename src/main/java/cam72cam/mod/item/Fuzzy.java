@@ -14,7 +14,7 @@ import net.minecraftforge.common.Tags;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** OreDict / Tag abstraction.  Use for item equivalence */
+/** Vanilla/Forge tag abstraction. Use for item equivalence */
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy(Tags.Items.RODS_WOODEN, "stickWood").add(Items.STICK);
     public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood").add(Blocks.OAK_PLANKS);
@@ -87,15 +87,14 @@ public class Fuzzy {
     public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass").add(Blocks.GLASS_PANE);
     public static final Fuzzy NAME_TAG = new Fuzzy("nameTag").add(Items.NAME_TAG);
 
+    public static final Fuzzy TEST = new Fuzzy("test1").add(Items.EMERALD).add(Blocks.IRON_BLOCK).include(Fuzzy.NAME_TAG);
     static {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
     }
 
     static Map<String, Fuzzy> registered;
     private final String ident;
-    final Tag<Item> tag;
-    private final List<Item> customItems;
-    private final Set<Fuzzy> includes;
+    private final Tag<Item> tag;
 
     public static Fuzzy get(String ident) {
         if (registered == null) {
@@ -123,8 +122,6 @@ public class Fuzzy {
 
         this.ident = ident;
         this.tag = tag;
-        this.customItems = new ArrayList<>();
-        includes = new HashSet<>();
         registered.put(ident, this);
     }
 
@@ -140,14 +137,10 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        Set<ItemStack> items = tag.getAllElements().stream().map(item -> new ItemStack(new net.minecraft.item.ItemStack(item))).collect(Collectors.toSet());
-        for (Item item : customItems) {
-            items.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
-        }
-        for (Fuzzy f : includes) {
-            items.addAll(f.enumerate());
-        }
-        return new ArrayList<>(items);
+        return tag.getAllElements().stream()
+                  .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
+                  .distinct()
+                  .collect(Collectors.toList());
     }
 
     /** Grab the first example of a item in this fuzzy */
@@ -164,13 +157,11 @@ public class Fuzzy {
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Block block) {
-        add(block.asItem());
-        return this;
+        return add(block.asItem());
     }
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
-        customItems.add(item);
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), item));
         return this;
     }
@@ -182,8 +173,6 @@ public class Fuzzy {
 
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
-        includes.add(other);
-        //TODO Does ordering matter?
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), other.tag));
         return this;
     }
