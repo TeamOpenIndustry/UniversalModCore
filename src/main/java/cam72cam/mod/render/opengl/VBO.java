@@ -203,10 +203,9 @@ public class VBO {
                         GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, false, stride, (long) vbInfo.vertexOffset * Float.BYTES);
                     }
                     case NORMAL -> {
-                        if (vbInfo.hasNormals) {
-                            GL32.glEnableVertexAttribArray(i);
-                            GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
-                        }
+                        if (!vbInfo.hasNormals) continue;
+                        GL32.glEnableVertexAttribArray(i);
+                        GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
                     }
                     case COLOR -> {
                         GL32.glEnableVertexAttribArray(i);
@@ -215,21 +214,26 @@ public class VBO {
                     case UV -> {
                         for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                             if (entry.getValue() == element) {
-                                if (entry.getKey().equals("UV0")) {
-                                    GL32.glEnableVertexAttribArray(i);
-                                    GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
-                                } else if (entry.getKey().equals("UV1")) {
-                                    GL32.glDisableVertexAttribArray(i);
-                                    GL32.glVertexAttribI2i(i, 0, 10);
-                                } else if (entry.getKey().equals("UV2")) {
-                                    GL32.glDisableVertexAttribArray(i);
-                                    int x = 255;
-                                    int y = 255;
-                                    if (state.lightmap != null) {
-                                        x = (int) (state.lightmap[0] * 255);
-                                        y = (int) (state.lightmap[1] * 255);
+                                switch (entry.getKey()) {
+                                    case "UV0" -> {
+                                        GL32.glEnableVertexAttribArray(i);
+                                        GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
                                     }
-                                    GL32.glVertexAttribI2i(i, x, y);
+                                    case "UV1" -> {
+                                        GL32.glDisableVertexAttribArray(i);
+                                        GL32.glVertexAttribI2i(i, 0, 10);
+                                    }
+                                    case "UV2" -> {
+                                        GL32.glDisableVertexAttribArray(i);
+                                        //240 means full bright
+                                        int x = RenderContext.FULL_BRIGHT;
+                                        int y = RenderContext.FULL_BRIGHT;
+                                        if (state.lightmap != null) {
+                                            x = (int) (state.lightmap[0] * RenderContext.FULL_BRIGHT);
+                                            y = (int) (state.lightmap[1] * RenderContext.FULL_BRIGHT);
+                                        }
+                                        GL32.glVertexAttribI2i(i, x, y);
+                                    }
                                 }
                             }
                         }
