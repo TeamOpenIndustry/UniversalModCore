@@ -11,7 +11,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
@@ -22,6 +21,9 @@ import java.util.*;
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    //Lightmap UV coordinate for full bright
+    public static final int FULL_BRIGHT = 240;
+
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
 
@@ -37,13 +39,7 @@ public class RenderContext {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader;
-        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
-        if (vanillaEmissive) {
-            shader = GameRenderer.getRendertypeBeaconBeamShader();
-        } else {
-            shader = RenderSystem.getShader();
-        }
+        ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = RenderSystem.getModelViewMatrix().copy();
             restore.add(() -> RenderSystem.getModelViewMatrix().load(oldModelView));
@@ -77,7 +73,8 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null && !vanillaEmissive) {
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
             float oldX;
             float oldY;
             if (state.stage == Stage.ENTITY) {
@@ -214,8 +211,9 @@ public class RenderContext {
             if (element.getUsage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        int x = (int) (oldX * 240);
-                        int y = (int) (oldY * 240);
+                        //240 means full bright
+                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
                         GL32.glVertexAttribI2i(i, x, y);
                     }
                 }
