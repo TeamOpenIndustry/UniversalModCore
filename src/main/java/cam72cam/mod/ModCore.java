@@ -67,7 +67,6 @@ import org.apache.commons.lang3.SystemUtils;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
@@ -91,7 +90,7 @@ public class ModCore {
     }
 
     /** Called during Mod Construction phase */
-    public ModCore() {
+    public ModCore(FMLJavaModLoadingContext context) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
 
@@ -99,12 +98,12 @@ public class ModCore {
         proxy.setup();
 
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::postInit);
-        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
-        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
-        CommonEvents.Item.CREATIVE_TAB.register(FMLJavaModLoadingContext.get().getModEventBus());
+        context.getModEventBus().addListener(this::preInit);
+        context.getModEventBus().addListener(this::init);
+        context.getModEventBus().addListener(this::postInit);
+        //context.getModEventBus().addListener(this::serverStarting);
+        //context.getModEventBus().addListener(this::serverStarted);
+        CommonEvents.Item.CREATIVE_TAB.register(context.getModEventBus());
 
         MinecraftForge.EVENT_BUS.register(this);
     }

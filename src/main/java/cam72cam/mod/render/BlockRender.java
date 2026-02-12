@@ -116,7 +116,6 @@ public class BlockRender {
                     model.renderCustom(new RenderState(var3).lightmap(j/240f, k/240f).stage(RenderContext.Stage.BLOCK), partialTicks);
 
                     RenderType.cutoutMipped().clearRenderState();
-                    RenderContext.resetState();
                 }
 
                 @Override
