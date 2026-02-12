@@ -1,8 +1,11 @@
 package cam72cam.mod;
 
+import cam72cam.mod.loading.UMCMod;
 import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.fml.common.ModContainerFactory;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.objectweb.asm.Type;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -36,6 +39,9 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
                 FMLLog.log.warn(e);
             }
         }
+
+        //Add our marker
+        ModContainerFactory.instance().registerContainerType(Type.getType(UMCMod.class), UMCModContainer.class);
     }
 
     @Override
