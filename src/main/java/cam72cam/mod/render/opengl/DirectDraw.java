@@ -39,7 +39,7 @@ public class DirectDraw {
             }
             RenderSystem.setShader(() -> shader);
         };
-        if (state.stage != RenderContext.Stage.ENTITY) {
+        if (state.getStage() != RenderContext.Stage.ENTITY) {
             render.run();
         } else {
             RenderContext.addDeferred(render);
