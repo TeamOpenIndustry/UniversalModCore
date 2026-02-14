@@ -153,6 +153,12 @@ public class Button implements IWidget{
     }
 
     public boolean isHovering() {
-        return button.isMouseOver(Minecraft.getInstance().mouseHelper.getMouseX(), Minecraft.getInstance().mouseHelper.getMouseY());
+//        return button.isMouseOver(Minecraft.getInstance().mouseHelper.getMouseX(), Minecraft.getInstance().mouseHelper.getMouseY());
+        //Re-wrap here as we want inactive button also get processed
+        Minecraft mc = Minecraft.getInstance();
+        double mouseX = mc.mouseHelper.getMouseX() * mc.mainWindow.getScaledWidth() / mc.mainWindow.getWidth();
+        double mouseY = mc.mouseHelper.getMouseY() * mc.mainWindow.getScaledHeight() / mc.mainWindow.getHeight();
+        return isVisible() && mouseX >= button.x && mouseX <= button.x + button.getWidth()
+                           && mouseY >= button.y && mouseY <= button.y + button.getHeight();
     }
 }
