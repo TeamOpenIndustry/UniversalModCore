@@ -156,8 +156,8 @@ public class Button implements IWidget{
 //        return button.isMouseOver(Minecraft.getInstance().mouseHelper.getMouseX(), Minecraft.getInstance().mouseHelper.getMouseY());
         //Re-wrap here as we want inactive button also get processed
         Minecraft mc = Minecraft.getInstance();
-        double mouseX = mc.mouseHelper.getMouseX() * mc.mainWindow.getScaledWidth() / mc.mainWindow.getWidth();
-        double mouseY = mc.mouseHelper.getMouseY() * mc.mainWindow.getScaledHeight() / mc.mainWindow.getHeight();
+        double mouseX = mc.mouseHelper.getMouseX() * mc.getMainWindow().getScaledWidth() / mc.getMainWindow().getWidth();
+        double mouseY = mc.mouseHelper.getMouseY() * mc.getMainWindow().getScaledHeight() / mc.getMainWindow().getHeight();
         return isVisible() && mouseX >= button.x && mouseX <= button.x + button.getWidth()
                            && mouseY >= button.y && mouseY <= button.y + button.getHeight();
     }
