@@ -165,7 +165,7 @@ public class Button implements IWidget{
         Minecraft mc = Minecraft.getInstance();
         double mouseX = mc.mouseHandler.xpos() * mc.getWindow().getGuiScaledWidth() / mc.getWindow().getWidth();
         double mouseY = mc.mouseHandler.ypos() * mc.getWindow().getGuiScaledHeight() / mc.getWindow().getHeight();
-        return isVisible() && mouseX >= button.x && mouseX <= button.x + button.getWidth()
-                           && mouseY >= button.y && mouseY <= button.y + button.getHeight();
+        return isVisible() && mouseX >= button.getX() && mouseX <= button.getX() + button.getWidth()
+                           && mouseY >= button.getY() && mouseY <= button.getY() + button.getHeight();
     }
 }
