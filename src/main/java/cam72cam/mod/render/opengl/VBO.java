@@ -170,7 +170,9 @@ public class VBO {
             if (!isLoaded()) {
                 return () -> {};
             }
-            RenderState state = this.state.clone();
+
+            //We have to create a new RenderState for 1.16 and below
+            RenderState state = new RenderState().stage(this.state.stage);
             mod.accept(state);
             return RenderContext.apply(state);
         }
