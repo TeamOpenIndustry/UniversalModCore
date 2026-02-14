@@ -98,7 +98,7 @@ public class VBO {
 
     public class Binding implements With {
         private final With restore;
-        private final RenderContext.Stage stage;
+        private final RenderState state;
 
         public boolean isLoaded() {
             return vbo != -1;
@@ -106,7 +106,6 @@ public class VBO {
 
         protected Binding(RenderState state, boolean wait) {
             lastUsed = System.currentTimeMillis();
-            stage = state.stage;
 
             if (!isLoaded()) {
                 init();
@@ -116,6 +115,7 @@ public class VBO {
                 if (!isLoaded()) {
                     restore = () -> {
                     };
+                    this.state = null;
                     return;
                 }
             } else {
@@ -130,6 +130,7 @@ public class VBO {
             }
 
             settings.accept(state);
+            this.state = state;
 
             int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -169,7 +170,7 @@ public class VBO {
             if (!isLoaded()) {
                 return () -> {};
             }
-            RenderState state = new RenderState().stage(stage);
+            RenderState state = this.state.clone();
             mod.accept(state);
             return RenderContext.apply(state);
         }
