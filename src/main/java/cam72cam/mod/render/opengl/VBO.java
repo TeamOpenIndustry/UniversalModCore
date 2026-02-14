@@ -180,23 +180,17 @@ public class VBO {
 
             RenderType renderType;
             ShaderInstance shader;
-            if (state.stage != null) {
-                shader = switch (state.stage) {
-                    case GUI -> GameRenderer.getBlockShader();
-                    case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
-                    default -> ShaderHelper.isShaderPackEnabled()
-                               ? GameRenderer.getRendertypeEntityCutoutShader()
-                               : RenderContext.UMC_CORE;
-                };
-
-                renderType = switch (state.stage) {
-                    case GUI -> null;
-                    default -> RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
-                };
-            } else {
-                shader = GameRenderer.getRendertypeEntityCutoutShader();
-                renderType = RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
-            }
+            shader = switch (state.getStage()) {
+                case GUI -> GameRenderer.getBlockShader();
+                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
+                default -> ShaderHelper.isShaderPackEnabled()
+                           ? GameRenderer.getRendertypeEntityCutoutShader()
+                           : RenderContext.UMC_CORE;
+            };
+            renderType = switch (state.getStage()) {
+                case GUI -> null;
+                default -> RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
+            };
 
             if (renderType != null) {
                 renderType.setupRenderState();

@@ -32,7 +32,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
-    public RenderContext.Stage stage;
+    protected RenderContext.Stage stage = RenderContext.Stage.NONE;
 
     private static FloatBuffer mbuf = FloatBuffer.wrap(new float[16]);
 
@@ -263,7 +263,10 @@ public class RenderState {
         return this;
     }
     public RenderState stage(RenderContext.Stage stage) {
-        this.stage = stage;
+        this.stage = stage != null ? stage : RenderContext.Stage.NONE;
         return this;
+    }
+    public RenderContext.Stage getStage() {
+        return this.stage;
     }
 }
