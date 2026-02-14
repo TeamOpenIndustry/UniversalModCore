@@ -36,6 +36,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class World {
     /* Static access to loaded worlds */
     private static final Map<Integer, World> clientWorlds = new HashMap<>();
     private static final Map<Integer, World> serverWorlds = new HashMap<>();
-    private static final List<Consumer<World>> onTicks = new ArrayList<>();
+    private static final Queue<Consumer<World>> onTicks = new ConcurrentLinkedDeque<>();
 
     /** Internal, do not use */
     public final net.minecraft.world.World internal;
