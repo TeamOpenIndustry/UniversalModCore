@@ -87,7 +87,6 @@ public class Fuzzy {
     public static final Fuzzy GLASS_PANE = new Fuzzy(Tags.Items.GLASS_PANES, "paneGlass").add(Blocks.GLASS_PANE);
     public static final Fuzzy NAME_TAG = new Fuzzy("nameTag").add(Items.NAME_TAG);
 
-    public static final Fuzzy TEST = new Fuzzy("test1").add(Items.EMERALD).add(Blocks.IRON_BLOCK).include(Fuzzy.NAME_TAG);
     static {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
     }
