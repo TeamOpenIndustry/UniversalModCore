@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(WorldRenderer.class)
 public class MixinRenderGlobal {
     @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher;drawBatch()V"))
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldRenderer;preRenderDamagedBlocks()V"))
     public void injectRenderGlobal(ActiveRenderInfo info, ICamera camera, float partialTicks, CallbackInfo ci) {
         Vec3d pos = GlobalRender.getCameraPos(partialTicks);
         RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);

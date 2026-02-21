@@ -119,6 +119,7 @@ public class CommonEvents {
                 ModdedEntity modded = (ModdedEntity) event.getEntity();
                 cam72cam.mod.world.World.get(modded.world).tracker
                         .move(modded,
+                              //Don't calculate Y in 1.16- as no corresponding event posted
                               ChunkPos.asLong(event.getOldChunkX(), 0, event.getOldChunkZ()),
                               ChunkPos.asLong(event.getNewChunkX(), 0, event.getNewChunkZ()));
             }
