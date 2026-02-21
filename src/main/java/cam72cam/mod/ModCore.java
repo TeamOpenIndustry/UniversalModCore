@@ -577,16 +577,17 @@ public class ModCore {
     private static Boolean isDev = null;
 
     public static boolean isDevelopmentEnvironment() {
-//        if (isDev == null) {
-//            try {
-//                Field field = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
-//                field.setAccessible(true);
-//                isDev = field.getBoolean(null);
-//            } catch (NoSuchFieldException | IllegalAccessException ignore) {
-//                isDev = false;
-//            }
-//        }
-        //TODO 1.14-1.15
+        //A 1.12 style hacky solution...Good news is 1.15 provides standard API so only need to do in 1.14
+        try {
+            // Are we in a 'decompiled' environment?
+            Class<?> clazz = ModCore.class.getClassLoader().loadClass("net.minecraft.world.World");
+            if (clazz != null) {
+                isDev = true;
+            }
+        } catch (ClassNotFoundException ignored) {
+            //Obfuscated environment -- not a dev environment
+            isDev = false;
+        }
         return false;
     }
 }
