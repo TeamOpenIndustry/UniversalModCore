@@ -6,13 +6,14 @@ import net.minecraft.client.gui.GuiTextField;
 import java.util.function.Predicate;
 
 /** Base text field */
-public class TextField implements IWidget{
+public class TextField implements IWidget {
     protected final GuiTextField textfield;
 
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         this(builder,
-             new GuiTextField(-1, Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height));
+             //Offset x&y by 1 and minus width&height by 2 to let border be within the range specified
+             new GuiTextField(-1, Minecraft.getMinecraft().fontRenderer, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2));
     }
 
     /** Internal, can be overridden to support custom GuiTextFields */
