@@ -23,7 +23,7 @@ public class RegisterRecipeEvent extends Event {
 
     public void registerCraftingRecipe(ShapedRecipe recipe, Fuzzy... triggers) {
         //Register corresponding unlocking advancement
-        CommonEvents.Recipe.RECIPE_TRIGGERS.get().add(event -> {
+        CommonEvents.Recipe.RECIPE_TRIGGERS.subscribe(event -> {
             ResourceLocation advancement = new ResourceLocation(recipe.getId().getNamespace(), "unlock" + recipe.getId().getPath());
             event.registerRecipeTrigger(advancement, recipe.getId(), triggers);
         });

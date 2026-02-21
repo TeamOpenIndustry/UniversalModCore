@@ -24,8 +24,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraft.world.server.ServerWorld;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 /** Registry of events that fire off on both client and server.  Do not use directly! */
@@ -61,8 +59,7 @@ public class CommonEvents {
 
     public static final class Recipe {
         public static final Event<Consumer<RegisterRecipeEvent>> REGISTER = new Event<>();
-        //TODO make event listener refreshable
-        public static ThreadLocal<List<Consumer<RegisterAdvancementEvent>>> RECIPE_TRIGGERS = ThreadLocal.withInitial(ArrayList::new);
+        public static final Event<Consumer<RegisterAdvancementEvent>> RECIPE_TRIGGERS = new Event.TransientEvent<>();
     }
 
     public static final class Entity {
@@ -186,8 +183,7 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void registerAdvancements(RegisterAdvancementEvent event) {
-            CommonEvents.Recipe.RECIPE_TRIGGERS.get().forEach(x -> x.accept(event));
-            CommonEvents.Recipe.RECIPE_TRIGGERS.get().clear();
+            CommonEvents.Recipe.RECIPE_TRIGGERS.execute(x -> x.accept(event));
         }
     }
 }
