@@ -24,15 +24,15 @@ public class RegisterBlockTagEvent extends Event {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void registerTag(ResourceLocation ident, Block block) {
-        //Safe casting verified by event poster
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
         builder.add(block);
         map.put(ident, builder);
     }
 
+    @SuppressWarnings("unchecked")
     public void registerTag(ResourceLocation ident, Tag<Block> includes) {
-        //Safe casting verified by event poster
         Tag.Builder<Block> builder = (Tag.Builder<Block>) map.getOrDefault(ident, Tag.Builder.create());
         builder.add(new Tag.TagEntry<>(includes.getId()));
         map.put(ident, builder);

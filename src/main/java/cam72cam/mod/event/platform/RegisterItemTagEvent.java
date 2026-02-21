@@ -25,23 +25,23 @@ public class RegisterItemTagEvent extends Event {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void registerTag(ResourceLocation ident, Item item) {
-        //Safe casting verified by event poster
         Tag.Builder<Item> builder = (Tag.Builder<Item>) map.getOrDefault(ident, Tag.Builder.create());
         builder.add(item);
         map.put(ident, builder);
     }
 
+    @SuppressWarnings("unchecked")
     public void registerTag(ResourceLocation ident, Tag<Item> includes) {
-        //Safe casting verified by event poster
         Tag.Builder<Item> builder = (Tag.Builder<Item>) map.getOrDefault(ident, Tag.Builder.create());
         //Don't pass in direct tag reference
         builder.add(new Tag.TagEntry<>(includes.getId()));
         map.put(ident, builder);
     }
 
+    @SuppressWarnings("unchecked")
     public void registerTag(ResourceLocation ident, ItemStack itemStack) {
-        //Safe casting verified by event poster
         Tag.Builder<Item> builder = (Tag.Builder<Item>) map.getOrDefault(ident, Tag.Builder.create());
         builder.add(itemStack.internal.getItem());
         map.put(ident, builder);

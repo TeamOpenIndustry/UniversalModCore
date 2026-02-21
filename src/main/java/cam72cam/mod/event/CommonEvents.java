@@ -59,7 +59,7 @@ public class CommonEvents {
 
     public static final class Recipe {
         public static final Event<Consumer<RegisterRecipeEvent>> REGISTER = new Event<>();
-        public static final Event<Consumer<RegisterAdvancementEvent>> RECIPE_TRIGGERS = new Event.TransientEvent<>();
+        public static final Event<Consumer<RegisterAdvancementEvent>> RECIPE_ADVENCEMENTS = new Event.TransientEvent<>();
     }
 
     public static final class Entity {
@@ -183,7 +183,7 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void registerAdvancements(RegisterAdvancementEvent event) {
-            CommonEvents.Recipe.RECIPE_TRIGGERS.execute(x -> x.accept(event));
+            CommonEvents.Recipe.RECIPE_ADVENCEMENTS.execute(x -> x.accept(event));
         }
     }
 }
