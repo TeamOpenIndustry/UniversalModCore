@@ -564,4 +564,29 @@ public class ModCore {
         usedCacheFiles.add(f);
         return f;
     }
+
+    /* Loader Utils */
+    public static String loaderBrand() {
+        return "forge";
+    }
+
+    public static int mcVersion() {
+        return 11404;
+    }
+
+    private static Boolean isDev = null;
+
+    public static boolean isDevelopmentEnvironment() {
+//        if (isDev == null) {
+//            try {
+//                Field field = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
+//                field.setAccessible(true);
+//                isDev = field.getBoolean(null);
+//            } catch (NoSuchFieldException | IllegalAccessException ignore) {
+//                isDev = false;
+//            }
+//        }
+        //TODO 1.14-1.15
+        return false;
+    }
 }
