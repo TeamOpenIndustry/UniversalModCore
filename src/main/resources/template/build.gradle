@@ -54,6 +54,7 @@ dependencies {
 shadowJar {
     classifier = ''
     configurations = [project.configurations.umcShadow]
+    #RELOCATION#
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
     finalizedBy 'reobfShadowJar'
