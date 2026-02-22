@@ -1,15 +1,34 @@
 //BUILDSCRIPT//
 buildscript {
     repositories {
+        mavenCentral()
+        gradlePluginPortal()
         maven { url = "https://maven.minecraftforge.net/" }
     }
 	dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
 	}
+}
+
+configurations {
+    umcShadow
+    compile.extendsFrom umcShadow
+
+    umcImplementation
+    compile.extendsFrom umcImplementation
+
+    umcCompileOnly
+    provided.extendsFrom umcCompileOnly
+
+    umcRuntimeOnly
+    runtime.extendsFrom umcRuntimeOnly
 }
 
 //PLUGINS//
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
+
 
 //MINECRAFT//
 sourceCompatibility = targetCompatibility = '1.8'
@@ -27,12 +46,24 @@ minecraft {
 #UMC_REPO#
 
 dependencies {
-    runtime "net.minecrell:terminalconsoleappender:1.3.0"
-    compile #UMC_DEPENDENCY#
+    umcRuntimeOnly "net.minecrell:terminalconsoleappender:1.3.0"
+    umcImplementation #UMC_DEPENDENCY#
 }
 
 //JAR//
-jar.finalizedBy('reobfJar')
+shadowJar {
+    classifier = ''
+    configurations = [project.configurations.umcShadow]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    finalizedBy 'reobfShadowJar'
+}
+
+reobf {
+    shadowJar {}
+}
+
+assemble.dependsOn shadowJar
 
 processResources {
     inputs.property "version", project.version
