@@ -12,7 +12,7 @@ import java.util.Objects;
  * Note that in order to make this work on 1.21.1 and upper, <code>DamageType</code>s should be treated as constants and created as soon as possible (like CONSTRUCT phase)
  */
 public final class DamageType {
-    public static final DamageType FIRE = new DamageType(DamageSource.IN_FIRE);
+    public static final DamageType FIRE = new DamageType(DamageSource.inFire);
     public static final DamageType PROJECTILE = new DamageType("arrow");
     public static final DamageType EXPLOSION = new DamageType("explosion");
     public static final DamageType MAGIC = new DamageType("magic");
