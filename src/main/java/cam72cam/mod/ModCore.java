@@ -19,10 +19,7 @@ import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.item.Fuzzy;
-import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
@@ -38,7 +35,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
@@ -481,12 +477,6 @@ public class ModCore {
         @Override
         public void serverEvent(ModEvent event) {
         }
-    }
-
-    public static void genData(String MODID, GatherDataEvent event) {
-        CommonEvents.Recipe.REGISTER.execute(Runnable::run);
-        event.getGenerator().addProvider(new Recipes(event.getGenerator()));
-        Fuzzy.register(event.getGenerator());
     }
 
     public static void debug(String msg, Object... params) {
