@@ -1,6 +1,5 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.block.Block;
@@ -11,7 +10,6 @@ import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.data.ExistingFileHelper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -138,7 +136,7 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return tag.getAllElements().stream()
+        return tag.getValues().stream()
                   .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
                   .distinct()
                   .collect(Collectors.toList());
@@ -147,7 +145,7 @@ public class Fuzzy {
     /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
-        return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
+        return !stacks.isEmpty() ? stacks.get(0) : ItemStack.EMPTY;
     }
 
     /** Use to register an itemstack */

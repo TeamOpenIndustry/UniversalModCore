@@ -2,9 +2,8 @@ package cam72cam.mod.mixin.feat.data_registry;
 
 import cam72cam.mod.event.platform.RegisterBlockTagEvent;
 import cam72cam.mod.event.platform.RegisterItemTagEvent;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.tags.Tag;
-import net.minecraft.tags.TagCollection;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.tags.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.Final;
@@ -21,16 +20,16 @@ import java.util.Map;
  * @see RegisterBlockTagEvent
  * @see RegisterItemTagEvent
  */
-@Mixin(TagCollection.class)
+@Mixin(TagCollectionReader.class)
 public class MixinTagCollection {
     @Shadow
     @Final
-    private String resourceLocationPrefix;
+    private String directory;
 
-    @Inject(method = "lambda$reload$3", at = @At("RETURN"))
-    public void postTagReload(IResourceManager manager, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder<?>>> cir) {
-        Map<ResourceLocation, Tag.Builder<?>> map = cir.getReturnValue();
-        switch (this.resourceLocationPrefix) {
+    @Inject(method = "load", at = @At("HEAD"))
+    public void onRegisterTag(Map<ResourceLocation, ITag.Builder> p_242226_1_, CallbackInfoReturnable<ITagCollection<?>> cir,
+                              @Local(argsOnly = true) Map<ResourceLocation, ITag.Builder> map) {
+        switch (this.directory) {
             //Change me when minecraft version changes
             case "tags/blocks":
                 RegisterBlockTagEvent blockTagEvent = new RegisterBlockTagEvent(map);

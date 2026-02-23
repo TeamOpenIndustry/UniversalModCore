@@ -41,7 +41,7 @@ public final class DamageType {
     }
 
     private DamageType(DamageSource source) {
-        this.damageType = new Identifier(source.damageType);
+        this.damageType = new Identifier(source.msgId);
         this.internal = source;
     }
 

@@ -8,13 +8,14 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.ShapedRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.fml.event.lifecycle.IModBusEvent;
 
 import java.util.Map;
 
 /**
  * Fired when recipe datapacks are reloaded
  */
-public class RegisterRecipeEvent extends Event {
+public class RegisterRecipeEvent extends Event implements IModBusEvent {
     Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map;
 
     public RegisterRecipeEvent(Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map) {
