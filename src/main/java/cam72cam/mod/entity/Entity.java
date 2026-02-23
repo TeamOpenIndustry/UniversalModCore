@@ -225,8 +225,8 @@ public class Entity {
     }
 
     /** Damage entity directly (bypassing armor) */
-    public void directDamage(String msg, double damage) {
-        internal.attackEntityFrom((new DamageSource(msg)).setDamageBypassesArmor(), (float) damage);
+    public void directDamage(DamageType type, double damage) {
+        internal.attackEntityFrom(type.internal.setDamageBypassesArmor(), (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
