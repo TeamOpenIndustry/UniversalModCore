@@ -37,6 +37,8 @@ public class RenderState {
         this.model_view = ctx.model_view != null ? ctx.model_view.copy() : null;
         this.projection = ctx.projection != null ? ctx.projection.copy() : null;
         this.texture = ctx.texture;
+        this.normals = ctx.normals;
+        this.specular = ctx.specular;
         this.color = ctx.color != null ? ctx.color.clone() : null;
 
         this.lighting = ctx.lighting;
