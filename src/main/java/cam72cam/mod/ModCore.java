@@ -12,6 +12,7 @@ import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -566,23 +567,10 @@ public class ModCore {
     }
 
     public static int mcVersion() {
-        return 11404;
+        return 11502;
     }
 
-    private static Boolean isDev = null;
-
     public static boolean isDevelopmentEnvironment() {
-        //A 1.12 style hacky solution...Good news is 1.15 provides standard API so only need to do in 1.14
-        try {
-            // Are we in a 'decompiled' environment?
-            Class<?> clazz = ModCore.class.getClassLoader().loadClass("net.minecraft.world.World");
-            if (clazz != null) {
-                isDev = true;
-            }
-        } catch (ClassNotFoundException ignored) {
-            //Obfuscated environment -- not a dev environment
-            isDev = false;
-        }
-        return isDev;
+        return !FMLLoader.isProduction();
     }
 }
