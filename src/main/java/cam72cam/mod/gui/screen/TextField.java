@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiTextField;
 import java.util.function.Predicate;
 
 /** Base text field */
-public class TextField implements IWidget{
+public class TextField implements IWidget {
     protected final GuiTextField textfield;
     protected Predicate<String> validator;
 
@@ -14,7 +14,7 @@ public class TextField implements IWidget{
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         //Have to do here as we can't call anything before constructor
         validator = str -> true;
-        textfield = new GuiTextField(Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height) {
+        textfield = new GuiTextField(Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2) {
             @Override
             public void setText(String text) {
                 if (validator.test(text)) {

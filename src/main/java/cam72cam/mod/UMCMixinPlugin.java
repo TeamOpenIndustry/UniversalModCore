@@ -6,7 +6,6 @@ import cpw.mods.fml.common.FMLLog;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -44,7 +43,6 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
         return null;
     }
 
-    @Nullable
     @Override
     public String getSetupClass() {
         return null;

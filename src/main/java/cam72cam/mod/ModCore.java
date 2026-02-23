@@ -24,6 +24,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
+import cpw.mods.fml.relauncher.CoreModManager;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import cam72cam.mod.world.ChunkManager;
@@ -49,6 +50,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -449,5 +451,29 @@ public class ModCore {
         File f = new File(cacheDir, path);
         usedCacheFiles.add(f);
         return f;
+    }
+
+    /* Loader Utils */
+    public static String loaderBrand() {
+        return "forge";
+    }
+
+    public static int mcVersion() {
+        return 10710;
+    }
+
+    private static Boolean isDev = null;
+
+    public static boolean isDevelopmentEnvironment() {
+        if (isDev == null) {
+            try {
+                Field field = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
+                field.setAccessible(true);
+                isDev = field.getBoolean(null);
+            } catch (NoSuchFieldException | IllegalAccessException ignore) {
+                isDev = false;
+            }
+        }
+        return isDev;
     }
 }
