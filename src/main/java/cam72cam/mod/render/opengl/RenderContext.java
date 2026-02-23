@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import util.Matrix4;
 
@@ -178,11 +179,35 @@ public class RenderContext {
             });
         }
 
-        state.bools.forEach((glId, value) -> {
-            boolean oldValue = GL11.glGetBoolean(glId);
-            applyBool(glId, value);
-            restore.add(() -> applyBool(glId, oldValue));
-        });
+        if (state.lighting != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_LIGHTING);
+            applyBool(GL11.GL_LIGHTING, state.lighting);
+            restore.add(() -> applyBool(GL11.GL_LIGHTING, oldValue));
+        }
+
+        if (state.alpha_test != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_ALPHA_TEST);
+            applyBool(GL11.GL_ALPHA_TEST, state.alpha_test);
+            restore.add(() -> applyBool(GL11.GL_ALPHA_TEST, oldValue));
+        }
+
+        if (state.depth_test != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            applyBool(GL11.GL_DEPTH_TEST, state.depth_test);
+            restore.add(() -> applyBool(GL11.GL_DEPTH_TEST, oldValue));
+        }
+
+        if (state.rescale_normal != null) {
+            boolean oldValue = GL11.glGetBoolean(GL12.GL_RESCALE_NORMAL);
+            applyBool(GL12.GL_RESCALE_NORMAL, state.rescale_normal);
+            restore.add(() -> applyBool(GL12.GL_RESCALE_NORMAL, oldValue));
+        }
+
+        if (state.cull_face != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+            applyBool(GL11.GL_CULL_FACE, state.cull_face);
+            restore.add(() -> applyBool(GL11.GL_CULL_FACE, oldValue));
+        }
 
         if (state.depth_mask != null) {
             boolean oldDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
@@ -196,17 +221,22 @@ public class RenderContext {
             restore.add(() -> GL11.glShadeModel(oldShading));
         }
 
-        if(state.scissorRange != null){
-            int scaleFactor = (int) Minecraft.getInstance().mainWindow.getGuiScaleFactor();
-            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+        if (state.scissor_test != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_SCISSOR_TEST);
+            applyBool(GL11.GL_SCISSOR_TEST, state.scissor_test);
+            if (state.scissor_test && state.scissor_range != null) {
+                int scaleFactor = (int) Minecraft.getInstance().mainWindow.getGuiScaleFactor();
+                int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-            int x = (int) state.scissorRange.getMinX() * scaleFactor;
-            int y = (int) state.scissorRange.getMinY() * scaleFactor;
-            int width = (int) state.scissorRange.getWidth() * scaleFactor;
-            int height = (int) state.scissorRange.getHeight() * scaleFactor;
+                int x = (int) state.scissor_range.getMinX() * scaleFactor;
+                int y = (int) state.scissor_range.getMinY() * scaleFactor;
+                int width = (int) state.scissor_range.getWidth() * scaleFactor;
+                int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
-            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-            GL11.glScissor(x, screenHeight - y - height, width, height);
+                //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+                GL11.glScissor(x, screenHeight - y - height, width, height);
+            }
+            restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
         }
 
         if (state.blend != null) {
