@@ -50,7 +50,7 @@ public class RenderState {
         this.depth_mask = ctx.depth_mask;
         this.smooth_shading = ctx.smooth_shading;
         this.scissor_test = ctx.scissor_test;
-        this.scissor_range = ctx.scissor_range.getBounds2D();
+        this.scissor_range = ctx.scissor_range != null ? ctx.scissor_range.getBounds2D() : null;
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
         this.shader = ctx.shader;
