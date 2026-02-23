@@ -21,7 +21,6 @@ import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -29,6 +28,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +40,7 @@ import org.lwjgl.opengl.GL11;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -371,5 +372,29 @@ public class ModCore {
         File f = new File(cacheDir, path);
         usedCacheFiles.add(f);
         return f;
+    }
+
+    /* Loader Utils */
+    public static String loaderBrand() {
+        return "forge";
+    }
+
+    public static int mcVersion() {
+        return 11202;
+    }
+
+    private static Boolean isDev = null;
+
+    public static boolean isDevelopmentEnvironment() {
+        if (isDev == null) {
+            try {
+                Field field = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
+                field.setAccessible(true);
+                isDev = field.getBoolean(null);
+            } catch (NoSuchFieldException | IllegalAccessException ignore) {
+                isDev = false;
+            }
+        }
+        return isDev;
     }
 }
