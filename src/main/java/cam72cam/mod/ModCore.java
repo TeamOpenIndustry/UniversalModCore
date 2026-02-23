@@ -578,6 +578,6 @@ public class ModCore {
             //Obfuscated environment -- not a dev environment
             isDev = false;
         }
-        return false;
+        return isDev;
     }
 }
