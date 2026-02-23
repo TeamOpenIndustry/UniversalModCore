@@ -380,7 +380,7 @@ public class ModCore {
     }
 
     public static int mcVersion() {
-        return 11202;
+        return 11102;
     }
 
     private static Boolean isDev = null;
