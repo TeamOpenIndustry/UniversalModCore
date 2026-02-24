@@ -94,6 +94,8 @@ public class Fuzzy {
     static Map<String, Fuzzy> registered;
     private final String ident;
     private final Tag<Item> tag;
+    //To indicate whether the tag is empty or else during load
+    private final List<Item> cache;
 
     public static Fuzzy get(String ident) {
         if (registered == null) {
@@ -121,6 +123,7 @@ public class Fuzzy {
 
         this.ident = ident;
         this.tag = tag;
+        this.cache = new ArrayList<>();
         registered.put(ident, this);
     }
 
@@ -136,20 +139,26 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        return tag.getAllElements().stream()
-                  .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
-                  .distinct()
-                  .collect(Collectors.toList());
+        //Standalone elements apart from datapack
+        List<ItemStack> stacks = cache.stream().map(i -> new ItemStack(new net.minecraft.item.ItemStack(i))).collect(Collectors.toList());
+        try {
+            stacks.addAll(tag.getAllElements().stream()
+                             .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
+                             .collect(Collectors.toList()));
+        } catch (IllegalStateException ignored) {}
+
+        return stacks;
     }
 
     /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
-        return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
+        return !stacks.isEmpty() ? stacks.get(0) : ItemStack.EMPTY;
     }
 
     /** Use to register an itemstack */
     public Fuzzy add(ItemStack itemStack) {
+        cache.add(itemStack.internal.getItem());
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), itemStack));
         return this;
     }
@@ -161,6 +170,7 @@ public class Fuzzy {
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
+        cache.add(item);
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), item));
         return this;
     }
