@@ -2,6 +2,7 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -13,7 +14,6 @@ import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** Vanilla/Forge tag abstraction. Use for item equivalence */
 public class Fuzzy {
@@ -150,6 +150,9 @@ public class Fuzzy {
             stacks.addAll(ForgeRegistries.ITEMS.tags().getTag(getTag()).stream()
                              .map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item)))
                              .toList());
+            //Manually create context for recipe loading phase
+            //We're having this because we don't know if someone is checking empty on their own instead of using isEmpty
+            stacks.addAll(RegistryUtil.resolveTagsRecipePhase(this));
         } catch (Exception ignored) {}
 
         return stacks;
