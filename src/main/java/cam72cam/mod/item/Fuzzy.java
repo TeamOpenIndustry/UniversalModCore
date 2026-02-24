@@ -95,7 +95,8 @@ public class Fuzzy {
     private final String ident;
     private final Tag<Item> tag;
     //To indicate whether the tag is empty or else during load
-    private final List<Item> cache;
+    private final List<ItemStack> cache;
+    private final Set<Fuzzy> includes;
 
     public static Fuzzy get(String ident) {
         if (registered == null) {
@@ -124,6 +125,7 @@ public class Fuzzy {
         this.ident = ident;
         this.tag = tag;
         this.cache = new ArrayList<>();
+        this.includes = new HashSet<>();
         registered.put(ident, this);
     }
 
@@ -140,7 +142,8 @@ public class Fuzzy {
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
         //Standalone elements apart from datapack
-        List<ItemStack> stacks = cache.stream().map(i -> new ItemStack(new net.minecraft.item.ItemStack(i))).collect(Collectors.toList());
+        List<ItemStack> stacks = new ArrayList<>(cache);
+        stacks.addAll(includes.stream().map(Fuzzy::enumerate).flatMap(List::stream).collect(Collectors.toList()));
         try {
             stacks.addAll(tag.getAllElements().stream()
                              .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
@@ -158,7 +161,7 @@ public class Fuzzy {
 
     /** Use to register an itemstack */
     public Fuzzy add(ItemStack itemStack) {
-        cache.add(itemStack.internal.getItem());
+        cache.add(itemStack);
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), itemStack));
         return this;
     }
@@ -170,7 +173,7 @@ public class Fuzzy {
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
-        cache.add(item);
+        cache.add(new ItemStack(new net.minecraft.item.ItemStack(item)));
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), item));
         return this;
     }
@@ -182,6 +185,7 @@ public class Fuzzy {
 
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
+        this.includes.add(other);
         CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.getId(), other.tag));
         return this;
     }
