@@ -1,12 +1,10 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.config.ConfigFile;
-import net.minecraft.core.HolderSet;
+import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.Registry;
-import net.minecraft.data.tags.BlockTagsProvider;
-import net.minecraft.data.tags.ItemTagsProvider;
-import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -14,15 +12,15 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** OreDict / Tag abstraction.  Use for item equivalence */
+/** Vanilla/Forge tag abstraction. Use for item equivalence */
 public class Fuzzy {
     public static final Fuzzy WOOD_STICK = new Fuzzy(Tags.Items.RODS_WOODEN, "stickWood").add(Items.STICK);
     public static final Fuzzy WOOD_PLANK = new Fuzzy(ItemTags.PLANKS, "plankWood").add(Blocks.OAK_PLANKS);
@@ -101,8 +99,9 @@ public class Fuzzy {
 
     static Map<String, Fuzzy> registered;
     private final String ident;
-    final TagKey<Item> tag;
-    private final List<Item> customItems;
+    private final TagKey<Item> tag;
+    //To indicate whether the tag is empty or else during load
+    private final List<ItemStack> cache;
     private final Set<Fuzzy> includes;
 
     public static Fuzzy get(String ident) {
@@ -132,8 +131,8 @@ public class Fuzzy {
 
         this.ident = ident;
         this.tag = tag;
-        this.customItems = new ArrayList<>();
-        includes = new HashSet<>();
+        this.cache = new ArrayList<>();
+        this.includes = new HashSet<>();
         registered.put(ident, this);
     }
 
@@ -149,50 +148,40 @@ public class Fuzzy {
 
     /** List all possible itemstacks */
     public List<ItemStack> enumerate() {
-        Set<ItemStack> items;
+        //Standalone elements apart from datapack
+        List<ItemStack> stacks = new ArrayList<>(cache);
+        stacks.addAll(includes.stream().map(Fuzzy::enumerate).flatMap(List::stream).collect(Collectors.toList()));
         try {
+            stacks.addAll(ForgeRegistries.ITEMS.tags().getTag(getTag()).stream()
+                             .map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item)))
+                             .toList());
+        } catch (IllegalStateException ignored) {}
 
-            HolderSet.Named<Item> tag = Registry.ITEM.getTag(this.tag).orElse(null);
-            if (tag == null) {
-                items = new HashSet<>();
-                ModCore.warn("Unable to locate registered tag: %s", this.tag);
-            } else {
-                items = tag.stream().map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item))).collect(Collectors.toSet());
-            }
-        } catch (IllegalStateException e) {
-            ModCore.warn("Unsafe tag access before load, try to avoid this if possible");
-            items = new HashSet<>();
-        }
-        for (Item item : customItems) {
-            items.add(new ItemStack(new net.minecraft.world.item.ItemStack(item)));
-        }
-        for (Fuzzy f : includes) {
-            items.addAll(f.enumerate());
-        }
-        return new ArrayList<>(items);
+        return stacks;
     }
 
     /** Grab the first example of a item in this fuzzy */
     public ItemStack example() {
         List<ItemStack> stacks = enumerate();
-        return stacks.size() != 0 ? stacks.get(0) : ItemStack.EMPTY;
+        return !stacks.isEmpty() ? stacks.get(0) : ItemStack.EMPTY;
     }
 
     /** Use to register an itemstack */
-    public Fuzzy add(ItemStack item) {
-        add(item.internal().getItem());
+    public Fuzzy add(ItemStack itemStack) {
+        cache.add(itemStack);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), itemStack));
         return this;
     }
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Block block) {
-        add(block.asItem());
-        return this;
+        return add(block.asItem());
     }
 
     /** Don't use directly (unless in version specific code) */
     public Fuzzy add(Item item) {
-        customItems.add(item);
+        cache.add(new ItemStack(new net.minecraft.world.item.ItemStack(item)));
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), item));
         return this;
     }
 
@@ -203,38 +192,18 @@ public class Fuzzy {
 
     /** Pull other fuzzy into this one */
     public Fuzzy include(Fuzzy other) {
-        includes.add(other);
+        this.includes.add(other);
+        CommonEvents.Item.TAGS.subscribe(e -> e.registerTag(tag.location(), other.tag));
         return this;
+    }
+
+    public TagKey<Item> getTag() {
+        //TODO
+        return tag;
     }
 
     @Override
     public String toString() {
         return ident;
-    }
-
-    public static void register(DataGenerator gen, ExistingFileHelper existingFileHelper) {
-        BlockTagsProvider blocktagsprovider = new BlockTagsProvider(gen, ModCore.MODID, existingFileHelper) {
-            @Override
-            protected void addTags() {
-                //super.addTags();
-            }
-        };
-        gen.addProvider(blocktagsprovider);
-        gen.addProvider(new ItemTagsProvider(gen,blocktagsprovider, ModCore.MODID, existingFileHelper) {
-            @Override
-            protected void addTags() {
-                for (Fuzzy value : registered.values()) {
-                    //if (!value.customItems.isEmpty() || !value.includes.isEmpty()) {
-                        TagsProvider.TagAppender<Item> builder = tag(value.tag);
-                        for (Item customItem : value.customItems) {
-                            builder.add(customItem);
-                        }
-                        for (Fuzzy include : value.includes) {
-                            builder.addTag(include.tag);
-                        }
-                    //}
-                }
-            }
-        });
     }
 }

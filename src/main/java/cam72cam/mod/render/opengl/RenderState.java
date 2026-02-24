@@ -7,15 +7,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
-import javax.annotation.Nonnull;
-import java.awt.geom.Rectangle2D;
 import java.nio.FloatBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.awt.geom.Rectangle2D;
 import java.util.function.Consumer;
 
 public class RenderState {
@@ -25,10 +21,20 @@ public class RenderState {
     protected Texture normals = null;
     protected Texture specular = null;
     protected float[] color = null;
-    protected Map<Integer, Boolean> bools = new HashMap<>();
+
+    @Deprecated(since = "mc1.17")
+    protected Boolean lighting = null;
+    @Deprecated(since = "mc1.17")
+    protected Boolean alpha_test = null;
+    protected Boolean depth_test = null;
+    @Deprecated(since = "mc1.17")
+    protected Boolean rescale_normal = null;
+    protected Boolean cull_face = null;
+
     protected Boolean depth_mask;
     protected Boolean smooth_shading = null;
-    protected Rectangle2D scissorRange = null;
+    protected Boolean scissor_test = null;
+    protected Rectangle2D scissor_range = null;
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
@@ -138,11 +144,20 @@ public class RenderState {
         this.model_view = ctx.model_view != null ? ctx.model_view.copy() : null;
         this.projection = ctx.projection != null ? ctx.projection.copy() : null;
         this.texture = ctx.texture;
+        this.normals = ctx.normals;
+        this.specular = ctx.specular;
         this.color = ctx.color != null ? ctx.color.clone() : null;
-        this.bools = new HashMap<>(ctx.bools);
+
+        this.lighting = ctx.lighting;
+        this.alpha_test = ctx.alpha_test;
+        this.depth_test = ctx.depth_test;
+        this.rescale_normal = ctx.rescale_normal;
+        this.cull_face = ctx.cull_face;
+
         this.depth_mask = ctx.depth_mask;
         this.smooth_shading = ctx.smooth_shading;
-        this.scissorRange = ctx.scissorRange;
+        this.scissor_test = ctx.scissor_test;
+        this.scissor_range = ctx.scissor_range != null ? ctx.scissor_range.getBounds2D() : null;
         this.lightmap = ctx.lightmap != null ? ctx.lightmap.clone() : null;
         this.blend = ctx.blend;
         this.shader = ctx.shader;
@@ -218,20 +233,20 @@ public class RenderState {
     }
 
     public RenderState lighting(boolean lighting) {
-        this.bools.put(GL11.GL_LIGHTING, lighting);
+        this.lighting = lighting;
         return this;
     }
     public RenderState alpha_test(boolean alpha_test) {
-        this.bools.put(GL11.GL_ALPHA_TEST, alpha_test);
+        this.alpha_test = alpha_test;
         return this;
     }
     public RenderState depth_test(boolean depth_test) {
-        this.bools.put(GL11.GL_DEPTH_TEST, depth_test);
+        this.depth_test = depth_test;
         return this;
     }
-    public RenderState scissor(boolean scissor, @Nonnull Rectangle2D range) {
-        this.bools.put(GL11.GL_SCISSOR_TEST, scissor);
-        this.scissorRange = range;
+    public RenderState scissor(boolean scissor, @Nullable Rectangle2D range) {
+        this.scissor_test = scissor;
+        this.scissor_range = range;
         return this;
     }
     public RenderState depth_mask(boolean depth_mask) {
@@ -243,11 +258,11 @@ public class RenderState {
         return this;
     }
     public RenderState rescale_normal(boolean rescale_normal) {
-        this.bools.put(GL12.GL_RESCALE_NORMAL, rescale_normal);
+        this.rescale_normal = rescale_normal;
         return this;
     }
     public RenderState cull_face(boolean cull_face) {
-        this.bools.put(GL11.GL_CULL_FACE, cull_face);
+        this.cull_face = cull_face;
         return this;
     }
     public RenderState lightmap(float block, float sky) {
