@@ -2,7 +2,7 @@ package cam72cam.mod.mixin.feat.data_registry;
 
 import cam72cam.mod.event.platform.RegisterBlockTagEvent;
 import cam72cam.mod.event.platform.RegisterItemTagEvent;
-import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.resources.IResourceManager;
 import net.minecraft.tags.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModLoader;
@@ -26,9 +26,9 @@ public class MixinTagCollection {
     @Final
     private String directory;
 
-    @Inject(method = "load", at = @At("HEAD"))
-    public void onRegisterTag(Map<ResourceLocation, ITag.Builder> p_242226_1_, CallbackInfoReturnable<ITagCollection<?>> cir,
-                              @Local(argsOnly = true) Map<ResourceLocation, ITag.Builder> map) {
+    @Inject(method = "lambda$prepare$2", at = @At("RETURN"))
+    public void onRegisterTag(IResourceManager p_242223_1_, CallbackInfoReturnable<Map<ResourceLocation, ITag.Builder>> cir) {
+        Map<ResourceLocation, ITag.Builder> map = cir.getReturnValue();
         switch (this.directory) {
             //Change me when minecraft version changes
             case "tags/blocks":

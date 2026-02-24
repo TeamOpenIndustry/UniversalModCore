@@ -8,6 +8,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagCollectionManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
 
@@ -145,7 +146,7 @@ public class Fuzzy {
         List<ItemStack> stacks = new ArrayList<>(cache);
         stacks.addAll(includes.stream().map(Fuzzy::enumerate).flatMap(List::stream).collect(Collectors.toList()));
         try {
-            stacks.addAll(tag.getValues().stream()
+            stacks.addAll(getTag().getValues().stream()
                              .map(item -> new ItemStack(new net.minecraft.item.ItemStack(item)))
                              .collect(Collectors.toList()));
         } catch (IllegalStateException ignored) {}
@@ -191,7 +192,8 @@ public class Fuzzy {
     }
 
     public ITag<Item> getTag() {
-        return tag;
+        ITag<Item> tag1 = TagCollectionManager.getInstance().getItems().getTag(tag.getName());
+        return tag1 == null ? tag : tag1;
     }
 
     @Override
