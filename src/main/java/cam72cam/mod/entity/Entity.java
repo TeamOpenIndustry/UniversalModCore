@@ -5,9 +5,6 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.minecraft.core.Holder;
-import net.minecraft.world.damagesource.DamageScaling;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Explosion;
@@ -244,7 +241,7 @@ public class Entity {
 
     /** Damage entity directly (bypassing armor) */
     public void directDamage(DamageType type, double damage) {
-        internal.hurt(type.internal, (float) damage);
+        internal.hurt(type.getDamageSource(), (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {

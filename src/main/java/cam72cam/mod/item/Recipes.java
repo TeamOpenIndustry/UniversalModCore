@@ -4,8 +4,10 @@ package cam72cam.mod.item;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +42,7 @@ public class Recipes {
                     }
                 }
 
-                ResourceLocation itemName = item.internal().getItem().getRegistryName();
+                ResourceLocation itemName = ForgeRegistries.ITEMS.getKey(item.internal().getItem());
 
                 int height = ingredients.length / width;
                 NonNullList<Ingredient> input = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
@@ -51,7 +53,7 @@ public class Recipes {
                     }
                 }
 
-                ShapedRecipe recipe = new ShapedRecipe(itemName, "", width, height, input, item.internal());
+                ShapedRecipe recipe = new ShapedRecipe(itemName, "", CraftingBookCategory.MISC, width, height, input, item.internal());
                 event.registerCraftingRecipe(recipe, ingredients);
             });
         }

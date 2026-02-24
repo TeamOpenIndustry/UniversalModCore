@@ -4,7 +4,6 @@ import cam72cam.mod.event.platform.RegisterBlockTagEvent;
 import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagLoader;
 import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.Final;
@@ -14,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,8 +28,8 @@ public class MixinTagCollection {
     private String directory;
 
     @Inject(method = "load", at = @At("RETURN"))
-    public void onRegisterTag(ResourceManager p_144496_, CallbackInfoReturnable<Map<ResourceLocation, Tag.Builder>> cir) {
-        Map<ResourceLocation, Tag.Builder> map = cir.getReturnValue();
+    public void onRegisterTag(ResourceManager p_144496_, CallbackInfoReturnable<Map<ResourceLocation, List<TagLoader.EntryWithSource>>> cir) {
+        Map<ResourceLocation, List<TagLoader.EntryWithSource>> map = cir.getReturnValue();
         switch (this.directory) {
             //Change me when minecraft version changes
             case "tags/blocks":

@@ -4,6 +4,7 @@ import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -12,10 +13,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /** Vanilla/Forge tag abstraction. Use for item equivalence */
 public class Fuzzy {
@@ -199,8 +198,7 @@ public class Fuzzy {
     }
 
     public TagKey<Item> getTag() {
-        //TODO
-        return tag;
+        return TagKey.create(Registries.ITEM, tag.location());
     }
 
     @Override
