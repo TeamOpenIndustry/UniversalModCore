@@ -3,6 +3,7 @@ package cam72cam.mod.event.platform;
 import cam72cam.mod.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
@@ -34,16 +35,16 @@ public class RegisterItemTagEvent extends Event implements IModBusEvent {
         map.put(ident, builder);
     }
 
-    public void registerTag(ResourceLocation ident, Tag.Named<Item> includes) {
+    public void registerTag(ResourceLocation ident, TagKey<Item> includes) {
         Tag.Builder builder = map.getOrDefault(ident, Tag.Builder.tag());
         //Don't pass in direct tag reference
-        builder.add(new Tag.TagEntry(includes.getName()), "universalmodcore_generated");
+        builder.add(new Tag.TagEntry(includes.location()), "universalmodcore_generated");
         map.put(ident, builder);
     }
 
     public void registerTag(ResourceLocation ident, ItemStack itemStack) {
         Tag.Builder builder = map.getOrDefault(ident, Tag.Builder.tag());
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(itemStack.internal.getItem());
+        ResourceLocation key = ForgeRegistries.ITEMS.getKey(itemStack.internal().getItem());
         builder.add(new Tag.ElementEntry(key), "universalmodcore_generated");
         map.put(ident, builder);
     }

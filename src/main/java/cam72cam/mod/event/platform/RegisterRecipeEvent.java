@@ -17,17 +17,20 @@ import java.util.Map;
  */
 public class RegisterRecipeEvent extends Event implements IModBusEvent {
     Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> map;
+    ImmutableMap.Builder<ResourceLocation, Recipe<?>> builder;
 
-    public RegisterRecipeEvent(Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> map) {
+    public RegisterRecipeEvent(Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> map, ImmutableMap.Builder<ResourceLocation, Recipe<?>> builder) {
         this.map = map;
+        this.builder = builder;
     }
 
     public void registerCraftingRecipe(ShapedRecipe recipe, Fuzzy... triggers) {
         //Register corresponding unlocking advancement
         CommonEvents.Recipe.RECIPE_ADVENCEMENTS.subscribe(event -> {
-            ResourceLocation advancement = new ResourceLocation(recipe.getId().getNamespace(), "unlock" + recipe.getId().getPath());
+            ResourceLocation advancement = ResourceLocation.fromNamespaceAndPath(recipe.getId().getNamespace(), "unlock" + recipe.getId().getPath());
             event.registerRecipeTrigger(advancement, recipe.getId(), triggers);
         });
         map.computeIfAbsent(RecipeType.CRAFTING, o -> ImmutableMap.builder()).put(recipe.getId(), recipe);
+        builder.put(recipe.getId(), recipe);
     }
 }
