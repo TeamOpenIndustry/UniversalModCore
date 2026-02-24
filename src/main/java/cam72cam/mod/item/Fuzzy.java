@@ -5,6 +5,7 @@ import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -155,6 +156,9 @@ public class Fuzzy {
             stacks.addAll(tag.stream()
                              .map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item)))
                              .toList());
+            //Manually create context for recipe loading phase
+            //We're having this because we don't know if someone is checking empty on their own instead of using isEmpty
+            stacks.addAll(RegistryUtil.resolveTagsRecipePhase(this));
         } catch (Exception ignored) {}
 
         return stacks;
