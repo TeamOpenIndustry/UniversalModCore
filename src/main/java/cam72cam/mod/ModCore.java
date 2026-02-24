@@ -4,10 +4,7 @@ import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.input.Mouse;
-import cam72cam.mod.item.Fuzzy;
-import cam72cam.mod.item.Recipes;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
@@ -37,11 +34,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fmllegacy.DatagenModLoader;
 import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
 import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -497,12 +494,6 @@ public class ModCore {
         }
     }
 
-    public static void genData(String MODID, GatherDataEvent event) {
-        CommonEvents.Recipe.REGISTER.execute(Runnable::run);
-        event.getGenerator().addProvider(new Recipes(event.getGenerator()));
-        Fuzzy.register(event.getGenerator(), event.getExistingFileHelper());
-    }
-
     public static void debug(String msg, Object... params) {
         if (Config.DebugLogging) {
             if (instance == null || instance.logger == null) {
@@ -577,5 +568,18 @@ public class ModCore {
         File f = new File(cacheDir, path);
         usedCacheFiles.add(f);
         return f;
+    }
+
+    /* Loader Utils */
+    public static String loaderBrand() {
+        return "forge";
+    }
+
+    public static int mcVersion() {
+        return 11701;
+    }
+
+    public static boolean isDevelopmentEnvironment() {
+        return !FMLLoader.isProduction();
     }
 }

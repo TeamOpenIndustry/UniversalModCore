@@ -88,35 +88,53 @@ public class RenderContext {
             restore.add(() -> setupLightMap(shader, oldX, oldY));
         }
 
-        if (state.bools.containsKey(GL11.GL_CULL_FACE)) {
-            boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
-            if(state.bools.get(GL11.GL_CULL_FACE)) {
-                RenderSystem.enableCull();
-            } else {
-                RenderSystem.disableCull();
-            }
-            restore.add(() -> {
-                if(olcState) {
-                    RenderSystem.enableCull();
-                } else {
-                    RenderSystem.disableCull();
-                }
-            });
-        }
+//        if (state.lighting != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL11.GL_LIGHTING);
+//            applyBool(GL11.GL_LIGHTING, state.lighting);
+//            restore.add(() -> applyBool(GL11.GL_LIGHTING, oldValue));
+//        }
+//
+//        if (state.alpha_test != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL11.GL_ALPHA_TEST);
+//            applyBool(GL11.GL_ALPHA_TEST, state.alpha_test);
+//            restore.add(() -> applyBool(GL11.GL_ALPHA_TEST, oldValue));
+//        }
 
-        if (state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
-            boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-            if(state.bools.get(GL11.GL_DEPTH_TEST)) {
+        if (state.depth_test != null) {
+            boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            if(state.depth_test) {
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthFunc(GL11.GL_LEQUAL);
             } else {
                 RenderSystem.disableDepthTest();
             }
             restore.add(() -> {
-                if(olcState) {
+                if(oldState) {
                     RenderSystem.enableDepthTest();
                 } else {
                     RenderSystem.disableDepthTest();
+                }
+            });
+        }
+
+//        if (state.rescale_normal != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL12.GL_RESCALE_NORMAL);
+//            applyBool(GL12.GL_RESCALE_NORMAL, state.rescale_normal);
+//            restore.add(() -> applyBool(GL12.GL_RESCALE_NORMAL, oldValue));
+//        }
+
+        if (state.cull_face != null) {
+            boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+            if(state.cull_face) {
+                RenderSystem.enableCull();
+            } else {
+                RenderSystem.disableCull();
+            }
+            restore.add(() -> {
+                if(oldState) {
+                    RenderSystem.enableCull();
+                } else {
+                    RenderSystem.disableCull();
                 }
             });
         }
@@ -130,14 +148,15 @@ public class RenderContext {
             restore.add(state.blend.apply());
         }
 
-        if(state.scissorRange != null){
+        //Always assume scissor test is disabled
+        if (state.scissor_test != null && state.scissor_test && state.scissor_range != null) {
             int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
             int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-            int x = (int) state.scissorRange.getMinX() * scaleFactor;
-            int y = (int) state.scissorRange.getMinY() * scaleFactor;
-            int width = (int) state.scissorRange.getWidth() * scaleFactor;
-            int height = (int) state.scissorRange.getHeight() * scaleFactor;
+            int x = (int) state.scissor_range.getMinX() * scaleFactor;
+            int y = (int) state.scissor_range.getMinY() * scaleFactor;
+            int width = (int) state.scissor_range.getWidth() * scaleFactor;
+            int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
