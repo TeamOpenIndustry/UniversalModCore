@@ -149,6 +149,10 @@ public class Fuzzy {
         List<ItemStack> stacks = new ArrayList<>(cache);
         stacks.addAll(includes.stream().map(Fuzzy::enumerate).flatMap(List::stream).toList());
         try {
+            //Manually create context for recipe loading phase
+            //We're having this because we don't know if someone is checking empty on their own instead of using isEmpty
+            stacks.addAll(RegistryUtil.resolveTagsRecipePhase(this));
+
             HolderSet.Named<Item> tag = BuiltInRegistries.ITEM.getTag(this.tag).orElse(null);
             if (tag == null) {
                 return stacks;
@@ -156,9 +160,6 @@ public class Fuzzy {
             stacks.addAll(tag.stream()
                              .map(item -> new ItemStack(new net.minecraft.world.item.ItemStack(item)))
                              .toList());
-            //Manually create context for recipe loading phase
-            //We're having this because we don't know if someone is checking empty on their own instead of using isEmpty
-            stacks.addAll(RegistryUtil.resolveTagsRecipePhase(this));
         } catch (Exception ignored) {}
 
         return stacks;
