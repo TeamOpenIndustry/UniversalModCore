@@ -3,12 +3,12 @@ package cam72cam.mod.event.platform;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.Fuzzy;
 import com.google.common.collect.ImmutableMap;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.fml.event.lifecycle.IModBusEvent;
+import net.minecraftforge.fml.event.IModBusEvent;
 
 import java.util.Map;
 
@@ -16,9 +16,9 @@ import java.util.Map;
  * Fired when recipe datapacks are reloaded
  */
 public class RegisterRecipeEvent extends Event implements IModBusEvent {
-    Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map;
+    Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> map;
 
-    public RegisterRecipeEvent(Map<IRecipeType<?>, ImmutableMap.Builder<ResourceLocation, IRecipe<?>>> map) {
+    public RegisterRecipeEvent(Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> map) {
         this.map = map;
     }
 
@@ -28,6 +28,6 @@ public class RegisterRecipeEvent extends Event implements IModBusEvent {
             ResourceLocation advancement = new ResourceLocation(recipe.getId().getNamespace(), "unlock" + recipe.getId().getPath());
             event.registerRecipeTrigger(advancement, recipe.getId(), triggers);
         });
-        map.computeIfAbsent(IRecipeType.CRAFTING, o -> ImmutableMap.builder()).put(recipe.getId(), recipe);
+        map.computeIfAbsent(RecipeType.CRAFTING, o -> ImmutableMap.builder()).put(recipe.getId(), recipe);
     }
 }

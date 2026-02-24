@@ -1,7 +1,7 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.resource.Identifier;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.damagesource.DamageSource;
 
 import java.util.HashMap;
 import java.util.Objects;

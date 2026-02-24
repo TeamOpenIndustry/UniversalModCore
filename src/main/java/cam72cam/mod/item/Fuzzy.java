@@ -1,15 +1,16 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.event.CommonEvents;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.SerializationTags;
 import net.minecraft.tags.Tag;
-import net.minecraft.tags.TagManager;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import cam72cam.mod.event.CommonEvents;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.Tags;
 
 import java.util.*;
@@ -192,8 +193,12 @@ public class Fuzzy {
     }
 
     public Tag<Item> getTag() {
-        Tag<Item> tag1 = TagManager.getInstance().getItems().getTag(tag.getName());
-        return tag1 == null ? tag : tag1;
+        try {
+            return SerializationTags.getInstance().getTagOrThrow(Registry.ITEM_REGISTRY, tag.getName(),
+                                                                 loc -> new IllegalStateException("known"));
+        } catch (IllegalStateException ignored) {
+            return tag;
+        }
     }
 
     @Override
