@@ -46,7 +46,7 @@ public class Recipes {
                 NonNullList<Ingredient> input = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
                 for (int i = 0; i < ingredients.length; i++) {
                     Fuzzy ingredient = ingredients[i];
-                    if (ingredient != null && !ingredient.isEmpty()) {
+                    if (ingredient != null) {
                         input.set(i, Ingredient.of(ingredient.getTag()));
                     }
                 }
