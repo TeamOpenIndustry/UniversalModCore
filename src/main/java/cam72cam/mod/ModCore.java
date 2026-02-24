@@ -8,13 +8,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import cam72cam.mod.event.CommonEvents;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.FileUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.data.loading.DatagenModLoader;
@@ -576,7 +576,7 @@ public class ModCore {
     }
 
     public static int mcVersion() {
-        return 11904;
+        return 12001;
     }
 
     public static boolean isDevelopmentEnvironment() {

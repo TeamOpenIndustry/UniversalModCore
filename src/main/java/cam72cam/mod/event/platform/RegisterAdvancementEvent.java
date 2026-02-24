@@ -4,17 +4,12 @@ import cam72cam.mod.item.Fuzzy;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementRewards;
 import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.RequirementsStrategy;
-import net.minecraft.advancements.critereon.EntityPredicate;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
-import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
+import net.minecraft.advancements.critereon.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +28,7 @@ public class RegisterAdvancementEvent extends Event implements IModBusEvent {
         Advancement.Builder builder = Advancement.Builder.advancement().parent(RECIPE_ROOT);
         List<String> stringList = new ArrayList<>();
 
-        Criterion alreadyHasRecipe = new Criterion(new RecipeUnlockedTrigger.TriggerInstance(EntityPredicate.Composite.ANY, recipe));
+        Criterion alreadyHasRecipe = new Criterion(new RecipeUnlockedTrigger.TriggerInstance(ContextAwarePredicate.ANY, recipe));
         builder.addCriterion("already_has_recipe", alreadyHasRecipe);
         stringList.add("already_has_recipe");
 
