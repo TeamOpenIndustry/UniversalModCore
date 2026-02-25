@@ -14,6 +14,8 @@
   ],
   "client": [
     "data_registry.MixinSpriteResourceLoader",
-    "global_renderer.MixinRenderGlobal"
+    "global_renderer.MixinRenderGlobal",
+    "iris_pbr.MixinDeferredWorldRenderingPipeline",
+    "iris_pbr.MixinNewWorldRenderingPipeline"
   ]
 }

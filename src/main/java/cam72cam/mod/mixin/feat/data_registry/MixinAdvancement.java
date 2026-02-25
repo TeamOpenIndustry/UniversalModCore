@@ -28,6 +28,6 @@ public class MixinAdvancement {
     public void postAdvancementReload(Map<ResourceLocation, JsonElement> p_136034_, ResourceManager p_136035_, ProfilerFiller p_136036_, CallbackInfo ci,
                                       @Local ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map) {
         RegisterAdvancementEvent event = new RegisterAdvancementEvent(map);
-        ModLoader.get().postEvent(event);
+        ModLoader.postEvent(event);
     }
 }

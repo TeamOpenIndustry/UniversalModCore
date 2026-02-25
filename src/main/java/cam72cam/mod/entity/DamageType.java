@@ -5,7 +5,6 @@ import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 
@@ -53,14 +52,9 @@ public final class DamageType {
     }
 
     public DamageSource getDamageSource() {
-        try {
-            Holder.Reference<net.minecraft.world.damagesource.DamageType> type =
-                    RegistryUtil.getRegistry().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(internal);
-            return new DamageSource(type);
-        } catch (IllegalStateException e) {
-            //Meaning requested isn't registered in vanilla, use our fallback
-            return new DamageSource(Holder.direct(new net.minecraft.world.damagesource.DamageType(id.toString(), DamageScaling.NEVER, 0f)));
-        }
+        Holder.Reference<net.minecraft.world.damagesource.DamageType> type =
+                RegistryUtil.getRegistry().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(internal);
+        return new DamageSource(type);
     }
 
     @Override

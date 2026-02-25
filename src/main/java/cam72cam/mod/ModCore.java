@@ -24,7 +24,6 @@ import net.minecraft.server.packs.resources.Resource;
 
 import java.util.*;
 
-import net.minecraft.resources.*;
 import net.minecraft.util.Unit;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -59,17 +58,13 @@ import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.PackCompatibility;
-import net.minecraft.server.packs.*;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import javax.annotation.Nullable;
-import java.io.*;
-import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;

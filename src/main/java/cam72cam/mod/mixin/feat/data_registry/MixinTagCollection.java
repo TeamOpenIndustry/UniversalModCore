@@ -32,13 +32,13 @@ public class MixinTagCollection {
         Map<ResourceLocation, List<TagLoader.EntryWithSource>> map = cir.getReturnValue();
         switch (this.directory) {
             //Change me when minecraft version changes
-            case "tags/blocks":
+            case "tags/block":
                 RegisterBlockTagEvent blockTagEvent = new RegisterBlockTagEvent(map);
-                ModLoader.get().postEvent(blockTagEvent);
+                ModLoader.postEvent(blockTagEvent);
                 return;
-            case "tags/items":
+            case "tags/item":
                 RegisterItemTagEvent itemTagEvent = new RegisterItemTagEvent(map);
-                ModLoader.get().postEvent(itemTagEvent);
+                ModLoader.postEvent(itemTagEvent);
                 return;
             default:
                 //Waiting for more...

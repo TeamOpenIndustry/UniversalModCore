@@ -30,7 +30,7 @@ public class ItemStack {
     //TODO How do we handle 1.20.5 NBT Removal?
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.defaultRegistry(),
+        this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.getRegistry(),
                                                               (nbt.hasKey("id") && nbt.getString("id").equals("minecraft:air")) ? new CompoundTag() : nbt.internal));
     }
 
@@ -77,7 +77,7 @@ public class ItemStack {
         if (internal().isEmpty()) {
             return new TagCompound();
         }
-        return new TagCompound((CompoundTag) internal().save(RegistryUtil.defaultRegistry()));
+        return new TagCompound((CompoundTag) internal().save(RegistryUtil.getRegistry()));
     }
 
     /** Items in this stack */

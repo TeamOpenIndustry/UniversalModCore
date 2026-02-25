@@ -3,17 +3,17 @@ package cam72cam.mod.mixin.feat.data_registry;
 import cam72cam.mod.event.platform.RegisterRecipeEvent;
 import cam72cam.mod.util.RegistryUtil;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.Share;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,25 +27,20 @@ import java.util.Map;
  * @see RegisterRecipeEvent
  */
 @Mixin(RecipeManager.class)
-public class MixinRecipeManager {
-
-    @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
-            at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/ImmutableMap;builder()Lcom/google/common/collect/ImmutableMap$Builder;"))
-    public void captureBuilder(Map<ResourceLocation, JsonElement> p_44037_, ResourceManager p_44038_, ProfilerFiller p_44039_, CallbackInfo ci,
-                               @Local ImmutableMap.Builder<ResourceLocation, Recipe<?>> builder,
-                               @Share("builder") LocalRef<ImmutableMap.Builder<ResourceLocation, Recipe<?>>> builderLocalRef) {
-        builderLocalRef.set(builder);
+public abstract class MixinRecipeManager extends SimpleJsonResourceReloadListener {
+    private MixinRecipeManager(Gson p_10768_, String p_10769_) {
+        super(p_10768_, p_10769_);
     }
 
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
-            at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 1))
-    public void postRecipeReload(Map<ResourceLocation, JsonElement> p_44037_, ResourceManager p_44038_, ProfilerFiller p_44039_, CallbackInfo ci,
-                                 @Local net.neoforged.neoforge.common.conditions.ConditionalOps<JsonElement> ops,
-                                 @Local(ordinal = 1) Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>>> mapLocalRef,
-                                 @Share("builder") LocalRef<ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>>> builderLocalRef) {
-        RegistryUtil.recipeBuildingContext(ops.context);
-        RegisterRecipeEvent event = new RegisterRecipeEvent(mapLocalRef, builderLocalRef.get());
-        ModLoader.get().postEvent(event);
+            at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/item/crafting/RecipeManager;makeConditionalOps()Lnet/neoforged/neoforge/common/conditions/ConditionalOps;"))
+    public void captureBuilder(Map<ResourceLocation, JsonElement> p_44037_, ResourceManager p_44038_, ProfilerFiller p_44039_, CallbackInfo ci,
+                               @Local ImmutableMultimap.Builder<ResourceLocation, RecipeHolder<?>> builder,
+                               @Local ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> builder1,
+                               @Local RegistryOps<JsonElement> ops) {
+        RegistryUtil.recipeBuildingContext(this.makeConditionalOps().context);
+        RegisterRecipeEvent event = new RegisterRecipeEvent(builder, builder1);
+        ModLoader.postEvent(event);
         RegistryUtil.recipeBuildingContext(null);
     }
 }
