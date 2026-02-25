@@ -2,7 +2,7 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.event.platform.TextureStitchEvent;
+import cam72cam.mod.event.platform.RegisterTextureSpriteEvent;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
@@ -11,7 +11,6 @@ import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -92,7 +91,7 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<RegisterTextureSpriteEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
@@ -120,11 +119,11 @@ public class ClientEvents {
         }
 
         private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, event instanceof ScreenEvent.MouseScrolled ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDeltaY() : 0);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDeltaY() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 ((ICancellableEvent)event).setCanceled(true);
-                if (!(event instanceof ScreenEvent.MouseScrolled)) {
+                if (action != MouseAction.SCROLL) {
                     // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
                     // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge
                     skipNextMouseInputEvent = true;
@@ -138,7 +137,7 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiDrag(ScreenEvent.MouseDragged.Pre event) {
-            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getMouseButton(), MouseAction.RELEASE);
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), event.getMouseButton(), MouseAction.MOVE);
         }
         @SubscribeEvent
         public static void onGuiRelease(ScreenEvent.MouseButtonReleased.Pre event) {
@@ -146,7 +145,7 @@ public class ClientEvents {
         }
         @SubscribeEvent
         public static void onGuiScroll(ScreenEvent.MouseScrolled.Pre event) {
-            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), -1, MouseAction.RELEASE);
+            onGuiMouse(event, (int) event.getMouseX(), (int) event.getMouseY(), -1, MouseAction.SCROLL);
         }
 
         private static void hackInputState(int event) {
@@ -228,7 +227,6 @@ public class ClientEvents {
             // TODO 1.15+ do we need to set lightmap coords here?
             RENDER_MOUSEOVER.execute(x -> x.accept(event));
             RenderType.cutout().clearRenderState();
-            RenderContext.resetState();
         }
 
         //Call in Mod Bus
@@ -278,7 +276,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent event) {
+        public static void onTextureStitchEvent(RegisterTextureSpriteEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 

@@ -10,8 +10,10 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.InventoryMenu;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
@@ -175,20 +177,28 @@ public class VBO {
             } else {
                 GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
             }*/
+
+            RenderType renderType;
             ShaderInstance shader;
-            if (state.stage != null) {
-                shader = switch (state.stage) {
-                    //DirectDraw will set their shader respectively
-                    case GUI -> GameRenderer.getPositionTexColorShader();
-                    case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
-                    default -> ShaderHelper.isShaderPackEnabled()
-                               ? GameRenderer.getRendertypeEntityCutoutShader()
-                               : RenderContext.UMC_CORE;
-                };
-            } else {
-                shader = GameRenderer.getRendertypeEntityCutoutShader();
+            shader = switch (state.getStage()) {
+                //DirectDraw will set their shader respectively
+                case GUI -> GameRenderer.getPositionTexColorShader();
+                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
+                default -> ShaderHelper.isShaderPackEnabled()
+                           ? GameRenderer.getRendertypeEntityCutoutShader()
+                           : RenderContext.UMC_CORE;
+            };
+            renderType = switch (state.getStage()) {
+                case GUI -> null;
+                default -> RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
+            };
+
+            if (renderType != null) {
+                renderType.setupRenderState();
             }
+
             RenderSystem.setShader(() -> shader);
+
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
 
@@ -210,10 +220,9 @@ public class VBO {
                         GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, false, stride, (long) vbInfo.vertexOffset * Float.BYTES);
                     }
                     case NORMAL -> {
-                        if (vbInfo.hasNormals) {
-                            GL32.glEnableVertexAttribArray(i);
-                            GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
-                        }
+                        if (!vbInfo.hasNormals) continue;
+                        GL32.glEnableVertexAttribArray(i);
+                        GL32.glVertexAttribPointer(i, 3, GL32.GL_FLOAT, true, stride, (long) vbInfo.normalOffset * Float.BYTES);
                     }
                     case COLOR -> {
                         GL32.glEnableVertexAttribArray(i);
@@ -222,21 +231,26 @@ public class VBO {
                     case UV -> {
                         for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                             if (entry.getValue() == element) {
-                                if (entry.getKey().equals("UV0")) {
-                                    GL32.glEnableVertexAttribArray(i);
-                                    GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
-                                } else if (entry.getKey().equals("UV1")) {
-                                    GL32.glDisableVertexAttribArray(i);
-                                    GL32.glVertexAttribI2i(i, 0, 10);
-                                } else if (entry.getKey().equals("UV2")) {
-                                    GL32.glDisableVertexAttribArray(i);
-                                    int x = 240;
-                                    int y = 240;
-                                    if (state.lightmap != null) {
-                                        x = (int) (state.lightmap[0] * 240);
-                                        y = (int) (state.lightmap[1] * 240);
+                                switch (entry.getKey()) {
+                                    case "UV0" -> {
+                                        GL32.glEnableVertexAttribArray(i);
+                                        GL32.glVertexAttribPointer(i, 2, GL32.GL_FLOAT, false, stride, (long) vbInfo.textureOffset * Float.BYTES);
                                     }
-                                    GL32.glVertexAttribI2i(i, x, y);
+                                    case "UV1" -> {
+                                        GL32.glDisableVertexAttribArray(i);
+                                        GL32.glVertexAttribI2i(i, 0, 10);
+                                    }
+                                    case "UV2" -> {
+                                        GL32.glDisableVertexAttribArray(i);
+                                        //240 means full bright
+                                        int x = RenderContext.FULL_BRIGHT;
+                                        int y = RenderContext.FULL_BRIGHT;
+                                        if (state.lightmap != null) {
+                                            x = (int) (state.lightmap[0] * RenderContext.FULL_BRIGHT);
+                                            y = (int) (state.lightmap[1] * RenderContext.FULL_BRIGHT);
+                                        }
+                                        GL32.glVertexAttribI2i(i, x, y);
+                                    }
                                 }
                             }
                         }
@@ -245,8 +259,13 @@ public class VBO {
             }
             RenderContext.checkError();
 
-            this.restore = RenderContext.apply(state, true).and(() -> {
+            this.restore = RenderContext.apply(state).and(() -> {
                 RenderContext.checkError();
+
+                if (renderType != null) {
+                    renderType.clearRenderState();
+                }
+
                 shader.getVertexFormat().clearBufferState();
 
                 RenderContext.checkError();
@@ -270,7 +289,7 @@ public class VBO {
             }
             RenderState state = this.state.clone();
             mod.accept(state);
-            return RenderContext.apply(state, true);
+            return RenderContext.apply(state);
         }
 
         /**

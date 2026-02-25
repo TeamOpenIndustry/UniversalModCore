@@ -66,23 +66,22 @@ public class BoundingBox extends AABB {
         return new BoundingBox(internal.offset(new Vec3d(x, y, z)));
     }
 
-    /* Interactions */
-    /*
-    @Override
+    /**
+     * Interactions
+     * @see cam72cam.mod.mixin.fix.custom_bb_collision.MixinVoxelShapes
+     * @see CustomVoxelShape
+     * */
     public double calculateXOffset(AABB other, double offsetX) {
         return internal.calculateXOffset(IBoundingBox.from(other), offsetX);
     }
 
-    @Override
     public double calculateYOffset(AABB other, double offsetY) {
         return internal.calculateYOffset(IBoundingBox.from(other), offsetY);
     }
 
-    @Override
     public double calculateZOffset(AABB other, double offsetZ) {
         return internal.calculateZOffset(IBoundingBox.from(other), offsetZ);
     }
-    */
 
     @Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {

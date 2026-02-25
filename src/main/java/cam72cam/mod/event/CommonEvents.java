@@ -1,6 +1,10 @@
 package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.platform.RegisterAdvancementEvent;
+import cam72cam.mod.event.platform.RegisterBlockTagEvent;
+import cam72cam.mod.event.platform.RegisterRecipeEvent;
+import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.entity.ModdedEntity;
@@ -53,6 +57,7 @@ public class CommonEvents {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.level.block.Block>>> REGISTER = new Event<>();
         public static final Event<Consumer<RegisterCapabilitiesEvent>> REGISTER_CAPABILITY = new Event<>();
         public static final Event<EventBusForge.BlockBrokenEvent> BROKEN = new Event<>();
+        public static final Event<Consumer<RegisterBlockTagEvent>> TAGS = new Event<>();
     }
 
     public static final class Tile {
@@ -61,11 +66,13 @@ public class CommonEvents {
 
     public static final class Item {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.item.Item>>> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterItemTagEvent>> TAGS = new Event<>();
         public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ModCore.MODID);
     }
 
     public static final class Recipe {
-        public static final Event<Runnable> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterRecipeEvent>> REGISTER = new Event<>();
+        public static final Event<Consumer<RegisterAdvancementEvent>> RECIPE_ADVENCEMENTS = new Event.TransientEvent<>();
     }
 
     public static final class Entity {
@@ -181,6 +188,26 @@ public class CommonEvents {
                                                      .versioned(Packet.VERSION)
                                                      .optional();
             Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
+        }
+
+        @SubscribeEvent
+        public static void registerBlockTags(RegisterBlockTagEvent event) {
+            Block.TAGS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerItemTags(RegisterItemTagEvent event) {
+            Item.TAGS.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerRecipes(RegisterRecipeEvent event) {
+            CommonEvents.Recipe.REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerAdvancements(RegisterAdvancementEvent event) {
+            CommonEvents.Recipe.RECIPE_ADVENCEMENTS.execute(x -> x.accept(event));
         }
     }
 }

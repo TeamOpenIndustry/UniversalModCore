@@ -146,10 +146,10 @@ public class StandardModel {
             worldRenderer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
             for (Pair<BlockState, BakedModel> model : models) {
-                if ((state.stage == RenderContext.Stage.GUI
-                        || state.stage == RenderContext.Stage.ITEM_IN_WORLD
-                        || state.stage == RenderContext.Stage.ITEM_IN_GUI
-                        || state.stage == RenderContext.Stage.OVERLAY)
+                if ((state.getStage() == RenderContext.Stage.GUI
+                        || state.getStage() == RenderContext.Stage.ITEM_IN_WORLD
+                        || state.getStage() == RenderContext.Stage.ITEM_IN_GUI
+                        || state.getStage() == RenderContext.Stage.OVERLAY)
                     && inGuiBlock.containsKey(model)) {
                     //Skip here as block's quad behave bad in those consequences
                     continue;
@@ -182,14 +182,12 @@ public class StandardModel {
     /** Render the OpenGL parts directly (partial tick aware) */
     public void renderCustom(RenderState state, float partialTicks) {
         custom.forEach(cons -> cons.render(state.clone(), partialTicks));
-        if (state.stage != null) {
-            switch (state.stage) {
-                case GUI, ITEM_IN_GUI, OVERLAY ->
-                        inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, 15728880));
-                case ITEM_IN_WORLD -> {
+        switch (state.getStage()) {
+            case GUI, ITEM_IN_GUI, OVERLAY ->
+                    inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, 15728880));
+            case ITEM_IN_WORLD -> {
                     int light = (int) (RenderContext.lastLightY * 65536 + RenderContext.lastLightX);
                     inGuiBlock.forEach((k, v) -> v.render(state.clone(), partialTicks, light));
-                }
             }
         }
 

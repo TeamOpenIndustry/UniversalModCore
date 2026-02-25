@@ -11,26 +11,27 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
+    //Lightmap UV coordinate for full bright
+    public static final int FULL_BRIGHT = 240;
+
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
 
     public static float lastLightX;
     public static float lastLightY;
+
+    public static ThreadLocal<RenderState> currentState = new ThreadLocal<>();
 
     private static final List<Runnable> deferredCall = new LinkedList<>();
 
@@ -38,21 +39,10 @@ public class RenderContext {
     }
 
     public static With apply(RenderState state) {
-        return apply(state, false);
-    }
-
-    /** Internal, use the method above */
-    public static With apply(RenderState state, boolean useBeaconShader) {
         RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader;
-        boolean vanillaEmissive = state.lightmap != null && state.lightmap[0] == 1 && state.lightmap[1] == 1;
-        if (vanillaEmissive && useBeaconShader) {
-            shader = GameRenderer.getRendertypeBeaconBeamShader();
-        } else {
-            shader = RenderSystem.getShader();
-        }
+        ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -68,11 +58,14 @@ public class RenderContext {
         }
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
+            currentState.set(state);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
-            // TODO normal and spec
+            //Normal and Specular handled in mixin.feat.iris_pbr
+            //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
             restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
             RenderSystem.setShaderTexture(0, state.texture.getId());
+            currentState.remove();
         }
 
         {
@@ -80,12 +73,13 @@ public class RenderContext {
             if (color == null) {
                 color = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
             }
-            float[] oldColor = RenderSystem.getShaderColor();
+            float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null && !vanillaEmissive) {
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
             float oldX;
             float oldY;
             if (state.stage == Stage.ENTITY) {
@@ -99,35 +93,53 @@ public class RenderContext {
             restore.add(() -> setupLightMap(shader, oldX, oldY));
         }
 
-        if (state.bools.containsKey(GL11.GL_CULL_FACE)) {
-            boolean olcState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
-            if(state.bools.get(GL11.GL_CULL_FACE)) {
-                RenderSystem.enableCull();
-            } else {
-                RenderSystem.disableCull();
-            }
-            restore.add(() -> {
-                if(olcState) {
-                    RenderSystem.enableCull();
-                } else {
-                    RenderSystem.disableCull();
-                }
-            });
-        }
+//        if (state.lighting != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL11.GL_LIGHTING);
+//            applyBool(GL11.GL_LIGHTING, state.lighting);
+//            restore.add(() -> applyBool(GL11.GL_LIGHTING, oldValue));
+//        }
+//
+//        if (state.alpha_test != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL11.GL_ALPHA_TEST);
+//            applyBool(GL11.GL_ALPHA_TEST, state.alpha_test);
+//            restore.add(() -> applyBool(GL11.GL_ALPHA_TEST, oldValue));
+//        }
 
-        if (state.bools.containsKey(GL11.GL_DEPTH_TEST)) {
-            boolean olcState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-            if(state.bools.get(GL11.GL_DEPTH_TEST)) {
+        if (state.depth_test != null) {
+            boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+            if(state.depth_test) {
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthFunc(GL11.GL_LEQUAL);
             } else {
                 RenderSystem.disableDepthTest();
             }
             restore.add(() -> {
-                if(olcState) {
+                if(oldState) {
                     RenderSystem.enableDepthTest();
                 } else {
                     RenderSystem.disableDepthTest();
+                }
+            });
+        }
+
+//        if (state.rescale_normal != null) {
+//            boolean oldValue = GL11.glGetBoolean(GL12.GL_RESCALE_NORMAL);
+//            applyBool(GL12.GL_RESCALE_NORMAL, state.rescale_normal);
+//            restore.add(() -> applyBool(GL12.GL_RESCALE_NORMAL, oldValue));
+//        }
+
+        if (state.cull_face != null) {
+            boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
+            if(state.cull_face) {
+                RenderSystem.enableCull();
+            } else {
+                RenderSystem.disableCull();
+            }
+            restore.add(() -> {
+                if(oldState) {
+                    RenderSystem.enableCull();
+                } else {
+                    RenderSystem.disableCull();
                 }
             });
         }
@@ -141,14 +153,15 @@ public class RenderContext {
             restore.add(state.blend.apply());
         }
 
-        if(state.scissorRange != null){
+        //Always assume scissor test is disabled
+        if (state.scissor_test != null && state.scissor_test && state.scissor_range != null) {
             int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
             int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-            int x = (int) state.scissorRange.getMinX() * scaleFactor;
-            int y = (int) state.scissorRange.getMinY() * scaleFactor;
-            int width = (int) state.scissorRange.getWidth() * scaleFactor;
-            int height = (int) state.scissorRange.getHeight() * scaleFactor;
+            int x = (int) state.scissor_range.getMinX() * scaleFactor;
+            int y = (int) state.scissor_range.getMinY() * scaleFactor;
+            int width = (int) state.scissor_range.getWidth() * scaleFactor;
+            int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
             //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
             RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
@@ -230,8 +243,9 @@ public class RenderContext {
             if (element.getUsage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        int x = (int) (oldX * 240);
-                        int y = (int) (oldY * 240);
+                        //240 means full bright
+                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
                         GL32.glVertexAttribI2i(i, x, y);
                     }
                 }
@@ -282,10 +296,5 @@ public class RenderContext {
         OVERLAY_TEXT, //Name plates...
 
         NONE
-    }
-
-    public static void resetState() {
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1,1,1,1);
     }
 }

@@ -20,6 +20,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.api.distmarker.Dist;
@@ -239,21 +240,6 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         if (!seats.isEmpty()) {
             seats.removeAll(seats.stream().filter(x -> !x.isAlive()).collect(Collectors.toList()));
             seats.forEach(seat -> seat.setPos(getX(), getY(), getZ()));
-
-            //Clear passengerPositions entries
-            //For some reason we have them persist even after dismount
-            ObjectArraySet<UUID> set = new ObjectArraySet<>();
-            passengerPositions.forEach(((k, v) -> {
-                if (seats.stream().noneMatch(seatEntity ->
-                                                     seatEntity.getEntityPassenger() != null
-                                                     && seatEntity.getEntityPassenger().getUUID().equals(k))) {
-                    set.add(k);
-                }
-            }));
-            set.forEach(passengerPositions::remove);
-        } else {
-            //A fast fallback
-            passengerPositions.clear();
         }
     }
 
@@ -389,7 +375,9 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
                 offset = iRidable.getMountOffset(passenger, calculatePassengerOffset(passenger));
             }
             offset = iRidable.onPassengerUpdate(passenger, offset);
-            if (!seat.hasPassenger(passenger.internal)) {
+            //Seat may be transported to another parent entity here
+            //We don't want the passenger being added back in this case
+            if (!seat.getParent().equals(self) || !seat.hasPassenger(passenger.internal)) {
                 return;
             }
             passengerPositions.put(passenger.getUUID(), offset);
@@ -400,9 +388,10 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         Vec3d pos = calculatePassengerPosition(offset);
         Vec3d motion = new Vec3d(getDeltaMovement());
 
-        if (seat.getId() < passenger.internal.getId()) {
-            pos = pos.add(motion);
-        }
+        //TODO 1.14.4 Do we still need this?
+//        if (this.getEntityId() < passenger.internal.getEntityId()) {
+//            pos = pos.add(motion);
+//        }
         passenger.setPosition(pos);
         if (!level().isClientSide) {
             passenger.setVelocity(motion);
@@ -429,10 +418,16 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
             this.seats.remove(seat);
             seat.moveTo(other.internal);
             other.internal.seats.add(seat);
-            seat.setPos(entity.getPosition().x, entity.getPosition().y, entity.getPosition().z);
-            other.internal.passengerPositions.put(entity.getUUID(), other.internal.calculatePassengerOffset(entity));
+            Vec3d realPos = calculateRiderWorldPosition(entity);
+            seat.setPos(realPos.x, realPos.y, realPos.z);
+            //Same as calculatePassengerOffset, just use Vec3d directly
+            Vec3d offset = realPos.subtract(other.getPosition()).rotateYaw(other.getRotationYaw());
+            offset = other.internal.iRidable.getMountOffset(entity, offset);
+            other.internal.passengerPositions.put(entity.getUUID(), offset);
+            this.passengerPositions.remove(entity.getUUID());
             if (!level().isClientSide) {
                 new PassengerSeatPacket(other, entity).sendToObserving(self);
+                new PassengerPositionsPacket(this).sendToObserving(self);
             }
         }
     }
@@ -510,7 +505,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /**
      * Only generates a new BB object when the underlying self.getCollision() changes
-     * TODO provide a way of specifying a render bounding box without a collision bounding box
+     * TODO provide a way of specifying a render bounding box without a custom_bb_collision bounding box
      * @see ICollision
      */
     @Override

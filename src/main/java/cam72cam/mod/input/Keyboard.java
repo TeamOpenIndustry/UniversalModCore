@@ -10,7 +10,11 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
+
 public class Keyboard {
+    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
+
     public enum KeyCode {
         ESCAPE(GLFW.GLFW_KEY_ESCAPE),
         NUM1(GLFW.GLFW_KEY_1),
@@ -128,12 +132,10 @@ public class Keyboard {
             keycodes.put(code, this);
         }
 
-        public static KeyCode of(int code) {
+        public static @Nullable KeyCode of(int code) {
             return keycodes.get(code);
         }
     }
-
-    private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
 
     /** Registers a keybind */
     @OnlyIn(Dist.CLIENT)

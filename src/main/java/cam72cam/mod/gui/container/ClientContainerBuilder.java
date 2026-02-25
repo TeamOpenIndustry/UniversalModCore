@@ -10,6 +10,7 @@ import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
@@ -207,7 +208,10 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
         // TODO 1.20.1 decorations?
         graphics.renderItem(stack.internal(), x, y);
-//        graphics.fill(RenderType.guiOverlay(), x, y, x + 16, y + 16, 0x80FFFFFF);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 200);
+        graphics.fill(RenderType.guiOverlay(), x, y, x + 16, y + 16, 0x80FFFFFF);
+        graphics.pose().popPose();
 
 //        try (With ctx = RenderContext.apply(
 //                new RenderState()
