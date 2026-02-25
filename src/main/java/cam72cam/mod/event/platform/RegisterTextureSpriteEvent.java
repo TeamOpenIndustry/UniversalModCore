@@ -10,17 +10,19 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Our own event to stitch sprite to InventoryMenu.BLOCK_ATLAS
- * <p>
- * This event is in replacement of net.minecraftforge.client.event.TextureStitchEvent.Pre which was removed
+ * Fired when texture stitch datapacks are reloaded
  */
-public class TextureStitchEvent extends Event implements IModBusEvent {
+public class RegisterTextureSpriteEvent extends Event implements IModBusEvent {
 	private final List<SpriteSource> spriteSources;
 
-	public TextureStitchEvent(List<SpriteSource> spriteSources) {
+	public RegisterTextureSpriteEvent(List<SpriteSource> spriteSources) {
 		this.spriteSources = spriteSources;
 	}
 
+	/**
+	 * Add custom sprite to <code>InventoryMenu.BLOCK_ATLAS</code>
+	 * @param location Your custom texture
+	 */
 	public void addSprite(ResourceLocation location) {
 		this.addSprite(new SingleFile(location, Optional.empty()));
 	}

@@ -2,17 +2,15 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
-import cam72cam.mod.event.platform.TextureStitchEvent;
+import cam72cam.mod.event.platform.RegisterTextureSpriteEvent;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
@@ -97,7 +95,7 @@ public class ClientEvents {
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
     public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
-    public static final Event<Consumer<TextureStitchEvent>> TEXTURE_STITCH = new Event<>();
+    public static final Event<Consumer<RegisterTextureSpriteEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
@@ -280,7 +278,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onTextureStitchEvent(TextureStitchEvent event) {
+        public static void onTextureStitchEvent(RegisterTextureSpriteEvent event) {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 
