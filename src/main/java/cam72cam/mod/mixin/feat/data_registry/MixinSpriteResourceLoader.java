@@ -1,6 +1,6 @@
-package cam72cam.mod.mixin.fix.altas_loader;
+package cam72cam.mod.mixin.feat.data_registry;
 
-import cam72cam.mod.event.platform.TextureStitchEvent;
+import cam72cam.mod.event.platform.RegisterTextureSpriteEvent;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.renderer.texture.atlas.SpriteResourceLoader;
 import net.minecraft.client.renderer.texture.atlas.SpriteSource;
@@ -23,7 +23,7 @@ public class MixinSpriteResourceLoader {
                                @Local List<SpriteSource> list) {
         if(p_261709_.getPath().equals("blocks")) {
             //Only hack into main sprite
-            TextureStitchEvent event = new TextureStitchEvent(list);
+            RegisterTextureSpriteEvent event = new RegisterTextureSpriteEvent(list);
             net.minecraftforge.fml.ModLoader.get().postEvent(event);
         }
     }
