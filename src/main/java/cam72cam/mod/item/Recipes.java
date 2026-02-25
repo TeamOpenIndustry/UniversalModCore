@@ -1,6 +1,11 @@
 package cam72cam.mod.item;
 
 
+import cam72cam.mod.event.CommonEvents;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
@@ -11,20 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.Optional;
 
 /** Recipe registration */
-public class Recipes extends RecipeProvider {
-    private static final List<Consumer<RecipeOutput>> registry = new ArrayList<>();
-
-    public Recipes(PackOutput generatorIn, CompletableFuture<HolderLookup.Provider> lookupProvider) {
-        super(generatorIn, lookupProvider);
-    }
-
-    @Override
-    protected void buildRecipes(RecipeOutput consumer) {
-        registry.forEach(fn -> fn.accept(consumer));
-    }
-
+public class Recipes {
     public static ShapedRecipeBuilder shapedRecipe(CustomItem item, int width, Fuzzy... ingredients) {
         return new ShapedRecipeBuilder(new ItemStack(item, 1), width, ingredients);
     }
@@ -34,55 +29,38 @@ public class Recipes extends RecipeProvider {
     }
 
     public static class ShapedRecipeBuilder {
-        private List<Fuzzy> dependencies = new ArrayList<>();
-        private List<Fuzzy> conflicts = new ArrayList<>();
+        private final List<Fuzzy> dependencies = new ArrayList<>();
+        private final List<Fuzzy> conflicts = new ArrayList<>();
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
-            //TODO 1.20.4
-//            registry.add(out -> {
-//                net.minecraft.data.recipes.ShapedRecipeBuilder builder = new net.minecraft.data.recipes.ShapedRecipeBuilder(RecipeCategory.MISC, item.internal().getItem(), item.getCount());
-//
-//                int height = ingredients.length / width;
-//
-//                for (int h = 0; h < height; h++) {
-//                    String line = "";
-//                    for (int w = 0; w < width; w++) {
-//                        int idx = h * width + w;
-//                        Fuzzy ingredient = ingredients[idx];
-//                        line += ingredient == null ? " " : idx + "";
-//                        if (ingredient != null) {
-//                            // TODO tags
-//                            builder.define((idx + "").charAt(0), ingredient.tag);
-//                            builder.unlockedBy(
-//                                    "has" + ingredient.toString() + idx,
-//                                    new InventoryChangeTrigger.TriggerInstance(
-//                                            ContextAwarePredicate.ANY,
-//                                            MinMaxBounds.Ints.ANY,
-//                                            MinMaxBounds.Ints.ANY,
-//                                            MinMaxBounds.Ints.ANY,
-//                                            new ItemPredicate[]{ItemPredicate.Builder.item().of(ingredient.tag).build()}
-//                                    )
-//                            );
-//                        }
-//                    }
-//                    builder.pattern(line);
-//                }
-//                ResourceLocation itemName = BuiltInRegistries.ITEM.getKey(item.internal().getItem());
-//                ResourceLocation name = ResourceLocation.tryBuild(itemName.getNamespace(), itemName.getPath() + Arrays.hashCode(ingredients) + dependencies.hashCode() + conflicts.hashCode());
-//
-//                if (!dependencies.isEmpty() || !conflicts.isEmpty()) {
-//                    ConditionalRecipe.Builder conditions = ConditionalRecipe.builder();
-//                    for (Fuzzy dependency : dependencies) {
-//                        conditions = conditions.addCondition(new NotCondition(new TagEmptyCondition(dependency.tag.location())));
-//                    }
-//                    for (Fuzzy conflict : conflicts) {
-//                        conditions = conditions.addCondition(new TagEmptyCondition(conflict.tag.location()));
-//                    }
-//                    conditions.addRecipe(builder::save).build(out, name);
-//                } else {
-//                    builder.save(out, name);
-//                }
-//            });
+            CommonEvents.Recipe.REGISTER.subscribe(event -> {
+                for (Fuzzy dependency : dependencies) {
+                    if (dependency.enumerate().isEmpty()) {
+                        // Don't register recipe
+                        return;
+                    }
+                }
+                for (Fuzzy conflict : conflicts) {
+                    if (!conflict.enumerate().isEmpty()) {
+                        // Don't register recipe
+                        return;
+                    }
+                }
+
+                ResourceLocation itemName = BuiltInRegistries.ITEM.getKey(item.internal().getItem());
+
+                int height = ingredients.length / width;
+                NonNullList<Ingredient> input = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
+                for (int i = 0; i < ingredients.length; i++) {
+                    Fuzzy ingredient = ingredients[i];
+                    if (ingredient != null) {
+                        input.set(i, Ingredient.of(ingredient.getTag()));
+                    }
+                }
+
+                ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.MISC, new ShapedRecipePattern(width, height, input, Optional.empty()), item.internal());
+                event.registerCraftingRecipe(new RecipeHolder<>(itemName, recipe), ingredients);
+            });
         }
 
         public ShapedRecipeBuilder require(Fuzzy ...dependencies) {

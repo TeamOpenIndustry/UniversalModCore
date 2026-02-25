@@ -53,6 +53,7 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class World {
     /* Static access to loaded worlds */
     private static final Map<String, World> clientWorlds = new HashMap<>();
     private static final Map<String, World> serverWorlds = new HashMap<>();
-    private static final List<Consumer<World>> onTicks = new ArrayList<>();
+    private static final Queue<Consumer<World>> onTicks = new ConcurrentLinkedDeque<>();
 
     /** Internal, do not use */
     public final Level internal;

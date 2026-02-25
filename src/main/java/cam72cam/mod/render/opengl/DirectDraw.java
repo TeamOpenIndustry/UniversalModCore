@@ -19,8 +19,6 @@ public class DirectDraw {
                                               .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             ShaderInstance shader = RenderSystem.getShader();
             //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
-            //TODO 1.19.4 figure out why
-//        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 
             //Add missing state
@@ -41,7 +39,7 @@ public class DirectDraw {
             }
             RenderSystem.setShader(() -> shader);
         };
-        if (state.stage != RenderContext.Stage.ENTITY) {
+        if (state.getStage() != RenderContext.Stage.ENTITY) {
             render.run();
         } else {
             RenderContext.addDeferred(render);

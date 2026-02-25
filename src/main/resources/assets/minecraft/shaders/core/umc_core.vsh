@@ -26,12 +26,22 @@ out vec2 texCoord0;
 out vec4 normal;
 
 void main() {
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
+    gl_Position = ProjMat * viewPos;
 
     vec4 norm = ModelViewMat * vec4(Normal, 0.0);
-    vertexDistance = length((ModelViewMat * vec4(Position, 1.0)).xyz);
-    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, norm.xyz, Color);
-    lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
+    vertexDistance = length(viewPos.xyz);
+
+    if (UV2.x == 240 && UV2.y == 240) {
+        //Vanilla emissive
+        //TODO can we optimize this by implementing new vertex format?
+        vertexColor = Color;
+        lightMapColor = texelFetch(Sampler2, ivec2(15, 15), 0);
+    } else {
+        vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, norm.xyz, Color);
+        lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
+    }
+
     overlayColor = texelFetch(Sampler1, UV1, 0);
     texCoord0 = UV0;
     normal = ProjMat * norm;

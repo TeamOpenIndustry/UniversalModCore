@@ -31,6 +31,5 @@ public class MixinRenderGlobal {
         RenderState state = new RenderState(pose).translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), delta.getGameTimeDeltaTicks());
         RenderType.cutoutMipped().clearRenderState();
-        RenderContext.resetState();
     }
 }

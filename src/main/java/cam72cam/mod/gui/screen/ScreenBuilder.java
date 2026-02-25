@@ -7,12 +7,12 @@ import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +25,14 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final Map<EditBox, TextField> textFieldMap = new HashMap<>();
     private final Supplier<Boolean> valid;
     private GuiGraphics graphics;
+    private ExtendedSlider dragging;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         super(Component.literal(""));
         this.screen = screen;
         this.valid = valid;
     }
-    
+
     @Override
     public void tick() {
         super.tick();
@@ -136,6 +137,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             close();
             return true;
         }
+        //See cam72cam.mod.mixin.fix.screen_navigation.MixinScreen
         if (super.keyPressed(typedChar, keyCode, mods)) {
             return true;
         }
@@ -151,15 +153,20 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     @Override
     public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
         return this.textFieldMap.keySet().stream()
-                             .anyMatch(txt -> txt.charTyped(p_charTyped_1_, p_charTyped_2_));
+                                .anyMatch(txt -> txt.charTyped(p_charTyped_1_, p_charTyped_2_));
     }
 
     @Override
     public boolean mouseClicked(double x, double y, int button) {
         Player.Hand hand = button == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
 
-        if (this.buttonMap.keySet().stream().anyMatch(btn -> btn.mouseClicked(x, y, button))) {
-            return true;
+        for (AbstractWidget btn : this.buttonMap.keySet()) {
+            if (btn.mouseClicked(x, y, button)) {
+                if (btn instanceof ExtendedSlider slider) {
+                    dragging = slider;
+                }
+                return true;
+            }
         }
 
         if (this.textFieldMap.keySet().stream().noneMatch(txt -> {
@@ -172,6 +179,21 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             screen.onMouseClick((int) x, (int) y, hand);
         }
         return true;
+    }
+
+    @Override
+    public boolean mouseDragged(double p_94699_, double p_94700_, int p_94701_, double p_94702_, double p_94703_) {
+        if (dragging != null) {
+            dragging.mouseDragged(p_94699_, p_94700_, p_94701_, p_94702_, p_94703_);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double p_94722_, double p_94723_, int p_94724_) {
+        dragging = null;
+        return false;
     }
 
     // Default overrides
