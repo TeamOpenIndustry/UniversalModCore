@@ -148,9 +148,9 @@ dependencies {
 }
 
 dependencies {
-    //Iris
-    implementation fg.deobf("curse.maven:embeddium-908741:5630140")
-    implementation fg.deobf("curse.maven:oculus-581495:6020952")
+    //We don't have Iris on 1.20.4 NF
+//    implementation fg.deobf("curse.maven:embeddium-908741:5521869")
+//    implementation fg.deobf("curse.maven:oculus-581495:6020952")
 }
 
 //mixin {

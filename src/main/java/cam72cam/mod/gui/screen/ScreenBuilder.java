@@ -7,13 +7,12 @@ import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.gui.widget.ForgeSlider;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +25,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final Map<EditBox, TextField> textFieldMap = new HashMap<>();
     private final Supplier<Boolean> valid;
     private GuiGraphics graphics;
-    private ForgeSlider dragging;
+    private ExtendedSlider dragging;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         super(Component.literal(""));
@@ -163,7 +162,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
         for (AbstractWidget btn : this.buttonMap.keySet()) {
             if (btn.mouseClicked(x, y, button)) {
-                if (btn instanceof ForgeSlider slider) {
+                if (btn instanceof ExtendedSlider slider) {
                     dragging = slider;
                 }
                 return true;

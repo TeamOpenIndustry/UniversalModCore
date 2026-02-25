@@ -11,13 +11,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.fml.ModLoader;
-import org.spongepowered.asm.mixin.Final;
+import net.neoforged.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -30,9 +28,6 @@ import java.util.Map;
  */
 @Mixin(RecipeManager.class)
 public class MixinRecipeManager {
-    @Shadow
-    @Final
-    private ICondition.IContext context;
 
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
             at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/ImmutableMap;builder()Lcom/google/common/collect/ImmutableMap$Builder;"))
@@ -45,9 +40,10 @@ public class MixinRecipeManager {
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 1))
     public void postRecipeReload(Map<ResourceLocation, JsonElement> p_44037_, ResourceManager p_44038_, ProfilerFiller p_44039_, CallbackInfo ci,
-                                 @Local(ordinal = 1) Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, Recipe<?>>> mapLocalRef,
-                                 @Share("builder") LocalRef<ImmutableMap.Builder<ResourceLocation, Recipe<?>>> builderLocalRef) {
-        RegistryUtil.recipeBuildingContext(this.context);
+                                 @Local net.neoforged.neoforge.common.conditions.ConditionalOps<JsonElement> ops,
+                                 @Local(ordinal = 1) Map<RecipeType<?>, ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>>> mapLocalRef,
+                                 @Share("builder") LocalRef<ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>>> builderLocalRef) {
+        RegistryUtil.recipeBuildingContext(ops.context);
         RegisterRecipeEvent event = new RegisterRecipeEvent(mapLocalRef, builderLocalRef.get());
         ModLoader.get().postEvent(event);
         RegistryUtil.recipeBuildingContext(null);

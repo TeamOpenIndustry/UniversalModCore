@@ -5,10 +5,7 @@ import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.item.crafting.ShapedRecipePattern;
+import net.minecraft.world.item.crafting.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +53,7 @@ public class Recipes {
                 }
 
                 ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.MISC, new ShapedRecipePattern(width, height, input, Optional.empty()), item.internal());
-                event.registerCraftingRecipe(recipe, ingredients);
+                event.registerCraftingRecipe(new RecipeHolder<>(itemName, recipe), ingredients);
             });
         }
 

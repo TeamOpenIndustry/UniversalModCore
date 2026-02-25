@@ -5,7 +5,7 @@ import cam72cam.mod.event.platform.RegisterItemTagEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagLoader;
-import net.minecraftforge.fml.ModLoader;
+import net.neoforged.fml.ModLoader;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

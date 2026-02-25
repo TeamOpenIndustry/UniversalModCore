@@ -5,9 +5,9 @@ import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

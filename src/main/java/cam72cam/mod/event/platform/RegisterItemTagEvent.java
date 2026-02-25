@@ -1,14 +1,14 @@
 package cam72cam.mod.event.platform;
 
 import cam72cam.mod.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagLoader;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.fml.event.IModBusEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.bus.api.Event;
+import net.neoforged.fml.event.IModBusEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class RegisterItemTagEvent extends Event implements IModBusEvent {
 
     public void registerTag(ResourceLocation ident, Item item) {
         List<TagLoader.EntryWithSource> builder = map.getOrDefault(ident, new ArrayList<>());
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(item);
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         builder.add(new TagLoader.EntryWithSource(TagEntry.element(key), "universalmodcore_generated"));
         map.put(ident, builder);
     }
@@ -47,7 +47,7 @@ public class RegisterItemTagEvent extends Event implements IModBusEvent {
 
     public void registerTag(ResourceLocation ident, ItemStack itemStack) {
         List<TagLoader.EntryWithSource> builder = map.getOrDefault(ident, new ArrayList<>());
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(itemStack.internal().getItem());
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(itemStack.internal().getItem());
         builder.add(new TagLoader.EntryWithSource(TagEntry.element(key), "universalmodcore_generated"));
         map.put(ident, builder);
     }
