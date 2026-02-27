@@ -143,6 +143,7 @@ public class StandardModel {
 
         try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
             BufferBuilder worldRenderer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            int drawCount = 0;
 
             for (Pair<BlockState, BakedModel> model : models) {
                 if ((state.getStage() == RenderContext.Stage.GUI
@@ -167,8 +168,11 @@ public class StandardModel {
                 }
 
                 quads.forEach(quad -> worldRenderer.putBulkData(new PoseStack().last(), quad, f, f1, f2, 1.0F, 12 << 4, OverlayTexture.NO_OVERLAY));
+                drawCount++;
             }
-            BufferUploader.draw(worldRenderer.buildOrThrow());
+            if (drawCount != 0) {
+                BufferUploader.draw(worldRenderer.buildOrThrow());
+            }
         }
     }
 
