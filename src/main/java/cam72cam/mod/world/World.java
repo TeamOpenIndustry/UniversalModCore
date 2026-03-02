@@ -569,11 +569,24 @@ public class World {
         return internal.getBlockState(pos.internal()).getBlockHardness(internal, pos.internal());
     }
 
-    /** Get max redstone power surrounding this block */
+    /** Get max redstone power (strong and weak) surrounding this block */
     public int getRedstone(Vec3i pos) {
         int power = 0;
         for (Facing facing : Facing.values()) {
             power = Math.max(power, internal.getRedstonePower(pos.offset(facing).internal(), facing.internal));
+        }
+        return power;
+    }
+
+    /**
+     * Get max strong redstone power surrounding this block
+     * <p>
+     * Sometimes attempts to get weak power may trap us into infinite loop, use this in that circumstance
+     * */
+    public int getRedstoneDirect(Vec3i pos) {
+        int power = 0;
+        for (Facing facing : Facing.values()) {
+            power = Math.max(power, internal.getStrongPower(pos.offset(facing).internal(), facing.internal));
         }
         return power;
     }
