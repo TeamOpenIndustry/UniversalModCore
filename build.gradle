@@ -170,7 +170,7 @@ publishing {
         mavenJava(MavenPublication) {
             artifact jar
             artifact shadowJar
-            artifact sourceJar
+            artifact sourcesJar
             artifactId archivesBaseName
         }
     }
