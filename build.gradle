@@ -87,6 +87,9 @@ repositories {
     maven {
         url = "https://jitpack.io"
     }
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
@@ -96,24 +99,13 @@ dependencies {
 
     modUtils.enableMixins(implementation(annotationProcessor("com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:$unimixinsVersion:dev")), 'mixins.universalmodcore.refmap.json')
 
+    implementation(':DragonBlockC-v1.4.85:')
+    implementation(':JBRA-Client-v1.6.52:')
+    implementation(':JRMCore-v1.3.51:')
     implementation('junit:junit:4.13.1')
 
     shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
 }
-
-//def tempDir = System.getenv("RUNNER_TEMP") == null ? tasks.compileJava.temporaryDir : System.getenv("RUNNER_TEMP")
-//
-//ext.outRefMapFile = "${tempDir}/mixins.universalmodcore.refmap.json"
-//
-//def outSrgFile = "${tempDir}/outSrg.srg"
-//
-//afterEvaluate {
-//    tasks.compileJava.options.compilerArgs += ["-AreobfSrgFile=${tasks.reobf.srg}", "-AoutSrgFile=${outSrgFile}", "-AoutRefMapFile=${outRefMapFile}"];
-//}
-//
-//reobf {
-//    addExtraSrgFile outSrgFile
-//}
 
 jar {
     archiveClassifier = 'slim'
@@ -173,7 +165,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
-            artifact shadowJar
+            artifact reobfJar
             artifact sourcesJar
             artifactId archivesBaseName
         }
