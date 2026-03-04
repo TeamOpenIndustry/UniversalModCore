@@ -165,6 +165,10 @@ test {
     maxHeapSize = '1G'
 }
 
+tasks.named('reobfJar').configure {
+    inputJar.set(tasks.named('shadowJar').flatMap({ it.archiveFile }))
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
