@@ -35,7 +35,11 @@ public class DirectDraw {
                 for (VertexBuilder vert : verts) {
                     vert.draw(builder);
                 }
-                BufferUploader.draw(builder.buildOrThrow());
+
+                MeshData data = builder.build();
+                if (data != null) {
+                    BufferUploader.draw(data);
+                }
             }
             RenderSystem.setShader(() -> shader);
         };

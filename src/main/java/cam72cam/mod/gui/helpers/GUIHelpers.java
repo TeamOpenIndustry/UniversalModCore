@@ -107,7 +107,10 @@ public class GUIHelpers {
             }
         }
         //TODO 1.21.1 Am I right?
-        BufferUploader.draw(buffer.buildOrThrow());
+        MeshData data = buffer.build();
+        if (data != null) {
+            BufferUploader.draw(data);
+        }
 
         RenderSystem.setShader(() -> oldShader);
     }
