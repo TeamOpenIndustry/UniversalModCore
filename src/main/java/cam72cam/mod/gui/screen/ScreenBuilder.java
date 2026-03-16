@@ -132,6 +132,12 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
+    protected void renderBlurredBackground(float p_330683_) {
+        //Do nothing here, this doesn't exist below 1.20.5
+        //TODO backport?
+    }
+
+    @Override
     public boolean keyPressed(int typedChar, int keyCode, int mods) {
         if (typedChar == 256 && this.shouldCloseOnEsc()) {
             close();
