@@ -7,9 +7,9 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.util.DamageSource;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Explosion;
 
 import java.util.List;
@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 public class Entity {
     /** The wrapped MC construct.  Do not use directly */
     public net.minecraft.entity.Entity internal;
+
+    private float rotationRoll;
 
     /** Wrap a MC entity in UMC entity.  Do not use directly. */
     public Entity(net.minecraft.entity.Entity entity) {
@@ -101,12 +103,46 @@ public class Entity {
         internal.rotationPitch = pitch;
     }
 
+    public float getRotationRoll() {
+        if (internal instanceof ModdedEntity) {
+            return internal.getDataManager().get(ModdedEntity.ROLL);
+        }
+        return 0f;
+    }
+
+    public void setRotationRoll(float roll) {
+        if (internal instanceof ModdedEntity) {
+            EntityDataManager dataManager = internal.getDataManager();
+            dataManager.set(ModdedEntity.PREV_ROLL, dataManager.get(ModdedEntity.ROLL));
+            dataManager.set(ModdedEntity.ROLL, roll);
+        }
+    }
+
+    public float getRotationYaw(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
+    }
+
+    public float getRotationPitch(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
+    }
+
+    public float getRotationRoll(float partialTicks) {
+        return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
+    }
+
     public float getPrevRotationYaw() {
         return internal.prevRotationYaw;
     }
 
     public float getPrevRotationPitch() {
         return internal.prevRotationPitch;
+    }
+
+    public float getPrevRotationRoll() {
+        if (internal instanceof ModdedEntity) {
+            return internal.getDataManager().get(ModdedEntity.PREV_ROLL);
+        }
+        return 0f;
     }
 
     Vec3d eyeCache;
