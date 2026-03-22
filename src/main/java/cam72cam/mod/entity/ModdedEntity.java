@@ -249,12 +249,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void onUpdate() {
         iTickable.onTick();
-
-        if (iTickable instanceof cam72cam.mod.entity.Entity) {
-            cam72cam.mod.entity.Entity moddedEntity = (cam72cam.mod.entity.Entity) iTickable;
-            moddedEntity.setRotationRoll(moddedEntity.getRotationRoll() + 10);
-        }
-
         this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
         try {
             self.sync.send();
