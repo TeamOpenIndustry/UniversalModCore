@@ -81,17 +81,15 @@ public class Entity {
     public void setRotationYaw(float yaw) {
         internal.prevRotationYaw = internal.rotationYaw;
         internal.rotationYaw = yaw;
-        double d0 = internal.prevRotationYaw - yaw;
-        if (d0 < -180.0D)
-        {
-            internal.prevRotationYaw += 360.0F;
-        }
 
-        if (d0 >= 180.0D)
+        while (internal.rotationYaw - internal.prevRotationYaw < -180.0F)
         {
             internal.prevRotationYaw -= 360.0F;
         }
-
+        while (internal.rotationYaw - internal.prevRotationYaw >= 180.0F)
+        {
+            internal.prevRotationYaw += 360.0F;
+        }
     }
 
     public float getRotationPitch() {
@@ -101,6 +99,15 @@ public class Entity {
     public void setRotationPitch(float pitch) {
         internal.prevRotationPitch = internal.rotationPitch;
         internal.rotationPitch = pitch;
+
+        while (internal.rotationPitch - internal.prevRotationPitch < -180.0F)
+        {
+            internal.prevRotationPitch -= 360.0F;
+        }
+        while (internal.rotationPitch - internal.prevRotationPitch >= 180.0F)
+        {
+            internal.prevRotationPitch += 360.0F;
+        }
     }
 
     public float getRotationRoll() {
@@ -113,7 +120,16 @@ public class Entity {
     public void setRotationRoll(float roll) {
         if (internal instanceof ModdedEntity) {
             EntityDataManager dataManager = internal.getDataManager();
-            dataManager.set(ModdedEntity.PREV_ROLL, dataManager.get(ModdedEntity.ROLL));
+            float prevRoll = dataManager.get(ModdedEntity.PREV_ROLL);
+            while (roll - prevRoll < -180.0F)
+            {
+                prevRoll -= 360.0F;
+            }
+            while (roll - prevRoll >= 180.0F)
+            {
+                prevRoll += 360.0F;
+            }
+            dataManager.set(ModdedEntity.PREV_ROLL, prevRoll);
             dataManager.set(ModdedEntity.ROLL, roll);
         }
     }

@@ -33,9 +33,6 @@ import java.util.stream.Collectors;
 
 /** Internal class which extends MC's Entity.  Do not use directly */
 public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
-    static final DataParameter<Float> PREV_ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
-    static final DataParameter<Float> ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
-
     // Reference to the entity that this is representing
     private CustomEntity self;
 
@@ -43,6 +40,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
 
+    //For data sync
+    static final DataParameter<Float> PREV_ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    static final DataParameter<Float> ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    //For data storage
     @TagField
     private float roll;
     @TagField
