@@ -6,6 +6,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.CameraUtils;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
 import cam72cam.mod.render.opengl.CustomTexture;
@@ -210,6 +211,15 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onRenderMouseover(DrawBlockHighlightEvent event) {
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
+        }
+
+        @SubscribeEvent
+        public static void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
+            CameraUtils.applyTranslation(event);
+        }
+
+        public static void onFOVSetup(EntityViewRenderEvent.FOVModifier event) {
+            CameraUtils.applyFov(event);
         }
 
         @SubscribeEvent
