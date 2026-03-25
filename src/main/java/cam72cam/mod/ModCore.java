@@ -6,9 +6,11 @@ import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.GuiRegistry;
 import cam72cam.mod.input.Mouse;
+import cam72cam.mod.render.SmoothFloat;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
+import cam72cam.mod.render.CameraUtils;
 import cam72cam.mod.render.Light;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
@@ -290,6 +292,14 @@ public class ModCore {
                     });
                     BlockRender.onPostColorSetup();
                     ClientEvents.fireReload();
+                    ClientEvents.TICK.subscribe(SmoothFloat::onClientTick);
+                {
+                    CameraUtils.Controller controller = CameraUtils.getController();
+                    ClientEvents.SCROLL.subscribe( e -> {
+                        controller.setThirdPersonZOffset(controller.getThirdPersonZOffset() + (float) ( e * 5), 20);
+                        return true;
+                    });
+                }
                     break;
             }
 

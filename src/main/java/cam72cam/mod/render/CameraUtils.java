@@ -5,18 +5,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CameraUtils {
-    private static float x;
-    private static float y;
-    private static float z;
-
-    private static float fov;
-
-    private static float yaw;
-    private static float pitch;
-    private static float roll;
-
-    private static boolean enabled;
+    private static final List<Controller> controllers = new ArrayList<>();
 
     public static Perspectives getPerspective() {
         if (!MinecraftClient.isReady()) {
@@ -39,49 +32,103 @@ public class CameraUtils {
         THIRD_PERSON_INVERTED,
     }
 
-    public static void enable() {
-        enabled = true;
+    public static Controller getController() {
+        return new Controller();
     }
 
-    public static void disable() {
-        enabled = false;
-    }
-
-    //+X is left, +Y is top, +Z is back
-    public static void setThirdPersonCameraOffset(float x, float y, float z) {
-        CameraUtils.x = x;
-        CameraUtils.y = y;
-        CameraUtils.z = z;
-    }
-
-    public static void setYawOffset(float yaw) {
-        CameraUtils.yaw = yaw;
-    }
-
-    public static void setPitchOffset(float pitch) {
-        CameraUtils.pitch = pitch;
-    }
-
-    public static void setRollOffset(float roll) {
-        CameraUtils.roll = roll;
-    }
-
-    public static void setFov(float fov) {
-        CameraUtils.fov = fov;
+    public static float getFov() {
+        return Minecraft.getMinecraft().gameSettings.fovSetting;
     }
 
     public static void applyTranslation(EntityViewRenderEvent.CameraSetup event) {
-        if (enabled) {
-            GlStateManager.translate(x, y, z);
-            event.setYaw(yaw);
-            event.setPitch(pitch);
-            event.setRoll(roll);
+        if (getPerspective() == Perspectives.FIRST_PERSON) {
+            return;
         }
+
+        float x = 0, y = 0, z = 0;
+        float yaw = 0, pitch = 0, roll = 0;
+
+        float partialTicks = (float) event.getRenderPartialTicks();
+
+        for (Controller controller : controllers) {
+            x += controller.xOffset.getValue(partialTicks);
+            y += controller.yOffset.getValue(partialTicks);
+            z += controller.zOffset.getValue(partialTicks);
+            yaw += controller.yawOffset.getValue(partialTicks);
+            pitch += controller.pitchOffset.getValue(partialTicks);
+            roll += controller.rollOffset.getValue(partialTicks);
+        }
+
+        GlStateManager.translate(x, y, z);
+        event.setYaw(event.getYaw() + yaw);
+        event.setPitch(event.getPitch() + pitch);
+        event.setRoll(event.getRoll() + roll);
     }
 
     public static void applyFov(EntityViewRenderEvent.FOVModifier event) {
-        if (enabled) {
-            event.setFOV(fov);
+        float fov = 0;
+        for (Controller controller : controllers) {
+            fov += controller.fovOffset.getValue((float) event.getRenderPartialTicks());
+        }
+        event.setFOV(fov);
+    }
+
+    public static class Controller {
+        SmoothFloat xOffset;
+        SmoothFloat yOffset;
+        SmoothFloat zOffset;
+
+        SmoothFloat yawOffset;
+        SmoothFloat pitchOffset;
+        SmoothFloat rollOffset;
+
+        SmoothFloat fovOffset;
+
+        private Controller() {
+            this.xOffset = new SmoothFloat();
+            this.yOffset = new SmoothFloat();
+            this.zOffset = new SmoothFloat();
+
+            this.yawOffset = new SmoothFloat();
+            this.pitchOffset = new SmoothFloat();
+            this.rollOffset = new SmoothFloat();
+
+            this.fovOffset = new SmoothFloat();
+
+            controllers.add(this);
+        }
+
+        //+X is left, +Y is top, +Z is back
+        public void setThirdPersonXOffset(float x, float expectedTicks) {
+            this.xOffset.setNewValue(x, expectedTicks);
+        }
+
+        public void setThirdPersonYOffset(float y, float expectedTicks) {
+            this.yOffset.setNewValue(y, expectedTicks);
+        }
+
+        public void setThirdPersonZOffset(float z, float expectedTicks) {
+            this.zOffset.setNewValue(z, expectedTicks);
+        }
+
+        public float getThirdPersonZOffset() {
+            return zOffset.getValue(0);
+        }
+
+        public void setYawOffset(float yaw, float expectedTicks) {
+            yawOffset.setNewValue(yaw, expectedTicks);
+        }
+
+        public void setPitchOffset(float pitch, float expectedTicks) {
+            pitchOffset.setNewValue(pitch, expectedTicks);
+        }
+
+        public void setRollOffset(float roll, float expectedTicks) {
+            rollOffset.setNewValue(roll, expectedTicks);
+        }
+
+        public void setFOV(float fov, float expectedTicks) {
+            fovOffset.setNewValue(fov, expectedTicks);
         }
     }
 }
