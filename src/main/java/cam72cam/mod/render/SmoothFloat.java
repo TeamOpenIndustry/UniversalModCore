@@ -1,17 +1,20 @@
-//AI Generated
 package cam72cam.mod.render;
 
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
+import java.util.Deque;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
- * A class used for smoothing input values with Hermite function
+ * A class for smoothing input values with Hermite function (3t^2 - 2t^3)
  */
+@SideOnly(Side.CLIENT)
 public class SmoothFloat {
-    private static final HashSet<WeakReference<SmoothFloat>> instances = new HashSet<>();
+    private static final Deque<WeakReference<SmoothFloat>> instances = new ConcurrentLinkedDeque<>();
 
     private float currentValue;
     private float currentVelocity;
@@ -25,10 +28,6 @@ public class SmoothFloat {
     private float durationTicks;
     private float elapsedTicks;
     private boolean active;
-
-    public SmoothFloat() {
-        this(0.0f);
-    }
 
     public SmoothFloat(float value) {
         this.currentValue = value;
@@ -56,8 +55,13 @@ public class SmoothFloat {
         return evaluatePosition(t);
     }
 
+    public float getTargetValue() {
+        return targetValue;
+    }
+
     public void setNewValue(float newValue, float expectedTicks) {
         if (expectedTicks <= 0.0f) {
+            //If we want to set it instantly
             currentValue = newValue;
             currentVelocity = 0.0f;
 
@@ -73,7 +77,7 @@ public class SmoothFloat {
             return;
         }
 
-
+        //Or use current velocity
         float v = getCurrentVelocityAtTime(elapsedTicks, durationTicks);
 
         currentValue = getValue(0.0f);
@@ -107,7 +111,6 @@ public class SmoothFloat {
         currentValue = evaluatePosition(t);
         currentVelocity = evaluateVelocity(t) / durationTicks;
     }
-
 
     public static void onClientTick() {
         Iterator<WeakReference<SmoothFloat>> it = instances.iterator();
@@ -154,7 +157,6 @@ public class SmoothFloat {
                 + dh01 * targetValue
                 + dh11 * targetVelocity * durationTicks;
     }
-
 
     private float getCurrentVelocityAtTime(float elapsedTicks, float durationTicks) {
         if (!active || durationTicks <= 0.0f) {

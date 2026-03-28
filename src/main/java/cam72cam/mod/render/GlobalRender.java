@@ -76,7 +76,11 @@ public class GlobalRender {
         return MinecraftForgeClient.getRenderPass() != 0;
     }
 
-    /** Get global position of the player's eyes (with partialTicks taken into account) */
+    /**
+     * Get global position of the player's eyes (with partialTicks taken into account)
+     * @deprecated use the one in CameraUtils
+     * */
+    @Deprecated
     public static Vec3d getCameraPos(float partialTicks) {
         net.minecraft.entity.Entity playerRender = Minecraft.getMinecraft().getRenderViewEntity();
         double d0 = playerRender.lastTickPosX + (playerRender.posX - playerRender.lastTickPosX) * partialTicks;
