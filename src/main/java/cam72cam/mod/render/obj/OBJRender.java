@@ -26,6 +26,28 @@ public class OBJRender extends VBO {
         this.buffer = buffer;
     }
 
+    /**
+     * This constructor allows the caller to override lighting before drawing.
+     */
+    public OBJRender(OBJModel model, Supplier<VertexBuffer> buffer, Consumer<RenderState> settings) {
+        super(buffer, settings);
+        this.model = model;
+        this.buffer = buffer;
+    }
+
+    public static class PieceRange {
+        public final int startVertex;
+        public final int vertexCount;
+        public final Matrix4 localMatrix;
+        public PieceRange(int startVertex, int vertexCount, Matrix4 localMatrix) {
+            this.startVertex = startVertex;
+            this.vertexCount = vertexCount;
+            this.localMatrix = localMatrix;
+        }
+    }
+    public List<PieceRange> pieceRanges = new ArrayList<>();
+
+
     public Binding bind(RenderState state) {
         return bind(state, false);
     }
@@ -75,11 +97,27 @@ public class OBJRender extends VBO {
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
             }
         }
+
+        /**
+         * Draws a single piece (vertex range) with per‑piece lightmap override.
+         * The lightmap coordinates are temporarily set to the provided block and sky light
+         * values, then restored after drawing.
+         * @param range       The piece range (start vertex and count) to draw.
+         * @param blockLight  Block light intensity in [0,1] (0=dark, 1=full bright).
+         * @param skyLight    Sky light intensity in [0,1].
+         */
+        public void drawPiece(PieceRange range, float blockLight, float skyLight) {
+            if (!isLoaded()) return;
+            try (With pus = push(s -> s.lightmap(blockLight, skyLight))) {
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, range.startVertex, range.vertexCount);
+            }
+        }
     }
 
     public class Builder {
         private final Consumer<RenderState> settings;
         private final List<Consumer<Buffer>> actions = new ArrayList<>();
+        private final List<PieceRange> ranges = new ArrayList<>();
 
         private Builder(Consumer<RenderState> settings) {
             this.settings = settings;
@@ -89,6 +127,8 @@ public class OBJRender extends VBO {
             private VertexBuffer vb;
             private float[] built;
             private int builtIdx;
+            private int currentPieceStart = -1;
+            private Matrix4 currentPieceMatrix;
 
             private Buffer() {
                 this.vb = buffer.get();
@@ -101,6 +141,31 @@ public class OBJRender extends VBO {
                     float[] tmp = new float[built.length * 2];
                     System.arraycopy(built, 0, tmp, 0, builtIdx);
                     built = tmp;
+                }
+            }
+
+            /**
+             * Marks the beginning of a new piece in the vertex buffer.
+             * Records the current vertex index as the start of the piece and stores
+             * the local transformation matrix for later light calculation.
+             */
+            public void startPiece(Matrix4 matrix) {
+                this.currentPieceStart = builtIdx / (vb.stride);
+                this.currentPieceMatrix = matrix;
+            }
+
+            /**
+             * Marks the end of the current piece.
+             * Computes the vertex count since the last startPiece call and adds a
+             * PieceRange entry to the builder's list.
+             */
+            public void endPiece() {
+                if (currentPieceStart != -1) {
+                    int currentEnd = builtIdx / (vb.stride);
+                    int vertexCount = currentEnd - currentPieceStart;
+                    Builder.this.ranges.add(new PieceRange(currentPieceStart, vertexCount, currentPieceMatrix));
+                    currentPieceStart = -1;
+                    currentPieceMatrix = null;
                 }
             }
 
@@ -193,7 +258,11 @@ public class OBJRender extends VBO {
         }
 
         public void draw(Collection<String> groups, Matrix4 m) {
-            actions.add(b -> b.draw(groups, m));
+            actions.add(b -> {
+                b.startPiece(m);
+                b.draw(groups, m);
+                b.endPiece();
+            });
         }
 
         public VBO build() {
@@ -203,6 +272,26 @@ public class OBJRender extends VBO {
                 actions.forEach(c -> c.accept(buff));
                 return buff.build();
             }, settings);
+        }
+
+        /**
+         * Synchronously builds an OBJRender instance that supports per‑piece lightmap.
+         * Unlike build(), this method processes all geometry immediately on the calling
+         * thread, ensuring that pieceRanges are fully populated before returning.
+         * The resulting OBJRender can then be used with drawPiece() for independent
+         * lighting per piece.
+         * @return An OBJRender instance with pieceRanges correctly filled.
+         */
+        public OBJRender buildWithLight() {
+            Buffer buff = new Buffer();
+            for (Consumer<Buffer> action : actions) {
+                action.accept(buff);
+            }
+            VertexBuffer vertexBuffer = buff.build();
+
+            OBJRender objRender = new OBJRender(model, () -> vertexBuffer, settings);
+            objRender.pieceRanges = new ArrayList<>(this.ranges);
+            return objRender;
         }
     }
 
