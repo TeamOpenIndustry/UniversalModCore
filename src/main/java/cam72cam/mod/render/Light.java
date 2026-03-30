@@ -7,25 +7,91 @@ import cam72cam.mod.world.World;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.ChunkPos;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
+import java.util.*;
 
 public class Light {
     private LightEntity internal;
     private double lightLevel;
+    private static final Map<ChunkPos, List<LightEntity>> CHUNK_LIGHTS = new HashMap<>();
+    private static final Object LOCK = new Object();
+    private static void registerInChunk(LightEntity entity) {
+        if (entity == null) return;
+        int cx = (int) Math.floor(entity.posX) >> 4;
+        int cz = (int) Math.floor(entity.posZ) >> 4;
+        ChunkPos cp = new ChunkPos(cx, cz);
+        synchronized (LOCK) {
+            CHUNK_LIGHTS.computeIfAbsent(cp, k -> new ArrayList<>()).add(entity);
+        }
+    }
+    private static void unregisterFromChunk(LightEntity entity) {
+        if (entity == null) return;
+        int cx = (int) Math.floor(entity.posX) >> 4;
+        int cz = (int) Math.floor(entity.posZ) >> 4;
+        ChunkPos cp = new ChunkPos(cx, cz);
+        synchronized (LOCK) {
+            List<LightEntity> list = CHUNK_LIGHTS.get(cp);
+            if (list != null) {
+                list.remove(entity);
+                if (list.isEmpty()) CHUNK_LIGHTS.remove(cp);
+            }
+        }
+    }
+    public static List<LightInfo> getLightsInRange(Vec3d center, double radius) {
+        int minX = (int)Math.floor((center.x - radius) / 16);
+        int maxX = (int)Math.floor((center.x + radius) / 16);
+        int minZ = (int)Math.floor((center.z - radius) / 16);
+        int maxZ = (int)Math.floor((center.z + radius) / 16);
+        List<LightInfo> result = new ArrayList<>();
+        synchronized (LOCK) {
+            for (int cx = minX; cx <= maxX; cx++) {
+                for (int cz = minZ; cz <= maxZ; cz++) {
+                    ChunkPos cp = new ChunkPos(cx, cz);
+                    List<LightEntity> entities = CHUNK_LIGHTS.get(cp);
+                    if (entities != null) {
+                        for (LightEntity e : entities) {
+                            if (e.isDead) continue;//can avoid some ghost entities?
+                            double dx = e.posX - center.x;
+                            double dy = e.posY - center.y;
+                            double dz = e.posZ - center.z;
+                            if (dx*dx + dy*dy + dz*dz <= radius*radius) {
+                                result.add(new LightInfo(new Vec3d(e.posX, e.posY, e.posZ), e.getSimulateLightLevel()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    public static class LightInfo {
+        public final Vec3d pos;
+        public final double level;
+        public LightInfo(Vec3d pos, double level) {
+            this.pos = pos;
+            this.level = level;
+        }
+    }
 
     public Light(World world, Vec3d pos, double lightLevel) {
         init(world.internal, pos.internal(), lightLevel);
     }
 
     public void remove() {
-        internal.setDead();
-        internal = null;
+        if (internal != null) {
+            unregisterFromChunk(internal);
+            internal.setDead();
+            internal = null;
+        }
     }
 
     public void setPosition(Vec3d pos) {
+        if (internal == null) return;
+        unregisterFromChunk(internal);
         internal.setPosition(pos.x, pos.y, pos.z);
+        registerInChunk(internal);
     }
 
     public void setLightLevel(double lightLevel) {
@@ -38,6 +104,7 @@ public class Light {
             return;
         }
         if (internal != null) {
+            unregisterFromChunk(internal);
             internal.setDead();
         }
         switch ((int) Math.ceil((lightLevel * 15))) {
@@ -58,6 +125,10 @@ public class Light {
             default:
             case 15: internal = new LightEntity15(world); break;
         }
+
+        internal.setSimulateLightLevel(lightLevel);
+        registerInChunk(internal);
+
         internal.setPosition(pos.x, pos.y, pos.z);
         world.spawnEntity(internal);
         this.lightLevel = lightLevel;
@@ -101,12 +172,21 @@ public class Light {
 
     // Client only
     private static class LightEntity extends Entity {
+        private double simulateLightLevel;
         public LightEntity(net.minecraft.world.World world) {
             super(world);
             super.width = 0;
             super.height = 0;
             super.isImmuneToFire = true;
             super.noClip = true;
+        }
+
+        public void setSimulateLightLevel(double level) {
+            this.simulateLightLevel = level;
+        }
+
+        public double getSimulateLightLevel() {
+            return simulateLightLevel;
         }
 
         @Override
@@ -129,6 +209,12 @@ public class Light {
         @Override
         protected void writeEntityToNBT(NBTTagCompound compound) {
 
+        }
+
+        @Override
+        public void setDead() {//can avoid some ghost entities?
+            unregisterFromChunk(this);
+            super.setDead();
         }
     }
 
