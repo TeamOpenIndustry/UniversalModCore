@@ -181,10 +181,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     private void save(TagCompound data) {
         data.setString("custom_mob_type", type);
-        if (!this.world.isRemote) {
-            this.roll = dataManager.get(ROLL);
-            this.prevRoll = dataManager.get(PREV_ROLL);
-        }
+        this.roll = dataManager.get(ROLL);
+        this.prevRoll = dataManager.get(PREV_ROLL);
 
         try {
             TagSerializer.serialize(data, this);
