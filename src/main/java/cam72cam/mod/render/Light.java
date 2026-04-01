@@ -45,6 +45,7 @@ public class Light {
      * return simulate Of dynamic light level
      * */
     public static double getSimulateOfDynamicLightLevel(Vec3d center) {
+        if(!enabled()) return 0;
         double extra = 0.0;
         List<LightInfo> lights = getLightsInRange(center, 8.0);
         for (LightInfo light : lights) {
