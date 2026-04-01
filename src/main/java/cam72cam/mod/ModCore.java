@@ -27,7 +27,6 @@ import net.minecraft.server.packs.resources.Resource;
 
 import java.util.*;
 
-import net.minecraft.resources.*;
 import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +46,6 @@ import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -476,15 +474,16 @@ public class ModCore {
                         ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
                                 stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
                     }
+                    break;
                 case SETUP:
                     try {
                         Minecraft.getInstance().createSearchTrees();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
+                    Light.registerClient();
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
-                    break;
             }
 
         }

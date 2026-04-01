@@ -168,6 +168,9 @@ dependencies {
     //Iris
     implementation fg.deobf("curse.maven:embeddium-908741:5630140")
     implementation fg.deobf("curse.maven:oculus-581495:6020952")
+
+    //Lamb Dynamic Lights (Ported as Sodium/Embeddium Dynamic Lights)
+    implementation fg.deobf("curse.maven:dynamiclights-reforged-551736:6044481")
 }
 
 mixin {
