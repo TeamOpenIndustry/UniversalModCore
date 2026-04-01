@@ -39,7 +39,24 @@ public class Light {
             }
         }
     }
-    public static List<LightInfo> getLightsInRange(Vec3d center, double radius) {
+
+    /**
+     * return simulate Of dynamic light level, should only 0 in MC version on and above 1.20
+     * */
+    public static double getSimulateOfDynamicLightLevel(Vec3d center) {
+        double extra = 0.0;
+        List<LightInfo> lights = getLightsInRange(center, 8.0);
+        for (LightInfo light : lights) {
+            double distSq = center.distanceToSquared(light.pos);
+            if (distSq < 64.0) {
+                double dist = Math.sqrt(distSq);
+                double factor = 1.0 - dist / 8.0;
+                extra = Math.max(light.level * factor, extra);
+            }
+        }
+        return extra;
+    }
+    private static List<LightInfo> getLightsInRange(Vec3d center, double radius) {
         int minX = (int)Math.floor((center.x - radius) / 16);
         int maxX = (int)Math.floor((center.x + radius) / 16);
         int minZ = (int)Math.floor((center.z - radius) / 16);
@@ -66,10 +83,10 @@ public class Light {
         }
         return result;
     }
-    public static class LightInfo {
-        public final Vec3d pos;
-        public final double level;
-        public LightInfo(Vec3d pos, double level) {
+    private static class LightInfo {
+        private final Vec3d pos;
+        private final double level;
+        private LightInfo(Vec3d pos, double level) {
             this.pos = pos;
             this.level = level;
         }
@@ -181,11 +198,11 @@ public class Light {
             super.noClip = true;
         }
 
-        public void setSimulateLightLevel(double level) {
+        private void setSimulateLightLevel(double level) {
             this.simulateLightLevel = level;
         }
 
-        public double getSimulateLightLevel() {
+        private double getSimulateLightLevel() {
             return simulateLightLevel;
         }
 
