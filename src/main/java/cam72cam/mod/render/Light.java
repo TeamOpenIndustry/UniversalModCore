@@ -19,8 +19,8 @@ public class Light {
     private static final Object LOCK = new Object();
     private static void registerInChunk(LightEntity entity) {
         if (entity == null) return;
-        int cx = (int) Math.floor(entity.posX) >> 4;
-        int cz = (int) Math.floor(entity.posZ) >> 4;
+        int cx = entity.chunkCoordX;
+        int cz = entity.chunkCoordZ;
         ChunkPos cp = new ChunkPos(cx, cz);
         synchronized (LOCK) {
             CHUNK_LIGHTS.computeIfAbsent(cp, k -> new ArrayList<>()).add(entity);
@@ -28,8 +28,9 @@ public class Light {
     }
     private static void unregisterFromChunk(LightEntity entity) {
         if (entity == null) return;
-        int cx = (int) Math.floor(entity.posX) >> 4;
-        int cz = (int) Math.floor(entity.posZ) >> 4;
+
+        int cx = entity.chunkCoordX;
+        int cz = entity.chunkCoordZ;
         ChunkPos cp = new ChunkPos(cx, cz);
         synchronized (LOCK) {
             List<LightEntity> list = CHUNK_LIGHTS.get(cp);
@@ -41,7 +42,7 @@ public class Light {
     }
 
     /**
-     * return simulate Of dynamic light level, should only 0 in MC version on and above 1.20
+     * return simulate Of dynamic light level
      * */
     public static double getSimulateOfDynamicLightLevel(Vec3d center) {
         double extra = 0.0;
