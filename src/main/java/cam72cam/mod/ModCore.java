@@ -461,6 +461,7 @@ public class ModCore {
                                 stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
                         Light.register();
                     }
+                    break;
                 case SETUP:
                     try {
                         Minecraft.getInstance().populateSearchTreeManager();
