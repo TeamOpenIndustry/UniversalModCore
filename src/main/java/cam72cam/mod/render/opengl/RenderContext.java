@@ -175,6 +175,7 @@ public class RenderContext {
             if (fourFloatBuffer == null) {
                 fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
             }
+            fourFloatBuffer.position(0);
             GL11.glGetFloat(GL11.GL_CURRENT_COLOR, fourFloatBuffer);
             float[] oldColor = new float[] {fourFloatBuffer.get(0), fourFloatBuffer.get(1), fourFloatBuffer.get(2), fourFloatBuffer.get(3)};
             GL11.glColor4f(state.color[0], state.color[1], state.color[2], state.color[3]);

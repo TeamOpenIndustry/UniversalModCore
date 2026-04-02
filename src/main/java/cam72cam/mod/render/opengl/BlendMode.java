@@ -65,6 +65,7 @@ public class BlendMode {
             if (fourFloatBuffer == null) {
                 fourFloatBuffer = GLAllocation.createDirectFloatBuffer(16);
             }
+            fourFloatBuffer.position(0);
             GL11.glGetFloat(GL14.GL_BLEND_COLOR, fourFloatBuffer);
             float[] oldColor = new float[] {fourFloatBuffer.get(0), fourFloatBuffer.get(1), fourFloatBuffer.get(2), fourFloatBuffer.get(3)};
             GL14.glBlendColor(r,g,b,a);
