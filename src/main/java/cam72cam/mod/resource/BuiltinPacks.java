@@ -6,15 +6,22 @@ import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-/** Internal, don't use */
+/**
+ * Internal, don't use
+ * <p>
+ * Keep in mind that some of the methods are side-only
+ * */
 public class BuiltinPacks {
-    public static void loadResource(ModCore.Mod mod) {
+    @SideOnly(Side.CLIENT)
+    public static void loadModResource(ModCore.Mod mod) {
         List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
 
         String configDir = Loader.instance().getConfigDir().toString();
@@ -23,12 +30,12 @@ public class BuiltinPacks {
         File folder = new File(configDir + File.separator + mod.modID());
         if (folder.exists()) {
             if (folder.isDirectory()) {
-                File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
+                File[] files = folder.listFiles(file -> file.getName().endsWith(".zip"));
                 for (File file : files) {
                     packs.add(BuiltinPacks.asResource(file));
                 }
 
-                File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
+                File[] folders = folder.listFiles(File::isDirectory);
                 for (File dir : folders) {
                     packs.add(BuiltinPacks.asResource(dir));
                 }
@@ -43,6 +50,7 @@ public class BuiltinPacks {
         packs.add(modPack);
     }
 
+    @SideOnly(Side.CLIENT)
     public static IResourcePack asResource(File path) {
         if (path.isDirectory()) {
             return new FolderResourcePack(path) {

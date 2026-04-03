@@ -167,7 +167,7 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
-                BuiltinPacks.loadResource(m);
+                BuiltinPacks.loadModResource(m);
             }
             super.event(event, m);
             m.clientEvent(event);
