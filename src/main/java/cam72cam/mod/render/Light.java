@@ -131,21 +131,23 @@ public class Light {
 
     public static boolean enabled() {
         boolean flag = isLDLInstalled();
-        try {
-            //Some branch specific stuff
-            //Need change once switch back to official LDL
-            //i.e. SodiumDynamicLights.get().config.getEntitiesLightSource().get()
-            Class<?> cls = Class.forName("toni.sodiumdynamiclights.SodiumDynamicLights");
-            Method m1 = cls.getDeclaredMethod("get");
-            Field f1 = cls.getDeclaredField("config");
-            Class<?> config = Class.forName("toni.sodiumdynamiclights.DynamicLightsConfig");
-            Object con = config.cast(f1.get(m1.invoke(null)));
-            Method m2 = config.getDeclaredMethod("getEntitiesLightSource");
-            return flag && ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get();
-        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
-                 IllegalAccessException e) {
-            return flag;
+        if (flag) {
+            try {
+                //Some branch specific stuff
+                //Need change once switch back to official LDL
+                //i.e. SodiumDynamicLights.get().config.getEntitiesLightSource().get()
+                Class<?> cls = Class.forName("toni.sodiumdynamiclights.SodiumDynamicLights");
+                Method m1 = cls.getDeclaredMethod("get");
+                Field f1 = cls.getDeclaredField("config");
+                Class<?> config = Class.forName("toni.sodiumdynamiclights.DynamicLightsConfig");
+                Object con = config.cast(f1.get(m1.invoke(null)));
+                Method m2 = config.getDeclaredMethod("getEntitiesLightSource");
+                return ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get();
+            } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
+                     IllegalAccessException ignored) {
+            }
         }
+        return flag;
     }
 
     private static boolean isLDLInstalled() {
