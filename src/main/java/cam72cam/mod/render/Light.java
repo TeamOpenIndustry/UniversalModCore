@@ -141,7 +141,7 @@ public class Light {
             Class<?> config = Class.forName("toni.sodiumdynamiclights.DynamicLightsConfig");
             Object con = config.cast(f1.get(m1.invoke(null)));
             Method m2 = config.getDeclaredMethod("getEntitiesLightSource");
-            return flag & ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get();
+            return flag && ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get();
         } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
                  IllegalAccessException e) {
             return flag;
