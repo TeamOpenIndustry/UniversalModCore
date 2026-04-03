@@ -1,11 +1,11 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import dev.lambdaurora.lambdynlights.api.DynamicLightHandlers;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -94,7 +94,7 @@ public class Light {
     }
 
     public static void onClientTick() {
-        if(Minecraft.getInstance().isPaused()) return;
+        if(MinecraftClient.isPaused()) return;
         for (LightEntity light : lights) {
             ClientLevel level = (ClientLevel) light.level();
             level.guardEntityTick(level::tickNonPassenger, light);
