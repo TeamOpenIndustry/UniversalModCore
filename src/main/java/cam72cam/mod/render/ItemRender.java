@@ -91,6 +91,7 @@ public class ItemRender {
                     return type;
                 }
             }
+            //We're facing enums added by other mods, use NONE as fallback
             return NONE;
         }
     }

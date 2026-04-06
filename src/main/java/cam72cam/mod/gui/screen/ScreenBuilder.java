@@ -25,7 +25,8 @@ import java.util.function.Supplier;
 public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
     private final IScreen screen;
     private final Map<GuiButton, Button> buttonMap = new HashMap<>();
-    private final List<GuiTextField> textFields = new ArrayList<>();
+    private final List<TextField> textFields = new ArrayList<>();
+    private TextField active = null;
     private final Supplier<Boolean> valid;
     private GuiButton selectedButton;
 
@@ -91,7 +92,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void addTextField(TextField textField) {
-        this.textFields.add(textField.textfield);
+        this.textFields.add(textField);
     }
 
     // GuiScreen
@@ -113,7 +114,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
         screen.draw(this, new RenderState().stage(RenderContext.Stage.GUI));
 
-        textFields.forEach(GuiTextField::drawTextBox);
+        textFields.stream().map(t -> t.internal).forEach(GuiTextField::drawTextBox);
 
         // draw buttons
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -132,7 +133,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             close();
         }
 
-        if (this.textFields.stream().noneMatch(x -> x.textboxKeyTyped(typedChar, keyCode))) {
+        if (this.active != null && !active.internal.textboxKeyTyped(typedChar, keyCode)) {
             screen.onKeyType(this, Keyboard.KeyCode.of(keyCode));
         }
     }
@@ -151,9 +152,16 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
             }
         }
 
-        if (this.textFields.stream().noneMatch(x -> AGuiTextField.from(x).mouseClicked(mouseX, mouseY, mouseButton))) {
-            screen.onMouseClick(mouseX, mouseY, hand);
+        for (TextField field : textFields) {
+            if (field.isVisible() && AGuiTextField.from(field.internal).mouseClicked(mouseX, mouseY, mouseButton)) {
+                active = field;
+                field.setFocused(true);
+                return;
+            }
+            field.setFocused(false);
         }
+
+        screen.onMouseClick(mouseX, mouseY, hand);
     }
 
     @Override

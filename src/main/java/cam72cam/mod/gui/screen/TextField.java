@@ -7,14 +7,14 @@ import java.util.function.Predicate;
 
 /** Base text field */
 public class TextField implements IWidget {
-    protected final GuiTextField textfield;
+    protected final GuiTextField internal;
     protected Predicate<String> validator;
 
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         //Have to do here as we can't call anything before constructor
         validator = str -> true;
-        textfield = new GuiTextField(Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2) {
+        internal = new GuiTextField(Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2) {
             @Override
             public void setText(String text) {
                 if (validator.test(text)) {
@@ -31,29 +31,30 @@ public class TextField implements IWidget {
                 }
             }
         };
+        internal.setMaxStringLength(256);
         builder.addTextField(this);
     }
 
     /** Internal, can be overridden to support custom GuiTextFields */
     protected TextField(IScreenBuilder builder, GuiTextField internal) {
-        this.textfield = internal;
+        this.internal = internal;
         builder.addTextField(this);
     }
 
     @Override
     public void setText(String s) {
-        textfield.setText(s);
+        internal.setText(s);
     }
 
     @Override
     public String getText() {
-        return textfield.getText();
+        return internal.getText();
     }
 
     @Override
     public void setVisible(boolean visible) {
-        textfield.setVisible(visible);
-        textfield.setEnabled(visible);
+        internal.setVisible(visible);
+        internal.setEnabled(visible);
     }
 
     @Deprecated
@@ -63,17 +64,17 @@ public class TextField implements IWidget {
 
     @Override
     public boolean isVisible() {
-        return textfield.getVisible();
+        return internal.getVisible();
     }
 
     @Override
     public void setEnabled(boolean enabled) {
-        textfield.setEnabled(enabled);
+        internal.setEnabled(enabled);
     }
 
     @Override
     public boolean isEnabled() {
-        return textfield.isEnabled;
+        return internal.isEnabled;
     }
 
     /** Validator that can block a string from being entered */
@@ -83,6 +84,6 @@ public class TextField implements IWidget {
 
     /** Move cursor to this text field */
     public void setFocused(boolean b) {
-        textfield.setFocused(b);
+        internal.setFocused(b);
     }
 }
