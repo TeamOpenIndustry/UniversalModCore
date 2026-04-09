@@ -8,8 +8,6 @@ import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraftforge.fml.common.Loader;
 
 import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,8 +16,6 @@ import java.util.stream.Collectors;
  * Utilities for wrapping resources across versions
  * */
 public class BuiltinPack {
-    private static final File umcLocation;
-
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
     private static final TreeMap<Identifier, Identifier> REDIRECTS =
             new TreeMap<>((a, b) -> {
@@ -30,15 +26,6 @@ public class BuiltinPack {
             });
     private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
     private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
-
-    static {
-        try {
-            umcLocation = Paths.get(BuiltinPack.class.getProtectionDomain().getCodeSource().getLocation().toURI())
-                               .toFile();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Directly attach a resource to the game
@@ -121,7 +108,8 @@ public class BuiltinPack {
 
     private static class InternalPack extends AbstractResourcePack {
         public InternalPack() {
-            super(umcLocation);
+            //We're initializing UMC
+            super(Loader.instance().activeModContainer().getSource());
         }
 
         @Override
@@ -186,9 +174,7 @@ public class BuiltinPack {
 
         @Override
         public Set<String> getResourceDomains() {
-            Set<String> set = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
-            set.add("universalmodcore");
-            return set;
+            return ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
         }
 
         @Override
