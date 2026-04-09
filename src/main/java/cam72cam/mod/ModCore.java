@@ -17,6 +17,7 @@ import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -142,6 +143,10 @@ public class ModCore {
         return proxy.getGPUTextureSize();
     }
 
+    public List<Mod> getLoadedMods() {
+        return mods;
+    }
+
     @SidedProxy(serverSide = "cam72cam.mod.ModCore$ServerProxy", clientSide = "cam72cam.mod.ModCore$ClientProxy", modId = ModCore.MODID)
     private static Proxy proxy;
     /** Hooked into forge's proxy system and fires off corresponding events */
@@ -164,10 +169,26 @@ public class ModCore {
     }
 
     public static class ClientProxy extends Proxy {
+        private static boolean constructed = false;
+
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
-                BuiltinPacks.loadModResource(m);
+
+                if (!constructed) {
+                    for (Mod mod : instance.mods) {
+                        BuiltinPacks.loadModResource(mod);
+                    }
+
+                    List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+                    IResourcePack modPack = BuiltinPacks.attach(Loader.instance().activeModContainer().getSource());
+                    // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+                    packs.add(1, modPack);
+                    packs.add(modPack);
+                    BuiltinPacks.loadWrappedResource(packs);
+
+                    constructed = true;
+                }
             }
             super.event(event, m);
             m.clientEvent(event);
@@ -233,6 +254,7 @@ public class ModCore {
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                        BuiltinPacks.reload();
                         ClientEvents.fireReload();
                     });
                     BlockRender.onPostColorSetup();
