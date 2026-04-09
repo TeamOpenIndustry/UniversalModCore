@@ -185,7 +185,7 @@ public class ModCore {
                     // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
                     packs.add(1, modPack);
                     packs.add(modPack);
-                    BuiltinPack.loadWrappedResource(packs);
+                    BuiltinPack.loadUMCResource(packs);
 
                     constructed = true;
                 }

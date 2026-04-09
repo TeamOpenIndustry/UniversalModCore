@@ -8,6 +8,8 @@ import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraftforge.fml.common.Loader;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,31 +18,50 @@ import java.util.stream.Collectors;
  * Utilities for wrapping resources across versions
  * */
 public class BuiltinPack {
+    private static final File umcLocation;
+
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
-    private static final HashMap<Identifier, Identifier> REDIRECTS = new HashMap<>();
+    private static final TreeMap<Identifier, Identifier> REDIRECTS =
+            new TreeMap<>((a, b) -> {
+                String aStr = a.toString();
+                String bStr = b.toString();
+                int d = Integer.compare(bStr.length(), aStr.length());
+                return d != 0 ? d : aStr.compareTo(bStr);
+            });
     private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
     private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
+
+    static {
+        try {
+            umcLocation = Paths.get(BuiltinPack.class.getProtectionDomain().getCodeSource().getLocation().toURI())
+                               .toFile();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Directly attach a resource to the game
      */
-    public static void addResource(Identifier resource, byte[] content) {
+    public static void put(Identifier resource, byte[] content) {
         DIRECT_RESOURCES.put(resource, content);
     }
 
     /**
-     * Attach a conditionally generated resource to the game. The result will be cached until next reload.
+     * Attach a conditionally generated resource to the game, return null in the function if conditions not met.
+     * <p>
+     * Once the resource is successfully generated, it will be cached until the next reload.
      */
-    public static void addGenerator(Function<Identifier, byte[]> func) {
+    public static void conditional(Function<Identifier, byte[]> func) {
         GENERATORS.add(func);
     }
 
     /**
      * Add a redirect logic for resources, especially useful when handling cross-version compatibilities
+     * <p>
+     * UMC will match all locations start with <code>from</code>, and replace them with <code>to</code> .
      */
-    public static void addRedirect(Identifier from, Identifier to) {
-        if (!to.canLoad())
-            throw new RuntimeException("Invalid redirect to: " + to);
+    public static void redirect(Identifier from, Identifier to) {
         REDIRECTS.put(from, to);
     }
 
@@ -88,7 +109,7 @@ public class BuiltinPack {
         }
     }
 
-    public static void loadWrappedResource(List<IResourcePack> packs) {
+    public static void loadUMCResource(List<IResourcePack> packs) {
         IResourcePack pack = new InternalPack();
         packs.add(1, pack);
         packs.add(pack);
@@ -100,7 +121,7 @@ public class BuiltinPack {
 
     private static class InternalPack extends AbstractResourcePack {
         public InternalPack() {
-            super(null);
+            super(umcLocation);
         }
 
         @Override
@@ -111,11 +132,12 @@ public class BuiltinPack {
 
             Identifier identifier = nameToLocation(resourcePath);
 
-            //TODO more robust logic
             for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
-                if (identifier.toString().startsWith(entry.getKey().toString())) {
-                    Identifier target = new Identifier(identifier.toString().replace(entry.getKey().toString(), entry.getValue().toString()));
-                    return target.getResourceStream();
+                String src = identifier.toString();
+                if (src.startsWith(entry.getKey().toString())) {
+                    //Replace [from] with [to]
+                    String suffix = src.substring(entry.getKey().toString().length());
+                    return new Identifier(entry.getValue().toString() + suffix).getResourceStream();
                 }
             }
 
@@ -123,7 +145,7 @@ public class BuiltinPack {
                 return new ByteArrayInputStream(DIRECT_RESOURCES.get(identifier));
             }
 
-            //It must already have been cached in hasResourceName if exists
+            //It must already have been populated in hasResourceName if exists
             if (CACHED_GENERATOR_RESULTS.containsKey(identifier)) {
                 return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(identifier));
             }
