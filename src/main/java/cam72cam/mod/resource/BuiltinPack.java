@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Utilities for wrapping resources across versions
  * */
-public class BuiltinPacks {
+public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
     private static final HashMap<Identifier, Identifier> REDIRECTS = new HashMap<>();
     private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
@@ -55,12 +55,12 @@ public class BuiltinPacks {
             if (folder.isDirectory()) {
                 File[] files = folder.listFiles(file -> file.getName().endsWith(".zip"));
                 for (File file : files) {
-                    packs.add(BuiltinPacks.attach(file));
+                    packs.add(BuiltinPack.attach(file));
                 }
 
                 File[] folders = folder.listFiles(File::isDirectory);
                 for (File dir : folders) {
-                    packs.add(BuiltinPacks.attach(dir));
+                    packs.add(BuiltinPack.attach(dir));
                 }
             }
         } else {

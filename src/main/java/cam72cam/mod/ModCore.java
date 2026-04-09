@@ -10,7 +10,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.Light;
-import cam72cam.mod.resource.BuiltinPacks;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
@@ -177,15 +177,15 @@ public class ModCore {
 
                 if (!constructed) {
                     for (Mod mod : instance.mods) {
-                        BuiltinPacks.loadModResource(mod);
+                        BuiltinPack.loadModResource(mod);
                     }
 
                     List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
-                    IResourcePack modPack = BuiltinPacks.attach(Loader.instance().activeModContainer().getSource());
+                    IResourcePack modPack = BuiltinPack.attach(Loader.instance().activeModContainer().getSource());
                     // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
                     packs.add(1, modPack);
                     packs.add(modPack);
-                    BuiltinPacks.loadWrappedResource(packs);
+                    BuiltinPack.loadWrappedResource(packs);
 
                     constructed = true;
                 }
@@ -254,7 +254,7 @@ public class ModCore {
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
-                        BuiltinPacks.reload();
+                        BuiltinPack.reload();
                         ClientEvents.fireReload();
                     });
                     BlockRender.onPostColorSetup();
