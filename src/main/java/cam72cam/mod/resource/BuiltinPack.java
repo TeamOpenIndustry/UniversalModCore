@@ -19,6 +19,7 @@ public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
     private static final TreeMap<Identifier, Identifier> REDIRECTS =
             new TreeMap<>((a, b) -> {
+                //Longer is better
                 String aStr = a.toString();
                 String bStr = b.toString();
                 int d = Integer.compare(bStr.length(), aStr.length());
@@ -118,24 +119,23 @@ public class BuiltinPack {
                 return new ByteArrayInputStream("{}".getBytes());
             }
 
-            Identifier identifier = nameToLocation(resourcePath);
+            Identifier ident = nameToLocation(resourcePath);
 
             for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
-                String src = identifier.toString();
-                if (src.startsWith(entry.getKey().toString())) {
-                    //Replace [from] with [to]
-                    String suffix = src.substring(entry.getKey().toString().length());
-                    return new Identifier(entry.getValue().toString() + suffix).getResourceStream();
+                String src = ident.toString();
+                if (src.startsWith(entry.getValue().toString())) {
+                    Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
+                    return redirect.getResourceStream();
                 }
             }
 
-            if (DIRECT_RESOURCES.containsKey(identifier)) {
-                return new ByteArrayInputStream(DIRECT_RESOURCES.get(identifier));
+            if (DIRECT_RESOURCES.containsKey(ident)) {
+                return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
             }
 
             //It must already have been populated in hasResourceName if exists
-            if (CACHED_GENERATOR_RESULTS.containsKey(identifier)) {
-                return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(identifier));
+            if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
+                return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
             }
 
             return null;
@@ -143,27 +143,34 @@ public class BuiltinPack {
 
         @Override
         protected boolean hasResourceName(String resourcePath) {
-            Identifier identifier = nameToLocation(resourcePath);
+            if (resourcePath.endsWith("mcmeta") && !"pack.mcmeta".equals(resourcePath)) {
+                //We don't handle resource metadata
+                return false;
+            }
 
-            if (DIRECT_RESOURCES.containsKey(identifier)) {
+            Identifier ident = nameToLocation(resourcePath);
+
+            if (DIRECT_RESOURCES.containsKey(ident)) {
                 return true;
             }
 
             for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
-                if (identifier.toString().startsWith(entry.getKey().toString())) {
+                //Check if it's start with any of the [to]s
+                if (ident.toString().startsWith(entry.getValue().toString())
+                        && handleRedirect(ident, entry.getKey(), entry.getValue()).canLoad()) {
                     return true;
                 }
             }
 
-            if (CACHED_GENERATOR_RESULTS.containsKey(identifier)) {
+            if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
                 return true;
             }
 
             synchronized (GENERATORS) {
                 for (Function<Identifier, byte[]> generator : GENERATORS) {
-                    byte[] stream = generator.apply(identifier);
+                    byte[] stream = generator.apply(ident);
                     if (stream != null) {
-                        CACHED_GENERATOR_RESULTS.put(identifier, stream);
+                        CACHED_GENERATOR_RESULTS.put(ident, stream);
                         return true;
                     }
                 }
@@ -174,7 +181,9 @@ public class BuiltinPack {
 
         @Override
         public Set<String> getResourceDomains() {
-            return ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
+            Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
+            collect.add("universalmodcore");
+            return collect;
         }
 
         @Override
@@ -188,6 +197,12 @@ public class BuiltinPack {
         }
     }
 
+    private static Identifier handleRedirect(Identifier src, Identifier from, Identifier to) {
+        //Replace [to] with [from] to implement redirect
+        String suffix = src.toString().substring(to.toString().length());
+        return new Identifier(from.toString() + suffix);
+    }
+
     private static Identifier nameToLocation(String path) {
         if(path.startsWith("assets/")) {
             //assets/[domain]/[path] -> domain:path
@@ -196,6 +211,6 @@ public class BuiltinPack {
             return new Identifier(path.substring(0, x), path.substring(x + 1));
         }
         //Not possible to hit below 1.12, except for pack.mcmeta
-        return null;
+        return new Identifier("universalmodcore", "invalid");
     }
 }
