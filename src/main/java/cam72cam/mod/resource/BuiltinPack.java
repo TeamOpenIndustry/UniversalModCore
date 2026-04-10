@@ -63,6 +63,7 @@ public class BuiltinPack {
      * This is mainly intended for compatibility aliases (e.g. cross-version path changes).
      */
     public static void redirect(Identifier sourcePrefix, Identifier targetPrefix) {
+        //Namespaces will be redirected!
         REDIRECTS.put(sourcePrefix, targetPrefix);
     }
 
@@ -119,7 +120,7 @@ public class BuiltinPack {
     /**
      * Internal
      */
-    public static void loadUMCResource(List<IResourcePack> packs) {
+    public static void onConstruct(List<IResourcePack> packs) {
         IResourcePack pack = new InternalPack();
         packs.add(1, pack);
         packs.add(pack);
