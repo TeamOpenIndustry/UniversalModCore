@@ -13,7 +13,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Utilities for wrapping resources across versions
+ * Utilities for wrapping resources across versions.
+ * <p>
+ * Only available within UMC mods' namespaces.
  * */
 public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
@@ -29,30 +31,66 @@ public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
 
     /**
-     * Directly attach a resource to the game
+     * Registers a static resource.
+     * <p>
+     * The given bytes are returned as-is whenever this identifier is requested.
+     * If the same identifier is registered again, the latest value wins.
      */
     public static void put(Identifier resource, byte[] content) {
         DIRECT_RESOURCES.put(resource, content);
     }
 
     /**
-     * Attach a conditionally generated resource to the game, return null in the function if conditions not met.
+     * Registers a conditional resource generator.
      * <p>
-     * Once the resource is successfully generated, it will be cached until the next reload.
+     * The function is called with the requested identifier and should return:
+     * <ul>
+     *   <li>resource bytes, if this generator wants to provide it</li>
+     *   <li>{@code null}, if it does not handle this identifier</li>
+     * </ul>
+     * Generated results are cached after the first successful generation, until next resource reload.
      */
     public static void conditional(Function<Identifier, byte[]> func) {
         GENERATORS.add(func);
     }
 
     /**
-     * Add a redirect logic for resources, especially useful when handling cross-version compatibilities
+     * Registers a resource path redirect.
      * <p>
-     * UMC will match all locations start with <code>from</code>, and replace them with <code>to</code> .
+     * Any requested identifier whose string form starts with {@code from}
+     * will be remapped to {@code to} (prefix replacement).
+     * This is mainly intended for compatibility aliases (e.g. cross-version path changes).
      */
     public static void redirect(Identifier from, Identifier to) {
         REDIRECTS.put(from, to);
     }
 
+    /**
+     * Registers a file or folder as an resource pack to the game.
+     */
+    public static IResourcePack attach(File path) {
+        if (path.isDirectory()) {
+            return new FolderResourcePack(path) {
+                @Override
+                protected InputStream getInputStreamByName(String name) throws IOException {
+                    InputStream stream = super.getInputStreamByName(name);
+                    File file = this.getFile(name);
+                    return new Identifier.InputStreamMod(stream, file.lastModified());
+                }
+            };
+        } else {
+            return new FileResourcePack(path) {
+                @Override
+                protected InputStream getInputStreamByName(String name) throws IOException {
+                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), resourcePackFile.lastModified());
+                }
+            };
+        }
+    }
+
+    /**
+     * Internal
+     */
     public static void loadModResource(ModCore.Mod mod) {
         List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
 
@@ -77,36 +115,25 @@ public class BuiltinPack {
         }
     }
 
-    public static IResourcePack attach(File path) {
-        if (path.isDirectory()) {
-            return new FolderResourcePack(path) {
-                @Override
-                protected InputStream getInputStreamByName(String name) throws IOException {
-                    InputStream stream = super.getInputStreamByName(name);
-                    File file = this.getFile(name);
-                    return new Identifier.InputStreamMod(stream, file.lastModified());
-                }
-            };
-        } else {
-            return new FileResourcePack(path) {
-                @Override
-                protected InputStream getInputStreamByName(String name) throws IOException {
-                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), resourcePackFile.lastModified());
-                }
-            };
-        }
-    }
-
+    /**
+     * Internal
+     */
     public static void loadUMCResource(List<IResourcePack> packs) {
         IResourcePack pack = new InternalPack();
         packs.add(1, pack);
         packs.add(pack);
     }
 
+    /**
+     * Internal
+     */
     public static void reload() {
         CACHED_GENERATOR_RESULTS.clear();
     }
 
+    /**
+     * Internal
+     */
     private static class InternalPack extends AbstractResourcePack {
         public InternalPack() {
             //We're initializing UMC
