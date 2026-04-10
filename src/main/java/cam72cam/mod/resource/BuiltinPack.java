@@ -122,6 +122,7 @@ public class BuiltinPack {
      */
     public static void onConstruct(List<IResourcePack> packs) {
         IResourcePack pack = new InternalPack();
+        //Ensure people will get our result first via getResourceStream() and getLastResourceStream()
         packs.add(1, pack);
         packs.add(pack);
     }

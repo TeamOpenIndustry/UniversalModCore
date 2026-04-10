@@ -182,7 +182,9 @@ public class ModCore {
 
                     List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
                     IResourcePack modPack = BuiltinPack.attach(Loader.instance().activeModContainer().getSource());
-                    // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
+                    // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
+                    // (Also injects last modified time access)
+                    // BUG: sounds can still be overridden by resource packs
                     packs.add(1, modPack);
                     packs.add(modPack);
                     BuiltinPack.onConstruct(packs);
