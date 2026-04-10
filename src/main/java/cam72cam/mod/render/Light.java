@@ -135,14 +135,19 @@ public class Light {
             try {
                 //Some branch specific stuff
                 //Need change once switch back to official LDL
-                //i.e. SodiumDynamicLights.get().config.getEntitiesLightSource().get()
+                //i.e.
+                // SodiumDynamicLights.get().config.getEntitiesLightSource().get()
+                // SodiumDynamicLights.get().config.getDynamicLightsMode().isEnabled()
                 Class<?> cls = Class.forName("toni.sodiumdynamiclights.SodiumDynamicLights");
                 Method m1 = cls.getDeclaredMethod("get");
                 Field f1 = cls.getDeclaredField("config");
                 Class<?> config = Class.forName("toni.sodiumdynamiclights.DynamicLightsConfig");
                 Object con = config.cast(f1.get(m1.invoke(null)));
                 Method m2 = config.getDeclaredMethod("getEntitiesLightSource");
-                return ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get();
+                Method m3 = config.getDeclaredMethod("getDynamicLightsMode");
+                Class<?> types = Class.forName("toni.sodiumdynamiclights.DynamicLightsMode");
+                Method m4 = types.getDeclaredMethod("isEnabled");
+                return ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get() && (boolean) m4.invoke(types.cast(m3.invoke(con)));
             } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
                      IllegalAccessException ignored) {
             }
