@@ -10,14 +10,13 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.FileResourcePack;
-import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraftforge.fml.common.Loader;
@@ -28,8 +27,6 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.relauncher.CoreModManager;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -37,8 +34,6 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -148,6 +143,10 @@ public class ModCore {
         return proxy.getGPUTextureSize();
     }
 
+    public List<Mod> getLoadedMods() {
+        return mods;
+    }
+
     @SidedProxy(serverSide = "cam72cam.mod.ModCore$ServerProxy", clientSide = "cam72cam.mod.ModCore$ClientProxy", modId = ModCore.MODID)
     private static Proxy proxy;
     /** Hooked into forge's proxy system and fires off corresponding events */
@@ -170,60 +169,31 @@ public class ModCore {
     }
 
     public static class ClientProxy extends Proxy {
+        private static boolean constructed = false;
+
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
 
-                List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
-
-                String configDir = Loader.instance().getConfigDir().toString();
-                new File(configDir).mkdirs();
-
-                File folder = new File(configDir + File.separator + m.modID());
-                if (folder.exists()) {
-                    if (folder.isDirectory()) {
-                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
-                        for (File file : files) {
-                            packs.add(createPack(file));
-                        }
-
-                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
-                        for (File dir : folders) {
-                            packs.add(createPack(dir));
-                        }
+                if (!constructed) {
+                    for (Mod mod : instance.mods) {
+                        BuiltinPack.loadModResource(mod);
                     }
-                } else {
-                    folder.mkdirs();
-                }
 
-                IResourcePack modPack = createPack(Loader.instance().activeModContainer().getSource());
-                // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-                packs.add(1, modPack);
-                packs.add(modPack);
+                    List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+                    IResourcePack modPack = BuiltinPack.attach(Loader.instance().activeModContainer().getSource());
+                    // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
+                    // (Also injects last modified time access)
+                    // BUG: sounds can still be overridden by resource packs
+                    packs.add(1, modPack);
+                    packs.add(modPack);
+                    BuiltinPack.onConstruct(packs);
+
+                    constructed = true;
+                }
             }
             super.event(event, m);
             m.clientEvent(event);
-        }
-
-        @SideOnly(Side.CLIENT)
-        private static IResourcePack createPack(File path) {
-            if (path.isDirectory()) {
-                return new FolderResourcePack(path) {
-                    @Override
-                    protected InputStream getInputStreamByName(String name) throws IOException {
-                        InputStream stream = super.getInputStreamByName(name);
-                        File file = this.getFile(name);
-                        return new Identifier.InputStreamMod(stream, file.lastModified());
-                    }
-                };
-            } else {
-                return new FileResourcePack(path) {
-                    @Override
-                    protected InputStream getInputStreamByName(String name) throws IOException {
-                        return new Identifier.InputStreamMod(super.getInputStreamByName(name), resourcePackFile.lastModified());
-                    }
-                };
-            }
         }
 
         @Override
@@ -286,6 +256,7 @@ public class ModCore {
                             return;
                         }
                         ModCore.instance.mods.forEach(mod -> mod.clientEvent(ModEvent.RELOAD));
+                        BuiltinPack.reload();
                         ClientEvents.fireReload();
                     });
                     BlockRender.onPostColorSetup();
