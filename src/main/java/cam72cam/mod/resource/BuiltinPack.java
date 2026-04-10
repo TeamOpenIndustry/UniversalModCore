@@ -13,9 +13,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Utilities for wrapping resources across versions.
+ * Utilities for wrapping resources, only available within UMC mods' namespaces.
  * <p>
- * Only available within UMC mods' namespaces.
+ * When handling request, static resources added via <code>put</code> have the highest priority,
+ * then <code>redirect</code>, then<code>conditional</code>.
  * */
 public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
@@ -57,12 +58,12 @@ public class BuiltinPack {
     /**
      * Registers a resource path redirect.
      * <p>
-     * Any requested identifier whose string form starts with {@code from}
-     * will be remapped to {@code to} (prefix replacement).
+     * Any requested identifier whose string form starts with {@code sourcePrefix}
+     * will be remapped to {@code targetPrefix} (simple replacement).
      * This is mainly intended for compatibility aliases (e.g. cross-version path changes).
      */
-    public static void redirect(Identifier from, Identifier to) {
-        REDIRECTS.put(from, to);
+    public static void redirect(Identifier sourcePrefix, Identifier targetPrefix) {
+        REDIRECTS.put(sourcePrefix, targetPrefix);
     }
 
     /**
@@ -224,10 +225,10 @@ public class BuiltinPack {
         }
     }
 
-    private static Identifier handleRedirect(Identifier src, Identifier from, Identifier to) {
-        //Replace [to] with [from] to implement redirect
-        String suffix = src.toString().substring(to.toString().length());
-        return new Identifier(from.toString() + suffix);
+    private static Identifier handleRedirect(Identifier src, Identifier sourcePrefix, Identifier targetPrefix) {
+        //Replace [to] with [from] to redirect the request back
+        String suffix = src.toString().substring(targetPrefix.toString().length());
+        return new Identifier(sourcePrefix.toString() + suffix);
     }
 
     private static Identifier nameToLocation(String path) {
