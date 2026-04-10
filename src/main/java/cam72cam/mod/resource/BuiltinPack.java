@@ -58,8 +58,8 @@ public class BuiltinPack {
     /**
      * Registers a resource path redirect.
      * <p>
-     * Any requested identifier whose string form starts with {@code sourcePrefix}
-     * will be remapped to {@code targetPrefix} (simple replacement).
+     * Any requested identifier whose string form starts with {@code targetPrefix}
+     * will be remapped back to {@code sourcePrefix} (simple replacement).
      * This is mainly intended for compatibility aliases (e.g. cross-version path changes).
      */
     public static void redirect(Identifier sourcePrefix, Identifier targetPrefix) {
@@ -135,7 +135,7 @@ public class BuiltinPack {
     }
 
     /**
-     * Internal
+     * Internal, Client side
      */
     private static class InternalPack extends AbstractResourcePack {
         public InternalPack() {
@@ -151,16 +151,16 @@ public class BuiltinPack {
 
             Identifier ident = nameToLocation(resourcePath);
 
+            if (DIRECT_RESOURCES.containsKey(ident)) {
+                return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
+            }
+
             for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
                 String src = ident.toString();
                 if (src.startsWith(entry.getValue().toString())) {
                     Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
                     return redirect.getResourceStream();
                 }
-            }
-
-            if (DIRECT_RESOURCES.containsKey(ident)) {
-                return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
             }
 
             //It must already have been populated in hasResourceName if exists
@@ -225,6 +225,44 @@ public class BuiltinPack {
         public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException {
             return super.getPackMetadata(metadataSerializer, metadataSectionName);
         }
+    }
+
+    /**
+     * Internal, Server side
+     */
+    public static InputStream loadServerResource(Identifier ident) throws IOException {
+        if (ident.getPath().endsWith("mcmeta")) {
+            //We don't handle resource metadata
+            return null;
+        }
+
+        if (DIRECT_RESOURCES.containsKey(ident)) {
+            return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
+        }
+
+        for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
+            String src = ident.toString();
+            if (src.startsWith(entry.getValue().toString())) {
+                Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
+                return redirect.getResourceStream();
+            }
+        }
+
+        if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
+            return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+        }
+
+        synchronized (GENERATORS) {
+            for (Function<Identifier, byte[]> generator : GENERATORS) {
+                byte[] stream = generator.apply(ident);
+                if (stream != null) {
+                    CACHED_GENERATOR_RESULTS.put(ident, stream);
+                    return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+                }
+            }
+        }
+
+        return null;
     }
 
     private static Identifier handleRedirect(Identifier src, Identifier sourcePrefix, Identifier targetPrefix) {
