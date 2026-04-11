@@ -42,6 +42,8 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -194,6 +196,29 @@ public class ModCore {
                     packs.add(1, modPack);
                     packs.add(modPack);
                     BuiltinPack.onConstruct(packs);
+
+                    //Backport of lowercase language v
+                    //No redirect here as language codes are not enumerable in 1.7...
+                    BuiltinPack.conditional(ident -> {
+                        String path = ident.getPath();
+                        if (!path.endsWith(".lang") || path.toLowerCase(Locale.ROOT).equals(path)) {
+                            // Not lang or already converted
+                            return null;
+                        }
+
+                        Identifier modern = new Identifier(ident.toString().toLowerCase());
+                        if (!modern.canLoad()) {
+                            return null;
+                        }
+
+                        try (InputStream stream = modern.getResourceStream()) {
+                            byte[] buffer = new byte[stream.available()];
+                            stream.read(buffer);
+                            return buffer;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
 
                     constructed = true;
                 }

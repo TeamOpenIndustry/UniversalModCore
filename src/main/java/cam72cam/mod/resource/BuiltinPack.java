@@ -1,13 +1,11 @@
 package cam72cam.mod.resource;
 
 import cam72cam.mod.ModCore;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.*;
-import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.*;
 import java.util.*;
@@ -228,11 +226,6 @@ public class BuiltinPack {
         @Override
         public String getPackName() {
             return "UMC Generated Resources";
-        }
-
-        @Override
-        public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException {
-            return super.getPackMetadata(metadataSerializer, metadataSectionName);
         }
     }
 
