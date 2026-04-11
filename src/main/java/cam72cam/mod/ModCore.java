@@ -1,6 +1,7 @@
 package cam72cam.mod;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -210,16 +211,58 @@ public class ModCore {
             List<IResourcePack> packs = new ArrayList<>();
 
             for (Mod mod : instance.mods) {
-                BuiltinPack.loadModResource(mod);
+                BuiltinPack.loadModResource(mod, packs);
             }
 
-            IResourcePack modPack = BuiltinPack.attach();
-            // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
-            // (Also injects last modified time access)
-            // BUG: sounds can still be overridden by resource packs
-            packs.add(1, modPack);
-            packs.add(modPack);
             BuiltinPack.onConstruct(packs);
+
+            //Wrapper for lang format language files
+            BuiltinPack.conditional(ident -> {
+                String path = ident.getPath();
+                if (!path.startsWith("lang/") || !path.endsWith(".json")) {
+                    return null;
+                }
+
+                Identifier lang = new Identifier(ident.toString().replace(".json", ".lang"));
+                if (!lang.canLoad()) {
+                    return null;
+                }
+
+                Map<String, String> translationMap = new HashMap<>();
+                try {
+                    for (InputStream stream : lang.getResourceStreamAll()) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                //Remove comment
+                                line = line.trim();
+                                if (line.isEmpty() || line.startsWith("#")) {
+                                    continue;
+                                }
+
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    translationMap.put(splits[0].trim(), splits[1].trim());
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Set<String> translations = new HashSet<>();
+                translationMap.forEach((key, value) -> {
+                    if (!key.isEmpty()) {
+                        translations.add(String.format("\"%s\": \"%s\"", key, value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                    }
+                });
+                String output = "{" + String.join(",", translations) + "}";
+                return output.getBytes(StandardCharsets.UTF_8);
+            });
 
             Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
                 @Override
@@ -245,47 +288,6 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
-        }
-
-        private static class UMCFolderPack extends FolderPack  {
-            public UMCFolderPack(File folder) {
-                super(folder);
-            }
-
-            @Override
-            public InputStream getInputStream(String name) throws IOException {
-                InputStream stream = super.getInputStream(name);
-                File file = this.getFile(name);
-                return new Identifier.InputStreamMod(stream, file.lastModified());
-            }
-
-            @Override
-            public boolean resourceExists(String resourcePath) {
-                return super.resourceExists(resourcePath);
-            }
-        }
-
-        private static class UMCFilePack extends FilePack  {
-            private final File path;
-
-            public UMCFilePack(File fileIn) {
-                super(fileIn);
-                this.path = fileIn;
-            }
-
-            @Override
-            public InputStream getInputStream(String name) throws IOException {
-                return new Identifier.InputStreamMod(super.getInputStream(name), path.lastModified());
-            }
-        }
-
-
-        private static ResourcePack createPack(File path) {
-            if (path.isDirectory()) {
-                return new UMCFolderPack(path);
-            } else {
-                return new UMCFilePack(path);
-            }
         }
     }
 

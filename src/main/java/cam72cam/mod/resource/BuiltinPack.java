@@ -1,17 +1,19 @@
 package cam72cam.mod.resource;
 
 import cam72cam.mod.ModCore;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.*;
-import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.resources.*;
+import net.minecraft.resources.data.IMetadataSectionSerializer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -77,36 +79,27 @@ public class BuiltinPack {
     /**
      * Registers a file or folder as a resource pack to the game.
      */
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static IResourcePack attach(File path) {
         if (path.isDirectory()) {
-            return new FolderResourcePack(path) {
-                @Override
-                protected InputStream getInputStreamByName(String name) throws IOException {
-                    InputStream stream = super.getInputStreamByName(name);
-                    File file = this.getFile(name);
-                    return new Identifier.InputStreamMod(stream, file.lastModified());
-                }
-            };
+            return new UMCFolderPack(path);
         } else {
-            return new FileResourcePack(path) {
-                @Override
-                protected InputStream getInputStreamByName(String name) throws IOException {
-                    return new Identifier.InputStreamMod(super.getInputStreamByName(name), resourcePackFile.lastModified());
-                }
-            };
+            return new UMCFilePack(path);
         }
     }
 
     /**
      * Internal
      */
-    public static void loadModResource(ModCore.Mod mod) {
-        List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
-
-        String configDir = Loader.instance().getConfigDir().toString();
+    public static void loadModResource(ModCore.Mod mod, List<IResourcePack> packs) {
+        String configDir = FMLPaths.CONFIGDIR.toString();
         new File(configDir).mkdirs();
 
+        IResourcePack modPack = BuiltinPack.attach(ModList.get().getModFileById(mod.modID()).getFile().getFilePath().toFile());
+        // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
+        // (Also injects last modified time access)
+        // BUG: sounds can still be overridden by resource packs
+        packs.add(modPack);
         File folder = new File(configDir + File.separator + mod.modID());
         if (folder.exists()) {
             if (folder.isDirectory()) {
@@ -123,6 +116,7 @@ public class BuiltinPack {
         } else {
             folder.mkdirs();
         }
+        packs.add(modPack);
     }
 
     /**
@@ -143,17 +137,15 @@ public class BuiltinPack {
     }
 
     /**
-     * Internal, Client side
+     * Internal, Client side assets loading
      */
-    @SideOnly(Side.CLIENT)
-    private static class InternalPack extends AbstractResourcePack {
+    private static class InternalPack extends ResourcePack {
         public InternalPack() {
-            //We're initializing UMC
-            super(Loader.instance().activeModContainer().getSource());
+            super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
         }
 
         @Override
-        protected InputStream getInputStreamByName(String resourcePath) throws IOException {
+        public InputStream getInputStream(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
                 return new ByteArrayInputStream("{}".getBytes());
             }
@@ -181,7 +173,7 @@ public class BuiltinPack {
         }
 
         @Override
-        protected boolean hasResourceName(String resourcePath) {
+        public boolean resourceExists(String resourcePath) {
             if (resourcePath.endsWith("mcmeta") && !"pack.mcmeta".equals(resourcePath)) {
                 //We don't handle resource metadata
                 return false;
@@ -219,27 +211,38 @@ public class BuiltinPack {
         }
 
         @Override
-        public Set<String> getResourceDomains() {
+        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public Set<String> getResourceNamespaces(ResourcePackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
         }
 
         @Override
-        public String getPackName() {
+        public String getName() {
             return "UMC Generated Resources";
         }
 
+        @Nullable
         @Override
-        public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException {
-            return super.getPackMetadata(metadataSerializer, metadataSectionName);
+        public <T> T getMetadata(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
+            return getResourceMetadata(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+        }
+
+        @Override
+        public void close() throws IOException {
+            //Have nothing to do here
         }
     }
 
     /**
-     * Internal, Server side
+     * Internal, Server side assets loading
      */
-    @SideOnly(Side.SERVER)
+    @OnlyIn(Dist.DEDICATED_SERVER)
     public static InputStream loadServerResource(Identifier ident) throws IOException {
         if (ident.getPath().endsWith("mcmeta")) {
             //We don't handle resource metadata
@@ -275,6 +278,38 @@ public class BuiltinPack {
         return null;
     }
 
+    private static class UMCFolderPack extends FolderPack {
+        public UMCFolderPack(File folder) {
+            super(folder);
+        }
+
+        @Override
+        public InputStream getInputStream(String name) throws IOException {
+            InputStream stream = super.getInputStream(name);
+            File file = this.getFile(name);
+            return new Identifier.InputStreamMod(stream, file.lastModified());
+        }
+
+        @Override
+        public boolean resourceExists(String resourcePath) {
+            return super.resourceExists(resourcePath);
+        }
+    }
+
+    private static class UMCFilePack extends FilePack {
+        private final File path;
+
+        public UMCFilePack(File fileIn) {
+            super(fileIn);
+            this.path = fileIn;
+        }
+
+        @Override
+        public InputStream getInputStream(String name) throws IOException {
+            return new Identifier.InputStreamMod(super.getInputStream(name), path.lastModified());
+        }
+    }
+
     private static Identifier handleRedirect(Identifier src, String requestedPrefix, String actualPrefix) {
         //Replace [requestedPrefix] with [actualPrefix] to redirect the request back
         String suffix = src.toString().substring(requestedPrefix.length());
@@ -283,12 +318,18 @@ public class BuiltinPack {
 
     private static Identifier nameToLocation(String path) {
         if(path.startsWith("assets/")) {
-            //assets/[domain]/[path] -> domain:path, for 1.12- path
+            //assets/[domain]/[path] -> domain:path
             path = path.substring(7);
             int x = path.indexOf('/');
             return new Identifier(path.substring(0, x), path.substring(x + 1));
+        } else if (path.startsWith("data/")) {
+            //data/[domain]/[path] -> domain:path
+            //However we added this as client-only resources...
+            //TODO (internal) datapack API
+            path = path.substring(5);
+            int x = path.indexOf('/');
+            return new Identifier(path.substring(0, x), path.substring(x + 1));
         }
-        //Not possible to hit below 1.12, except for pack.mcmeta
         return new Identifier("universalmodcore", "invalid");
     }
 }
