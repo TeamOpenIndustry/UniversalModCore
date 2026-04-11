@@ -146,6 +146,11 @@ class Data {
 
     public static class ServerProxy extends DataProxy {
         private InputStream getEmbeddedResourceStream(Identifier location) throws IOException {
+            //Check our custom logic first
+            InputStream stream = BuiltinPack.loadServerResource(location);
+            if (stream != null) {
+                return stream;
+            }
             URL url = this.getClass().getResource(pathString(location, true));
             return url != null ? this.getClass().getResourceAsStream(pathString(location, true)) : null;
         }
