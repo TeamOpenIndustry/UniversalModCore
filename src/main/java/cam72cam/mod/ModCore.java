@@ -16,6 +16,8 @@ import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
@@ -33,13 +35,12 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
-import java.io.File;
+import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
@@ -188,6 +189,40 @@ public class ModCore {
                     packs.add(1, modPack);
                     packs.add(modPack);
                     BuiltinPack.onConstruct(packs);
+
+                    //Wrapper for JSON translations
+                    BuiltinPack.conditional(ident -> {
+                        String path = ident.getPath();
+                        if (!path.startsWith("lang/") || !path.endsWith(".lang")) {
+                            return null;
+                        }
+
+                        String req = ident.toString();
+                        Identifier json = new Identifier(req.replace(".lang", ".json").toLowerCase());
+
+                        if (!json.canLoad()) {
+                            return null;
+                        }
+
+                        Map<String, String> translation = new LinkedHashMap<>();
+
+                        try {
+                            for (InputStream stream : json.getResourceStreamAll()) {
+                                try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                                    JsonElement root = new JsonParser().parse(reader);
+                                    for (Map.Entry<String, JsonElement> entry : root.getAsJsonObject().entrySet()) {
+                                        translation.put(entry.getKey(), entry.getValue().getAsString());
+                                    }
+                                }
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        StringBuilder out = new StringBuilder();
+                        translation.forEach((k, v) -> out.append(k).append('=').append(v).append('\n'));
+                        return out.toString().getBytes(StandardCharsets.UTF_8);
+                    });
 
                     constructed = true;
                 }
