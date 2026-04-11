@@ -84,7 +84,7 @@ public class BuiltinPack {
                 @Override
                 protected InputStream getInputStreamByName(String name) throws IOException {
                     InputStream stream = super.getInputStreamByName(name);
-                    File file = this.getFile(name);
+                    File file = new File(this.resourcePackFile, name);
                     return new Identifier.InputStreamMod(stream, file.lastModified());
                 }
             };
