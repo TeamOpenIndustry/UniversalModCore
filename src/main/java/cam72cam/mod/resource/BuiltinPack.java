@@ -6,6 +6,8 @@ import net.minecraft.client.resources.*;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.*;
 import java.util.*;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 
 /**
  * Utilities for wrapping resources, only available within UMC mods' namespaces.
+ * <p>
+ * Should be called as soon as possible!
  * <p>
  * When handling request, static resources added via <code>put</code> have the highest priority,
  * then <code>redirect</code>, then<code>conditional</code>.
@@ -68,8 +72,9 @@ public class BuiltinPack {
     }
 
     /**
-     * Registers a file or folder as an resource pack to the game.
+     * Registers a file or folder as a resource pack to the game.
      */
+    @SideOnly(Side.CLIENT)
     public static IResourcePack attach(File path) {
         if (path.isDirectory()) {
             return new FolderResourcePack(path) {
@@ -137,6 +142,7 @@ public class BuiltinPack {
     /**
      * Internal, Client side
      */
+    @SideOnly(Side.CLIENT)
     private static class InternalPack extends AbstractResourcePack {
         public InternalPack() {
             //We're initializing UMC
@@ -230,6 +236,7 @@ public class BuiltinPack {
     /**
      * Internal, Server side
      */
+    @SideOnly(Side.SERVER)
     public static InputStream loadServerResource(Identifier ident) throws IOException {
         if (ident.getPath().endsWith("mcmeta")) {
             //We don't handle resource metadata
@@ -266,14 +273,14 @@ public class BuiltinPack {
     }
 
     private static Identifier handleRedirect(Identifier src, Identifier sourcePrefix, Identifier targetPrefix) {
-        //Replace [to] with [from] to redirect the request back
+        //Replace [targetPrefix] with [sourcePrefix] to redirect the request back
         String suffix = src.toString().substring(targetPrefix.toString().length());
         return new Identifier(sourcePrefix.toString() + suffix);
     }
 
     private static Identifier nameToLocation(String path) {
         if(path.startsWith("assets/")) {
-            //assets/[domain]/[path] -> domain:path
+            //assets/[domain]/[path] -> domain:path, for 1.12- path
             path = path.substring(7);
             int x = path.indexOf('/');
             return new Identifier(path.substring(0, x), path.substring(x + 1));
