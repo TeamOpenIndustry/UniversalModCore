@@ -55,9 +55,11 @@ public class EntityRenderer extends net.minecraft.client.renderer.entity.EntityR
 
     /**
      * Sooo this is a fun one...
-     *
+     * <p>
      * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
+     * <p>
      * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
+     * <p>
      * We try to detect entities in this edge case and render them here to prevent the issue.
      */
     private static void renderLargeEntities(RenderState state, float partialTicks) {
@@ -85,6 +87,7 @@ public class EntityRenderer extends net.minecraft.client.renderer.entity.EntityR
             AxisAlignedBB chunk = new AxisAlignedBB(min.internal(), max.internal());
             if (!camera.isBoundingBoxInFrustum(chunk) && camera.isBoundingBoxInFrustum(entity.internal.getRenderBoundingBox())) {
                 Minecraft.getInstance().getRenderManager().renderEntityStatic(entity.internal, partialTicks, true);
+                Minecraft.getInstance().getRenderManager().renderMultipass(entity.internal, partialTicks);
             }
         }
 
