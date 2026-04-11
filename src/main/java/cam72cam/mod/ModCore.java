@@ -197,7 +197,7 @@ public class ModCore {
                     packs.add(modPack);
                     BuiltinPack.onConstruct(packs);
 
-                    //Backport of lowercase language v
+                    //Backport of lowercase language code
                     //No redirect here as language codes are not enumerable in 1.7...
                     BuiltinPack.conditional(ident -> {
                         String path = ident.getPath();

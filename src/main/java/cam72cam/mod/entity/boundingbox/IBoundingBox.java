@@ -1,12 +1,11 @@
 package cam72cam.mod.entity.boundingbox;
 
-import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import net.minecraft.util.AxisAlignedBB;
 
 public interface IBoundingBox {
-    IBoundingBox INFINITE = new DefaultBoundingBox(TileEntity.INFINITE_EXTENT_AABB);
+    IBoundingBox INFINITE = new DefaultBoundingBox(AxisAlignedBB.getBoundingBox(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY));
     IBoundingBox ORIGIN = new DefaultBoundingBox(AxisAlignedBB.getBoundingBox(0,0,0,0,0,0));
     IBoundingBox BLOCK = new DefaultBoundingBox(AxisAlignedBB.getBoundingBox(0,0,0,1,1,1));
 
