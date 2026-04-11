@@ -24,13 +24,11 @@ import java.util.stream.Collectors;
  * */
 public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
-    private static final TreeMap<Identifier, Identifier> REDIRECTS =
+    //Stringified identifier, longer is better
+    private static final TreeMap<String, String> REDIRECTS =
             new TreeMap<>((a, b) -> {
-                //Longer is better
-                String aStr = a.toString();
-                String bStr = b.toString();
-                int d = Integer.compare(bStr.length(), aStr.length());
-                return d != 0 ? d : aStr.compareTo(bStr);
+                int d = Integer.compare(b.length(), a.length());
+                return  d != 0 ? d : a.compareTo(b);
             });
     private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
     private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
@@ -62,13 +60,18 @@ public class BuiltinPack {
     /**
      * Registers a resource path redirect.
      * <p>
-     * Any requested identifier whose string form starts with {@code targetPrefix}
-     * will be remapped back to {@code sourcePrefix} (simple replacement).
+     * Any requested identifier whose string form starts with {@code requestedPrefix}
+     * will be remapped back to {@code actualPrefix} (simple replacement).
      * This is mainly intended for compatibility aliases (e.g. cross-version path changes).
      */
-    public static void redirect(Identifier sourcePrefix, Identifier targetPrefix) {
+    public static void redirect(Identifier requestedPrefix, Identifier actualPrefix) {
         //Namespaces will be redirected!
-        REDIRECTS.put(sourcePrefix, targetPrefix);
+        String requested = requestedPrefix.toString();
+        String actual = actualPrefix.toString();
+        if (actual.startsWith(requested)) {
+            throw new IllegalArgumentException("Attempting to redirect to child folders, this is not allowed! Redirect with full file name instead!");
+        }
+        REDIRECTS.put(requested, actual);
     }
 
     /**
@@ -161,9 +164,9 @@ public class BuiltinPack {
                 return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
             }
 
-            for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
+            for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
                 String src = ident.toString();
-                if (src.startsWith(entry.getValue().toString())) {
+                if (src.startsWith(entry.getKey())) {
                     Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
                     return redirect.getResourceStream();
                 }
@@ -190,9 +193,9 @@ public class BuiltinPack {
                 return true;
             }
 
-            for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
+            for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
                 //Check if it's start with any of the [to]s
-                if (ident.toString().startsWith(entry.getValue().toString())
+                if (ident.toString().startsWith(entry.getKey())
                         && handleRedirect(ident, entry.getKey(), entry.getValue()).canLoad()) {
                     return true;
                 }
@@ -247,9 +250,9 @@ public class BuiltinPack {
             return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
         }
 
-        for (Map.Entry<Identifier, Identifier> entry : REDIRECTS.entrySet()) {
+        for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
             String src = ident.toString();
-            if (src.startsWith(entry.getValue().toString())) {
+            if (src.startsWith(entry.getKey())) {
                 Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
                 return redirect.getResourceStream();
             }
@@ -272,10 +275,10 @@ public class BuiltinPack {
         return null;
     }
 
-    private static Identifier handleRedirect(Identifier src, Identifier sourcePrefix, Identifier targetPrefix) {
-        //Replace [targetPrefix] with [sourcePrefix] to redirect the request back
-        String suffix = src.toString().substring(targetPrefix.toString().length());
-        return new Identifier(sourcePrefix.toString() + suffix);
+    private static Identifier handleRedirect(Identifier src, String requestedPrefix, String actualPrefix) {
+        //Replace [requestedPrefix] with [actualPrefix] to redirect the request back
+        String suffix = src.toString().substring(requestedPrefix.length());
+        return new Identifier(actualPrefix + suffix);
     }
 
     private static Identifier nameToLocation(String path) {
