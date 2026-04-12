@@ -6,25 +6,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraftforge.data.loading.DatagenModLoader;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.packs.*;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
-import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackCompatibility;
-import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.server.packs.resources.Resource;
 
 import java.util.*;
 
 import net.minecraft.resources.*;
-import net.minecraftforge.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,13 +28,13 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.util.Unit;
 import net.minecraftforge.common.MinecraftForge;
@@ -59,11 +51,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(ModCore.MODID)
@@ -195,6 +184,10 @@ public class ModCore {
         }
     }
 
+    public List<Mod> getLoadedMods() {
+        return mods;
+    }
+
     private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
@@ -238,49 +231,54 @@ public class ModCore {
             }
             Config.getMaxTextureSize(); //populate
 
-            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-            Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer, packInfoFactory) -> {
-                List<PackResources> packs = new ArrayList<>();
-                packs.add(new TranslationResourcePack());
+            BuiltinPack.loadClientResources();
 
-                for (Mod m : mods) {
-                    PackResources modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
-                    packs.add(modPack);
-                    String configDir = FMLPaths.CONFIGDIR.get().toString();
-                    new File(configDir).mkdirs();
+            //Wrapper for lang format language files
+            BuiltinPack.conditional(ident -> {
+                String path = ident.getPath();
+                if (!path.startsWith("lang/") || !path.endsWith(".json")) {
+                    return null;
+                }
 
-                    File folder = new File(configDir + File.separator + m.modID());
-                    if (folder.exists()) {
-                        if (folder.isDirectory()) {
-                            File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
-                            for (File file : files) {
-                                packs.add(createPack(file));
-                            }
+                Identifier lang = new Identifier(ident.toString().replace(".json", ".lang"));
+                if (!lang.canLoad()) {
+                    return null;
+                }
 
-                            File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
-                            for (File dir : folders) {
-                                packs.add(createPack(dir));
+                Map<String, String> translationMap = new HashMap<>();
+                try {
+                    for (InputStream stream : lang.getResourceStreamAll()) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                //Remove comment
+                                line = line.trim();
+                                if (line.isEmpty() || line.startsWith("#")) {
+                                    continue;
+                                }
+
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    translationMap.put(splits[0].trim(), splits[1].trim());
+                                }
                             }
                         }
-                    } else {
-                        folder.mkdirs();
                     }
-                    packs.add(modPack);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
 
-
-                for (PackResources pack : packs) {
-                    consumer.accept(new Pack(pack.getName(),
-                            true,
-                            () -> pack,
-                            new TextComponent(""),
-                            new TextComponent(""),
-                            PackCompatibility.COMPATIBLE,
-                            Pack.Position.TOP,
-                            true,
-                            PackSource.DEFAULT,
-                            true));
-                }
+                Set<String> translations = new HashSet<>();
+                translationMap.forEach((key, value) -> {
+                    if (!key.isEmpty()) {
+                        translations.add(String.format("\"%s\": \"%s\"", key, value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                    }
+                });
+                String output = "{" + String.join(",", translations) + "}";
+                return output.getBytes(StandardCharsets.UTF_8);
             });
         }
 
@@ -288,149 +286,6 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
-        }
-
-        private static class TranslationResourcePack extends AbstractPackResources {
-            public TranslationResourcePack() {
-                super(null);
-            }
-
-            private ResourceLocation toLang(String path) {
-                // assets/mod/location
-                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
-                String[] parts = path.split("/");
-                String type = parts[0];
-                String namespace = parts[1];
-                String prefix = String.format("%s/%s/", type, namespace);
-                path = path.replace(prefix, "").replace(".json", ".lang");
-                String lang = path.split("_")[1].replace(".lang", "");
-                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
-                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
-                    @Override
-                    public String getPath() {
-                        // Very evil...
-                        return path;
-                    }
-                };
-            }
-
-            @Override
-            public boolean hasResource(String resourcePath) {
-                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
-                    ResourceLocation lang = toLang(resourcePath);
-                    return Minecraft.getInstance().getResourceManager().hasResource(lang);
-                }
-                return false;
-            }
-
-            @Override
-            public InputStream getResource(String resourcePath) throws IOException {
-                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
-                    // Magical Translations!
-                    ResourceLocation lang = toLang(resourcePath);
-                    if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
-                        Map<String, String> translationMap = new HashMap<>();
-                        for (Resource resource : Minecraft.getInstance().getResourceManager().getResources(lang)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    //Remove comment
-                                    line = line.trim();
-                                    int comment = line.indexOf("#");
-                                    if (line.isEmpty() || comment == 0) {
-                                        continue;
-                                    }
-
-                                    String[] splits = line.split("=", 2);
-                                    if (splits.length == 2) {
-                                        translationMap.put(splits[0].trim(), splits[1].trim());
-                                    }
-                                }
-                            }
-                        }
-
-                        Set<String> translations = new HashSet<>();
-                        translationMap.forEach((key, value) -> {
-                            if (!key.isEmpty()) {
-                                translations.add(String.format("\"%s\": \"%s\"", key, value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                            }
-                        });
-                        String output = "{" + String.join(",", translations) + "}";
-                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public Collection<ResourceLocation> getResources(PackType p_225637_1_, String p_225637_2_, String p_225637_3_, int p_225637_4_, Predicate<String> p_225637_5_) {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public Set<String> getNamespaces(PackType p_195759_1_) {
-                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
-            }
-
-            @Override
-            public void close() {
-
-            }
-
-            @Override
-            public String getName() {
-                return "Translation Hackery";
-            }
-
-            @Nullable
-            @Override
-            public <T> T getMetadataSection(MetadataSectionSerializer<T> p_195760_1_) throws IOException {
-                return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
-            }
-        }
-
-        private static class UMCFolderPack extends FolderPackResources {
-            public UMCFolderPack(File folder) {
-                super(folder);
-            }
-
-            @Override
-            public InputStream getResource(String name) throws IOException {
-                InputStream stream = super.getResource(name);
-                File file = this.getFile(name);
-                return new Identifier.InputStreamMod(stream, file.lastModified());
-            }
-
-            @Override
-            public boolean hasResource(String resourcePath) {
-                return super.hasResource(resourcePath);
-            }
-        }
-
-        private static class UMCFilePack extends FilePackResources {
-            private final File path;
-
-            public UMCFilePack(File fileIn) {
-                super(fileIn);
-                this.path = fileIn;
-            }
-
-            @Override
-            public InputStream getResource(String name) throws IOException {
-                return new Identifier.InputStreamMod(super.getResource(name), path.lastModified());
-            }
-        }
-
-
-        private static PackResources createPack(File path) {
-            if (path.isDirectory()) {
-                return new UMCFolderPack(path);
-            } else {
-                return new UMCFilePack(path);
-            }
         }
     }
 
@@ -485,8 +340,9 @@ public class ModCore {
                     // Instance can be null during data gen
                     if (Minecraft.getInstance() != null) {
                         ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
                     }
+                    break;
                 case SETUP:
                     try {
                         Minecraft.getInstance().createSearchTrees();

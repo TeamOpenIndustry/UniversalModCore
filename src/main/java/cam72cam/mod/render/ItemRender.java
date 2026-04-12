@@ -159,7 +159,8 @@ public class ItemRender {
                     return type;
                 }
             }
-            return null;
+            //We're facing enums added by other mods, use NONE as fallback
+            return NONE;
         }
     }
 
