@@ -76,7 +76,7 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        float[] oldColor = RenderSystem.getShaderColor();
+        float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
         ShaderInstance oldShader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);

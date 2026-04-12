@@ -49,6 +49,8 @@ public class Recipes {
                 for (int i = 0; i < ingredients.length; i++) {
                     Fuzzy ingredient = ingredients[i];
                     if (ingredient != null) {
+                        //ForgeHooks#L1171: If oc isn't loaded radio card's recipe will refuse to show, that's normal
+                        //TODO Mixing in ClientRecipeBook#L53 incomplete?
                         input.set(i, Ingredient.of(ingredient.getTag()));
                     }
                 }
