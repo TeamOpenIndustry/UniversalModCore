@@ -362,7 +362,7 @@ public class BuiltinPack {
                 return new ByteArrayInputStream(("{\n" +
                                                  "  \"pack\": {\n" +
                                                  "    \"description\": \"UMC Generated Data\",\n" +
-                                                 "    \"pack_format\": 4\n" +
+                                                 "    \"pack_format\": 5\n" +
                                                  "  }\n" +
                                                  "}").getBytes(StandardCharsets.UTF_8));
             }
