@@ -1,14 +1,16 @@
 package cam72cam.mod.render;
 
+import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -17,9 +19,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Light {
-    private static EntityType<LightEntity>[] types = new EntityType[16];
+    private static final ConcurrentLinkedDeque<LightEntity> lights = new ConcurrentLinkedDeque<>();
+
+    private static final EntityType<LightEntity>[] types = new EntityType[16];
 
     private LightEntity internal;
     private double lightLevel;
@@ -55,8 +60,9 @@ public class Light {
         EntityType<LightEntity> type = types[ll];
         internal = type.create(world);
         internal.setPos(pos.x, pos.y, pos.z);
-        world.addFreshEntity(internal);
+//        world.addFreshEntity(internal);
         this.lightLevel = lightLevel;
+        lights.add(internal);
     }
 
     public static void register() {
@@ -71,6 +77,25 @@ public class Light {
                 types[i] = et;
             }
         });
+    }
+
+    public static void registerClient() {
+        if(isLDLInstalled()) {
+            for (int i = 1; i <= 15; i++) {
+                EntityType<LightEntity> et = types[i];
+                int finalI = i;
+                DynamicLightHandlers.registerDynamicLightHandler(et, e -> finalI);
+            }
+            ClientEvents.TICK.subscribe(Light::onClientTick);
+        }
+    }
+
+    public static void onClientTick() {
+        if(MinecraftClient.isPaused()) return;
+        for (LightEntity light : lights) {
+            ClientLevel level = (ClientLevel) light.level();
+            level.guardEntityTick(level::tickNonPassenger, light);
+        }
     }
 
     // Client only
@@ -102,13 +127,22 @@ public class Light {
     }
 
     public static boolean enabled() {
-        if (!OptiFine.isLoaded()) {
-            return false;
+        boolean flag = isLDLInstalled();
+        if (flag) {
+            try {
+
+            } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
+                     IllegalAccessException ignored) {
+            }
         }
+        return flag;
+    }
+
+    private static boolean isLDLInstalled() {
         try {
-            Class<?> optiConfig = Class.forName("Config");
-            return Objects.equals(true, optiConfig.getDeclaredMethod("isDynamicLights").invoke(null));
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            Class<?> cls = Class.forName("dev.lambdaurora.lambdynlights.api.DynamicLightsInitializer");
+            return true;
+        } catch (ClassNotFoundException ignored) {
             return false;
         }
     }

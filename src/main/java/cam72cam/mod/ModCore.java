@@ -2,25 +2,16 @@ package cam72cam.mod;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.resource.BuiltinPack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.logging.LogUtils;
-import net.minecraft.FileUtil;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.packs.resources.IoSupplier;
-import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.server.packs.*;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
-import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.server.packs.resources.Resource;
 
 import java.util.*;
 
@@ -28,10 +19,10 @@ import net.minecraft.util.Unit;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.CreativeModeTabRegistry;
@@ -40,6 +31,7 @@ import net.neoforged.neoforge.data.loading.DatagenModLoader;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.minecraft.resources.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,17 +49,13 @@ import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.repository.PackCompatibility;
-import net.neoforged.fml.loading.FMLEnvironment;
+import net.minecraft.server.packs.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.neoforged.fml.common.Mod(ModCore.MODID)
@@ -199,6 +187,10 @@ public class ModCore {
         }
     }
 
+    public List<Mod> getLoadedMods() {
+        return mods;
+    }
+
     private static Proxy proxy = FMLEnvironment.dist.isClient() ? new ClientProxy() : new ServerProxy();
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
@@ -242,60 +234,54 @@ public class ModCore {
             }
             Config.getMaxTextureSize(); //populate
 
-            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-            Minecraft.getInstance().getResourcePackRepository().addPackFinder(consumer -> {
-                List<PackResources> packs = new ArrayList<>();
-                packs.add(new TranslationResourcePack());
+            BuiltinPack.loadClientResources();
 
-                for (Mod m : mods) {
-                    PackResources modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
-                    packs.add(modPack);
-                    String configDir = FMLPaths.CONFIGDIR.get().toString();
-                    new File(configDir).mkdirs();
+            //Wrapper for lang format language files
+            BuiltinPack.conditional(ident -> {
+                String path = ident.getPath();
+                if (!path.startsWith("lang/") || !path.endsWith(".json")) {
+                    return null;
+                }
 
-                    File folder = new File(configDir + File.separator + m.modID());
-                    if (folder.exists()) {
-                        if (folder.isDirectory()) {
-                            File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
-                            for (File file : files) {
-                                packs.add(createPack(file));
-                            }
+                Identifier lang = new Identifier(ident.toString().replace(".json", ".lang"));
+                if (!lang.canLoad()) {
+                    return null;
+                }
 
-                            File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
-                            for (File dir : folders) {
-                                packs.add(createPack(dir));
+                Map<String, String> translationMap = new HashMap<>();
+                try {
+                    for (InputStream stream : lang.getResourceStreamAll()) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                //Remove comment
+                                line = line.trim();
+                                if (line.isEmpty() || line.startsWith("#")) {
+                                    continue;
+                                }
+
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    translationMap.put(splits[0].trim(), splits[1].trim());
+                                }
                             }
                         }
-                    } else {
-                        folder.mkdirs();
                     }
-                    packs.add(modPack);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
 
-
-                for (PackResources pack : packs) {
-                    //TODO 1.21.1
-                    PackLocationInfo info = new PackLocationInfo(pack.packId(),
-                                                                 Component.literal(""),
-                                                                 PackSource.BUILT_IN,
-                                                                 Optional.empty());
-                    consumer.accept(new Pack(
-                            info,
-                            new Pack.ResourcesSupplier() {
-                                @Override
-                                public PackResources openPrimary(PackLocationInfo p_326301_) {
-                                    return pack;
-                                }
-
-                                @Override
-                                public PackResources openFull(PackLocationInfo p_326241_, Pack.Metadata p_325959_) {
-                                    return pack;
-                                }
-                            },
-                            new Pack.Metadata(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
-                            new PackSelectionConfig(true, Pack.Position.TOP, true)
-                            ));
-                }
+                Set<String> translations = new HashSet<>();
+                translationMap.forEach((key, value) -> {
+                    if (!key.isEmpty()) {
+                        translations.add(String.format("\"%s\": \"%s\"", key, value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
+                    }
+                });
+                String output = "{" + String.join(",", translations) + "}";
+                return output.getBytes(StandardCharsets.UTF_8);
             });
         }
 
@@ -303,149 +289,6 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
-        }
-
-        private static class TranslationResourcePack extends AbstractPackResources {
-            public TranslationResourcePack() {
-                super(new PackLocationInfo("translation Hackery",
-                                           Component.literal("translation Hackery"),
-                                           PackSource.BUILT_IN,
-                                           Optional.empty()));
-            }
-
-            @org.jetbrains.annotations.Nullable
-            @Override
-            public IoSupplier<InputStream> getRootResource(String... p_252049_) {
-                return null;
-            }
-
-            @org.jetbrains.annotations.Nullable
-            @Override
-            public IoSupplier<InputStream> getResource(PackType type, ResourceLocation resourcePath) {
-                if (resourcePath.getPath().contains("lang/") && resourcePath.getPath().endsWith(".json")) {
-                    // Magical Translations!
-                    ResourceLocation lang = ResourceLocation.tryBuild(resourcePath.getNamespace(), resourcePath.getPath().replace("json", "lang"));
-                    List<Resource> langFiles = Minecraft.getInstance().getResourceManager().getResourceStack(lang);
-                    if (!langFiles.isEmpty()) {
-                        Map<String, String> translationMap = new HashMap<>();
-                        for (Resource resource : langFiles) {
-                            try (BufferedReader reader = resource.openAsReader()) {
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    //Remove comment
-                                    line = line.trim();
-                                    int comment = line.indexOf("#");
-                                    if (line.isEmpty() || comment == 0) {
-                                        continue;
-                                    }
-
-                                    String[] splits = line.split("=", 2);
-                                    if (splits.length == 2) {
-                                        translationMap.put(splits[0].trim(), splits[1].trim());
-                                    }
-                                }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-
-                        Set<String> translations = new HashSet<>();
-                        translationMap.forEach((key, value) -> {
-                            if (!key.isEmpty()) {
-                                translations.add(String.format("\"%s\": \"%s\"", key, value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                            }
-                        });
-                        String output = "{" + String.join(",", translations) + "}";
-                        return () -> new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public void listResources(PackType p_10289_, String p_251379_, String p_251932_, ResourceOutput p_249347_) {
-
-            }
-
-            @Override
-            public Set<String> getNamespaces(PackType p_195759_1_) {
-                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
-            }
-
-            @Override
-            public void close() {
-
-            }
-
-            @Nullable
-            @Override
-            public <T> T getMetadataSection(MetadataSectionSerializer<T> p_195760_1_) throws IOException {
-                return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
-            }
-        }
-
-        private static class UMCFolderPack extends PathPackResources {
-            private final Path root;
-
-            public UMCFolderPack(File folder) {
-                super(new PackLocationInfo(folder.getName(),
-                                           Component.literal(folder.getName()),
-                                           PackSource.BUILT_IN,
-                                           Optional.empty()),
-                      folder.toPath());
-                this.root = folder.toPath();
-            }
-
-            @Override
-            public IoSupplier<InputStream> getResource(PackType p_249352_, ResourceLocation p_251715_) {
-                Path path = this.root.resolve(p_249352_.getDirectory()).resolve(p_251715_.getNamespace());
-                return getResource(p_251715_, path);
-            }
-
-            public static IoSupplier<InputStream> getResource(ResourceLocation p_250145_, Path p_251046_) {
-                try {
-                    List<String> list = FileUtil.decomposePath(p_250145_.getPath()).getPartialOrThrow();
-                    String s = String.join("\\", list);
-                    Path path = FileUtil.resolvePath(p_251046_, List.of(s));
-                    return Files.exists(path)
-                           ? new Identifier.IoInputStreamMod(IoSupplier.create(path), path.toFile().lastModified())
-                           : null;
-                } catch (IllegalStateException|IndexOutOfBoundsException e) {
-                    LogUtils.getLogger().error("Invalid path {}", p_250145_);
-                    return null;
-                }
-            }
-        }
-
-        private static class UMCFilePack extends FilePackResources {
-            private final File path;
-
-            public UMCFilePack(File fileIn) {
-				super(new PackLocationInfo(fileIn.getName(),
-                                           Component.literal(fileIn.getName()),
-                                           PackSource.BUILT_IN,
-                                           Optional.empty()),
-                      new SharedZipFileAccess(fileIn), "");
-                this.path = fileIn;
-            }
-
-            @Override
-            public IoSupplier<InputStream> getResource(PackType p_249605_, ResourceLocation p_252147_) {
-                IoSupplier<InputStream> found = super.getResource(p_249605_, p_252147_);
-                return found != null ? new Identifier.IoInputStreamMod(found, path.lastModified()) : null;
-            }
-        }
-
-
-        private static PackResources createPack(File path) {
-            if (path.isDirectory()) {
-                return new UMCFolderPack(path);
-            } else {
-                return new UMCFilePack(path);
-            }
         }
     }
 
@@ -500,17 +343,18 @@ public class ModCore {
                     // Instance can be null during data gen
                     if (Minecraft.getInstance() != null) {
                         ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
                     }
+                    break;
                 case SETUP:
                     try {
                         CreativeModeTabRegistry.recalculateItemCreativeModeTabs();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
+                    Light.registerClient();
                     //BlockRender.onPostColorSetup();
                     //ClientEvents.fireReload();
-                    break;
             }
 
         }

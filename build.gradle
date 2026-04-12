@@ -148,8 +148,12 @@ dependencies {
 }
 
 dependencies {
+    //Iris
     implementation "curse.maven:sodium-394468:6382651"
     implementation "curse.maven:irisshaders-455508:6661598"
+
+    //Lamb Dynamic Lights
+    implementation "curse.maven:lambdynamiclights-393442:7306458"
 }
 
 //mixin {

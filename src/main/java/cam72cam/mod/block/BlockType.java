@@ -22,8 +22,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlockContainer;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -31,6 +34,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.capabilities.Capabilities;
+
+import javax.annotation.Nullable;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -177,7 +182,8 @@ public abstract class BlockType {
      * BlockInternal is an internal class that should only be extended when you need to implement
      * an interface.
      */
-    public class BlockInternal extends net.minecraft.world.level.block.Block {
+    public class BlockInternal extends net.minecraft.world.level.block.Block
+                               implements LiquidBlockContainer {
         public BlockInternal() {
             super(Block.Properties.of().mapColor(getMaterial().internal)
                     .sound(BlockType.this.getMaterial().soundType)
@@ -304,6 +310,15 @@ public abstract class BlockType {
         @Override
         public VoxelShape getOcclusionShape(BlockState state, BlockGetter worldIn, BlockPos pos) {
             return Shapes.empty();
+        }
+
+        //Blocks liquid movement for now
+        public boolean canPlaceLiquid(@Nullable net.minecraft.world.entity.player.Player p_295256_, BlockGetter p_54766_, BlockPos p_54767_, BlockState p_54768_, Fluid p_54769_) {
+            return false;
+        }
+
+        public boolean placeLiquid(LevelAccessor p_54770_, BlockPos p_54771_, BlockState p_54772_, FluidState p_54773_) {
+            return false;
         }
     }
 }
