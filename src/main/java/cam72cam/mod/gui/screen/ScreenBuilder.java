@@ -144,6 +144,14 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
+    public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
+        if (active != null) {
+            return active.internal.charTyped(p_charTyped_1_, p_charTyped_2_);
+        }
+        return super.charTyped(p_charTyped_1_, p_charTyped_2_);
+    }
+
+    @Override
     public boolean mouseClicked(double x, double y, int button) {
         Player.Hand hand = button == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY;
 
