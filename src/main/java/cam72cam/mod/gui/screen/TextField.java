@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 
 /** Base text field */
 public class TextField implements IWidget{
-    protected final EditBox textfield;
+    protected final EditBox internal;
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         this(builder,
@@ -18,28 +18,29 @@ public class TextField implements IWidget{
 
     /** Internal, can be overridden to support custom GuiTextFields */
     protected TextField(IScreenBuilder builder, EditBox internal) {
-        this.textfield = internal;
+        this.internal = internal;
+        this.internal.setMaxLength(256);
         builder.addTextField(this);
     }
 
     EditBox internal() {
-        return textfield;
+        return internal;
     }
 
     @Override
     public void setText(String s) {
-        textfield.setValue(s);
+        internal.setValue(s);
     }
 
     @Override
     public String getText() {
-        return textfield.getValue();
+        return internal.getValue();
     }
 
     @Override
     public void setVisible(boolean visible) {
-        textfield.setVisible(visible);
-        textfield.setEditable(visible);
+        internal.setVisible(visible);
+        internal.setEditable(visible);
     }
 
     @Deprecated
@@ -49,17 +50,17 @@ public class TextField implements IWidget{
 
     @Override
     public boolean isVisible() {
-        return textfield.isVisible();
+        return internal.isVisible();
     }
 
     @Override
     public void setEnabled(boolean enabled) {
-        textfield.setEditable(enabled);
+        internal.setEditable(enabled);
     }
 
     @Override
     public boolean isEnabled() {
-        return textfield.active;
+        return internal.active;
     }
 
     /** Validator that can block a string from being entered */

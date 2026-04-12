@@ -9,6 +9,7 @@
   "mixinPriority": 1300,
   "mixins": [
     "data_registry.MixinAdvancement",
+    "data_registry.MixinMinecraftServer",
     "data_registry.MixinRecipeManager",
     "data_registry.MixinTagCollection",
     "large_entity_collision.MixinEntitySectionStorage"
