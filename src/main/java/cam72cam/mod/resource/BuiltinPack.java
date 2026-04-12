@@ -3,10 +3,13 @@ package cam72cam.mod.resource;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.platform.LoadDatapackEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.*;
-import net.minecraft.resources.data.IMetadataSectionSerializer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.*;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
+import net.minecraft.server.packs.repository.PackSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,7 +18,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -86,7 +92,7 @@ public class BuiltinPack {
      * Registers a file or folder as a resource pack to the game.
      */
     @OnlyIn(Dist.CLIENT)
-    public static IResourcePack attach(File path) {
+    public static PackResources attach(File path) {
         if (path.isDirectory()) {
             return new UMCFolderPack(path);
         } else {
@@ -105,29 +111,29 @@ public class BuiltinPack {
      * Internal
      */
     public static void loadClientResources() {
-        List<IResourcePack> packs = new ArrayList<>();
+        List<PackResources> packs = new ArrayList<>();
 
         for (ModCore.Mod mod : ModCore.instance.getLoadedMods()) {
             BuiltinPack.loadModResource(mod, packs);
         }
 
-        IResourcePack pack = new InternalResourcePack();
+        PackResources pack = new InternalResourcePack();
         //Ensure people will get our result first via getResourceStream() and getLastResourceStream()
         packs.add(1, pack);
         packs.add(pack);
 
         Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer, packInfoFactory) -> {
-            for (IResourcePack pack1 : packs) {
-                consumer.accept(new ResourcePackInfo(pack1.getName(),
-                                                     true,
-                                                     () -> pack1,
-                                                     new StringTextComponent(""),
-                                                     new StringTextComponent(""),
-                                                     PackCompatibility.COMPATIBLE,
-                                                     ResourcePackInfo.Priority.TOP,
-                                                     true,
-                                                     IPackNameDecorator.DEFAULT,
-                                                     true));
+            for (PackResources pack1 : packs) {
+                consumer.accept(new Pack(pack1.getName(),
+                                         true,
+                                         () -> pack1,
+                                         new TextComponent(""),
+                                         new TextComponent(""),
+                                         PackCompatibility.COMPATIBLE,
+                                         Pack.Position.TOP,
+                                         true,
+                                         PackSource.DEFAULT,
+                                         true));
             }
         });
     }
@@ -140,11 +146,11 @@ public class BuiltinPack {
         event.addDataPack(new InternalDataPack());
     }
 
-    private static void loadModResource(ModCore.Mod mod, List<IResourcePack> packs) {
+    private static void loadModResource(ModCore.Mod mod, List<PackResources> packs) {
         String configDir = FMLPaths.CONFIGDIR.toString();
         new File(configDir).mkdirs();
 
-        IResourcePack modPack = BuiltinPack.attach(ModList.get().getModFileById(mod.modID()).getFile().getFilePath().toFile());
+        PackResources modPack = BuiltinPack.attach(ModList.get().getModFileById(mod.modID()).getFile().getFilePath().toFile());
         // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
         // (Also injects last modified time access)
         // BUG: sounds can still be overridden by resource packs
@@ -178,7 +184,7 @@ public class BuiltinPack {
     /**
      * Internal, Client side assets loading
      */
-    private static class InternalResourcePack extends ResourcePack {
+    private static class InternalResourcePack extends AbstractPackResources {
         public InternalResourcePack() {
             super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
         }
@@ -250,7 +256,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(PackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
@@ -278,7 +284,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Set<String> getNamespaces(ResourcePackType type) {
+        public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
@@ -291,7 +297,7 @@ public class BuiltinPack {
 
         @Nullable
         @Override
-        public <T> T getMetadataSection(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
+        public <T> T getMetadataSection(MetadataSectionSerializer<T> p_195760_1_) throws IOException {
             return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
         }
 
@@ -343,7 +349,7 @@ public class BuiltinPack {
     /**
      * Internal, Server side data loading
      */
-    public static class InternalDataPack extends ResourcePack {
+    public static class InternalDataPack extends AbstractPackResources {
         static Map<ResourceLocation, byte[]> data = new HashMap<>();
 
         public InternalDataPack() {
@@ -365,7 +371,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(PackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
@@ -381,7 +387,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Set<String> getNamespaces(ResourcePackType type) {
+        public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
@@ -398,7 +404,7 @@ public class BuiltinPack {
         }
     }
 
-    private static class UMCFolderPack extends FolderPack {
+    private static class UMCFolderPack extends FolderPackResources {
         public UMCFolderPack(File folder) {
             super(folder);
         }
@@ -416,7 +422,7 @@ public class BuiltinPack {
         }
     }
 
-    private static class UMCFilePack extends FilePack {
+    private static class UMCFilePack extends FilePackResources {
         private final File path;
 
         public UMCFilePack(File fileIn) {
