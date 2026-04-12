@@ -143,7 +143,12 @@ class Data {
 
     public static class ServerProxy extends DataProxy {
         private InputStream getEmbeddedResourceStream(Identifier location) throws IOException {
-            //Since 1.17 Minecraft has been forcing us to use Java16, and ForgeGradle here will auto generate a module name for us
+            //Check our custom logic first
+            InputStream stream = BuiltinPack.loadServerResource(location);
+            if (stream != null) {
+                return stream;
+            }
+            //And since 1.17 Minecraft has been forcing us to use Java16, and ForgeGradle here will auto generate a module name for us
             //So we can no longer access mods' assets
             //This isn't needed for MC 1.16- running on modern Java, but essential for projects built on Java9+
             String name = pathString(location, true);
