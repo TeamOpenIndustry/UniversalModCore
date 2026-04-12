@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -286,7 +288,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public void listResources(PackType type, String pathIn, String namespace, PackResources.ResourceOutput output) {
+        public void listResources(PackType type, String namespace, String pathIn, PackResources.ResourceOutput output) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             final String folder = pathIn + "/"; // Ensure folders
             DIRECT_RESOURCES.forEach((k, v) -> {
