@@ -21,7 +21,8 @@ import java.util.function.Supplier;
 public class ScreenBuilder extends Screen implements IScreenBuilder {
     private final IScreen screen;
     private final Map<Widget, Button> buttonMap = new HashMap<>();
-    private final Map<TextFieldWidget, TextField> textFieldMap = new HashMap<>();
+    private final List<TextField> textFields = new ArrayList<>();
+    private TextField active = null;
     private final Supplier<Boolean> valid;
     private MatrixStack stack;
 
@@ -65,7 +66,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     @Override
     public void addTextField(TextField textField) {
         super.addButton(textField.internal());
-        this.textFieldMap.put(textField.internal(), textField);
+        this.textFields.add(textField);
     }
 
     @Override
@@ -103,7 +104,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     @Override
     public void init() {
         buttonMap.clear();
-        textFieldMap.clear();
+        textFields.clear();
         screen.init(this);
     }
 
@@ -138,18 +139,11 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        if (this.textFieldMap.keySet().stream()
-                             .noneMatch(txt -> txt.keyPressed(typedChar, keyCode, mods))) {
-            screen.onKeyType(this, Keyboard.KeyCode.of(typedChar));
+        if (this.active != null && !active.internal.keyPressed(typedChar, keyCode, mods)) {
+            screen.onKeyType(this, Keyboard.KeyCode.of(keyCode));
         }
 
         return true;
-    }
-
-    @Override
-    public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
-        return this.textFieldMap.keySet().stream()
-                             .anyMatch(txt -> txt.charTyped(p_charTyped_1_, p_charTyped_2_));
     }
 
     @Override
@@ -160,15 +154,16 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
             return true;
         }
 
-        if (this.textFieldMap.keySet().stream().noneMatch(txt -> {
-            if (txt.mouseClicked(x, y, button)) {
-                txt.setFocus(true);
+        for (TextField field : textFields) {
+            if (field.isVisible() && field.internal.mouseClicked(x, y, hand == Player.Hand.PRIMARY ? 0 : 1)) {
+                active = field;
+                field.setFocused(true);
                 return true;
             }
-            return false;
-        })) {
-            screen.onMouseClick((int) x, (int) y, hand);
+            field.setFocused(false);
         }
+
+        screen.onMouseClick((int) x, (int) y, hand);
         return true;
     }
 
