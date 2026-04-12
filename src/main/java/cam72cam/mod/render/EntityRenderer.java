@@ -89,9 +89,11 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
     /** Fixed in 1.15? Minecraft yes! Optifine Broke it!
      * Sooo this is a fun one...
-     *
+     * <p>
      * MC culls out entities in chunks that are not in view, which breaks when entities span chunk boundaries
+     * <p>
      * For 1-2 block entities, this is barely noticeable.  For large entities it's a problem.
+     * <p>
      * We try to detect entities in this edge case and render them here to prevent the issue.
      *
      */

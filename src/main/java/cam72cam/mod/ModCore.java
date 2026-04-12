@@ -6,12 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
-import net.minecraft.resources.data.IMetadataSectionSerializer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +19,7 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
@@ -46,13 +42,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.GL11;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /** UMC Mod, do not touch... */
 @net.minecraftforge.fml.common.Mod(ModCore.MODID)
@@ -169,6 +162,10 @@ public class ModCore {
         }
     }
 
+    public List<Mod> getLoadedMods() {
+        return mods;
+    }
+
     private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
@@ -215,52 +212,54 @@ public class ModCore {
             }
             Config.getMaxTextureSize(); //populate
 
-            List<ResourcePack> packs = new ArrayList<>();
-            packs.add(new TranslationResourcePack());
+            BuiltinPack.loadClientResources();
 
-            for (Mod m : mods) {
-                ResourcePack modPack = createPack(ModList.get().getModFileById(m.modID()).getFile().getFilePath().toFile());
-                packs.add(modPack);
-                String configDir = FMLPaths.CONFIGDIR.get().toString();
-                new File(configDir).mkdirs();
+            //Wrapper for lang format language files
+            BuiltinPack.conditional(ident -> {
+                String path = ident.getPath();
+                if (!path.startsWith("lang/") || !path.endsWith(".json")) {
+                    return null;
+                }
 
-                File folder = new File(configDir + File.separator + m.modID());
-                if (folder.exists()) {
-                    if (folder.isDirectory()) {
-                        File[] files = folder.listFiles((dir, name) -> name.endsWith(".zip"));
-                        for (File file : files) {
-                            packs.add(createPack(file));
-                        }
+                Identifier lang = new Identifier(ident.toString().replace(".json", ".lang"));
+                if (!lang.canLoad()) {
+                    return null;
+                }
 
-                        File[] folders = folder.listFiles((dir, name) -> dir.isDirectory());
-                        for (File dir : folders) {
-                            packs.add(createPack(dir));
+                Map<String, String> translationMap = new HashMap<>();
+                try {
+                    for (InputStream stream : lang.getResourceStreamAll()) {
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                //Remove comment
+                                line = line.trim();
+                                if (line.isEmpty() || line.startsWith("#")) {
+                                    continue;
+                                }
+
+                                String[] splits = line.split("=", 2);
+                                if (splits.length == 2) {
+                                    translationMap.put(splits[0].trim(), splits[1].trim());
+                                }
+                            }
                         }
                     }
-                } else {
-                    folder.mkdirs();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-                packs.add(modPack);
-            }
 
-            // Force first and last (and inject mod time) BUG: sounds can still be overridden by resource packs
-            Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
-                @Override
-                public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
-                    for (ResourcePack pack : packs) {
-                        //noinspection unchecked
-                        nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
-                                true,
-                                () -> pack,
-                                new StringTextComponent(""),
-                                new StringTextComponent(""),
-                                PackCompatibility.COMPATIBLE,
-                                ResourcePackInfo.Priority.TOP,
-                                true,
-                                null,
-                                true));
+                Set<String> translations = new HashSet<>();
+                translationMap.forEach((key, value) -> {
+                    if (!key.isEmpty()) {
+                        translations.add(String.format("\"%s\": \"%s\"", key, value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
+                        translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
                     }
-                }
+                });
+                String output = "{" + String.join(",", translations) + "}";
+                return output.getBytes(StandardCharsets.UTF_8);
             });
         }
 
@@ -268,149 +267,6 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             super.event(event, m);
             m.clientEvent(event);
-        }
-
-        private static class TranslationResourcePack extends ResourcePack  {
-            public TranslationResourcePack() {
-                super(null);
-            }
-
-            private ResourceLocation toLang(String path) {
-                // assets/mod/location
-                //return String.format("%s/%s/%s", type.getDirectoryName(), location.getNamespace(), location.getPath());
-                String[] parts = path.split("/");
-                String type = parts[0];
-                String namespace = parts[1];
-                String prefix = String.format("%s/%s/", type, namespace);
-                path = path.replace(prefix, "").replace(".json", ".lang");
-                String lang = path.split("_")[1].replace(".lang", "");
-                path = path.replace("_" + lang, "_" + lang.toUpperCase(Locale.ROOT));
-                return new ResourceLocation(namespace, path.toLowerCase(Locale.ROOT)) {
-                    @Override
-                    public String getPath() {
-                        // Very evil...
-                        return path;
-                    }
-                };
-            }
-
-            @Override
-            public boolean resourceExists(String resourcePath) {
-                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
-                    ResourceLocation lang = toLang(resourcePath);
-                    return Minecraft.getInstance().getResourceManager().hasResource(lang);
-                }
-                return false;
-            }
-
-            @Override
-            public InputStream getInputStream(String resourcePath) throws IOException {
-                if (resourcePath.contains("/lang/") && resourcePath.endsWith(".json")) {
-                    // Magical Translations!
-                    ResourceLocation lang = toLang(resourcePath);
-                    if (Minecraft.getInstance().getResourceManager().hasResource(lang)) {
-                        Map<String, String> translationMap = new HashMap<>();
-                        for (IResource resource : Minecraft.getInstance().getResourceManager().getAllResources(lang)) {
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    //Remove comment
-                                    line = line.trim();
-                                    int comment = line.indexOf("#");
-                                    if (line.isEmpty() || comment == 0) {
-                                        continue;
-                                    }
-
-                                    String[] splits = line.split("=", 2);
-                                    if (splits.length == 2) {
-                                        translationMap.put(splits[0].trim(), splits[1].trim());
-                                    }
-                                }
-                            }
-                        }
-
-                        Set<String> translations = new HashSet<>();
-                        translationMap.forEach((key, value) -> {
-                            if (!key.isEmpty()) {
-                                translations.add(String.format("\"%s\": \"%s\"", key, value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(":", "."), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", ""), value));
-                                translations.add(String.format("\"%s\": \"%s\"", key.replace(".name", "").replace(":", "."), value));
-                            }
-                        });
-                        String output = "{" + String.join(",", translations) + "}";
-                        return new ByteArrayInputStream(output.getBytes(StandardCharsets.UTF_8));
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String namespaceIn, String pathIn, int maxDepthIn, Predicate<String> filterIn) {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public Set<String> getResourceNamespaces(ResourcePackType type) {
-                return mods.stream().map(Mod::modID).collect(Collectors.toSet());
-            }
-
-            @Override
-            public void close() throws IOException {
-
-            }
-
-            @Override
-            public String getName() {
-                return "Translation Hackery";
-            }
-
-            @Nullable
-            @Override
-            public <T> T getMetadata(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
-                return getResourceMetadata(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
-            }
-        }
-
-        private static class UMCFolderPack extends FolderPack  {
-            public UMCFolderPack(File folder) {
-                super(folder);
-            }
-
-            @Override
-            public InputStream getInputStream(String name) throws IOException {
-                InputStream stream = super.getInputStream(name);
-                File file = this.getFile(name);
-                return new Identifier.InputStreamMod(stream, file.lastModified());
-            }
-
-            @Override
-            public boolean resourceExists(String resourcePath) {
-                return super.resourceExists(resourcePath);
-            }
-        }
-
-        private static class UMCFilePack extends FilePack  {
-            private final File path;
-
-            public UMCFilePack(File fileIn) {
-                super(fileIn);
-                this.path = fileIn;
-            }
-
-            @Override
-            public InputStream getInputStream(String name) throws IOException {
-                return new Identifier.InputStreamMod(super.getInputStream(name), path.lastModified());
-            }
-        }
-
-
-        private static ResourcePack createPack(File path) {
-            if (path.isDirectory()) {
-                return new UMCFolderPack(path);
-            } else {
-                return new UMCFilePack(path);
-            }
         }
     }
 
@@ -464,9 +320,10 @@ public class ModCore {
                     // Instance can be null during data gen
                     if (Minecraft.getInstance() != null) {
                         ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload));
+                                stage.markCompleteAwaitingOthers(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
                         Light.register();
                     }
+                    break;
                 case SETUP:
                     try {
                         Minecraft.getInstance().populateSearchTreeManager();
