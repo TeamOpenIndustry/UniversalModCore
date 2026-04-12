@@ -6,9 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
-import net.minecraft.util.text.StringTextComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -208,13 +206,7 @@ public class ModCore {
             }
             Config.getMaxTextureSize(); //populate
 
-            List<IResourcePack> packs = new ArrayList<>();
-
-            for (Mod mod : instance.mods) {
-                BuiltinPack.loadModResource(mod, packs);
-            }
-
-            BuiltinPack.onConstruct(packs);
+            BuiltinPack.loadClientResources();
 
             //Wrapper for lang format language files
             BuiltinPack.conditional(ident -> {
@@ -262,25 +254,6 @@ public class ModCore {
                 });
                 String output = "{" + String.join(",", translations) + "}";
                 return output.getBytes(StandardCharsets.UTF_8);
-            });
-
-            Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
-                @Override
-                public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
-                    for (IResourcePack pack : packs) {
-                        //noinspection unchecked
-                        nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
-                                true,
-                                () -> pack,
-                                new StringTextComponent(""),
-                                new StringTextComponent(""),
-                                PackCompatibility.COMPATIBLE,
-                                ResourcePackInfo.Priority.TOP,
-                                true,
-                                null,
-                                true));
-                    }
-                }
             });
         }
 

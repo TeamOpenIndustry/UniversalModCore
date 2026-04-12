@@ -1,12 +1,18 @@
 package cam72cam.mod.resource;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.event.platform.LoadDatapackEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
@@ -24,6 +30,7 @@ import java.util.stream.Collectors;
  * When handling request, static resources added via <code>put</code> have the highest priority,
  * then <code>redirect</code>, then<code>conditional</code>.
  * */
+@Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
     //Stringified identifier, longer is better
@@ -89,9 +96,56 @@ public class BuiltinPack {
     }
 
     /**
+     * Internal, for putting datapack entries
+     */
+    public static void putData(ResourceLocation location, byte[] content) {
+        InternalDataPack.data.put(location, content);
+    }
+
+    /**
      * Internal
      */
-    public static void loadModResource(ModCore.Mod mod, List<IResourcePack> packs) {
+    public static void loadClientResources() {
+        List<IResourcePack> packs = new ArrayList<>();
+
+        for (ModCore.Mod mod : ModCore.instance.getLoadedMods()) {
+            BuiltinPack.loadModResource(mod, packs);
+        }
+
+        IResourcePack pack = new InternalResourcePack();
+        //Ensure people will get our result first via getResourceStream() and getLastResourceStream()
+        packs.add(1, pack);
+        packs.add(pack);
+
+        Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
+            @Override
+            public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
+                for (IResourcePack pack : packs) {
+                    //noinspection unchecked
+                    nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
+                            true,
+                            () -> pack,
+                            new StringTextComponent(""),
+                            new StringTextComponent(""),
+                            PackCompatibility.COMPATIBLE,
+                            ResourcePackInfo.Priority.TOP,
+                            true,
+                            null,
+                            true));
+                }
+            }
+        });
+    }
+
+    /**
+     * Internal
+     */
+    @SubscribeEvent
+    public static void loadServerResource(LoadDatapackEvent event) {
+        event.addDataPack(new InternalDataPack());
+    }
+
+    private static void loadModResource(ModCore.Mod mod, List<IResourcePack> packs) {
         String configDir = FMLPaths.CONFIGDIR.toString();
         new File(configDir).mkdirs();
 
@@ -122,16 +176,6 @@ public class BuiltinPack {
     /**
      * Internal
      */
-    public static void onConstruct(List<IResourcePack> packs) {
-        IResourcePack pack = new InternalPack();
-        //Ensure people will get our result first via getResourceStream() and getLastResourceStream()
-        packs.add(1, pack);
-        packs.add(pack);
-    }
-
-    /**
-     * Internal
-     */
     public static void reload() {
         CACHED_GENERATOR_RESULTS.clear();
     }
@@ -139,8 +183,8 @@ public class BuiltinPack {
     /**
      * Internal, Client side assets loading
      */
-    private static class InternalPack extends ResourcePack {
-        public InternalPack() {
+    private static class InternalResourcePack extends ResourcePack {
+        public InternalResourcePack() {
             super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
         }
 
@@ -212,7 +256,30 @@ public class BuiltinPack {
 
         @Override
         public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
-            return Collections.emptyList();
+            //TODO list all redirect/conditional resources, may need new parameters in API?
+            List<ResourceLocation> result = new ArrayList<>();
+            final String folder = pathIn + "/"; // Ensure folders
+            DIRECT_RESOURCES.forEach((k, v) -> {
+                String path = k.getPath();
+                if(path.startsWith(folder) && filter.test(path)) {
+                    path = path.substring((folder).length());
+                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
+                        result.add(k.internal);
+                    }
+                }
+            });
+
+            CACHED_GENERATOR_RESULTS.forEach((k, v) -> {
+                String path = k.getPath();
+                if(path.startsWith(folder) && filter.test(path)) {
+                    path = path.substring((folder).length());
+                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
+                        result.add(k.internal);
+                    }
+                }
+            });
+
+            return result;
         }
 
         @Override
@@ -278,6 +345,64 @@ public class BuiltinPack {
         return null;
     }
 
+    /**
+     * Internal, Server side data loading
+     */
+    public static class InternalDataPack extends ResourcePack {
+        static Map<ResourceLocation, byte[]> data = new HashMap<>();
+
+        public InternalDataPack() {
+            super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
+        }
+
+        @Override
+        public InputStream getInputStream(String resourcePath) throws IOException {
+            if("pack.mcmeta".equals(resourcePath)) {
+                return new ByteArrayInputStream("{}".getBytes());
+            }
+
+            return new ByteArrayInputStream(data.get(nameToLocation(resourcePath).internal));
+        }
+
+        @Override
+        public boolean resourceExists(String resourcePath) {
+            return "pack.mcmeta".equals(resourcePath) || data.containsKey(nameToLocation(resourcePath).internal);
+        }
+
+        @Override
+        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, int maxDepth, Predicate<String> filter) {
+            List<ResourceLocation> result = new ArrayList<>();
+            final String folder = pathIn + "/"; // Ensure folders
+            data.keySet().forEach((k) -> {
+                String path = k.getPath();
+                if(path.startsWith(folder) && filter.test(path)) {
+                    path = path.substring((folder).length());
+                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
+                        result.add(k);
+                    }
+                }
+            });
+            return result;
+        }
+
+        @Override
+        public Set<String> getResourceNamespaces(ResourcePackType type) {
+            Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
+            collect.add("universalmodcore");
+            return collect;
+        }
+
+        @Override
+        public String getName() {
+            return "UMC Generated Data";
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+    }
+
     private static class UMCFolderPack extends FolderPack {
         public UMCFolderPack(File folder) {
             super(folder);
@@ -322,10 +447,8 @@ public class BuiltinPack {
             path = path.substring(7);
             int x = path.indexOf('/');
             return new Identifier(path.substring(0, x), path.substring(x + 1));
-        } else if (path.startsWith("data/")) {
+        } else if(path.startsWith("data/")) {
             //data/[domain]/[path] -> domain:path
-            //However we added this as client-only resources...
-            //TODO (internal) datapack API
             path = path.substring(5);
             int x = path.indexOf('/');
             return new Identifier(path.substring(0, x), path.substring(x + 1));
