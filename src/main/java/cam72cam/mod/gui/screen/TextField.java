@@ -12,7 +12,8 @@ public class TextField implements IWidget{
     /** Standard constructor */
     public TextField(IScreenBuilder builder, int x, int y, int width, int height) {
         this(builder,
-              new EditBox(Minecraft.getInstance().font, builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, width, height,
+              //Offset x&y by 1 and minus width&height by 2 to let border be within the range specified
+              new EditBox(Minecraft.getInstance().font, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2,
                           Component.literal("")));
     }
 
