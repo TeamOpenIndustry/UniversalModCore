@@ -255,7 +255,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String namespace, String pathIn, int maxDepth, Predicate<String> filter) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
@@ -370,7 +370,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String namespace, String pathIn, int maxDepth, Predicate<String> filter) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
