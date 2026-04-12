@@ -3,7 +3,6 @@ package cam72cam.mod.resource;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.platform.LoadDatapackEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.ClientResourcePackInfo;
 import net.minecraft.resources.*;
 import net.minecraft.resources.data.IMetadataSectionSerializer;
 import net.minecraft.util.ResourceLocation;
@@ -117,22 +116,18 @@ public class BuiltinPack {
         packs.add(1, pack);
         packs.add(pack);
 
-        Minecraft.getInstance().getResourcePackList().addPackFinder(new IPackFinder() {
-            @Override
-            public <T extends ResourcePackInfo> void addPackInfosToMap(Map<String, T> nameToPackMap, ResourcePackInfo.IFactory<T> packInfoFactory) {
-                for (IResourcePack pack : packs) {
-                    //noinspection unchecked
-                    nameToPackMap.put(pack.getName(), (T) new ClientResourcePackInfo(pack.getName(),
-                            true,
-                            () -> pack,
-                            new StringTextComponent(""),
-                            new StringTextComponent(""),
-                            PackCompatibility.COMPATIBLE,
-                            ResourcePackInfo.Priority.TOP,
-                            true,
-                            null,
-                            true));
-                }
+        Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer, packInfoFactory) -> {
+            for (IResourcePack pack1 : packs) {
+                consumer.accept(new ResourcePackInfo(pack1.getName(),
+                                                     true,
+                                                     () -> pack1,
+                                                     new StringTextComponent(""),
+                                                     new StringTextComponent(""),
+                                                     PackCompatibility.COMPATIBLE,
+                                                     ResourcePackInfo.Priority.TOP,
+                                                     true,
+                                                     IPackNameDecorator.DEFAULT,
+                                                     true));
             }
         });
     }
@@ -189,7 +184,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public InputStream getInputStream(String resourcePath) throws IOException {
+        public InputStream getResource(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
                 return new ByteArrayInputStream("{}".getBytes());
             }
@@ -217,7 +212,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public boolean resourceExists(String resourcePath) {
+        public boolean hasResource(String resourcePath) {
             if (resourcePath.endsWith("mcmeta") && !"pack.mcmeta".equals(resourcePath)) {
                 //We don't handle resource metadata
                 return false;
@@ -255,7 +250,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
@@ -283,7 +278,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Set<String> getResourceNamespaces(ResourcePackType type) {
+        public Set<String> getNamespaces(ResourcePackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
@@ -296,12 +291,12 @@ public class BuiltinPack {
 
         @Nullable
         @Override
-        public <T> T getMetadata(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
-            return getResourceMetadata(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+        public <T> T getMetadataSection(IMetadataSectionSerializer<T> p_195760_1_) throws IOException {
+            return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             //Have nothing to do here
         }
     }
@@ -356,7 +351,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public InputStream getInputStream(String resourcePath) throws IOException {
+        public InputStream getResource(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
                 return new ByteArrayInputStream("{}".getBytes());
             }
@@ -365,12 +360,12 @@ public class BuiltinPack {
         }
 
         @Override
-        public boolean resourceExists(String resourcePath) {
+        public boolean hasResource(String resourcePath) {
             return "pack.mcmeta".equals(resourcePath) || data.containsKey(nameToLocation(resourcePath).internal);
         }
 
         @Override
-        public Collection<ResourceLocation> getAllResourceLocations(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
@@ -386,7 +381,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Set<String> getResourceNamespaces(ResourcePackType type) {
+        public Set<String> getNamespaces(ResourcePackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
@@ -398,7 +393,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
 
         }
     }
@@ -409,15 +404,15 @@ public class BuiltinPack {
         }
 
         @Override
-        public InputStream getInputStream(String name) throws IOException {
-            InputStream stream = super.getInputStream(name);
+        public InputStream getResource(String name) throws IOException {
+            InputStream stream = super.getResource(name);
             File file = this.getFile(name);
             return new Identifier.InputStreamMod(stream, file.lastModified());
         }
 
         @Override
-        public boolean resourceExists(String resourcePath) {
-            return super.resourceExists(resourcePath);
+        public boolean hasResource(String resourcePath) {
+            return super.hasResource(resourcePath);
         }
     }
 
@@ -430,8 +425,8 @@ public class BuiltinPack {
         }
 
         @Override
-        public InputStream getInputStream(String name) throws IOException {
-            return new Identifier.InputStreamMod(super.getInputStream(name), path.lastModified());
+        public InputStream getResource(String name) throws IOException {
+            return new Identifier.InputStreamMod(super.getResource(name), path.lastModified());
         }
     }
 
