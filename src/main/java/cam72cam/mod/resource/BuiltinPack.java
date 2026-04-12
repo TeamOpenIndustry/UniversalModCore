@@ -16,6 +16,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -250,7 +251,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(ResourcePackType type, String namespace, String pathIn, int maxDepth, Predicate<String> filter) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
@@ -353,7 +354,12 @@ public class BuiltinPack {
         @Override
         public InputStream getResource(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
-                return new ByteArrayInputStream("{}".getBytes());
+                return new ByteArrayInputStream(("{\n" +
+                                                 "  \"pack\": {\n" +
+                                                 "    \"description\": \"UMC Generated Data\",\n" +
+                                                 "    \"pack_format\": 6\n" +
+                                                 "  }\n" +
+                                                 "}").getBytes(StandardCharsets.UTF_8));
             }
 
             return new ByteArrayInputStream(data.get(nameToLocation(resourcePath).internal));
@@ -365,7 +371,7 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(ResourcePackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public Collection<ResourceLocation> getResources(ResourcePackType type, String namespace, String pathIn, int maxDepth, Predicate<String> filter) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
