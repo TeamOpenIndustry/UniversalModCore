@@ -123,6 +123,7 @@ public class Light {
         boolean flag = isLDLInstalled();
         if (flag) {
             try {
+                //TODO Optimize me!
                 Class<?> ldl = Class.forName("dev.lambdaurora.lambdynlights.LambDynLights");
                 Method getInstance = ldl.getDeclaredMethod("get");
                 Object inst = getInstance.invoke(null);
@@ -139,7 +140,7 @@ public class Light {
                 return true;
             }
         }
-        return flag;
+        return false;
     }
 
     private static boolean isLDLInstalled() {

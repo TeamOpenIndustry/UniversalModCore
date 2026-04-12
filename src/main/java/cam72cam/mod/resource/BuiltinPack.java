@@ -389,7 +389,17 @@ public class BuiltinPack {
 
         private InputStream getResource(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
-                return new ByteArrayInputStream("{}".getBytes());
+                return new ByteArrayInputStream("""
+                                                {
+                                                    "pack": {
+                                                        "description": {"text":"UMC Generated Resources"},
+                                                		"pack_format": 9999,
+                                                        "supported_formats": [0, 9999],
+                                                		"min_format": 0,
+                                                        "max_format": 9999
+                                                    }
+                                                }
+                                                """.getBytes());
             }
 
             return new ByteArrayInputStream(data.get(nameToLocation(resourcePath).internal));
@@ -400,12 +410,12 @@ public class BuiltinPack {
         }
 
         @Override
-        public void listResources(PackType type, String pathIn, String namespace, PackResources.ResourceOutput output) {
+        public void listResources(PackType type, String namespace, String pathIn, PackResources.ResourceOutput output) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
                 String path = k.getPath();
-                if(k.getNamespace().equals(namespace) && path.startsWith(folder) && data.containsKey(k)) {
+                if(k.getNamespace().equals(namespace) && path.startsWith(folder)) {
                     output.accept(k, () -> new ByteArrayInputStream(data.get(k)));
                 }
             });
