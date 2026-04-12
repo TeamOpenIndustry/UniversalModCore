@@ -17,6 +17,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -358,7 +359,12 @@ public class BuiltinPack {
         @Override
         public InputStream getInputStream(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
-                return new ByteArrayInputStream("{}".getBytes());
+                return new ByteArrayInputStream(("{\n" +
+                                                 "  \"pack\": {\n" +
+                                                 "    \"description\": \"UMC Generated Data\",\n" +
+                                                 "    \"pack_format\": 4\n" +
+                                                 "  }\n" +
+                                                 "}").getBytes(StandardCharsets.UTF_8));
             }
 
             return new ByteArrayInputStream(data.get(nameToLocation(resourcePath).internal));
