@@ -1,5 +1,6 @@
 package cam72cam.mod.util;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
@@ -34,7 +35,16 @@ public class RegistryUtil {
     public static RegistryAccess getRegistry() {
         try {
             if (FMLLoader.getDist().isClient()) {
-                return Minecraft.getInstance().getConnection().registryAccess();
+                if (Thread.currentThread().getThreadGroup().getName().contains("main")) {
+                    //Logical client
+                    return Minecraft.getInstance().getConnection().registryAccess();
+                } else if (Thread.currentThread().getThreadGroup().getName().contains("SERVER")) {
+                    //Integrated server
+                    return ServerLifecycleHooks.getCurrentServer().registryAccess();
+                } else {
+                    ModCore.warn("What the hell Minecraft?");
+                    return ServerLifecycleHooks.getCurrentServer().registryAccess();
+                }
             } else {
                 return ServerLifecycleHooks.getCurrentServer().registryAccess();
             }

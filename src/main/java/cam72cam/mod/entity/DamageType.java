@@ -69,7 +69,7 @@ public final class DamageType {
     public DamageSource getDamageSource(Level level) {
         //TODO RegistryUtil is broken
         Holder<net.minecraft.world.damagesource.DamageType> type =
-                level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(internal);
+                RegistryUtil.getRegistry().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(internal);
         return new DamageSource(type, null, null, null);
     }
 
