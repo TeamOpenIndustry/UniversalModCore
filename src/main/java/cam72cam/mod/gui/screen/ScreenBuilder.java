@@ -9,7 +9,6 @@ import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -144,6 +143,14 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
+        if (active != null) {
+            return active.internal.charTyped(p_charTyped_1_, p_charTyped_2_);
+        }
+        return super.charTyped(p_charTyped_1_, p_charTyped_2_);
     }
 
     @Override
