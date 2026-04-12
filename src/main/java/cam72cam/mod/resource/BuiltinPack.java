@@ -10,15 +10,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
@@ -39,7 +38,7 @@ import java.util.stream.Collectors;
  * When handling request, static resources added via <code>put</code> have the highest priority,
  * then <code>redirect</code>, then<code>conditional</code>.
  * */
-@Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ModCore.MODID)
 public class BuiltinPack {
     private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
     //Stringified identifier, longer is better
@@ -95,7 +94,6 @@ public class BuiltinPack {
     /**
      * Registers a file or folder as a resource pack to the game.
      */
-    @OnlyIn(Dist.CLIENT)
     public static PackResources attach(File path) {
         if (path.isDirectory()) {
             return new UMCFolderPack(path);
@@ -128,15 +126,26 @@ public class BuiltinPack {
 
         Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer) -> {
             for (PackResources pack1 : packs) {
-                consumer.accept(Pack.create(pack1.packId(),
-                                            Component.literal(""),
-                                            true,
-                                            s -> pack1,
-                                            new Pack.Info(Component.literal(""), 13, FeatureFlagSet.of()),
-                                            PackType.CLIENT_RESOURCES,
-                                            Pack.Position.TOP,
-                                            true,
-                                            PackSource.DEFAULT
+                //TODO 1.21.1
+                PackLocationInfo info = new PackLocationInfo(pack1.packId(),
+                                                             Component.literal(""),
+                                                             PackSource.BUILT_IN,
+                                                             Optional.empty());
+                consumer.accept(new Pack(
+                        info,
+                        new Pack.ResourcesSupplier() {
+                            @Override
+                            public PackResources openPrimary(PackLocationInfo p_326301_) {
+                                return pack1;
+                            }
+
+                            @Override
+                            public PackResources openFull(PackLocationInfo p_326241_, Pack.Metadata p_325959_) {
+                                return pack1;
+                            }
+                        },
+                        new Pack.Metadata(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
+                        new PackSelectionConfig(true, Pack.Position.TOP, true)
                 ));
             }
         });
@@ -190,7 +199,10 @@ public class BuiltinPack {
      */
     private static class InternalResourcePack extends AbstractPackResources {
         public InternalResourcePack() {
-            super("UMC Generated Resources", true);
+            super(new PackLocationInfo("UMC Generated Resources",
+                                       Component.literal("UMC Generated Resources"),
+                                       PackSource.BUILT_IN,
+                                       Optional.empty()));
         }
 
         @Override
@@ -314,7 +326,6 @@ public class BuiltinPack {
     /**
      * Internal, Server side assets loading
      */
-    @OnlyIn(Dist.DEDICATED_SERVER)
     public static InputStream loadServerResource(Identifier ident) throws IOException {
         if (DIRECT_RESOURCES.containsKey(ident)) {
             return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
@@ -352,7 +363,10 @@ public class BuiltinPack {
         static Map<ResourceLocation, byte[]> data = new HashMap<>();
 
         public InternalDataPack() {
-            super("UMC Generated Resources", true);
+            super(new PackLocationInfo("UMC Generated Resources",
+                                       Component.literal("UMC Generated Resources"),
+                                       PackSource.BUILT_IN,
+                                       Optional.empty()));
         }
 
         @Override
@@ -414,7 +428,11 @@ public class BuiltinPack {
         private final Path root;
 
         public UMCFolderPack(File folder) {
-            super(folder.getName(), folder.toPath(), false);
+            super(new PackLocationInfo(folder.getName(),
+                                       Component.literal(folder.getName()),
+                                       PackSource.BUILT_IN,
+                                       Optional.empty()),
+                  folder.toPath());
             this.root = folder.toPath();
         }
 
@@ -425,13 +443,17 @@ public class BuiltinPack {
         }
 
         public static IoSupplier<InputStream> getResource(ResourceLocation p_250145_, Path p_251046_) {
-            return FileUtil.decomposePath(p_250145_.getPath()).get().map((p_251647_) -> {
-                Path path = FileUtil.resolvePath(p_251046_, p_251647_);
-                return Files.exists(path) ? new Identifier.IoInputStreamMod(() -> Files.newInputStream(path), path.toFile().lastModified()) : null;
-            }, (p_248714_) -> {
-                LogUtils.getLogger().error("Invalid path {}: {}", p_250145_, p_248714_.message());
+            try {
+                List<String> list = FileUtil.decomposePath(p_250145_.getPath()).getPartialOrThrow();
+                String s = String.join("\\", list);
+                Path path = FileUtil.resolvePath(p_251046_, List.of(s));
+                return Files.exists(path)
+                       ? new Identifier.IoInputStreamMod(IoSupplier.create(path), path.toFile().lastModified())
+                       : null;
+            } catch (IllegalStateException|IndexOutOfBoundsException e) {
+                LogUtils.getLogger().error("Invalid path {}", p_250145_);
                 return null;
-            });
+            }
         }
     }
 
@@ -439,7 +461,11 @@ public class BuiltinPack {
         private final File path;
 
         public UMCFilePack(File fileIn) {
-            super(fileIn.getName(), fileIn, false);
+            super(new PackLocationInfo(fileIn.getName(),
+                                       Component.literal(fileIn.getName()),
+                                       PackSource.BUILT_IN,
+                                       Optional.empty()),
+                  new SharedZipFileAccess(fileIn), "");
             this.path = fileIn;
         }
 

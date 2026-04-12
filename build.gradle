@@ -22,6 +22,8 @@ apply plugin: 'com.gradleup.shadow'
 configurations {
     shade
     implementation.extendsFrom shade
+    minecraftLibrary
+    implementation.extendsFrom minecraftLibrary
 }
 
 java {
@@ -71,6 +73,10 @@ runs {
         // You can set various levels here.
         // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
         systemProperty 'forge.logging.console.level', 'debug'
+
+        dependencies {
+            runtime project.configurations.minecraftLibrary
+        }
 
         modSource project.sourceSets.main
     }
@@ -143,17 +149,36 @@ dependencies {
     //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
-    implementation(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
+    minecraftLibrary(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
 //    implementation(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
+repositories {
+    maven {
+        //LDL
+        name = "Gegy"
+        url = uri("https://maven.gegy.dev")
+    }
+}
+
+var mappingsAttribute = Attribute.of("net.minecraft.mappings", String.class)
+
 dependencies {
+    attributesSchema {
+        attribute(mappingsAttribute)
+    }
+
     //Iris
     implementation "curse.maven:sodium-394468:6382651"
     implementation "curse.maven:irisshaders-455508:6661598"
 
     //Lamb Dynamic Lights
-    implementation "curse.maven:lambdynamiclights-393442:7306458"
+    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.7+1.21.1") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+    runtimeOnly "curse.maven:lambdynamiclights-393442:7306458"
 }
 
 //mixin {

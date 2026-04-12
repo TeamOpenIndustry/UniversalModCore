@@ -18,6 +18,9 @@ config="mixins.feat.universalmodcore.json"
 [[mixins]]
 config="mixins.fix.universalmodcore.json"
 
+[modproperties.universalmodcore."yumi:entrypoints"]
+"lambdynlights:initializer" = "cam72cam.mod.render.Light$UMCDynLightInitializer"
+
 [[dependencies.universalmodcore]]
     modId="neoforge"
     type='required'
