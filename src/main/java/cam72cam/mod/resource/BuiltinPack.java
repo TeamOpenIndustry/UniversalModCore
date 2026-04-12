@@ -2,14 +2,17 @@ package cam72cam.mod.resource;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.platform.LoadDatapackEvent;
+import com.mojang.logging.LogUtils;
+import net.minecraft.FileUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -22,9 +25,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -122,18 +126,18 @@ public class BuiltinPack {
         packs.add(1, pack);
         packs.add(pack);
 
-        Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer, packInfoFactory) -> {
+        Minecraft.getInstance().getResourcePackRepository().addPackFinder((consumer) -> {
             for (PackResources pack1 : packs) {
-                consumer.accept(new Pack(pack1.getName(),
-                                         true,
-                                         () -> pack1,
-                                         new TextComponent(""),
-                                         new TextComponent(""),
-                                         PackCompatibility.COMPATIBLE,
-                                         Pack.Position.TOP,
-                                         true,
-                                         PackSource.DEFAULT,
-                                         true));
+                consumer.accept(Pack.create(pack1.packId(),
+                                            Component.literal(""),
+                                            true,
+                                            s -> pack1,
+                                            new Pack.Info(Component.literal(""), 13, FeatureFlagSet.of()),
+                                            PackType.CLIENT_RESOURCES,
+                                            Pack.Position.TOP,
+                                            true,
+                                            PackSource.DEFAULT
+                ));
             }
         });
     }
@@ -186,39 +190,53 @@ public class BuiltinPack {
      */
     private static class InternalResourcePack extends AbstractPackResources {
         public InternalResourcePack() {
-            super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
+            super("UMC Generated Resources", true);
         }
 
         @Override
-        public InputStream getResource(String resourcePath) throws IOException {
-            if("pack.mcmeta".equals(resourcePath)) {
-                return new ByteArrayInputStream("{}".getBytes());
+        public @org.jetbrains.annotations.Nullable IoSupplier<InputStream> getRootResource(String... strs) {
+            String path = String.join("/", strs);
+            if (hasResource(path)) {
+                return () -> getResource(path);
             }
-
-            Identifier ident = nameToLocation(resourcePath);
-
-            if (DIRECT_RESOURCES.containsKey(ident)) {
-                return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
-            }
-
-            for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
-                String src = ident.toString();
-                if (src.startsWith(entry.getKey())) {
-                    Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
-                    return redirect.getResourceStream();
-                }
-            }
-
-            //It must already have been populated in hasResourceName if exists
-            if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
-                return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
-            }
-
             return null;
         }
 
         @Override
-        public boolean hasResource(String resourcePath) {
+        public IoSupplier<InputStream> getResource(PackType type, ResourceLocation loc) {
+            String path = locationToName(type, loc);
+            if (hasResource(path)) {
+                return () -> getResource(path);
+            }
+            return null;
+        }
+
+        private InputStream getResource(String resourcePath) {
+            Identifier ident = nameToLocation(resourcePath);
+
+            try {
+                if (DIRECT_RESOURCES.containsKey(ident)) {
+                    return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
+                }
+
+                for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
+                    String src = ident.toString();
+                    if (src.startsWith(entry.getKey())) {
+                        Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
+                        return redirect.getResourceStream();
+                    }
+                }
+
+                //It must already have been populated in hasResourceName if exists
+                if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
+                    return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+                }
+            } catch (Exception ignored) {
+            }
+            return null;
+        }
+
+        private boolean hasResource(String resourcePath) {
             if (resourcePath.endsWith("mcmeta") && !"pack.mcmeta".equals(resourcePath)) {
                 //We don't handle resource metadata
                 return false;
@@ -256,31 +274,22 @@ public class BuiltinPack {
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(PackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public void listResources(PackType type, String pathIn, String namespace, PackResources.ResourceOutput output) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
-            List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             DIRECT_RESOURCES.forEach((k, v) -> {
                 String path = k.getPath();
-                if(k.getDomain().equals(namespace) && path.startsWith(folder) && filter.test(path)) {
-                    path = path.substring((folder).length());
-                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
-                        result.add(k.internal);
-                    }
+                if(k.getDomain().equals(namespace) && path.startsWith(folder)) {
+                    output.accept(k.internal, () -> new ByteArrayInputStream(v));
                 }
             });
 
             CACHED_GENERATOR_RESULTS.forEach((k, v) -> {
                 String path = k.getPath();
-                if(k.getDomain().equals(namespace) && path.startsWith(folder) && filter.test(path)) {
-                    path = path.substring((folder).length());
-                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
-                        result.add(k.internal);
-                    }
+                if(k.getDomain().equals(namespace) && path.startsWith(folder)) {
+                    output.accept(k.internal, () -> new ByteArrayInputStream(v));
                 }
             });
-
-            return result;
         }
 
         @Override
@@ -288,11 +297,6 @@ public class BuiltinPack {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
             collect.add("universalmodcore");
             return collect;
-        }
-
-        @Override
-        public String getName() {
-            return "UMC Generated Resources";
         }
 
         @Nullable
@@ -312,11 +316,6 @@ public class BuiltinPack {
      */
     @OnlyIn(Dist.DEDICATED_SERVER)
     public static InputStream loadServerResource(Identifier ident) throws IOException {
-        if (ident.getPath().endsWith("mcmeta")) {
-            //We don't handle resource metadata
-            return null;
-        }
-
         if (DIRECT_RESOURCES.containsKey(ident)) {
             return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
         }
@@ -353,11 +352,28 @@ public class BuiltinPack {
         static Map<ResourceLocation, byte[]> data = new HashMap<>();
 
         public InternalDataPack() {
-            super(ModList.get().getModFileById("universalmodcore").getFile().getFilePath().toFile());
+            super("UMC Generated Resources", true);
         }
 
         @Override
-        public InputStream getResource(String resourcePath) throws IOException {
+        public @org.jetbrains.annotations.Nullable IoSupplier<InputStream> getRootResource(String... strs) {
+            String path = String.join("/", strs);
+            if (hasResource(path)) {
+                return () -> getResource(path);
+            }
+            return null;
+        }
+
+        @Override
+        public IoSupplier<InputStream> getResource(PackType type, ResourceLocation loc) {
+            String path = locationToName(type, loc);
+            if (hasResource(path)) {
+                return () -> getResource(path);
+            }
+            return null;
+        }
+
+        private InputStream getResource(String resourcePath) throws IOException {
             if("pack.mcmeta".equals(resourcePath)) {
                 return new ByteArrayInputStream("{}".getBytes());
             }
@@ -365,25 +381,20 @@ public class BuiltinPack {
             return new ByteArrayInputStream(data.get(nameToLocation(resourcePath).internal));
         }
 
-        @Override
-        public boolean hasResource(String resourcePath) {
+        private boolean hasResource(String resourcePath) {
             return "pack.mcmeta".equals(resourcePath) || data.containsKey(nameToLocation(resourcePath).internal);
         }
 
         @Override
-        public Collection<ResourceLocation> getResources(PackType type, String pathIn, String namespace, int maxDepth, Predicate<String> filter) {
+        public void listResources(PackType type, String pathIn, String namespace, PackResources.ResourceOutput output) {
             List<ResourceLocation> result = new ArrayList<>();
             final String folder = pathIn + "/"; // Ensure folders
             data.keySet().forEach((k) -> {
                 String path = k.getPath();
-                if(k.getNamespace().equals(namespace) && path.startsWith(folder) && filter.test(path)) {
-                    path = path.substring((folder).length());
-                    if (path.chars().filter(ch -> ch == '/').count() < maxDepth) {
-                        result.add(k);
-                    }
+                if(k.getNamespace().equals(namespace) && path.startsWith(folder) && data.containsKey(k)) {
+                    output.accept(k, () -> new ByteArrayInputStream(data.get(k)));
                 }
             });
-            return result;
         }
 
         @Override
@@ -394,31 +405,33 @@ public class BuiltinPack {
         }
 
         @Override
-        public String getName() {
-            return "UMC Generated Data";
-        }
-
-        @Override
         public void close() {
 
         }
     }
 
-    private static class UMCFolderPack extends FolderPackResources {
+    private static class UMCFolderPack extends PathPackResources {
+        private final Path root;
+
         public UMCFolderPack(File folder) {
-            super(folder);
+            super(folder.getName(), folder.toPath(), false);
+            this.root = folder.toPath();
         }
 
         @Override
-        public InputStream getResource(String name) throws IOException {
-            InputStream stream = super.getResource(name);
-            File file = this.getFile(name);
-            return new Identifier.InputStreamMod(stream, file.lastModified());
+        public IoSupplier<InputStream> getResource(PackType p_249352_, ResourceLocation p_251715_) {
+            Path path = this.root.resolve(p_249352_.getDirectory()).resolve(p_251715_.getNamespace());
+            return getResource(p_251715_, path);
         }
 
-        @Override
-        public boolean hasResource(String resourcePath) {
-            return super.hasResource(resourcePath);
+        public static IoSupplier<InputStream> getResource(ResourceLocation p_250145_, Path p_251046_) {
+            return FileUtil.decomposePath(p_250145_.getPath()).get().map((p_251647_) -> {
+                Path path = FileUtil.resolvePath(p_251046_, p_251647_);
+                return Files.exists(path) ? new Identifier.IoInputStreamMod(() -> Files.newInputStream(path), path.toFile().lastModified()) : null;
+            }, (p_248714_) -> {
+                LogUtils.getLogger().error("Invalid path {}: {}", p_250145_, p_248714_.message());
+                return null;
+            });
         }
     }
 
@@ -426,13 +439,14 @@ public class BuiltinPack {
         private final File path;
 
         public UMCFilePack(File fileIn) {
-            super(fileIn);
+            super(fileIn.getName(), fileIn, false);
             this.path = fileIn;
         }
 
         @Override
-        public InputStream getResource(String name) throws IOException {
-            return new Identifier.InputStreamMod(super.getResource(name), path.lastModified());
+        public IoSupplier<InputStream> getResource(PackType p_249605_, ResourceLocation p_252147_) {
+            IoSupplier<InputStream> found = super.getResource(p_249605_, p_252147_);
+            return found != null ? new Identifier.IoInputStreamMod(found, path.lastModified()) : null;
         }
     }
 
@@ -440,6 +454,11 @@ public class BuiltinPack {
         //Replace [requestedPrefix] with [actualPrefix] to redirect the request back
         String suffix = src.toString().substring(requestedPrefix.length());
         return new Identifier(actualPrefix + suffix);
+    }
+
+    private static String locationToName(PackType type, ResourceLocation path) {
+        String pattern = type == PackType.CLIENT_RESOURCES ? "assets/%s/%s" : "data/%s/%s";
+        return String.format(pattern, path.getNamespace(), path.getPath());
     }
 
     private static Identifier nameToLocation(String path) {
