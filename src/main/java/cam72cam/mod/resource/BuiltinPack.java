@@ -142,7 +142,7 @@ public class BuiltinPack {
     }
 
     private static void loadModResource(ModCore.Mod mod, List<IResourcePack> packs) {
-        String configDir = FMLPaths.CONFIGDIR.toString();
+        String configDir = FMLPaths.CONFIGDIR.get().toString();
         new File(configDir).mkdirs();
 
         IResourcePack modPack = BuiltinPack.attach(ModList.get().getModFileById(mod.modID()).getFile().getFilePath().toFile());
