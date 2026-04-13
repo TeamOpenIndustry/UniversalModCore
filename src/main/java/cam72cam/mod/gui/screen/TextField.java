@@ -14,12 +14,12 @@ public class TextField implements IWidget {
         this(builder,
              //Offset x&y by 1 and minus width&height by 2 to let border be within the range specified
              new GuiTextField(-1, Minecraft.getMinecraft().fontRendererObj, builder.getWidth() / 2 + x + 1, builder.getHeight() / 4 + y + 1, width - 2, height - 2));
-        internal.setMaxStringLength(256);
     }
 
     /** Internal, can be overridden to support custom GuiTextFields */
     protected TextField(IScreenBuilder builder, GuiTextField internal) {
         this.internal = internal;
+        internal.setMaxStringLength(256);
         builder.addTextField(this);
     }
 

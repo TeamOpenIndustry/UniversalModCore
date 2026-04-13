@@ -175,19 +175,15 @@ public class ModCore {
         public void event(ModEvent event, Mod m) {
             if (event == ModEvent.CONSTRUCT) {
                 Config.getMaxTextureSize(); //populate
-
+                List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
+                BuiltinPack.loadModResource(m);
+                IResourcePack modPack = BuiltinPack.attach(Loader.instance().activeModContainer().getSource());
+                // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
+                // (Also injects last modified time access)
+                // BUG: sounds can still be overridden by resource packs
+                packs.add(1, modPack);
+                packs.add(modPack);
                 if (!constructed) {
-                    for (Mod mod : instance.mods) {
-                        BuiltinPack.loadModResource(mod);
-                    }
-
-                    List<IResourcePack> packs = Minecraft.getMinecraft().defaultResourcePacks;
-                    IResourcePack modPack = BuiltinPack.attach(Loader.instance().activeModContainer().getSource());
-                    // Ensure people will get our result first via getResourceStream() and getLastResourceStream()
-                    // (Also injects last modified time access)
-                    // BUG: sounds can still be overridden by resource packs
-                    packs.add(1, modPack);
-                    packs.add(modPack);
                     BuiltinPack.onConstruct(packs);
 
                     constructed = true;
