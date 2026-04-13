@@ -42,10 +42,12 @@ public class RegistryUtil {
                     //Integrated server
                     return ServerLifecycleHooks.getCurrentServer().registryAccess();
                 } else {
+                    //Assume we're on server -- who knows?
                     ModCore.warn("What the hell Minecraft?");
                     return ServerLifecycleHooks.getCurrentServer().registryAccess();
                 }
             } else {
+                //Dedicated server
                 return ServerLifecycleHooks.getCurrentServer().registryAccess();
             }
         } catch (Exception e) {
