@@ -31,13 +31,13 @@ public class TextField implements IWidget {
                 }
             }
         };
-        internal.setMaxStringLength(256);
         builder.addTextField(this);
     }
 
     /** Internal, can be overridden to support custom GuiTextFields */
     protected TextField(IScreenBuilder builder, GuiTextField internal) {
         this.internal = internal;
+        internal.setMaxStringLength(256);
         builder.addTextField(this);
     }
 
