@@ -64,11 +64,11 @@ public class TextField implements IWidget {
 
     /** Validator that can block a string from being entered */
     public void setValidator(Predicate<String> filter) {
-        internal().setValidator(filter::test);
+        internal.setValidator(filter::test);
     }
 
     /** Move cursor to this text field */
     public void setFocused(boolean b) {
-        internal().setFocused2(b);
+        internal.setFocused2(b);
     }
 }
