@@ -1,6 +1,7 @@
 package cam72cam.mod;
 
 import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.entity.CustomEntity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.event.ClientEvents;
@@ -256,6 +257,7 @@ public class ModCore {
                     Packet.register(ModdedEntity.PassengerPositionsPacket::new, PacketDirection.ServerToClient);
                     Packet.register(ModdedEntity.PassengerSeatPacket::new, PacketDirection.ServerToClient);
                     Packet.register(Mouse.MousePressPacket::new, PacketDirection.ClientToServer);
+                    Packet.register(CustomEntity.RollPacket::new, PacketDirection.ServerToClient);
                     Command.register(new ModCoreCommand());
                     Light.register();
                     ConfigFile.sync(Config.class);
