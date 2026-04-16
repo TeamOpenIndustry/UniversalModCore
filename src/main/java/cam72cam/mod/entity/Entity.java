@@ -1,8 +1,10 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
+import cam72cam.mod.entity.sync.TagSync;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
+import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.monster.EntityMob;
@@ -25,8 +27,6 @@ import java.util.stream.Collectors;
 public class Entity {
     /** The wrapped MC construct.  Do not use directly */
     public net.minecraft.entity.Entity internal;
-
-    private float rotationRoll;
 
     /** Wrap a MC entity in UMC entity.  Do not use directly. */
     public Entity(net.minecraft.entity.Entity entity) {
@@ -78,6 +78,26 @@ public class Entity {
         return internal.rotationYaw;
     }
 
+    public float getRotationPitch() {
+        return internal.rotationPitch;
+    }
+
+    public float getRotationRoll() {
+        return 0;
+    }
+
+    public float getRotationYaw(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
+    }
+
+    public float getRotationPitch(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
+    }
+
+    public float getRotationRoll(float partialTicks) {
+        return 0;
+    }
+
     public void setRotationYaw(float yaw) {
         internal.prevRotationYaw = internal.rotationYaw;
         internal.rotationYaw = yaw;
@@ -90,10 +110,6 @@ public class Entity {
         {
             internal.prevRotationYaw += 360.0F;
         }
-    }
-
-    public float getRotationPitch() {
-        return internal.rotationPitch;
     }
 
     public void setRotationPitch(float pitch) {
@@ -110,40 +126,7 @@ public class Entity {
         }
     }
 
-    public float getRotationRoll() {
-        if (internal instanceof ModdedEntity) {
-            return internal.getDataManager().get(ModdedEntity.ROLL);
-        }
-        return 0f;
-    }
-
     public void setRotationRoll(float roll) {
-        if (internal instanceof ModdedEntity) {
-            EntityDataManager dataManager = internal.getDataManager();
-            float prevRoll = dataManager.get(ModdedEntity.PREV_ROLL);
-            while (roll - prevRoll < -180.0F)
-            {
-                prevRoll -= 360.0F;
-            }
-            while (roll - prevRoll >= 180.0F)
-            {
-                prevRoll += 360.0F;
-            }
-            dataManager.set(ModdedEntity.PREV_ROLL, prevRoll);
-            dataManager.set(ModdedEntity.ROLL, roll);
-        }
-    }
-
-    public float getRotationYaw(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
-    }
-
-    public float getRotationPitch(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
-    }
-
-    public float getRotationRoll(float partialTicks) {
-        return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
     }
 
     public float getPrevRotationYaw() {
@@ -155,10 +138,7 @@ public class Entity {
     }
 
     public float getPrevRotationRoll() {
-        if (internal instanceof ModdedEntity) {
-            return internal.getDataManager().get(ModdedEntity.PREV_ROLL);
-        }
-        return 0f;
+        return 0;
     }
 
     Vec3d eyeCache;
