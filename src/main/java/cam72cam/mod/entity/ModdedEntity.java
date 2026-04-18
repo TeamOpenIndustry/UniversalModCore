@@ -40,14 +40,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
 
-    //For data sync
+    //Data synchronization
     static final DataParameter<Float> PREV_ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
     static final DataParameter<Float> ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
-    //For data storage
+    //Data storage
     @TagField
-    private float roll;
+    private float roll = 0;
     @TagField
-    private float prevRoll;
+    private float prevRoll = 0;
 
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();

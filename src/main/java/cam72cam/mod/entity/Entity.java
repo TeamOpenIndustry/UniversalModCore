@@ -26,8 +26,6 @@ public class Entity {
     /** The wrapped MC construct.  Do not use directly */
     public net.minecraft.entity.Entity internal;
 
-    private float rotationRoll;
-
     /** Wrap a MC entity in UMC entity.  Do not use directly. */
     public Entity(net.minecraft.entity.Entity entity) {
         this.internal = entity;
@@ -82,6 +80,9 @@ public class Entity {
         return internal.rotationPitch;
     }
 
+    /**
+     * Only available with UMC entities
+     */
     public float getRotationRoll() {
         if (internal instanceof ModdedEntity) {
             return internal.getDataManager().get(ModdedEntity.ROLL);
@@ -97,6 +98,9 @@ public class Entity {
         return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
     }
 
+    /**
+     * Only available with UMC entities
+     */
     public float getRotationRoll(float partialTicks) {
         return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
     }
@@ -129,6 +133,9 @@ public class Entity {
         }
     }
 
+    /**
+     * Only available with UMC entities
+     */
     public void setRotationRoll(float roll) {
         if (internal instanceof ModdedEntity) {
             EntityDataManager dataManager = internal.getDataManager();
@@ -154,6 +161,9 @@ public class Entity {
         return internal.prevRotationPitch;
     }
 
+    /**
+     * Only available with UMC entities
+     */
     public float getPrevRotationRoll() {
         if (internal instanceof ModdedEntity) {
             return internal.getDataManager().get(ModdedEntity.PREV_ROLL);
