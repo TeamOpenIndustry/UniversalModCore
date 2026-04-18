@@ -82,12 +82,12 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         super(world);
 
         super.preventEntitySpawning = true;
-        this.dataManager.register(ROLL, 0f);
-        this.dataManager.register(PREV_ROLL, 0f);
     }
 
     @Override
     protected final void entityInit() {
+        this.dataManager.register(ROLL, 0f);
+        this.dataManager.register(PREV_ROLL, 0f);
     }
 
     /** Setup self if we have not done so already.  This happens during entity data load. */
