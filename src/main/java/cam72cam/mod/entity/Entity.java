@@ -81,12 +81,9 @@ public class Entity {
     }
 
     /**
-     * Only available with UMC entities
+     * @see CustomEntity#getRotationRoll() 
      */
     public float getRotationRoll() {
-        if (internal instanceof ModdedEntity) {
-            return internal.getDataManager().get(ModdedEntity.ROLL);
-        }
         return 0f;
     }
 
@@ -99,10 +96,10 @@ public class Entity {
     }
 
     /**
-     * Only available with UMC entities
+     * @see CustomEntity#getRotationRoll(float) 
      */
     public float getRotationRoll(float partialTicks) {
-        return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
+        return 0;
     }
 
     public void setRotationYaw(float yaw) {
@@ -134,23 +131,9 @@ public class Entity {
     }
 
     /**
-     * Only available with UMC entities
+     * @see CustomEntity#setRotationRoll(float) 
      */
     public void setRotationRoll(float roll) {
-        if (internal instanceof ModdedEntity) {
-            EntityDataManager dataManager = internal.getDataManager();
-            float prevRoll = dataManager.get(ModdedEntity.PREV_ROLL);
-            while (roll - prevRoll < -180.0F)
-            {
-                prevRoll -= 360.0F;
-            }
-            while (roll - prevRoll >= 180.0F)
-            {
-                prevRoll += 360.0F;
-            }
-            dataManager.set(ModdedEntity.PREV_ROLL, prevRoll);
-            dataManager.set(ModdedEntity.ROLL, roll);
-        }
     }
 
     public float getPrevRotationYaw() {
@@ -162,12 +145,9 @@ public class Entity {
     }
 
     /**
-     * Only available with UMC entities
+     * @see CustomEntity#getPrevRotationRoll()
      */
     public float getPrevRotationRoll() {
-        if (internal instanceof ModdedEntity) {
-            return internal.getDataManager().get(ModdedEntity.PREV_ROLL);
-        }
         return 0f;
     }
 
