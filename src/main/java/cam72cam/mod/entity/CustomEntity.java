@@ -1,9 +1,7 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.entity.sync.EntitySync;
-import cam72cam.mod.entity.sync.TagSync;
-import cam72cam.mod.serialization.TagField;
-import net.minecraft.util.math.MathHelper;
+import cam72cam.mod.world.World;
 
 import java.util.List;
 
@@ -18,14 +16,6 @@ public class CustomEntity extends Entity {
 
     /** Data that is automatically synchronized from server to client on tick */
     public final EntitySync sync;
-
-    /** Internal roll implementation */
-    @TagField
-    @TagSync
-    private float rotationRoll;
-    @TagField
-    @TagSync
-    private float prevRotationRoll;
 
     /** Do not use directly.  Construct via world on ModdedEntity load */
     protected CustomEntity() {
@@ -99,36 +89,4 @@ public class CustomEntity extends Entity {
         return internal.getActualPassengers();
     }
 
-    @Override
-    public float getRotationRoll() {
-        return rotationRoll;
-    }
-
-    @Override
-    public void setRotationRoll(float roll) {
-        this.prevRotationRoll = this.rotationRoll;
-        this.rotationRoll = roll;
-        while (roll - prevRotationRoll < -180.0F)
-        {
-            prevRotationRoll -= 360.0F;
-        }
-        while (roll - prevRotationRoll >= 180.0F)
-        {
-            prevRotationRoll += 360.0F;
-        }
-    }
-
-    @Override
-    public float getRotationRoll(float partialTicks) {
-        return (float) MathHelper.clampedLerp(prevRotationRoll, rotationRoll, partialTicks);
-    }
-
-    @Override
-    public float getPrevRotationRoll() {
-        return prevRotationRoll;
-    }
-
-    void tickRoll() {
-        this.prevRotationRoll = this.rotationRoll;
-    }
 }

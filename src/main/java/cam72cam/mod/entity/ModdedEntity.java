@@ -40,6 +40,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
 
+    //For data sync
+    static final DataParameter<Float> PREV_ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    static final DataParameter<Float> ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    //For data storage
+    @TagField
+    private float roll;
+    @TagField
+    private float prevRoll;
+
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();
 
@@ -73,6 +82,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         super(world);
 
         super.preventEntitySpawning = true;
+        this.dataManager.register(ROLL, 0f);
+        this.dataManager.register(PREV_ROLL, 0f);
     }
 
     @Override
@@ -132,6 +143,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
 
+        if (!this.world.isRemote) {
+            dataManager.set(ROLL, this.roll);
+            dataManager.set(PREV_ROLL, this.prevRoll);
+        }
+
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
             // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
@@ -165,6 +181,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     private void save(TagCompound data) {
         data.setString("custom_mob_type", type);
+        this.roll = dataManager.get(ROLL);
+        this.prevRoll = dataManager.get(PREV_ROLL);
 
         try {
             TagSerializer.serialize(data, this);
@@ -230,9 +248,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public final void onUpdate() {
         iTickable.onTick();
-        if (!this.world.isRemote) {
-            self.tickRoll();
-        }
+        this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
         try {
             self.sync.send();
         } catch (SerializationException e) {
