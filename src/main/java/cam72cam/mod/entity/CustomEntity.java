@@ -2,15 +2,10 @@ package cam72cam.mod.entity;
 
 import cam72cam.mod.entity.sync.EntitySync;
 import cam72cam.mod.entity.sync.TagSync;
-import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Implement to create a custom modded entity
@@ -26,8 +21,10 @@ public class CustomEntity extends Entity {
 
     /** Internal roll implementation */
     @TagField
+    @TagSync
     private float rotationRoll;
     @TagField
+    @TagSync
     private float prevRotationRoll;
 
     /** Do not use directly.  Construct via world on ModdedEntity load */
@@ -131,32 +128,7 @@ public class CustomEntity extends Entity {
         return prevRotationRoll;
     }
 
-    public void tickRoll() {
-        this.prevRotationRoll = rotationRoll;
-    }
-
-    public static class RollPacket extends Packet {
-        @TagField("t")
-        private CustomEntity target;
-        @TagField("r")
-        private float roll;
-        @TagField("p")
-        private float prevRoll;
-
-        public RollPacket() {}
-
-        public RollPacket(CustomEntity entity) {
-            this.target = entity;
-            this.roll = entity.rotationRoll;
-            this.prevRoll = entity.prevRotationRoll;
-        }
-
-        @Override
-        public void handle() {
-            if (target != null && target.internal instanceof ModdedEntity) {
-                target.rotationRoll = roll;
-                target.prevRotationRoll = prevRoll;
-            }
-        }
+    void tickRoll() {
+        this.prevRotationRoll = this.rotationRoll;
     }
 }

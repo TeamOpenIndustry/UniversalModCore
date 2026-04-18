@@ -63,16 +63,13 @@ public class EntitySync extends TagCompound {
                             .collect(Object2IntOpenHashMap::new,
                                      (m, f) -> {
                                          TagSync tag = f.getAnnotation(TagSync.class);
-                                         String name = f.getAnnotation(TagField.class).value();
-                                         if ("".equals(name)) {
-                                             name = f.getName();
-                                         }
+                                         TagField tagField = f.getAnnotation(TagField.class);
                                          Class<?> type = f.getType();
 
                                          if (type == float.class || type == Float.class) {
-                                             m.put(name, Math.max(0, Math.min(tag.floatPrecision(), 8)));
+                                             m.put(tagField.value(), Math.max(0, Math.min(tag.floatPrecision(), 8)));
                                          } else if (type == double.class || type == Double.class) {
-                                             m.put(name, Math.max(0, Math.min(tag.doublePrecision(), 8)));
+                                             m.put(tagField.value(), Math.max(0, Math.min(tag.doublePrecision(), 8)));
                                          }
                                      },
                                      Object2IntOpenHashMap::putAll);

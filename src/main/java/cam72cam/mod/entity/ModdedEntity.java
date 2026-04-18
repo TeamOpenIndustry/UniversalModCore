@@ -232,8 +232,6 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         iTickable.onTick();
         if (!this.world.isRemote) {
             self.tickRoll();
-            self.setRotationRoll(self.getRotationRoll() + 5);
-            new CustomEntity.RollPacket(self).sendToObserving(self);
         }
         try {
             self.sync.send();
