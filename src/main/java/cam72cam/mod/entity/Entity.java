@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * The base entity abstraction that wraps MC entities.
- *
+ * <p>
  * TODO: Make sure we are setting prevRot/Loc stuff correctly.  Should it only be changed on a tick processing the movement?
  */
 public class Entity {
@@ -78,6 +78,29 @@ public class Entity {
         return internal.rotationYaw;
     }
 
+    public float getRotationPitch() {
+        return internal.rotationPitch;
+    }
+
+    public float getRotationRoll() {
+        if (internal instanceof ModdedEntity) {
+            return internal.getDataManager().get(ModdedEntity.ROLL);
+        }
+        return 0f;
+    }
+
+    public float getRotationYaw(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
+    }
+
+    public float getRotationPitch(float partialTicks) {
+        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
+    }
+
+    public float getRotationRoll(float partialTicks) {
+        return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
+    }
+
     public void setRotationYaw(float yaw) {
         internal.prevRotationYaw = internal.rotationYaw;
         internal.rotationYaw = yaw;
@@ -92,10 +115,6 @@ public class Entity {
         }
     }
 
-    public float getRotationPitch() {
-        return internal.rotationPitch;
-    }
-
     public void setRotationPitch(float pitch) {
         internal.prevRotationPitch = internal.rotationPitch;
         internal.rotationPitch = pitch;
@@ -108,13 +127,6 @@ public class Entity {
         {
             internal.prevRotationPitch += 360.0F;
         }
-    }
-
-    public float getRotationRoll() {
-        if (internal instanceof ModdedEntity) {
-            return internal.getDataManager().get(ModdedEntity.ROLL);
-        }
-        return 0f;
     }
 
     public void setRotationRoll(float roll) {
@@ -132,18 +144,6 @@ public class Entity {
             dataManager.set(ModdedEntity.PREV_ROLL, prevRoll);
             dataManager.set(ModdedEntity.ROLL, roll);
         }
-    }
-
-    public float getRotationYaw(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
-    }
-
-    public float getRotationPitch(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
-    }
-
-    public float getRotationRoll(float partialTicks) {
-        return (float) MathHelper.clampedLerp(getPrevRotationRoll(), getRotationRoll(), partialTicks);
     }
 
     public float getPrevRotationYaw() {
