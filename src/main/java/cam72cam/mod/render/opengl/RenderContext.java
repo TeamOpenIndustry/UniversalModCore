@@ -287,6 +287,8 @@ public class RenderContext {
         OVERLAY,      //Mouseover...
         OVERLAY_TEXT, //Name plates...
 
+        PARTICLES,
+
         NONE
     }
 }

@@ -83,7 +83,7 @@ public abstract class Particle {
 
                     if (renderer == null) {
                         RenderState state = new RenderState();
-                        state.stage(RenderContext.Stage.ENTITY);
+                        state.stage(RenderContext.Stage.PARTICLES);
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
