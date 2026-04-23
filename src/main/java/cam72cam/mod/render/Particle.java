@@ -81,14 +81,14 @@ public abstract class Particle {
                     ip.renderY = posY - interpPosY + this.motionY * partialTicks;
                     ip.renderZ = posZ - interpPosZ + this.motionZ * partialTicks;
 
+                    RenderState state = new RenderState();
+                    state.stage(RenderContext.Stage.PARTICLES);
                     if (renderer == null) {
-                        RenderState state = new RenderState();
-                        state.stage(RenderContext.Stage.PARTICLES);
                         state.translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, new RenderState(), partialTicks);
+                            renderer.accept(particles, state, partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }

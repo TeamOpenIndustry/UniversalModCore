@@ -2,21 +2,29 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.With;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DirectDraw {
+    private static final Tessellator INTERNAL = new Tessellator(256*1024);
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
         try (With ctx = RenderContext.apply(state)) {
-            GL11.glBegin(GL11.GL_QUADS);
+            BufferBuilder builder = INTERNAL.getBuffer();
+            builder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            //TODO
+            // 1.color
+            // 2.optional normal
             for (VertexBuilder vert : verts) {
-                vert.draw();
+                vert.draw(builder, state);
             }
-            GL11.glEnd();
+            INTERNAL.draw();
         }
     }
 
@@ -71,17 +79,26 @@ public class DirectDraw {
             return this;
         }
 
-        private void draw() {
+        private void draw(BufferBuilder buffer, RenderState state) {
+            buffer.pos(x, y, z);
             if (u != null) {
-                GL11.glTexCoord2d(u, v);
+                buffer.tex(u, v);
+            } else {
+                buffer.tex(0, 0);
             }
             if (r != null) {
-                GL11.glColor4d(r, g, b, a);
+                buffer.color(r.floatValue(), g.floatValue(), b.floatValue(), a.floatValue());
+            } else if (state.color != null) {
+                buffer.color(state.color[0], state.color[1], state.color[2], state.color[3]);
+            } else {
+                buffer.color(1f, 1f, 1f, 1f);
             }
             if (j != null) {
-                GL11.glNormal3d(j, k, l);
+                buffer.normal(j.floatValue(), k.floatValue(), l.floatValue());
+            } else {
+                buffer.normal(0, 0, 0);
             }
-            GL11.glVertex3d(x, y, z);
+            buffer.endVertex();
         }
     }
 }
