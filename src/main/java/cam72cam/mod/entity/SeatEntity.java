@@ -158,8 +158,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
 
     @Override
     public Vec3 getPassengerRidingPosition(Entity entity) {
-        Vec3 vec3 = super.getPassengerRidingPosition(entity);
-        return new Vec3(vec3.x, 0, vec3.z);
+        return super.getPassengerRidingPosition(entity);
     }
 
     int lastUpdateTick = -1;
