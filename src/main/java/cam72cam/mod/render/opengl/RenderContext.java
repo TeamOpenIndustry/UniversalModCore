@@ -2,13 +2,14 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -24,6 +25,7 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 public class RenderContext {
     //Lightmap UV coordinate for full bright
     public static final int FULL_BRIGHT = 240;
+    public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
@@ -34,6 +36,11 @@ public class RenderContext {
     public static ThreadLocal<RenderState> currentState = new ThreadLocal<>();
 
     private static final List<Runnable> deferredCall = new LinkedList<>();
+
+    //TODO 1.21.1 HELP
+    //  We can't change light map twice
+    //  How can we get rid of this global state?
+    private static volatile boolean hasChangedLightmap = false;
 
     private RenderContext() {
     }
@@ -78,7 +85,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null) {
+        if (state.lightmap != null && ! hasChangedLightmap) {
             //Our custom shader will handle vanilla emissive stuff
             float oldX;
             float oldY;
@@ -92,8 +99,13 @@ public class RenderContext {
                 oldX = 1;
                 oldY = 1;
             }
+            hasChangedLightmap = true;
             setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
-            restore.add(() -> setupLightMap(shader, oldX, oldY));
+            restore.add(() -> {
+                //Is it able to change shader before setup and restore?
+                setupLightMap(shader, oldX, oldY);
+                hasChangedLightmap = false;
+            });
         }
 
 //        if (state.lighting != null) {

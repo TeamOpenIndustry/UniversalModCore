@@ -393,7 +393,7 @@ public class ItemRender {
                     // Maybe backwards?
                     //mat.last().pose().mul(matrix.last().pose());
 
-                    RenderState state = new RenderState(mat);
+                    RenderState state = new RenderState(mat).stage(RenderContext.Stage.ITEM_IN_WORLD);
                     model.applyTransform(stack, type, state);
 
                     int j = i % 65536;

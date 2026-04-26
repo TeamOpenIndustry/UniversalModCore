@@ -10,12 +10,10 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.joml.Matrix4f;
@@ -27,8 +25,6 @@ import java.util.List;
 public class GlobalRender {
     // Fire these off every tick
     private static final List<RenderFunction> renderFuncs = new ArrayList<>();
-
-    private static final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
@@ -120,8 +116,8 @@ public class GlobalRender {
                      .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), immediate, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
-            immediate.endBatch();
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -134,9 +130,9 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
-                                       immediate, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            immediate.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -150,9 +146,9 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(str, 0, 0, color, false, new Matrix4f(),
-                                       immediate, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            immediate.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -165,9 +161,9 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
-                                       immediate, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            immediate.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 

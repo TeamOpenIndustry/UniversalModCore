@@ -9,7 +9,6 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -24,7 +23,6 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -92,16 +90,8 @@ public class StandardModel {
             matrix.model_view().multiply(transform);
 
             try (With ctx = RenderContext.apply(matrix)) {
-                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
-                if (oldState) {
-                    GL32.glEnable(GL32.GL_BLEND);
-                } else {
-                    GL32.glDisable(GL32.GL_BLEND);
-                }
-
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), buffer, null, 0);
-                buffer.endBatch();
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), RenderContext.IMMEDIATE, null, 0);
+                RenderContext.IMMEDIATE.endBatch();
             }
         });
         return this;
@@ -193,9 +183,9 @@ public class StandardModel {
             }
         }
 
-        if (!Minecraft.getInstance().renderBuffers().bufferSource().startedBuilders.isEmpty()) {
+        if (!RenderContext.IMMEDIATE.startedBuilders.isEmpty()) {
             try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
-                Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+                RenderContext.IMMEDIATE.endBatch();
             }
         }
     }
@@ -215,18 +205,10 @@ public class StandardModel {
                 matrix.model_view().rotate(Math.toRadians(90), 1, 0, 0);
             }
             try (With ctx = RenderContext.apply(matrix)) {
-                boolean oldState = GL32.glGetBoolean(GL32.GL_BLEND);
-                MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
-                if (oldState) {
-                    GL32.glEnable(GL32.GL_BLEND);
-                } else {
-                    GL32.glDisable(GL32.GL_BLEND);
-                }
-
                 Minecraft.getInstance().getItemRenderer().renderStatic(stack, ItemDisplayContext.NONE,
                                                                        light, OverlayTexture.NO_OVERLAY,
-                                                                       new PoseStack(), buffer, null, 0);
-                buffer.endBatch();
+                                                                       new PoseStack(), RenderContext.IMMEDIATE, null, 0);
+                RenderContext.IMMEDIATE.endBatch();
             }
         };
     }
