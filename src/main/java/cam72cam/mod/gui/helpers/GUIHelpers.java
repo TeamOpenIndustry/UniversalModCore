@@ -19,6 +19,7 @@ import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -27,6 +28,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
@@ -74,8 +76,9 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(IClientFluidTypeExtensions.of(fluid.internal.get(0)).getStillTexture());
-        drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.get(0)).getTintColor(), x, y, width, height);
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                                             .apply(IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getStillTexture());
+        drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getTintColor(), x, y, width, height);
     }
 
     /** Draw a texture sprite at coords, tinted with col  */
@@ -85,7 +88,7 @@ public class GUIHelpers {
         float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
         ShaderInstance oldShader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
         int iW = sprite.contents().width();
         int iH = sprite.contents().height();
 
@@ -138,16 +141,19 @@ public class GUIHelpers {
         drawString(text, x, y, color, new Matrix4());
     }
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
+        //TODO Ridiculous Z!
+        matrix.m23 = 400;
         state.model_view().multiply(matrix);
-        matrix.m23 = 10;//Z transform
-        graphics.pose().pushPose();
-        graphics.pose().setIdentity();
-        graphics.pose().mulPose(matrix.convertToMoj());
-        int xPos = (int) (x + matrix.m03 / matrix.m00);
-        int yPos = (int) (y + matrix.m13 / matrix.m11);
-        graphics.drawString(Minecraft.getInstance().font, text, xPos, yPos, color);
-        graphics.pose().popPose();
+        try (With with = RenderContext.apply(state)) {
+            Font font = Minecraft.getInstance().font;
+            font.drawInBatch(
+                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
+                    font.isBidirectional()
+            );
+            RenderContext.IMMEDIATE.endBatch();
+        }
     }
 
     /** Draw a shadowed string offset from the center of coords */
@@ -155,16 +161,18 @@ public class GUIHelpers {
         drawCenteredString(text, x, y, color, new Matrix4());
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
+        matrix.m23 = 400;
         state.model_view().multiply(matrix);
-        matrix.m23 = 0;//Z transform
-        graphics.pose().pushPose();
-        graphics.pose().setIdentity();
-        graphics.pose().mulPose(matrix.convertToMoj());
-        int xPos = (int) (x + matrix.m03 / matrix.m00);
-        int yPos = (int) (y + matrix.m13 / matrix.m11);
-        graphics.drawCenteredString(Minecraft.getInstance().font, text, xPos, yPos, color);
-        graphics.pose().popPose();
+        try (With with = RenderContext.apply(state)) {
+            Font font = Minecraft.getInstance().font;
+            font.drawInBatch(
+                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
+                    font.isBidirectional()
+            );
+            RenderContext.IMMEDIATE.endBatch();
+        }
     }
 
     /** Gat a string's internal width for further use */
