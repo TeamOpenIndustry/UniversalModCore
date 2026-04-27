@@ -37,11 +37,6 @@ public class RenderContext {
 
     private static final List<Runnable> deferredCall = new LinkedList<>();
 
-    //TODO 1.21.1 HELP
-    //  We can't change light map twice
-    //  How can we get rid of this global state?
-    private static volatile boolean hasChangedLightmap = false;
-
     private RenderContext() {
     }
 
@@ -85,7 +80,7 @@ public class RenderContext {
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
 
-        if (state.lightmap != null && ! hasChangedLightmap) {
+        if (state.lightmap != null) {
             //Our custom shader will handle vanilla emissive stuff
             float oldX;
             float oldY;
@@ -99,12 +94,9 @@ public class RenderContext {
                 oldX = 1;
                 oldY = 1;
             }
-            hasChangedLightmap = true;
             setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
             restore.add(() -> {
-                //Is it able to change shader before setup and restore?
                 setupLightMap(shader, oldX, oldY);
-                hasChangedLightmap = false;
             });
         }
 
@@ -254,6 +246,7 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
+    //TODO check existence before ste
     private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
         List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
         for (int i = 0; i < elements1.size(); i++) {

@@ -88,6 +88,7 @@ public class StandardModel {
     public StandardModel addItem(ItemStack stack, Matrix4 transform) {
         custom.add((matrix, pt) -> {
             matrix.model_view().multiply(transform);
+            matrix.lightmap(1, 1);
 
             try (With ctx = RenderContext.apply(matrix)) {
                 Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), RenderContext.IMMEDIATE, null, 0);
