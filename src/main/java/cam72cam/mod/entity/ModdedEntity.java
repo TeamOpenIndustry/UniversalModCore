@@ -247,8 +247,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void onUpdate() {
-        iTickable.onTick();
         this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
+        iTickable.onTick();
         try {
             self.sync.send();
         } catch (SerializationException e) {
