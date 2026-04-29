@@ -12,6 +12,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -53,7 +54,7 @@ public abstract class BlockTypeEntity extends BlockType {
 
     /** Hack for initializing a "fake" te */
     public final BlockEntity createBlockEntity(World world, Vec3i pos) {
-        TileEntity te = ((TileEntity) ((BlockTypeInternal)internal).newBlockEntity(pos.internal(), null));
+        TileEntity te = ((TileEntity) ((BlockTypeInternal)internal).newBlockEntity(pos.internal(), Blocks.AIR.defaultBlockState()));
         te.hasTileData = true;
         te.setLevel(world.internal);
         return te.instance();
