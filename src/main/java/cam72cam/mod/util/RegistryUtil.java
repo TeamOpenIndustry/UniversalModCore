@@ -1,13 +1,11 @@
 package cam72cam.mod.util;
 
-import cam72cam.mod.ModCore;
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.util.thread.EffectiveSide;
 import net.neoforged.neoforge.common.conditions.ICondition;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
@@ -34,20 +32,11 @@ public class RegistryUtil {
 
     public static RegistryAccess getRegistry() {
         try {
-            if (FMLLoader.getDist().isClient()) {
-                if (Thread.currentThread().getThreadGroup().getName().contains("main")) {
-                    //Logical client
-                    return Minecraft.getInstance().getConnection().registryAccess();
-                } else if (Thread.currentThread().getThreadGroup().getName().contains("SERVER")) {
-                    //Integrated server
-                    return ServerLifecycleHooks.getCurrentServer().registryAccess();
-                } else {
-                    //Assume we're on server -- who knows?
-                    ModCore.warn("What the hell Minecraft?");
-                    return ServerLifecycleHooks.getCurrentServer().registryAccess();
-                }
+            if (EffectiveSide.get().isClient()) {
+                //Logical client
+                return Minecraft.getInstance().getConnection().registryAccess();
             } else {
-                //Dedicated server
+                //Integrated or dedicated server
                 return ServerLifecycleHooks.getCurrentServer().registryAccess();
             }
         } catch (Exception e) {
