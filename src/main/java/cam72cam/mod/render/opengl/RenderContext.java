@@ -2,12 +2,14 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -178,10 +180,10 @@ public class RenderContext {
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
             Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
 //            Lighting.setupLevel(matrix4.convertToMoj());
-            Vector4f transformd0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
-            Vector4f transformd1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
-            RenderSystem.setShaderLights(new Vector3f(transformd0.x(), transformd0.y(), transformd0.z()),
-                                         new Vector3f(transformd1.x(), transformd1.y(), transformd1.z()));
+            Vector4f transformed0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
+            Vector4f transformed1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
+            RenderSystem.setShaderLights(new Vector3f(transformed0.x(), transformed0.y(), transformed0.z()),
+                                         new Vector3f(transformed1.x(), transformed1.y(), transformed1.z()));
         }
 
         applyShaderFields(shader);
@@ -246,22 +248,15 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
-    //TODO check existence before ste
     private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
-        List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
-        for (int i = 0; i < elements1.size(); i++) {
-            VertexFormatElement element = elements1.get(i);
-            if (element.usage() == VertexFormatElement.Usage.UV) {
-                for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
-                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        //240 means full bright
-                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
-                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
-                        GL32.glVertexAttribI2i(i, x, y);
-                    }
-                }
-            }
+        VertexFormat vertexFormat = shader.getVertexFormat();
+        if (vertexFormat != DefaultVertexFormat.NEW_ENTITY && !ShaderHelper.isShaderPackEnabled()) {
+            return;
         }
+
+        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
+        GL32.glVertexAttribI2i(4, x, y); //NEW_ENTITY's UV2
     }
 
     public static void applyBool(int opt, boolean currState) {
