@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.neoforged.bus.api.Event;
 import net.neoforged.fml.event.IModBusEvent;
@@ -14,13 +15,12 @@ import net.neoforged.fml.event.IModBusEvent;
  * Fired when recipe datapacks are reloaded
  */
 public class RegisterRecipeEvent extends Event implements IModBusEvent {
-    private static final ResourceLocation CRAFTING = ResourceLocation.withDefaultNamespace("crafting");
-    private final ImmutableMultimap.Builder<ResourceLocation, RecipeHolder<?>> map;
-    private final ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> builder;
+    private final ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> byType;
+    private final ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> byName;
 
-    public RegisterRecipeEvent(ImmutableMultimap.Builder<ResourceLocation, RecipeHolder<?>> map, ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> builder) {
-        this.map = map;
-        this.builder = builder;
+    public RegisterRecipeEvent(ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> byType, ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> byName) {
+        this.byType = byType;
+        this.byName = byName;
     }
 
     public void registerCraftingRecipe(RecipeHolder<ShapedRecipe> recipe, Fuzzy... triggers) {
@@ -29,7 +29,7 @@ public class RegisterRecipeEvent extends Event implements IModBusEvent {
             ResourceLocation advancement = ResourceLocation.tryBuild(recipe.id().getNamespace(), "unlock" + recipe.id().getPath());
             event.registerRecipeTrigger(advancement, recipe.id(), triggers);
         });
-        map.put(CRAFTING, recipe);
-        builder.put(recipe.id(), recipe);
+        byType.put(RecipeType.CRAFTING, recipe);
+        byName.put(recipe.id(), recipe);
     }
 }

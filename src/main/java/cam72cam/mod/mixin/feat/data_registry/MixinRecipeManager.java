@@ -14,6 +14,7 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,7 +36,7 @@ public abstract class MixinRecipeManager extends SimpleJsonResourceReloadListene
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
             at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/item/crafting/RecipeManager;makeConditionalOps()Lnet/neoforged/neoforge/common/conditions/ConditionalOps;"))
     public void captureBuilder(Map<ResourceLocation, JsonElement> p_44037_, ResourceManager p_44038_, ProfilerFiller p_44039_, CallbackInfo ci,
-                               @Local ImmutableMultimap.Builder<ResourceLocation, RecipeHolder<?>> builder,
+                               @Local ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> builder,
                                @Local ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> builder1,
                                @Local RegistryOps<JsonElement> ops) {
         RegistryUtil.recipeBuildingContext(this.makeConditionalOps().context);
