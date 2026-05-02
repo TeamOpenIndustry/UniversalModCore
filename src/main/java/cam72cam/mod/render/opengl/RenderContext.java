@@ -2,15 +2,14 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
@@ -248,15 +247,24 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
+    //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
     private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
-        VertexFormat vertexFormat = shader.getVertexFormat();
-        if (vertexFormat != DefaultVertexFormat.NEW_ENTITY && !ShaderHelper.isShaderPackEnabled()) {
-            return;
-        }
+        LightTexture light = Minecraft.getInstance().gameRenderer.lightTexture();
 
-        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
-        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
-        GL32.glVertexAttribI2i(4, x, y); //NEW_ENTITY's UV2
+        List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
+        for (int i = 0; i < elements1.size(); i++) {
+            VertexFormatElement element = elements1.get(i);
+            if (element.usage() == VertexFormatElement.Usage.UV) {
+                for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
+                        //240 means full bright
+                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
+                        GL32.glVertexAttribI2i(i, x, y);
+                    }
+                }
+            }
+        }
     }
 
     public static void applyBool(int opt, boolean currState) {

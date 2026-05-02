@@ -387,7 +387,7 @@ public class ItemRender {
                  * before actually setting up the correct GL context.
                  */
                 if (!ModCore.isInReload()) {
-                    RenderType.solid().setupRenderState();
+                    RenderType.cutoutMipped().setupRenderState();
 
                     mat.pushPose();
                     // Maybe backwards?
@@ -407,7 +407,7 @@ public class ItemRender {
 
                     mat.popPose();
 
-                    RenderType.solid().clearRenderState();
+                    RenderType.cutoutMipped().setupRenderState();
                 }
                 // TODO return std.getQuads(side, rand);
             };
