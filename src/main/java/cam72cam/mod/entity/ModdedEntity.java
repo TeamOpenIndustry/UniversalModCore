@@ -247,7 +247,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void onUpdate() {
-        this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
+        if (!world.isRemote) {
+            this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
+        }
         iTickable.onTick();
         try {
             self.sync.send();
