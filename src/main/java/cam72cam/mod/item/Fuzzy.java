@@ -33,8 +33,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold").add(Items.GOLD_INGOT);
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("universalmodcore:ingots/steel").toString()), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("universalmodcore:storage_blocks/steel").toString()), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.bind(new ResourceLocation("forge:ingots/steel").toString()), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.bind(new ResourceLocation("forge:storage_blocks/steel").toString()), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron").add(Blocks.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -99,8 +99,9 @@ public class Fuzzy {
                 "  \"replace\": false,\n" +
                 "  \"values\": []\n" +
                 "}").getBytes(StandardCharsets.UTF_8);
-        BuiltinPack.putData(new ResourceLocation("universalmodcore:tags/items/ingots/steel.json"), data);
-        BuiltinPack.putData(new ResourceLocation("universalmodcore:tags/items/storage_blocks/steel.json"), data);
+        BuiltinPack.addNamespace("forge");
+        BuiltinPack.putData(new ResourceLocation("forge:tags/items/ingots/steel.json"), data);
+        BuiltinPack.putData(new ResourceLocation("forge:tags/items/storage_blocks/steel.json"), data);
     }
 
     static Map<String, Fuzzy> registered;

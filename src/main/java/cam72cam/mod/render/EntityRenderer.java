@@ -145,10 +145,12 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
-        // TODO
-        renderers.get(self.getClass()).postRender(self, state, partialTicks);
-
         RenderType.cutout().clearRenderState();
+
+        //Enable translucent for post render
+        RenderType.translucent().setupRenderState();
+        renderers.get(self.getClass()).postRender(self, state, partialTicks);
+        RenderType.translucent().clearRenderState();
     }
 
     @Nullable
