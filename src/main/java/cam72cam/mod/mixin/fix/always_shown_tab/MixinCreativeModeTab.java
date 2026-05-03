@@ -1,4 +1,4 @@
-package cam72cam.mod.mixin.feat.always_shown_tab;
+package cam72cam.mod.mixin.fix.always_shown_tab;
 
 import cam72cam.mod.mixin.accessor.ACreativeModeTab;
 import net.minecraft.world.item.CreativeModeTab;
