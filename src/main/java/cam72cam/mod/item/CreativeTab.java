@@ -2,6 +2,7 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.mixin.accessor.ACreativeModeTab;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
@@ -33,6 +34,7 @@ public class CreativeTab {
                            }
                        });
             });
+            ACreativeModeTab.from(internal).setUMCTab();
             after.add(internal);
         });
     }

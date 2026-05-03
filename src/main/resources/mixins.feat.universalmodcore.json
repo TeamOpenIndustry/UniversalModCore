@@ -8,6 +8,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixinPriority": 1300,
   "mixins": [
+    "always_shown_tab.MixinCreativeModeTab",
     "data_registry.MixinAdvancement",
     "data_registry.MixinMinecraftServer",
     "data_registry.MixinRecipeManager",
