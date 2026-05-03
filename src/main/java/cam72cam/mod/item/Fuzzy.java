@@ -4,6 +4,7 @@ import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.resources.ResourceLocation;
+import cam72cam.mod.resource.BuiltinPack;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /** Vanilla/Forge tag abstraction. Use for item equivalence */
@@ -30,8 +32,8 @@ public class Fuzzy {
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold").add(Items.GOLD_INGOT);
-    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "ingots/steel")), "ingotSteel");
-    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(ResourceLocation.fromNamespaceAndPath("forge", "storage_blocks/steel")), "blockSteel");
+    public static final Fuzzy STEEL_INGOT = new Fuzzy(ItemTags.create(ResourceLocation.parse("universalmodcore:ingots/steel")), "ingotSteel");
+    public static final Fuzzy STEEL_BLOCK = new Fuzzy(ItemTags.create(ResourceLocation.parse("universalmodcore:storage_blocks/steel")), "blockSteel");
     public static final Fuzzy IRON_INGOT = new Fuzzy(Tags.Items.INGOTS_IRON, "ingotIron").add(Items.IRON_INGOT);
     public static final Fuzzy IRON_BLOCK = new Fuzzy(Tags.Items.STORAGE_BLOCKS_IRON, "blockIron").add(Blocks.IRON_BLOCK);
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
@@ -90,6 +92,14 @@ public class Fuzzy {
 
     static {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
+
+        //Fallback for virtual steel binding...
+        byte[] data = ("{\n" +
+                "  \"replace\": false,\n" +
+                "  \"values\": []\n" +
+                "}").getBytes(StandardCharsets.UTF_8);
+        BuiltinPack.putData(ResourceLocation.parse("universalmodcore:tags/items/ingots/steel.json"), data);
+        BuiltinPack.putData(ResourceLocation.parse("universalmodcore:tags/items/storage_blocks/steel.json"), data);
     }
 
     static Map<String, Fuzzy> registered;
