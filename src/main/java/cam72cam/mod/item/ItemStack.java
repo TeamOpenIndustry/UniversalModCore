@@ -3,12 +3,12 @@ package cam72cam.mod.item;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.RegistryUtil;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.fluids.FluidUtil;
 
@@ -27,11 +27,13 @@ public class ItemStack {
         this.supplier = null;
     }
 
-    //TODO How do we handle 1.20.5 NBT Removal?
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
         this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.getRegistry(),
                                                               (nbt.hasKey("id") && nbt.getString("id").equals("minecraft:air")) ? new CompoundTag() : nbt.internal));
+        if (!internal().has(ModCoreDataComponent.type()) && nbt.hasKey("tag")) {
+            this.setTagCompound(nbt.get("tag"));
+        }
     }
 
     /** Construct from customItem */
@@ -55,17 +57,17 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
-        //TODO move to our own data component
-        if (internal().get(DataComponents.CUSTOM_DATA) == null) {
-            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new TagCompound().internal));
+        DataComponentType<ModCoreDataComponent> component = ModCoreDataComponent.type();
+        if (!internal().has(component)) {
+            internal().set(component, ModCoreDataComponent.of(new TagCompound()));
         }
-        CustomData customData = internal().get(DataComponents.CUSTOM_DATA);
-        return new TagCompound(customData == null ? new CompoundTag() : customData.getUnsafe());
+        ModCoreDataComponent data = internal().get(component);
+        return new TagCompound(data.compound());
     }
 
     /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
-        internal().set(DataComponents.CUSTOM_DATA, CustomData.of(data.internal));
+        internal().set(ModCoreDataComponent.type(), ModCoreDataComponent.of(data));
     }
 
     public ItemStack copy() {

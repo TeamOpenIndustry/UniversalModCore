@@ -19,7 +19,7 @@ build
 
 # other
 eclipse
-run
+runs
 
 # sketchup
 *.skb
