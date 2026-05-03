@@ -7,6 +7,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1301,
   "mixins": [
+    "always_shown_tab.MixinCreativeModeTab",
     "custom_bb_collision.MixinVoxelShapes",
     "entity_data_migration.MixinChunkStorage"
   ],

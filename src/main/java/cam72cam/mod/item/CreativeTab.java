@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.mixin.accessor.ACreativeModeTab;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
@@ -12,12 +13,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /** Creates/Registers a creative tab for custom items */
-
 public class CreativeTab {
-    public CreativeModeTab internal;
-
     private static ResourceKey<CreativeModeTab> lastTab = CreativeModeTabs.SPAWN_EGGS;
 
+    public CreativeModeTab internal;
 
     // TODO expose existing creative tabs as constants to be used by mods
 
@@ -40,6 +39,7 @@ public class CreativeTab {
             builder.withTabsBefore(key);
 
             internal = builder.build();
+            ACreativeModeTab.from(internal).setUMCTab();
             return internal;
         });
         lastTab = register.getKey();

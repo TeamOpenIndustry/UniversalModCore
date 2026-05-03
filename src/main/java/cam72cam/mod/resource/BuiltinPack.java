@@ -51,6 +51,11 @@ public class BuiltinPack {
             });
     private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
     private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
+    private static final HashSet<String> EXTRA_NAMESPACES = new HashSet<>();
+
+    static {
+        addNamespace("universalmodcore");
+    }
 
     /**
      * Registers a static resource.
@@ -109,6 +114,13 @@ public class BuiltinPack {
      */
     public static void putData(ResourceLocation location, byte[] content) {
         InternalDataPack.data.put(location, content);
+    }
+
+    /**
+     * Internal
+     */
+    public static void addNamespace(String namespace) {
+        EXTRA_NAMESPACES.add(namespace);
     }
 
     /**
@@ -309,7 +321,7 @@ public class BuiltinPack {
         @Override
         public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
-            collect.add("universalmodcore");
+            collect.addAll(EXTRA_NAMESPACES);
             return collect;
         }
 
@@ -426,7 +438,7 @@ public class BuiltinPack {
         @Override
         public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
-            collect.add("universalmodcore");
+            collect.addAll(EXTRA_NAMESPACES);
             return collect;
         }
 
