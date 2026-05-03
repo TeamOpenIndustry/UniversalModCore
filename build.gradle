@@ -196,6 +196,7 @@ jar.finalizedBy('reobfJar')
 shadowJar {
     archiveClassifier = ''
     configurations = [project.configurations.shade]
+    relocate 'javax.vecmath', "${project.group}.shade.javax.vecmath"
     relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
     //Don't do this
