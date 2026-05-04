@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cam72cam.mod.event.CommonEvents;
-import cam72cam.mod.item.ModCoreDataComponent;
 import cam72cam.mod.resource.BuiltinPack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.server.packs.*;
@@ -92,7 +91,6 @@ public class ModCore {
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
         CommonEvents.Item.CREATIVE_TAB.register(modEventBus);
-        ModCoreDataComponent.register(modEventBus);
 
         NeoForge.EVENT_BUS.register(this);
     }
