@@ -23,7 +23,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -142,9 +141,10 @@ public class GUIHelpers {
     }
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
-        //TODO Ridiculous Z!
-        matrix.m23 = 400;
+        //Reset Z to prevent culling
+        matrix.m23 = 0;
         state.model_view().multiply(matrix);
+        state.depth_test(false);
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
@@ -162,8 +162,10 @@ public class GUIHelpers {
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
-        matrix.m23 = 400;
+        //Reset Z to prevent culling
+        matrix.m23 = 0;
         state.model_view().multiply(matrix);
+        state.depth_test(false);
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
