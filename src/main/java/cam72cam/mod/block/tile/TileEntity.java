@@ -126,7 +126,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                     myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
                 BlockPos pos = new BlockPos(data.getInt("x"), data.getInt("y"), data.getInt("z"));
-                data.putString("id", BlockEntityType.getKey(((EntityBlock)myState.getBlock()).newBlockEntity(pos, null).getType()).toString());
+                data.putString("id", BlockEntityType.getKey(((EntityBlock)myState.getBlock()).newBlockEntity(pos, Blocks.AIR.defaultBlockState()).getType()).toString());
                 return myState;
             }
             return null;
