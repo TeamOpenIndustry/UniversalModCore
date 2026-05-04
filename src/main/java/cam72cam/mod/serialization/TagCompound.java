@@ -10,6 +10,7 @@ import cam72cam.mod.world.World;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.world.level.block.Blocks;
 
 import java.io.*;
 import java.util.*;
@@ -305,7 +306,7 @@ public class TagCompound {
 
 
             BlockPos blockpos = new BlockPos(ted.get("data").internal.getInt("x"), ted.get("data").internal.getInt("y"), ted.get("data").internal.getInt("z"));
-            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, null, ted.get("data").internal);
+            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), ted.get("data").internal);
             te.setLevel(world.internal);
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();
