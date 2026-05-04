@@ -58,8 +58,11 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
+        if (!internal().has(DataComponents.CUSTOM_DATA)) {
+            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
+        }
         CustomData customData = internal().get(DataComponents.CUSTOM_DATA);
-        return new TagCompound(customData == null ? new CompoundTag() : customData.getUnsafe().copy());
+        return new TagCompound(customData == null ? new CompoundTag() : customData.getUnsafe());
     }
 
     /** Tag attached to this stack */
