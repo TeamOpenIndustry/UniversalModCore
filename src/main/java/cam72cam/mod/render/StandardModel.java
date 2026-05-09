@@ -7,7 +7,6 @@ import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -24,7 +23,6 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.tuple.Pair;
-import org.joml.Matrix4f;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -92,16 +90,11 @@ public class StandardModel {
             matrix.model_view().multiply(transform);
 
             //Otherwise we'll get brown-tinted light texture with iris...find out why
-            Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
-            Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
-            RenderSystem.getModelViewMatrix().set(matrix.model_view().copy().transpose().convertToMoj());
-            RenderSystem.getProjectionMatrix().set(matrix.projection().copy().transpose().convertToMoj());
-
-            Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY, new PoseStack(), RenderContext.IMMEDIATE, null, 0);
-            RenderContext.IMMEDIATE.endBatch();
-
-            RenderSystem.getModelViewMatrix().set(oldModelView);
-            RenderSystem.getProjectionMatrix().set(oldProjection);
+            try (With ctx = RenderContext.applyBaseState(matrix)) {
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY,
+                                                                       new PoseStack(), RenderContext.IMMEDIATE, null, 0);
+                RenderContext.IMMEDIATE.endBatch();
+            }
         });
         return this;
     }
