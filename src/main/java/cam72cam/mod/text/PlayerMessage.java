@@ -20,8 +20,8 @@ public class PlayerMessage {
 
     /** Translated */
     public static PlayerMessage translate(String msg, Object... objects) {
-        String[] args = Arrays.stream(objects).map(Object::toString).toArray(String[]::new);
-        return new PlayerMessage(Component.translatable(msg, args));
+        Object[] stringed = Arrays.stream(objects).map(Object::toString).toArray(Object[]::new);
+        return new PlayerMessage(Component.translatable(msg, stringed));
     }
 
     /** URL Formatted (clickable) */
