@@ -156,8 +156,11 @@ public abstract class CustomItem {
 
         @Override
         public InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level world, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
-            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
-            return super.use(world, player, hand);
+            Player umcPlayer = new Player(player);
+            Player.Hand umcHand = Player.Hand.from(hand);
+            onClickAir(umcPlayer, World.get(world), umcHand);
+            ItemStack stack = umcPlayer.getHeldItem(umcHand).copy();
+            return InteractionResultHolder.consume(stack.internal());
         }
 //See constructor
 //        @Override
@@ -184,7 +187,7 @@ public abstract class CustomItem {
      * </pre>
      */
     public abstract static class ItemDataSerializer {
-        private final ItemStack stack;
+        private ItemStack stack;
 
         protected ItemDataSerializer(ItemStack stack) {
             this.stack = stack;
