@@ -51,7 +51,7 @@ public class GlobalRender {
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getName().equals(VanillaGuiLayers.HOTBAR)) {
+            if (event.getName().equals(VanillaGuiLayers.HOTBAR) && !Minecraft.getInstance().options.hideGui) {
                 func.render(new RenderState(event.getGuiGraphics().pose()).stage(RenderContext.Stage.GUI), event.getPartialTick().getRealtimeDeltaTicks());
             }
         });
