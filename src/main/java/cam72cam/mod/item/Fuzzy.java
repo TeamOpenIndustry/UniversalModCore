@@ -128,7 +128,7 @@ public class Fuzzy {
         this(ItemTags.create(
 				Objects.requireNonNull(ident.contains(":")
 									   ? ResourceLocation.tryParse(ident.toLowerCase(Locale.ROOT))
-									   : ResourceLocation.tryBuild("forge", ident.toLowerCase(Locale.ROOT)))
+									   : ResourceLocation.tryBuild("c", ident.toLowerCase(Locale.ROOT)))
         ), ident);
     }
 
