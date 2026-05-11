@@ -46,12 +46,89 @@ public class GUIRenderer {
 
     //0 - disabled, 1 - normal, 2 - hovering
     public void drawVanillaButton(int x, int y, int width, int height, int state) {
+        if (width < 6 || height < 6) {
+            //Don't handle
+            return;
+        }
+
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        this.texturedRect(VANILLA_BUTTON, x, y, 0, 46 + state * 20, width / 2, height);
-        this.texturedRect(VANILLA_BUTTON, x + width / 2, y, 200 - width / 2, 46 + state * 20, width / 2, height);
+
+        int uBase = 0;
+        int vBase = 46 + state * 20;
+        int border = 3;
+        int texTotalW = 200;
+        int texTotalH = 20;
+
+        int uLeft   = uBase;
+        int uCenter = uBase + border;
+        int uRight  = uBase + texTotalW - border;
+        int vTop    = vBase;
+        int vMiddle = vBase + border;
+        int vBottom = vBase + texTotalH - border;
+
+        int centerTexW = texTotalW - 2 * border;
+        int centerTexH = texTotalH - 2 * border;
+
+        // Corners
+        texturedRect(VANILLA_BUTTON, x, y,                             uLeft,  vTop,    border, border);
+        texturedRect(VANILLA_BUTTON, x + width - border, y,           uRight, vTop,    border, border);
+        texturedRect(VANILLA_BUTTON, x, y + height - border,          uLeft,  vBottom, border, border);
+        texturedRect(VANILLA_BUTTON, x + width - border, y + height - border, uRight, vBottom, border, border);
+
+        int innerW =  width - 2 * border;
+        int innerH = height - 2 * border;
+
+        // Upper/Lower edge
+        if (innerW > 0) {
+            int upperY = y;
+            int lowerY = y + height - border;
+            int startX = x + border;
+            int remaining = innerW;
+            while (remaining > 0) {
+                int w = Math.min(remaining, centerTexW);
+                texturedRect(VANILLA_BUTTON, startX, upperY, uCenter, vTop, w, border);
+                texturedRect(VANILLA_BUTTON, startX, lowerY, uCenter, vBottom, w, border);
+                startX += w;
+                remaining -= w;
+            }
+        }
+
+        // Left/Right Edge
+        if (innerH > 0) {
+            int leftX = x;
+            int rightX = x + width - border;
+            int startY = y + border;
+            int remaining = innerH;
+            while (remaining > 0) {
+                int h = Math.min(remaining, centerTexH);
+                texturedRect(VANILLA_BUTTON, leftX, startY, uLeft, vMiddle, border, h);
+                texturedRect(VANILLA_BUTTON, rightX, startY, uRight, vMiddle, border, h);
+                startY += h;
+                remaining -= h;
+            }
+        }
+
+        // Internal
+        if (innerW > 0 && innerH > 0) {
+            int startY = y + border;
+            int remainingH = innerH;
+            while (remainingH > 0) {
+                int h = Math.min(remainingH, centerTexH);
+                int startX = x + border;
+                int remainingW = innerW;
+                while (remainingW > 0) {
+                    int w = Math.min(remainingW, centerTexW);
+                    texturedRect(VANILLA_BUTTON, startX, startY, uCenter, vMiddle, w, h);
+                    startX += w;
+                    remainingW -= w;
+                }
+                startY += h;
+                remainingH -= h;
+            }
+        }
     }
 
     /** Draw fluid block at coords */

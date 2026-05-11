@@ -25,8 +25,11 @@ public class ScreenBuilder extends GuiScreen {
         Button<?> button1 = new Button(150, 20, PlayerMessage.direct("clicker"), btnTest);
         Button<?> button2 = new Button(150, 20, PlayerMessage.direct("clicker2"), btnTest);
         Button<?> button3 = new Button(150, 20, PlayerMessage.direct("clicker3"), btnTest);
-        Slider<?> slider1 = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false, slider -> System.out.println(((Slider<?>)slider).getValue()));
-        root.addChildren(button1, button2, button3, slider1);
+        Slider<?> hori = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false,
+                                       slider -> System.out.println(((Slider<?>)slider).getValue()), true);
+        Slider<?> vert = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
+                                       slider -> System.out.println(((Slider<?>)slider).getValue()), false);
+        root.addChildren(button1, button2, button3, hori, vert);
     }
 
     @Override

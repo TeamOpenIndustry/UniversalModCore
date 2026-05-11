@@ -22,29 +22,26 @@ public class Slider<T extends Slider<T>> extends AbstractSlider<T> {
 
     @Override
     public void render(GUIRenderer renderer) {
+        //Render track
         renderer.drawVanillaButton(getX(), getY(), getWidth(), getHeight(), 0);
 
         double ratio = (value - min) / (max - min);
         ratio = Math.max(0.0, Math.min(1.0, ratio));
 
+        //Render slider bar
         if (isHorizontal) {
             int trackWidth = getWidth() - 8;
             int handleX = getX() + (int) (ratio * trackWidth);
             int handleY = getY();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            renderer.texturedRect(GUIRenderer.VANILLA_BUTTON, handleX, handleY, 0, 66, 4, 20);
-            renderer.texturedRect(GUIRenderer.VANILLA_BUTTON, handleX + 4, handleY, 196, 66, 4, 20);
-
-
+            renderer.drawVanillaButton(handleX, handleY, 8, height, 1);
         } else {
-            //TODO Vertical
-//            int trackHeight = getHeight() - 8;
-//            int handleX = getX();
-//            int handleY = getY() + (int) ((1.0 - ratio) * trackHeight);
-//
-//            renderer.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-//            renderer.drawTexturedModalRect(handleX, handleY, 0, 66, 20, 4);
-//            renderer.drawTexturedModalRect(handleX, handleY + 4, 196, 66, 20, 4);
+            int trackHeight = getHeight() - 8;
+            int handleX = getX();
+            int handleY = getY() + (int) ((1.0 - ratio) * trackHeight);
+
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            renderer.drawVanillaButton(handleX, handleY, width, 8, 1);
         }
 
 

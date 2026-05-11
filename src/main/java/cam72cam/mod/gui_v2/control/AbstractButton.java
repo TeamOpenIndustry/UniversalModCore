@@ -39,7 +39,7 @@ public abstract class AbstractButton<T extends AbstractButton<T>>
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, float x, float y) {
+    public boolean onClick(Player.Hand hand, int x, int y) {
         if (isHovering()) {
             this.handler.accept(hand, (T) this);
             this.onStateChange();

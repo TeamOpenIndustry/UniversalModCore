@@ -57,7 +57,7 @@ public abstract class AbstractPanel
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, float x, float y) {
+    public boolean onClick(Player.Hand hand, int x, int y) {
         if (!isHovering()) {
             return false;
         }
