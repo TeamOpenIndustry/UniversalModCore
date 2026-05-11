@@ -1,12 +1,8 @@
-package cam72cam.mod.gui_v2.widgets;
+package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.GUIUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
-import cam72cam.mod.gui_v2.core.actions.ITooltipper;
 import cam72cam.mod.text.PlayerMessage;
-import org.lwjgl.input.Mouse;
-
-import java.util.List;
 
 /**
  * Basic UMC widget

@@ -1,12 +1,10 @@
-package cam72cam.mod.gui_v2.widgets.impl;
+package cam72cam.mod.gui_v2.control.panel;
 
 import cam72cam.mod.gui_v2.core.ILayoutable;
-import cam72cam.mod.gui_v2.rendering.GUIRenderer;
-import cam72cam.mod.gui_v2.widgets.AbstractPanel;
-import org.jline.reader.Widget;
+import cam72cam.mod.gui_v2.control.AbstractPanel;
 
-public class SimplePanel extends AbstractPanel {
-    public SimplePanel(int x, int y, int width, int height) {
+public class VerticalPanel extends AbstractPanel {
+    public VerticalPanel(int x, int y, int width, int height) {
         super(x, y, width, height);
     }
 

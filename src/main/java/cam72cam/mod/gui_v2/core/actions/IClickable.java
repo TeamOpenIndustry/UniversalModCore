@@ -7,11 +7,7 @@ import cam72cam.mod.entity.Player;
  */
 public interface IClickable {
     /**
-     *
-     * @param hand PRIMARY for left click, otherwise SECONDARY
-     * @param x
-     * @param y
-     * @return
+     * PRIMARY for left click, otherwise SECONDARY
      */
     boolean consumeClick(Player.Hand hand, float x, float y);
 }

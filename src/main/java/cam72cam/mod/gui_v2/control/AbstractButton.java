@@ -1,4 +1,4 @@
-package cam72cam.mod.gui_v2.widgets;
+package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.core.actions.IClickable;

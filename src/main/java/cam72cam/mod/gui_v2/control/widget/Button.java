@@ -1,8 +1,8 @@
-package cam72cam.mod.gui_v2.widgets.impl;
+package cam72cam.mod.gui_v2.control.widget;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.rendering.GUIRenderer;
-import cam72cam.mod.gui_v2.widgets.AbstractButton;
+import cam72cam.mod.gui_v2.control.AbstractButton;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.Minecraft;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 public class Button<T extends Button<T>> extends AbstractButton<Button<T>> {
-    private static final Identifier VANILLA_BUTTON = new Identifier("textures/gui/widgets.png");
+    private static final Identifier VANILLA_BUTTON = new Identifier("textures/gui/control.png");
 
     /** Custom width/height */
     public Button(int width, int height, PlayerMessage name, BiConsumer<Player.Hand, Button<T>> handler) {
