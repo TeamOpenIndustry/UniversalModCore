@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ITooltipper {
     List<PlayerMessage> getTooltips();
+    void setTooltip(List<PlayerMessage> text);
 }

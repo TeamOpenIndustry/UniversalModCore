@@ -62,7 +62,7 @@ public abstract class AbstractWidget implements ILayoutable {
         return isHovering(GUIUtils.getMouseX(), GUIUtils.getMouseY());
     }
 
-    public boolean isHovering(float mouseX, float mouseY) {
+    private boolean isHovering(float mouseX, float mouseY) {
         return mouseX >= this.x && mouseX  <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height;
     }
 
@@ -103,6 +103,14 @@ public abstract class AbstractWidget implements ILayoutable {
 
     @Override
     public void setHeight(int height) {
+        this.height = height;
+    }
+
+    @Override
+    public void setBound(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
         this.height = height;
     }
 }

@@ -6,6 +6,7 @@ import cam72cam.mod.gui_v2.core.actions.ITooltipper;
 import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.text.PlayerMessage;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -20,11 +21,6 @@ public abstract class AbstractButton<T extends AbstractButton<T>>
     protected BiConsumer<Player.Hand, T> handler;
 
     protected List<PlayerMessage> tooltip;
-
-    /** Default width/height */
-    public AbstractButton(int x, int y, PlayerMessage text, BiConsumer<Player.Hand, T> handler) {
-        this(x, y, 200, 20, text, handler);
-    }
 
     /** Custom width/height */
     public AbstractButton(int x, int y, int width, int height, PlayerMessage text, BiConsumer<Player.Hand, T> handler) {
@@ -42,10 +38,9 @@ public abstract class AbstractButton<T extends AbstractButton<T>>
         this.setY(y);
     }
 
-    /** Internal click handler*/
     @Override
-    public boolean consumeClick(Player.Hand hand, float x, float y) {
-        if (isHovering(x, y)) {
+    public boolean onClick(Player.Hand hand, float x, float y) {
+        if (isHovering()) {
             this.handler.accept(hand, (T) this);
             this.onStateChange();
             return true;
@@ -56,8 +51,14 @@ public abstract class AbstractButton<T extends AbstractButton<T>>
     /**
      * Set current widget's tooltip
      */
+    @Override
     public void setTooltip(List<PlayerMessage> text) {
         this.tooltip = text;
+    }
+
+    @Override
+    public List<PlayerMessage> getTooltips() {
+        return Collections.singletonList(this.getName());
     }
 
     @Override

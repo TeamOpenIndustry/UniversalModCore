@@ -1,15 +1,11 @@
 package cam72cam.mod.gui_v2.rendering;
 
-import cam72cam.mod.MinecraftClient;
-import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -18,17 +14,11 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.event.ClickEvent;
 import util.Matrix4;
 
-import java.util.List;
-
 public class GUIRenderer {
-    /** Standard 54 slot chest UI */
-    public static final Identifier CHEST_GUI_TEXTURE = new Identifier("textures/gui/container/generic_54.png");
-    // Internal hack for using Gui functions
+    public static final Identifier VANILLA_BUTTON = new Identifier("textures/gui/widgets.png");
+
     private final GuiScreen instance;
     private final ScaledResolution resolution;
 
@@ -52,6 +42,16 @@ public class GUIRenderer {
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
             instance.drawTexturedModalRect(x, y, startU, startV, width, height);
         }
+    }
+
+    //0 - disabled, 1 - normal, 2 - hovering
+    public void drawVanillaButton(int x, int y, int width, int height, int state) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        this.texturedRect(VANILLA_BUTTON, x, y, 0, 46 + state * 20, width / 2, height);
+        this.texturedRect(VANILLA_BUTTON, x + width / 2, y, 200 - width / 2, 46 + state * 20, width / 2, height);
     }
 
     /** Draw fluid block at coords */
@@ -137,7 +137,7 @@ public class GUIRenderer {
         state.stage(RenderContext.Stage.GUI);
         try (With ctx = RenderContext.apply(state)) {
             GlStateManager.color(1, 1, 1, 0);
-            Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, color);
+            Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, x, y, color);
         }
     }
 
@@ -166,34 +166,6 @@ public class GUIRenderer {
         state.model_view().multiply(matrix);
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
-        }
-    }
-
-    /** Try to open an external link in player's browser */
-    public void openLink(String url){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-        if (Minecraft.getMinecraft().currentScreen != null) {
-            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
-        } else {
-            ModCore.error("Trying to open a link outside a screen: %s", url);
-            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
-                MinecraftClient.getPlayer().sendMessage(PlayerMessage.url(url));
-            }
-        }
-    }
-
-    /** Try to open an external link in player's browser */
-    public static void openFile(String path){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
-        if (Minecraft.getMinecraft().currentScreen != null) {
-            Minecraft.getMinecraft().currentScreen.handleComponentClick(component);
-        } else {
-            ModCore.error("Trying to open a file outside a screen: %s", path);
-            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
-                MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
-            }
         }
     }
 }
