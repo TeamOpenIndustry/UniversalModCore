@@ -7,10 +7,10 @@ import cam72cam.mod.text.PlayerMessage;
 
 import java.util.function.BiConsumer;
 
-public class Button<T extends Button<T>> extends AbstractButton<Button<T>> {
+public class Button extends AbstractButton<Button> {
 
     /** Custom width/height */
-    public Button(int width, int height, PlayerMessage name, BiConsumer<Player.Hand, Button<T>> handler) {
+    public Button(int width, int height, PlayerMessage name, BiConsumer<Player.Hand, Button> handler) {
         super(0, 0, width, height, name, handler);
         setEnabled(true);
     }

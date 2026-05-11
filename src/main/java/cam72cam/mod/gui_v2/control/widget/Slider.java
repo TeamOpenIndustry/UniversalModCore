@@ -7,16 +7,16 @@ import net.minecraft.client.renderer.GlStateManager;
 
 import java.util.function.Consumer;
 
-public class Slider<T extends Slider<T>> extends AbstractSlider<T> {
-    public Slider(PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<T> handler) {
+public class Slider extends AbstractSlider<Slider> {
+    public Slider(PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
         super(text, min, max, start, doublePrecision, handler);
     }
 
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<T> handler) {
+    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
         super(width, height, text, min, max, start, doublePrecision, handler);
     }
 
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<T> handler, boolean isHorizontal) {
+    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler, boolean isHorizontal) {
         super(width, height, text, min, max, start, doublePrecision, handler, isHorizontal);
     }
 

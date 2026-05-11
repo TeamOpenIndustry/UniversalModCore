@@ -21,15 +21,15 @@ public class ScreenBuilder extends GuiScreen {
     public ScreenBuilder() {
         //Test
         this.root = new VerticalPanel(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
-        BiConsumer<Player.Hand, Button<?>> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
-        Button<?> button1 = new Button(150, 20, PlayerMessage.direct("clicker"), btnTest);
-        Button<?> button2 = new Button(150, 20, PlayerMessage.direct("clicker2"), btnTest);
-        Button<?> button3 = new Button(150, 20, PlayerMessage.direct("clicker3"), btnTest);
-        Slider<?> hori = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false,
-                                       slider -> System.out.println(((Slider<?>)slider).getValue()), true);
-        Slider<?> vert = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
-                                       slider -> System.out.println(((Slider<?>)slider).getValue()), false);
-        root.addChildren(button1, button2, button3, hori, vert);
+        BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
+        Button button1 = new Button(150, 20, PlayerMessage.direct("clicker"), btnTest);
+        Button button2 = new Button(150, 20, PlayerMessage.direct("clicker2"), btnTest);
+        Button button3 = new Button(150, 20, PlayerMessage.direct("clicker3"), btnTest);
+        Slider horizontal = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false,
+                                       slider -> System.out.println(slider.getValue()), true);
+        Slider vertical = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
+                                       slider -> System.out.println(slider.getValue()), false);
+        root.addChildren(button1, button2, button3, horizontal, vertical);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class ScreenBuilder extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         //TODO Mouse key detection
         root.onClick(Player.Hand.PRIMARY, mouseX, mouseY);
     }
