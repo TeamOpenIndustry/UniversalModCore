@@ -14,12 +14,14 @@ import org.lwjgl.opengl.GL13;
 import util.Matrix4;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
 public class RenderContext {
     private static FloatBuffer fourFloatBuffer;
+    private static IntBuffer fourIntBuffer;
 
     private RenderContext() {
     }
@@ -233,6 +235,14 @@ public class RenderContext {
                 int y = (int) state.scissor_range.getMinY() * scaleFactor;
                 int width = (int) state.scissor_range.getWidth() * scaleFactor;
                 int height = (int) state.scissor_range.getHeight() * scaleFactor;
+
+                if (fourIntBuffer == null) {
+                    fourIntBuffer = GLAllocation.createDirectIntBuffer(16);
+                }
+                fourIntBuffer.position(0);
+                GL11.glGetInteger(GL11.GL_SCISSOR_BOX, fourIntBuffer);
+                int[] oldScissor = new int[]{fourIntBuffer.get(0), fourIntBuffer.get(1), fourIntBuffer.get(2), fourIntBuffer.get(3)};
+                restore.add(() -> GL11.glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]));
 
                 //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
                 GL11.glScissor(x, screenHeight - y - height, width, height);
