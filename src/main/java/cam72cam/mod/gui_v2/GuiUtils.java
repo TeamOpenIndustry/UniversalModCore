@@ -8,16 +8,16 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 
-public class GUIUtils {
-    public static float mouseX;
-    public static float mouseY;
+public class GuiUtils {
+    public static int mouseX;
+    public static int mouseY;
     public static TestScreen currentBuilder;
 
-    public static float getMouseX() {
+    public static int getMouseX() {
         return mouseX;
     }
 
-    public static float getMouseY() {
+    public static int getMouseY() {
         return mouseY;
     }
 

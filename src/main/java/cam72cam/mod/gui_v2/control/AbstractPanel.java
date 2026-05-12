@@ -5,7 +5,8 @@ import cam72cam.mod.gui_v2.core.ILayoutable;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.gui_v2.core.actions.IScrollable;
-import cam72cam.mod.gui_v2.rendering.GUIRenderer;
+import cam72cam.mod.gui_v2.core.actions.IUpdatable;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,15 +41,21 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         layout(this.x(), this.y());
     }
 
-    public void renderPanel(GUIRenderer renderer) {
-        this.children.forEach(child -> {
+    public void renderPanel(GuiRenderer renderer) {
+        this.children.stream().filter(ILayoutable::isVisible).forEach(child -> {
             child.renderBackground(renderer);
             child.render(renderer);
             child.renderForeground(renderer);
+            if (child instanceof IUpdatable) {
+                ((IUpdatable) child).postRender();
+            }
         });
         this.renderBackground(renderer);
         this.render(renderer);
         this.renderForeground(renderer);
+        if (this instanceof IUpdatable) {
+            ((IUpdatable) this).postRender();
+        }
     }
 
     @Override

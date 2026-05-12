@@ -1,9 +1,11 @@
 package cam72cam.mod.gui_v2.control.widget;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.IDraggable;
+import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
@@ -11,7 +13,7 @@ import net.minecraft.util.math.MathHelper;
 import java.util.function.Consumer;
 
 public class Slider extends AbstractWidget<Slider>
-        implements IClickable, IDraggable {
+        implements IClickable, IDraggable, IUpdatable {
     protected final boolean isHorizontal;
 
     protected double min;
@@ -117,6 +119,13 @@ public class Slider extends AbstractWidget<Slider>
         this.setX(x);
         this.setY(y);
         isDragging = false;
+    }
+
+    @Override
+    public void postRender() {
+        if (this.isDragging) {
+            updateSlider(GuiUtils.getMouseX(), GuiUtils.getMouseY());
+        }
     }
 
     public void vanillaFacade() {

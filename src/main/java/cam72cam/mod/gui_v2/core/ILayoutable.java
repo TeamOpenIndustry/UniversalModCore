@@ -1,6 +1,6 @@
 package cam72cam.mod.gui_v2.core;
 
-import cam72cam.mod.gui_v2.rendering.GUIRenderer;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 
 import java.util.function.BiConsumer;
 
@@ -17,13 +17,16 @@ public interface ILayoutable<T> {
     void setBound(int x, int y, int width, int height);
 
     //Rendering
-    void renderBackground(GUIRenderer renderer);
-    void render(GUIRenderer renderer);
-    void renderForeground(GUIRenderer renderer);
+    boolean isVisible();
+    void setVisible(boolean visible);
 
-    void setBackgroundRenderFunc(BiConsumer<GUIRenderer, T> handler);
-    void setRenderFunc(BiConsumer<GUIRenderer, T> handler);
-    void setForegroundRenderFunc(BiConsumer<GUIRenderer, T> handler);
+    void renderBackground(GuiRenderer renderer);
+    void render(GuiRenderer renderer);
+    void renderForeground(GuiRenderer renderer);
+
+    void setBackgroundRenderFunc(BiConsumer<GuiRenderer, T> handler);
+    void setRenderFunc(BiConsumer<GuiRenderer, T> handler);
+    void setForegroundRenderFunc(BiConsumer<GuiRenderer, T> handler);
 
     //Layout
     void layout(int x, int y);

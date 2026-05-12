@@ -2,12 +2,13 @@ package cam72cam.mod.gui_v2.wrapper;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.gui_v2.GUIUtils;
+import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
-import cam72cam.mod.gui_v2.rendering.GUIRenderer;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.panel.VBox;
+import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -16,15 +17,15 @@ import java.io.IOException;
 import java.util.function.BiConsumer;
 
 public class TestScreen extends GuiScreen {
-    private final AbstractPanel root;
+    private final AbstractPanel<?> root;
 
     public TestScreen() {
         //Test
         this.root = new VBox(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
-        Button button1 = new Button(150, 20, PlayerMessage.direct("clicker"), btnTest);
-        Button button2 = new Button(150, 20, PlayerMessage.direct("clicker2"), btnTest);
-        Button button3 = new Button(150, 20, PlayerMessage.direct("clicker3"), btnTest);
+        Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);
+        Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), btnTest);
+        Button button3 = Button.textured(150, 20, PlayerMessage.direct("clicker3"), btnTest, new Identifier("textures/blocks/bedrock.png"));
         Slider horizontal = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false,
                                        slider -> System.out.println(slider.getValue()), true);
         Slider vertical = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
@@ -34,9 +35,9 @@ public class TestScreen extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        GUIUtils.mouseX = mouseX;
-        GUIUtils.mouseY = mouseY;
-        GUIRenderer renderer = new GUIRenderer(this);
+        GuiUtils.mouseX = mouseX;
+        GuiUtils.mouseY = mouseY;
+        GuiRenderer renderer = new GuiRenderer(this);
         root.renderPanel(renderer);
     }
 
