@@ -73,9 +73,9 @@ public class GUIRenderer {
         int centerTexH = texTotalH - 2 * border;
 
         // Corners
-        texturedRect(VANILLA_BUTTON, x, y,                             uLeft,  vTop,    border, border);
-        texturedRect(VANILLA_BUTTON, x + width - border, y,           uRight, vTop,    border, border);
-        texturedRect(VANILLA_BUTTON, x, y + height - border,          uLeft,  vBottom, border, border);
+        texturedRect(VANILLA_BUTTON, x, y, uLeft,  vTop,    border, border);
+        texturedRect(VANILLA_BUTTON, x + width - border, y, uRight, vTop, border, border);
+        texturedRect(VANILLA_BUTTON, x, y + height - border, uLeft,  vBottom, border, border);
         texturedRect(VANILLA_BUTTON, x + width - border, y + height - border, uRight, vBottom, border, border);
 
         int innerW =  width - 2 * border;
@@ -197,7 +197,7 @@ public class GUIRenderer {
     }
 
     /** Draw a shadowed string offset from the center of coords */
-    public void drawCenteredString(String text, int x, int y, int color) {
+    public void drawCenteredString(String text, int x, int y, int color /*ARGB*/) {
         drawCenteredString(text, x, y, color, new Matrix4());
     }
     public void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {

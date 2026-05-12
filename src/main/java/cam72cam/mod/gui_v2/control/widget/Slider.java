@@ -1,58 +1,153 @@
 package cam72cam.mod.gui_v2.control.widget;
 
-import cam72cam.mod.gui_v2.control.AbstractSlider;
-import cam72cam.mod.gui_v2.rendering.GUIRenderer;
+import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.control.AbstractWidget;
+import cam72cam.mod.gui_v2.core.actions.IClickable;
+import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.function.Consumer;
 
-public class Slider extends AbstractSlider<Slider> {
-    public Slider(PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
-        super(text, min, max, start, doublePrecision, handler);
-    }
+public class Slider extends AbstractWidget<Slider>
+        implements IClickable, IDraggable {
+    protected final boolean isHorizontal;
 
+    protected double min;
+    protected double max;
+    protected double value;
+    protected int displayPrecision;
+
+    protected boolean isDragging;
+
+    protected Consumer<Slider> handler;
+
+    //TODO
+    // 1.Int precision
+    // 2.Prefix/Suffix text
     public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
-        super(width, height, text, min, max, start, doublePrecision, handler);
+        this(width, height, text, min, max, start, doublePrecision, handler, true);
     }
 
     public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler, boolean isHorizontal) {
-        super(width, height, text, min, max, start, doublePrecision, handler, isHorizontal);
+        this.setBound(0, 0, width, height);
+        this.name = text;
+        this.min = min;
+        this.max = max;
+        this.value = start;
+        this.displayPrecision = doublePrecision ? 4 : 0;
+        this.handler = handler;
+        this.isHorizontal = isHorizontal;
+
+        this.vanillaFacade();
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public void setSliderBound(double min, double max) {
+        this.min = min;
+        this.max = max;
+        this.value = MathHelper.clamp(min, max, value);
     }
 
     @Override
-    public void render(GUIRenderer renderer) {
-        //Render track
-        renderer.drawVanillaButton(getX(), getY(), getWidth(), getHeight(), 0);
+    public boolean onClick(Player.Hand hand, int x, int y) {
+        if (!isHovering()) {
+            return false;
+        }
+        updateSlider(x, y);
+        return true;
+    }
 
-        double ratio = (value - min) / (max - min);
+    @Override
+    public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
+        if (!isHovering()) {
+            if (!isDragging) {
+                return false;
+            }
+        }
+        isDragging = true;
+        updateSlider(mouseX, mouseY);
+        return true;
+    }
+
+    protected void updateSlider(int mouseX, int mouseY) {
+        double oldValue = value;
+        double ratio;
+
+        if (isHorizontal) {
+            double relX = mouseX - x() - 4; //Slider bar size
+            ratio = relX / (width() - 8);
+        } else {
+            double relY = y() + height() - mouseY - 4;
+            ratio = relY / (height() - 8);
+        }
+
         ratio = Math.max(0.0, Math.min(1.0, ratio));
 
-        //Render slider bar
-        if (isHorizontal) {
-            int trackWidth = getWidth() - 8;
-            int handleX = getX() + (int) (ratio * trackWidth);
-            int handleY = getY();
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            renderer.drawVanillaButton(handleX, handleY, 8, height, 1);
-        } else {
-            int trackHeight = getHeight() - 8;
-            int handleX = getX();
-            int handleY = getY() + (int) ((1.0 - ratio) * trackHeight);
+        double rawValue = min + ratio * (max - min);
+        value = Math.max(min, Math.min(max, rawValue));
 
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            renderer.drawVanillaButton(handleX, handleY, width, 8, 1);
+        if (value != oldValue && handler != null) {
+            handler.accept(this);
         }
+    }
 
-
-        int j = 14737632;
-
-        if (nameColor != 0) {
-            j = nameColor;
-        } else if (isHovering()) {
-            j = 16777120;
+    @Override
+    public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
+        if (isDragging) {
+            isDragging = false;
+            if (handler != null) {
+                handler.accept(this);
+            }
+            return true;
         }
+        return false;
+    }
 
-        renderer.drawCenteredString(this.name.internal.getFormattedText(), this.x + this.width / 2, this.y + (this.height - 8) / 2, j);
+    @Override
+    public void layout(int x, int y) {
+        this.setX(x);
+        this.setY(y);
+        isDragging = false;
+    }
+
+    public void vanillaFacade() {
+        this.setBackgroundRenderFunc((gui, slid) -> {
+            //Render track
+            gui.drawVanillaButton(slid.x(), slid.y(), slid.width(), slid.height(), 0);
+
+            double ratio = (slid.value - slid.min) / (slid.max - slid.min);
+            ratio = Math.max(0.0, Math.min(1.0, ratio));
+
+            //Render slider bar
+            if (slid.isHorizontal) {
+                int trackWidth = slid.width() - 8;
+                int handleX = slid.x() + (int) (ratio * trackWidth);
+                int handleY = slid.y();
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                gui.drawVanillaButton(handleX, handleY, 8, slid.height(), 1);
+            } else {
+                int trackHeight = slid.height() - 8;
+                int handleX = slid.x();
+                int handleY = slid.y() + (int) ((1.0 - ratio) * trackHeight);
+
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                gui.drawVanillaButton(handleX, handleY, slid.width(), 8, 1);
+            }
+        });
+        this.setRenderFunc((gui, slid) -> {
+            int j = slid.nameColor != 0 ? slid.nameColor :
+                      slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
+
+            gui.drawCenteredString(slid.name.internal.getFormattedText(), slid.x + slid.width / 2, slid.y + (slid.height - 8) / 2, j);
+        });
     }
 }

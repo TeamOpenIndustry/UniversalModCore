@@ -2,18 +2,21 @@ package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.GUIUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.rendering.GUIRenderer;
 import cam72cam.mod.text.PlayerMessage;
+
+import java.util.function.BiConsumer;
 
 /**
  * Basic UMC widget
  */
-public abstract class AbstractWidget implements ILayoutable {
+public abstract class AbstractWidget<T extends AbstractWidget<T>>
+        implements ILayoutable<T> {
     protected PlayerMessage name;
     protected int nameColor;
 
     protected AbstractPanel parent;
 
-    protected int x, y, width, height;
     protected boolean visible;
     protected boolean enabled;
 
@@ -66,51 +69,76 @@ public abstract class AbstractWidget implements ILayoutable {
         return mouseX >= this.x && mouseX  <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height;
     }
 
+    /* ILayoutable */
+    protected int x, y, width, height;
+
     @Override
-    public int getX() {
+    public int y() {
+        return y;
+    }
+    @Override
+    public int x() {
         return x;
     }
-
+    @Override
+    public int width() {
+        return width;
+    }
+    @Override
+    public int height() {
+        return height;
+    }
     @Override
     public void setX(int x) {
         this.x = x;
     }
-
-    @Override
-    public int getY() {
-        return y;
-    }
-
     @Override
     public void setY(int y) {
         this.y = y;
     }
-
-    @Override
-    public int getWidth() {
-        return width;
-    }
-
     @Override
     public void setWidth(int width) {
         this.width = width;
     }
-
-    @Override
-    public int getHeight() {
-        return height;
-    }
-
     @Override
     public void setHeight(int height) {
         this.height = height;
     }
-
     @Override
     public void setBound(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+    }
+
+    protected BiConsumer<GUIRenderer, T> background = (gui, widget) -> {};
+    protected BiConsumer<GUIRenderer, T> content = (gui, widget) -> {};
+    protected BiConsumer<GUIRenderer, T> foreground = (gui, widget) -> {};
+
+    @Override
+    public void renderBackground(GUIRenderer renderer) {
+        background.accept(renderer, (T) this);
+    }
+    @Override
+    public void render(GUIRenderer renderer) {
+        content.accept(renderer, (T) this);
+    }
+    @Override
+    public void renderForeground(GUIRenderer renderer) {
+        foreground.accept(renderer, (T) this);
+    }
+
+    @Override
+    public void setBackgroundRenderFunc(BiConsumer<GUIRenderer, T> handler) {
+        background = handler;
+    }
+    @Override
+    public void setRenderFunc(BiConsumer<GUIRenderer, T> handler) {
+        content = handler;
+    }
+    @Override
+    public void setForegroundRenderFunc(BiConsumer<GUIRenderer, T> handler) {
+        foreground = handler;
     }
 }

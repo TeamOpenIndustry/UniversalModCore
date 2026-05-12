@@ -4,10 +4,10 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.gui_v2.GUIUtils;
 import cam72cam.mod.gui_v2.control.widget.Slider;
+import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.rendering.GUIRenderer;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
-import cam72cam.mod.gui_v2.control.widget.Button;
-import cam72cam.mod.gui_v2.control.panel.VerticalPanel;
+import cam72cam.mod.gui_v2.control.panel.VBox;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -15,12 +15,12 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 import java.util.function.BiConsumer;
 
-public class ScreenBuilder extends GuiScreen {
+public class TestScreen extends GuiScreen {
     private final AbstractPanel root;
 
-    public ScreenBuilder() {
+    public TestScreen() {
         //Test
-        this.root = new VerticalPanel(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
+        this.root = new VBox(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
         Button button1 = new Button(150, 20, PlayerMessage.direct("clicker"), btnTest);
         Button button2 = new Button(150, 20, PlayerMessage.direct("clicker2"), btnTest);
@@ -37,9 +37,7 @@ public class ScreenBuilder extends GuiScreen {
         GUIUtils.mouseX = mouseX;
         GUIUtils.mouseY = mouseY;
         GUIRenderer renderer = new GUIRenderer(this);
-        root.renderBackground(renderer);
-        root.render(renderer);
-        root.renderForeground(renderer);
+        root.renderPanel(renderer);
     }
 
     @Override

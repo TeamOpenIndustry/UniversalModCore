@@ -11,10 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class AbstractPanel
-        extends AbstractWidget
+public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
         implements IClickable, IDraggable, IScrollable {
-    protected List<ILayoutable> children;
+    protected List<ILayoutable<?>> children;
 
     public AbstractPanel(int x, int y, int width, int height) {
         this.setX(x);
@@ -24,36 +23,32 @@ public abstract class AbstractPanel
         this.children = new ArrayList<>();
     }
 
-    public void addChildren(ILayoutable child) {
+    public void addChildren(ILayoutable<?> child) {
         this.children.add(child);
-        layout(this.getX(), this.getY());
+        layout(this.x(), this.y());
     }
 
-    public void addChildren(ILayoutable... children) {
+    public void addChildren(ILayoutable<?>... children) {
         this.children.addAll(Arrays.asList(children));
-        layout(this.getX(), this.getY());
+        layout(this.x(), this.y());
     }
 
-    public void addChildren(Iterable<ILayoutable> children) {
-        for (ILayoutable child : children) {
+    public void addChildren(Iterable<ILayoutable<?>> children) {
+        for (ILayoutable<?> child : children) {
             this.children.add(child);
         }
-        layout(this.getX(), this.getY());
+        layout(this.x(), this.y());
     }
 
-    @Override
-    public void render(GUIRenderer renderer) {
-        this.children.forEach(child -> child.render(renderer));
-    }
-
-    @Override
-    public void renderBackground(GUIRenderer renderer) {
-
-    }
-
-    @Override
-    public void renderForeground(GUIRenderer renderer) {
-
+    public void renderPanel(GUIRenderer renderer) {
+        this.children.forEach(child -> {
+            child.renderBackground(renderer);
+            child.render(renderer);
+            child.renderForeground(renderer);
+        });
+        this.renderBackground(renderer);
+        this.render(renderer);
+        this.renderForeground(renderer);
     }
 
     @Override

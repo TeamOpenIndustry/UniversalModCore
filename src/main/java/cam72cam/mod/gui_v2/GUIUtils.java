@@ -2,7 +2,7 @@ package cam72cam.mod.gui_v2;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
-import cam72cam.mod.gui_v2.wrapper.ScreenBuilder;
+import cam72cam.mod.gui_v2.wrapper.TestScreen;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -11,7 +11,7 @@ import net.minecraft.util.text.event.ClickEvent;
 public class GUIUtils {
     public static float mouseX;
     public static float mouseY;
-    public static ScreenBuilder currentBuilder;
+    public static TestScreen currentBuilder;
 
     public static float getMouseX() {
         return mouseX;
