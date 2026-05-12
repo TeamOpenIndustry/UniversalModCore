@@ -2,8 +2,10 @@ package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
+import cam72cam.mod.util.With;
 
 import java.util.function.BiConsumer;
 
@@ -115,15 +117,17 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     protected BiConsumer<GuiRenderer, T> foreground = (gui, widget) -> {};
 
     @Override
-    public void renderBackground(GuiRenderer renderer) {
-        background.accept(renderer, (T) this);
+    public void renderBackground(GuiRenderer renderer, ScissorStack stack) {
+        try (With ctx = stack.applyScissor()) {
+            background.accept(renderer, (T) this);
+        }
     }
     @Override
-    public void render(GuiRenderer renderer) {
+    public void render(GuiRenderer renderer, ScissorStack stack) {
         content.accept(renderer, (T) this);
     }
     @Override
-    public void renderForeground(GuiRenderer renderer) {
+    public void renderForeground(GuiRenderer renderer, ScissorStack stack) {
         foreground.accept(renderer, (T) this);
     }
 

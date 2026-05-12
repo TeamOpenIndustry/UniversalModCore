@@ -2,6 +2,7 @@ package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.gui_v2.core.actions.IScrollable;
@@ -41,18 +42,22 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         layout(this.x(), this.y());
     }
 
-    public void renderPanel(GuiRenderer renderer) {
+    public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
+        stack.push(this);
         this.children.stream().filter(ILayoutable::isVisible).forEach(child -> {
-            child.renderBackground(renderer);
-            child.render(renderer);
-            child.renderForeground(renderer);
+            stack.push(child);
+            child.renderBackground(renderer, stack);
+            child.render(renderer, stack);
+            child.renderForeground(renderer, stack);
+            stack.pop();
             if (child instanceof IUpdatable) {
                 ((IUpdatable) child).postRender();
             }
         });
-        this.renderBackground(renderer);
-        this.render(renderer);
-        this.renderForeground(renderer);
+        this.renderBackground(renderer, stack);
+        this.render(renderer, stack);
+        this.renderForeground(renderer, stack);
+        stack.pop();
         if (this instanceof IUpdatable) {
             ((IUpdatable) this).postRender();
         }

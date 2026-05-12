@@ -19,4 +19,9 @@ public class VBox extends AbstractPanel<VBox> {
             y += widget.height();
         }
     }
+
+    @Override
+    public int height() {
+        return children.stream().mapToInt(ILayoutable::height).sum();
+    }
 }

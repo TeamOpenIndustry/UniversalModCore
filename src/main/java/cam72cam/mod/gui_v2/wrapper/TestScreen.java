@@ -3,8 +3,10 @@ package cam72cam.mod.gui_v2.wrapper;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.gui_v2.GuiUtils;
+import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
+import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.panel.VBox;
@@ -21,7 +23,7 @@ public class TestScreen extends GuiScreen {
 
     public TestScreen() {
         //Test
-        this.root = new VBox(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
+        VBox vBox = new VBox(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
         Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), btnTest);
@@ -30,7 +32,10 @@ public class TestScreen extends GuiScreen {
                                        slider -> System.out.println(slider.getValue()), true);
         Slider vertical = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
                                        slider -> System.out.println(slider.getValue()), false);
-        root.addChildren(button1, button2, button3, horizontal, vertical);
+        ScrollPane pane = new ScrollPane(0, 0, 300, 200);
+        vBox.addChildren(button1, button2, button3, horizontal, vertical);
+        pane.addChildren(vBox);
+        this.root = pane;
     }
 
     @Override
@@ -38,7 +43,8 @@ public class TestScreen extends GuiScreen {
         GuiUtils.mouseX = mouseX;
         GuiUtils.mouseY = mouseY;
         GuiRenderer renderer = new GuiRenderer(this);
-        root.renderPanel(renderer);
+        ScissorStack stack = new ScissorStack();
+        root.renderPanel(renderer, stack);
     }
 
     @Override

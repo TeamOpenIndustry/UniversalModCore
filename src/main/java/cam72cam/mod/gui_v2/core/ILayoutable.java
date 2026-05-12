@@ -20,9 +20,9 @@ public interface ILayoutable<T> {
     boolean isVisible();
     void setVisible(boolean visible);
 
-    void renderBackground(GuiRenderer renderer);
-    void render(GuiRenderer renderer);
-    void renderForeground(GuiRenderer renderer);
+    void renderBackground(GuiRenderer renderer, ScissorStack stack);
+    void render(GuiRenderer renderer, ScissorStack stack);
+    void renderForeground(GuiRenderer renderer, ScissorStack stack);
 
     void setBackgroundRenderFunc(BiConsumer<GuiRenderer, T> handler);
     void setRenderFunc(BiConsumer<GuiRenderer, T> handler);
