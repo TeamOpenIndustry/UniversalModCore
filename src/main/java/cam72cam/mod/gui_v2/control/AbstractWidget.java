@@ -17,6 +17,8 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     protected PlayerMessage name;
     protected int nameColor;
 
+    protected AbstractWidget<?> parent;
+
     protected boolean visible = true;
     protected boolean enabled = true;
 
@@ -66,7 +68,11 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
 
     private boolean isHovering(float mouseX, float mouseY) {
-        return mouseX >= this.x && mouseX  <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height;
+        boolean flag = true;
+        if (parent != null) {
+            flag = parent.isHovering(mouseX, mouseY);
+        }
+        return flag && mouseX >= this.x && mouseX  <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height;
     }
 
     /* ILayoutable */
@@ -124,11 +130,15 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
     @Override
     public void render(GuiRenderer renderer, ScissorStack stack) {
-        content.accept(renderer, (T) this);
+        try (With ctx = stack.applyScissor()) {
+            content.accept(renderer, (T) this);
+        }
     }
     @Override
     public void renderForeground(GuiRenderer renderer, ScissorStack stack) {
-        foreground.accept(renderer, (T) this);
+        try (With ctx = stack.applyScissor()) {
+            foreground.accept(renderer, (T) this);
+        }
     }
 
     @Override

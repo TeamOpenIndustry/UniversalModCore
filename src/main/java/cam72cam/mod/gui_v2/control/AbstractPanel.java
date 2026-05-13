@@ -11,6 +11,7 @@ import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
@@ -26,18 +27,19 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     }
 
     public void addChildren(ILayoutable<?> child) {
-        this.children.add(child);
-        layout(this.x(), this.y());
+        addChildren(Collections.singleton(child));
     }
 
     public void addChildren(ILayoutable<?>... children) {
-        this.children.addAll(Arrays.asList(children));
-        layout(this.x(), this.y());
+        addChildren(Arrays.asList(children));
     }
 
     public void addChildren(Iterable<ILayoutable<?>> children) {
         for (ILayoutable<?> child : children) {
             this.children.add(child);
+            if (child instanceof AbstractWidget<?>) {
+                ((AbstractWidget<?>)child).parent = this;
+            }
         }
         layout(this.x(), this.y());
     }
@@ -46,9 +48,13 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         stack.push(this);
         this.children.stream().filter(ILayoutable::isVisible).forEach(child -> {
             stack.push(child);
-            child.renderBackground(renderer, stack);
-            child.render(renderer, stack);
-            child.renderForeground(renderer, stack);
+            if (child instanceof AbstractPanel) {
+                ((AbstractPanel<?>) child).renderPanel(renderer, stack);
+            } else {
+                child.renderBackground(renderer, stack);
+                child.render(renderer, stack);
+                child.renderForeground(renderer, stack);
+            }
             stack.pop();
             if (child instanceof IUpdatable) {
                 ((IUpdatable) child).postRender();

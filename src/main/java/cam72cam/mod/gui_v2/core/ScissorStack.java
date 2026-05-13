@@ -4,11 +4,14 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 
+import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class ScissorStack {
+    private static final Rectangle2D EMPTY = new Rectangle(0, 0, 0, 0);
+
     Deque<Rectangle2D> stack;
 
     public ScissorStack() {
@@ -16,16 +19,20 @@ public class ScissorStack {
     }
 
     public ScissorStack push(ILayoutable<?> widget) {
-        return push(new Rectangle2D.Double(widget.x(), widget.y(), widget.width(), widget.height()));
+        return push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height()));
     }
 
     public ScissorStack push(int x, int y, int width, int height) {
-        return push(new Rectangle2D.Double(x, y, width, height));
+        return push(new Rectangle(x, y, width, height));
     }
 
     public ScissorStack push(Rectangle2D r) {
         if (!stack.isEmpty()) {
-            r = r.createIntersection(stack.peek());
+            if (r.intersects(stack.peek())) {
+                r = r.createIntersection(stack.peek());
+            } else {
+                r = EMPTY;
+            }
         }
         stack.push(r);
         return this;

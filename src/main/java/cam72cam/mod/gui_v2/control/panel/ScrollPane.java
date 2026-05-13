@@ -3,19 +3,22 @@ package cam72cam.mod.gui_v2.control.panel;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.IScrollable;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 
-public class ScrollPane extends AbstractPanel<ScrollPane>
-        implements IScrollable {
-    //TODO
+public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable {
     private final Slider controller;
+    // 0 stands for top
     private double scrolled;
-    private int lastLaidHeight;
+    private int contentHeight;
 
     public ScrollPane(int x, int y, int width, int height) {
         super(x, y, width, height);
-        this.controller = new Slider(width, height, PlayerMessage.direct(""), 0, 1, 0, false, this::onControllerChange);
+        this.controller = new Slider(20, height, PlayerMessage.direct(""),
+                0, 1, 0, false, this::onControllerChange, false);
+        this.addChildren(this.controller);
     }
 
     @Override
@@ -23,37 +26,53 @@ public class ScrollPane extends AbstractPanel<ScrollPane>
         this.setX(x);
         this.setY(y);
 
-        int h = children.stream().mapToInt(ILayoutable::height).sum();
-        lastLaidHeight = (int) (Math.max(0, h - this.height()) * scrolled);
+        contentHeight = children.stream().mapToInt(ILayoutable::height).sum();
 
-        int rel = lastLaidHeight;
+        double maxScroll = Math.max(0, contentHeight - height());
+        if (maxScroll == 0) scrolled = 0;
+
+        double scrollOffset = scrolled * maxScroll;
+
+        int currentY = y() - (int) scrollOffset;
         for (ILayoutable<?> widget : children) {
-            widget.setX(0);
-            widget.setY(rel);
-            widget.layout(x, rel);
-            rel += widget.height();
+            if (widget == controller) {
+                continue;
+            }
+            widget.setX(x());
+            widget.setY(currentY);
+            widget.layout(x(), currentY);
+            currentY += widget.height();
         }
+
+        this.controller.layout(x() + width() - controller.width(), y());
+    }
+
+    @Override
+    public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
+        super.renderPanel(renderer, stack);
     }
 
     @Override
     public boolean onScroll(int mouseX, int mouseY, double deltaScroll) {
-        if (!isHovering()) {
-            return false;
-        }
+        if (!isHovering()) return false;
 
+        double maxScroll = Math.max(0, contentHeight - height());
+        if (maxScroll <= 0) return false;
+
+        //Fixed at 20px
+        double step = 20.0 / maxScroll;
         if (deltaScroll > 0) {
-            controller.setValue(controller.getValue() + 0.05 / lastLaidHeight);
-            return true;
-        } else  if (deltaScroll < 0) {
-            controller.setValue(controller.getValue() - 0.05 / lastLaidHeight);
-            return true;
+            scrolled = Math.max(0, scrolled - step);
+        } else if (deltaScroll < 0) {
+            scrolled = Math.min(1.0, scrolled + step);
         }
 
-        return super.onScroll(mouseX, mouseY, deltaScroll);
+        this.controller.setValue(scrolled);
+        return true;
     }
 
     private void onControllerChange(Slider ctrl) {
         scrolled = ctrl.getValue();
-        layout(this.x(), this.y());
+        layout(x(), y());
     }
 }

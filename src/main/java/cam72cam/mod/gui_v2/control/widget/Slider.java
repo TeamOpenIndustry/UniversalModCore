@@ -10,6 +10,7 @@ import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 
+import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
 public class Slider extends AbstractWidget<Slider>
@@ -23,6 +24,7 @@ public class Slider extends AbstractWidget<Slider>
 
     protected boolean isDragging;
 
+    @Nonnull
     protected Consumer<Slider> handler;
 
     //TODO
@@ -51,12 +53,14 @@ public class Slider extends AbstractWidget<Slider>
 
     public void setValue(double value) {
         this.value = value;
+        this.handler.accept(this);
     }
 
     public void setSliderBound(double min, double max) {
         this.min = min;
         this.max = max;
         this.value = MathHelper.clamp(min, max, value);
+        this.handler.accept(this);
     }
 
     @Override
@@ -95,20 +99,14 @@ public class Slider extends AbstractWidget<Slider>
         ratio = Math.max(0.0, Math.min(1.0, ratio));
 
         double rawValue = min + ratio * (max - min);
-        value = Math.max(min, Math.min(max, rawValue));
-
-        if (value != oldValue && handler != null) {
-            handler.accept(this);
-        }
+        setValue(Math.max(min, Math.min(max, rawValue)));
     }
 
     @Override
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
         if (isDragging) {
             isDragging = false;
-            if (handler != null) {
-                handler.accept(this);
-            }
+            setValue(value);
             return true;
         }
         return false;
