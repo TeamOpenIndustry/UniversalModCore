@@ -14,13 +14,13 @@ import java.util.function.BiConsumer;
  */
 public abstract class AbstractWidget<T extends AbstractWidget<T>>
         implements ILayoutable<T> {
-    protected PlayerMessage name;
-    protected int nameColor;
+    private PlayerMessage name;
+    private int nameColor;
 
     protected AbstractWidget<?> parent;
 
-    protected boolean visible = true;
-    protected boolean enabled = true;
+    private boolean visible = true;
+    private boolean enabled = true;
 
     /**
      * Change current widget's visibility
@@ -56,6 +56,10 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
 
     /** Override the text color */
+    public int getNameColor() {
+        return nameColor;
+    }
+
     public void setNameColor(int argb) {
         this.nameColor = argb;
     }
@@ -76,7 +80,7 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
 
     /* ILayoutable */
-    protected int x, y, width, height;
+    private int x, y, width, height;
 
     @Override
     public int y() {

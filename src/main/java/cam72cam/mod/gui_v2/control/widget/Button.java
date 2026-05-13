@@ -27,11 +27,8 @@ public class Button extends AbstractWidget<Button>
 
     /** Constructor with no rendering */
     protected Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
-        this.x = 0;
-        this.y = 0;
-        this.width = width;
-        this.height = height;
-        this.name = text;
+        this.setBound(0, 0, width, height);
+        this.setName(text);
         this.handler = handler;
     }
 
@@ -56,10 +53,10 @@ public class Button extends AbstractWidget<Button>
             }
         });
         button.setRenderFunc((gui, btn) -> {
-            int color = btn.nameColor != 0 ? btn.nameColor :
+            int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
-            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x + btn.width / 2, btn.y + (btn.height - 8) / 2, color);
+            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
         });
         return button;
     }
@@ -100,10 +97,10 @@ public class Button extends AbstractWidget<Button>
             gui.drawVanillaButton(btn.x(), btn.y(), btn.width(), btn.height(), state);
         });
         this.setRenderFunc((gui, btn) -> {
-            int color = btn.nameColor != 0 ? btn.nameColor :
+            int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
-            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x + btn.width / 2, btn.y + (btn.height - 8) / 2, color);
+            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
         });
     }
 }

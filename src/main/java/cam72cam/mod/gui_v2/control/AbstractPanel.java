@@ -19,10 +19,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     protected List<ILayoutable<?>> children;
 
     public AbstractPanel(int x, int y, int width, int height) {
-        this.setX(x);
-        this.setY(y);
-        this.setWidth(width);
-        this.setHeight(height);
+        this.setBound(x, y, width, height);
         this.children = new ArrayList<>();
     }
 

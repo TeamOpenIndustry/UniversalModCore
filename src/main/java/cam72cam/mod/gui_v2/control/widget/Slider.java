@@ -36,7 +36,7 @@ public class Slider extends AbstractWidget<Slider>
 
     public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler, boolean isHorizontal) {
         this.setBound(0, 0, width, height);
-        this.name = text;
+        this.setName(text);
         this.min = min;
         this.max = max;
         this.value = start;
@@ -151,10 +151,10 @@ public class Slider extends AbstractWidget<Slider>
             }
         });
         this.setRenderFunc((gui, slid) -> {
-            int j = slid.nameColor != 0 ? slid.nameColor :
+            int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
-            gui.drawCenteredString(slid.name.internal.getFormattedText(), slid.x + slid.width / 2, slid.y + (slid.height - 8) / 2, j);
+            gui.drawCenteredString(slid.getName().internal.getFormattedText(), slid.x() + slid.width() / 2, slid.y() + (slid.height() - 8) / 2, j);
         });
     }
 }
