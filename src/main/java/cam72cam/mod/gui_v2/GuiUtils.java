@@ -24,11 +24,8 @@ public class GuiUtils {
     }
 
     public static void setCurrent(TestScreen current) {
+        //TODO Ridiculous NPE
         GuiUtils.current = current;
-    }
-
-    public static void requestLayout() {
-        current.layout();
     }
 
     public static int getScreenWidth() {

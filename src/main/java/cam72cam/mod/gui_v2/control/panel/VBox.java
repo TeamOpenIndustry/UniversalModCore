@@ -1,6 +1,5 @@
 package cam72cam.mod.gui_v2.control.panel;
 
-import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 
@@ -19,43 +18,37 @@ public class VBox extends AbstractPanel<VBox> {
 
     public void setSpacing(int spacing) {
         this.spacing = spacing;
-        GuiUtils.requestLayout();
+        requestLayout();
     }
 
     @Override
     public void layout(int x, int y) {
         this.setX(x);
         this.setY(y);
+        int maxWidth = 0;
+        int currentHeight = y;
         for (ILayoutable<?> widget : children) {
             widget.setX(0);
-            widget.setY(y);
-            widget.layout(x, y);
-            y += widget.height() + spacing;
+            widget.setY(currentHeight);
+            widget.layout(x, currentHeight);
+            currentHeight += widget.height() + spacing;
+            maxWidth = Math.max(maxWidth, widget.width());
         }
-    }
-
-    @Override
-    public int width() {
-        return children.stream().mapToInt(ILayoutable::width).max().orElse(0);
-    }
-
-    @Override
-    public int height() {
-        int total = 0;
-        for (ILayoutable<?> child : children) {
-            total += child.height() + spacing;
-        }
-        total -= spacing;
-        return total;
+        setWHInternal(maxWidth, currentHeight - y - spacing);
     }
 
     @Override
     public void setWidth(int width) {
-        //NO-OP
+        //NO-OP for VBox
     }
 
     @Override
     public void setHeight(int height) {
-        //NO-OP
+        //NO-OP for VBox
+    }
+
+    protected void setWHInternal(int width, int height) {
+        super.setWidth(width);
+        super.setHeight(height);
     }
 }

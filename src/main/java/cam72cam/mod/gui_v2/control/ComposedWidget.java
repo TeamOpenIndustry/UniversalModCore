@@ -2,12 +2,13 @@ package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.control.panel.SimplePane;
 
-public abstract class ComposedWidget
-        extends AbstractWidget {
+public abstract class ComposedWidget<T extends  ComposedWidget<T>>
+        extends AbstractWidget<T> {
     protected SimplePane internal;
 
     public ComposedWidget(int width, int height) {
         this.internal = new SimplePane(width, height);
+        this.internal.parent = this;
     }
 
     @Override

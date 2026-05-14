@@ -67,12 +67,11 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             ((IUpdatable) this).postRender();
         }
     }
-
     void renderBound(GuiRenderer renderer) {
-        renderer.drawRect(x(), y(), 1, height(), 0xFFFFFF);
-        renderer.drawRect(x(), y(), width(), 1, 0xFFFFFF);
-        renderer.drawRect(x() + width(), y(), 1, height(), 0xFFFFFF);
-        renderer.drawRect(x(), y() + height(), width(), 1, 0xFFFFFF);
+        renderer.drawRect(x(), y(), 1, height(), 0x000000);
+        renderer.drawRect(x(), y(), width(), 1, 0x000000);
+        renderer.drawRect(x() + width(), y(), 1, height(), 0x000000);
+        renderer.drawRect(x(), y() + height(), width(), 1, 0x000000);
     }
 
     @Override

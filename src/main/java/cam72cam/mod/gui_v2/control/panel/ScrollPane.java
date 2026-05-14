@@ -1,6 +1,5 @@
 package cam72cam.mod.gui_v2.control.panel;
 
-import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.core.ILayoutable;
@@ -74,6 +73,6 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
 
     private void onControllerChange(Slider ctrl) {
         scrolled = ctrl.getValue();
-        GuiUtils.requestLayout();
+        requestLayout();
     }
 }

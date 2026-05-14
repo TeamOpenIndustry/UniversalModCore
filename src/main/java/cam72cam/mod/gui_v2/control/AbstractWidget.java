@@ -160,4 +160,14 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     public void setForegroundRenderFunc(BiConsumer<GuiRenderer, T> handler) {
         foreground = handler;
     }
+
+
+    public void requestLayout() {
+        if (this.parent != null) {
+            parent.requestLayout();
+            return;
+        }
+        layout(this.x(), this.y());
+    }
+
 }
