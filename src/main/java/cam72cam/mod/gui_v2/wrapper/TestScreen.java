@@ -39,7 +39,7 @@ public class TestScreen extends GuiScreen {
         ScrollPane pane = new ScrollPane(160, 200);
         vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, vertical);
         pane.addChildren(vBox);
-        SimplePane rootPane = new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
+        SimplePane rootPane = SimplePane.fullScreen();
         rootPane.addChildren(pane, 0, 0);
         this.root = rootPane;
     }

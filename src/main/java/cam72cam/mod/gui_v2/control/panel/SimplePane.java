@@ -1,5 +1,6 @@
 package cam72cam.mod.gui_v2.control.panel;
 
+import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.PositionedPanel;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 
@@ -9,6 +10,10 @@ import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 public class SimplePane extends PositionedPanel<SimplePane> {
     public SimplePane(int width, int height) {
         super(width, height);
+    }
+
+    public static SimplePane fullScreen() {
+        return new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
     }
 
     @Override
