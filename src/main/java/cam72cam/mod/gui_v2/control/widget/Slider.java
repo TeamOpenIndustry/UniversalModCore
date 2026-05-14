@@ -144,7 +144,7 @@ public class Slider extends AbstractWidget<Slider>
             } else {
                 int trackHeight = slid.height() - 8;
                 int handleX = slid.x();
-                int handleY = slid.y() + (int) ((1.0 - ratio) * trackHeight);
+                int handleY = slid.y() + (int) (ratio * trackHeight);
 
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 gui.drawVanillaButton(handleX, handleY, slid.width(), 8, 1);

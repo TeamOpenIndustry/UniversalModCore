@@ -1,7 +1,6 @@
 package cam72cam.mod.gui_v2.wrapper;
 
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.panel.SimplePane;
@@ -9,7 +8,6 @@ import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
-import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.panel.VBox;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
@@ -23,7 +21,7 @@ public class TestScreen extends GuiScreen {
     private final SimplePane root;
 
     public TestScreen() {
-        GuiUtils.current = this;
+        GuiUtils.setCurrent(this);
         //Test
         VBox vBox = new VBox(5);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
@@ -37,10 +35,9 @@ public class TestScreen extends GuiScreen {
         ScrollPane pane = new ScrollPane(300, 200);
         vBox.addChildren(button1, button2, button3, horizontal, vertical);
         pane.addChildren(vBox);
-        SimplePane pane1 = new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
-        //TODO rel position
-        pane1.addChildren(pane);
-        this.root = pane1;
+        SimplePane rootPane = new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
+        rootPane.addChildren(pane, 0, 0);
+        this.root = rootPane;
     }
 
     public void layout() {
@@ -93,7 +90,7 @@ public class TestScreen extends GuiScreen {
     @Override
     public void onGuiClosed() {
         super.onGuiClosed();
-        GuiUtils.current = null;
+        GuiUtils.setCurrent(null);
     }
 
     @Override

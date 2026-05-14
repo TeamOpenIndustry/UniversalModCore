@@ -28,6 +28,7 @@ public class Button extends AbstractWidget<Button>
     /** Constructor with no rendering */
     protected Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
         this.setName(text);
+        this.setBound(0, 0, width, height);
         this.handler = handler;
     }
 

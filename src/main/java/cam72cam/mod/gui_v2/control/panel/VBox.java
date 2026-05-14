@@ -4,8 +4,6 @@ import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 
-import java.util.Comparator;
-
 public class VBox extends AbstractPanel<VBox> {
     private int spacing;
 
@@ -45,10 +43,9 @@ public class VBox extends AbstractPanel<VBox> {
     public int height() {
         int total = 0;
         for (ILayoutable<?> child : children) {
-            total = child.height();
-            total += spacing;
+            total += child.height() + spacing;
         }
-        total += spacing;
+        total -= spacing;
         return total;
     }
 

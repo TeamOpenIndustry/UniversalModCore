@@ -19,7 +19,7 @@ public class ScissorStack {
     }
 
     public ScissorStack push(ILayoutable<?> widget) {
-        return push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height()));
+        return push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height() + 1));
     }
 
     public ScissorStack push(int x, int y, int width, int height) {

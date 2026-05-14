@@ -13,7 +13,7 @@ import net.minecraft.util.text.event.ClickEvent;
 public class GuiUtils {
     public static int mouseX;
     public static int mouseY;
-    public static TestScreen current;
+    private static TestScreen current;
 
     public static int getMouseX() {
         return mouseX;
@@ -21,6 +21,10 @@ public class GuiUtils {
 
     public static int getMouseY() {
         return mouseY;
+    }
+
+    public static void setCurrent(TestScreen current) {
+        GuiUtils.current = current;
     }
 
     public static void requestLayout() {

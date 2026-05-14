@@ -78,10 +78,11 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         if (parent != null) {
             flag = parent.isHovering(mouseX, mouseY);
         }
-        return flag && mouseX >= this.x && mouseX  <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height;
+        return flag && mouseX >= this.x() && mouseX <= this.x() + this.width() && mouseY >= this.y() && mouseY <= this.y() + this.height();
     }
 
     /* ILayoutable */
+    /* Don't directly make use of these fields! */
     private int x, y, width, height;
 
     @Override

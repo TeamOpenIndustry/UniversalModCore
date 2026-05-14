@@ -1,12 +1,12 @@
 package cam72cam.mod.gui_v2.control.panel;
 
-import cam72cam.mod.gui_v2.control.AbstractPanel;
+import cam72cam.mod.gui_v2.control.PositionedPanel;
 import cam72cam.mod.gui_v2.core.ILayoutable;
 
 /**
  * Fixed size panel
  */
-public class SimplePane extends AbstractPanel<SimplePane> {
+public class SimplePane extends PositionedPanel<SimplePane> {
     public SimplePane(int width, int height) {
         super(width, height);
     }
@@ -17,9 +17,11 @@ public class SimplePane extends AbstractPanel<SimplePane> {
         this.setY(y);
         int width = 0, height = 0;
         for (ILayoutable<?> child : children) {
-            child.layout(x, y);
-            width = Math.max(child.width() + child.x() - this.x(), width);
-            height = Math.max(child.height() + child.y() - this.y(), height);
+            int childX = x + getChildRelX(child);
+            int childY = y + getChildRelY(child);
+            child.layout(childX, childY);
+            width = Math.max(child.width() + childX, width);
+            height = Math.max(child.height() + childY, height);
         }
         this.setWidth(width);
         this.setHeight(height);
