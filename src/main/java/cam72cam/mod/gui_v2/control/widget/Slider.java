@@ -92,7 +92,7 @@ public class Slider extends AbstractWidget<Slider>
             double relX = mouseX - x() - 4; //Slider bar size
             ratio = relX / (width() - 8);
         } else {
-            double relY = y() + height() - mouseY - 4;
+            double relY = mouseY - y() - 4;
             ratio = relY / (height() - 8);
         }
 

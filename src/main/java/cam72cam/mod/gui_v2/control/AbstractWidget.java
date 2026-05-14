@@ -22,6 +22,8 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     private boolean visible = true;
     private boolean enabled = true;
 
+    public AbstractWidget() {}
+
     /**
      * Change current widget's visibility
      */

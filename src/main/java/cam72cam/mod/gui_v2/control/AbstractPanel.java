@@ -18,8 +18,9 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         implements IClickable, IDraggable, IScrollable {
     protected List<ILayoutable<?>> children;
 
-    public AbstractPanel(int x, int y, int width, int height) {
-        this.setBound(x, y, width, height);
+    public AbstractPanel(int width, int height) {
+        super();
+        this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
     }
 
@@ -60,10 +61,18 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.renderBackground(renderer, stack);
         this.render(renderer, stack);
         this.renderForeground(renderer, stack);
+        this.renderBound(renderer);
         stack.pop();
         if (this instanceof IUpdatable) {
             ((IUpdatable) this).postRender();
         }
+    }
+
+    void renderBound(GuiRenderer renderer) {
+        renderer.drawRect(x(), y(), 1, height(), 0xFFFFFF);
+        renderer.drawRect(x(), y(), width(), 1, 0xFFFFFF);
+        renderer.drawRect(x() + width(), y(), 1, height(), 0xFFFFFF);
+        renderer.drawRect(x(), y() + height(), width(), 1, 0xFFFFFF);
     }
 
     @Override

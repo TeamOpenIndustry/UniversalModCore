@@ -1,5 +1,6 @@
 package cam72cam.mod.gui_v2.control.panel;
 
+import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.core.ILayoutable;
@@ -14,8 +15,8 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
     private double scrolled;
     private int contentHeight;
 
-    public ScrollPane(int x, int y, int width, int height) {
-        super(x, y, width, height);
+    public ScrollPane(int width, int height) {
+        super(width, height);
         this.controller = new Slider(20, height, PlayerMessage.direct(""),
                 0, 1, 0, false, this::onControllerChange, false);
         this.addChildren(this.controller);
@@ -73,6 +74,6 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
 
     private void onControllerChange(Slider ctrl) {
         scrolled = ctrl.getValue();
-        layout(x(), y());
+        GuiUtils.requestLayout();
     }
 }

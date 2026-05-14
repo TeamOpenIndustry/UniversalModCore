@@ -7,8 +7,8 @@ import cam72cam.mod.gui_v2.core.ILayoutable;
  * Fixed size panel
  */
 public class SimplePane extends AbstractPanel<SimplePane> {
-    public SimplePane(int x, int y, int width, int height) {
-        super(x, y, width, height);
+    public SimplePane(int width, int height) {
+        super(width, height);
     }
 
     @Override

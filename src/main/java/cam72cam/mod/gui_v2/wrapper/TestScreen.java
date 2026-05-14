@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
+import cam72cam.mod.gui_v2.control.panel.SimplePane;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.core.ScissorStack;
@@ -19,11 +20,12 @@ import java.io.IOException;
 import java.util.function.BiConsumer;
 
 public class TestScreen extends GuiScreen {
-    private final AbstractPanel<?> root;
+    private final SimplePane root;
 
     public TestScreen() {
+        GuiUtils.current = this;
         //Test
-        VBox vBox = new VBox(0, 0, GUIHelpers.getScreenWidth(), GUIHelpers.getScreenHeight());
+        VBox vBox = new VBox(5);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
         Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), btnTest);
@@ -32,10 +34,17 @@ public class TestScreen extends GuiScreen {
                                        slider -> System.out.println(slider.getValue()), true);
         Slider vertical = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
                                        slider -> System.out.println(slider.getValue()), false);
-        ScrollPane pane = new ScrollPane(0, 0, 300, 200);
+        ScrollPane pane = new ScrollPane(300, 200);
         vBox.addChildren(button1, button2, button3, horizontal, vertical);
         pane.addChildren(vBox);
-        this.root = pane;
+        SimplePane pane1 = new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
+        //TODO rel position
+        pane1.addChildren(pane);
+        this.root = pane1;
+    }
+
+    public void layout() {
+        this.root.layout(0, 0);
     }
 
     @Override
@@ -79,6 +88,12 @@ public class TestScreen extends GuiScreen {
         if (scroll != 0) {
             this.mouseScrolled(i, j, scroll);
         }
+    }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        GuiUtils.current = null;
     }
 
     @Override

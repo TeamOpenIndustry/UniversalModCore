@@ -7,7 +7,7 @@ public abstract class ComposedWidget
     protected SimplePane internal;
 
     public ComposedWidget(int width, int height) {
-        this.internal = new SimplePane(0, 0, width, height);
+        this.internal = new SimplePane(width, height);
     }
 
     @Override

@@ -4,6 +4,8 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui_v2.wrapper.TestScreen;
 import cam72cam.mod.text.PlayerMessage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
@@ -11,7 +13,7 @@ import net.minecraft.util.text.event.ClickEvent;
 public class GuiUtils {
     public static int mouseX;
     public static int mouseY;
-    public static TestScreen currentBuilder;
+    public static TestScreen current;
 
     public static int getMouseX() {
         return mouseX;
@@ -21,12 +23,24 @@ public class GuiUtils {
         return mouseY;
     }
 
+    public static void requestLayout() {
+        current.layout();
+    }
+
+    public static int getScreenWidth() {
+        return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+    }
+
+    public static int getScreenHeight() {
+        return new ScaledResolution(Minecraft.getMinecraft()).getScaledHeight();
+    }
+
     /** Try to open an external link in player's browser */
     public void openLink(String url){
         ITextComponent component = new TextComponentString("");
         component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-        if (currentBuilder != null) {
-            currentBuilder.handleComponentClick(component);
+        if (current != null) {
+            current.handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a link outside a screen: %s", url);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
@@ -39,8 +53,8 @@ public class GuiUtils {
     public static void openFile(String path){
         ITextComponent component = new TextComponentString("");
         component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
-        if (currentBuilder != null) {
-            currentBuilder.handleComponentClick(component);
+        if (current != null) {
+            current.handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a file outside a screen: %s", path);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {

@@ -5,7 +5,7 @@ import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import java.util.function.BiConsumer;
 
 public interface ILayoutable<T> {
-    //Position
+    //Position & Size
     int x();
     int y();
     int width();
