@@ -79,13 +79,13 @@ public class Slider extends AbstractWidget<Slider>
                 return false;
             }
         }
-        isDragging = true;
+        requestDragging(this);
+        this.isDragging = true;
         updateSlider(mouseX, mouseY);
         return true;
     }
 
     protected void updateSlider(int mouseX, int mouseY) {
-        double oldValue = value;
         double ratio;
 
         if (isHorizontal) {
@@ -106,6 +106,7 @@ public class Slider extends AbstractWidget<Slider>
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
         if (isDragging) {
             isDragging = false;
+            freeDragging();
             setValue(value);
             return true;
         }
@@ -117,6 +118,7 @@ public class Slider extends AbstractWidget<Slider>
         this.setX(x);
         this.setY(y);
         isDragging = false;
+        freeDragging();
     }
 
     @Override

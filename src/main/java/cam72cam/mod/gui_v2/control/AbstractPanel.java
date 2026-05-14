@@ -18,6 +18,8 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         implements IClickable, IDraggable, IScrollable {
     protected List<ILayoutable<?>> children;
 
+    private IDraggable dragging;
+
     public AbstractPanel(int width, int height) {
         super();
         this.setBound(0, 0, width, height);
@@ -86,7 +88,10 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     @Override
     public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
-        //TODO Tracking
+        if (dragging != null) {
+            return dragging.onDrag(hand, mouseX, mouseY);
+        }
+        //Defaults
         if (!isHovering()) {
             return false;
         }
@@ -97,6 +102,10 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     @Override
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
+        if (dragging != null) {
+            return dragging.onRelease(hand, mouseX, mouseY);
+        }
+        //Defaults
         if (!isHovering()) {
             return false;
         }
@@ -114,5 +123,23 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         return children.stream()
                        .filter(c -> c instanceof IScrollable)
                        .anyMatch(c -> ((IScrollable) c).onScroll(mouseX, mouseY, deltaScroll));
+    }
+
+    @Override
+    public void requestDragging(IDraggable dragging) {
+        if (this.parent != null) {
+            super.requestDragging(dragging);
+            return;
+        }
+        this.dragging = dragging;
+    }
+
+    @Override
+    protected void freeDragging() {
+        if (this.parent != null) {
+            super.requestDragging(dragging);
+            return;
+        }
+        this.dragging = null;
     }
 }

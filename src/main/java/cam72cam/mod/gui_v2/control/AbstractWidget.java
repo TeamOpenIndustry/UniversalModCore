@@ -3,6 +3,7 @@ package cam72cam.mod.gui_v2.control;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
+import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
@@ -161,13 +162,25 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         foreground = handler;
     }
 
-
     public void requestLayout() {
         if (this.parent != null) {
             parent.requestLayout();
             return;
         }
+        //Only handle in root
         layout(this.x(), this.y());
     }
 
+    protected void requestDragging(IDraggable dragging) {
+        if (this.parent != null) {
+            this.parent.requestDragging(dragging);
+        }
+        //Implemented in AbstractPanel
+    }
+    protected void freeDragging() {
+        if (this.parent != null) {
+            this.parent.freeDragging();
+        }
+        //Implemented in AbstractPanel
+    }
 }
