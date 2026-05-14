@@ -8,6 +8,7 @@ import cam72cam.mod.gui_v2.control.widget.Label;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.core.ScissorStack;
+import cam72cam.mod.gui_v2.core.layout.HorizontalAlign;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.gui_v2.control.panel.VBox;
 import cam72cam.mod.resource.Identifier;
@@ -24,7 +25,7 @@ public class TestScreen extends GuiScreen {
     public TestScreen() {
         GuiUtils.setCurrent(this);
         //Test
-        VBox vBox = new VBox(5);
+        VBox vBox = new VBox(5, HorizontalAlign.MIDDLE);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
         Label lab = Label.direct("label1");
         Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);

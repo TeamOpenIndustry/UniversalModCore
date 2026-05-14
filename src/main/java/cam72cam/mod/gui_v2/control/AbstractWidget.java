@@ -1,7 +1,7 @@
 package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.GuiUtils;
-import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;

@@ -1,7 +1,7 @@
 package cam72cam.mod.gui_v2.control.panel;
 
 import cam72cam.mod.gui_v2.control.PositionedPanel;
-import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 
 /**
  * Fixed size panel

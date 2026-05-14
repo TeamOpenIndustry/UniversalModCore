@@ -2,7 +2,7 @@ package cam72cam.mod.gui_v2.control.panel;
 
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.widget.Slider;
-import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.IScrollable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;

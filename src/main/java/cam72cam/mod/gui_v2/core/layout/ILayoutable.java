@@ -1,5 +1,6 @@
-package cam72cam.mod.gui_v2.core;
+package cam72cam.mod.gui_v2.core.layout;
 
+import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 
 import java.util.function.BiConsumer;

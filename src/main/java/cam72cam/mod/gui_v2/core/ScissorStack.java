@@ -1,5 +1,6 @@
 package cam72cam.mod.gui_v2.core;
 
+import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;

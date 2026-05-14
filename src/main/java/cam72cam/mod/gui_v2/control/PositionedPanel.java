@@ -1,6 +1,6 @@
 package cam72cam.mod.gui_v2.control;
 
-import cam72cam.mod.gui_v2.core.ILayoutable;
+import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import it.unimi.dsi.fastutil.objects.Object2LongArrayMap;
 
 /**
