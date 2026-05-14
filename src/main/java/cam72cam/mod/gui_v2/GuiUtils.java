@@ -28,6 +28,10 @@ public class GuiUtils {
         GuiUtils.current = current;
     }
 
+    public static int getTextWidth(String text) {
+        return Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
+    }
+
     public static int getScreenWidth() {
         return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
     }

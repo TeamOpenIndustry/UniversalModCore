@@ -4,6 +4,7 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.panel.SimplePane;
+import cam72cam.mod.gui_v2.control.widget.Label;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.core.ScissorStack;
@@ -25,15 +26,17 @@ public class TestScreen extends GuiScreen {
         //Test
         VBox vBox = new VBox(5);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
+        Label lab = Label.direct("label1");
         Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);
+        Label lab2 = Label.direct("label2");
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), btnTest);
         Button button3 = Button.textured(150, 20, PlayerMessage.direct("clicker3"), btnTest, new Identifier("textures/blocks/bedrock.png"));
-        Slider horizontal = new Slider(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, false,
-                                       slider -> System.out.println(slider.getValue()), true);
-        Slider vertical = new Slider(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, false,
-                                       slider -> System.out.println(slider.getValue()), false);
-        ScrollPane pane = new ScrollPane(300, 200);
-        vBox.addChildren(button1, button2, button3, horizontal, vertical);
+        Slider horizontal = Slider.horizontal(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, 0,
+                                                     slider -> System.out.println(slider.getValue()));
+        Slider vertical = Slider.vertical(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, 0,
+                                       slider -> System.out.println(slider.getValue()));
+        ScrollPane pane = new ScrollPane(160, 200);
+        vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, vertical);
         pane.addChildren(vBox);
         SimplePane rootPane = new SimplePane(GuiUtils.getScreenWidth(), GuiUtils.getScreenHeight());
         rootPane.addChildren(pane, 0, 0);

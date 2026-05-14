@@ -26,24 +26,26 @@ public class Button extends AbstractWidget<Button>
     protected List<PlayerMessage> tooltip;
 
     /** Constructor with no rendering */
-    protected Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
+    public Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
         this.setName(text);
         this.setBound(0, 0, width, height);
         this.handler = handler;
+
+        vanillaFacade();
     }
 
-    /** Useful overrides */
+    /* Semitic constructors */
     public static Button vanilla(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
-        Button button = new Button(width, height, text, handler);
-        button.vanillaFacade();
-        return button;
+        return new Button(width, height, text, handler);
     }
 
+    /* Render full texture */
     public static Button textured(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler,
                                   Identifier tex) {
         return textured(width, height, text, handler, tex, 0, 0, 1, 1);
     }
 
+    /* Render sprite texture */
     public static Button textured(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler,
                                   Identifier tex, float startU, float startV, float endU, float endV) {
         Button button = new Button(width, height, text, handler);

@@ -22,29 +22,39 @@ public class Slider extends AbstractWidget<Slider>
     protected double value;
     protected int displayPrecision;
 
+    protected String formatted;
+
     protected boolean isDragging;
 
     @Nonnull
     protected Consumer<Slider> handler;
 
     //TODO
-    // 1.Int precision
-    // 2.Prefix/Suffix text
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler) {
-        this(width, height, text, min, max, start, doublePrecision, handler, true);
+    // 1.Prefix/Suffix text
+    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
+        this(width, height, text, min, max, start, displayPrecision, handler, true);
     }
 
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, boolean doublePrecision, Consumer<Slider> handler, boolean isHorizontal) {
+    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler, boolean isHorizontal) {
         this.setBound(0, 0, width, height);
         this.setName(text);
         this.min = min;
         this.max = max;
         this.value = start;
-        this.displayPrecision = doublePrecision ? 4 : 0;
+        this.displayPrecision = displayPrecision;
         this.handler = handler;
         this.isHorizontal = isHorizontal;
 
-        this.vanillaFacade();
+        vanillaFacade();
+    }
+
+    /* Semitic constructors */
+    public static Slider horizontal(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
+        return new Slider(width, height, text, min, max, start, displayPrecision, handler, true);
+    }
+
+    public static Slider vertical(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
+        return new Slider(width, height, text, min, max, start, displayPrecision, handler, false);
     }
 
     public double getValue() {
@@ -63,6 +73,11 @@ public class Slider extends AbstractWidget<Slider>
         this.handler.accept(this);
     }
 
+    public void setDisplayPrecision(int displayPrecision) {
+        this.displayPrecision = displayPrecision;
+        this.formatName();
+    }
+
     @Override
     public boolean onClick(Player.Hand hand, int x, int y) {
         if (!isHovering()) {
@@ -74,8 +89,8 @@ public class Slider extends AbstractWidget<Slider>
 
     @Override
     public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
-        if (!isHovering()) {
-            if (!isDragging) {
+        if (!isDragging) {
+            if (!isHovering()) {
                 return false;
             }
         }
@@ -117,8 +132,6 @@ public class Slider extends AbstractWidget<Slider>
     public void layout(int x, int y) {
         this.setX(x);
         this.setY(y);
-        isDragging = false;
-        freeDragging();
     }
 
     @Override
@@ -156,7 +169,18 @@ public class Slider extends AbstractWidget<Slider>
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
-            gui.drawCenteredString(slid.getName().internal.getFormattedText(), slid.x() + slid.width() / 2, slid.y() + (slid.height() - 8) / 2, j);
+            gui.drawCenteredString(String.format(formatted, value), slid.x() + slid.width() / 2, slid.y() + (slid.height() - 8) / 2, j);
         });
+    }
+
+    @Override
+    public void setName(PlayerMessage text) {
+        super.setName(text);
+        this.formatName();
+    }
+
+    private void formatName() {
+        String text = this.getName().internal.getFormattedText();
+        formatted = text.replace("slidValue", "%."+displayPrecision+"f");
     }
 }
