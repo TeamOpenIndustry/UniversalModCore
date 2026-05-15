@@ -120,10 +120,10 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
     @Override
     public void setBound(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+        this.setX(x);
+        this.setY(y);
+        this.setWidth(width);
+        this.setHeight(height);
     }
 
     protected BiConsumer<GuiRenderer, T> background = (gui, widget) -> {};
