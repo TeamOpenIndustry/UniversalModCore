@@ -181,7 +181,7 @@ public class Slider extends AbstractWidget<Slider>
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
             gui.drawCenteredString(String.format(formatted, value),
-                                   slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiUtils.TEXT_HEiGHT) / 2, j);
+                                   slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiUtils.TEXT_HEIGHT) / 2, j);
         });
     }
 

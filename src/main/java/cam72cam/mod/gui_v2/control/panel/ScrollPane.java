@@ -34,7 +34,10 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
             scrolled = 0;
             controller.setHandleSize(controller.height());
         } else {
-            controller.setHandleSize((int) (controller.height() * (height() / contentHeight)));
+            int handleSize = controller.height();
+            handleSize *= height();
+            handleSize /= contentHeight;
+            controller.setHandleSize(handleSize);
         }
 
         double scrollOffset = scrolled * maxScroll;

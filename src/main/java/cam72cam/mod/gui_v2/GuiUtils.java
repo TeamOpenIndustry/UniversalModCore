@@ -2,7 +2,7 @@ package cam72cam.mod.gui_v2;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
-import cam72cam.mod.gui_v2.wrapper.TestScreen;
+import cam72cam.mod.gui_v2.core.ScreenWrapper;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -11,11 +11,11 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 
 public class GuiUtils {
-    public static int TEXT_HEiGHT = 8;
+    public static int TEXT_HEIGHT = 8;
 
     public static int mouseX;
     public static int mouseY;
-    private static TestScreen current;
+    private static ScreenWrapper current;
 
     public static int getMouseX() {
         return mouseX;
@@ -25,7 +25,7 @@ public class GuiUtils {
         return mouseY;
     }
 
-    public static void setCurrent(TestScreen current) {
+    public static void setCurrent(ScreenWrapper current) {
         //TODO Ridiculous NPE
         GuiUtils.current = current;
     }

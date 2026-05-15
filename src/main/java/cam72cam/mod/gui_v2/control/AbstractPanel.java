@@ -36,6 +36,9 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     public void addChildren(Iterable<ILayoutable<?>> children) {
         for (ILayoutable<?> child : children) {
+            if (child == this) {
+                throw new IllegalArgumentException("Cannot add self as child panel!");
+            }
             this.children.add(child);
             if (child instanceof AbstractWidget<?>) {
                 ((AbstractWidget<?>)child).parent = this;
