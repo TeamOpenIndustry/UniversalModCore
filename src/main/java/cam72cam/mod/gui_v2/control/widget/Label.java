@@ -20,15 +20,27 @@ public class Label extends AbstractWidget<Label> {
     }
 
     public static Label direct(String text) {
-        return new Label(PlayerMessage.direct(text), 0xE0E0E0);
+        return direct(text, 0xE0E0E0);
+    }
+
+    public static Label direct(String text, int nameColor) {
+        return new Label(PlayerMessage.direct(text), nameColor);
     }
 
     public static Label trans(String text) {
-        return new Label(PlayerMessage.translate(text), 0xE0E0E0);
+        return trans(text, 0xE0E0E0);
+    }
+
+    public static Label trans(String text, int nameColor) {
+        return new Label(PlayerMessage.translate(text), nameColor);
     }
 
     public static Label url(String text) {
-        return new Label(PlayerMessage.url(text), 0xE0E0E0);
+        return url(text, 0xE0E0E0);
+    }
+
+    public static Label url(String text, int nameColor) {
+        return new Label(PlayerMessage.url(text), nameColor);
     }
 
     @Override

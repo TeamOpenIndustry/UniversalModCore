@@ -19,15 +19,15 @@ public class ScissorStack {
         stack = new ArrayDeque<>();
     }
 
-    public ScissorStack push(ILayoutable<?> widget) {
-        return push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height() + 1));
+    public void push(ILayoutable<?> widget) {
+        push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height() + 1));
     }
 
-    public ScissorStack push(int x, int y, int width, int height) {
-        return push(new Rectangle(x, y, width, height));
+    public void push(int x, int y, int width, int height) {
+        push(new Rectangle(x, y, width, height));
     }
 
-    public ScissorStack push(Rectangle2D r) {
+    public void push(Rectangle2D r) {
         if (!stack.isEmpty()) {
             if (r.intersects(stack.peek())) {
                 r = r.createIntersection(stack.peek());
@@ -36,12 +36,10 @@ public class ScissorStack {
             }
         }
         stack.push(r);
-        return this;
     }
 
-    public ScissorStack pop() {
+    public void pop() {
         stack.pop();
-        return this;
     }
 
     public With applyScissor() {
