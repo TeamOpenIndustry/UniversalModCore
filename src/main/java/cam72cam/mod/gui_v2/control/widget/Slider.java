@@ -17,6 +17,8 @@ public class Slider extends AbstractWidget<Slider>
         implements IClickable, IDraggable, IUpdatable {
     protected final boolean isHorizontal;
 
+    protected int handleSize;
+
     protected double min;
     protected double max;
     protected double value;
@@ -44,6 +46,8 @@ public class Slider extends AbstractWidget<Slider>
         this.displayPrecision = displayPrecision;
         this.handler = handler;
         this.isHorizontal = isHorizontal;
+
+        this.handleSize = 8; //Default
 
         vanillaFacade();
     }
@@ -78,6 +82,13 @@ public class Slider extends AbstractWidget<Slider>
         this.formatName();
     }
 
+    public void setHandleSize(int handleSize) {
+        if (handleSize > this.height()) {
+            handleSize = this.height();
+        }
+        this.handleSize = handleSize;
+    }
+
     @Override
     public boolean onClick(Player.Hand hand, int x, int y) {
         if (!isHovering()) {
@@ -104,11 +115,11 @@ public class Slider extends AbstractWidget<Slider>
         double ratio;
 
         if (isHorizontal) {
-            double relX = mouseX - x() - 4; //Slider bar size
-            ratio = relX / (width() - 8);
+            double relX = mouseX - x() - handleSize / 2.0; //Slider bar size
+            ratio = relX / (width() - handleSize);
         } else {
-            double relY = mouseY - y() - 4;
-            ratio = relY / (height() - 8);
+            double relY = mouseY - y() - handleSize / 2.0;
+            ratio = relY / (height() - handleSize);
         }
 
         ratio = Math.max(0.0, Math.min(1.0, ratio));
@@ -151,25 +162,26 @@ public class Slider extends AbstractWidget<Slider>
 
             //Render slider bar
             if (slid.isHorizontal) {
-                int trackWidth = slid.width() - 8;
+                int trackWidth = slid.width() - handleSize;
                 int handleX = slid.x() + (int) (ratio * trackWidth);
                 int handleY = slid.y();
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                gui.drawVanillaButton(handleX, handleY, 8, slid.height(), 1);
+                gui.drawVanillaButton(handleX, handleY, handleSize, slid.height(), 1);
             } else {
-                int trackHeight = slid.height() - 8;
+                int trackHeight = slid.height() - handleSize;
                 int handleX = slid.x();
                 int handleY = slid.y() + (int) (ratio * trackHeight);
 
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                gui.drawVanillaButton(handleX, handleY, slid.width(), 8, 1);
+                gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
         });
         this.setRenderFunc((gui, slid) -> {
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
-            gui.drawCenteredString(String.format(formatted, value), slid.x() + slid.width() / 2, slid.y() + (slid.height() - 8) / 2, j);
+            gui.drawCenteredString(String.format(formatted, value),
+                                   slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiUtils.TEXT_HEiGHT) / 2, j);
         });
     }
 

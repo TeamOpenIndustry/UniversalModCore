@@ -22,7 +22,7 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
 
     @Override
     public void addChildren(ILayoutable<?> child, int relX, int relY) {
-        addChildAnchored(child, HorizontalAlign.LEFT, relX, VerticalAlign.TOP, relY);
+        addChildren(child, HorizontalAlign.LEFT, relX, VerticalAlign.TOP, relY);
     }
 
     @Override
@@ -33,15 +33,17 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
         }
     }
 
-    public void addChildAnchored(ILayoutable<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
+    public void addChildren(ILayoutable<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
         super.addChildren(child);
         anchorMap.put(child, new AnchorInfo(hAlign, marginX, vAlign, marginY));
+        requestLayout();
     }
 
     public void setChildAnchor(ILayoutable<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
         if (!anchorMap.containsKey(child))
             throw new IllegalArgumentException("AnchorPane does not contain child");
         anchorMap.put(child, new AnchorInfo(hAlign, marginX, vAlign, marginY));
+        requestLayout();
     }
 
     @Override

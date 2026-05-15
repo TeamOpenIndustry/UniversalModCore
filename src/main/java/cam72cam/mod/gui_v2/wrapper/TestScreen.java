@@ -2,17 +2,19 @@ package cam72cam.mod.gui_v2.wrapper;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
+import cam72cam.mod.gui_v2.control.panel.AnchorPane;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
-import cam72cam.mod.gui_v2.control.panel.SimplePane;
 import cam72cam.mod.gui_v2.control.widget.Label;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.layout.HorizontalAlign;
+import cam72cam.mod.gui_v2.core.layout.VerticalAlign;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.gui_v2.control.panel.VBox;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
@@ -20,10 +22,11 @@ import java.io.IOException;
 import java.util.function.BiConsumer;
 
 public class TestScreen extends GuiScreen {
-    private final SimplePane root;
+    private final AnchorPane root;
 
     public TestScreen() {
-        GuiUtils.setCurrent(this);
+        this.root = AnchorPane.fullScreen();
+
         //Test
         VBox vBox = new VBox(5, HorizontalAlign.MIDDLE);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
@@ -39,9 +42,7 @@ public class TestScreen extends GuiScreen {
         ScrollPane pane = new ScrollPane(160, 200);
         vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, vertical);
         pane.addChildren(vBox);
-        SimplePane rootPane = SimplePane.fullScreen();
-        rootPane.addChildren(pane, 0, 0);
-        this.root = rootPane;
+        root.addChildren(pane, HorizontalAlign.RIGHT, 0, VerticalAlign.TOP, 0);
     }
 
     public void layout() {
@@ -95,6 +96,13 @@ public class TestScreen extends GuiScreen {
     public void onGuiClosed() {
         super.onGuiClosed();
         GuiUtils.setCurrent(null);
+    }
+
+    @Override
+    public void onResize(Minecraft mcIn, int w, int h) {
+        super.onResize(mcIn, w, h);
+        this.root.setBound(0, 0, w, h);
+        this.root.layout(0, 0);
     }
 
     @Override

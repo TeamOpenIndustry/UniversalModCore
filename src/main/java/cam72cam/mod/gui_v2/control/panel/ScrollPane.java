@@ -16,8 +16,8 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
 
     public ScrollPane(int width, int height) {
         super(width, height);
-        this.controller = new Slider(10, height, PlayerMessage.direct(""),
-                0, 1, 0, 0, this::onControllerChange, false);
+        this.controller = Slider.vertical(10, height, PlayerMessage.direct(""),
+                                          0, 1, 0, 0, this::onControllerChange);
         this.addChildren(this.controller);
     }
 
@@ -28,8 +28,14 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
 
         contentHeight = children.stream().filter(c -> c != controller).mapToInt(ILayoutable::height).sum();
 
-        double maxScroll = Math.max(0, contentHeight - height());
-        if (maxScroll == 0) scrolled = 0;
+        double maxScroll = contentHeight - height();
+        if (maxScroll <= 0) {
+            maxScroll = 0;
+            scrolled = 0;
+            controller.setHandleSize(controller.height());
+        } else {
+            controller.setHandleSize((int) (controller.height() * (height() / contentHeight)));
+        }
 
         double scrollOffset = scrolled * maxScroll;
 

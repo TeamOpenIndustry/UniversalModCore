@@ -11,6 +11,8 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 
 public class GuiUtils {
+    public static int TEXT_HEiGHT = 8;
+
     public static int mouseX;
     public static int mouseY;
     private static TestScreen current;
