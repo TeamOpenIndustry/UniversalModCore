@@ -51,7 +51,7 @@ public class Button extends AbstractWidget<Button>
         Button button = new Button(width, height, text, handler);
         button.setBackgroundRenderFunc((gui, btn) -> {
             try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
-                gui.texturedUvRect(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
+                gui.drawTexturedUvRect(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
             }
         });
         button.setRenderFunc((gui, btn) -> {

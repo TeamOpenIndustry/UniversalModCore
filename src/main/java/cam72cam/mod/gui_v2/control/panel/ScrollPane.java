@@ -8,6 +8,7 @@ import cam72cam.mod.gui_v2.core.actions.IScrollable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 
+//TODO Controller position and visibility
 public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable {
     private final Slider controller;
     // 0 stands for top
@@ -19,6 +20,10 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
         this.controller = Slider.vertical(10, height, PlayerMessage.direct(""),
                                           0, 1, 0, 0, this::onControllerChange);
         this.addChildren(this.controller);
+    }
+
+    public static ScrollPane vertical(int width, int height) {
+        return new ScrollPane(width, height);
     }
 
     @Override

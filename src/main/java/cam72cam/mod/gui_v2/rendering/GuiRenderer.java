@@ -41,20 +41,20 @@ public class GuiRenderer {
     /**
      * Draw a full image (tex) at coords with given width/height
      */
-    public void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        this.texturedRect(tex, x, y, 0, 0, width, height);
+    public void drawTexturedRect(Identifier tex, int x, int y, int width, int height) {
+        this.drawTexturedRect(tex, x, y, 0, 0, width, height);
     }
 
     /**
      * Draw a full image (tex) at coords with given width/height
      */
-    public void texturedRect(Identifier tex, int x, int y, int startU, int startV, int width, int height) {
+    public void drawTexturedRect(Identifier tex, int x, int y, int startU, int startV, int width, int height) {
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
             instance.drawTexturedModalRect(x, y, startU, startV, width, height);
         }
     }
 
-    public void texturedUvRect(Identifier tex, int x, int y, int width, int height, float startU, float startV, float endU, float endV) {
+    public void drawTexturedUvRect(Identifier tex, int x, int y, int width, int height, float startU, float startV, float endU, float endV) {
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder builder = tessellator.getBuffer();

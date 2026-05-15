@@ -32,7 +32,7 @@ public class TestScreen extends ClientScreen {
         Slider vertical = Slider.vertical(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, 0,
                                           slider -> System.out.println(slider.getValue()));
         CheckBox checkBox = new CheckBox(PlayerMessage.direct("cb"), cb -> System.out.println(cb.isChecked()));
-        ScrollPane pane = new ScrollPane(160, 200);
+        ScrollPane pane = ScrollPane.vertical(160, 200);
         vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, vertical);
         pane.addChildren(vBox);
         root.addChildren(pane, HorizontalAlign.MIDDLE, 0, VerticalAlign.MIDDLE, 0);
