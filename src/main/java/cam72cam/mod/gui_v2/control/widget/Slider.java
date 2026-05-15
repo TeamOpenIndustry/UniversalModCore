@@ -49,7 +49,7 @@ public class Slider extends AbstractWidget<Slider>
 
         this.handleSize = 8; //Default
 
-        vanillaFacade();
+        setVanillaFacade();
     }
 
     /* Semitic constructors */
@@ -152,7 +152,7 @@ public class Slider extends AbstractWidget<Slider>
         }
     }
 
-    public void vanillaFacade() {
+    public void setVanillaFacade() {
         this.setBackgroundRenderFunc((gui, slid) -> {
             //Render track
             gui.drawVanillaButton(slid.x(), slid.y(), slid.width(), slid.height(), 0);

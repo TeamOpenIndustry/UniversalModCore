@@ -13,9 +13,9 @@ public class Label extends AbstractWidget<Label> {
     public Label(PlayerMessage text, int textColor) {
         this.setName(text);
         this.setNameColor(textColor);
-        this.formatted = text.internal.getFormattedText();
-        this.setWidth(GuiUtils.getTextWidth(formatted));
+        this.setWidth(GuiUtils.getTextWidth(text));
         this.setHeight(8); //Default height
+        this.formatted = text.internal.getFormattedText();
         this.setRenderFunc((gui, label) -> gui.drawString(formatted, x(), y(), getNameColor()));
     }
 

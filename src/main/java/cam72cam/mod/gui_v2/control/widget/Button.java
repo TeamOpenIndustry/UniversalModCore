@@ -31,7 +31,7 @@ public class Button extends AbstractWidget<Button>
         this.setBound(0, 0, width, height);
         this.handler = handler;
 
-        vanillaFacade();
+        setVanillaFacade();
     }
 
     /* Semitic constructors */
@@ -92,7 +92,7 @@ public class Button extends AbstractWidget<Button>
     }
 
     /* Facades */
-    public void vanillaFacade() {
+    public void setVanillaFacade() {
         this.setBackgroundRenderFunc((gui, btn) -> {
             int state = !btn.isEnabled() ? 0
                     : btn.isHovering() ? 2 : 1;

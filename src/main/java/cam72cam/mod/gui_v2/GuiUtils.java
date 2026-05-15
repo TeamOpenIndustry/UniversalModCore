@@ -30,6 +30,10 @@ public class GuiUtils {
         GuiUtils.current = current;
     }
 
+    public static int getTextWidth(PlayerMessage text) {
+        return getTextWidth(text.internal.getFormattedText());
+    }
+
     public static int getTextWidth(String text) {
         return Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
     }

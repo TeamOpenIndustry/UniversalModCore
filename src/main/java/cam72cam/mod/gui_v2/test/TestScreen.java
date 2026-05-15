@@ -5,6 +5,7 @@ import cam72cam.mod.gui_v2.control.panel.AnchorPane;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.panel.VBox;
 import cam72cam.mod.gui_v2.control.widget.Button;
+import cam72cam.mod.gui_v2.control.widget.CheckBox;
 import cam72cam.mod.gui_v2.control.widget.Label;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.core.ClientScreen;
@@ -30,8 +31,9 @@ public class TestScreen extends ClientScreen {
                                               slider -> System.out.println(slider.getValue()));
         Slider vertical = Slider.vertical(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, 0,
                                           slider -> System.out.println(slider.getValue()));
+        CheckBox checkBox = new CheckBox(PlayerMessage.direct("cb"), cb -> System.out.println(cb.isChecked()));
         ScrollPane pane = new ScrollPane(160, 200);
-        vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, vertical);
+        vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, vertical);
         pane.addChildren(vBox);
         root.addChildren(pane, HorizontalAlign.MIDDLE, 0, VerticalAlign.MIDDLE, 0);
     }
