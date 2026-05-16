@@ -1,13 +1,11 @@
 package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.core.actions.*;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
-import cam72cam.mod.gui_v2.core.actions.IClickable;
-import cam72cam.mod.gui_v2.core.actions.IDraggable;
-import cam72cam.mod.gui_v2.core.actions.IScrollable;
-import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
+import cam72cam.mod.input.Keyboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,15 +13,17 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
-        implements IClickable, IDraggable, IScrollable {
+        implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener {
     protected List<ILayoutable<?>> children;
 
-    private IDraggable dragging;
+    private IFocusable active;
 
     public AbstractPanel(int width, int height) {
         super();
         this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
+
+        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
 
     public void addChildren(ILayoutable<?> child) {
@@ -51,32 +51,34 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         stack.push(this);
         this.children.stream().filter(ILayoutable::isVisible).forEach(child -> {
             stack.push(child);
-            if (child instanceof AbstractPanel) {
-                ((AbstractPanel<?>) child).renderPanel(renderer, stack);
-            } else {
-                child.renderBackground(renderer, stack);
-                child.render(renderer, stack);
-                child.renderForeground(renderer, stack);
-            }
+            drawWidget(child, renderer, stack);
             stack.pop();
-            if (child instanceof IUpdatable) {
-                ((IUpdatable) child).postRender();
-            }
         });
-        this.renderBackground(renderer, stack);
-        this.render(renderer, stack);
-        this.renderForeground(renderer, stack);
-        this.renderBound(renderer);
+        drawWidget(this, renderer, stack);
         stack.pop();
-        if (this instanceof IUpdatable) {
-            ((IUpdatable) this).postRender();
+    }
+
+    private void drawWidget(ILayoutable<?> widget, GuiRenderer renderer, ScissorStack stack) {
+        if (widget instanceof IUpdatable) {
+            ((IUpdatable) widget).preRender();
+        }
+        if (widget != this && widget instanceof AbstractPanel) {
+            ((AbstractPanel<?>) widget).renderPanel(renderer, stack);
+        } else {
+            widget.renderBackground(renderer, stack);
+            widget.render(renderer, stack);
+            widget.renderForeground(renderer, stack);
+        }
+        if (widget instanceof IUpdatable) {
+            ((IUpdatable) widget).postRender();
         }
     }
-    void renderBound(GuiRenderer renderer) {
-        renderer.drawRect(x(), y(), 1, height(), 0x000000);
-        renderer.drawRect(x(), y(), width(), 1, 0x000000);
-        renderer.drawRect(x() + width(), y(), 1, height(), 0x000000);
-        renderer.drawRect(x(), y() + height(), width(), 1, 0x000000);
+
+    public void renderBound(GuiRenderer renderer, int argb) {
+        renderer.drawRect(x(), y(), 1, height(), argb);
+        renderer.drawRect(x(), y(), width()-1, 1, argb);
+        renderer.drawRect(x() + width()-1, y(), 1, height(), argb);
+        renderer.drawRect(x(), y() + height()-1, width(), 1, argb);
     }
 
     @Override
@@ -91,8 +93,8 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     @Override
     public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
-        if (dragging != null) {
-            return dragging.onDrag(hand, mouseX, mouseY);
+        if (active instanceof IDraggable) {
+            return ((IDraggable) active).onDrag(hand, mouseX, mouseY);
         }
         //Defaults
         if (!isHovering()) {
@@ -105,8 +107,8 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     @Override
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
-        if (dragging != null) {
-            return dragging.onRelease(hand, mouseX, mouseY);
+        if (active instanceof IDraggable) {
+            return ((IDraggable) active).onRelease(hand, mouseX, mouseY);
         }
         //Defaults
         if (!isHovering()) {
@@ -129,20 +131,57 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     }
 
     @Override
-    public void requestDragging(IDraggable dragging) {
-        if (this.parent != null) {
-            super.requestDragging(dragging);
-            return;
+    public void onTick() {
+        for (ILayoutable<?> child : children) {
+            if (child instanceof IUpdatable) {
+                ((IUpdatable) child).onTick();
+            }
         }
-        this.dragging = dragging;
     }
 
     @Override
-    protected void freeDragging() {
+    public boolean onKeyPressed(Keyboard.KeyCode key) {
+        if (active instanceof IKeyboardListener) {
+            return ((IKeyboardListener) active).onKeyPressed(key);
+        }
+
+        return children.stream()
+                       .filter(c -> c instanceof IKeyboardListener)
+                       .anyMatch(c -> ((IKeyboardListener) c).onKeyPressed(key));
+    }
+
+    @Override
+    public boolean onCharTyped(char ch) {
+        if (active instanceof IKeyboardListener) {
+            return ((IKeyboardListener) active).onCharTyped(ch);
+        }
+
+        return children.stream()
+                       .filter(c -> c instanceof IKeyboardListener)
+                       .anyMatch(c -> ((IKeyboardListener) c).onCharTyped(ch));
+    }
+
+    @Override
+    protected void requestFocus(IFocusable focusing) {
         if (this.parent != null) {
-            super.requestDragging(dragging);
+            super.requestFocus(focusing);
             return;
         }
-        this.dragging = null;
+        if (this.active != null) {
+            this.active.onFocusLost();
+        }
+        focusing.onFocusGained();
+        this.active = focusing;
+    }
+    @Override
+    protected void freeFocus() {
+        if (this.parent != null) {
+            super.freeFocus();
+            return;
+        }
+        if (this.active != null) {
+            this.active.onFocusLost();
+        }
+        this.active = null;
     }
 }

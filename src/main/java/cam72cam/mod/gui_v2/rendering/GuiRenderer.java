@@ -2,6 +2,7 @@ package cam72cam.mod.gui_v2.rendering;
 
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -22,6 +23,7 @@ import util.Matrix4;
 
 public class GuiRenderer {
     public static final Texture VANILLA_BUTTON = Texture.wrap(new Identifier("textures/gui/widgets.png"));
+    public static int TEXT_HEIGHT = 8;
 
     private final GuiScreen instance;
     private final ScaledResolution resolution;
@@ -35,7 +37,12 @@ public class GuiRenderer {
      * Draw a solid color block
      */
     public void drawRect(int x, int y, int width, int height, int color) {
-        Gui.drawRect(x, y, x + width, y + height, color);
+        try (With ctx = RenderContext.apply(
+                new RenderState().color(1, 1, 1, 1)
+                                 .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+        )) {
+            Gui.drawRect(x, y, x + width, y + height, color);
+        }
     }
 
     /**
@@ -68,37 +75,35 @@ public class GuiRenderer {
     }
 
     //0 - disabled, 1 - normal, 2 - hovering
-    public void drawVanillaButton(int x, int y, int width, int height, int state) {
+    public void drawVanillaButton(int x, int y, int width, int height, int btnState) {
         if (width < 6 || height < 6) {
             //Don't handle
             return;
         }
 
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                                            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                                            GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderState state = new RenderState().texture(VANILLA_BUTTON)
+                                             .color(1, 1, 1, 1)
+                                             .blend(new BlendMode(BlendMode.GL_SRC_ALPHA,
+                                                                  BlendMode.GL_ONE_MINUS_SRC_ALPHA, BlendMode.GL_ONE,
+                                                                  BlendMode.GL_ZERO));
+        try (With ctx = RenderContext.apply(state)) {
+            //Sprite info
+            int uBase = 0;
+            int vBase = 46 + btnState * 20;
+            int border = 3;
+            int texTotalW = 200;
+            int texTotalH = 20;
 
-        //Sprite info
-        int uBase = 0;
-        int vBase = 46 + state * 20;
-        int border = 3;
-        int texTotalW = 200;
-        int texTotalH = 20;
+            int uLeft = uBase;
+            int uCenter = uBase + border;
+            int uRight = uBase + texTotalW - border;
+            int vTop = vBase;
+            int vMiddle = vBase + border;
+            int vBottom = vBase + texTotalH - border;
 
-        int uLeft = uBase;
-        int uCenter = uBase + border;
-        int uRight = uBase + texTotalW - border;
-        int vTop = vBase;
-        int vMiddle = vBase + border;
-        int vBottom = vBase + texTotalH - border;
+            int centerTexW = texTotalW - 2 * border;
+            int centerTexH = texTotalH - 2 * border;
 
-        int centerTexW = texTotalW - 2 * border;
-        int centerTexH = texTotalH - 2 * border;
-
-        try (With ctx = RenderContext.apply(new RenderState().texture(VANILLA_BUTTON))) {
             // Corners
             instance.drawTexturedModalRect(x, y, uLeft, vTop, border, border);
             instance.drawTexturedModalRect(x + width - border, y, uRight, vTop, border, border);

@@ -11,11 +11,8 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 
 public class GuiUtils {
-    public static int TEXT_HEIGHT = 8;
-
     public static int mouseX;
     public static int mouseY;
-    private static ScreenWrapper current;
 
     public static int getMouseX() {
         return mouseX;
@@ -23,11 +20,6 @@ public class GuiUtils {
 
     public static int getMouseY() {
         return mouseY;
-    }
-
-    public static void setCurrent(ScreenWrapper current) {
-        //TODO Ridiculous NPE
-        GuiUtils.current = current;
     }
 
     public static int getTextWidth(PlayerMessage text) {
@@ -46,12 +38,16 @@ public class GuiUtils {
         return new ScaledResolution(Minecraft.getMinecraft()).getScaledHeight();
     }
 
+    public static boolean isPrintable(char c) {
+        return !Character.isISOControl(c) && Character.isDefined(c);
+    }
+
     /** Try to open an external link in player's browser */
     public void openLink(String url){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-        if (current != null) {
-            current.handleComponentClick(component);
+        if (ScreenWrapper.getInstance() != null) {
+            ITextComponent component = new TextComponentString("");
+            component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+            ScreenWrapper.getInstance().handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a link outside a screen: %s", url);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
@@ -62,10 +58,10 @@ public class GuiUtils {
 
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
-        ITextComponent component = new TextComponentString("");
-        component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
-        if (current != null) {
-            current.handleComponentClick(component);
+        if (ScreenWrapper.getInstance() != null) {
+            ITextComponent component = new TextComponentString("");
+            component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
+            ScreenWrapper.getInstance().handleComponentClick(component);
         } else {
             ModCore.error("Trying to open a file outside a screen: %s", path);
             if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {

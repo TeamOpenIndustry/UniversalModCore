@@ -1,9 +1,9 @@
 package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.gui_v2.GuiUtils;
+import cam72cam.mod.gui_v2.core.actions.IFocusable;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
-import cam72cam.mod.gui_v2.core.actions.IDraggable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
@@ -70,11 +70,11 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     /**
      * Is mouse over?
      */
-    public boolean isHovering() {
+    protected boolean isHovering() {
         return isHovering(GuiUtils.getMouseX(), GuiUtils.getMouseY());
     }
 
-    private boolean isHovering(float mouseX, float mouseY) {
+    protected boolean isHovering(float mouseX, float mouseY) {
         boolean flag = true;
         if (parent != null) {
             flag = parent.isHovering(mouseX, mouseY);
@@ -171,16 +171,15 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         layout(this.x(), this.y());
     }
 
-    protected void requestDragging(IDraggable dragging) {
+    protected void requestFocus(IFocusable focusing) {
         if (this.parent != null) {
-            this.parent.requestDragging(dragging);
+            this.parent.requestFocus(focusing);
         }
         //Implemented in AbstractPanel
     }
-    protected void freeDragging() {
+    protected void freeFocus() {
         if (this.parent != null) {
-            this.parent.freeDragging();
+            this.parent.freeFocus();
         }
-        //Implemented in AbstractPanel
     }
 }

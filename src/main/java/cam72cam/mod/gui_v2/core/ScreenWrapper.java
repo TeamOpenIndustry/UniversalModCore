@@ -1,9 +1,11 @@
 package cam72cam.mod.gui_v2.core;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.panel.AnchorPane;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
+import cam72cam.mod.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -11,15 +13,28 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 
 public class ScreenWrapper extends GuiScreen {
+    static ScreenWrapper instance;
+
     final ClientScreen clientScreen;
     final AnchorPane root;
     final boolean pausesGame;
+
+    static {
+        ClientEvents.TICK.subscribe(() -> {
+            if (instance != null) {
+                instance.onTick();
+            } else if (Minecraft.getMinecraft().currentScreen instanceof ScreenWrapper) {
+                instance = ((ScreenWrapper) Minecraft.getMinecraft().currentScreen);
+            }
+        });
+    }
 
     public ScreenWrapper(ClientScreen screen, boolean pausesGame) {
         this.root = AnchorPane.fullScreen();
         this.clientScreen = screen;
         this.pausesGame = pausesGame;
         screen.bootstrap(this);
+        instance = this;
     }
 
     public void layout() {
@@ -69,10 +84,23 @@ public class ScreenWrapper extends GuiScreen {
     }
 
     @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        super.keyTyped(typedChar, keyCode);
+        Keyboard.KeyCode key = Keyboard.KeyCode.of(keyCode);
+        boolean consumed = false;
+        if (key != null) {
+            consumed = root.onKeyPressed(key);
+        }
+        if (!consumed && GuiUtils.isPrintable(typedChar)) {
+            root.onCharTyped(typedChar);
+        }
+    }
+
+    @Override
     public void onGuiClosed() {
         super.onGuiClosed();
         this.clientScreen.onClose();
-        GuiUtils.setCurrent(null);
+        instance = null;
     }
 
     @Override
@@ -82,8 +110,16 @@ public class ScreenWrapper extends GuiScreen {
         this.root.layout(0, 0);
     }
 
+    private void onTick() {
+        this.root.onTick();
+    }
+
     @Override
     public boolean doesGuiPauseGame() {
         return this.pausesGame;
+    }
+
+    public static ScreenWrapper getInstance() {
+        return instance;
     }
 }

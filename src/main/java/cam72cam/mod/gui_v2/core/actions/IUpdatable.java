@@ -1,5 +1,7 @@
 package cam72cam.mod.gui_v2.core.actions;
 
 public interface IUpdatable {
-    void postRender();
+    default void preRender() {}
+    default void postRender() {}
+    default void onTick() {}
 }

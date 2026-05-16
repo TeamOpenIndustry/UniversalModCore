@@ -5,7 +5,9 @@ import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.IDraggable;
+import cam72cam.mod.gui_v2.core.actions.IFocusable;
 import cam72cam.mod.gui_v2.core.actions.IUpdatable;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
@@ -14,7 +16,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
 public class Slider extends AbstractWidget<Slider>
-        implements IClickable, IDraggable, IUpdatable {
+        implements IClickable, IDraggable, IFocusable, IUpdatable {
     protected final boolean isHorizontal;
 
     protected int handleSize;
@@ -100,13 +102,10 @@ public class Slider extends AbstractWidget<Slider>
 
     @Override
     public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
-        if (!isDragging) {
-            if (!isHovering()) {
-                return false;
-            }
+        if (!isDragging && !isHovering()) {
+            return false;
         }
-        requestDragging(this);
-        this.isDragging = true;
+        requestFocus(this);
         updateSlider(mouseX, mouseY);
         return true;
     }
@@ -131,12 +130,21 @@ public class Slider extends AbstractWidget<Slider>
     @Override
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
         if (isDragging) {
-            isDragging = false;
-            freeDragging();
+            freeFocus();
             setValue(value);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onFocusGained() {
+        this.isDragging = true;
+    }
+
+    @Override
+    public void onFocusLost() {
+        this.isDragging = false;
     }
 
     @Override
@@ -181,7 +189,7 @@ public class Slider extends AbstractWidget<Slider>
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
             gui.drawCenteredString(String.format(formatted, value),
-                                   slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiUtils.TEXT_HEIGHT) / 2, j);
+                                   slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiRenderer.TEXT_HEIGHT) / 2, j);
         });
     }
 
