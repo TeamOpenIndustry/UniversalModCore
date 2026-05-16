@@ -40,9 +40,9 @@ public class VBox extends AbstractPanel<VBox> {
     public void layout(int x, int y) {
         this.setX(x);
         this.setY(y);
-        int maxWidth = children.stream().mapToInt(ILayoutable::width).max().orElse(0);
+        int maxWidth = getVisibleChildren().stream().mapToInt(ILayoutable::width).max().orElse(0);
         int currentHeight = y;
-        for (ILayoutable<?> widget : children) {
+        for (ILayoutable<?> widget : getVisibleChildren()) {
             int childWidth = widget.width();
             int childXOffset;
             switch (alignType) {

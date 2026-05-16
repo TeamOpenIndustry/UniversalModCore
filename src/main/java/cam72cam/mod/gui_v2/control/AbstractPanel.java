@@ -11,10 +11,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
         implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener {
-    protected List<ILayoutable<?>> children;
+    private final List<ILayoutable<?>> children;
 
     private IFocusable active;
 
@@ -45,6 +46,14 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             }
         }
         layout(this.x(), this.y());
+    }
+
+    public List<ILayoutable<?>> getChildren() {
+        return children;
+    }
+
+    public List<ILayoutable<?>> getVisibleChildren() {
+        return children.stream().filter(ILayoutable::isVisible).collect(Collectors.toList());
     }
 
     public void renderPanel(GuiRenderer renderer, ScissorStack stack) {

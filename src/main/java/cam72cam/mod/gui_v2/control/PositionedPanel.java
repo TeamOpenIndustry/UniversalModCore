@@ -19,7 +19,7 @@ public abstract class PositionedPanel<T extends PositionedPanel<T>> extends Abst
     }
 
     protected void setChildPosition(ILayoutable<?> child, int relX, int relY) {
-        if (!children.contains(child)) {
+        if (!getChildren().contains(child)) {
             return;
         }
         childrenPositions.put(child, (long) relX << 32 | relY);

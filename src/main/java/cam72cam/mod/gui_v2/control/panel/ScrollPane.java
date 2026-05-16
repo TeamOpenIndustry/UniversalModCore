@@ -31,7 +31,7 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
         this.setX(x);
         this.setY(y);
 
-        contentHeight = children.stream().filter(c -> c != controller).mapToInt(ILayoutable::height).sum();
+        contentHeight = getVisibleChildren().stream().filter(c -> c != controller).mapToInt(ILayoutable::height).sum();
 
         double maxScroll = contentHeight - height();
         if (maxScroll <= 0) {
@@ -48,7 +48,7 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
         double scrollOffset = scrolled * maxScroll;
 
         int currentY = y() - (int) scrollOffset;
-        for (ILayoutable<?> widget : children) {
+        for (ILayoutable<?> widget : getVisibleChildren()) {
             if (widget == controller) {
                 continue;
             }

@@ -54,7 +54,7 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
         int panelW = width();
         int panelH = height();
 
-        for (ILayoutable<?> child : children) {
+        for (ILayoutable<?> child : getVisibleChildren()) {
             AnchorInfo info = anchorMap.get(child);
             if (info != null) {
                 int relX = 0, relY = 0;

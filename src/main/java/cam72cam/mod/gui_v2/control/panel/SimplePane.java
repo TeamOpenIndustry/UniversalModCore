@@ -21,7 +21,7 @@ public class SimplePane extends PositionedPanel<SimplePane> {
         this.setX(x);
         this.setY(y);
         int width = 0, height = 0;
-        for (ILayoutable<?> child : children) {
+        for (ILayoutable<?> child : getVisibleChildren()) {
             int childX = x + getChildRelX(child);
             int childY = y + getChildRelY(child);
             child.layout(childX, childY);
