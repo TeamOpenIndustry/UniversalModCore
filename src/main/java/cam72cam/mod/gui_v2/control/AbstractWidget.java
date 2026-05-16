@@ -4,11 +4,10 @@ import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.actions.IFocusable;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
+import cam72cam.mod.gui_v2.rendering.GuiRenderFunc;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
-
-import java.util.function.BiConsumer;
 
 /**
  * Basic UMC widget
@@ -126,39 +125,39 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         this.setHeight(height);
     }
 
-    protected BiConsumer<GuiRenderer, T> background = (gui, widget) -> {};
-    protected BiConsumer<GuiRenderer, T> content = (gui, widget) -> {};
-    protected BiConsumer<GuiRenderer, T> foreground = (gui, widget) -> {};
+    protected GuiRenderFunc<T> background = (gui, widget) -> {};
+    protected GuiRenderFunc<T> content = (gui, widget) -> {};
+    protected GuiRenderFunc<T> foreground = (gui, widget) -> {};
 
     @Override
     public void renderBackground(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
-            background.accept(renderer, (T) this);
+            background.draw(renderer, (T) this);
         }
     }
     @Override
     public void render(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
-            content.accept(renderer, (T) this);
+            content.draw(renderer, (T) this);
         }
     }
     @Override
     public void renderForeground(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
-            foreground.accept(renderer, (T) this);
+            foreground.draw(renderer, (T) this);
         }
     }
 
     @Override
-    public void setBackgroundRenderFunc(BiConsumer<GuiRenderer, T> handler) {
+    public void setBackgroundRenderFunc(GuiRenderFunc<T> handler) {
         background = handler;
     }
     @Override
-    public void setRenderFunc(BiConsumer<GuiRenderer, T> handler) {
+    public void setRenderFunc(GuiRenderFunc<T> handler) {
         content = handler;
     }
     @Override
-    public void setForegroundRenderFunc(BiConsumer<GuiRenderer, T> handler) {
+    public void setForegroundRenderFunc(GuiRenderFunc<T> handler) {
         foreground = handler;
     }
 

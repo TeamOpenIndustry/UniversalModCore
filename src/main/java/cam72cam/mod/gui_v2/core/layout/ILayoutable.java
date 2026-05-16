@@ -1,9 +1,8 @@
 package cam72cam.mod.gui_v2.core.layout;
 
 import cam72cam.mod.gui_v2.core.ScissorStack;
+import cam72cam.mod.gui_v2.rendering.GuiRenderFunc;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
-
-import java.util.function.BiConsumer;
 
 public interface ILayoutable<T> {
     //Position & Size
@@ -25,9 +24,9 @@ public interface ILayoutable<T> {
     void render(GuiRenderer renderer, ScissorStack stack);
     void renderForeground(GuiRenderer renderer, ScissorStack stack);
 
-    void setBackgroundRenderFunc(BiConsumer<GuiRenderer, T> handler);
-    void setRenderFunc(BiConsumer<GuiRenderer, T> handler);
-    void setForegroundRenderFunc(BiConsumer<GuiRenderer, T> handler);
+    void setBackgroundRenderFunc(GuiRenderFunc<T> handler);
+    void setRenderFunc(GuiRenderFunc<T> handler);
+    void setForegroundRenderFunc(GuiRenderFunc<T> handler);
 
     //Layout
     void layout(int x, int y);
