@@ -1,5 +1,6 @@
 package cam72cam.mod.gui_v2.control.widget;
 
+import cam72cam.immersiverailroading.util.MathUtil;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
@@ -9,7 +10,6 @@ import cam72cam.mod.gui_v2.core.actions.IFocusable;
 import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
@@ -75,7 +75,7 @@ public class Slider extends AbstractWidget<Slider>
     public void setSliderBound(double min, double max) {
         this.min = min;
         this.max = max;
-        this.value = MathHelper.clamp(min, max, value);
+        this.value = MathUtil.clamp(value, min, max);
         this.handler.accept(this);
     }
 
@@ -96,6 +96,7 @@ public class Slider extends AbstractWidget<Slider>
         if (!isHovering()) {
             return false;
         }
+        requestFocus(this);
         updateSlider(x, y);
         return true;
     }
@@ -105,7 +106,6 @@ public class Slider extends AbstractWidget<Slider>
         if (!isDragging && !isHovering()) {
             return false;
         }
-        requestFocus(this);
         updateSlider(mouseX, mouseY);
         return true;
     }
@@ -173,14 +173,11 @@ public class Slider extends AbstractWidget<Slider>
                 int trackWidth = slid.width() - handleSize;
                 int handleX = slid.x() + (int) (ratio * trackWidth);
                 int handleY = slid.y();
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 gui.drawVanillaButton(handleX, handleY, handleSize, slid.height(), 1);
             } else {
                 int trackHeight = slid.height() - handleSize;
                 int handleX = slid.x();
                 int handleY = slid.y() + (int) (ratio * trackHeight);
-
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
         });

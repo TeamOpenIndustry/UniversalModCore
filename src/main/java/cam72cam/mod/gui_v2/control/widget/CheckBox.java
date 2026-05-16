@@ -25,7 +25,7 @@ public class CheckBox extends AbstractWidget<CheckBox>
         this.callback = callback;
 
         int width = CHECK_BOX_SIZE + 2 + GuiUtils.getTextWidth(this.getName());
-        setBound(0, 0, width, CHECK_BOX_SIZE);
+        setWHInternal(width, CHECK_BOX_SIZE);
 
         setVanillaFacade();
     }
@@ -70,6 +70,11 @@ public class CheckBox extends AbstractWidget<CheckBox>
     @Override
     public void setHeight(int height) {
         //NO-OP
+    }
+
+    protected void setWHInternal(int width, int height) {
+        super.setWidth(width);
+        super.setHeight(height);
     }
 
     public void setVanillaFacade() {

@@ -13,7 +13,6 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -26,11 +25,9 @@ public class GuiRenderer {
     public static int TEXT_HEIGHT = 8;
 
     private final GuiScreen instance;
-    private final ScaledResolution resolution;
 
     public GuiRenderer(GuiScreen gui) {
         this.instance = gui;
-        this.resolution = new ScaledResolution(Minecraft.getMinecraft());
     }
 
     /**
@@ -39,7 +36,7 @@ public class GuiRenderer {
     public void drawRect(int x, int y, int width, int height, int color) {
         try (With ctx = RenderContext.apply(
                 new RenderState().color(1, 1, 1, 1)
-                                 .blend(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA))
+                                 .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
         )) {
             Gui.drawRect(x, y, x + width, y + height, color);
         }
@@ -83,9 +80,8 @@ public class GuiRenderer {
 
         RenderState state = new RenderState().texture(VANILLA_BUTTON)
                                              .color(1, 1, 1, 1)
-                                             .blend(new BlendMode(BlendMode.GL_SRC_ALPHA,
-                                                                  BlendMode.GL_ONE_MINUS_SRC_ALPHA, BlendMode.GL_ONE,
-                                                                  BlendMode.GL_ZERO));
+                                             .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA,
+                                                                  BlendMode.GL_ONE, BlendMode.GL_ZERO));
         try (With ctx = RenderContext.apply(state)) {
             //Sprite info
             int uBase = 0;
@@ -261,31 +257,10 @@ public class GuiRenderer {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         state.stage(RenderContext.Stage.GUI);
+        state.color(1, 1, 1, 1);
         try (With ctx = RenderContext.apply(state)) {
-            GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(text, x, y, color);
         }
-    }
-
-    /**
-     * Gat a string's internal width for further use
-     */
-    public int getTextWidth(String text) {
-        return Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
-    }
-
-    /**
-     * Screen Width in pixels (std coords)
-     */
-    public int getScreenWidth() {
-        return resolution.getScaledWidth();
-    }
-
-    /**
-     * Screen Height in pixels (std coords)
-     */
-    public int getScreenHeight() {
-        return resolution.getScaledHeight();
     }
 
     /**

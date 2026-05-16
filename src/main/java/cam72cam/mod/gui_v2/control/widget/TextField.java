@@ -4,10 +4,7 @@ import cam72cam.immersiverailroading.util.MathUtil;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
-import cam72cam.mod.gui_v2.core.actions.IClickable;
-import cam72cam.mod.gui_v2.core.actions.IFocusable;
-import cam72cam.mod.gui_v2.core.actions.IKeyboardListener;
-import cam72cam.mod.gui_v2.core.actions.IUpdatable;
+import cam72cam.mod.gui_v2.core.actions.*;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Clipboard;
 import cam72cam.mod.input.Keyboard;
@@ -18,7 +15,7 @@ import java.util.function.Predicate;
 
 //TODO Multiline support
 public class TextField extends AbstractWidget<TextField>
-        implements IClickable, IFocusable, IKeyboardListener, IUpdatable {
+        implements IClickable, IFocusable, IDraggable, IKeyboardListener, IUpdatable {
     private static final int SPAN = GuiRenderer.TEXT_HEIGHT / 2;
 
     private String text;
@@ -280,6 +277,48 @@ public class TextField extends AbstractWidget<TextField>
         return true;
     }
 
+    @Override
+    public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {
+        if (!focusing) return false;
+
+        //Start dragging
+        if (selectionStart < 0) {
+            selectionStart = cursorPos;
+        }
+
+        int relativeX = mouseX - x() + textOffsetX;
+        int bestPos = 0;
+        int bestDist = Integer.MAX_VALUE;
+        int currX = SPAN;
+        for (int i = 0; i <= text.length(); i++) {
+            int dist = Math.abs(relativeX - currX);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestPos = i;
+            }
+            if (i < text.length()) {
+                currX += GuiUtils.getTextWidth(String.valueOf(text.charAt(i)));
+            }
+        }
+        setCursorPos(bestPos);
+
+        //If cursor moves beyond then scroll the text to fit
+        int localX = mouseX - x();
+        int scrollThreshold = 10;
+        if (localX < -scrollThreshold) {
+            setCursorPos(cursorPos - 1);
+        } else if (localX > width() + scrollThreshold) {
+            setCursorPos(cursorPos + 1);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
+        return false;
+    }
+
     public void setVanillaFacade() {
         this.setBackgroundRenderFunc((gui, txt) -> {
             int bgColor = 0xFF101010;
@@ -295,8 +334,8 @@ public class TextField extends AbstractWidget<TextField>
             if (txt.hasSelection()) {
                 int start = Math.min(txt.selectionStart, txt.cursorPos);
                 int end = Math.max(txt.selectionStart, txt.cursorPos);
-                int selX1 = xOff + gui.getTextWidth(txt.text.substring(0, start));
-                int selX2 = xOff + gui.getTextWidth(txt.text.substring(0, end));
+                int selX1 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, start));
+                int selX2 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, end));
                 gui.drawRect(selX1, yOff, selX2 - selX1, GuiRenderer.TEXT_HEIGHT, 0xFF0080FF);
             }
 
@@ -304,7 +343,7 @@ public class TextField extends AbstractWidget<TextField>
 
             //Cursor
             if (txt.focusing && txt.cursorBlinkTimer % 20 < 10) {
-                int cursorX = xOff + gui.getTextWidth(txt.text.substring(0, txt.cursorPos));
+                int cursorX = xOff + GuiUtils.getTextWidth(txt.text.substring(0, txt.cursorPos));
                 gui.drawRect(cursorX, yOff - 2 , 1, GuiRenderer.TEXT_HEIGHT + 4, 0xFFEEEEEE);
             }
         });

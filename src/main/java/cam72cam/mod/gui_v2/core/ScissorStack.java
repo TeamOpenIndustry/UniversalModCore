@@ -43,7 +43,7 @@ public class ScissorStack {
     }
 
     public With applyScissor() {
-        if (!stack.isEmpty() && stack.peek() != EMPTY) {
+        if (!stack.isEmpty()) {
             return RenderContext.apply(new RenderState().scissor(true, stack.peek()));
         }
         return () -> {};
