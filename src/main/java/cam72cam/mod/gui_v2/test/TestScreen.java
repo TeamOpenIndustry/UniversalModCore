@@ -1,6 +1,7 @@
 package cam72cam.mod.gui_v2.test;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.control.composed.NumberField;
 import cam72cam.mod.gui_v2.control.panel.AnchorPane;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.panel.VBox;

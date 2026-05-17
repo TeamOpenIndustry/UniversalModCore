@@ -1,6 +1,9 @@
-package cam72cam.mod.gui_v2.control.widget;
+package cam72cam.mod.gui_v2.control.composed;
 
 import cam72cam.mod.gui_v2.control.ComposedWidget;
+import cam72cam.mod.gui_v2.control.widget.Button;
+import cam72cam.mod.gui_v2.control.widget.Slider;
+import cam72cam.mod.gui_v2.control.widget.TextField;
 import cam72cam.mod.text.PlayerMessage;
 
 import java.util.function.Consumer;
