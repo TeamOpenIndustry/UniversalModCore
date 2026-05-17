@@ -1,21 +1,21 @@
 package cam72cam.mod.gui_v2.control;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.core.actions.*;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
         implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener {
     private final List<ILayoutable<?>> children;
+    private final List<ILayoutable<?>> controller;
 
     private IFocusable active;
 
@@ -23,6 +23,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         super();
         this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
+        this.controller = new ArrayList<>();
 
 //        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
@@ -42,7 +43,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             }
             this.children.add(child);
             if (child instanceof AbstractWidget<?>) {
-                ((AbstractWidget<?>)child).parent = this;
+                ((AbstractWidget<?>) child).parent = this;
             }
         }
         layout(this.x(), this.y());
@@ -56,11 +57,29 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         return children.stream().filter(ILayoutable::isVisible).collect(Collectors.toList());
     }
 
+    public void clearChildren() {
+        this.children.clear();
+    }
+
+    protected void addController(ILayoutable<?> ctrl) {
+        this.controller.add(ctrl);
+        if (ctrl instanceof AbstractWidget<?>) {
+            ((AbstractWidget<?>) ctrl).parent = this;
+        }
+    }
+
     public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
-        stack.push(this);
+        stack.pushPanel(this);
         this.getVisibleChildren().forEach(child -> {
             stack.push(child);
             drawWidget(child, renderer, stack);
+            stack.pop();
+        });
+        stack.pop();
+        stack.push(this);
+        this.controller.forEach(ctrl -> {
+            stack.push(ctrl);
+            drawWidget(ctrl, renderer, stack);
             stack.pop();
         });
         drawWidget(this, renderer, stack);
@@ -90,14 +109,42 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         renderer.drawRect(x(), y() + height()-1, width(), 1, argb);
     }
 
+    /* Indicate actual range excluded panel basics like ScrollPane's scroll bar */
+    public int panelX() {
+        return x();
+    }
+    public int panelY() {
+        return y();
+    }
+    public int panelWidth() {
+        return width();
+    }
+    public int panelHeight() {
+        return height();
+    }
+
+    protected boolean isHoveringPanel() {
+        return isHoveringPanel(GuiUtils.getMouseX(), GuiUtils.getMouseY());
+    }
+    protected boolean isHoveringPanel(int mouseX, int mouseY) {
+        boolean flag = true;
+        if (parent != null) {
+            flag = parent.isHovering(mouseX, mouseY);
+        }
+        return flag && mouseX >= this.panelX() && mouseX <= this.panelX() + this.width()
+                    && mouseY >= this.panelY() && mouseY <= this.panelY() + this.height();
+    }
+
     @Override
     public boolean onClick(Player.Hand hand, int x, int y) {
         if (!isHovering()) {
             return false;
         }
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IClickable)
-                       .anyMatch(c -> ((IClickable) c).onClick(hand, x, y));
+        if (castedStream(controller, IClickable.class).anyMatch(c -> c.onClick(hand, x, y))) {
+            return true;
+        }
+        return isHoveringPanel() && castedStream(getVisibleChildren(), IClickable.class)
+                .anyMatch(c -> c.onClick(hand, x, y));
     }
 
     @Override
@@ -105,13 +152,14 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (active instanceof IDraggable) {
             return ((IDraggable) active).onDrag(hand, mouseX, mouseY);
         }
-        //Defaults
         if (!isHovering()) {
             return false;
         }
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IDraggable)
-                       .anyMatch(c -> ((IDraggable) c).onDrag(hand, mouseX, mouseY));
+        if (castedStream(controller, IDraggable.class).anyMatch(c -> c.onDrag(hand, mouseX, mouseY))) {
+            return true;
+        }
+        return isHoveringPanel() && castedStream(getVisibleChildren(), IDraggable.class)
+                .anyMatch(c -> c.onDrag(hand, mouseX, mouseY));
     }
 
     @Override
@@ -119,13 +167,14 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (active instanceof IDraggable) {
             return ((IDraggable) active).onRelease(hand, mouseX, mouseY);
         }
-        //Defaults
         if (!isHovering()) {
             return false;
         }
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IDraggable)
-                       .anyMatch(c -> ((IDraggable) c).onRelease(hand, mouseX, mouseY));
+        if (castedStream(controller, IDraggable.class).anyMatch(c -> c.onRelease(hand, mouseX, mouseY))) {
+            return true;
+        }
+        return isHoveringPanel() && castedStream(getVisibleChildren(), IDraggable.class)
+                .anyMatch(c -> c.onRelease(hand, mouseX, mouseY));
     }
 
     @Override
@@ -133,19 +182,17 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (!isHovering()) {
             return false;
         }
-
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IScrollable)
-                       .anyMatch(c -> ((IScrollable) c).onScroll(mouseX, mouseY, deltaScroll));
+        if (castedStream(controller, IScrollable.class).anyMatch(c -> c.onScroll(mouseX, mouseY, deltaScroll))) {
+            return true;
+        }
+        return isHoveringPanel() && castedStream(getVisibleChildren(), IScrollable.class)
+                .anyMatch(c -> c.onScroll(mouseX, mouseY, deltaScroll));
     }
 
     @Override
     public void onTick() {
-        for (ILayoutable<?> child : getVisibleChildren()) {
-            if (child instanceof IUpdatable) {
-                ((IUpdatable) child).onTick();
-            }
-        }
+        castedStream(controller, IUpdatable.class).forEach(IUpdatable::onTick);
+        castedStream(getVisibleChildren(), IUpdatable.class).forEach(IUpdatable::onTick);
     }
 
     @Override
@@ -153,21 +200,23 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (active instanceof IKeyboardListener) {
             return ((IKeyboardListener) active).onKeyPressed(key);
         }
-
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IKeyboardListener)
-                       .anyMatch(c -> ((IKeyboardListener) c).onKeyPressed(key));
+        if (castedStream(controller, IKeyboardListener.class).anyMatch(c -> c.onKeyPressed(key))) {
+            return true;
+        }
+        return castedStream(getVisibleChildren(), IKeyboardListener.class)
+                .anyMatch(c -> c.onKeyPressed(key));
     }
 
     @Override
     public boolean onCharTyped(char ch) {
         if (active instanceof IKeyboardListener) {
-            return ((IKeyboardListener) active).onCharTyped(ch);
+            if (((IKeyboardListener) active).onCharTyped(ch)) return true;
         }
-
-        return getVisibleChildren().stream()
-                       .filter(c -> c instanceof IKeyboardListener)
-                       .anyMatch(c -> ((IKeyboardListener) c).onCharTyped(ch));
+        if (castedStream(controller, IKeyboardListener.class).anyMatch(c -> c.onCharTyped(ch))) {
+            return true;
+        }
+        return castedStream(getVisibleChildren(), IKeyboardListener.class)
+                .anyMatch(c -> c.onCharTyped(ch));
     }
 
     @Override
@@ -183,7 +232,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.active = focusing;
     }
     @Override
-    protected void freeFocus() {
+    public void freeFocus() {
         if (this.parent != null) {
             super.freeFocus();
             return;
@@ -192,5 +241,9 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             this.active.onFocusLost();
         }
         this.active = null;
+    }
+
+    private static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1) {
+        return elements.stream().filter(interface1::isInstance).map(interface1::cast);
     }
 }

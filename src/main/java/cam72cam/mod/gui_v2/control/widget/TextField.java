@@ -22,7 +22,9 @@ public class TextField extends AbstractWidget<TextField>
     private Predicate<String> validator = Predicates.alwaysTrue();
     private int cursorPos = 0;
     private int textOffsetX = 0;
-    private int selectionStart = -1;
+
+    private boolean hasSelection = false;
+    private int selectionStart = 0;
 
     private int cursorBlinkTimer = 0;
 
@@ -81,11 +83,11 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     public boolean hasSelection() {
-        return selectionStart >= 0 && selectionStart != cursorPos;
+        return hasSelection;
     }
 
     public String getSelectedText() {
-        if (!hasSelection()) return "";
+        if (!hasSelection) return "";
         int start = Math.min(selectionStart, cursorPos);
         int end = Math.max(selectionStart, cursorPos);
         return text.substring(start, end);
@@ -139,7 +141,10 @@ public class TextField extends AbstractWidget<TextField>
         }
 
         if (Keyboard.isPressingShift()) {
-            if (selectionStart < 0) selectionStart = cursorPos;
+            if (!hasSelection) {
+                hasSelection = true;
+                selectionStart = cursorPos;
+            }
         } else {
             clearSelection();
         }
@@ -152,7 +157,8 @@ public class TextField extends AbstractWidget<TextField>
         if (!focusing) return false;
 
         //Start dragging
-        if (selectionStart < 0) {
+        if (!hasSelection) {
+            hasSelection = true;
             selectionStart = cursorPos;
         }
 
@@ -196,7 +202,10 @@ public class TextField extends AbstractWidget<TextField>
         switch (key) {
             case LEFT:
                 if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
+                    if (!hasSelection) {
+                        hasSelection = true;
+                        selectionStart = cursorPos;
+                    }
                 } else {
                     clearSelection();
                 }
@@ -204,7 +213,10 @@ public class TextField extends AbstractWidget<TextField>
                 return true;
             case RIGHT:
                 if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
+                    if (!hasSelection) {
+                        hasSelection = true;
+                        selectionStart = cursorPos;
+                    }
                 } else {
                     clearSelection();
                 }
@@ -212,7 +224,10 @@ public class TextField extends AbstractWidget<TextField>
                 return true;
             case HOME:
                 if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
+                    if (!hasSelection) {
+                        hasSelection = true;
+                        selectionStart = cursorPos;
+                    }
                 } else {
                     clearSelection();
                 }
@@ -220,7 +235,10 @@ public class TextField extends AbstractWidget<TextField>
                 return true;
             case END:
                 if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
+                    if (!hasSelection) {
+                        hasSelection = true;
+                        selectionStart = cursorPos;
+                    }
                 } else {
                     clearSelection();
                 }
@@ -253,6 +271,7 @@ public class TextField extends AbstractWidget<TextField>
                 return true;
             case A:
                 if (Keyboard.isPressingCtrl()) {
+                    hasSelection = true;
                     selectionStart = 0;
                     setCursorPos(text.length());
                     return true;
@@ -325,11 +344,12 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     private void clearSelection() {
-        selectionStart = -1;
+        hasSelection = false;
+        selectionStart = 0;
     }
 
     private void deleteSelection() {
-        if (!hasSelection()) return;
+        if (!hasSelection) return;
         int start = Math.min(selectionStart, cursorPos);
         int end = Math.max(selectionStart, cursorPos);
         String newText = text.substring(0, start) + text.substring(end);
@@ -366,8 +386,6 @@ public class TextField extends AbstractWidget<TextField>
             if (txt.hasSelection()) {
                 int start = Math.min(txt.selectionStart, txt.cursorPos);
                 int end = Math.max(txt.selectionStart, txt.cursorPos);
-                start = Math.max(0, Math.min(txt.text.length(), start));
-                end = Math.max(0, Math.min(txt.text.length(), end));
                 int selX1 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, start));
                 int selX2 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, end));
                 gui.drawRect(selX1, yOff, selX2 - selX1, GuiRenderer.TEXT_HEIGHT, 0xFF0080FF);

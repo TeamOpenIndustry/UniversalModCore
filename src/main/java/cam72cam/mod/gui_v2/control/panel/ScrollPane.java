@@ -3,9 +3,7 @@ package cam72cam.mod.gui_v2.control.panel;
 import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.control.widget.Slider;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
-import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.IScrollable;
-import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 
 //TODO Controller position and visibility
@@ -19,7 +17,7 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
         super(width, height);
         this.controller = Slider.vertical(10, height, PlayerMessage.direct(""),
                                           0, 1, 0, 0, this::onControllerChange);
-        this.addChildren(this.controller);
+        addController(controller);
     }
 
     public static ScrollPane vertical(int width, int height) {
@@ -31,7 +29,7 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
         this.setX(x);
         this.setY(y);
 
-        contentHeight = getVisibleChildren().stream().filter(c -> c != controller).mapToInt(ILayoutable::height).sum();
+        contentHeight = getVisibleChildren().stream().mapToInt(ILayoutable::height).sum();
 
         double maxScroll = contentHeight - height();
         if (maxScroll <= 0) {
@@ -49,9 +47,6 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
 
         int currentY = y() - (int) scrollOffset;
         for (ILayoutable<?> widget : getVisibleChildren()) {
-            if (widget == controller) {
-                continue;
-            }
             widget.setX(x());
             widget.setY(currentY);
             widget.layout(x(), currentY);
@@ -62,8 +57,8 @@ public class ScrollPane extends AbstractPanel<ScrollPane> implements IScrollable
     }
 
     @Override
-    public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
-        super.renderPanel(renderer, stack);
+    public int panelWidth() {
+        return super.width() - controller.width();
     }
 
     @Override

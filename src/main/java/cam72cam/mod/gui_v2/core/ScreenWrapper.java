@@ -53,7 +53,10 @@ public class ScreenWrapper extends GuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         //TODO Mouse key detection
-        root.onClick(Player.Hand.PRIMARY, mouseX, mouseY);
+        if (!root.onClick(Player.Hand.PRIMARY, mouseX, mouseY)) {
+            //If clicked nothing we should free current one
+            root.freeFocus();
+        }
     }
 
     @Override

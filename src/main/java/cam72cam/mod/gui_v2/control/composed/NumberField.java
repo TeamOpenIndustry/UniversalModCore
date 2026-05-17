@@ -51,6 +51,7 @@ public class NumberField extends ComposedWidget<NumberField> {
         this.onButtonChange();
     }
 
+    //TODO Use HBox for auto scaling
     @Override
     public void setWidth(int width) {
         super.setWidth(width);

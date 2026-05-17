@@ -4,6 +4,8 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.ITooltipper;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
+import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -14,6 +16,7 @@ import cam72cam.mod.util.With;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class Button extends AbstractWidget<Button>
         implements IClickable, ITooltipper {
@@ -59,6 +62,18 @@ public class Button extends AbstractWidget<Button>
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
             gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
+        });
+        return button;
+    }
+
+    public static Button item(ItemStack stack, Consumer<Button> callback) {
+        Button button = new Button(GuiRenderer.ITEM_SIZE, GuiRenderer.ITEM_SIZE, PlayerMessage.direct(""),
+                                   ((hand, btn) -> callback.accept(btn)));
+        button.setBackgroundRenderFunc((gui, btn) -> {
+//            gui.drawRect(btn.x(), btn.y(), btn.width(), btn.height(), 0x00000000);
+        });
+        button.setRenderFunc((gui, btn) -> {
+            gui.drawItem(stack, btn.x(), btn.y());
         });
         return button;
     }

@@ -1,5 +1,6 @@
 package cam72cam.mod.gui_v2.core;
 
+import cam72cam.mod.gui_v2.control.AbstractPanel;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -20,7 +21,11 @@ public class ScissorStack {
     }
 
     public void push(ILayoutable<?> widget) {
-        push(new Rectangle(widget.x(), widget.y() + 1, widget.width(), widget.height() + 1));
+        push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height() + 1));
+    }
+
+    public void pushPanel(AbstractPanel<?> panel) {
+        push(new Rectangle(panel.panelX(), panel.panelY(), panel.panelWidth(), panel.panelHeight() + 1));
     }
 
     public void push(int x, int y, int width, int height) {

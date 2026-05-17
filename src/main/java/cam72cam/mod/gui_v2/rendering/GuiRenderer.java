@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -22,6 +23,7 @@ import util.Matrix4;
 public class GuiRenderer {
     public static final Texture VANILLA_BUTTON = Texture.wrap(new Identifier("textures/gui/widgets.png"));
     public static int TEXT_HEIGHT = 8;
+    public static final int ITEM_SIZE = 16;
 
     private final GuiScreen instance;
 
@@ -272,8 +274,10 @@ public class GuiRenderer {
     public void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
         RenderState state = new RenderState();
         state.model_view().multiply(matrix);
+        RenderHelper.enableGUIStandardItemLighting();
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         }
+        RenderHelper.disableStandardItemLighting();
     }
 }
