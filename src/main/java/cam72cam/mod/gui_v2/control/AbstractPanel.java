@@ -58,7 +58,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 
     public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
         stack.push(this);
-        this.children.stream().filter(ILayoutable::isVisible).forEach(child -> {
+        this.getVisibleChildren().forEach(child -> {
             stack.push(child);
             drawWidget(child, renderer, stack);
             stack.pop();
@@ -95,7 +95,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (!isHovering()) {
             return false;
         }
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IClickable)
                        .anyMatch(c -> ((IClickable) c).onClick(hand, x, y));
     }
@@ -109,7 +109,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (!isHovering()) {
             return false;
         }
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IDraggable)
                        .anyMatch(c -> ((IDraggable) c).onDrag(hand, mouseX, mouseY));
     }
@@ -123,7 +123,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (!isHovering()) {
             return false;
         }
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IDraggable)
                        .anyMatch(c -> ((IDraggable) c).onRelease(hand, mouseX, mouseY));
     }
@@ -134,14 +134,14 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             return false;
         }
 
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IScrollable)
                        .anyMatch(c -> ((IScrollable) c).onScroll(mouseX, mouseY, deltaScroll));
     }
 
     @Override
     public void onTick() {
-        for (ILayoutable<?> child : children) {
+        for (ILayoutable<?> child : getVisibleChildren()) {
             if (child instanceof IUpdatable) {
                 ((IUpdatable) child).onTick();
             }
@@ -154,7 +154,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             return ((IKeyboardListener) active).onKeyPressed(key);
         }
 
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IKeyboardListener)
                        .anyMatch(c -> ((IKeyboardListener) c).onKeyPressed(key));
     }
@@ -165,7 +165,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             return ((IKeyboardListener) active).onCharTyped(ch);
         }
 
-        return children.stream()
+        return getVisibleChildren().stream()
                        .filter(c -> c instanceof IKeyboardListener)
                        .anyMatch(c -> ((IKeyboardListener) c).onCharTyped(ch));
     }

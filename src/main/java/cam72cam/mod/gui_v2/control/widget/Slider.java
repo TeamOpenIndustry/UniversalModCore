@@ -138,6 +138,11 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     @Override
+    public boolean isFocusing() {
+        return this.isDragging;
+    }
+
+    @Override
     public void onFocusGained() {
         this.isDragging = true;
     }

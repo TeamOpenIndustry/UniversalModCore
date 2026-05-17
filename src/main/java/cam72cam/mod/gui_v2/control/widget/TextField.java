@@ -232,6 +232,11 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     @Override
+    public boolean isFocusing() {
+        return focusing;
+    }
+
+    @Override
     public void onFocusGained() {
         focusing = true;
         cursorBlinkTimer = 0;

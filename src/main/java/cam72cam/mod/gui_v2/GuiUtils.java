@@ -2,6 +2,8 @@ package cam72cam.mod.gui_v2;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.gui_v2.control.AbstractWidget;
+import cam72cam.mod.gui_v2.control.PositionedPanel;
 import cam72cam.mod.gui_v2.core.ScreenWrapper;
 import cam72cam.mod.text.PlayerMessage;
 import net.minecraft.client.Minecraft;
@@ -40,6 +42,16 @@ public class GuiUtils {
 
     public static boolean isPrintable(char c) {
         return !Character.isISOControl(c) && Character.isDefined(c);
+    }
+
+    public static boolean insidePositionedPanel(AbstractWidget<?> widget) {
+        AbstractWidget<?> parent = widget;
+        while ((parent = parent.getParent()) != null) {
+            if (parent instanceof PositionedPanel) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Try to open an external link in player's browser */

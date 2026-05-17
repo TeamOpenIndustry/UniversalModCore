@@ -29,6 +29,12 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
+        if (this instanceof IFocusable && ((IFocusable) this).isFocusing()) {
+            parent.freeFocus();
+        }
+        if (GuiUtils.insidePositionedPanel(this)) {
+            requestLayout();
+        }
     }
 
     public boolean isVisible() {
@@ -79,6 +85,10 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
             flag = parent.isHovering(mouseX, mouseY);
         }
         return flag && mouseX >= this.x() && mouseX <= this.x() + this.width() && mouseY >= this.y() && mouseY <= this.y() + this.height();
+    }
+
+    public AbstractWidget<?> getParent() {
+        return parent;
     }
 
     /* ILayoutable */
