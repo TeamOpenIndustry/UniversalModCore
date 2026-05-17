@@ -24,15 +24,15 @@ public class NumberField extends ComposedWidget<NumberField> {
     public NumberField(int width, int height, PlayerMessage name, double min, double max, double orig, boolean allowDecimal, Consumer<Double> callback) {
         super(width, height);
         this.value = Math.max(min, Math.min(max, orig));
-        this.button = Button.vanilla(height, height, PlayerMessage.direct("↺"), (hand, btn) -> onButtonChange(btn));
+        this.button = Button.vanilla(height, height, PlayerMessage.direct("↺"), (hand, btn) -> onButtonChange());
         this.slider = Slider.horizontal(width - height, height, name, min, max, value, allowDecimal ? 4 : 0, this::onSliderChange);
         this.textField = new TextField(width - height, height, this::onTextChange) {
             @Override
             public void onFocusLost() {
                 super.onFocusLost();
                 String str = getText();
-                double d = str.isEmpty() ? slider.min : Double.parseDouble(str);
-                setText(String.format(formatter, Math.max(slider.min, Math.min(slider.max, d))));
+                double d = str.isEmpty() ? slider.getMinBound() : Double.parseDouble(str);
+                setText(String.format(formatter, Math.max(slider.getMinBound(), Math.min(slider.getMaxBound(), d))));
             }
         };
         this.textField.setValidator(this::verify);
@@ -45,7 +45,7 @@ public class NumberField extends ComposedWidget<NumberField> {
         this.addChildren(this.button, width - height, 0);
         //Wrapped true for triggering refreshment
         this.showSlider = false;
-        this.onButtonChange(null);
+        this.onButtonChange();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class NumberField extends ComposedWidget<NumberField> {
         }
     }
 
-    protected void onButtonChange(Button btn) {
+    protected void onButtonChange() {
         this.showSlider = !this.showSlider;
         if (this.showSlider) {
             this.textField.setVisible(false);

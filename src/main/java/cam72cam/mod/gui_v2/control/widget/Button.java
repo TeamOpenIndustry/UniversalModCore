@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 
 public class Button extends AbstractWidget<Button>
         implements IClickable, ITooltipper {
-    /**
+    /*
      * Handler consumer, called upon clicked
      * Hand -> PRIMARY is a left-click, SECONDARY is a right-click
      * Button -> Reference of self, as it may not be fully constructed
@@ -25,7 +25,7 @@ public class Button extends AbstractWidget<Button>
     protected BiConsumer<Player.Hand, Button> handler;
     protected List<PlayerMessage> tooltip;
 
-    /** Constructor with no rendering */
+    /* Constructor with no rendering */
     public Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
         this.setName(text);
         this.setBound(0, 0, width, height);
@@ -78,9 +78,6 @@ public class Button extends AbstractWidget<Button>
         return false;
     }
 
-    /**
-     * Set current widget's tooltip
-     */
     @Override
     public void setTooltip(List<PlayerMessage> text) {
         this.tooltip = text;

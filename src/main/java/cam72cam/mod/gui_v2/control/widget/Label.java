@@ -2,6 +2,7 @@ package cam72cam.mod.gui_v2.control.widget;
 
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
+import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 
 //TODO
@@ -14,7 +15,7 @@ public class Label extends AbstractWidget<Label> {
         this.setName(text);
         this.setNameColor(textColor);
         this.setWidth(GuiUtils.getTextWidth(text));
-        this.setHeight(8); //Default height
+        this.setHeight(GuiRenderer.TEXT_HEIGHT);
         this.formatted = text.internal.getFormattedText();
         this.setRenderFunc((gui, label) -> gui.drawString(formatted, x(), y(), getNameColor()));
     }

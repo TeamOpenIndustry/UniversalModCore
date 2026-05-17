@@ -19,10 +19,10 @@ public class Slider extends AbstractWidget<Slider>
 
     protected int handleSize;
 
-    protected double min;
-    protected double max;
-    protected double value;
-    protected int displayPrecision;
+    private double min;
+    private double max;
+    private double value;
+    private int displayPrecision;
 
     protected String formatted;
 
@@ -30,12 +30,6 @@ public class Slider extends AbstractWidget<Slider>
 
     @Nonnull
     protected Consumer<Slider> handler;
-
-    //TODO
-    // 1.Prefix/Suffix text
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
-        this(width, height, text, min, max, start, displayPrecision, handler, true);
-    }
 
     public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler, boolean isHorizontal) {
         this.setBound(0, 0, width, height);
@@ -70,6 +64,14 @@ public class Slider extends AbstractWidget<Slider>
         this.handler.accept(this);
     }
 
+    public double getMinBound() {
+        return min;
+    }
+
+    public double getMaxBound() {
+        return max;
+    }
+
     public void setSliderBound(double min, double max) {
         this.min = min;
         this.max = max;
@@ -90,6 +92,18 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     @Override
+    public void layout(int x, int y) {
+        this.setX(x);
+        this.setY(y);
+    }
+
+    @Override
+    public void setName(PlayerMessage text) {
+        super.setName(text);
+        this.formatName();
+    }
+
+    @Override
     public boolean onClick(Player.Hand hand, int x, int y) {
         if (!isHovering()) {
             return false;
@@ -106,23 +120,6 @@ public class Slider extends AbstractWidget<Slider>
         }
         updateSlider(mouseX, mouseY);
         return true;
-    }
-
-    protected void updateSlider(int mouseX, int mouseY) {
-        double ratio;
-
-        if (isHorizontal) {
-            double relX = mouseX - x() - handleSize / 2.0; //Slider bar size
-            ratio = relX / (width() - handleSize);
-        } else {
-            double relY = mouseY - y() - handleSize / 2.0;
-            ratio = relY / (height() - handleSize);
-        }
-
-        ratio = Math.max(0.0, Math.min(1.0, ratio));
-
-        double rawValue = min + ratio * (max - min);
-        setValue(Math.max(min, Math.min(max, rawValue)));
     }
 
     @Override
@@ -151,16 +148,32 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     @Override
-    public void layout(int x, int y) {
-        this.setX(x);
-        this.setY(y);
-    }
-
-    @Override
     public void postRender() {
         if (this.isDragging) {
             updateSlider(GuiUtils.getMouseX(), GuiUtils.getMouseY());
         }
+    }
+
+    protected void updateSlider(int mouseX, int mouseY) {
+        double ratio;
+
+        if (isHorizontal) {
+            double relX = mouseX - x() - handleSize / 2.0;
+            ratio = relX / (width() - handleSize);
+        } else {
+            double relY = mouseY - y() - handleSize / 2.0;
+            ratio = relY / (height() - handleSize);
+        }
+
+        ratio = Math.max(0.0, Math.min(1.0, ratio));
+
+        double rawValue = min + ratio * (max - min);
+        setValue(Math.max(min, Math.min(max, rawValue)));
+    }
+
+    private void formatName() {
+        String text = this.getName().internal.getFormattedText();
+        formatted = text.replace("slidValue", "%."+displayPrecision+"f");
     }
 
     public void setVanillaFacade() {
@@ -171,7 +184,7 @@ public class Slider extends AbstractWidget<Slider>
             double ratio = (slid.value - slid.min) / (slid.max - slid.min);
             ratio = Math.max(0.0, Math.min(1.0, ratio));
 
-            //Render slider bar
+            //Render slider handle
             if (slid.isHorizontal) {
                 int trackWidth = slid.width() - handleSize;
                 int handleX = slid.x() + (int) (ratio * trackWidth);
@@ -191,16 +204,5 @@ public class Slider extends AbstractWidget<Slider>
             gui.drawCenteredString(String.format(formatted, value),
                                    slid.x() + slid.width() / 2, slid.y() + (slid.height() - GuiRenderer.TEXT_HEIGHT) / 2, j);
         });
-    }
-
-    @Override
-    public void setName(PlayerMessage text) {
-        super.setName(text);
-        this.formatName();
-    }
-
-    private void formatName() {
-        String text = this.getName().internal.getFormattedText();
-        formatted = text.replace("slidValue", "%."+displayPrecision+"f");
     }
 }

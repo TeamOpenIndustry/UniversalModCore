@@ -41,125 +41,19 @@ public class TextField extends AbstractWidget<TextField>
         this.setVanillaFacade();
     }
 
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String newText) {
+        if (canApplyText(newText)) {
+            this.text = newText;
+            this.callback.accept(newText);
+        }
+    }
+
     public void setValidator(Predicate<String> validator) {
         this.validator = validator;
-    }
-
-    @Override
-    public void layout(int x, int y) {
-        setX(x);
-        setY(y);
-    }
-
-    @Override
-    public boolean onKeyPressed(Keyboard.KeyCode key) {
-        if (!focusing) return false;
-
-        switch (key) {
-            case LEFT:
-                if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
-                } else {
-                    clearSelection();
-                }
-                setCursorPos(cursorPos - 1);
-                return true;
-            case RIGHT:
-                if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
-                } else {
-                    clearSelection();
-                }
-                setCursorPos(cursorPos + 1);
-                return true;
-            case HOME:
-                if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
-                } else {
-                    clearSelection();
-                }
-                setCursorPos(0);
-                return true;
-            case END:
-                if (Keyboard.isPressingShift()) {
-                    if (selectionStart < 0) selectionStart = cursorPos;
-                } else {
-                    clearSelection();
-                }
-                setCursorPos(text.length());
-                return true;
-            case BACK:
-                if (hasSelection()) {
-                    deleteSelection();
-                } else if (cursorPos > 0) {
-                    String newText = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
-                    if (canApplyText(newText)) {
-                        if (cursorPos == newText.length()) {
-                            //Already at tail, don't move
-                            setCursorPos(cursorPos);
-                        } else {
-                            //Move front
-                            setCursorPos(cursorPos - 1);
-                        }
-                    }
-                }
-                return true;
-            case DELETE:
-                if (hasSelection()) {
-                    deleteSelection();
-                } else if (cursorPos < text.length()) {
-                    String newText = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
-                    canApplyText(newText);
-                    setCursorPos(cursorPos); //Trigger updates
-                }
-                return true;
-            case A:
-                if (Keyboard.isPressingCtrl()) {
-                    selectionStart = 0;
-                    setCursorPos(text.length());
-                    return true;
-                }
-                break;
-            case C:
-                if (Keyboard.isPressingCtrl()) {
-                    if (hasSelection()) {
-                        Clipboard.setClipboard(getSelectedText());
-                    }
-                    return true;
-                }
-                break;
-            case X:
-                if (Keyboard.isPressingCtrl()) {
-                    if (hasSelection()) {
-                        Clipboard.setClipboard(getSelectedText());
-                        deleteSelection();
-                    }
-                    return true;
-                }
-                break;
-            case V:
-                if (Keyboard.isPressingCtrl()) {
-                    String clipboard = Clipboard.getClipboard();
-                    if (!clipboard.isEmpty()) {
-                        insertText(clipboard);
-                    }
-                    return true;
-                }
-                break;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onCharTyped(char ch) {
-        if (!focusing) return false;
-        insertChar(ch);
-        return true;
-    }
-
-    @Override
-    public void onTick() {
-        cursorBlinkTimer ++;
     }
 
     public void setCursorPos(int newPos) {
@@ -186,77 +80,21 @@ public class TextField extends AbstractWidget<TextField>
         this.textOffsetX = newOffset;
     }
 
-    public void clearSelection() {
-        selectionStart = -1;
-    }
-
     public boolean hasSelection() {
         return selectionStart >= 0 && selectionStart != cursorPos;
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String newText) {
-        if (canApplyText(newText)) {
-            this.text = newText;
-            this.callback.accept(newText);
-        }
-    }
-
-    private boolean canApplyText(String newText) {
-        if (!validator.test(newText)) {
-            return false;
-        }
-        this.text = newText;
-        setCursorPos(cursorPos); //Trigger updates
-        if (callback != null) {
-            callback.accept(text);
-        }
-        return true;
-    }
-
-    private String getSelectedText() {
+    public String getSelectedText() {
         if (!hasSelection()) return "";
         int start = Math.min(selectionStart, cursorPos);
         int end = Math.max(selectionStart, cursorPos);
         return text.substring(start, end);
     }
 
-    private void deleteSelection() {
-        if (!hasSelection()) return;
-        int start = Math.min(selectionStart, cursorPos);
-        int end = Math.max(selectionStart, cursorPos);
-        String newText = text.substring(0, start) + text.substring(end);
-        if (canApplyText(newText)) {
-            setCursorPos(start);
-            clearSelection();
-        }
-    }
-
-    private void insertChar(char c) {
-        insertText(String.valueOf(c));
-    }
-
-    private void insertText(String str) {
-        deleteSelection();
-        String newText = text.substring(0, cursorPos) + str + text.substring(cursorPos);
-        if (canApplyText(newText)) {
-            setCursorPos(cursorPos + str.length());
-        }
-    }
-
     @Override
-    public void setVisible(boolean visible) {
-        super.setVisible(visible);
-        this.clearSelection();
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
-        this.clearSelection();
+    public void layout(int x, int y) {
+        setX(x);
+        setY(y);
     }
 
     @Override
@@ -349,6 +187,168 @@ public class TextField extends AbstractWidget<TextField>
     @Override
     public boolean onRelease(Player.Hand hand, int mouseX, int mouseY) {
         return false;
+    }
+
+    @Override
+    public boolean onKeyPressed(Keyboard.KeyCode key) {
+        if (!focusing) return false;
+
+        switch (key) {
+            case LEFT:
+                if (Keyboard.isPressingShift()) {
+                    if (selectionStart < 0) selectionStart = cursorPos;
+                } else {
+                    clearSelection();
+                }
+                setCursorPos(cursorPos - 1);
+                return true;
+            case RIGHT:
+                if (Keyboard.isPressingShift()) {
+                    if (selectionStart < 0) selectionStart = cursorPos;
+                } else {
+                    clearSelection();
+                }
+                setCursorPos(cursorPos + 1);
+                return true;
+            case HOME:
+                if (Keyboard.isPressingShift()) {
+                    if (selectionStart < 0) selectionStart = cursorPos;
+                } else {
+                    clearSelection();
+                }
+                setCursorPos(0);
+                return true;
+            case END:
+                if (Keyboard.isPressingShift()) {
+                    if (selectionStart < 0) selectionStart = cursorPos;
+                } else {
+                    clearSelection();
+                }
+                setCursorPos(text.length());
+                return true;
+            case BACK:
+                if (hasSelection()) {
+                    deleteSelection();
+                } else if (cursorPos > 0) {
+                    String newText = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
+                    if (canApplyText(newText)) {
+                        if (cursorPos == newText.length()) {
+                            //Already at tail, don't move
+                            setCursorPos(cursorPos);
+                        } else {
+                            //Move front
+                            setCursorPos(cursorPos - 1);
+                        }
+                    }
+                }
+                return true;
+            case DELETE:
+                if (hasSelection()) {
+                    deleteSelection();
+                } else if (cursorPos < text.length()) {
+                    String newText = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
+                    canApplyText(newText);
+                    setCursorPos(cursorPos); //Trigger updates
+                }
+                return true;
+            case A:
+                if (Keyboard.isPressingCtrl()) {
+                    selectionStart = 0;
+                    setCursorPos(text.length());
+                    return true;
+                }
+                break;
+            case C:
+                if (Keyboard.isPressingCtrl()) {
+                    if (hasSelection()) {
+                        Clipboard.setClipboard(getSelectedText());
+                    }
+                    return true;
+                }
+                break;
+            case X:
+                if (Keyboard.isPressingCtrl()) {
+                    if (hasSelection()) {
+                        Clipboard.setClipboard(getSelectedText());
+                        deleteSelection();
+                    }
+                    return true;
+                }
+                break;
+            case V:
+                if (Keyboard.isPressingCtrl()) {
+                    String clipboard = Clipboard.getClipboard();
+                    if (!clipboard.isEmpty()) {
+                        insert(clipboard);
+                    }
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public void onTick() {
+        cursorBlinkTimer ++;
+    }
+
+    @Override
+    public boolean onCharTyped(char ch) {
+        if (!focusing) return false;
+        insert(ch);
+        return true;
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        this.clearSelection();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        this.clearSelection();
+    }
+
+    private boolean canApplyText(String newText) {
+        if (!validator.test(newText)) {
+            return false;
+        }
+        this.text = newText;
+        setCursorPos(cursorPos); //Trigger updates
+        if (callback != null) {
+            callback.accept(text);
+        }
+        return true;
+    }
+
+    private void clearSelection() {
+        selectionStart = -1;
+    }
+
+    private void deleteSelection() {
+        if (!hasSelection()) return;
+        int start = Math.min(selectionStart, cursorPos);
+        int end = Math.max(selectionStart, cursorPos);
+        String newText = text.substring(0, start) + text.substring(end);
+        if (canApplyText(newText)) {
+            setCursorPos(start);
+            clearSelection();
+        }
+    }
+
+    private void insert(char c) {
+        insert(String.valueOf(c));
+    }
+
+    private void insert(String str) {
+        deleteSelection();
+        String newText = text.substring(0, cursorPos) + str + text.substring(cursorPos);
+        if (canApplyText(newText)) {
+            setCursorPos(cursorPos + str.length());
+        }
     }
 
     public void setVanillaFacade() {
