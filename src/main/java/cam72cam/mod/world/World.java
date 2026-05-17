@@ -43,13 +43,13 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.common.SpecialPlantable;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
@@ -639,7 +639,7 @@ public class World {
         if (block instanceof BushBlock) {
             return true;
         }
-        if (block.asItem() instanceof SpecialPlantable) {
+        if (block.asItem() instanceof IPlantable) {
             return true;
         }
         if (block instanceof LiquidBlock) {

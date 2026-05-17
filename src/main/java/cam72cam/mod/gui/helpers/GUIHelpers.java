@@ -28,7 +28,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;

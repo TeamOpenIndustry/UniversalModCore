@@ -6,6 +6,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -16,14 +17,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 
 import java.util.List;
 import java.util.UUID;
 
 /** Seat construct to make multiple riders actually work */
-public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
+public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
     static final ResourceLocation ID = ResourceLocation.tryBuild(ModCore.MODID, "seat");
     public static final EntityType<SeatEntity> TYPE = makeType();
 
@@ -213,7 +214,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
+    public void writeSpawnData(FriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.setUUID("parent", parent);
         data.setUUID("passenger", passenger);
@@ -221,7 +222,7 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public void readSpawnData(RegistryFriendlyByteBuf additionalData) {
+    public void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         parent = data.getUUID("parent");
         passenger = data.getUUID("passenger");

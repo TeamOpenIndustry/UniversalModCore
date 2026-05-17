@@ -17,13 +17,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.ICancellableEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.*;
-import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
-import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -128,7 +126,7 @@ public class ClientEvents {
             MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDeltaY() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
-                ((ICancellableEvent)event).setCanceled(true);
+                event.setCanceled(true);
                 if (action != MouseAction.SCROLL) {
                     // Apparently cancelling this input event only cancels it for the *GUI* handlers, not all input handlers
                     // Therefore we need to track that ourselves.  Thanks for changing that from 1.12.2-forge

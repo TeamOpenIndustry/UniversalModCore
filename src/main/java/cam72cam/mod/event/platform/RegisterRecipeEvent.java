@@ -8,8 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.neoforged.bus.api.Event;
-import net.neoforged.fml.event.IModBusEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.fml.event.IModBusEvent;
 
 /**
  * Fired when recipe datapacks are reloaded

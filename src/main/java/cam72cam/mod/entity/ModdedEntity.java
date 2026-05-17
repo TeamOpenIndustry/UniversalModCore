@@ -12,6 +12,7 @@ import cam72cam.mod.util.SingleCache;
 import net.minecraft.core.registries.BuiltInRegistries;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
@@ -24,9 +25,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Internal class which extends MC's Entity.  Do not use directly */
-public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
+public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Reference to the entity that this is representing
     private CustomEntity self;
 
@@ -192,7 +193,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see #load */
     @Override
-    public final void readSpawnData(RegistryFriendlyByteBuf additionalData) {
+    public final void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         if (cam72cam.mod.world.World.get(level()) == null) {
             // This can happen during a sudden disconnect...
@@ -207,7 +208,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public final void writeSpawnData(RegistryFriendlyByteBuf buffer) {
+    public final void writeSpawnData(FriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.set("sync", self.sync);
         save(data);

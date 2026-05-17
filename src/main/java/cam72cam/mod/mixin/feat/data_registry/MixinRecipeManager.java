@@ -15,7 +15,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.fml.ModLoader;
+import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -41,7 +41,7 @@ public abstract class MixinRecipeManager extends SimpleJsonResourceReloadListene
                                @Local RegistryOps<JsonElement> ops) {
         RegistryUtil.recipeBuildingContext(this.makeConditionalOps().context);
         RegisterRecipeEvent event = new RegisterRecipeEvent(builder, builder1);
-        ModLoader.postEvent(event);
+        ModLoader.get().postEvent(event);
         RegistryUtil.recipeBuildingContext(null);
     }
 }

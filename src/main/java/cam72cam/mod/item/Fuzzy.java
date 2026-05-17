@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.common.Tags;
+import net.minecraftforge.common.Tags;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,7 +30,7 @@ public class Fuzzy {
 
     public static final Fuzzy STONE_SLAB = new Fuzzy("slabStone").add(Items.STONE_SLAB);
     public static final Fuzzy STONE_BRICK = new Fuzzy(ItemTags.STONE_BRICKS, "brickStone").add(Blocks.STONE_BRICKS);
-    public static final Fuzzy SAND = new Fuzzy(Tags.Items.SANDS, "sand").add(Blocks.SAND);
+    public static final Fuzzy SAND = new Fuzzy(Tags.Items.SAND, "sand").add(Blocks.SAND);
     public static final Fuzzy PISTON = new Fuzzy("piston").add(Items.PISTON);
 
     public static final Fuzzy GOLD_INGOT = new Fuzzy(Tags.Items.INGOTS_GOLD, "ingotGold").add(Items.GOLD_INGOT);
@@ -41,7 +41,7 @@ public class Fuzzy {
     public static final Fuzzy IRON_BARS = new Fuzzy("barsIron").add(Blocks.IRON_BARS);
 
     public static final Fuzzy NETHER_BRICK = new Fuzzy("brickNether").add(Blocks.NETHER_BRICKS);
-    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy(Tags.Items.GRAVELS, "gravel").add(Blocks.GRAVEL);
+    public static final Fuzzy GRAVEL_BLOCK = new Fuzzy(Tags.Items.GRAVEL, "gravel").add(Blocks.GRAVEL);
     public static final Fuzzy BRICK_BLOCK = new Fuzzy("brickBlock").add(Blocks.BRICKS);
     public static final Fuzzy COBBLESTONE = new Fuzzy(Tags.Items.COBBLESTONES, "cobblestone").add(Blocks.COBBLESTONE);
     public static final Fuzzy CONCRETE = new Fuzzy("concrete")

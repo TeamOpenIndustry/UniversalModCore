@@ -2,8 +2,8 @@ package cam72cam.mod.resource;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.Resource;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;

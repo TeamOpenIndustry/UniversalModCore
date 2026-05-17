@@ -9,7 +9,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.event.EventHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.List;
 import java.util.UUID;
@@ -247,7 +247,7 @@ public class Entity {
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
         Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP);
-        if (EventHooks.onExplosionStart(getWorld().internal, explosion)) return;
+        if (ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.explode();
         explosion.finalizeExplosion(true);
     }

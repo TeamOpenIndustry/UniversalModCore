@@ -23,10 +23,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.network.IContainerFactory;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.network.IContainerFactory;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;

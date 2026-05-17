@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
+import net.minecraftforge.client.gui.widget.ForgeSlider;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -23,7 +23,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     private TextField active = null;
     private final Supplier<Boolean> valid;
     private GuiGraphics graphics;
-    private ExtendedSlider dragging;
+    private ForgeSlider dragging;
 
     public ScreenBuilder(IScreen screen, Supplier<Boolean> valid) {
         super(Component.literal(""));
@@ -167,7 +167,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
         for (AbstractWidget btn : this.buttonMap.keySet()) {
             if (btn.mouseClicked(x, y, button)) {
-                if (btn instanceof ExtendedSlider slider) {
+                if (btn instanceof ForgeSlider slider) {
                     dragging = slider;
                 }
                 return true;

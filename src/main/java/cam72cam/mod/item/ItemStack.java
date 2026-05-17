@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.neoforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidUtil;
 
 import java.util.function.Supplier;
 

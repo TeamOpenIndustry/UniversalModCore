@@ -15,7 +15,6 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;

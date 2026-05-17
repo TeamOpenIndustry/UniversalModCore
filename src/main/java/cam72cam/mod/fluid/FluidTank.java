@@ -5,7 +5,7 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 import cam72cam.mod.serialization.TagMapper;
 import cam72cam.mod.util.RegistryUtil;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 @TagMapped(FluidTank.Mapper.class)
 public class FluidTank implements ITank {
     // TODO clean up capacity crap.  Probably just want to implement my own fluid handler from scratch TBH
-    public final net.neoforged.neoforge.fluids.capability.templates.FluidTank internal;
+    public final net.minecraftforge.fluids.capability.templates.FluidTank internal;
 
     private Supplier<List<Fluid>> filter;
     private final Set<Runnable> onChange = new HashSet<>();
@@ -26,7 +26,7 @@ public class FluidTank implements ITank {
     }
 
     public FluidTank(FluidStack fluidStack, int capacity) {
-        internal = new net.neoforged.neoforge.fluids.capability.templates.FluidTank(capacity) {
+        internal = new net.minecraftforge.fluids.capability.templates.FluidTank(capacity) {
             public void onContentsChanged() {
                 FluidTank.this.onChange();
             }
@@ -73,7 +73,7 @@ public class FluidTank implements ITank {
     @Override
     public boolean allows(Fluid fluid) {
         return (filter == null || filter.get() == null || filter.get().contains(fluid)) &&
-                fluid.internal.stream().anyMatch(f -> internal.isFluidValid(new net.neoforged.neoforge.fluids.FluidStack(f, 1)));
+                fluid.internal.stream().anyMatch(f -> internal.isFluidValid(new net.minecraftforge.fluids.FluidStack(f, 1)));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class FluidTank implements ITank {
     @Override
     public FluidStack drain(FluidStack fluidStack, boolean simulate) {
         if (!allows(fluidStack.getFluid())) {
-            return new FluidStack(net.neoforged.neoforge.fluids.FluidStack.EMPTY);
+            return new FluidStack(net.minecraftforge.fluids.FluidStack.EMPTY);
         }
         return new FluidStack(internal.drain(fluidStack.internal, simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE));
     }

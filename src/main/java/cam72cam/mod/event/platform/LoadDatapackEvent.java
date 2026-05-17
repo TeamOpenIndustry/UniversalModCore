@@ -9,8 +9,8 @@ import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.world.flag.FeatureFlagSet;
-import net.neoforged.bus.api.Event;
-import net.neoforged.fml.event.IModBusEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.fml.event.IModBusEvent;
 
 import java.util.List;
 import java.util.Optional;

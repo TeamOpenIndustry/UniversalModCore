@@ -1,7 +1,7 @@
 package cam72cam.mod.item;
 
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 public interface IInventory {
     /** Wraps MC construct.  Do not use */
