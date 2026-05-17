@@ -1,6 +1,5 @@
 package cam72cam.mod.gui_v2.control.widget;
 
-import cam72cam.immersiverailroading.util.MathUtil;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
@@ -19,7 +18,7 @@ public class TextField extends AbstractWidget<TextField>
     private static final int SPAN = GuiRenderer.TEXT_HEIGHT / 2;
 
     private String text;
-    private Consumer<String> callback;
+    private final Consumer<String> callback;
     private Predicate<String> validator = Predicates.alwaysTrue();
     private int cursorPos = 0;
     private int textOffsetX = 0;
@@ -95,7 +94,13 @@ public class TextField extends AbstractWidget<TextField>
                 } else if (cursorPos > 0) {
                     String newText = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
                     if (canApplyText(newText)) {
-                        setCursorPos(cursorPos - 1);
+                        if (cursorPos == newText.length()) {
+                            //Already at tail, don't move
+                            setCursorPos(cursorPos);
+                        } else {
+                            //Move front
+                            setCursorPos(cursorPos - 1);
+                        }
                     }
                 }
                 return true;
@@ -158,7 +163,7 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     public void setCursorPos(int newPos) {
-        cursorPos = MathUtil.clamp(newPos, 0, text.length());
+        cursorPos = Math.max(0, Math.min(text.length(), newPos));
         cursorBlinkTimer = 0; //Reset blinker
 
         //Refine text offset to display in bounds
@@ -187,6 +192,17 @@ public class TextField extends AbstractWidget<TextField>
 
     public boolean hasSelection() {
         return selectionStart >= 0 && selectionStart != cursorPos;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String newText) {
+        if (canApplyText(newText)) {
+            this.text = newText;
+            this.callback.accept(newText);
+        }
     }
 
     private boolean canApplyText(String newText) {
@@ -232,6 +248,18 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        this.clearSelection();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        this.clearSelection();
+    }
+
+    @Override
     public boolean isFocusing() {
         return focusing;
     }
@@ -260,8 +288,7 @@ public class TextField extends AbstractWidget<TextField>
         int relativeX = mouseX - x() + textOffsetX;
         int bestPos = 0;
         int bestDist = Integer.MAX_VALUE;
-        int xOff = SPAN;
-        int currX = xOff;
+        int currX = SPAN;
         for (int i = 0; i <= text.length(); i++) {
             int dist = Math.abs(relativeX - currX);
             if (dist < bestDist) {
@@ -339,6 +366,8 @@ public class TextField extends AbstractWidget<TextField>
             if (txt.hasSelection()) {
                 int start = Math.min(txt.selectionStart, txt.cursorPos);
                 int end = Math.max(txt.selectionStart, txt.cursorPos);
+                start = Math.max(0, Math.min(txt.text.length(), start));
+                end = Math.max(0, Math.min(txt.text.length(), end));
                 int selX1 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, start));
                 int selX2 = xOff + GuiUtils.getTextWidth(txt.text.substring(0, end));
                 gui.drawRect(selX1, yOff, selX2 - selX1, GuiRenderer.TEXT_HEIGHT, 0xFF0080FF);

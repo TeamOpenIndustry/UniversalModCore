@@ -24,7 +24,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
 
-        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
+//        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
 
     public void addChildren(ILayoutable<?> child) {

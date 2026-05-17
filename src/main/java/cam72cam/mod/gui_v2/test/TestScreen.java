@@ -24,14 +24,19 @@ public class TestScreen extends ClientScreen {
         Label lab2 = Label.direct("label2");
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), btnTest);
         Button button3 = Button.textured(150, 20, PlayerMessage.direct("clicker3"), btnTest, new Identifier("textures/blocks/bedrock.png"));
+        NumberField numberField = new NumberField(150, 20, PlayerMessage.direct("Val: slidValue"), 0, 1, 0, true, d -> System.out.println("Val: " + d));
+        NumberField numberField1 = new NumberField(150, 20, PlayerMessage.direct("Val: slidValue"), 10, 100, 0, false, d -> System.out.println("Val: " + d));
         Slider horizontal = Slider.horizontal(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, 0,
                                               slider -> System.out.println(slider.getValue()));
         Slider vertical = Slider.vertical(20, 150, PlayerMessage.direct("slider"), 0, 1, 0, 0,
-                                          slider -> System.out.println(slider.getValue()));
+                                          slider -> {
+                                              System.out.println(slider.getValue());
+                                              numberField1.setWidth((int) (50 + slider.getValue() * 100));
+                                          });
         CheckBox checkBox = new CheckBox(PlayerMessage.direct("cb"), cb -> System.out.println(cb.isChecked()));
         TextField textField = new TextField(150, 20, txt -> System.out.println("Text: " + txt));
         ScrollPane pane = ScrollPane.vertical(160, 200);
-        vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, textField, vertical);
+        vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, textField, numberField, numberField1, vertical);
         pane.addChildren(vBox);
         root.addChildren(pane, HorizontalAlign.RIGHT, 0, VerticalAlign.BOTTOM, 0);
     }

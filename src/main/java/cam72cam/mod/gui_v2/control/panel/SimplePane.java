@@ -25,8 +25,8 @@ public class SimplePane extends PositionedPanel<SimplePane> {
             int childX = x + getChildRelX(child);
             int childY = y + getChildRelY(child);
             child.layout(childX, childY);
-            width = Math.max(child.width() + childX, width);
-            height = Math.max(child.height() + childY, height);
+            width = Math.max(child.width() + childX - x, width);
+            height = Math.max(child.height() + childY - y, height);
         }
         this.setWidth(width);
         this.setHeight(height);

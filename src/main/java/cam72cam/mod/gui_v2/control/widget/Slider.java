@@ -1,6 +1,5 @@
 package cam72cam.mod.gui_v2.control.widget;
 
-import cam72cam.immersiverailroading.util.MathUtil;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
@@ -10,7 +9,6 @@ import cam72cam.mod.gui_v2.core.actions.IFocusable;
 import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
-import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
@@ -41,13 +39,13 @@ public class Slider extends AbstractWidget<Slider>
 
     public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler, boolean isHorizontal) {
         this.setBound(0, 0, width, height);
-        this.setName(text);
         this.min = min;
         this.max = max;
         this.value = start;
         this.displayPrecision = displayPrecision;
         this.handler = handler;
         this.isHorizontal = isHorizontal;
+        this.setName(text);
 
         this.handleSize = 8; //Default
 
@@ -75,7 +73,7 @@ public class Slider extends AbstractWidget<Slider>
     public void setSliderBound(double min, double max) {
         this.min = min;
         this.max = max;
-        this.value = MathUtil.clamp(value, min, max);
+        this.value = Math.max(min, Math.min(value, max));
         this.handler.accept(this);
     }
 
