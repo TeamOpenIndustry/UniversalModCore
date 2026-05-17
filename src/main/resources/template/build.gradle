@@ -1,68 +1,122 @@
-//BUILDSCRIPT//
-buildscript {
-    repositories {
-        maven {
-            name "neoforgedReleases"
-            url "https://maven.neoforged.net/releases"
-        }
-        maven { url "https://plugins.gradle.org/m2/" }
-        mavenCentral()
-    }
-	dependencies {
-        classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
-        classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
-	}
-}
-
 //PLUGINS//
-apply plugin: 'net.neoforged.gradle.userdev'
-apply plugin: 'net.neoforged.gradle.common'
-apply plugin: 'eclipse'
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[7.0.23,8.0)'
+    id 'net.minecraftforge.jarjar' version '0.2.3'
+}
 
 //MINECRAFT//
-sourceSets {
-    main {
-        resources {
-            srcDirs = [
-                    "$rootDir/src/main/resources",
-                    "$rootDir/src/generated/resources"
-            ]
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+
+minecraft {
+    mappings channel: "official", version: "1.21.1"
+    accessTransformer = true
+
+    runs {
+        // applies to all the run configs below
+        configureEach {
+            workingDir.convention layout.projectDirectory.dir('run')
+            // Mixin requires either specifying the config via command line, or in the Manifest
+            args "--mixin.config=universalmodcore.feat.mixins.json", "--mixin.config=universalmodcore.fix.mixins.json"
+
+            systemProperty "mixin.debug.verbose", "true"
+            systemProperty "mixin.debug.export", "true"
+            // Recommended logging data for a userdev environment
+            // The markers can be added/remove as needed separated by commas.
+            // "SCAN": For mods scan.
+            // "REGISTRIES": For firing of registry events.
+            // "REGISTRYDUMP": For getting the contents of all registries.
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            // Recommended logging level for the console
+            // You can set various levels here.
+            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            systemProperty 'forge.logging.console.level', 'debug'
+        }
+
+        register('client') {
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            systemProperty 'forge.enabledGameTestNamespaces', 'universalmodcore'
+        }
+
+        register('server') {
+            systemProperty 'forge.enabledGameTestNamespaces', 'universalmodcore'
+            args '--nogui'
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        register('gameTestServer') {
+            systemProperty 'forge.enabledGameTestNamespaces', 'universalmodcore'
+        }
+
+        register('data') {
+            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+            // workingDirectory project.file('run-data')
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            args '--mod', 'universalmodcore', '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
     }
 }
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-
-        modSource project.sourceSets.main
-    }
-
-    client {
-        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
-    }
-
-    server {
-        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
-        argument '--nogui'
-    }
-
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', '#ID#'
-    }
-
-    data {arguments.addAll '--mod', '#ID#', '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-    }
-}
+sourceSets.main.resources { srcDir layout.projectDirectory.dir('src/generated/resources') }
 
 //DEPENDENCIES//
+
+// This methods registers jarJar for the default jar task.
+// The closure allows you to configure the task, instead of needing to do this:
+// tasks.named('jarJar', net.minecraftforge.jarjar.gradle.JarJar)
+jarJar.register() {
+    archiveClassifier = null
+}
+
 #UMC_REPO#
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Sponge'
+                url = 'https://repo.spongepowered.org/repository/maven-public'
+            }
+        }
+        filter {
+            includeGroupAndSubgroups('org.spongepowered')
+        }
+    }
+    mavenCentral()
+    mavenLocal()
+}
 
 dependencies {
-    implementation "net.neoforged:neoforge:21.1.216"
-    implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    implementation minecraft.dependency("net.minecraftforge:forge:1.21.1-52.1.14")
+    implementation(jarJar(group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')) {
+        jarJar.configure(it) {
+            module {
+                group = 'javax.vecmath'
+                name = 'vecmath'
+            }
+            version = "1.5.2"
+        }
+    }
+    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0'))
+    implementation(jarJar('io.github.llamalad7:mixinextras-forge:0.5.0')) {
+        jarJar.configure(it) {
+            module {
+                group = 'io.github.llamalad7'
+                name = 'mixinextras'
+            }
+            range = "[0.5.0,)"
+        }
+    }
     implementation #UMC_DEPENDENCY#
 }
 
@@ -76,7 +130,6 @@ jar {
                 "Implementation-Title": project.name,
                 "Implementation-Version": "${version}",
                 "Implementation-Vendor" :"#ID#",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
@@ -84,3 +137,19 @@ jar {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+// IntelliJ no longer downloads javadocs and sources by default, this tells Gradle to force IntelliJ to do it.
+idea.module { downloadJavadoc = downloadSources = true }
+
+eclipse {
+    // Eclipse no longer downloads javadocs and sources by default, this tells Gradle to force Eclipse to do it.
+    classpath { downloadJavadoc = downloadSources = true }
+
+    // NOTE: ForgeGradle 7 does not yet support Eclipse run configurations
+    // Run everytime eclipse builds the code
+    //autoBuildTasks genEclipseRuns
+    // Run when importing the project
+    //synchronizationTasks 'genEclipseRuns'
+}
+
+// NOTE: Merging of source sets is now controlled by the property 'net.minecraftforge.gradle.merge-source-sets'
