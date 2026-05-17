@@ -82,16 +82,15 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
 
     /* ILayoutable */
-    /* Don't directly make use of these fields! */
     private int x, y, width, height;
 
     @Override
-    public int y() {
-        return y;
-    }
-    @Override
     public int x() {
         return x;
+    }
+    @Override
+    public int y() {
+        return y;
     }
     @Override
     public int width() {
