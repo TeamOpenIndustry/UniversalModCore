@@ -1,6 +1,7 @@
 package cam72cam.mod.gui_v2.core;
 
 import cam72cam.mod.gui_v2.control.panel.AnchorPane;
+import cam72cam.mod.gui_v2.overlay.PostEffect;
 
 public abstract class ClientScreen {
     private ScreenWrapper internal;
@@ -14,6 +15,8 @@ public abstract class ClientScreen {
     public final void requestClose() {
         GuiManager.closeUMCScreen();
     }
+
+    public final void addEffect(PostEffect layer) {}
 
     void bootstrap(ScreenWrapper internal) {
         this.internal = internal;

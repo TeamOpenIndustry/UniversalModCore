@@ -13,12 +13,12 @@ public abstract class PositionedPanel<T extends PositionedPanel<T>> extends Abst
         super(width, height);
     }
 
-    public void addChildren(ILayoutable<?> child, int relX, int relY) {
+    public void addChildren(AbstractWidget<?> child, int relX, int relY) {
         super.addChildren(child);
         setChildPosition(child, relX, relY);
     }
 
-    public void setChildPosition(ILayoutable<?> child, int relX, int relY) {
+    public void setChildPosition(AbstractWidget<?> child, int relX, int relY) {
         if (!getChildren().contains(child)) {
             return;
         }

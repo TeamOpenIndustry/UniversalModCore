@@ -4,19 +4,27 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui_v2.GuiUtils;
 import cam72cam.mod.gui_v2.control.panel.AnchorPane;
+import cam72cam.mod.gui_v2.overlay.PostEffect;
+import cam72cam.mod.gui_v2.overlay.Tooltip;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ScreenWrapper extends GuiScreen {
     static ScreenWrapper instance;
 
     final ClientScreen clientScreen;
     final AnchorPane root;
+    final List<PostEffect> effects;
+    final Tooltip tooltip;
     final boolean pausesGame;
 
     static {
@@ -35,6 +43,9 @@ public class ScreenWrapper extends GuiScreen {
         this.pausesGame = pausesGame;
         screen.bootstrap(this);
         instance = this;
+        this.effects = new ArrayList<>();
+        tooltip = new Tooltip();
+        this.effects.add(tooltip);
     }
 
     public void layout() {
@@ -43,11 +54,26 @@ public class ScreenWrapper extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableDepth();
         GuiUtils.mouseX = mouseX;
         GuiUtils.mouseY = mouseY;
         GuiRenderer renderer = new GuiRenderer(this);
         ScissorStack stack = new ScissorStack();
         root.renderPanel(renderer, stack);
+        tooltip.setMessages(root.getTooltips());
+        renderEffects(renderer, mouseX, mouseY);
+        GlStateManager.enableDepth();
+        RenderHelper.enableStandardItemLighting();
+    }
+
+    private void renderEffects(GuiRenderer renderer, int mouseX, int mouseY) {
+        for (PostEffect effect : effects) {
+            if (effect.isAlive()) {
+                effect.drawAt(renderer, mouseX, mouseY);
+            }
+        }
+        effects.removeIf(e -> !e.isAlive());
     }
 
     @Override

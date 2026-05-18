@@ -1,6 +1,7 @@
 package cam72cam.mod.gui_v2.control.panel;
 
 import cam72cam.mod.gui_v2.GuiUtils;
+import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.control.PositionedPanel;
 import cam72cam.mod.gui_v2.core.layout.HorizontalAlign;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
@@ -21,39 +22,39 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
     }
 
     @Override
-    public void addChildren(ILayoutable<?> child, int relX, int relY) {
+    public void addChildren(AbstractWidget<?> child, int relX, int relY) {
         addChildren(child, HorizontalAlign.LEFT, relX, VerticalAlign.TOP, relY);
     }
 
     @Override
-    public void addChildren(Iterable<ILayoutable<?>> children) {
+    public void addChildren(Iterable<AbstractWidget<?>> children) {
         super.addChildren(children);
         for (ILayoutable<?> child : children) {
             anchorMap.put(child, new AnchorInfo(HorizontalAlign.LEFT, 0, VerticalAlign.TOP, 0));
         }
     }
 
-    public void addChildren(ILayoutable<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
+    public void addChildren(AbstractWidget<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
         super.addChildren(child);
         anchorMap.put(child, new AnchorInfo(hAlign, marginX, vAlign, marginY));
         requestLayout();
     }
 
-    public void setChildAnchor(ILayoutable<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
+    public void setChildAnchor(AbstractWidget<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
         if (!anchorMap.containsKey(child))
             throw new IllegalArgumentException("AnchorPane does not contain child");
         anchorMap.put(child, new AnchorInfo(hAlign, marginX, vAlign, marginY));
         requestLayout();
     }
 
-    public void setChildHorizontalAnchor(ILayoutable<?> child, HorizontalAlign hAlign, int marginX) {
+    public void setChildHorizontalAnchor(AbstractWidget<?> child, HorizontalAlign hAlign, int marginX) {
         AnchorInfo info = anchorMap.get(child);
         if (info == null)
             throw new IllegalArgumentException("AnchorPane does not contain child");
         setChildAnchor(child, hAlign, marginX, info.vAlign, info.marginY);
     }
 
-    public void setChildVerticalAnchor(ILayoutable<?> child, VerticalAlign vAlign, int marginY) {
+    public void setChildVerticalAnchor(AbstractWidget<?> child, VerticalAlign vAlign, int marginY) {
         AnchorInfo info = anchorMap.get(child);
         if (info == null)
             throw new IllegalArgumentException("AnchorPane does not contain child");
@@ -68,7 +69,7 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
         int panelW = width();
         int panelH = height();
 
-        for (ILayoutable<?> child : getVisibleChildren()) {
+        for (AbstractWidget<?> child : getVisibleChildren()) {
             AnchorInfo info = anchorMap.get(child);
             if (info != null) {
                 int relX = 0, relY = 0;

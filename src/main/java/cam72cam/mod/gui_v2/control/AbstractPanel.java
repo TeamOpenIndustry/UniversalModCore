@@ -7,15 +7,17 @@ import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.text.PlayerMessage;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
-        implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener {
-    private final List<ILayoutable<?>> children;
-    private final List<ILayoutable<?>> controller;
+        implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener, ITooltipProvider {
+    private final List<AbstractWidget<?>> children;
+    private final List<AbstractWidget<?>> controller;
 
     private IFocusable active;
 
@@ -28,32 +30,30 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
 //        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
 
-    public void addChildren(ILayoutable<?> child) {
+    public void addChildren(AbstractWidget<?> child) {
         addChildren(Collections.singleton(child));
     }
 
-    public void addChildren(ILayoutable<?>... children) {
+    public void addChildren(AbstractWidget<?>... children) {
         addChildren(Arrays.asList(children));
     }
 
-    public void addChildren(Iterable<ILayoutable<?>> children) {
-        for (ILayoutable<?> child : children) {
+    public void addChildren(Iterable<AbstractWidget<?>> children) {
+        for (AbstractWidget<?> child : children) {
             if (child == this) {
                 throw new IllegalArgumentException("Cannot add self as child panel!");
             }
             this.children.add(child);
-            if (child instanceof AbstractWidget<?>) {
-                ((AbstractWidget<?>) child).parent = this;
-            }
+            child.parent = this;
         }
         layout(this.x(), this.y());
     }
 
-    public List<ILayoutable<?>> getChildren() {
+    public List<AbstractWidget<?>> getChildren() {
         return children;
     }
 
-    public List<ILayoutable<?>> getVisibleChildren() {
+    public List<AbstractWidget<?>> getVisibleChildren() {
         return children.stream().filter(ILayoutable::isVisible).collect(Collectors.toList());
     }
 
@@ -61,11 +61,9 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.children.clear();
     }
 
-    protected void addController(ILayoutable<?> ctrl) {
+    protected void addController(AbstractWidget<?> ctrl) {
         this.controller.add(ctrl);
-        if (ctrl instanceof AbstractWidget<?>) {
-            ((AbstractWidget<?>) ctrl).parent = this;
-        }
+        ctrl.parent = this;
     }
 
     public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
@@ -243,7 +241,35 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.active = null;
     }
 
+    @Override
+    public List<PlayerMessage> getTooltips() {
+        if (!isHovering()) {
+            return null;
+        }
+        Optional<ITooltipProvider> optional = castedStream(controller, ITooltipProvider.class, AbstractWidget::isHovering)
+                .filter(c -> c.getTooltips() != null).findFirst();
+        if (optional.isPresent()) {
+            return optional.get().getTooltips();
+        }
+        if (isHoveringPanel()) {
+            optional = castedStream(getVisibleChildren(), ITooltipProvider.class, AbstractWidget::isHovering)
+                    .filter(c -> c.getTooltips() != null).findFirst();
+            if (optional.isPresent()) {
+                return optional.get().getTooltips();
+            }
+        }
+        return null;
+    }
+    @Override
+    public void setTooltip(List<PlayerMessage> text) {
+        //NO-OP
+    }
+
     private static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1) {
         return elements.stream().filter(interface1::isInstance).map(interface1::cast);
+    }
+
+    private static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1, Predicate<E> condition) {
+        return elements.stream().filter(condition).filter(interface1::isInstance).map(interface1::cast);
     }
 }

@@ -37,7 +37,6 @@ public class GuiRenderer {
     public void drawRect(int x, int y, int width, int height, int color) {
         try (With ctx = RenderContext.apply(
                 new RenderState().color(1, 1, 1, 1)
-                                 .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
         )) {
             Gui.drawRect(x, y, x + width, y + height, color);
         }

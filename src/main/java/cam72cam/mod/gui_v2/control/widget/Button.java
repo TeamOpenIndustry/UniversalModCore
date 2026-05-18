@@ -3,7 +3,7 @@ package cam72cam.mod.gui_v2.control.widget;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
-import cam72cam.mod.gui_v2.core.actions.ITooltipper;
+import cam72cam.mod.gui_v2.core.actions.ITooltipProvider;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
@@ -19,7 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class Button extends AbstractWidget<Button>
-        implements IClickable, ITooltipper {
+        implements IClickable, ITooltipProvider {
     /*
      * Handler consumer, called upon clicked
      * Hand -> PRIMARY is a left-click, SECONDARY is a right-click
@@ -35,6 +35,7 @@ public class Button extends AbstractWidget<Button>
         this.handler = handler;
 
         setVanillaFacade();
+        this.setTooltip(Collections.singletonList(this.getName()));
     }
 
     /* Semitic constructors */
@@ -94,13 +95,13 @@ public class Button extends AbstractWidget<Button>
     }
 
     @Override
-    public void setTooltip(List<PlayerMessage> text) {
-        this.tooltip = text;
+    public List<PlayerMessage> getTooltips() {
+        return this.tooltip;
     }
 
     @Override
-    public List<PlayerMessage> getTooltips() {
-        return Collections.singletonList(this.getName());
+    public void setTooltip(List<PlayerMessage> text) {
+        this.tooltip = text;
     }
 
     /* Facades */

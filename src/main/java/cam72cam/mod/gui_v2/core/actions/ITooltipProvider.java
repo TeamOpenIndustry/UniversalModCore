@@ -4,7 +4,7 @@ import cam72cam.mod.text.PlayerMessage;
 
 import java.util.List;
 
-public interface ITooltipper {
+public interface ITooltipProvider {
     List<PlayerMessage> getTooltips();
     void setTooltip(List<PlayerMessage> text);
 }

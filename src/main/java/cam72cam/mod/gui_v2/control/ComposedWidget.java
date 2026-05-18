@@ -4,21 +4,26 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.control.panel.SimplePane;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.*;
-import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderFunc;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.text.PlayerMessage;
+
+import java.util.Collections;
+import java.util.List;
 
 public abstract class ComposedWidget<T extends ComposedWidget<T>> extends AbstractWidget<T>
-        implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener {
+        implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener, ITooltipProvider {
 
     private final SimplePane internal;
+    private List<PlayerMessage> tooltips;
 
     public ComposedWidget(int width, int height) {
         this.internal = new SimplePane(width, height);
         this.internal.parent = this;
         this.setWidth(width);
         this.setHeight(height);
+        this.setTooltip(Collections.singletonList(PlayerMessage.direct("CCCCCCCCCCCC c")));
     }
 
     //Redirects
@@ -52,20 +57,20 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
         return internal.height();
     }
 
-    public int getChildRelativeX(ILayoutable<?> child) {
+    public int getChildRelativeX(AbstractWidget<?> child) {
         return internal.getChildRelX(child);
     }
-    public int getChildRelativeY(ILayoutable<?> child) {
+    public int getChildRelativeY(AbstractWidget<?> child) {
         return internal.getChildRelY(child);
     }
-    public void setChildRelativeX(ILayoutable<?> child, int relX) {
+    public void setChildRelativeX(AbstractWidget<?> child, int relX) {
         internal.setChildPosition(child, relX, internal.getChildRelY(child));
     }
-    public void setChildRelativeY(ILayoutable<?> child, int relY) {
+    public void setChildRelativeY(AbstractWidget<?> child, int relY) {
         internal.setChildPosition(child, internal.getChildRelX(child), relY);
     }
 
-    protected void addChildren(ILayoutable<?> widget, int relX, int relY) {
+    protected void addChildren(AbstractWidget<?> widget, int relX, int relY) {
         internal.addChildren(widget, relX, relY);
     }
 
@@ -119,5 +124,16 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
     @Override
     public boolean onCharTyped(char ch) {
         return internal.onCharTyped(ch);
+    }
+    @Override
+    public List<PlayerMessage> getTooltips() {
+        if (this.tooltips != null) {
+            return this.tooltips;
+        }
+        return internal.getTooltips();
+    }
+    @Override
+    public void setTooltip(List<PlayerMessage> text) {
+        this.tooltips = text;
     }
 }
