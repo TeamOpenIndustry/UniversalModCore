@@ -46,7 +46,7 @@ public class CheckBox extends AbstractWidget<CheckBox>
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, int x, int y) {
+    public boolean onClick(Player.Hand hand, int mouseX, int mouseY) {
         if (!isHovering()) {
             return false;
         }

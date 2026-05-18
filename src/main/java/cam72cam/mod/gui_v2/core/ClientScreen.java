@@ -16,7 +16,9 @@ public abstract class ClientScreen {
         GuiManager.closeUMCScreen();
     }
 
-    public final void addEffect(PostEffect layer) {}
+    public final void addEffect(PostEffect layer) {
+        internal.effects.add(layer);
+    }
 
     void bootstrap(ScreenWrapper internal) {
         this.internal = internal;

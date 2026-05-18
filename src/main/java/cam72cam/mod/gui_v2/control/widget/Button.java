@@ -13,7 +13,6 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -35,7 +34,6 @@ public class Button extends AbstractWidget<Button>
         this.handler = handler;
 
         setVanillaFacade();
-        this.setTooltip(Collections.singletonList(this.getName()));
     }
 
     /* Semitic constructors */
@@ -86,7 +84,7 @@ public class Button extends AbstractWidget<Button>
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, int x, int y) {
+    public boolean onClick(Player.Hand hand, int mouseX, int mouseY) {
         if (isHovering()) {
             this.handler.accept(hand, this);
             return true;

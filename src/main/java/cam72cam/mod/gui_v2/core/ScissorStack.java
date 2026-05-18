@@ -21,10 +21,12 @@ public class ScissorStack {
     }
 
     public void push(ILayoutable<?> widget) {
+        //Expand height by 1 to avoid ScaledResolution's precision loss
         push(new Rectangle(widget.x(), widget.y(), widget.width(), widget.height() + 1));
     }
 
     public void pushPanel(AbstractPanel<?> panel) {
+        //Expand height by 1 to avoid ScaledResolution's precision loss
         push(new Rectangle(panel.panelX(), panel.panelY(), panel.panelWidth(), panel.panelHeight() + 1));
     }
 

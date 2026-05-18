@@ -104,12 +104,12 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, int x, int y) {
+    public boolean onClick(Player.Hand hand, int mouseX, int mouseY) {
         if (!isHovering()) {
             return false;
         }
         requestFocus(this);
-        updateSlider(x, y);
+        updateSlider(mouseX, mouseY);
         return true;
     }
 
@@ -150,7 +150,7 @@ public class Slider extends AbstractWidget<Slider>
     @Override
     public void postRender() {
         if (this.isDragging) {
-            updateSlider(GuiUtils.getMouseX(), GuiUtils.getMouseY());
+            updateSlider(GuiUtils.getGuiMouseX(), GuiUtils.getGuiMouseY());
         }
     }
 

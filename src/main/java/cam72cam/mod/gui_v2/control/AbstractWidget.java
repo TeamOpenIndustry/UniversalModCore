@@ -76,7 +76,7 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
      * Is mouse over?
      */
     protected boolean isHovering() {
-        return isHovering(GuiUtils.getMouseX(), GuiUtils.getMouseY());
+        return isHovering(GuiUtils.getGuiMouseX(), GuiUtils.getGuiMouseY());
     }
 
     protected boolean isHovering(float mouseX, float mouseY) {

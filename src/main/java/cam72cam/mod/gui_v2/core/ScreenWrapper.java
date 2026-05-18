@@ -31,8 +31,6 @@ public class ScreenWrapper extends GuiScreen {
         ClientEvents.TICK.subscribe(() -> {
             if (instance != null) {
                 instance.onTick();
-            } else if (Minecraft.getMinecraft().currentScreen instanceof ScreenWrapper) {
-                instance = ((ScreenWrapper) Minecraft.getMinecraft().currentScreen);
             }
         });
     }
@@ -42,7 +40,7 @@ public class ScreenWrapper extends GuiScreen {
         this.clientScreen = screen;
         this.pausesGame = pausesGame;
         screen.bootstrap(this);
-        instance = this;
+        ScreenWrapper.instance = this;
         this.effects = new ArrayList<>();
         tooltip = new Tooltip();
         this.effects.add(tooltip);
@@ -54,10 +52,12 @@ public class ScreenWrapper extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        //Update global state
+        ScreenWrapper.instance = this;
+        GuiUtils.updateGuiMouse(mouseX, mouseY);
+
         RenderHelper.disableStandardItemLighting();
         GlStateManager.disableDepth();
-        GuiUtils.mouseX = mouseX;
-        GuiUtils.mouseY = mouseY;
         GuiRenderer renderer = new GuiRenderer(this);
         ScissorStack stack = new ScissorStack();
         root.renderPanel(renderer, stack);

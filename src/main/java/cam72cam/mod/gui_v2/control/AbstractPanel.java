@@ -132,7 +132,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     }
 
     protected boolean isHoveringPanel() {
-        return isHoveringPanel(GuiUtils.getMouseX(), GuiUtils.getMouseY());
+        return isHoveringPanel(GuiUtils.getGuiMouseX(), GuiUtils.getGuiMouseY());
     }
     protected boolean isHoveringPanel(int mouseX, int mouseY) {
         boolean flag = true;
@@ -144,15 +144,15 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, int x, int y) {
+    public boolean onClick(Player.Hand hand, int mouseX, int mouseY) {
         if (!isHovering()) {
             return false;
         }
-        if (castedStream(controller, IClickable.class).anyMatch(c -> c.onClick(hand, x, y))) {
+        if (castedStream(controller, IClickable.class).anyMatch(c -> c.onClick(hand, mouseX, mouseY))) {
             return true;
         }
         return isHoveringPanel() && castedStream(getVisibleChildrenReverse(), IClickable.class)
-                .anyMatch(c -> c.onClick(hand, x, y));
+                .anyMatch(c -> c.onClick(hand, mouseX, mouseY));
     }
 
     @Override

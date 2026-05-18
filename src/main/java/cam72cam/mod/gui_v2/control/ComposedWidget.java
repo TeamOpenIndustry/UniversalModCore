@@ -9,7 +9,6 @@ import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.text.PlayerMessage;
 
-import java.util.Collections;
 import java.util.List;
 
 public abstract class ComposedWidget<T extends ComposedWidget<T>> extends AbstractWidget<T>
@@ -23,7 +22,6 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
         this.internal.parent = this;
         this.setWidth(width);
         this.setHeight(height);
-        this.setTooltip(Collections.singletonList(PlayerMessage.direct("CCCCCCCCCCCC c")));
     }
 
     //Redirects
@@ -98,8 +96,8 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
     }
 
     @Override
-    public boolean onClick(Player.Hand hand, int x, int y) {
-        return internal.onClick(hand, x, y);
+    public boolean onClick(Player.Hand hand, int mouseX, int mouseY) {
+        return internal.onClick(hand, mouseX, mouseY);
     }
     @Override
     public boolean onDrag(Player.Hand hand, int mouseX, int mouseY) {

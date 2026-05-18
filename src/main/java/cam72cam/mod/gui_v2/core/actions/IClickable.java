@@ -9,5 +9,5 @@ public interface IClickable {
     /**
      * PRIMARY for left click, otherwise SECONDARY
      */
-    boolean onClick(Player.Hand hand, int x, int y);
+    boolean onClick(Player.Hand hand, int mouseX, int mouseY);
 }

@@ -13,14 +13,21 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
 
 public class GuiUtils {
-    public static int mouseX;
-    public static int mouseY;
+    private GuiUtils() {}
 
-    public static int getMouseX() {
+    private static int mouseX;
+    private static int mouseY;
+
+    public static void updateGuiMouse(int mouseX, int mouseY) {
+        GuiUtils.mouseX = mouseX;
+        GuiUtils.mouseY = mouseY;
+    }
+
+    public static int getGuiMouseX() {
         return mouseX;
     }
 
-    public static int getMouseY() {
+    public static int getGuiMouseY() {
         return mouseY;
     }
 
