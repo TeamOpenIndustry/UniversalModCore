@@ -81,12 +81,14 @@ public class HBox extends AbstractPanel<HBox> {
 
     @Override
     public void setWidth(int width) {
-        // NO-OP for HBox
+        //HBox auto-calculates bounds
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setHeight(int height) {
-        // NO-OP for HBox
+        //HBox auto-calculates bounds
+        throw new UnsupportedOperationException();
     }
 
     protected void setWHInternal(int width, int height) {

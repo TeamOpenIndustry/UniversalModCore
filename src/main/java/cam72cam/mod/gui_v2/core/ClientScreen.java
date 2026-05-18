@@ -17,11 +17,11 @@ public abstract class ClientScreen {
     }
 
     public final void addEffect(PostEffect layer) {
-        internal.effects.add(layer);
+        internal.addEffect(layer);
     }
 
     void bootstrap(ScreenWrapper internal) {
         this.internal = internal;
-        init(this.internal.root);
+        init(this.internal.getRoot());
     }
 }

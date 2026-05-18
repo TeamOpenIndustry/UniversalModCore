@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScreenWrapper extends GuiScreen {
-    static ScreenWrapper instance;
+    private static ScreenWrapper instance;
 
-    final ClientScreen clientScreen;
-    final AnchorPane root;
-    final List<PostEffect> effects;
-    final Tooltip tooltip;
-    final boolean pausesGame;
+    private final ClientScreen clientScreen;
+    private final AnchorPane root;
+    private final List<PostEffect> effects;
+    private final Tooltip tooltip;
+    private final boolean pausesGame;
 
     static {
         ClientEvents.TICK.subscribe(() -> {
@@ -36,6 +36,10 @@ public class ScreenWrapper extends GuiScreen {
     }
 
     public ScreenWrapper(ClientScreen screen, boolean pausesGame) {
+        if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
+            throw new RuntimeException("Screen initialized outside main client thread! This should never happen!");
+        }
+
         this.root = AnchorPane.fullScreen();
         this.clientScreen = screen;
         this.pausesGame = pausesGame;
@@ -48,6 +52,14 @@ public class ScreenWrapper extends GuiScreen {
 
     public void layout() {
         this.root.layout(0, 0);
+    }
+
+    AnchorPane getRoot() {
+        return root;
+    }
+
+    public void addEffect(PostEffect layer) {
+        this.effects.add(layer);
     }
 
     @Override

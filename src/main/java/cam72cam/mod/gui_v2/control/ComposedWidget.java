@@ -82,7 +82,8 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
 
     @Override
     public void setBackgroundRenderFunc(GuiRenderFunc<T> handler) {
-        //NO-OP for ComposedWidget
+        //We redirect draw call in renderMain
+        throw new UnsupportedOperationException();
     }
     @Override
     public void renderMain(GuiRenderer renderer, ScissorStack stack) {
@@ -92,7 +93,8 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
     }
     @Override
     public void setForegroundRenderFunc(GuiRenderFunc<T> handler) {
-        //NO-OP for ComposedWidget
+        //We redirect draw call in renderMain
+        throw new UnsupportedOperationException();
     }
 
     @Override

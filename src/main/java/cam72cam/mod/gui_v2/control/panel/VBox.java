@@ -68,12 +68,14 @@ public class VBox extends AbstractPanel<VBox> {
 
     @Override
     public void setWidth(int width) {
-        //NO-OP for VBox
+        //VBox auto-calculates bounds
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setHeight(int height) {
-        //NO-OP for VBox
+        //VBox auto-calculates bounds
+        throw new UnsupportedOperationException();
     }
 
     protected void setWHInternal(int width, int height) {

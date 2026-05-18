@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-//TODO Container
+//TODO Container support
 public class GuiManager {
     @SideOnly(Side.CLIENT)
     public static void openUMCScreen(ClientScreen screen) {
