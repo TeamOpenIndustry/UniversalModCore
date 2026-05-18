@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 public abstract class AbstractPanel<T extends AbstractPanel<T>> extends AbstractWidget<T>
         implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener, ITooltipProvider {
     private final List<AbstractWidget<?>> children;
+    private final List<AbstractWidget<?>> childrenReverse;
     private final List<AbstractWidget<?>> controller;
 
     private IFocusable active;
@@ -25,6 +26,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         super();
         this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
+        this.childrenReverse = new ArrayList<>();
         this.controller = new ArrayList<>();
 
 //        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
@@ -44,6 +46,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
                 throw new IllegalArgumentException("Cannot add self as child panel!");
             }
             this.children.add(child);
+            this.childrenReverse.add(0, child);
             child.parent = this;
         }
         layout(this.x(), this.y());
@@ -57,8 +60,15 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         return children.stream().filter(ILayoutable::isVisible).collect(Collectors.toList());
     }
 
+    //Used for action handling
+    //The widget drawn last should be checked first
+    protected List<AbstractWidget<?>> getVisibleChildrenReverse() {
+        return childrenReverse.stream().filter(ILayoutable::isVisible).collect(Collectors.toList());
+    }
+
     public void clearChildren() {
         this.children.clear();
+        this.childrenReverse.clear();
     }
 
     protected void addController(AbstractWidget<?> ctrl) {
@@ -141,7 +151,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IClickable.class).anyMatch(c -> c.onClick(hand, x, y))) {
             return true;
         }
-        return isHoveringPanel() && castedStream(getVisibleChildren(), IClickable.class)
+        return isHoveringPanel() && castedStream(getVisibleChildrenReverse(), IClickable.class)
                 .anyMatch(c -> c.onClick(hand, x, y));
     }
 
@@ -156,7 +166,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IDraggable.class).anyMatch(c -> c.onDrag(hand, mouseX, mouseY))) {
             return true;
         }
-        return isHoveringPanel() && castedStream(getVisibleChildren(), IDraggable.class)
+        return isHoveringPanel() && castedStream(getVisibleChildrenReverse(), IDraggable.class)
                 .anyMatch(c -> c.onDrag(hand, mouseX, mouseY));
     }
 
@@ -171,7 +181,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IDraggable.class).anyMatch(c -> c.onRelease(hand, mouseX, mouseY))) {
             return true;
         }
-        return isHoveringPanel() && castedStream(getVisibleChildren(), IDraggable.class)
+        return isHoveringPanel() && castedStream(getVisibleChildrenReverse(), IDraggable.class)
                 .anyMatch(c -> c.onRelease(hand, mouseX, mouseY));
     }
 
@@ -183,14 +193,14 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IScrollable.class).anyMatch(c -> c.onScroll(mouseX, mouseY, deltaScroll))) {
             return true;
         }
-        return isHoveringPanel() && castedStream(getVisibleChildren(), IScrollable.class)
+        return isHoveringPanel() && castedStream(getVisibleChildrenReverse(), IScrollable.class)
                 .anyMatch(c -> c.onScroll(mouseX, mouseY, deltaScroll));
     }
 
     @Override
     public void onTick() {
         castedStream(controller, IUpdatable.class).forEach(IUpdatable::onTick);
-        castedStream(getVisibleChildren(), IUpdatable.class).forEach(IUpdatable::onTick);
+        castedStream(getVisibleChildrenReverse(), IUpdatable.class).forEach(IUpdatable::onTick);
     }
 
     @Override
@@ -201,7 +211,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IKeyboardListener.class).anyMatch(c -> c.onKeyPressed(key))) {
             return true;
         }
-        return castedStream(getVisibleChildren(), IKeyboardListener.class)
+        return castedStream(getVisibleChildrenReverse(), IKeyboardListener.class)
                 .anyMatch(c -> c.onKeyPressed(key));
     }
 
@@ -213,7 +223,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (castedStream(controller, IKeyboardListener.class).anyMatch(c -> c.onCharTyped(ch))) {
             return true;
         }
-        return castedStream(getVisibleChildren(), IKeyboardListener.class)
+        return castedStream(getVisibleChildrenReverse(), IKeyboardListener.class)
                 .anyMatch(c -> c.onCharTyped(ch));
     }
 
@@ -252,7 +262,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             return optional.get().getTooltips();
         }
         if (isHoveringPanel()) {
-            optional = castedStream(getVisibleChildren(), ITooltipProvider.class, AbstractWidget::isHovering)
+            optional = castedStream(getVisibleChildrenReverse(), ITooltipProvider.class, AbstractWidget::isHovering)
                     .filter(c -> c.getTooltips() != null).findFirst();
             if (optional.isPresent()) {
                 return optional.get().getTooltips();
