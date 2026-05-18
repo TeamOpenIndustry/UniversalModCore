@@ -145,7 +145,7 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         }
     }
     @Override
-    public void render(GuiRenderer renderer, ScissorStack stack) {
+    public void renderMain(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
             content.draw(renderer, (T) this);
         }
@@ -162,12 +162,18 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         background = handler;
     }
     @Override
-    public void setRenderFunc(GuiRenderFunc<T> handler) {
+    public void setMainRenderFunc(GuiRenderFunc<T> handler) {
         content = handler;
     }
     @Override
     public void setForegroundRenderFunc(GuiRenderFunc<T> handler) {
         foreground = handler;
+    }
+
+    public void copyFacade(AbstractWidget<T> other) {
+        this.setBackgroundRenderFunc(other.background);
+        this.setMainRenderFunc(other.content);
+        this.setForegroundRenderFunc(other.foreground);
     }
 
     public void requestLayout() {

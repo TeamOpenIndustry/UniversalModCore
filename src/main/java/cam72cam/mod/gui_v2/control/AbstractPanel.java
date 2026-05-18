@@ -94,7 +94,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
             ((AbstractPanel<?>) widget).renderPanel(renderer, stack);
         } else {
             widget.renderBackground(renderer, stack);
-            widget.render(renderer, stack);
+            widget.renderMain(renderer, stack);
             widget.renderForeground(renderer, stack);
         }
         if (widget instanceof IUpdatable) {

@@ -197,7 +197,7 @@ public class Slider extends AbstractWidget<Slider>
                 gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
         });
-        this.setRenderFunc((gui, slid) -> {
+        this.setMainRenderFunc((gui, slid) -> {
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 

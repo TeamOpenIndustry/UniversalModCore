@@ -12,7 +12,7 @@ public abstract class ClientScreen {
     public void onGuiResize(int newWidth, int newHeight) {}
 
     public final void requestClose() {
-        internal.onGuiClosed();
+        GuiManager.closeUMCScreen();
     }
 
     void bootstrap(ScreenWrapper internal) {

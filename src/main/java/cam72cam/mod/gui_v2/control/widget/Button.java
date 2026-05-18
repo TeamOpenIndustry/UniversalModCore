@@ -57,7 +57,7 @@ public class Button extends AbstractWidget<Button>
                 gui.drawTexturedUvRect(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
             }
         });
-        button.setRenderFunc((gui, btn) -> {
+        button.setMainRenderFunc((gui, btn) -> {
             int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
@@ -72,7 +72,7 @@ public class Button extends AbstractWidget<Button>
         button.setBackgroundRenderFunc((gui, btn) -> {
 //            gui.drawRect(btn.x(), btn.y(), btn.width(), btn.height(), 0x00000000);
         });
-        button.setRenderFunc((gui, btn) -> {
+        button.setMainRenderFunc((gui, btn) -> {
             gui.drawItem(stack, btn.x(), btn.y());
         });
         return button;
@@ -110,7 +110,7 @@ public class Button extends AbstractWidget<Button>
                     : btn.isHovering() ? 2 : 1;
             gui.drawVanillaButton(btn.x(), btn.y(), btn.width(), btn.height(), state);
         });
-        this.setRenderFunc((gui, btn) -> {
+        this.setMainRenderFunc((gui, btn) -> {
             int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;

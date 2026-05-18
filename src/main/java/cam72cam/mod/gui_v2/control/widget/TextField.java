@@ -378,7 +378,7 @@ public class TextField extends AbstractWidget<TextField>
             gui.drawRect(txt.x(), txt.y(), txt.width(), txt.height(), borderColor);
             gui.drawRect(txt.x()+1, txt.y()+1, txt.width()-2, txt.height()-2, bgColor);
         });
-        this.setRenderFunc((gui, txt) -> {
+        this.setMainRenderFunc((gui, txt) -> {
             int xOff = txt.x() + SPAN - txt.textOffsetX;
             int yOff = txt.y() + (txt.height() - GuiRenderer.TEXT_HEIGHT) / 2;
 

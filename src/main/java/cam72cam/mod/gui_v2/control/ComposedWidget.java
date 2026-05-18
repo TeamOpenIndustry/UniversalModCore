@@ -5,6 +5,7 @@ import cam72cam.mod.gui_v2.control.panel.SimplePane;
 import cam72cam.mod.gui_v2.core.ScissorStack;
 import cam72cam.mod.gui_v2.core.actions.*;
 import cam72cam.mod.gui_v2.core.layout.ILayoutable;
+import cam72cam.mod.gui_v2.rendering.GuiRenderFunc;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.input.Keyboard;
 
@@ -75,12 +76,22 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
         internal.setBound(0, 0, width(), height());
         internal.layout(x, y);
     }
+
     @Override
-    public void render(GuiRenderer renderer, ScissorStack stack) {
+    public void setBackgroundRenderFunc(GuiRenderFunc<T> handler) {
+        //NO-OP for ComposedWidget
+    }
+    @Override
+    public void renderMain(GuiRenderer renderer, ScissorStack stack) {
         stack.push(this);
         internal.renderPanel(renderer, stack);
         stack.pop();
     }
+    @Override
+    public void setForegroundRenderFunc(GuiRenderFunc<T> handler) {
+        //NO-OP for ComposedWidget
+    }
+
     @Override
     public boolean onClick(Player.Hand hand, int x, int y) {
         return internal.onClick(hand, x, y);

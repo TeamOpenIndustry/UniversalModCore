@@ -46,6 +46,20 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
         requestLayout();
     }
 
+    public void setChildHorizontalAnchor(ILayoutable<?> child, HorizontalAlign hAlign, int marginX) {
+        AnchorInfo info = anchorMap.get(child);
+        if (info == null)
+            throw new IllegalArgumentException("AnchorPane does not contain child");
+        setChildAnchor(child, hAlign, marginX, info.vAlign, info.marginY);
+    }
+
+    public void setChildVerticalAnchor(ILayoutable<?> child, VerticalAlign vAlign, int marginY) {
+        AnchorInfo info = anchorMap.get(child);
+        if (info == null)
+            throw new IllegalArgumentException("AnchorPane does not contain child");
+        setChildAnchor(child, info.hAlign, info.marginX, vAlign, marginY);
+    }
+
     @Override
     public void layout(int x, int y) {
         this.setX(x);

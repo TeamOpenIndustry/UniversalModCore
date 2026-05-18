@@ -22,6 +22,7 @@ public class ItemPicker extends ComposedWidget<ItemPicker> {
 
     private final TextField searchField;
     private final ScrollPane scrollPane;
+    //TODO GridPane
     private final VBox rowsContainer;
 
     private final List<ItemStack> allItems = new ArrayList<>();

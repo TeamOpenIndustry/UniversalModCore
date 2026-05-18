@@ -1,6 +1,7 @@
 package cam72cam.mod.gui_v2.test;
 
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.gui_v2.control.composed.CyclableButton;
 import cam72cam.mod.gui_v2.control.composed.ItemPicker;
 import cam72cam.mod.gui_v2.control.composed.NumberField;
 import cam72cam.mod.gui_v2.control.panel.AnchorPane;
@@ -46,6 +47,14 @@ public class TestScreen extends ClientScreen {
         ScrollPane pane = ScrollPane.vertical(160, 200);
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), (hand, b) -> picker.setVisible(!picker.isVisible()));
         vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, textField, numberField, numberField1, vertical);
+
+        CyclableButton<HorizontalAlign> hAlign = CyclableButton.ofEnum(button3, HorizontalAlign.class, HorizontalAlign.LEFT, e -> {
+            root.setChildHorizontalAnchor(pane, e, 0);
+        });
+        CyclableButton<VerticalAlign> vAlign = CyclableButton.ofEnum(button3, VerticalAlign.class, VerticalAlign.TOP, e -> {
+            root.setChildVerticalAnchor(pane, e, 0);
+        });
+        vBox.addChildren(hAlign, vAlign);
         pane.addChildren(vBox);
         root.addChildren(pane, HorizontalAlign.RIGHT, 0, VerticalAlign.BOTTOM, 0);
     }
