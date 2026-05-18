@@ -35,7 +35,7 @@ public class AnchorPane extends PositionedPanel<AnchorPane> {
     }
 
     public void addChildren(AbstractWidget<?> child, HorizontalAlign hAlign, int marginX, VerticalAlign vAlign, int marginY) {
-        super.addChildren(child);
+        super.addChild(child);
         anchorMap.put(child, new AnchorInfo(hAlign, marginX, vAlign, marginY));
         requestLayout();
     }

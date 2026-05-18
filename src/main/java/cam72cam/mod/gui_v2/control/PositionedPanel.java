@@ -14,7 +14,7 @@ public abstract class PositionedPanel<T extends PositionedPanel<T>> extends Abst
     }
 
     public void addChildren(AbstractWidget<?> child, int relX, int relY) {
-        super.addChildren(child);
+        super.addChild(child);
         setChildPosition(child, relX, relY);
     }
 

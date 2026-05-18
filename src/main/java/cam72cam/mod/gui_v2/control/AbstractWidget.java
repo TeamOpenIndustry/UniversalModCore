@@ -72,9 +72,7 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         this.nameColor = argb;
     }
 
-    /**
-     * Is mouse over?
-     */
+    /** Is mouse over? */
     protected boolean isHovering() {
         return isHovering(GuiUtils.getGuiMouseX(), GuiUtils.getGuiMouseY());
     }
@@ -84,7 +82,8 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         if (parent != null) {
             flag = parent.isHovering(mouseX, mouseY);
         }
-        return flag && mouseX >= this.x() && mouseX <= this.x() + this.width() && mouseY >= this.y() && mouseY <= this.y() + this.height();
+        return flag && mouseX >= this.x() && mouseX <= this.x() + this.width()
+                    && mouseY >= this.y() && mouseY <= this.y() + this.height();
     }
 
     public AbstractWidget<?> getParent() {

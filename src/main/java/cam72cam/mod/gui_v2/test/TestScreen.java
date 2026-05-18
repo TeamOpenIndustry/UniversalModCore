@@ -24,9 +24,8 @@ public class TestScreen extends ClientScreen {
         VBox vBox = new VBox(5, HorizontalAlign.MIDDLE);
         BiConsumer<Player.Hand, Button> btnTest = (hand, btn) -> System.out.println(btn.hashCode());
         Label lab = Label.direct("label1");
-        Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), btnTest);
         Label lab2 = Label.direct("label2");
-        Button button3 = Button.textured(150, 20, PlayerMessage.direct("clicker3"), btnTest, new Identifier("textures/blocks/bedrock.png"));
+        Button button3 = Button.textured(150, 20, PlayerMessage.direct("clicker3 sel"), btnTest, new Identifier("textures/blocks/bedrock.png"));
         NumberField numberField = new NumberField(150, 20, PlayerMessage.direct("Val: slidValue"), 0, 1, 0, true, d -> System.out.println("Val: " + d));
         NumberField numberField1 = new NumberField(150, 20, PlayerMessage.direct("Val: slidValue"), 10, 100, 0, false, d -> System.out.println("Val: " + d));
         Slider horizontal = Slider.horizontal(150, 20, PlayerMessage.direct("slider"), 0, 1, 0, 0,
@@ -45,17 +44,26 @@ public class TestScreen extends ClientScreen {
         CheckBox checkBox = new CheckBox(PlayerMessage.direct("cb"), cb -> System.out.println(cb.isChecked()));
         TextField textField = new TextField(150, 20, txt -> System.out.println("Text: " + txt));
         ScrollPane pane = ScrollPane.vertical(160, 200);
+        ScrollPane hori = ScrollPane.horizontal(100, 230);
+        Button button1 = Button.vanilla(150, 20, PlayerMessage.direct("clicker"), (hand, btn) -> {
+            if (pane.isBarVisible()) {
+                pane.hideScrollBar();
+            } else {
+                pane.showScrollBar();
+            }
+        });
         Button button2 = Button.vanilla(150, 20, PlayerMessage.direct("clicker2"), (hand, b) -> picker.setVisible(!picker.isVisible()));
         vBox.addChildren(lab, button1, button2, lab2, button3, horizontal, checkBox, textField, numberField, numberField1, vertical);
 
         CyclableButton<HorizontalAlign> hAlign = CyclableButton.ofEnum(button3, HorizontalAlign.class, HorizontalAlign.LEFT, e -> {
-            root.setChildHorizontalAnchor(pane, e, 0);
+            root.setChildHorizontalAnchor(hori, e, 0);
         });
         CyclableButton<VerticalAlign> vAlign = CyclableButton.ofEnum(button3, VerticalAlign.class, VerticalAlign.TOP, e -> {
-            root.setChildVerticalAnchor(pane, e, 0);
+            root.setChildVerticalAnchor(hori, e, 0);
         });
         vBox.addChildren(hAlign, vAlign);
-        pane.addChildren(vBox);
-        root.addChildren(pane, HorizontalAlign.RIGHT, 0, VerticalAlign.BOTTOM, 0);
+        pane.addChild(vBox);
+        hori.addChild(pane);
+        root.addChildren(hori, HorizontalAlign.RIGHT, 0, VerticalAlign.BOTTOM, 0);
     }
 }

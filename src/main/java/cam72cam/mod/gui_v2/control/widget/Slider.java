@@ -85,8 +85,10 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     public void setHandleSize(int handleSize) {
-        if (handleSize > this.height()) {
+        if (!isHorizontal && handleSize > this.height()) {
             handleSize = this.height();
+        } else if (isHorizontal && handleSize > this.width()) {
+            handleSize = this.width();
         }
         this.handleSize = handleSize;
     }

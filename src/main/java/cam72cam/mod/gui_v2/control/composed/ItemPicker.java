@@ -32,8 +32,8 @@ public class ItemPicker extends ComposedWidget<ItemPicker> {
     public ItemPicker(int width, int height, Consumer<ItemStack> onItemSelected) {
         super(width, height);
         rowsContainer = new VBox(0);
-        scrollPane = new ScrollPane(width, height);
-        scrollPane.addChildren(rowsContainer);
+        scrollPane = ScrollPane.vertical(width, height);
+        scrollPane.addChild(rowsContainer);
         addChildren(scrollPane, 0, 0);
 
         this.onItemSelected = onItemSelected;
@@ -81,10 +81,10 @@ public class ItemPicker extends ComposedWidget<ItemPicker> {
         for (int i = 0; i < filteredItems.size(); i++) {
             if (i % cols == 0) {
                 currentRow = new HBox(0);
-                rowsContainer.addChildren(currentRow);
+                rowsContainer.addChild(currentRow);
             }
             int finalI = i;
-            currentRow.addChildren(Button.item(filteredItems.get(i), (btn) -> {
+            currentRow.addChild(Button.item(filteredItems.get(i), (btn) -> {
                 if (onItemSelected != null) {
                     onItemSelected.accept(filteredItems.get(finalI));
                 }

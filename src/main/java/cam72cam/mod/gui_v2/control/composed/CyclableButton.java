@@ -36,7 +36,7 @@ public class CyclableButton<T> extends ComposedWidget<CyclableButton<T>> {
         this.selected = sel;
 
         this.original = template.getName();
-        this.button = new Button(template.width(), template.height(), formatName(original), this::onCLick);
+        this.button = new Button(template.width(), template.height(), formatName(original), this::onButtonClick);
         this.button.copyFacade(template);
         this.callback = callback;
         this.addChildren(button, 0, 0);
@@ -44,10 +44,10 @@ public class CyclableButton<T> extends ComposedWidget<CyclableButton<T>> {
 
     public static <E extends Enum<E>> CyclableButton<E> ofEnum(Button template, Class<E> classE, E sel, Consumer<E> callback) {
         List<E> options = Arrays.asList(classE.getEnumConstants());
-        return new CyclableButton<E>(template, options, sel, callback);
+        return new CyclableButton<>(template, options, sel, callback);
     }
 
-    private void onCLick(Player.Hand hand, Button btn) {
+    private void onButtonClick(Player.Hand hand, Button btn) {
         int offset = hand == Player.Hand.PRIMARY ? 1 : -1;
         this.index += offset;
         if (this.index >= this.options.length) {
@@ -57,7 +57,7 @@ public class CyclableButton<T> extends ComposedWidget<CyclableButton<T>> {
             this.index = this.options.length - 1;
         }
         this.selected = this.options[this.index];
-        this.setName(this.formatName(original));
+        this.button.setName(this.formatName(original));
         if (this.callback != null) {
             this.callback.accept(this.selected);
         }

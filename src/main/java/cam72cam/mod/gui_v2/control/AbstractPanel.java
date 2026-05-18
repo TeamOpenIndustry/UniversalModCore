@@ -18,7 +18,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         implements IClickable, IDraggable, IUpdatable, IScrollable, IKeyboardListener, ITooltipProvider {
     private final List<AbstractWidget<?>> children;
     private final List<AbstractWidget<?>> childrenReverse;
-    private final List<AbstractWidget<?>> controller;
+    private final Set<AbstractWidget<?>> controller;
 
     private IFocusable active;
 
@@ -27,29 +27,31 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.setBound(0, 0, width, height);
         this.children = new ArrayList<>();
         this.childrenReverse = new ArrayList<>();
-        this.controller = new ArrayList<>();
+        this.controller = new LinkedHashSet<>();
 
 //        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
 
-    public void addChildren(AbstractWidget<?> child) {
-        addChildren(Collections.singleton(child));
+    public void addChild(AbstractWidget<?> child) {
+        if (child == this) {
+            throw new IllegalArgumentException("Cannot add self as child panel!");
+        }
+        this.children.add(child);
+        this.childrenReverse.add(0, child);
+        child.parent = this;
+        layout(this.x(), this.y());
     }
 
     public void addChildren(AbstractWidget<?>... children) {
-        addChildren(Arrays.asList(children));
+        for (AbstractWidget<?> child : children) {
+            addChild(child);
+        }
     }
 
     public void addChildren(Iterable<AbstractWidget<?>> children) {
         for (AbstractWidget<?> child : children) {
-            if (child == this) {
-                throw new IllegalArgumentException("Cannot add self as child panel!");
-            }
-            this.children.add(child);
-            this.childrenReverse.add(0, child);
-            child.parent = this;
+            addChild(child);
         }
-        layout(this.x(), this.y());
     }
 
     public List<AbstractWidget<?>> getChildren() {
@@ -74,6 +76,10 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
     protected void addController(AbstractWidget<?> ctrl) {
         this.controller.add(ctrl);
         ctrl.parent = this;
+    }
+
+    protected void removeController(AbstractWidget<?> ctrl) {
+        this.controller.remove(ctrl);
     }
 
     public void renderPanel(GuiRenderer renderer, ScissorStack stack) {
@@ -275,11 +281,11 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         //NO-OP
     }
 
-    private static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1) {
+    protected static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1) {
         return elements.stream().filter(interface1::isInstance).map(interface1::cast);
     }
 
-    private static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1, Predicate<E> condition) {
+    protected static <E, I> Stream<I> castedStream(Collection<E> elements, Class<I> interface1, Predicate<E> condition) {
         return elements.stream().filter(condition).filter(interface1::isInstance).map(interface1::cast);
     }
 }
