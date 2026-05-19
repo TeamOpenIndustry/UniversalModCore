@@ -82,7 +82,7 @@ public class ModCore {
     public ModCore(FMLJavaModLoadingContext context) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
-        var modEventBus = context.getModEventBus();
+        IEventBus modEventBus = context.getModEventBus();
 
         ModCore.register(new Internal());
         proxy.setup();
