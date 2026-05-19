@@ -39,7 +39,7 @@ minecraft {
     runs {
         // applies to all the run configs below
         configureEach {
-            workingDir.convention layout.projectDirectory.dir('run')
+            workingDir.convention layout.projectDirectory.dir('runs')
             // Mixin requires either specifying the config via command line, or in the Manifest
             args "--mixin.config=mixins.feat.universalmodcore.json", "--mixin.config=mixins.fix.universalmodcore.json"
 
