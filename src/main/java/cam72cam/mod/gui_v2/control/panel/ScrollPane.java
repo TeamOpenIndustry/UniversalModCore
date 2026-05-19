@@ -25,15 +25,23 @@ public abstract class ScrollPane extends AbstractPanel<ScrollPane>
     }
 
     public void showScrollBar() {
-        controller.setVisible(true);
-        addController(controller);
-        requestLayout();
+        setBarVisible(true);
     }
 
     public void hideScrollBar() {
-        controller.setVisible(false);
-        removeController(controller);
+        setBarVisible(false);
+    }
+
+    public void setBarVisible(boolean visible) {
+        controller.setVisible(visible);
         requestLayout();
+        if (!visible) {
+            //Temporarily cut off connection with upstream
+            removeController(controller);
+        } else {
+            //Add it back
+            addController(controller);
+        }
     }
 
     public boolean isBarVisible() {
@@ -89,9 +97,9 @@ public abstract class ScrollPane extends AbstractPanel<ScrollPane>
         }
 
         @Override
-        public int panelWidth() {
+        public int width() {
             int w = controller.isVisible() ? controller.width() : 0;
-            return width() - w;
+            return super.width() + w;
         }
 
         @Override
@@ -136,9 +144,9 @@ public abstract class ScrollPane extends AbstractPanel<ScrollPane>
         }
 
         @Override
-        public int panelHeight() {
+        public int height() {
             int h = controller.isVisible() ? controller.height() : 0;
-            return height() - h;
+            return super.height() + h;
         }
 
         @Override
