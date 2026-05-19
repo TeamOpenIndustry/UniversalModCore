@@ -20,13 +20,11 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -35,16 +33,15 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.client.model.data.ModelData;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
@@ -327,16 +324,17 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     public final SingleCache<IBoundingBox, AABB> bbCache =
             new SingleCache<>(internal -> BoundingBox.from(internal).move(getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ()));
-
-    /* Moved to cam72cam.mod.render.BlockRender
-      @Override
-      public net.minecraft.world.phys.AABB getRenderBoundingBox() {
-          if (instance() != null) {
-              return bbCache.get(instance().getRenderBoundingBox());
-          }
-          return INFINITE_EXTENT_AABB;
-      }
-      */
+    /**
+     * @return Instance's bounding box
+     * @see BlockEntity
+     */
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
+        if (instance() != null) {
+            return bbCache.get(instance().getRenderBoundingBox());
+        }
+        return INFINITE_EXTENT_AABB;
+    }
 
     /**
      * @return Instance's render distance
