@@ -25,6 +25,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.*;
 
 import java.lang.reflect.Constructor;
@@ -39,6 +41,7 @@ import java.util.function.Supplier;
  * Packet abstraction and registration
  * @see TagSerializer
  */
+@Mod.EventBusSubscriber(modid = ModCore.MODID)
 public abstract class Packet {
     public static final String VERSION = "1.0";
     // Packet class name -> Packet Constructor
@@ -46,9 +49,6 @@ public abstract class Packet {
 
     // Received packet data
     private TagCompound data = new TagCompound();
-
-    // Each packet is given its own channel
-    private static Map<String, SimpleChannel> channels = new HashMap<>();
 
     /**
      * So either forge or minecraft has a bug where it mixes up the player in the context handler...
@@ -69,18 +69,6 @@ public abstract class Packet {
             return;
         }
         types.put(pktClass, sup);
-        ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
-        var channel = ChannelBuilder.named(name)
-                .networkProtocolVersion(0) // versions are handled separately
-                .simpleChannel()
-                .configuration().clientbound()
-                .add(ClientboundCustomPayloadPacket.class, ClientboundCustomPayloadPacket.CONFIG_STREAM_CODEC, UMCPacketHandler::applyClientbound)
-                .play().clientbound()
-                .add(ClientboundCustomPayloadPacket.class, ClientboundCustomPayloadPacket.GAMEPLAY_STREAM_CODEC, UMCPacketHandler::applyClientbound)
-                .any().serverbound()
-                .add(ServerboundCustomPayloadPacket.class, ServerboundCustomPayloadPacket.STREAM_CODEC, UMCPacketHandler::applyServerbound)
-                .build();
-        channels.put(pktClass, channel);
     }
 
     CustomPayloadEvent.Context ctx;
@@ -183,11 +171,14 @@ public abstract class Packet {
         }
     }
 
-    private static class UMCPacketHandler {
-
-        private static void apply(Message message, CustomPayloadEvent.Context context) {
-            context.enqueueWork(() -> {
-                World world = World.get(context.getSender().level());
+    /**
+     * Internal
+     */
+    @SubscribeEvent
+    public static void onCustomPacket(CustomPayloadEvent event) {
+        if (event.getPayloadObject() instanceof Message message) {
+            event.getSource().enqueueWork(() -> {
+                World world = World.get(event.getSource().getSender().level());
                 try {
                     TagSerializer.deserialize(message.packet.data, message.packet, world);
                 } catch (SerializationException e) {
@@ -205,18 +196,6 @@ public abstract class Packet {
                 }
                 message.packet.handle();
             });
-        }
-
-        public static void applyClientbound(ClientboundCustomPayloadPacket packet, CustomPayloadEvent.Context context) {
-            if (packet.payload() instanceof Message message) {
-                apply(message, context);
-            }
-        }
-
-        public static void applyServerbound(ServerboundCustomPayloadPacket packet, CustomPayloadEvent.Context context) {
-            if (packet.payload() instanceof Message message) {
-                apply(message, context);
-            }
         }
     }
 }
