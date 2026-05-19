@@ -20,7 +20,7 @@ repositories {
 String umcVersion = "1.2.3"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
-        umcVersion += "-${providers.exec { commandLine("git", "rev-parse", "--verify", "--short=7", "HEAD") }.standardOutput.asText.get()}"
+        umcVersion += "-${(providers.exec { commandLine("git", "rev-parse", "--verify", "--short=7", "HEAD") }.standardOutput.asText.get() as String).substring(0, 7)}"
     } catch (Exception ignored) {
         umcVersion += "-unknown"
     }
@@ -28,6 +28,8 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
 version = "1.21.1-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 base.archivesName = "UniversalModCore"
+
+println("version: ${version}")
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 println("Java: ${providers.systemProperty("java.version").get()}, " +
