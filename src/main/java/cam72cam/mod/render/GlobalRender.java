@@ -15,6 +15,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -29,15 +30,16 @@ public class GlobalRender {
     public static void registerClientEvents() {
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
-            if (Minecraft.getInstance().getDebugOverlay().showDebugScreen() && GPUInfo.hasGPUInfo()) {
+            if (Minecraft.getInstance().getDebugOverlay().showDebugScreen()
+                    && event.getSide() == CustomizeGuiOverlayEvent.DebugText.Side.Right && GPUInfo.hasGPUInfo()) {
                 int i;
-                for (i = 0; i < event.getRight().size(); i++) {
-                    if (event.getRight().get(i).startsWith("Display: ")) {
+                for (i = 0; i < event.getText().size(); i++) {
+                    if (event.getText().get(i).startsWith("Display: ")) {
                         i++;
                         break;
                     }
                 }
-                event.getRight().add(i, GPUInfo.debug());
+                event.getText().add(i, GPUInfo.debug());
             }
         });
     }
@@ -48,12 +50,12 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(RenderFunction func) {
-        ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getName().equals(VanillaGuiLayers.HOTBAR) && !Minecraft.getInstance().options.hideGui) {
-                func.render(new RenderState(event.getGuiGraphics().pose()).stage(RenderContext.Stage.GUI), event.getPartialTick().getRealtimeDeltaTicks());
-            }
-        });
+    public static void registerOverlay(RenderFunction func) { // TODO
+        //ClientEvents.RENDER_OVERLAY.subscribe(event -> {
+        //    if (event.getName().equals(VanillaGuiLayers.HOTBAR) && !Minecraft.getInstance().options.hideGui) {
+        //        func.render(new RenderState(event.getGuiGraphics().pose()).stage(RenderContext.Stage.GUI), event.getPartialTick().getRealtimeDeltaTicks());
+        //    }
+        //});
     }
 
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
@@ -63,7 +65,7 @@ public class GlobalRender {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal().getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(),
-                              MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()).stage(RenderContext.Stage.OVERLAY), event.getDeltaTracker().getRealtimeDeltaTicks());
+                              MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()).stage(RenderContext.Stage.OVERLAY), event.getPartialTick());
                 }
             }
         });

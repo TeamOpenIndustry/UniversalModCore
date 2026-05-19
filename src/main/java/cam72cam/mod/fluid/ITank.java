@@ -21,7 +21,7 @@ public interface ITank {
      * See ImmersiveRailroading's FreightTank for an example.
      */
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        Optional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal());
+        Optional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal()).resolve();
         if (handler.isEmpty()) {
             return null;
         }

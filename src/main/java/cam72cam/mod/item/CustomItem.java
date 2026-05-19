@@ -30,6 +30,7 @@ import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
@@ -103,14 +104,14 @@ public abstract class CustomItem {
 
         public ItemInternal(Properties p_i48487_1_) {
             super(p_i48487_1_);
-            ClientEvents.CLIENT_EXTENSIONS_REGISTER.subscribe(e -> {
+            /*ClientEvents.CLIENT_EXTENSIONS_REGISTER.subscribe(e -> {
                 e.registerItem(new IClientItemExtensions() {
                     @Override
                     public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                         return ItemRender.ISTER();
                     }
                 }, this);
-            });
+            });*/
         }
 
         @Override
@@ -162,16 +163,16 @@ public abstract class CustomItem {
             ItemStack stack = umcPlayer.getHeldItem(umcHand).copy();
             return InteractionResultHolder.consume(stack.internal());
         }
-//See constructor
-//        @Override
-//        public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-//            consumer.accept(new IClientItemExtensions() {
-//                @Override
-//                public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-//                    return ItemRender.ISTER();
-//                }
-//            });
-//        }
+
+        @Override
+        public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+            consumer.accept(new IClientItemExtensions() {
+                @Override
+                public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                    return ItemRender.ISTER();
+                }
+            });
+        }
     }
     /**
      * Helper for serializing / deserializing data on a stack

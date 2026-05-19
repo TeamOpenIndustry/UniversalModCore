@@ -15,6 +15,7 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -54,7 +55,7 @@ public class GuiRegistry {
     /** Internal event registration, do not use */
     @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
-        ClientEvents.MENU_SCREENS_REGISTER.subscribe(e -> e.register(TYPE, ClientContainerBuilder::new));
+        ClientEvents.REGISTER_ENTITY.subscribe(() -> MenuScreens.register(TYPE, ClientContainerBuilder::new));
     }
 
     public GuiRegistry() {

@@ -41,7 +41,7 @@ minecraft {
         configureEach {
             workingDir.convention layout.projectDirectory.dir('run')
             // Mixin requires either specifying the config via command line, or in the Manifest
-            args "--mixin.config=universalmodcore.feat.mixins.json", "--mixin.config=universalmodcore.fix.mixins.json"
+            args "--mixin.config=mixins.feat.universalmodcore.json", "--mixin.config=mixins.fix.universalmodcore.json"
 
             systemProperty "mixin.debug.verbose", "true"
             systemProperty "mixin.debug.export", "true"
@@ -185,7 +185,7 @@ jar {
             "Implementation-Title": project.name,
             "Implementation-Version": umcVersion,
             "Implementation-Vendor" :"",
-            "MixinConfigs" : "universalmodcore.feat.mixins.json, universalmodcore.fix.mixins.json"
+            "MixinConfigs" : "mixins.feat.universalmodcore.json,mixins.fix.universalmodcore.json"
         ])
     }
 }

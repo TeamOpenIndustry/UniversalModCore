@@ -93,11 +93,11 @@ public class FluidTank implements ITank {
     }
 
     public TagCompound write(TagCompound tag) {
-        return new TagCompound(internal.writeToNBT(RegistryUtil.getRegistry(), tag.internal));
+        return new TagCompound(internal.writeToNBT(tag.internal));
     }
 
     public void read(TagCompound tag) {
-        internal.readFromNBT(RegistryUtil.getRegistry(), tag.internal);
+        internal.readFromNBT(tag.internal);
     }
 
     static class Mapper implements TagMapper<FluidTank> {

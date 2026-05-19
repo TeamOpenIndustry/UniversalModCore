@@ -123,14 +123,6 @@ public class BlockRender {
                 public boolean shouldRenderOffScreen(TileEntity te) {
                     return true;
                 }
-
-                @Override
-                public AABB getRenderBoundingBox(TileEntity blockEntity) {
-                    if (blockEntity.instance() != null) {
-                        return blockEntity.bbCache.get(blockEntity.instance().getRenderBoundingBox());
-                    }
-                    return TileEntity.INFINITE_EXTENT_AABB;
-                }
             });
         });
     }

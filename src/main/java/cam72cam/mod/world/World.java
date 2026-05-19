@@ -45,6 +45,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -672,17 +673,12 @@ public class World {
 
     /** Get the inventory at this block (accessed from given side) */
     public IInventory getInventory(Vec3i offset, Facing dir) {
-		if (dir != null) {
-			IItemHandler capability = internal.getCapability(TileEntity.ITEM_HANDLER_BLOCK, offset.internal(), dir.internal);
-            if (capability instanceof IItemHandlerModifiable) {
-                return IInventory.from((IItemHandlerModifiable) capability);
-            }
-		} else {
-            for(Facing facing : Facing.values()){
-                IItemHandler capability = internal.getCapability(TileEntity.ITEM_HANDLER_BLOCK, offset.internal(), facing.internal);
-                if (capability instanceof IItemHandlerModifiable) {
-                    return IInventory.from((IItemHandlerModifiable) capability);
-                }
+		net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
+        Direction face = dir != null ? dir.internal : null;
+        if (te != null && te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).isPresent()) {
+            IItemHandler inv = te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).orElse(null);
+            if (inv instanceof IItemHandlerModifiable) {
+                return IInventory.from((IItemHandlerModifiable) inv);
             }
         }
         return null;
@@ -701,17 +697,12 @@ public class World {
 
     /** Get the tank at this block (accessed from given side) */
     public List<ITank> getTank(Vec3i offset, Facing dir) {
-        if (dir != null) {
-            IFluidHandler capability = internal.getCapability(TileEntity.FLUID_HANDLER_BLOCK, offset.internal(), dir.internal);
-            if (capability != null) {
-                return ITank.getTank(capability);
-            }
-        } else {
-            for(Facing facing : Facing.values()){
-                IFluidHandler capability = internal.getCapability(TileEntity.FLUID_HANDLER_BLOCK, offset.internal(), facing.internal);
-                if (capability != null) {
-                    return ITank.getTank(capability);
-                }
+        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
+        Direction face = dir != null ? dir.internal : null;
+        if (te != null && te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).isPresent()) {
+            IFluidHandler tank = te.getCapability(ForgeCapabilities.FLUID_HANDLER, face).orElse(null);
+            if (tank != null) {
+                return ITank.getTank(tank);
             }
         }
         return null;
