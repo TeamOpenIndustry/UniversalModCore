@@ -39,6 +39,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -63,8 +65,6 @@ import java.util.function.Supplier;
  * @see BlockEntity
  */
 public class TileEntity extends net.minecraft.world.level.block.entity.BlockEntity {
-    public static final AABB INFINITE_EXTENT_AABB = new net.minecraft.world.phys.AABB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-
     private static final Map<String, BlockEntityType<? extends TileEntity>> types = HashBiMap.create();
     // InstanceId -> Supplier mapping
     private static final Map<String, Supplier<BlockEntity>> registry = HashBiMap.create();
@@ -165,7 +165,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         BlockEntity example = instance.get();
 
         // Force legacy registration
-//        example.supplier(id);
+        example.supplier(id);
 
         CommonEvents.Tile.REGISTER.subscribe(helper -> {
             BlockEntityType<TileEntity> type = new BlockEntityType<>((pos, state) -> {
@@ -348,160 +348,141 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
         return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
     }*/
 
-    public static final BlockCapability<IItemHandler, Direction> ITEM_HANDLER_BLOCK =
-            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "item_handler"),
-                                   IItemHandler.class, Direction.class);
-
-    public static final BlockCapability<IFluidHandler, Direction> FLUID_HANDLER_BLOCK =
-            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "fluid_handler"),
-                                   IFluidHandler.class, Direction.class);
-
-    public static final BlockCapability<IEnergyStorage, Direction> ENERGY_HANDLER_BLOCK =
-            BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "energy_handler"),
-                                   IEnergyStorage.class, Direction.class);
-
-    public IItemHandler getItemHandler(@Nullable Direction side) {
-        IInventory target = getInventory(Facing.from(side));
-        if (target == null) {
-            return null;
-        }
-        return new IItemHandlerModifiable() {
-            @Override
-            public int getSlots() {
-                return target.getSlotCount();
+    @Override
+    @Nullable
+    public <T> LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
+        if (capability == ForgeCapabilities.FLUID_HANDLER) {
+            ITank target = getTank(Facing.from(facing));
+            if (target == null) {
+                return LazyOptional.empty();
             }
 
-            @Override
-            public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-                target.set(slot, new cam72cam.mod.item.ItemStack(stack));
-            }
-
-            @Nonnull
-            @Override
-            public ItemStack getStackInSlot(int slot) {
-                return target.get(slot).internal();
-            }
-
-            @Nonnull
-            @Override
-            public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-                return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal();
-            }
-
-            @Nonnull
-            @Override
-            public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                return target.extract(slot, amount, simulate).internal();
-            }
-
-            @Override
-            public int getSlotLimit(int slot) {
-                return target.getLimit(slot);
-            }
-
-            @Override
-            public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
-                return true; //TODO 1.14.4
-            }
-        };
-    }
-
-    public IFluidHandler getFluidHandler(@Nullable Direction side) {
-        ITank target = getTank(Facing.from(side));
-        if (target == null) {
-            return null;
-        }
-        return new IFluidHandler() {
-            @Override
-            public int getTanks() {
-                return 1;
-            }
-
-            @Nonnull
-            @Override
-            public FluidStack getFluidInTank(int tank) {
-                return target.getContents().internal;
-            }
-
-            @Override
-            public int getTankCapacity(int tank) {
-                return target.getCapacity();
-            }
-
-            @Override
-            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                return target.allows(Fluid.getFluid(stack.getFluid()));
-            }
-
-            @Override
-            public int fill(FluidStack resource, FluidAction action) {
-                return target.fill(new cam72cam.mod.fluid.FluidStack(resource), action.simulate());
-            }
-
-            @Nonnull
-            @Override
-            public FluidStack drain(FluidStack resource, FluidAction action) {
-                return target.drain(new cam72cam.mod.fluid.FluidStack(resource), action.simulate()).internal;
-            }
-
-            @Nonnull
-            @Override
-            public FluidStack drain(int maxDrain, FluidAction action) {
-                if (target.getContents().internal.isEmpty()) {
-                    return FluidStack.EMPTY;
+            return LazyOptional.of(() -> new IFluidHandler() {
+                @Override
+                public int getTanks() {
+                    return 1;
                 }
-                return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal.getFluid(), maxDrain)), action.simulate()).internal;
-            }
-        };
-    }
 
-    public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
-        IEnergy target = getEnergy(Facing.from(side));
-        if (target == null) {
-            return null;
+                @Nonnull
+                @Override
+                public FluidStack getFluidInTank(int tank) {
+                    return target.getContents().internal;
+                }
+
+                @Override
+                public int getTankCapacity(int tank) {
+                    return target.getCapacity();
+                }
+
+                @Override
+                public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+                    return target.allows(Fluid.getFluid(stack.getFluid()));
+                }
+
+                @Override
+                public int fill(FluidStack resource, FluidAction action) {
+                    return target.fill(new cam72cam.mod.fluid.FluidStack(resource), action.simulate());
+                }
+
+                @Nonnull
+                @Override
+                public FluidStack drain(FluidStack resource, FluidAction action) {
+                    return target.drain(new cam72cam.mod.fluid.FluidStack(resource), action.simulate()).internal;
+                }
+
+                @Nonnull
+                @Override
+                public FluidStack drain(int maxDrain, FluidAction action) {
+                    if (target.getContents().internal.isEmpty()) {
+                        return FluidStack.EMPTY;
+                    }
+                    return target.drain(new cam72cam.mod.fluid.FluidStack(new FluidStack(target.getContents().internal, maxDrain)), action.simulate()).internal;
+                }
+            }).cast();
         }
-        return new IEnergyStorage() {
-            @Override
-            public int receiveEnergy(int maxReceive, boolean simulate) {
-                return target.receive(maxReceive, simulate);
+        if (capability == ForgeCapabilities.ITEM_HANDLER) {
+            IInventory target = getInventory(Facing.from(facing));
+            if (target == null) {
+                return LazyOptional.empty();
             }
+            return LazyOptional.of(() -> new IItemHandlerModifiable() {
+                @Override
+                public int getSlots() {
+                    return target.getSlotCount();
+                }
 
-            @Override
-            public int extractEnergy(int maxExtract, boolean simulate) {
-                return target.extract(maxExtract, simulate);
-            }
+                @Override
+                public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
+                    target.set(slot, new cam72cam.mod.item.ItemStack(stack));
+                }
 
-            @Override
-            public int getEnergyStored() {
-                return target.getCurrent();
-            }
+                @Nonnull
+                @Override
+                public ItemStack getStackInSlot(int slot) {
+                    return target.get(slot).internal();
+                }
 
-            @Override
-            public int getMaxEnergyStored() {
-                return target.getMax();
-            }
+                @Nonnull
+                @Override
+                public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
+                    return target.insert(slot, new cam72cam.mod.item.ItemStack(stack), simulate).internal();
+                }
 
-            @Override
-            public boolean canExtract() {
-                return true;
-            }
+                @Nonnull
+                @Override
+                public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                    return target.extract(slot, amount, simulate).internal();
+                }
 
-            @Override
-            public boolean canReceive() {
-                return true;
-            }
-        };
-    }
+                @Override
+                public int getSlotLimit(int slot) {
+                    return target.getLimit(slot);
+                }
 
-    public boolean hasCapacity(BlockCapability<?, Direction> capability, Direction side) {
-        if (capability == ITEM_HANDLER_BLOCK) {
-            return getInventory(Facing.from(side)) != null;
-        } else if (capability == FLUID_HANDLER_BLOCK) {
-            return getTank(Facing.from(side)) != null;
-        } else if (capability == ENERGY_HANDLER_BLOCK) {
-            return getEnergy(Facing.from(side)) != null;
+                @Override
+                public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
+                    return true; //TODO 1.14.4
+                }
+            }).cast();
         }
-        return false;
+        if (capability == ForgeCapabilities.ENERGY) {
+            IEnergy target = getEnergy(Facing.from(facing));
+            if (target == null) {
+                return LazyOptional.empty();
+            }
+            return LazyOptional.of(() -> new IEnergyStorage() {
+                @Override
+                public int receiveEnergy(int maxReceive, boolean simulate) {
+                    return target.receive(maxReceive, simulate);
+                }
+
+                @Override
+                public int extractEnergy(int maxExtract, boolean simulate) {
+                    return target.extract(maxExtract, simulate);
+                }
+
+                @Override
+                public int getEnergyStored() {
+                    return target.getCurrent();
+                }
+
+                @Override
+                public int getMaxEnergyStored() {
+                    return target.getMax();
+                }
+
+                @Override
+                public boolean canExtract() {
+                    return true;
+                }
+
+                @Override
+                public boolean canReceive() {
+                    return true;
+                }
+            }).cast();
+        }
+        return LazyOptional.empty();
     }
 
     /*

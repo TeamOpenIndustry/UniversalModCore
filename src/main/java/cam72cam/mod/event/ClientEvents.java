@@ -18,6 +18,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.client.event.*;
@@ -94,14 +95,11 @@ public class ClientEvents {
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
-    public static final Event<Consumer<RenderGuiLayerEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
 //    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
-    public static final Event<Consumer<RegisterClientExtensionsEvent>> CLIENT_EXTENSIONS_REGISTER = new Event<>();
-    public static final Event<Consumer<RegisterMenuScreensEvent>> MENU_SCREENS_REGISTER = new Event<>();
 
     @EventBusSubscriber(modid = ModCore.MODID, value = Dist.CLIENT)
     public static class ClientEventBus {
@@ -113,17 +111,17 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onClientTick(ClientTickEvent.Pre event) {
+        public static void onClientTick(TickEvent.ClientTickEvent.Pre event) {
             TICK.execute(Runnable::run);
         }
 
         @SubscribeEvent
-        public static void onClientTick(ClientTickEvent.Post event) {
+        public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
             TICK_POST.execute(Runnable::run);
         }
 
         private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDeltaY() : 0);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getDeltaY() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
@@ -167,7 +165,7 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onScroll(InputEvent.MouseScrollingEvent event) {
-            if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDeltaY()))) {
+            if (!SCROLL.executeCancellable(x -> x.apply(event.getDeltaY()))) {
                 event.setCanceled(true);
             }
         }
@@ -203,7 +201,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onFrame(RenderFrameEvent.Pre event) {
+        public static void onFrame(TickEvent.RenderTickEvent.Pre event) {
             if (dragPos != null) {
                 //Minecraft.getMinecraft().mouseHelper.mouseXYChange();
                 dragPos = dragPos.add(Minecraft.getInstance().mouseHandler.getXVelocity(), Minecraft.getInstance().mouseHandler.getYVelocity(), 0);
@@ -218,11 +216,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onDebugRender(CustomizeGuiOverlayEvent.DebugText event) {
             RENDER_DEBUG.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void onOverlayEvent(RenderGuiLayerEvent.Pre event) {
-            RENDER_OVERLAY.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent
@@ -248,7 +241,7 @@ public class ClientEvents {
 
         static boolean hasHacked = false;
         @SubscribeEvent
-        public static void onHackShaders(RenderFrameEvent.Pre event) {
+        public static void onHackShaders(TickEvent.RenderTickEvent.Pre event) {
             if (!hasHacked/* && event.phase == TickEvent.Phase.START*/) {
                 if (GameRenderer.getRendertypeCutoutShader() != null) {
                     hasHacked = true;
@@ -299,7 +292,7 @@ public class ClientEvents {
             REGISTER_SHADER.execute(x -> x.accept(event));
         }
 
-        @SubscribeEvent
+        /*@SubscribeEvent
         public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
             CLIENT_EXTENSIONS_REGISTER.execute(x -> x.accept(event));
         }
@@ -307,7 +300,7 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerMenuScreen(RegisterMenuScreensEvent event) {
             MENU_SCREENS_REGISTER.execute(x -> x.accept(event));
-        }
+        }*/
 
         @SubscribeEvent
         public static void onSoundLoad(SoundEngineLoadEvent event) {

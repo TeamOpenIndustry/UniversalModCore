@@ -22,6 +22,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -78,9 +79,10 @@ public class ModCore {
     }
 
     /** Called during Mod Construction phase */
-    public ModCore(IEventBus modEventBus, Dist dist) {
+    public ModCore(FMLJavaModLoadingContext context) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
+        var modEventBus = context.getModEventBus();
 
         ModCore.register(new Internal());
         proxy.setup();

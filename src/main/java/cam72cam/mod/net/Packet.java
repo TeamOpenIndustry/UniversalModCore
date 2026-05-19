@@ -11,22 +11,28 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
+import io.netty.util.AttributeKey;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.network.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -40,6 +46,9 @@ public abstract class Packet {
 
     // Received packet data
     private TagCompound data = new TagCompound();
+
+    // Each packet is given its own channel
+    private static Map<String, SimpleChannel> channels = new HashMap<>();
 
     /**
      * So either forge or minecraft has a bug where it mixes up the player in the context handler...
@@ -61,81 +70,43 @@ public abstract class Packet {
         }
         types.put(pktClass, sup);
         ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
-        CustomPacketPayload.Type<Message> type = new CustomPacketPayload.Type<>(name);
-        CommonEvents.Networking.REGISTER_PACKET.subscribe(reg -> {
-            reg.commonBidirectional(type, Message.codec, (msg, context) -> {
-                context.enqueueWork(() -> {
-                    msg.packet.ctx = context;
-                    Packet newPacket = copyFreshPacket(msg);
-                    World world = (context.protocol().isPlay() && context.flow() == PacketFlow.CLIENTBOUND)
-                                  ? MinecraftClient.getPlayer().getWorld() : World.get(context.player().level());
-                    try {
-                        TagSerializer.deserialize(msg.packet.data, newPacket, world);
-                    } catch (SerializationException e) {
-                        ModCore.catching(e);
-                        return;
-                    }
-                    newPacket.ctx = context;
-                    if (newPacket.getPlayer() == null) {
-                        try {
-                            throw new Exception(
-                                    String.format("Invalid Packet %s: missing player", newPacket.getClass()));
-                        } catch (Exception e) {
-                            ModCore.catching(e);
-                            return;
-                        }
-                    }
-                    newPacket.handle();
-                });
-            });
-        });
+        var channel = ChannelBuilder.named(name)
+                .networkProtocolVersion(0) // versions are handled separately
+                .simpleChannel()
+                .configuration().clientbound()
+                .add(ClientboundCustomPayloadPacket.class, ClientboundCustomPayloadPacket.CONFIG_STREAM_CODEC, UMCPacketHandler::applyClientbound)
+                .play().clientbound()
+                .add(ClientboundCustomPayloadPacket.class, ClientboundCustomPayloadPacket.GAMEPLAY_STREAM_CODEC, UMCPacketHandler::applyClientbound)
+                .any().serverbound()
+                .add(ServerboundCustomPayloadPacket.class, ServerboundCustomPayloadPacket.STREAM_CODEC, UMCPacketHandler::applyServerbound)
+                .build();
+        channels.put(pktClass, channel);
     }
 
-    //Since 1.20.4 NeoForge will use the identical packet object for networking in singleplayer
-    //Good optimization but bad for UMC
-    //Create a new copy to avoid modifying original packet object
-    private static Packet copyFreshPacket(Message msg) {
-        Packet newPacket;
-        try {
-            Constructor<? extends Packet> constructor =
-                    msg.packet.getClass().getDeclaredConstructor();
-            constructor.setAccessible(true);
-            newPacket = constructor.newInstance();
-        } catch (InstantiationException | IllegalAccessException |
-                 InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        return newPacket;
-    }
-
-    IPayloadContext ctx;
+    CustomPayloadEvent.Context ctx;
 
     /** Called after deserialization */
     protected abstract void handle();
 
     /** Only valid during handle */
     protected final World getWorld() {
-        if (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND) {
-            return getPlayer().getWorld();
-        }
         return world;
     }
 
     /** Only valid during handle */
     protected final Player getPlayer() {
-        return (ctx.protocol().isPlay() && ctx.flow() == PacketFlow.CLIENTBOUND)
-               ? MinecraftClient.getPlayer()
-               : player;
+        return player;
     }
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        PacketDistributor.sendToPlayersNear((ServerLevel) world.internal, null, pos.x, pos.y, pos.z, distance, new Message(this));
+        PacketDistributor.NEAR
+                .with(new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.dimension()))
+                        .send(new ClientboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
-        net.minecraft.world.entity.Entity internal = entity.internal;
         int syncDist = entity.internal.getType().clientTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
@@ -144,17 +115,20 @@ public abstract class Packet {
     public void sendToServer() {
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
-        PacketDistributor.sendToServer(new Message(this));
+        PacketDistributor.SERVER.noArg()
+                .send(new ServerboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Broadcast to all players from server */
     public void sendToAll() {
-        PacketDistributor.sendToAllPlayers(new Message(this));
+        PacketDistributor.ALL.noArg()
+                .send(new ClientboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Send from server to player */
     public void sendToPlayer(Player player) {
-        PacketDistributor.sendToPlayer((ServerPlayer) player.internal, new Message(this));
+        PacketDistributor.PLAYER.with((ServerPlayer) player.internal)
+                .send(new ClientboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Forge message construct.  Do not use directly */
@@ -206,6 +180,43 @@ public abstract class Packet {
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return type;
+        }
+    }
+
+    private static class UMCPacketHandler {
+
+        private static void apply(Message message, CustomPayloadEvent.Context context) {
+            context.enqueueWork(() -> {
+                World world = World.get(context.getSender().level());
+                try {
+                    TagSerializer.deserialize(message.packet.data, message.packet, world);
+                } catch (SerializationException e) {
+                    ModCore.catching(e);
+                    return;
+                }
+                if (message.packet.getPlayer() == null) {
+                    try {
+                        throw new Exception(
+                                String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                    } catch (Exception e) {
+                        ModCore.catching(e);
+                        return;
+                    }
+                }
+                message.packet.handle();
+            });
+        }
+
+        public static void applyClientbound(ClientboundCustomPayloadPacket packet, CustomPayloadEvent.Context context) {
+            if (packet.payload() instanceof Message message) {
+                apply(message, context);
+            }
+        }
+
+        public static void applyServerbound(ServerboundCustomPayloadPacket packet, CustomPayloadEvent.Context context) {
+            if (packet.payload() instanceof Message message) {
+                apply(message, context);
+            }
         }
     }
 }
