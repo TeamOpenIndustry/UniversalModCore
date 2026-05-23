@@ -68,7 +68,6 @@ shadowJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
     archiveClassifier = 'shadow'
-//    finalizedBy 'reobfShadowJar'
 }
 
 shadeDowngradedApi {
