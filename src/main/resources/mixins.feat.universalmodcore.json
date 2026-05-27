@@ -7,6 +7,9 @@
   "minVersion": "0.8.2",
   "compatibilityLevel": "JAVA_8",
   "mixinPriority": 1300,
+  "mixinextras": {
+    "minVersion": "0.5.0"
+  },
   "mixins": [
     "large_entity_collision.MixinVanillaWorld"
   ],
