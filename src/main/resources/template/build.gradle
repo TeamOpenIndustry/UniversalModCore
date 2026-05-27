@@ -1,56 +1,104 @@
 //BUILDSCRIPT//
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url = "https://jcenter.bintray.com/" }
-        maven {
-            name = "forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-    }
-    dependencies {
-        classpath ('com.anatawa12.forge:ForgeGradle:1.2-1.0.+') {
-            changing = true
-        }
-    }
+plugins {
+    id 'java'
+    //A customized fork for better support on Cleanroom
+    id 'xyz.wagyourtail.unimined' version "1.4.18-kappa"
+    id 'com.gradleup.shadow' version "9.4.1"
+    id "maven-publish"
+    id 'xyz.wagyourtail.jvmdowngrader' version '1.3.6'
+}
+configurations {
+    umcShade
+    modImplementation.extendsFrom umcShade
 }
 
 //PLUGINS//
-apply plugin: 'forge'
 
 //MINECRAFT//
-sourceCompatibility = targetCompatibility = '1.8'
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+
+    withSourcesJar()
 }
 
-minecraft {
-    version = "1.7.10-10.13.4.9999-1.7.10"
-    runDir = "run"
-    mappings = "stable_12"
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
+
+jvmdg {
+    quiet = false
+    downgradeTo = JavaVersion.VERSION_1_8
+    multiReleaseOriginal = true
+    shadeInlining = false
+    dg(configurations.umcShade, false)
+    //MR-JAR uses a Incremental Update-like strategy, so add versions here won't cause too much waste
+    multiReleaseVersions = [
+            JavaVersion.VERSION_1_8,  // 1.16 and below
+            JavaVersion.VERSION_16,   // 1.17
+            JavaVersion.VERSION_17,   // 1.18 - 1.20
+            JavaVersion.VERSION_21,   // 1.21
+            JavaVersion.VERSION_25    // 26.1 and beyond as well as modern 1.7.10/1.12.2
+    ].toSet()
+}
+
+unimined.minecraft {
+    version "1.7.10"
+
+    mappings {
+        searge()
+        mcp("stable", "12-1.7.10")
+    }
+
+    forge {
+        loader("10.13.4.1614-1.7.10")
+    }
+
+    defaultRemapJar = true
 }
 
 //DEPENDENCIES//
 #UMC_REPO#
 
+repositories {
+    maven { url = 'https://maven.cleanroommc.com' }
+}
+
 dependencies {
-    runtime "net.minecrell:terminalconsoleappender:1.3.0"
-    compile #UMC_DEPENDENCY#
+    modImplementation ('zone.rong:mixinbooter:10.7') { transitive = false }
+    modImplementation #UMC_DEPENDENCY#
 }
 
 //JAR//
-jar.finalizedBy('reobf')
+jar {
+    enabled = false
+}
+
+shadowJar {
+    configurations = [project.configurations.umcShade]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    archiveClassifier = 'shadow'
+}
+
+remapJar {
+    inputFile = tasks.shadeDowngradedApi.archiveFile
+    dependsOn(tasks.named("shadowJar"))
+    archiveClassifier = ''
+}
+
+tasks.named("assemble") {
+    dependsOn(tasks.named("remapJar"))
+}
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", "#MINECRAFT#"
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version':project.version, 'mcversion':"#MINECRAFT#"
     }
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'

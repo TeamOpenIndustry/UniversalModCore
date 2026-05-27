@@ -11,15 +11,17 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
-import cpw.mods.fml.client.config.GuiUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.lwjgl.opengl.GL11;
 import util.Matrix4;
 
@@ -188,6 +190,7 @@ public class GUIHelpers {
 //              .stage(RenderContext.Stage.GUI);
 
         state.model_view().multiply(matrix);
+        RenderHelper.enableGUIStandardItemLighting();
         try (With ctx = RenderContext.apply(state)) {
             IItemRenderer renderer = MinecraftForgeClient.getItemRenderer(stack.internal, IItemRenderer.ItemRenderType.INVENTORY);
             if (renderer != null) {
@@ -200,6 +203,7 @@ public class GUIHelpers {
                 }
             }
         }
+        RenderHelper.disableStandardItemLighting();
     }
 
     /** Try to open an external link in player's browser */
