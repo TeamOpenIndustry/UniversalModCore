@@ -90,9 +90,7 @@ repositories {
 dependencies {
     shade "curse.maven:invtweaks-223094:2431302"
 
-    def unimixinsVersion = "0.1.14"
-
-    modUtils.enableMixins(implementation(annotationProcessor("com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:$unimixinsVersion:dev")), 'mixins.universalmodcore.refmap.json')
+    modUtils.enableMixins(implementation(annotationProcessor("com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev")), 'mixins.universalmodcore.refmap.json')
 
     implementation('junit:junit:4.13.1')
 
