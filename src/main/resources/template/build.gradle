@@ -52,7 +52,7 @@ unimined.minecraft {
     }
 
     forge {
-        loader("13.20.0.2315-1.11.2")
+        loader("13.20.0.2588")
     }
 
     defaultRemapJar = true
