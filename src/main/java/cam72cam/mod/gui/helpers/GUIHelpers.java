@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.text.ITextComponent;
@@ -177,9 +178,11 @@ public class GUIHelpers {
         //Otherwise we don't care
 //              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
+        RenderHelper.enableGUIStandardItemLighting();
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         }
+        RenderHelper.disableStandardItemLighting();
     }
 
     /** Try to open an external link in player's browser */

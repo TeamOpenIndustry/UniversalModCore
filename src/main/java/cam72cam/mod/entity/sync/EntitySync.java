@@ -62,13 +62,16 @@ public class EntitySync extends TagCompound {
                             .collect(HashMap::new,
                                      (m, f) -> {
                                          TagSync tag = f.getAnnotation(TagSync.class);
-                                         TagField tagField = f.getAnnotation(TagField.class);
+                                         String name = f.getAnnotation(TagField.class).value();
+                                         if("".equals(name)) {
+                                             name = f.getName();
+                                         }
                                          Class<?> type = f.getType();
 
                                          if (type == float.class || type == Float.class) {
-                                             m.put(tagField.value(), Math.max(0, Math.min(tag.floatPrecision(), 8)));
+                                             m.put(name, Math.max(0, Math.min(tag.floatPrecision(), 8)));
                                          } else if (type == double.class || type == Double.class) {
-                                             m.put(tagField.value(), Math.max(0, Math.min(tag.doublePrecision(), 8)));
+                                             m.put(name, Math.max(0, Math.min(tag.doublePrecision(), 8)));
                                          }
                                      },
                                      HashMap::putAll);
