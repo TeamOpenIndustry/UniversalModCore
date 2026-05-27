@@ -13,7 +13,7 @@ import java.util.zip.ZipEntry;
 @Mixin(JarDiscoverer.class)
 public class MixinJarDiscoverer {
     //Skip Java9+ classes in Multi-Release as Forge can't process them
-    @WrapOperation(method = "findClassesASM", at = @At(value = "INVOKE", target = "Ljava/util/regex/Matcher;matches()Z"), remap = false, require = 0)
+    @WrapOperation(method = "discover", at = @At(value = "INVOKE", target = "Ljava/util/regex/Matcher;matches()Z"), remap = false, require = 0)
     private boolean checkClass(Matcher instance, Operation<Boolean> original, @Local(name = "ze") ZipEntry ze) {
         if (original.call(instance)) {
             return !ze.getName().endsWith("module-info.class")
