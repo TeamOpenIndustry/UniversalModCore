@@ -62,11 +62,12 @@ unimined.minecraft {
 #UMC_REPO#
 
 repositories {
-    maven { url = 'https://maven.cleanroommc.com' }
+    maven { url = "https://cursemaven.com" }
 }
 
 dependencies {
-    modImplementation ('zone.rong:mixinbooter:10.7') { transitive = false }
+    modImplementation "curse.maven:unimixins-826970:8153136"
+    modImplementation "curse.maven:lwjgl3ify-998880:8123975"
     modImplementation #UMC_DEPENDENCY#
 }
 
