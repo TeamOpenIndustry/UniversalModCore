@@ -45,7 +45,7 @@ jvmdg {
 }
 
 unimined.minecraft {
-    version "1.14.4"
+    version "1.15.2"
 
     mappings {
         searge()
