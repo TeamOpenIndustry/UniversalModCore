@@ -49,7 +49,7 @@ unimined.minecraft {
 
     mappings {
         searge()
-        mcp("stable", "58-1.14")
+        mcp("stable", "58-1.14.4")
     }
 
     minecraftForge {
