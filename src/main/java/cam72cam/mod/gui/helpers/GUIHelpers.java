@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -178,9 +179,11 @@ public class GUIHelpers {
         //Otherwise we don't care
 //              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
+        RenderHelper.enableGUIStandardItemLighting();
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.internal, x, y);
         }
+        RenderHelper.disableStandardItemLighting();
     }
 
     /** Try to open an external link in player's browser */
