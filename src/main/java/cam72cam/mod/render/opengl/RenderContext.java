@@ -236,10 +236,11 @@ public class RenderContext {
                 int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
                 if (fourIntBuffer == null) {
-                    fourIntBuffer = GLAllocation.createDirectIntBuffer(16);
+                    //16 ints in case it overflows...
+                    fourIntBuffer = GLAllocation.createDirectByteBuffer(64).asIntBuffer();
                 }
                 fourIntBuffer.position(0);
-                GL11.glGetInteger(GL11.GL_SCISSOR_BOX, fourIntBuffer);
+                GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, fourIntBuffer);
                 int[] oldScissor = new int[]{fourIntBuffer.get(0), fourIntBuffer.get(1), fourIntBuffer.get(2), fourIntBuffer.get(3)};
                 restore.add(() -> GL11.glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]));
 
