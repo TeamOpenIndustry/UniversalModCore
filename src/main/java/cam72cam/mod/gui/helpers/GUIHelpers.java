@@ -180,7 +180,7 @@ public class GUIHelpers {
         //Otherwise we don't care
 //              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
-        RenderHelper.enableGUIStandardItemLighting();
+        RenderHelper.enableStandardItemLighting();
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(stack.internal, x, y);
         }
