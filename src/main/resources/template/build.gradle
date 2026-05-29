@@ -48,6 +48,7 @@ unimined.minecraft {
     version "1.18.2"
 
     mappings {
+        intermediary()
         mojmap()
         parchment("1.18.2", "2022.11.06")
     }
