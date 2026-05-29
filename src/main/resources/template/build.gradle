@@ -48,6 +48,7 @@ unimined.minecraft {
     version "1.14.4"
 
     mappings {
+        intermediary()
         searge()
         mcp("stable", "58-1.14.4")
     }
