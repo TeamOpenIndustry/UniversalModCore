@@ -48,6 +48,7 @@ unimined.minecraft {
     version "1.15.2"
 
     mappings {
+        intermediary()
         searge()
         mcp("snapshot", "20201118-1.15.1")
     }
