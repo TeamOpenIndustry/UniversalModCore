@@ -251,7 +251,7 @@ public class RenderContext {
 
                 if (fourIntBuffer == null) {
                     //16 ints in case it overflows...
-                    fourIntBuffer = GLAllocation.createDirectByteBuffer(64).asIntBuffer();
+                    fourIntBuffer = GLAllocation.createByteBuffer(64).asIntBuffer();
                 }
                 fourIntBuffer.position(0);
                 GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, fourIntBuffer);

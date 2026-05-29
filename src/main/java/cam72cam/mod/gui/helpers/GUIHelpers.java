@@ -182,11 +182,12 @@ public class GUIHelpers {
         //Otherwise we don't care
 //              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
-        RenderHelper.enableStandardItemLighting();
+        RenderHelper.turnBackOn();
+        RenderHelper.setupFor3DItems();
         try (With ctx = RenderContext.apply(state)) {
             Minecraft.getInstance().getItemRenderer().renderAndDecorateItem(stack.internal, x, y);
         }
-        RenderHelper.disableStandardItemLighting();
+        RenderHelper.turnOff();
     }
 
     /** Try to open an external link in player's browser */
