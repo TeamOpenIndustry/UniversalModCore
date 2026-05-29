@@ -49,7 +49,7 @@ unimined.minecraft {
 
     mappings {
         mojmap()
-        parchment("1.19.4", "2023.06.25")
+        parchment("1.19.4", "2023.06.26")
     }
 
     minecraftForge {
