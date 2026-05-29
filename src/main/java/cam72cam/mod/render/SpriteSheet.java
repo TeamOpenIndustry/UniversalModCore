@@ -1,6 +1,7 @@
 package cam72cam.mod.render;
 
 import net.minecraft.client.renderer.texture.TextureUtil;
+import cam72cam.mod.render.opengl.DirectDraw;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -9,7 +10,6 @@ import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,7 +51,7 @@ public class SpriteSheet {
     /** Allocate a slot in the sheet and write pixels to it */
     public void setSprite(Identifier id, ByteBuffer pixels) {
         if (!sprites.containsKey(id)) {
-            if (unallocated.size() == 0) {
+            if (unallocated.isEmpty()) {
                 allocateSheet();
             }
             sprites.put(id, unallocated.remove(0));
@@ -72,19 +72,12 @@ public class SpriteSheet {
         state.texture(Texture.wrap(sprite.texID))
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
-        try (With ctx = RenderContext.apply(state)) {
-            GL11.glBegin(GL11.GL_QUADS);
-            GL11.glColor4f(1, 1, 1, 1);
-            GL11.glTexCoord2f(sprite.uMin, sprite.vMin);
-            GL11.glVertex3f(0, 0, 0);
-            GL11.glTexCoord2f(sprite.uMin, sprite.vMax);
-            GL11.glVertex3f(0, 1, 0);
-            GL11.glTexCoord2f(sprite.uMax, sprite.vMax);
-            GL11.glVertex3f(1, 1, 0);
-            GL11.glTexCoord2f(sprite.uMax, sprite.vMin);
-            GL11.glVertex3f(1, 0, 0);
-            GL11.glEnd();
-        };
+        DirectDraw buffer = new DirectDraw();
+        buffer.vertex(0, 0, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMin);
+        buffer.vertex(0, 1, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMax);
+        buffer.vertex(1, 1, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMax);
+        buffer.vertex(1, 0, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMin);
+        buffer.draw(state);
     }
 
     /** Remove a sprite from the sheet (does not reduce used GPU memory yet) */
