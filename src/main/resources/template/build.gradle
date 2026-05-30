@@ -53,6 +53,13 @@ unimined.minecraft {
         mcp("stable", "58-1.14.4")
     }
 
+    mods {
+        modImplementation {
+            //In case something uses named mapping in AW
+            catchAWNamespaceAssertion()
+        }
+    }
+
     minecraftForge {
         loader("28.2.26")
     }
