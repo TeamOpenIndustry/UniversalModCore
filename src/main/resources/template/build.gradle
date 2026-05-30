@@ -26,6 +26,7 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
+    options.encoding = 'UTF-8'
 }
 
 jvmdg {
@@ -55,6 +56,13 @@ unimined.minecraft {
 
     neoForge {
         loader("216")
+    }
+
+    mods {
+        modImplementation {
+            //In case something uses named mapping in AW
+            catchAWNamespaceAssertion()
+        }
     }
 
     minecraftRemapper.config {
