@@ -46,12 +46,12 @@ jvmdg {
 }
 
 unimined.minecraft {
-    version "1.20.1"
+    version "1.21.1"
 
     mappings {
         intermediary()
         mojmap()
-        parchment("1.20.1", "2023.09.03")
+        parchment("1.21.1", "2024.11.17")
     }
 
     mods {
@@ -62,10 +62,10 @@ unimined.minecraft {
     }
 
     minecraftForge {
-        loader("47.4.20")
+        loader("52.1.14")
     }
 
-    defaultRemapJar = true
+    defaultRemapJar = false
 }
 
 //DEPENDENCIES//
@@ -88,14 +88,8 @@ shadowJar {
     archiveClassifier = 'shadow'
 }
 
-remapJar {
-    inputFile = tasks.shadeDowngradedApi.archiveFile
-    dependsOn(tasks.named("shadowJar"))
-    archiveClassifier = ''
-}
-
 tasks.named("assemble") {
-    dependsOn(tasks.named("remapJar"))
+    dependsOn(tasks.named("shadowJar"))
 }
 
 processResources {
