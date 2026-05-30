@@ -60,7 +60,7 @@ public class SpriteSheet {
      */
     public void setSprite(Identifier id, ByteBuffer pixels) {
         if (!sprites.containsKey(id)) {
-            if (unallocated.size() == 0) {
+            if (unallocated.isEmpty()) {
                 allocateSheet();
             }
             sprites.put(id, unallocated.remove(0));
@@ -90,17 +90,11 @@ public class SpriteSheet {
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
         DirectDraw buffer = new DirectDraw();
-
-        try (With ctx = RenderContext.apply(state)) {
-            buffer.vertex(0, 0, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMin);
-            buffer.vertex(0, 1, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMax);
-            buffer.vertex(1, 1, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMax);
-            buffer.vertex(1, 0, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMin);
-        }
-        ;
+        buffer.vertex(0, 0, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMin);
+        buffer.vertex(0, 1, 0).color(1, 1, 1, 1).uv(sprite.uMin, sprite.vMax);
+        buffer.vertex(1, 1, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMax);
+        buffer.vertex(1, 0, 0).color(1, 1, 1, 1).uv(sprite.uMax, sprite.vMin);
         buffer.draw(state);
-
-
     }
 
     /**

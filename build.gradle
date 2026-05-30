@@ -17,7 +17,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.2.3"
+String umcVersion = "1.2.4"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-${(providers.exec { commandLine("git", "rev-parse", "--verify", "--short=7", "HEAD") }.standardOutput.asText.get() as String).substring(0, 7)}"
