@@ -26,6 +26,7 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
+    options.encoding = 'UTF-8'
 }
 
 jvmdg {
@@ -51,6 +52,13 @@ unimined.minecraft {
         intermediary()
         mojmap()
         parchment("1.18.2", "2022.11.06")
+    }
+
+    mods {
+        modImplementation {
+            //In case something uses named mapping in AW
+            catchAWNamespaceAssertion()
+        }
     }
 
     minecraftForge {
