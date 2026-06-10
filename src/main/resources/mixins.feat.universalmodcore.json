@@ -12,6 +12,7 @@
   },
   "mixins": [
     "large_entity_collision.MixinVanillaWorld",
+    "mod_loading.MixinDirectoryDiscoverer",
     "mod_loading.MixinJarDiscoverer"
   ],
   "client": [

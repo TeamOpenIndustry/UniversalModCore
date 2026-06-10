@@ -14,8 +14,11 @@ import java.util.function.Supplier;
 public class UMCModParser {
     private static final JsonParser parser = new JsonParser();
 
-    //TODO not only jar but also directory
     public static UMCModContainer parse(ModCandidate candidate, InputStream stream) throws NoSuchElementException {
+        return parse(candidate, stream, null);
+    }
+
+    public static UMCModContainer parse(ModCandidate candidate, InputStream stream, File resources) throws NoSuchElementException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
             JsonElement root = parser.parse(reader);
             JsonObject obj = root.getAsJsonObject();
@@ -33,6 +36,7 @@ public class UMCModParser {
                 container.modURL = new URL(modURL);
             }
             container.license = getString(obj, "license").orElse("N/A");
+            container.resourcesRoot = resources;
 
             container.authors = new ArrayList<>();
             if (obj.has("authors") && obj.get("authors").isJsonArray()) {
