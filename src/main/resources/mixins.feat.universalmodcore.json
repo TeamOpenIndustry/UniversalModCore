@@ -11,7 +11,8 @@
     "minVersion": "0.5.0"
   },
   "mixins": [
-    "large_entity_collision.MixinVanillaWorld"
+    "large_entity_collision.MixinVanillaWorld",
+    "mod_loading.MixinJarDiscoverer"
   ],
   "client": [
     "global_renderer.MixinRenderGlobal"
