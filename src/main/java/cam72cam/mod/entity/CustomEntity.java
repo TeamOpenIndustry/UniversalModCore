@@ -1,6 +1,9 @@
 package cam72cam.mod.entity;
 
 import cam72cam.mod.entity.sync.EntitySync;
+import cam72cam.mod.world.World;
+import net.minecraft.entity.DataWatcher;
+import net.minecraft.util.MathHelper;
 
 import java.util.List;
 
@@ -88,4 +91,33 @@ public class CustomEntity extends Entity {
         return internal.getActualPassengers();
     }
 
+    @Override
+    public float getRotationRoll() {
+        return internal.getDataWatcher().getWatchableObjectFloat(ModdedEntity.ROLL);
+    }
+
+    @Override
+    public float getRotationRoll(float partialTicks) {
+        return getPrevRotationRoll() + (getRotationRoll() - getPrevRotationRoll()) * partialTicks;
+    }
+
+    @Override
+    public void setRotationRoll(float roll) {
+        DataWatcher dataManager = internal.getDataWatcher();
+        float prevRoll = dataManager.getWatchableObjectFloat(ModdedEntity.PREV_ROLL);
+        while (roll - prevRoll < -180.0F)
+        {
+            prevRoll -= 360.0F;
+        }
+        while (roll - prevRoll >= 180.0F)
+        {
+            prevRoll += 360.0F;
+        }
+        dataManager.updateObject(ModdedEntity.PREV_ROLL, prevRoll);
+        dataManager.updateObject(ModdedEntity.ROLL, roll);
+    }
+
+    public float getPrevRotationRoll() {
+        return internal.getDataWatcher().getWatchableObjectFloat(ModdedEntity.PREV_ROLL);
+    }
 }

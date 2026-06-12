@@ -93,7 +93,8 @@ public class EntityRenderer extends Render {
         RenderState state = new RenderState();
         state.translate(x, y, z);
         state.rotate(180 - entityYaw, 0, 1, 0);
-        state.rotate(self.getRotationPitch(), 1, 0, 0);
+        state.rotate(self.getRotationPitch(partialTicks), 1, 0, 0);
+        state.rotate(self.getRotationRoll(partialTicks), 0, 0, 1);
         state.rotate(-90, 0, 1, 0);
         state.stage(RenderContext.Stage.ENTITY);
         if (MinecraftForgeClient.getRenderPass() == 0) {

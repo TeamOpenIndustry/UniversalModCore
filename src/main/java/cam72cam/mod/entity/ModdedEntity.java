@@ -5,9 +5,7 @@ import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.entity.custom.*;
 import cam72cam.mod.entity.sync.TagSync;
-import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
@@ -35,6 +33,16 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
+    //Data synchronization
+    //1.7 uses int as keys so here we hash the names...
+    static final int PREV_ROLL = 0x4DE076B2;
+    static final int ROLL = 0x41AEAD17;
+    //Data storage
+    @TagField
+    private float roll = 0;
+    @TagField
+    private float prevRoll = 0;
 
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();
@@ -73,6 +81,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     protected final void entityInit() {
+        this.getDataWatcher().addObject(ROLL, 0f);
+        this.getDataWatcher().addObject(PREV_ROLL, 0f);
     }
 
     /** Setup self if we have not done so already.  This happens during entity data load. */
@@ -128,6 +138,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
 
+        if (!this.worldObj.isRemote) {
+            getDataWatcher().updateObject(ROLL, this.roll);
+            getDataWatcher().updateObject(PREV_ROLL, this.prevRoll);
+        }
+
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
             // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
@@ -161,6 +176,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     private void save(TagCompound data) {
         data.setString("custom_mob_type", type);
+        this.roll = getDataWatcher().getWatchableObjectFloat(ROLL);
+        this.prevRoll = getDataWatcher().getWatchableObjectFloat(PREV_ROLL);
+
         try {
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
@@ -226,6 +244,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public void onEntityUpdate() {
+        if (!worldObj.isRemote) {
+            this.getDataWatcher().updateObject(PREV_ROLL,
+                                               this.getDataWatcher().getWatchableObjectFloat(ROLL));
+        }
         iTickable.onTick();
         try {
             self.sync.send();
