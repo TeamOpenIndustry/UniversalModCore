@@ -16,6 +16,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -38,6 +41,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
+    //Data synchronization
+    static final DataParameter<Float> PREV_ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    static final DataParameter<Float> ROLL = EntityDataManager.createKey(ModdedEntity.class, DataSerializers.FLOAT);
+    //Data storage
+    @TagField
+    private float roll = 0;
+    @TagField
+    private float prevRoll = 0;
 
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();
@@ -76,6 +88,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     protected final void entityInit() {
+        this.dataManager.register(ROLL, 0f);
+        this.dataManager.register(PREV_ROLL, 0f);
     }
 
     /** Setup self if we have not done so already.  This happens during entity data load. */
@@ -131,6 +145,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
 
+        if (!this.world.isRemote) {
+            dataManager.set(ROLL, this.roll);
+            dataManager.set(PREV_ROLL, this.prevRoll);
+        }
+
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
             // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
@@ -164,6 +183,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     private void save(TagCompound data) {
         data.setString("custom_mob_type", type);
+        this.roll = dataManager.get(ROLL);
+        this.prevRoll = dataManager.get(PREV_ROLL);
+
         try {
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
@@ -227,6 +249,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void onUpdate() {
+        if (!world.isRemote) {
+            this.dataManager.set(PREV_ROLL, this.dataManager.get(ROLL));
+        }
         iTickable.onTick();
         try {
             self.sync.send();
