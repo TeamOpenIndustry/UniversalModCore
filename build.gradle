@@ -28,7 +28,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.2.4"
+String umcVersion = "1.3.0"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -49,7 +49,7 @@ minecraft {
     version = "1.12.2-14.23.5.2847"
     runDir = "run"
 
-    coreMod = 'cam72cam.mod.UMCMixinPlugin'
+    coreMod = 'cam72cam.mod.UMCCoremodPlugin'
 //    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
 //    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
     // the mappings can be changed at any time, and must be in the following format.
