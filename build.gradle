@@ -49,7 +49,7 @@ minecraft {
     version = "1.12.2-14.23.5.2847"
     runDir = "run"
 
-    coreMod = 'cam72cam.mod.UMCCoremodPlugin'
+    coreMod = 'cam72cam.mod.UMCMixinPlugin'
 //    clientRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
 //    serverRunArgs.addAll('--tweakClass', 'org.spongepowered.asm.launch.MixinTweaker', '--mixin', 'mixins.universalmodcore.json')
     // the mappings can be changed at any time, and must be in the following format.
