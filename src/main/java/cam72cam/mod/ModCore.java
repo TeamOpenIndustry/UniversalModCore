@@ -421,6 +421,10 @@ public class ModCore {
         return 11404;
     }
 
+    public static String semanticVersion() {
+        return "1.12.2-forge";
+    }
+
     private static Boolean isDev = null;
 
     public static boolean isDevelopmentEnvironment() {
