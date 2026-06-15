@@ -20,7 +20,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.gtnewhorizons:retrofuturagradle:1.4.0')
+        classpath('com.gtnewhorizons:retrofuturagradle:1.4.9')
         classpath('com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4')
     }
 }
