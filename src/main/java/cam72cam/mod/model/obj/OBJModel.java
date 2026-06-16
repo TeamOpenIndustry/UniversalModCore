@@ -30,8 +30,8 @@ public class OBJModel {
     public final int textureHeight;
     public final int defaultLodSize;
     public final Map<String, Map<Integer, OBJTextureSheet>> textures = new HashMap<>();
-    public final Map<String, OBJTextureSheet> normals = new HashMap<>();
-    public final Map<String, OBJTextureSheet> speculars = new HashMap<>();
+    public final Map<String, Map<Integer, OBJTextureSheet>> normals = new HashMap<>();
+    public final Map<String, Map<Integer, OBJTextureSheet>> speculars = new HashMap<>();
     public final LinkedHashMap<String, OBJGroup> groups; //Order by vertex start/stop
     public final boolean isSmoothShading;
 
@@ -112,7 +112,7 @@ public class OBJModel {
 
             for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
                 ModCore.debug("%s : tex %s", modelLoc, variant);
-                Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
+                Map<Integer, OBJTextureSheet> baseTexLodMap = new HashMap<>();
 
                 int texSize = Math.max(textureWidth, textureHeight);
                 Supplier<GenericByteBuffer> texData = cache.getResource(variant + ".rgba", builder -> {
@@ -128,7 +128,7 @@ public class OBJModel {
                     }
                     return new GenericByteBuffer(toRGBA(img));
                 });
-                lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
+                baseTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, texData, cacheSeconds));
 
                 for (Integer lodValue : lodValues) {
                     if (lodValue < texSize) {
@@ -136,24 +136,70 @@ public class OBJModel {
                         Supplier<GenericByteBuffer> lodData = cache.getResource(variant + String.format("_%s.rgba", lodValue),
                                 builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getTextures().get(variant).get(), lodValue)))
                         );
-                        lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
+                        baseTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodData, cacheSeconds));
                     }
                 }
-                this.textures.put(variant, lodMap);
+                this.textures.put(variant, baseTexLodMap);
 
                 if (hasNormals) {
+                    Map<Integer, OBJTextureSheet> normalTexLodMap = new HashMap<>();
                     try {
-                        Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> new GenericByteBuffer(toRGBA(builder.getNormals().get(variant).get())));
-                        this.normals.put(variant, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+                        Supplier<GenericByteBuffer> normData = cache.getResource(variant + ".norm", builder -> {
+                            BufferedImage img = builder.getNormals().get(variant).get();
+                            if (Config.DebugTextureSheets) {
+                                try {
+                                    File cacheFile = ModCore.cacheFile(new Identifier(modelLoc.getDomain() + "debug", modelLoc.getPath() + "_" + variant + "_norm.png"));
+                                    ModCore.info("Writing debug normal to " + cacheFile);
+                                    ImageIO.write(img, "png", cacheFile);
+                                } catch (IOException e) {
+                                    ModCore.catching(e);
+                                }
+                            }
+                            return new GenericByteBuffer(toRGBA(img));
+                        });
+                        normalTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, normData, cacheSeconds));
+
+                        for (Integer lodValue : lodValues) {
+                            if (lodValue < texSize) {
+                                Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
+                                Supplier<GenericByteBuffer> lodNormData = cache.getResource(variant + "_" + lodValue + ".norm",
+                                        builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getNormals().get(variant).get(), lodValue))));
+                                normalTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodNormData, cacheSeconds));
+                            }
+                        }
+                        this.normals.put(variant, normalTexLodMap);
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load normal map for %s, %s", modelLoc, ex);
                     }
                 }
 
                 if (hasSpeculars) {
+                    Map<Integer, OBJTextureSheet> specularTexLodMap = new HashMap<>();
                     try {
-                    Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> new GenericByteBuffer(toRGBA(builder.getSpeculars().get(variant).get())));
-                    this.speculars.put(variant, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
+                        Supplier<GenericByteBuffer> specData = cache.getResource(variant + ".spec", builder -> {
+                            BufferedImage img = builder.getSpeculars().get(variant).get();
+                            if (Config.DebugTextureSheets) {
+                                try {
+                                    File cacheFile = ModCore.cacheFile(new Identifier(modelLoc.getDomain() + "debug", modelLoc.getPath() + "_" + variant + "_spec.png"));
+                                    ModCore.info("Writing debug specular to " + cacheFile);
+                                    ImageIO.write(img, "png", cacheFile);
+                                } catch (IOException e) {
+                                    ModCore.catching(e);
+                                }
+                            }
+                            return new GenericByteBuffer(toRGBA(img));
+                        });
+                        specularTexLodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight, specData, cacheSeconds));
+
+                        for (Integer lodValue : lodValues) {
+                            if (lodValue < texSize) {
+                                Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
+                                Supplier<GenericByteBuffer> lodSpecData = cache.getResource(variant + "_" + lodValue + ".spec",
+                                        builder -> new GenericByteBuffer(toRGBA(scaleImage(builder.getSpeculars().get(variant).get(), lodValue))));
+                                specularTexLodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(), lodSpecData, cacheSeconds));
+                            }
+                        }
+                        this.speculars.put(variant, specularTexLodMap);
                     } catch (Exception ex) {
                         ModCore.warn("Unable to load specular map for %s, %s", modelLoc, ex);
                     }
@@ -302,18 +348,62 @@ public class OBJModel {
                 }
             }
 
-
-
-            if (lodSize == defaultLodSize && OBJModel.this.normals.containsKey(texName)) {
-                state.normals(OBJModel.this.normals.get(texName).synchronous(wait));
+            OBJTextureSheet normTex = null;
+            if (OBJModel.this.normals.containsKey(texName)) {
+                Map<Integer, OBJTextureSheet> normLodMap = OBJModel.this.normals.get(texName);
+                normTex = normLodMap.get(lodSize);
+                if (normTex == null) {
+                    normTex = normLodMap.get(defaultLodSize);
+                }
+            }
+            if (normTex != null) {
+                if (wait) {
+                    state.normals(normTex.synchronous(true));
+                } else {
+                    normTex.getId();
+                    if (!normTex.isLoaded()) {
+                        normTex = OBJModel.this.normals.get(texName).values().stream()
+                                .filter(CustomTexture::isLoaded)
+                                .findAny().orElse(null);
+                    }
+                    if (normTex != null) {
+                        state.normals(normTex);
+                    } else {
+                        state.normals(defTex);
+                    }
+                }
             } else {
                 state.normals(defTex);
             }
-            if (lodSize == defaultLodSize && OBJModel.this.speculars.containsKey(texName)) {
-                state.specular(OBJModel.this.speculars.get(texName).synchronous(wait));
+
+            OBJTextureSheet specTex = null;
+            if (OBJModel.this.speculars.containsKey(texName)) {
+                Map<Integer, OBJTextureSheet> specLodMap = OBJModel.this.speculars.get(texName);
+                specTex = specLodMap.get(lodSize);
+                if (specTex == null) {
+                    specTex = specLodMap.get(defaultLodSize);
+                }
+            }
+            if (specTex != null) {
+                if (wait) {
+                    state.specular(specTex.synchronous(true));
+                } else {
+                    specTex.getId();
+                    if (!specTex.isLoaded()) {
+                        specTex = OBJModel.this.speculars.get(texName).values().stream()
+                                .filter(CustomTexture::isLoaded)
+                                .findAny().orElse(null);
+                    }
+                    if (specTex != null) {
+                        state.specular(specTex);
+                    } else {
+                        state.specular(defTex);
+                    }
+                }
             } else {
                 state.specular(defTex);
             }
+
             state.smooth_shading(OBJModel.this.isSmoothShading);
         }
 

@@ -149,7 +149,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         RenderState state = new RenderState(p_225623_4_).lightmap(j / 240f, k / 240f);
         state.rotate(180 - entityYaw, 0, 1, 0);
-        state.rotate(self.getRotationPitch(), 1, 0, 0);
+        state.rotate(self.getRotationPitch(partialTicks), 1, 0, 0);
+        state.rotate(self.getRotationRoll(partialTicks), 0, 0, 1);
         state.rotate(-90, 0, 1, 0);
         state.stage(RenderContext.Stage.ENTITY);
         //Set up our own light state

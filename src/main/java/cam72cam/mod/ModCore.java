@@ -427,6 +427,10 @@ public class ModCore {
         return 11502;
     }
 
+    public static String semanticVersion() {
+        return "1.15.2-forge";
+    }
+
     public static boolean isDevelopmentEnvironment() {
         return !FMLLoader.isProduction();
     }
