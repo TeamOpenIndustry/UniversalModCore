@@ -407,7 +407,7 @@ public class ModCore {
     }
 
     public static String semanticVersion() {
-        return "1.10.2-forge";
+        return "1.7.10-forge";
     }
 
     private static Boolean isDev = null;
