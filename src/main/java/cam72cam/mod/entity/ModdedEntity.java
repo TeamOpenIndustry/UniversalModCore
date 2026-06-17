@@ -122,7 +122,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
 
-        if (!this.level.isClientSide()) {
+        if (!this.level().isClientSide()) {
             getEntityData().set(ROLL, this.roll);
             getEntityData().set(PREV_ROLL, this.prevRoll);
         }
@@ -247,7 +247,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void tick() {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             this.getEntityData().set(PREV_ROLL, getEntityData().get(ROLL));
         }
         iTickable.onTick();
