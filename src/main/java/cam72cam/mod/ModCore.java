@@ -450,7 +450,7 @@ public class ModCore {
     }
 
     public static String semanticVersion() {
-        return "1.20.1-forge";
+        return "1.21.1-neoforge";
     }
 
     public static boolean isDevelopmentEnvironment() {
