@@ -5,6 +5,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Explosion;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * The base entity abstraction that wraps MC entities.
- *
+ * <p>
  * TODO: Make sure we are setting prevRot/Loc stuff correctly.  Should it only be changed on a tick processing the movement?
  */
 public class Entity {
@@ -76,29 +77,64 @@ public class Entity {
         return internal.getYRot();
     }
 
+    public float getRotationPitch() {
+        return internal.getXRot();
+    }
+
+    /**
+     * @see CustomEntity#getRotationRoll()
+     */
+    public float getRotationRoll() {
+        return 0f;
+    }
+
+    public float getRotationYaw(float partialTicks) {
+        return Mth.clampedLerp(internal.yRotO, internal.getYRot(), partialTicks);
+    }
+
+    public float getRotationPitch(float partialTicks) {
+        return Mth.clampedLerp(internal.xRotO, internal.getXRot(), partialTicks);
+    }
+
+    /**
+     * @see CustomEntity#getRotationRoll(float)
+     */
+    public float getRotationRoll(float partialTicks) {
+        return 0;
+    }
+
     public void setRotationYaw(float yaw) {
         internal.yRotO = internal.getYRot();
         internal.setYRot(yaw);
-        double d0 = internal.yRotO - yaw;
-        if (d0 < -180.0D)
-        {
-            internal.yRotO += 360.0F;
-        }
 
-        if (d0 >= 180.0D)
+        while (internal.getYRot() - internal.yRotO < -180.0F)
         {
             internal.yRotO -= 360.0F;
         }
-
-    }
-
-    public float getRotationPitch() {
-        return internal.getXRot();
+        while (internal.getYRot() - internal.yRotO >= 180.0F)
+        {
+            internal.yRotO += 360.0F;
+        }
     }
 
     public void setRotationPitch(float pitch) {
         internal.xRotO = internal.getXRot();
         internal.setXRot(pitch);
+
+        while (internal.getXRot() - internal.xRotO < -180.0F)
+        {
+            internal.xRotO -= 360.0F;
+        }
+        while (internal.getXRot() - internal.xRotO >= 180.0F)
+        {
+            internal.xRotO += 360.0F;
+        }
+    }
+
+    /**
+     * @see CustomEntity#setRotationRoll(float)
+     */
+    public void setRotationRoll(float roll) {
     }
 
     public float getPrevRotationYaw() {
@@ -107,6 +143,13 @@ public class Entity {
 
     public float getPrevRotationPitch() {
         return internal.xRotO;
+    }
+
+    /**
+     * @see CustomEntity#getPrevRotationRoll()
+     */
+    public float getPrevRotationRoll() {
+        return 0f;
     }
 
     Vec3d eyeCache;
