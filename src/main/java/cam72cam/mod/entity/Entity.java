@@ -7,8 +7,6 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Explosion;
@@ -80,7 +78,7 @@ public class Entity {
     }
 
     public float getRotationPitch() {
-        return internal.rotationPitch;
+        return internal.xRot;
     }
 
     /**
@@ -91,11 +89,11 @@ public class Entity {
     }
 
     public float getRotationYaw(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationYaw, internal.rotationYaw, partialTicks);
+        return (float) MathHelper.clampedLerp(internal.yRotO, internal.yRot, partialTicks);
     }
 
     public float getRotationPitch(float partialTicks) {
-        return (float) MathHelper.clampedLerp(internal.prevRotationPitch, internal.rotationPitch, partialTicks);
+        return (float) MathHelper.clampedLerp(internal.xRotO, internal.xRot, partialTicks);
     }
 
     /**
