@@ -19,6 +19,9 @@ import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.util.ActionResultType;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -42,6 +45,15 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
+    //Data synchronization
+    static final DataParameter<Float> PREV_ROLL = EntityDataManager.defineId(ModdedEntity.class, DataSerializers.FLOAT);
+    static final DataParameter<Float> ROLL = EntityDataManager.defineId(ModdedEntity.class, DataSerializers.FLOAT);
+    //Data storage
+    @TagField
+    private float roll = 0;
+    @TagField
+    private float prevRoll = 0;
 
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();
@@ -112,6 +124,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
 
+        if (!this.level.isClientSide()) {
+            getEntityData().set(ROLL, this.roll);
+            getEntityData().set(PREV_ROLL, this.prevRoll);
+        }
+
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
             // Old style used to save everything in one giant NBT blob.  New versions save self in a sub tag.
@@ -166,6 +183,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      * @see #load
      */
     private void save(TagCompound data) {
+        this.roll = getEntityData().get(ROLL);
+        this.prevRoll = getEntityData().get(PREV_ROLL);
+
         try {
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
@@ -235,6 +255,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
      */
     @Override
     public final void tick() {
+        if (!level.isClientSide()) {
+            this.getEntityData().set(PREV_ROLL, getEntityData().get(ROLL));
+        }
         iTickable.onTick();
         try {
             self.sync.send();
@@ -284,7 +307,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** @see IKillable */
     @Override
     protected void defineSynchedData() {
-
+        getEntityData().define(PREV_ROLL, 0F);
+        getEntityData().define(ROLL, 0F);
     }
 
     @Override
@@ -305,6 +329,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** Since 1.14 we can't get rider's world position simply as it returns their riding entity's position */
     public Vec3d calculateRiderWorldPosition(cam72cam.mod.entity.Entity entity) {
         //This should work without pitch applied now
+        //TODO Pitch and roll
         if (passengerPositions.containsKey(entity.getUUID())) {
             return calculatePassengerPosition(passengerPositions.get(entity.getUUID()));
         }
