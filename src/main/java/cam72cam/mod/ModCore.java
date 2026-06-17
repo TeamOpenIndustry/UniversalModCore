@@ -447,7 +447,7 @@ public class ModCore {
     }
 
     public static String semanticVersion() {
-        return "1.17.1-forge";
+        return "1.18.2-forge";
     }
 
     public static boolean isDevelopmentEnvironment() {
