@@ -2,18 +2,18 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import cam72cam.mod.resource.BuiltinPack;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 
 import java.nio.charset.StandardCharsets;
@@ -164,7 +164,7 @@ public class Fuzzy {
             //We're having this because we don't know if someone is checking empty on their own instead of using isEmpty
             stacks.addAll(RegistryUtil.resolveTagsRecipePhase(this));
 
-            HolderSet.Named<Item> tag = BuiltInRegistries.ITEM.getTag(this.tag).orElse(null);
+            HolderSet.Named<Item> tag = BuiltInRegistries.ITEM.get(this.tag).orElse(null);
             if (tag == null) {
                 return stacks;
             }

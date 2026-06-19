@@ -1,10 +1,16 @@
 package cam72cam.mod.event.platform;
 
 import cam72cam.mod.item.Fuzzy;
+import cam72cam.mod.util.RegistryUtil;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.advancements.*;
-import net.minecraft.advancements.critereon.*;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.bus.api.Event;
 import net.neoforged.fml.event.IModBusEvent;
 
@@ -24,10 +30,11 @@ public class RegisterAdvancementEvent extends Event implements IModBusEvent {
     }
 
     @SuppressWarnings("removal")
-    public void registerRecipeTrigger(ResourceLocation advancementIdent, ResourceLocation recipe, Fuzzy... trigger) {
+    public void registerRecipeTrigger(ResourceLocation advancementIdent, ResourceLocation target, Fuzzy... trigger) {
         Advancement.Builder builder = Advancement.Builder.advancement().parent(RECIPE_ROOT);
         List<String> stringList = new ArrayList<>();
 
+        ResourceKey<Recipe<?>> recipe = ResourceKey.create(Registries.RECIPE, target);
         Criterion<RecipeUnlockedTrigger.TriggerInstance> alreadyHasRecipe
                 = new Criterion<>(CriteriaTriggers.RECIPE_UNLOCKED, new RecipeUnlockedTrigger.TriggerInstance(Optional.empty(), recipe));
         builder.addCriterion("already_has_recipe", alreadyHasRecipe);
@@ -38,7 +45,7 @@ public class RegisterAdvancementEvent extends Event implements IModBusEvent {
             if (ingredient == null || ingredient.getTag() == null) continue;
 
             Criterion<InventoryChangeTrigger.TriggerInstance> hasItem = InventoryChangeTrigger.TriggerInstance
-                    .hasItems(ItemPredicate.Builder.item().of(ingredient.getTag()).build());
+                    .hasItems(ItemPredicate.Builder.item().of(RegistryUtil.getRegistry().lookupOrThrow(Registries.ITEM), ingredient.getTag()).build());
             String name = "has" + ingredient + i;
             builder.addCriterion(name, hasItem);
             stringList.add(name);

@@ -5,14 +5,16 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import dev.lambdaurora.lambdynlights.api.DynamicLightsContext;
-import dev.lambdaurora.lambdynlights.api.DynamicLightsInitializer;
-import dev.lambdaurora.lambdynlights.api.item.ItemLightSourceManager;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
@@ -21,7 +23,6 @@ import net.minecraft.world.phys.Vec3;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Light {
@@ -61,7 +62,7 @@ public class Light {
         ll = Math.min(ll, 15);
         ll = Math.max(ll, 1);
         EntityType<LightEntity> type = types[ll];
-        internal = type.create(world);
+        internal = type.create(world, EntitySpawnReason.COMMAND);
         internal.setPos(pos.x, pos.y, pos.z);
 //        world.addFreshEntity(internal);
         this.lightLevel = lightLevel;
@@ -74,9 +75,9 @@ public class Light {
                 EntityType.Builder<LightEntity> builder = EntityType.Builder.of(LightEntity::new, MobCategory.MISC);
                 builder.fireImmune();
                 builder.sized(0, 0);
-
-                EntityType<LightEntity> et = builder.build("light" + i);
-                helper.register(Objects.requireNonNull(ResourceLocation.tryParse("universalmodcore:light" + i)), et);
+                ResourceLocation light = ResourceLocation.tryParse("universalmodcore:light" + i);
+                EntityType<LightEntity> et = builder.build(ResourceKey.create(Registries.ENTITY_TYPE, light));
+                helper.register(light, et);
                 types[i] = et;
             }
         });
@@ -106,6 +107,11 @@ public class Light {
         @Override
         protected void defineSynchedData(SynchedEntityData.Builder builder) {
 
+        }
+
+        @Override
+        public boolean hurtServer(ServerLevel p_376804_, DamageSource p_376155_, float p_376892_) {
+            return false;
         }
 
         @Override
@@ -152,21 +158,21 @@ public class Light {
         }
     }
 
-    public static class UMCDynLightInitializer implements DynamicLightsInitializer {
-        @Override
-        public void onInitializeDynamicLights(DynamicLightsContext lightCtx) {
-            lightCtx.entityLightSourceManager().onRegisterEvent().register(context -> {
-                for (int i = 1; i <= 15; i++) {
-                    EntityType<LightEntity> et = types[i];
-                    context.register(et, i);
-                }
-            });
-        }
-
-        @Deprecated(forRemoval = true)
-        @Override
-        public void onInitializeDynamicLights(ItemLightSourceManager itemLightSourceManager) {
-            //Deprecated
-        }
-    }
+//    public static class UMCDynLightInitializer implements DynamicLightsInitializer {
+//        @Override
+//        public void onInitializeDynamicLights(DynamicLightsContext lightCtx) {
+//            lightCtx.entityLightSourceManager().onRegisterEvent().register(context -> {
+//                for (int i = 1; i <= 15; i++) {
+//                    EntityType<LightEntity> et = types[i];
+//                    context.register(et, i);
+//                }
+//            });
+//        }
+//
+//        @Deprecated(forRemoval = true)
+//        @Override
+//        public void onInitializeDynamicLights(ItemLightSourceManager itemLightSourceManager) {
+//            //Deprecated
+//        }
+//    }
 }

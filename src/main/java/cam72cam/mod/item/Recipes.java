@@ -4,18 +4,14 @@ package cam72cam.mod.item;
 import cam72cam.mod.event.CommonEvents;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.*;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.RecipeProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.Optional;
 
 /** Recipe registration */
@@ -50,18 +46,18 @@ public class Recipes {
                 ResourceLocation itemName = BuiltInRegistries.ITEM.getKey(item.internal().getItem());
 
                 int height = ingredients.length / width;
-                NonNullList<Ingredient> input = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
+                List<Optional<Ingredient>> input = NonNullList.withSize(ingredients.length, Optional.empty());
                 for (int i = 0; i < ingredients.length; i++) {
                     Fuzzy ingredient = ingredients[i];
                     if (ingredient != null) {
                         //ForgeHooks#L1171: If oc isn't loaded radio card's recipe will refuse to show, that's normal
                         //TODO Mixing in ClientRecipeBook#L53 incomplete?
-                        input.set(i, Ingredient.of(ingredient.getTag()));
+                        input.set(i, Optional.of(Ingredient.of(BuiltInRegistries.ITEM.get(ingredient.getTag()).orElseThrow())));
                     }
                 }
 
                 ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.MISC, new ShapedRecipePattern(width, height, input, Optional.empty()), item.internal());
-                event.registerCraftingRecipe(new RecipeHolder<>(itemName, recipe), ingredients);
+                event.registerCraftingRecipe(new RecipeHolder<>(ResourceKey.create(Registries.RECIPE, itemName), recipe), ingredients);
             });
         }
 

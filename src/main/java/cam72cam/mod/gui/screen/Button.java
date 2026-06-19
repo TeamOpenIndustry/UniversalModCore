@@ -1,17 +1,15 @@
 package cam72cam.mod.gui.screen;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.AbstractButton;
-
 import cam72cam.mod.entity.Player;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 
-import java.util.function.Consumer;
-
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /** Base interactable GUI element */
 public class Button implements IWidget{
@@ -41,7 +39,7 @@ public class Button implements IWidget{
         public boolean mouseClicked(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
             if (this.active && this.visible) {
                 if (this.isValidClickButton(p_mouseClicked_5_)) {
-                    boolean flag = this.clicked(p_mouseClicked_1_, p_mouseClicked_3_);
+                    boolean flag = this.isMouseOver(p_mouseClicked_1_, p_mouseClicked_3_);
                     if (flag) {
                         this.playDownSound(Minecraft.getInstance().getSoundManager());
                         clicker.accept(p_mouseClicked_5_ == 0 ? Player.Hand.PRIMARY : Player.Hand.SECONDARY);

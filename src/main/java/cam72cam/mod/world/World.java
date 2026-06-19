@@ -18,11 +18,9 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.Facing;
+import com.google.common.base.Predicates;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -50,7 +48,6 @@ import net.neoforged.neoforge.common.SpecialPlantable;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -510,14 +507,14 @@ public class World {
         return internal.isRaining();
     }
 
-    /** If it is is raining */
+    /** If it is raining */
     public boolean isRaining(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal()) == Biome.Precipitation.RAIN;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal(), internal.getSeaLevel()) == Biome.Precipitation.RAIN;
     }
 
     /** If it is snowing */
     public boolean isSnowing(Vec3i position) {
-        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal()) == Biome.Precipitation.SNOW;
+        return isPrecipitating() && internal.getBiome(position.internal()).value().getPrecipitationAt(position.internal(), internal.getSeaLevel()) == Biome.Precipitation.SNOW;
     }
 
     /** Temp in celsius */
@@ -721,7 +718,9 @@ public class World {
     public ItemStack getItemStack(Vec3i pos) {
         BlockState state = internal.getBlockState(pos.internal());
         try {
-            return new ItemStack(state.getBlock().getCloneItemStack(internal, pos.internal(), state));
+            //TODO check logic 1.21.4+
+            net.minecraft.world.entity.player.Player nearest = internal.getNearestPlayer(pos.x, pos.y, pos.z, Double.POSITIVE_INFINITY, Predicates.alwaysTrue());
+            return new ItemStack(state.getBlock().getCloneItemStack(internal, pos.internal(), state, true, nearest));
         } catch (Exception ex) {
             return new ItemStack(new net.minecraft.world.item.ItemStack(state.getBlock()));
         }

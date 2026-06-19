@@ -9,14 +9,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -33,7 +30,7 @@ public class RenderContext {
     public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     //Modified from rendertype_entity_cutout, fix model normal
-    public static ShaderInstance UMC_CORE;
+    public static ShaderProgram UMC_CORE;
 
     private static IntBuffer fourIntBuffer;
 
@@ -179,7 +176,7 @@ public class RenderContext {
     public static With apply(RenderState state) {
         With ctx = applyBaseState(state);
         List<Runnable> restore = new ArrayList<>();
-        ShaderInstance shader = RenderSystem.getShader();
+        CompiledShaderProgram shader = RenderSystem.getShader();
 
         if (state.lightmap != null) {
             //Our custom shader will handle vanilla emissive stuff
@@ -218,7 +215,7 @@ public class RenderContext {
         return ctx.and(() -> restore.forEach(Runnable::run));
     }
 
-    private static void applyShaderFields(ShaderInstance shader) {
+    private static void applyShaderFields(CompiledShaderProgram shader) {
         if (shader.MODEL_VIEW_MATRIX != null) {
             shader.MODEL_VIEW_MATRIX.set(RenderSystem.getModelViewMatrix());
         }
@@ -237,23 +234,24 @@ public class RenderContext {
 
         for (int i = 0; i < 8; ++i) {
             int o = RenderSystem.getShaderTexture(i);
-            shader.setSampler("Sampler" + i, o);
+            shader.bindSampler("Sampler" + i, o);
         }
 
+        FogParameters fogparameters = RenderSystem.getShaderFog();
         if (shader.FOG_START != null) {
-            shader.FOG_START.set(RenderSystem.getShaderFogStart());
+            shader.FOG_START.set(fogparameters.start());
         }
 
         if (shader.FOG_END != null) {
-            shader.FOG_END.set(RenderSystem.getShaderFogEnd());
+            shader.FOG_END.set(fogparameters.end());
         }
 
         if (shader.FOG_COLOR != null) {
-            shader.FOG_COLOR.set(RenderSystem.getShaderFogColor());
+            shader.FOG_COLOR.set(fogparameters.red(), fogparameters.green(), fogparameters.blue(), fogparameters.alpha());
         }
 
         if (shader.FOG_SHAPE != null) {
-            shader.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
+            shader.FOG_SHAPE.set(fogparameters.shape().getIndex());
         }
 
         if (shader.TEXTURE_MATRIX != null) {
@@ -273,14 +271,14 @@ public class RenderContext {
     }
 
     //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
-    private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
+    private static void setupLightMap(CompiledShaderProgram shader, float oldX, float oldY) {
         LightTexture light = Minecraft.getInstance().gameRenderer.lightTexture();
 
-        List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
+        List<VertexFormatElement> elements1 = shader.vertexFormat().getElements();
         for (int i = 0; i < elements1.size(); i++) {
             VertexFormatElement element = elements1.get(i);
             if (element.usage() == VertexFormatElement.Usage.UV) {
-                for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
                         //240 means full bright
                         int x = (int) (oldX * RenderContext.FULL_BRIGHT);

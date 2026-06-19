@@ -4,8 +4,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.CoreShaders;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,9 @@ public class DirectDraw {
         Runnable render = () -> {
             BufferBuilder builder = Tesselator.getInstance()
                                               .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            ShaderInstance shader = RenderSystem.getShader();
+            CompiledShaderProgram shader = RenderSystem.getShader();
             //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
 
             //Add missing state
             if (state.color != null) {
@@ -41,7 +41,7 @@ public class DirectDraw {
                     BufferUploader.draw(data);
                 }
             }
-            RenderSystem.setShader(() -> shader);
+            RenderSystem.setShader(shader);
         };
         if (state.getStage() != RenderContext.Stage.ENTITY) {
             render.run();

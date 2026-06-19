@@ -12,14 +12,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Entity Rendering Registry */
-public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client.renderer.entity.EntityRenderer<T> {
+public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client.renderer.entity.EntityRenderer<T, UMCRenderState> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
     static {
@@ -51,10 +49,9 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         // Don't render seat entities
         ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRenderers.register(SeatEntity.TYPE, manager -> new net.minecraft.client.renderer.entity.EntityRenderer<>(manager) {
-            @Nullable
             @Override
-            public ResourceLocation getTextureLocation(SeatEntity entity) {
-                return null;
+            public UMCRenderState createRenderState() {
+                return new UMCRenderState();
             }
         }));
     }
@@ -62,6 +59,18 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     /** Internal, do not use */
     public EntityRenderer(EntityRendererProvider.Context factory) {
         super(factory);
+    }
+
+    @Override
+    public UMCRenderState createRenderState() {
+        return new UMCRenderState();
+    }
+
+    @Override
+    public void extractRenderState(T entity, UMCRenderState state, float p_362204_) {
+        super.extractRenderState(entity, state, p_362204_);
+        state.entity = entity;
+        state.rotationYaw = entity.getYRot(p_362204_);
     }
 
     /** This is how you register your entities renderer */
@@ -127,15 +136,16 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }*/
 
     @Override
-    public void render(T stock, float entityYaw, float partialTicks, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
-        Entity self = stock.getSelf();
+    public void render(UMCRenderState stockState, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
+        Entity self = stockState.entity.getSelf();
 
         RenderType.cutout().setupRenderState();
 
         int j = (i >> 4) & 0xF;
         int k = (i >> 20) & 0xF;
+        float partialTicks = stockState.partialTick;
         RenderState state = new RenderState(p_225623_4_).lightmap(j / 15f, k / 15f);
-        state.rotate(180 - entityYaw, 0, 1, 0);
+        state.rotate(180 - stockState.rotationYaw, 0, 1, 0);
         state.rotate(self.getRotationPitch(partialTicks), 1, 0, 0);
         state.rotate(self.getRotationRoll(partialTicks), 0, 0, 1);
         state.rotate(-90, 0, 1, 0);
@@ -152,11 +162,5 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         RenderType.translucent().setupRenderState();
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
         RenderType.translucent().clearRenderState();
-    }
-
-    @Nullable
-    @Override
-    public ResourceLocation getTextureLocation(T entity) {
-        return null;
     }
 }

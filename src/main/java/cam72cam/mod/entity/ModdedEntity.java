@@ -16,6 +16,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -233,7 +234,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     @Override
     public EntityType<?> getType() {
-        return legacyId == null ? super.getType() : BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(legacyId));
+        return legacyId == null ? super.getType() : BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(legacyId)).orElseThrow().value();
     }
 
     /* ITickable */
@@ -275,7 +276,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see IKillable */
     @Override
-    public final boolean hurt(DamageSource damagesource, float amount) {
+    public final boolean hurtServer(ServerLevel level, DamageSource damagesource, float amount) {
         cam72cam.mod.entity.Entity wrapEnt = damagesource.getDirectEntity() != null ? self.getWorld().getEntity(damagesource.getDirectEntity()) : null;
         DamageType type;
         if (damagesource.is(DamageTypes.EXPLOSION)) {
@@ -526,15 +527,11 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         return cachedCollisionBB.get(iCollision.getCollision());
     }
 
-    /**
-     * Only generates a new BB object when the underlying self.getCollision() changes
-     * TODO provide a way of specifying a render bounding box without a custom_bb_collision bounding box
-     * @see ICollision
-     */
-    @Override
-    public AABB getBoundingBoxForCulling() {
-        return cachedRenderBB.get(iCollision.getCollision());
-    }
+    //No more need to
+//    @Override
+//    public AABB getBoundingBoxForCulling() {
+//        return cachedRenderBB.get(iCollision.getCollision());
+//    }
 
     //No more need to
 //    @Override

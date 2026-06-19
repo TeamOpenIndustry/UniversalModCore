@@ -19,15 +19,11 @@ public enum ClickResult {
     }
 
     public static ClickResult from(InteractionResult ear) {
-        switch (ear) {
-            case SUCCESS:
-            case CONSUME:
-                return ACCEPTED;
-            case PASS:
-                return PASS;
-            case FAIL:
-                return REJECTED;
-        }
-        return null;
+        return switch (ear) {
+            case InteractionResult.Success success -> ACCEPTED;
+            case InteractionResult.Pass pass -> PASS;
+            case InteractionResult.TryEmptyHandInteraction empty -> PASS;
+            case InteractionResult.Fail fail -> REJECTED;
+        };
     }
 }

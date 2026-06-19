@@ -39,7 +39,7 @@ public class BlockInfo {
                         @Override
                         public Optional<Holder.Reference<Block>> get(ResourceKey<Block> p_255645_) {
                             // This is some of the worst OOP spaghetti I've ever encountered...
-                            return BuiltInRegistries.BLOCK.getHolder(p_255645_);
+                            return BuiltInRegistries.BLOCK.get(p_255645_);
                         }
 
                         @Override

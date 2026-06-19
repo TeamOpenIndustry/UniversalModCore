@@ -17,14 +17,18 @@ public class Living extends Entity {
     }
 
     public void unleash(Player player) {
-        if (living instanceof Mob) {
-            ((Mob)living).dropLeash(true, !player.isCreative());
+        if (living instanceof Mob mob) {
+            if (!player.isCreative()) {
+                mob.dropLeash();
+            } else {
+                mob.removeLeash();
+            }
         }
     }
 
     public void setLeashHolder(Player player) {
-        if (living instanceof Mob) {
-            ((Mob) living).setLeashedTo(player.internal, true);
+        if (living instanceof Mob mob) {
+            mob.setLeashedTo(player.internal, true);
         }
     }
 

@@ -7,6 +7,7 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -32,12 +33,12 @@ public class MinecraftClient {
 
     /** Hooks into the GUI profiler */
     public static void startProfiler(String section) {
-        Minecraft.getInstance().getProfiler().push(section);
+        Profiler.get().push(section);
     }
 
     /** Hooks into the GUI profiler */
     public static void endProfiler() {
-        Minecraft.getInstance().getProfiler().pop();
+        Profiler.get().pop();
     }
 
     /** Entity that you are currently looking at (distance limited) */

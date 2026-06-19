@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -327,8 +325,8 @@ public class BuiltinPack {
 
         @Nullable
         @Override
-        public <T> T getMetadataSection(MetadataSectionSerializer<T> p_195760_1_) throws IOException {
-            return getMetadataFromStream(p_195760_1_, new ByteArrayInputStream("{}".getBytes()));
+        public <T> T getMetadataSection(MetadataSectionType<T> p_389404_) throws IOException {
+            return getMetadataFromStream(p_389404_, new ByteArrayInputStream("{}".getBytes()));
         }
 
         @Override

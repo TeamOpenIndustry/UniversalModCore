@@ -6,8 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.11'
-        classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.11'
+        classpath group: 'net.neoforged.gradle', name: 'userdev', version: '7.1.38'
+        classpath group: 'net.neoforged.gradle', name: 'common', version: '7.1.38'
         classpath "com.gradleup.shadow:shadow-gradle-plugin:9.2.2"
     }
 }
@@ -44,7 +44,7 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
         umcVersion += "-unknown"
     }
 }
-version = "1.21.1-neoforge-" + umcVersion
+version = "1.21.4-neoforge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
@@ -98,7 +98,7 @@ runs {
         systemProperty 'neoforge.enabledGameTestNamespaces', 'universalmodcore'
     }
 
-    data {
+    clientData {
         // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
         // workingDirectory project.file('run-data')
 
@@ -122,7 +122,7 @@ repositories {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:21.1.216"
+    implementation "net.neoforged:neoforge:21.4.157"
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
@@ -169,16 +169,17 @@ dependencies {
     }
 
     //Iris
-    implementation "curse.maven:sodium-394468:6382651"
-    implementation "curse.maven:irisshaders-455508:6661598"
+    implementation "curse.maven:sodium-394468:6382663"
+    implementation "curse.maven:irisshaders-455508:6213645"
 
     //Lamb Dynamic Lights
-    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.7+1.21.1") {
-        attributes {
-            attribute(mappingsAttribute, "mojmap")
-        }
-    }
-    runtimeOnly "curse.maven:lambdynamiclights-393442:7306458"
+    //TODO 1.21.8 re-enable
+//    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.7+1.21.1") {
+//        attributes {
+//            attribute(mappingsAttribute, "mojmap")
+//        }
+//    }
+//    runtimeOnly "curse.maven:lambdynamiclights-393442:7306458"
 }
 
 //mixin {

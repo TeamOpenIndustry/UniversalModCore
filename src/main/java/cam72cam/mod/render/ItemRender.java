@@ -18,37 +18,33 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Transformation;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.ExtraFaceData;
-import net.neoforged.neoforge.client.model.ItemLayerModel;
 import net.neoforged.neoforge.client.model.SimpleModelState;
-import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -68,11 +64,11 @@ public class ItemRender {
         SimpleModelState foo = new SimpleModelState(Transformation.identity());
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
-            Map<ModelResourceLocation, BakedModel> models = event.getModels();
-            ModelResourceLocation location = new ModelResourceLocation(item.getRegistryName().internal, "");
-            Material mat = new Material(InventoryMenu.BLOCK_ATLAS, tex.internal);
-            ItemLayerModel model = new ItemLayerModel(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
-            event.getModels().put(location, model.bake(new IGeometryBakingContext(){
+            ModelBakery.BakingResult bakingResult = event.getBakingResult();
+            Map<ResourceLocation, ItemModel> models = bakingResult.itemStackModels();
+            Material mat = new Material(TextureAtlas.LOCATION_BLOCKS, tex.internal);
+            ItemModel model = new ItemModel(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
+            models.put(item.getRegistryName().internal, model.bake(new IGeometryBakingContext(){
                 @Override
                 public String getModelName() {
                     return null;
@@ -128,7 +124,7 @@ public class ItemRender {
                 AtlasSet.StitchResult atlasset$stitchresult = collect.get(mat.atlasLocation());
                 TextureAtlasSprite textureatlassprite = atlasset$stitchresult.getSprite(mat.texture());
                 return Objects.requireNonNullElseGet(textureatlassprite, atlasset$stitchresult::missing);
-            }, foo, ItemOverrides.EMPTY/*, tex.internal*/));
+            }, foo));
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(list -> list.addSprite(tex.internal));
@@ -141,7 +137,10 @@ public class ItemRender {
         ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
+        ClientEvents.MODEL_BAKE.subscribe(event -> {
+            ModelBakery.BakingResult bakingResult = event.getBakingResult();
+            bakingResult.blockStateModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model));
+        });
 
         // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel) {
@@ -246,7 +245,7 @@ public class ItemRender {
 
         TextureTarget fb = new TextureTarget(width, height, true, true);
         fb.setClearColor(0, 0, 0, 0);
-        fb.clear(Minecraft.ON_OSX);
+        fb.clear();
         fb.bindWrite(true);
 
         RenderState state = new RenderState();
@@ -338,27 +337,18 @@ public class ItemRender {
         }
 
         @Override
-        public boolean isCustomRenderer() {
-            return true;
-        }
-
-        @Override
         public TextureAtlasSprite getParticleIcon() {
             return null;
         }
 
         @Override
         public ItemTransforms getTransforms() {
-            return BakedModel.super.getTransforms();
+            //TODO 1.21.4
+            return ItemTransforms.NO_TRANSFORMS;
         }
 
         @Override
-        public ItemOverrides getOverrides() {
-            return new ItemOverrideListHack();
-        }
-
-        @Override
-        public BakedModel applyTransform(ItemDisplayContext cameraTransformType, PoseStack mat, boolean applyLeftHandTransform) {
+        public void applyTransform(ItemDisplayContext cameraTransformType, PoseStack mat, boolean applyLeftHandTransform) {
             this.type = ItemRenderType.from(cameraTransformType);
 
             doRender = (matrix, i) -> {
@@ -411,21 +401,6 @@ public class ItemRender {
                 }
                 // TODO return std.getQuads(side, rand);
             };
-
-
-            return this;//ForgeHooksClient.handlePerspective(this, cameraTransformType, mat);
-        }
-
-        class ItemOverrideListHack extends ItemOverrides {
-            ItemOverrideListHack() {
-                super();
-            }
-
-            @Override
-            public BakedModel resolve(BakedModel model, net.minecraft.world.item.ItemStack stack, @Nullable ClientLevel worldIn, @Nullable LivingEntity entityIn, int what) {
-                BakedItemModel.this.stack = new ItemStack(stack);
-                return BakedItemModel.this;
-            }
         }
     }
 }

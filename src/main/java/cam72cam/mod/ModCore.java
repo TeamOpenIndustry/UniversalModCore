@@ -1,20 +1,23 @@
 package cam72cam.mod;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
+import cam72cam.mod.config.ConfigFile;
+import cam72cam.mod.entity.ModdedEntity;
+import cam72cam.mod.entity.sync.EntitySync;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.input.Mouse;
+import cam72cam.mod.net.Packet;
+import cam72cam.mod.net.PacketDirection;
+import cam72cam.mod.render.Light;
 import cam72cam.mod.resource.BuiltinPack;
+import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.text.Command;
+import cam72cam.mod.util.MinecraftFiles;
+import cam72cam.mod.util.ModCoreCommand;
+import cam72cam.mod.world.ChunkManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.server.packs.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
-
-import java.util.*;
-
 import net.minecraft.util.Unit;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -31,31 +34,17 @@ import net.neoforged.neoforge.data.loading.DatagenModLoader;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.minecraft.resources.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import cam72cam.mod.config.ConfigFile;
-import cam72cam.mod.entity.ModdedEntity;
-import cam72cam.mod.entity.sync.EntitySync;
-import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.input.Mouse;
-import cam72cam.mod.net.Packet;
-import cam72cam.mod.net.PacketDirection;
-import cam72cam.mod.render.Light;
-import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.text.Command;
-import cam72cam.mod.util.MinecraftFiles;
-import cam72cam.mod.util.ModCoreCommand;
-import cam72cam.mod.world.ChunkManager;
-import net.minecraft.client.Minecraft;
-import net.minecraft.server.packs.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /** UMC Mod, do not touch... */
 @net.neoforged.fml.common.Mod(ModCore.MODID)
@@ -342,8 +331,8 @@ public class ModCore {
                 case CONSTRUCT:
                     // Instance can be null during data gen
                     if (Minecraft.getInstance() != null) {
-                        ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((stage, resourceManager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) ->
-                                stage.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
+                        ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((barrier, resourceManager, backgroundExecutor, gameExecutor) ->
+                                barrier.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
                     }
                     break;
                 case SETUP:

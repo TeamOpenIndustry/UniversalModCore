@@ -2,7 +2,6 @@ package cam72cam.mod.render;
 
 import com.mojang.math.Transformation;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
@@ -67,18 +66,8 @@ class BakedScaledModel implements BakedModel {
     }
 
     @Override
-    public boolean isCustomRenderer() {
-        return source.isCustomRenderer();
-    }
-
-    @Override
     public TextureAtlasSprite getParticleIcon() {
         return source.getParticleIcon();
-    }
-
-    @Override
-    public ItemOverrides getOverrides() {
-        return source.getOverrides();
     }
 
     @Override

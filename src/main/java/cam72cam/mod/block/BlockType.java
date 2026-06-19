@@ -16,7 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -27,9 +26,9 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.redstone.Orientation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -206,12 +205,12 @@ public abstract class BlockType {
         }
 
         @Override
-        protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack, BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, InteractionHand hand, BlockHitResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        protected InteractionResult useItemOn(net.minecraft.world.item.ItemStack stack, BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, InteractionHand hand, BlockHitResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         @Override
-        public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
+        public net.minecraft.world.item.ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(level, pos);
             if (world != null) {
                 return BlockType.this.onPick(world, new Vec3i(pos)).internal();
@@ -220,8 +219,8 @@ public abstract class BlockType {
         }
 
         @Override
-        public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
-            this.onNeighborChange(state, worldIn, pos, fromPos);
+        public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, @Nullable Orientation neighbor, boolean isMoving) {
+            this.onNeighborChange(state, worldIn, pos, pos.relative(neighbor.getFront()));
         }
 
         @Override
@@ -303,12 +302,12 @@ public abstract class BlockType {
         }
 
         @Override
-        public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+        public boolean propagatesSkylightDown(BlockState state) {
             return true;
         }
 
         @Override
-        public VoxelShape getOcclusionShape(BlockState state, BlockGetter worldIn, BlockPos pos) {
+        public VoxelShape getOcclusionShape(BlockState state) {
             return Shapes.empty();
         }
 

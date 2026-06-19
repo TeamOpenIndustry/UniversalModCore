@@ -46,7 +46,7 @@ public class ItemStack {
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(item)), i));
+        this(new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(item)).orElseThrow().value(), i));
     }
 
     public net.minecraft.world.item.ItemStack internal() {
@@ -139,7 +139,7 @@ public class ItemStack {
 
     /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
-        return internal().getBurnTime(RecipeType.SMELTING);
+        return internal().getBurnTime(RecipeType.SMELTING, RegistryUtil.getFuelValues());
     }
 
     /** Max count of the stack */

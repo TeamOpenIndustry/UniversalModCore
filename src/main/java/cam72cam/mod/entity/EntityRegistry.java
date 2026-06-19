@@ -13,7 +13,10 @@ import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.api.distmarker.Dist;
@@ -47,11 +50,10 @@ public class EntityRegistry {
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
                     .setUpdateInterval(20);
-//                    .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr));
             if (ctr.get().isImmuneToFire()) {
                 builder = builder.fireImmune();
             }
-            EntityType<? extends ModdedEntity> et = builder.build(id.toString());
+            EntityType<? extends ModdedEntity> et = builder.build(ResourceKey.create(Registries.ENTITY_TYPE, id.internal));
             helper.register(id.internal, et);
             registered.put(type, et);
         });
@@ -65,7 +67,7 @@ public class EntityRegistry {
 
     public static CustomEntity create(World world, Class<? extends Entity> cls) {
         //TODO null checks
-        ModdedEntity ent = registered.get(cls).create(world.internal);
+        ModdedEntity ent = registered.get(cls).create(world.internal, EntitySpawnReason.COMMAND);
         return ent.getSelf();
     }
 

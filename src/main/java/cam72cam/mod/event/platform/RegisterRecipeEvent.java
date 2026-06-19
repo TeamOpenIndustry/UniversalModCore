@@ -2,34 +2,31 @@ package cam72cam.mod.event.platform;
 
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.item.Fuzzy;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.neoforged.bus.api.Event;
 import net.neoforged.fml.event.IModBusEvent;
+
+import java.util.SortedMap;
 
 /**
  * Fired when recipe datapacks are reloaded
  */
 public class RegisterRecipeEvent extends Event implements IModBusEvent {
-    private final ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> byType;
-    private final ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> byName;
+    private final SortedMap<ResourceLocation, Recipe<?>> map;
 
-    public RegisterRecipeEvent(ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> byType, ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> byName) {
-        this.byType = byType;
-        this.byName = byName;
+    public RegisterRecipeEvent(SortedMap<ResourceLocation, Recipe<?>> map) {
+        this.map = map;
     }
 
     public void registerCraftingRecipe(RecipeHolder<ShapedRecipe> recipe, Fuzzy... triggers) {
         //Register corresponding unlocking advancement
         CommonEvents.Recipe.RECIPE_ADVENCEMENTS.subscribe(event -> {
-            ResourceLocation advancement = ResourceLocation.tryBuild(recipe.id().getNamespace(), "unlock" + recipe.id().getPath());
-            event.registerRecipeTrigger(advancement, recipe.id(), triggers);
+            ResourceLocation advancement = ResourceLocation.tryBuild(recipe.id().location().getNamespace(), "unlock" + recipe.id().location().getPath());
+            event.registerRecipeTrigger(advancement, recipe.id().location(), triggers);
         });
-        byType.put(RecipeType.CRAFTING, recipe);
-        byName.put(recipe.id(), recipe);
+        map.put(recipe.id().location(), recipe.value());
     }
 }

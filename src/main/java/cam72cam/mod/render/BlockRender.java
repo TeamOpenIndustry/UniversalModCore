@@ -9,8 +9,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.render.opengl.RenderContext;
-import cam72cam.mod.render.opengl.RenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
@@ -18,11 +16,12 @@ import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -145,7 +144,8 @@ public class BlockRender {
         });
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
-            event.getModels().put(new ModelResourceLocation(block.id.internal, ""), new BakedModel() {
+            ModelBakery.BakingResult bakingResult = event.getBakingResult();
+            bakingResult.blockStateModels().put(new ModelResourceLocation(block.id.internal, ""), new BakedModel() {
                 @Override
                 public @NotNull List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData properties, @org.jetbrains.annotations.Nullable RenderType renderType) {
                     if (block instanceof BlockTypeEntity) {
@@ -186,11 +186,6 @@ public class BlockRender {
                 }
 
                 @Override
-                public boolean isCustomRenderer() {
-                    return false;
-                }
-
-                @Override
                 public TextureAtlasSprite getParticleIcon() {
                     if (block.internal.defaultMapColor() == MapColor.METAL) {
                         return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
@@ -199,8 +194,8 @@ public class BlockRender {
                 }
 
                 @Override
-                public ItemOverrides getOverrides() {
-                    return null;
+                public ItemTransforms getTransforms() {
+                    return ItemTransforms.NO_TRANSFORMS;
                 }
             });
         });

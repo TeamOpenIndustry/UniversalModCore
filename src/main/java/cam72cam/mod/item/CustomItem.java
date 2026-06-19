@@ -13,16 +13,15 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
@@ -131,6 +130,7 @@ public abstract class CustomItem {
             }
         }*/
 
+        //TODO We need the stack ref
         @Override
         public String getDescriptionId(net.minecraft.world.item.ItemStack stack) {
             String cn = getCustomName(new ItemStack(stack));
@@ -155,12 +155,12 @@ public abstract class CustomItem {
         }
 
         @Override
-        public InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level world, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
+        public InteractionResult use(Level world, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
             Player umcPlayer = new Player(player);
             Player.Hand umcHand = Player.Hand.from(hand);
             onClickAir(umcPlayer, World.get(world), umcHand);
             ItemStack stack = umcPlayer.getHeldItem(umcHand).copy();
-            return InteractionResultHolder.consume(stack.internal());
+            return InteractionResult.CONSUME;
         }
 //See constructor
 //        @Override

@@ -95,7 +95,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             public BlockPos immutable() {
                 return this; // BAHAHAHAHA
             }
-        }, new StateDefinition.Builder<Block, BlockState>(BuiltInRegistries.BLOCK.get(id.internal))
+        }, new StateDefinition.Builder<Block, BlockState>(BuiltInRegistries.BLOCK.get(id.internal).orElseThrow().value())
                 .create(Block::defaultBlockState, BlockState::new).any());
         instance = registry.get(id.toString()).get();
         instance.internal = this;
@@ -178,7 +178,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                     // WHYYYYYYYYYYYYYYYY
                     return true;
                 }
-            }, null);
+            });
             types.put(id.toString(), type);
             helper.register(id.internal, type);
         });

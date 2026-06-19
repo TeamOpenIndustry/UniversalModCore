@@ -4,16 +4,18 @@ import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -45,8 +47,8 @@ public class MinecraftTexture implements Texture {
                 // Fallback to zips
                 texManager.register(id.internal, new SimpleTexture(id.internal) {
                     @Override
-                    protected SimpleTexture.TextureImage getTextureImage(ResourceManager p_118140_) {
-                        return SimpleTexture.TextureImage.load(new ResourceManager() {
+                    public TextureContents loadContents(ResourceManager p_118140_) throws IOException {
+                        return TextureContents.load(new ResourceManager() {
                             @Override
                             public Set<String> getNamespaces() {
                                 throw new RuntimeException("INVALID");
@@ -76,7 +78,7 @@ public class MinecraftTexture implements Texture {
                             public Optional<Resource> getResource(ResourceLocation resourceLocationIn) {
                                 return Optional.of(new Resource(null, MinecraftTexture.this.id::getResourceStream));
                             }
-                        }, this.location);
+                        }, this.resourceId());
                     }
                 });
                 tex = texManager.getTexture(id.internal);

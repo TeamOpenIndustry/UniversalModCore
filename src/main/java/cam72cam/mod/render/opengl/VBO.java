@@ -8,15 +8,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.InventoryMenu;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL32;
 
-import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,14 +36,9 @@ public class VBO {
             }
         });
         ClientEvents.REGISTER_SHADER.subscribe(event -> {
-            try {
-                event.registerShader(new ShaderInstance(event.getResourceProvider(),
-                                                        ResourceLocation.tryParse("umc_core"),
-                                                        DefaultVertexFormat.NEW_ENTITY),
-                                     instance -> RenderContext.UMC_CORE = instance);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            event.registerShader(new ShaderProgram(ResourceLocation.tryParse("umc_core"),
+                                                   DefaultVertexFormat.NEW_ENTITY,
+                                                   ShaderDefines.EMPTY));
         });
     }
 
@@ -162,7 +154,7 @@ public class VBO {
             settings.accept(state);
             this.state = state;
 
-            ShaderInstance oldShader = RenderSystem.getShader();
+            CompiledShaderProgram oldShader = RenderSystem.getShader();
             //int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);
             //int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER_BINDING);
 
@@ -178,25 +170,25 @@ public class VBO {
             }*/
 
             RenderType renderType;
-            ShaderInstance shader;
+            ShaderProgram shader;
             shader = switch (state.getStage()) {
                 //DirectDraw will set their shader respectively
-                case GUI -> GameRenderer.getPositionTexColorShader();
-                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> GameRenderer.getRendertypeEntityCutoutShader();
+                case GUI -> CoreShaders.POSITION_TEX_COLOR;
+                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> CoreShaders.RENDERTYPE_ENTITY_CUTOUT;
                 default -> ShaderHelper.isShaderPackEnabled()
-                           ? GameRenderer.getRendertypeEntityCutoutShader()
+                           ? CoreShaders.RENDERTYPE_ENTITY_CUTOUT
                            : RenderContext.UMC_CORE;
             };
             renderType = switch (state.getStage()) {
                 case GUI -> null;
-                default -> RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS);
+                default -> RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
             };
 
             if (renderType != null) {
                 renderType.setupRenderState();
             }
 
-            RenderSystem.setShader(() -> shader);
+            RenderSystem.setShader(shader);
 
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -272,7 +264,7 @@ public class VBO {
                 //GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
                 //GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, 0);
                 //GL32.glBindVertexArray(oldVao);
-                RenderSystem.setShader(() -> oldShader);
+                RenderSystem.setShader(oldShader);
                 BufferUploader.reset();
             });
         }

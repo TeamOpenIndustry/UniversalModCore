@@ -15,6 +15,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.joml.Matrix4f;
 
@@ -116,7 +117,7 @@ public class GlobalRender {
                      .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
             RenderContext.IMMEDIATE.endBatch();
         }
     }
@@ -129,7 +130,7 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
+            fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
                                        RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
             RenderContext.IMMEDIATE.endBatch();
@@ -145,7 +146,7 @@ public class GlobalRender {
         state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(str, 0, 0, color, false, new Matrix4f(),
+            fontRendererIn.drawInBatch(Component.literal(str), 0, 0, color, false, new Matrix4f(),
                                        RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
             RenderContext.IMMEDIATE.endBatch();
@@ -160,7 +161,7 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
+            fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
                                        RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
             RenderContext.IMMEDIATE.endBatch();

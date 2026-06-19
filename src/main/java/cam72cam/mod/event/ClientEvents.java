@@ -2,9 +2,9 @@ package cam72cam.mod.event;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.EntityRegistry;
+import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.platform.RegisterTextureSpriteEvent;
 import cam72cam.mod.gui.GuiRegistry;
-import cam72cam.mod.entity.Player;
 import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.BlockRender;
@@ -15,7 +15,6 @@ import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.ICancellableEvent;
@@ -252,7 +251,7 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onHackShaders(RenderFrameEvent.Pre event) {
             if (!hasHacked/* && event.phase == TickEvent.Phase.START*/) {
-                if (GameRenderer.getRendertypeCutoutShader() != null) {
+                if (Minecraft.getInstance().isGameLoadFinished()) {
                     hasHacked = true;
                     HACKS.execute(Runnable::run);
                 }

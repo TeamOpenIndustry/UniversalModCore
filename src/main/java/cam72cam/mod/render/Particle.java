@@ -15,7 +15,6 @@ import net.minecraft.core.particles.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector3f;
 import util.Matrix4;
 
 import java.util.ArrayList;
@@ -141,7 +140,7 @@ public abstract class Particle {
         ParticleOptions options = switch (vanilla) {
             case SAND_DUST -> new BlockParticleOption(vanilla.internal, Blocks.SAND.defaultBlockState());
             case DIRT_DUST -> new BlockParticleOption(vanilla.internal, Blocks.DIRT.defaultBlockState());
-            case REDSTONE -> new DustParticleOptions(new Vector3f(1, 1, 1), 1);
+            case REDSTONE -> new DustParticleOptions(16711680, 1);
             default -> (ParticleOptions) vanilla.internal;
         };
         net.minecraft.client.particle.Particle particle =

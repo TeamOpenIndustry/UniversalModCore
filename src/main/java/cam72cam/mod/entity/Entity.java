@@ -8,9 +8,8 @@ import cam72cam.mod.world.World;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.event.EventHooks;
 
 import java.util.List;
 import java.util.UUID;
@@ -289,10 +288,9 @@ public class Entity {
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP);
-        if (EventHooks.onExplosionStart(getWorld().internal, explosion)) return;
-        explosion.explode();
-        explosion.finalizeExplosion(true);
+        this.internal.level().explode(this.internal,
+                                      null, null, pos.x, pos.y, pos.z, size, false,
+                                      damageTerrain ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
     }
 
     /** Non persistent ID.  Should use UUID instead */

@@ -11,23 +11,19 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
@@ -70,12 +66,12 @@ public class GUIHelpers {
         // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
         // X Y, W H, U V, UW VH, TW TH
         RenderSystem.setShaderTexture(0, tex.internal);
-        graphics.blit(tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
+        graphics.blit(RenderType::guiTextured, tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
     }
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
                                              .apply(IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getStillTexture());
         drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getTintColor(), x, y, width, height);
     }
@@ -85,9 +81,9 @@ public class GUIHelpers {
         double zLevel = 0;
 
         float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
-        ShaderInstance oldShader = RenderSystem.getShader();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
+        CompiledShaderProgram oldShader = RenderSystem.getShader();
+        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
+        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         int iW = sprite.contents().width();
         int iH = sprite.contents().height();
 
@@ -114,7 +110,7 @@ public class GUIHelpers {
             BufferUploader.draw(data);
         }
 
-        RenderSystem.setShader(() -> oldShader);
+        RenderSystem.setShader(oldShader);
     }
 
     /** Draw the fluid in a tank with a black background at % full */
@@ -148,7 +144,7 @@ public class GUIHelpers {
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    Component.literal(text), -font.width(text) / 2f, 0, color, false, new Matrix4f(),
                     RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
                     font.isBidirectional()
             );
@@ -169,7 +165,7 @@ public class GUIHelpers {
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    Component.literal(text), -font.width(text) / 2f, 0, color, false, new Matrix4f(),
                     RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
                     font.isBidirectional()
             );

@@ -32,7 +32,7 @@ public class Fluid {
             List<net.minecraft.world.level.material.Fluid> fluids = new ArrayList<>();
             for (ResourceLocation key : BuiltInRegistries.FLUID.keySet()) {
                 if (key.getPath().equals(type)) {
-                    net.minecraft.world.level.material.Fluid fluid = BuiltInRegistries.FLUID.get(key);
+                    net.minecraft.world.level.material.Fluid fluid = BuiltInRegistries.FLUID.get(key).orElseThrow().value();
                     if (!BuiltInRegistries.FLUID.getDefaultKey().equals(BuiltInRegistries.FLUID.getKey(fluid))) {
                         fluids.add(fluid);
                     }
