@@ -65,7 +65,7 @@ unimined.minecraft {
         loader("52.1.14")
     }
 
-    defaultRemapJar = false
+    defaultRemapJar = true
 }
 
 //DEPENDENCIES//
@@ -88,8 +88,14 @@ shadowJar {
     archiveClassifier = 'shadow'
 }
 
-tasks.named("assemble") {
+remapJar {
+    inputFile = tasks.shadeDowngradedApi.archiveFile
     dependsOn(tasks.named("shadowJar"))
+    archiveClassifier = ''
+}
+
+tasks.named("assemble") {
+    dependsOn(tasks.named("remapJar"))
 }
 
 processResources {
