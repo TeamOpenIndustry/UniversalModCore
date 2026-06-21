@@ -153,7 +153,7 @@ public class CommonEvents {
 
     }
 
-    @EventBusSubscriber(modid = ModCore.MODID)
+    @EventBusSubscriber(modid = ModCore.MODID, bus = EventBusSubscriber.Bus.MOD)
     public static final class EventBusMod {
         static {
             registerEvents();
