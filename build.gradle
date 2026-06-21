@@ -72,13 +72,6 @@ minecraft {
             args '--nogui'
         }
 
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
-        register('gameTestServer') {
-            systemProperty 'forge.enabledGameTestNamespaces', 'universalmodcore'
-        }
-
         register('data') {
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // workingDirectory project.file('run-data')
