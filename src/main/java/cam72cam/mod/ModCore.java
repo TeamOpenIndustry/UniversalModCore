@@ -444,7 +444,7 @@ public class ModCore {
 
     /* Loader Utils */
     public static String loaderBrand() {
-        return "neoforge";
+        return "forge";
     }
 
     public static int mcVersion() {
@@ -452,7 +452,7 @@ public class ModCore {
     }
 
     public static String semanticVersion() {
-        return "1.20.1-forge";
+        return "1.21.1-forge";
     }
 
     public static boolean isDevelopmentEnvironment() {
