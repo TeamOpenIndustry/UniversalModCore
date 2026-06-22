@@ -2,7 +2,6 @@
   "required": true,
   "package": "cam72cam.mod.mixin.feat",
   "refmap": "mixins.universalmodcore.refmap.json",
-  "plugin": "cam72cam.mod.UMCMixinExtrasLoader",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8.2",
   "compatibilityLevel": "JAVA_8",
