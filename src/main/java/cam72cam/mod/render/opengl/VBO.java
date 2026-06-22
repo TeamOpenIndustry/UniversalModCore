@@ -3,6 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -135,12 +136,6 @@ public class VBO {
             int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
 
-            this.restore = RenderContext.apply(state).and(() -> {
-                GL11.glPopClientAttrib();
-                GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
-            });
-
-
             GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
@@ -159,6 +154,19 @@ public class VBO {
             if (vbInfo.hasNormals) {
                 GL11.glNormalPointer(GL11.GL_FLOAT, stride, (long) vbInfo.normalOffset * Float.BYTES);
             }
+
+            if (state.stage == RenderContext.Stage.GUI) {
+                RenderSystem.enableDepthTest();
+            }
+
+            this.restore = RenderContext.apply(state).and(() -> {
+                GL11.glPopClientAttrib();
+                GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
+
+                if (state.stage == RenderContext.Stage.GUI) {
+                    RenderSystem.disableDepthTest();
+                }
+            });
         }
 
         @Override
