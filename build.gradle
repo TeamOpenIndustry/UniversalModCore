@@ -148,10 +148,7 @@ processResources {
 shadowJar {
     classifier = ''
     configurations = [project.configurations.shade]
-    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
-    //Don't do this
-//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
     finalizedBy 'reobfShadowJar'
