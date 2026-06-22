@@ -1,41 +1,21 @@
 package cam72cam.mod;
 
-import net.minecraftforge.fml.common.FMLLog;
-import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import zone.rong.mixinbooter.IEarlyMixinLoader;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.CodeSource;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-public class UMCMixinPlugin implements IFMLLoadingPlugin {
+public class UMCMixinPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader {
     public UMCMixinPlugin() {
-        MixinBootstrap.init();
-        Mixins.addConfiguration("mixins.feat.universalmodcore.json");
-        Mixins.addConfiguration("mixins.fix.universalmodcore.json");
+    }
 
-        CodeSource codeSource = this.getClass().getProtectionDomain().getCodeSource();
-        if (codeSource != null) {
-            URL location = codeSource.getLocation();
-            try {
-                File file = new File(location.toURI());
-                if (file.isFile() && !CoreModManager.getReparseableCoremods().contains(file.getName())) {
-                    //Due to FML's bad behaviour on processing FMLCorePluginContainsFMLMod we add here manually
-                    CoreModManager.getIgnoredMods().remove(file.getName());
-                    if (!ModCore.isDevelopmentEnvironment()) {
-                        CoreModManager.getReparseableCoremods().add(file.getName());
-                    }
-                }
-            } catch (URISyntaxException e) {
-                FMLLog.log.warn(e);
-            }
-        }
+    @Override
+    public List<String> getMixinConfigs() {
+        return Arrays.asList("mixins.feat.universalmodcore.json", "mixins.fix.universalmodcore.json");
     }
 
     @Override
