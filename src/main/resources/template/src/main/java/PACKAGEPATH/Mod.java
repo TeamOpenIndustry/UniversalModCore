@@ -1,6 +1,6 @@
 package #PACKAGE#;
 
-import cam72cam.mod.ModCore;
+import cam72cam.umc.api.ModCore;
 
 @net.minecraftforge.fml.common.Mod(modid = Mod.MODID, name = "#NAME#", version = "#VERSION#", dependencies = "#FORGE_STRING_DEPENDENCIES#", acceptedMinecraftVersions = "[1.12,1.13)")
 public class Mod {

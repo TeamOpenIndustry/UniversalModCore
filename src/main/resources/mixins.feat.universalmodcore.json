@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "cam72cam.mod.mixin.feat",
+  "package": "cam72cam.umc.api.mixin.feat",
   "refmap": "mixins.universalmodcore.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8.2",

@@ -1,0 +1,175 @@
+package cam72cam.umc.api.entity;
+
+import cam72cam.umc.api.ModCore;
+import cam72cam.umc.api.serialization.TagCompound;
+import cam72cam.umc.api.world.World;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.util.UUID;
+
+/** Seat construct to make multiple riders actually work */
+public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
+    static final ResourceLocation ID = new ResourceLocation(ModCore.MODID, "seat");
+    // What it's a part of
+    private UUID parent;
+    // What is in the seat
+    private UUID passenger;
+    // If we should try to render the rider as standing or sitting (partial support!)
+    boolean shouldSit = true;
+    // If a passenger has mounted and then dismounted (if so, we can go away)
+    private boolean hasHadPassenger = false;
+    // ticks alive?
+    private int ticks = 0;
+
+    /** MC reflection */
+    public SeatEntity(net.minecraft.world.World worldIn) {
+        super(worldIn);
+    }
+
+    @Override
+    protected void entityInit() {
+
+    }
+
+    @Override
+    protected void readEntityFromNBT(NBTTagCompound compound) {
+        TagCompound data = new TagCompound(compound);
+        parent = data.getUUID("parent");
+        passenger = data.getUUID("passenger");
+        shouldSit = data.getBoolean("shouldSit");
+    }
+
+    @Override
+    protected void writeEntityToNBT(NBTTagCompound compound) {
+        TagCompound data = new TagCompound(compound);
+        data.setUUID("parent", parent);
+        data.setUUID("passenger", passenger);
+        data.setBoolean("shouldSit", shouldSit);
+    }
+
+    @Override
+    public void onUpdate() {
+        ticks ++;
+        if (world.isRemote || ticks < 5) {
+            return;
+        }
+
+        if (parent == null) {
+            ModCore.debug("No parent, goodbye");
+            this.setDead();
+            return;
+        }
+        if (passenger == null) {
+            ModCore.debug("No passenger, goodbye");
+            this.setDead();
+            return;
+        }
+
+        if (getPassengers().isEmpty()) {
+            if (this.ticks < 20) {
+                if (!hasHadPassenger) {
+                    cam72cam.umc.api.entity.Entity toRide = World.get(world).getEntity(passenger, cam72cam.umc.api.entity.Entity.class);
+                    if (toRide != null) {
+                        ModCore.debug("FORCE RIDER");
+                        toRide.internal.startRiding(this, true);
+                        hasHadPassenger = true;
+                    }
+                }
+            } else {
+                ModCore.debug("No passengers, goodbye");
+                this.setDead();
+                return;
+            }
+        }
+
+        if (getParent() == null) {
+            if (ticks > 20) {
+                ModCore.debug("No parent found, goodbye");
+                this.setDead();
+            }
+        }
+    }
+
+    public void setup(ModdedEntity moddedEntity, Entity passenger) {
+        this.parent = moddedEntity.getUniqueID();
+        this.setPosition(moddedEntity.posX, moddedEntity.posY, moddedEntity.posZ);
+        this.passenger = passenger.getUniqueID();
+    }
+
+    public void moveTo(ModdedEntity moddedEntity) {
+        this.parent = moddedEntity.getUniqueID();
+    }
+
+    public cam72cam.umc.api.entity.Entity getParent() {
+        cam72cam.umc.api.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.umc.api.entity.Entity.class);
+        if (linked != null && linked.internal instanceof ModdedEntity) {
+            return linked;
+        }
+        return null;
+    }
+
+    @Override
+    public double getMountedYOffset() {
+        return 0;
+    }
+
+    @Override
+    public final void updatePassenger(net.minecraft.entity.Entity passenger) {
+        cam72cam.umc.api.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.umc.api.entity.Entity.class);
+        if (linked != null && linked.internal instanceof ModdedEntity) {
+            ((ModdedEntity) linked.internal).updateSeat(this);
+        }
+    }
+
+    @Override
+    public boolean shouldRiderSit() {
+        return shouldSit;
+    }
+
+    @Override
+    public final void removePassenger(net.minecraft.entity.Entity passenger) {
+        cam72cam.umc.api.entity.Entity linked = World.get(world).getEntity(parent, cam72cam.umc.api.entity.Entity.class);
+        if (linked != null && linked.internal instanceof ModdedEntity) {
+            ((ModdedEntity) linked.internal).removeSeat(this);
+        }
+        super.removePassenger(passenger);
+    }
+
+    public cam72cam.umc.api.entity.Entity getEntityPassenger() {
+        if (this.isDead) {
+            return null;
+        }
+        if (this.getPassengers().size() == 0) {
+            return null;
+        }
+        return World.get(world).getEntity(getPassengers().get(0));
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf buffer) {
+        TagCompound data = new TagCompound();
+        data.setUUID("parent", parent);
+        data.setUUID("passenger", passenger);
+        ByteBufUtils.writeTag(buffer, data.internal);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf additionalData) {
+        TagCompound data = new TagCompound(ByteBufUtils.readTag(additionalData));
+        parent = data.getUUID("parent");
+        passenger = data.getUUID("passenger");
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public boolean isInRangeToRenderDist(double distance) {
+        return false;
+    }
+}
