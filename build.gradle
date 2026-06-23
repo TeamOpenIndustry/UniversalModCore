@@ -118,6 +118,7 @@ jar {
         attributes (
                 'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
+                'ForceLoadAsMod': true,
                 'TweakOrder': '0',
                 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
         )
