@@ -49,7 +49,7 @@ renamer.enableMixinRefmaps {
 }
 
 minecraft {
-    mappings channel: "stable", version: "29-1.10"
+    mappings channel: "stable", version: "29-1.10.2"
 
     setAccessTransformer("META-INF/UniversalModCore_at.cfg")
 
@@ -119,14 +119,14 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('processResources', ProcessResources) {
     // this will ensure that this task is redone when the versions change.
     inputs.property 'version', project.version
-    inputs.property 'mcversion', "1.11.2"
+    inputs.property 'mcversion', "1.10.2"
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':"1.11.2"
+        expand 'version':project.version, 'mcversion':"1.10.2"
     }
 
     // copy everything else except the mcmod.info
