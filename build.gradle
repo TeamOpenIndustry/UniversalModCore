@@ -3,9 +3,9 @@ plugins {
     id 'idea'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[7.0.23,8.0)'
+    id 'net.minecraftforge.gradle' version '[7.0.30,8.0)'
     id 'net.minecraftforge.renamer' version '1.1.2'
-    id("com.gradleup.shadow") version "9.4.2"
+    id 'com.gradleup.shadow' version "9.4.2"
 }
 
 configurations {
