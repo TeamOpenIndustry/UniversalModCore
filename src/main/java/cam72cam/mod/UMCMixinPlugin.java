@@ -8,6 +8,8 @@ import java.util.Map;
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 public class UMCMixinPlugin implements IFMLLoadingPlugin {
     public UMCMixinPlugin() {
+        Mixins.addConfiguration("mixins.feat.universalmodcore.json");
+        Mixins.addConfiguration("mixins.fix.universalmodcore.json");
     }
 
     @Override
@@ -27,8 +29,6 @@ public class UMCMixinPlugin implements IFMLLoadingPlugin {
 
     @Override
     public void injectData(Map<String, Object> data) {
-        Mixins.addConfiguration("mixins.feat.universalmodcore.json");
-        Mixins.addConfiguration("mixins.fix.universalmodcore.json");
     }
 
     @Override

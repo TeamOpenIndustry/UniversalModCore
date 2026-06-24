@@ -20,19 +20,15 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.gtnewhorizons:retrofuturagradle:1.4.9')
-        classpath('com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4')
+        classpath('com.gtnewhorizons:retrofuturagradle:2.0.2')
+        classpath("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.2")
     }
 }
 
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
+apply plugin: 'java'
 apply plugin: 'com.gtnewhorizons.retrofuturagradle'
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 repositories {
     maven {
@@ -50,9 +46,13 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
 }
 version = "1.7.10-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "UniversalModCore"
+String archivesBaseName = "UniversalModCore"
+base.archivesName = archivesBaseName
 
-apply plugin: 'java'
+configurations {
+    shade
+    implementation.extendsFrom shade
+}
 
 java {
     toolchain {
@@ -74,7 +74,7 @@ minecraft {
     groupsToExcludeFromAutoReobfMapping.addAll("com.diffplug", "com.diffplug.durian", "net.industrial-craft")
 }
 
-tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/META-INF/UniversalModCore_at.cfg")}
+tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/META-INF/accesstransformer.cfg")}
 
 repositories {
     maven { url = "https://repo.spongepowered.org/maven" }
@@ -102,7 +102,7 @@ jar {
     manifest {
         attributes (
                 'FMLCorePlugin': 'cam72cam.mod.UMCMixinPlugin',
-                'FMLAT': 'UniversalModCore_at.cfg',
+                'FMLAT': 'accesstransformer.cfg',
                 'FMLCorePluginContainsFMLMod': true,
                 "ForceLoadAsMod": true,
                 'TweakOrder': '0',
