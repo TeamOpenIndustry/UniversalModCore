@@ -13,7 +13,7 @@ description="Universal Mod API (Minecraft version agnostic)"
 [[dependencies.universalmodcore]]
     modId="forge"
     mandatory=true
-    versionRange="[28,)"
+    versionRange="[28.2.30,)"
     ordering="NONE"
     side="BOTH"
 

@@ -63,8 +63,6 @@ minecraft {
 
             systemProperty "forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP"
             systemProperty "forge.logging.console.level", "debug"
-
-            systemProperty "fml.coreMods.load", "cam72cam.mod.UMCMixinPlugin"
         }
 
         register("client")
@@ -84,7 +82,7 @@ repositories {
 }
 
 dependencies {
-    implementation minecraft.dependency("net.minecraftforge:forge:1.14.4-28.2.26")
+    implementation minecraft.dependency("net.minecraftforge:forge:1.14.4-28.2.30")
 
     annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
     implementation renamer.dependency("curse.maven:mixinbootstrap-357178:3437402")
@@ -125,14 +123,15 @@ tasks.named('processResources', ProcessResources) {
 jar {
     archiveClassifier = 'slim'
     manifest {
-        attributes (
-                'FMLAT': 'accesstransformer.cfg',
-                "FMLCorePlugin": "cam72cam.mod.UMCMixinPlugin",
-                'FMLCorePluginContainsFMLMod': true,
-                'ForceLoadAsMod': true,
-                'TweakOrder': '0',
-                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
-        )
+        attributes ([
+                "Specification-Title": "universalmodcore",
+                "Specification-Vendor": "",
+                "Specification-Version": "1", // We are version 1 of ourselves
+                "Implementation-Title": project.name,
+                "Implementation-Version": umcVersion,
+                "Implementation-Vendor" :"",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
     }
 }
 
@@ -148,6 +147,7 @@ renamer.classes(tasks.named('jar', Jar)) {
 tasks.named("shadowJar") {
     archiveClassifier = ''
     configurations = project.configurations.named('shade').map { [it] }
+    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
