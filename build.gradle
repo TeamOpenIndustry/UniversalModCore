@@ -27,7 +27,7 @@ buildscript {
 
 configurations {
     shade
-    implementation.extendsFrom shade
+    compile.extendsFrom shade
 }
 
 apply plugin: 'com.gtnewhorizons.retrofuturagradle'
@@ -94,7 +94,7 @@ dependencies {
 
     implementation('junit:junit:4.13.1')
 
-    shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
+    shade "at.yawk.lz4:lz4-java:1.10.2"
 }
 
 jar {
@@ -162,7 +162,7 @@ publishing {
     }
     repositories {
         maven {
-            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            url = "sftp://teamopenindustry.cc:22/var/www/html/maven/"
             credentials {
                 username = "mavenci"
                 password = System.getenv("MAVENCI_PASS")
