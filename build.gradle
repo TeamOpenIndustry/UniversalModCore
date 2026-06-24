@@ -208,6 +208,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact renameShadowJar
+            artifact sourcesJar
             artifactId = archivesBaseName
         }
     }
