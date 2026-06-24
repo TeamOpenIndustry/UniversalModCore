@@ -1,23 +1,12 @@
-buildscript {
-    repositories {
-        maven { url = "https://maven.minecraftforge.net/" }
-        maven { url "https://plugins.gradle.org/" }
-        maven { url = 'https://repo.spongepowered.org/maven' }
-        mavenCentral()
-    }
-	dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.69', changing: true
-        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:2.0.4'
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-    }
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[7.0.23,8.0)'
+    id 'net.minecraftforge.renamer' version '1.1.2'
+    id("com.gradleup.shadow") version "9.4.2"
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.spongepowered.mixin'
 
 configurations {
     shade
@@ -30,171 +19,152 @@ java {
 
 repositories {
     maven {
-        url "https://cursemaven.com"
+        url = "https://cursemaven.com"
     }
 }
 
 String umcVersion = "1.3.0"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
-        umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
-    } catch (Exception ex) {
+        umcVersion += "-${(providers.exec { commandLine("git", "rev-parse", "--verify", "--short=7", "HEAD") }.standardOutput.asText.get() as String).substring(0, 7)}"
+    } catch (Exception ignored) {
         umcVersion += "-unknown"
     }
 }
 version = "1.14.4-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "UniversalModCore"
+String archivesBaseName = "UniversalModCore"
+base.archivesName = archivesBaseName
 
+println("version: ${version}")
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+println("Java: ${providers.systemProperty("java.version").get()}, " +
+        "JVM: ${providers.systemProperty("java.vm.version").get()} (${providers.systemProperty("java.vendor").get()}), " +
+        "Arch: ${providers.systemProperty("os.arch").get()}")
+
+renamer.enableMixinRefmaps {
+    config "mixins.feat.universalmodcore.json"
+    config "mixins.fix.universalmodcore.json"
+}
 
 minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   Snapshot are built nightly.
-    // stable_#            Stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'stable', version: '58-1.14.4'
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    mappings channel: "stable", version: "58-1.14.4"
 
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    setAccessTransformer("META-INF/accesstransformer.cfg")
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
-        client {
-            workingDirectory project.file('run')
+        configureEach {
+            workingDir.convention layout.projectDirectory.dir('run')
+            args "--mixin.config=mixins.feat.universalmodcore.json", "--mixin.config=mixins.fix.universalmodcore.json"
 
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            systemProperty "mixin.debug.verbose", "true"
+            systemProperty "mixin.debug.export", "true"
 
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
+            systemProperty "forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP"
+            systemProperty "forge.logging.console.level", "debug"
 
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
+            systemProperty "fml.coreMods.load", "cam72cam.mod.UMCMixinPlugin"
         }
 
-        server {
-            workingDirectory project.file('run')
+        register("client")
 
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
-            property 'forge.logging.console.level', 'debug'
-
-            args '--mod', 'universalmodcore', '--all', '--output', file('src/generated/resources/')
-
-            mods {
-                universalmodcore {
-                    source sourceSets.main
-                }
-            }
+        register("server") {
+            args "--nogui"
         }
     }
 }
 
 repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
     maven { url = "https://repo.spongepowered.org/maven" }
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.14.4-28.2.26'
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-      
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+    implementation minecraft.dependency("net.minecraftforge:forge:1.14.4-28.2.26")
 
-    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
-    // except that these dependencies get remapped to your current MCP mappings
-    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
     annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
-    implementation fg.deobf("curse.maven:mixinbootstrap-357178:3437402")
+    implementation renamer.dependency("curse.maven:mixinbootstrap-357178:3437402")
     annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
+
     testImplementation ('junit:junit:4.13.1')
 
-    shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2'
+    shade "at.yawk.lz4:lz4-java:1.10.2"
 }
 
-mixin {
-    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
+renamer.mappings.from minecraft.dependency.toSrgFile
 
-    config 'mixins.feat.universalmodcore.json'
-    config 'mixins.fix.universalmodcore.json'
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
 
-    //Dev environment setup
-    debug.verbose = true
-    debug.export = true
-    dumpTargetOnFailure = true
+tasks.named('processResources', ProcessResources) {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', "1.14.4"
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':"1.14.4"
+    }
+
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.WARN
 }
 
 jar {
-    classifier = 'slim'
+    archiveClassifier = 'slim'
     manifest {
-        attributes([
-            "Specification-Title": "universalmodcore",
-            "Specification-Vendor": "",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": umcVersion,
-            "Implementation-Vendor" :"",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
+        attributes (
+                'FMLAT': 'accesstransformer.cfg',
+                "FMLCorePlugin": "cam72cam.mod.UMCMixinPlugin",
+                'FMLCorePluginContainsFMLMod': true,
+                'ForceLoadAsMod': true,
+                'TweakOrder': '0',
+                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
+        )
     }
 }
 
-jar.finalizedBy('reobfJar')
+renamer.classes(tasks.named('jar', Jar)) {
+    archiveClassifier = 'slim'
+    // We need to use the generated mappings, which includes things generated by the annotation processor
+    mappings renamer.mixin.generatedMappings
+    output = input.map { inputFile ->
+        layout.buildDirectory.file("libs/${inputFile.asFile.name}").get()
+    }
+}
 
-shadowJar {
-    classifier = ''
-    configurations = [project.configurations.shade]
-    relocate 'com.llamalad7', "${project.group}.shade.com.llamalad7"
+tasks.named("shadowJar") {
+    archiveClassifier = ''
+    configurations = project.configurations.named('shade').map { [it] }
     relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
-    //Don't do this
-//    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
-    finalizedBy 'reobfShadowJar'
 }
+
+renamer.classes(tasks.named('shadowJar', Jar)) {
+    archiveClassifier = ''
+    // We need to use the generated mappings, which includes things generated by the annotation processor
+    mappings renamer.mixin.generatedMappings
+    output = input.map { inputFile ->
+        layout.buildDirectory.file("libs/${inputFile.asFile.name}").get()
+    }
+}
+
+
 
 assemble.dependsOn shadowJar
-
-reobf {
-    shadowJar {}
-}
 
 test {
     useJUnit()
@@ -204,15 +174,14 @@ test {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifact jar
-            artifact shadowJar
+            artifact renameShadowJar
             artifact sourcesJar
-            artifactId archivesBaseName
+            artifactId = archivesBaseName
         }
     }
     repositories {
         maven {
-            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            url = "sftp://teamopenindustry.cc:22/var/www/html/maven/"
             credentials {
                 username = "mavenci"
                 password = System.getenv("MAVENCI_PASS")
@@ -221,7 +190,7 @@ publishing {
     }
 }
 
-task ('showBuildInfo') {
+tasks.register('showBuildInfo') {
     doLast {
         System.out.println("Build Uploaded to Maven at: ")
         System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${version}/UniversalModCore-${version}.jar")
@@ -229,3 +198,17 @@ task ('showBuildInfo') {
 }
 
 publish.finalizedBy showBuildInfo
+
+// IntelliJ no longer downloads javadocs and sources by default, this tells Gradle to force IntelliJ to do it.
+idea.module { downloadJavadoc = downloadSources = true }
+
+eclipse {
+    // Eclipse no longer downloads javadocs and sources by default, this tells Gradle to force Eclipse to do it.
+    classpath { downloadJavadoc = downloadSources = true }
+
+    // NOTE: ForgeGradle 7 does not yet support Eclipse run configurations
+    // Run everytime eclipse builds the code
+    //autoBuildTasks genEclipseRuns
+    // Run when importing the project
+    //synchronizationTasks 'genEclipseRuns'
+}
