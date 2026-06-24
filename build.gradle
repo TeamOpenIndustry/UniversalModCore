@@ -51,7 +51,7 @@ renamer.enableMixinRefmaps {
 minecraft {
     mappings channel: "stable", version: "29-1.10.2"
 
-    setAccessTransformer("META-INF/UniversalModCore_at.cfg")
+    setAccessTransformer("META-INF/accesstransformer.cfg")
 
     runs {
         configureEach {
@@ -141,7 +141,7 @@ jar {
     archiveClassifier = 'slim'
     manifest {
         attributes (
-                'FMLAT': 'UniversalModCore_at.cfg',
+                'FMLAT': 'accesstransformer.cfg',
                 "FMLCorePlugin": "cam72cam.mod.UMCMixinPlugin",
                 'FMLCorePluginContainsFMLMod': true,
                 'ForceLoadAsMod': true,
