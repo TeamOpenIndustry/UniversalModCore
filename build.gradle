@@ -70,7 +70,7 @@ minecraft {
             systemProperty "forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP"
             systemProperty "forge.logging.console.level", "debug"
 
-            systemProperty "fml.coreMods.load", "cam72cam.mod.UMCMixinPlugin"
+            systemProperty "fml.coreMods.load", "cam72cam.umc.api.UMCMixinPlugin"
         }
 
         register("client")
@@ -148,7 +148,7 @@ jar {
     manifest {
         attributes (
                 'FMLAT': 'accesstransformer.cfg',
-                "FMLCorePlugin": "cam72cam.mod.UMCMixinPlugin",
+                "FMLCorePlugin": "cam72cam.umc.api.UMCMixinPlugin",
                 'FMLCorePluginContainsFMLMod': true,
                 'ForceLoadAsMod': true,
                 'TweakOrder': '0',

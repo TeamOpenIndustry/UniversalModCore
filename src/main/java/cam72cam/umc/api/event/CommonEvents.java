@@ -1,0 +1,131 @@
+package cam72cam.umc.api.event;
+
+import cam72cam.umc.api.ModCore;
+import cam72cam.umc.api.entity.ModdedEntity;
+import cam72cam.umc.api.world.ChunkPos;
+import cam72cam.umc.api.entity.EntityRegistry;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+
+import java.util.function.Consumer;
+
+/** Registry of events that fire off on both client and server.  Do not use directly! */
+public class CommonEvents {
+    private static void registerEvents() {
+        cam72cam.umc.api.world.World.registerEvents();
+        EntityRegistry.registerEvents();
+    }
+
+    public static final class World {
+        public static final Event<Consumer<net.minecraft.world.World>> LOAD = new Event<>();
+        public static final Event<Consumer<net.minecraft.world.World>> UNLOAD = new Event<>();
+        public static final Event<Consumer<net.minecraft.world.World>> TICK = new Event<>();
+    }
+
+    public static final class Block {
+        public static final Event<Runnable> REGISTER = new Event<>();
+        public static final Event<EventBus.BlockBrokenEvent> BROKEN = new Event<>();
+    }
+
+    public static final class Item {
+        public static final Event<Runnable> REGISTER = new Event<>();
+    }
+
+    public static final class Recipe {
+        public static final Event<Runnable> REGISTER = new Event<>();
+    }
+
+    public static final class Entity {
+        public static final Event<Runnable> REGISTER = new Event<>();
+        public static final Event<EventBus.EntityJoinEvent> JOIN = new Event<>();
+    }
+
+    @Mod.EventBusSubscriber(modid = ModCore.MODID)
+    public static final class EventBus {
+        static {
+            registerEvents();
+        }
+
+        // World
+        @SubscribeEvent
+        public static void onWorldLoad(WorldEvent.Load event) {
+            World.LOAD.execute(x -> x.accept(event.getWorld()));
+        }
+
+        @SubscribeEvent
+        public static void onWorldUnload(WorldEvent.Unload event) {
+            World.UNLOAD.execute(x -> x.accept(event.getWorld()));
+        }
+
+        @SubscribeEvent
+        public static void onWorldTick(TickEvent.WorldTickEvent event) {
+            if (event.phase == TickEvent.Phase.START) {
+                World.TICK.execute(x -> x.accept(event.world));
+            }
+        }
+
+        @SubscribeEvent
+        public static void registerBlocks(RegistryEvent.Register<net.minecraft.block.Block> event) {
+            Block.REGISTER.execute(Runnable::run);
+        }
+
+        @FunctionalInterface
+        public interface BlockBrokenEvent {
+            boolean onBroken(net.minecraft.world.World world, BlockPos pos, EntityPlayer player);
+        }
+        @SubscribeEvent
+        public static void onBlockBreakEvent(BlockEvent.BreakEvent event) {
+            if (!Block.BROKEN.executeCancellable(x -> x.onBroken(event.getWorld(), event.getPos(), event.getPlayer()))) {
+                event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void registerItems(RegistryEvent.Register<net.minecraft.item.Item> event) {
+            Item.REGISTER.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void registerRecipes(RegistryEvent.Register<IRecipe> event) {
+            Recipe.REGISTER.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
+            Entity.REGISTER.execute(Runnable::run);
+        }
+
+        @FunctionalInterface
+        public interface EntityJoinEvent {
+            boolean onJoin(net.minecraft.world.World world, net.minecraft.entity.Entity entity);
+        }
+        @SubscribeEvent
+        public static void onEntityJoin(EntityJoinWorldEvent event) {
+            if (!Entity.JOIN.executeCancellable(x -> x.onJoin(event.getWorld(), event.getEntity()))) {
+                event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onEntityTransfer(EntityEvent.EnteringChunk event) {
+            if (event.getEntity() instanceof ModdedEntity) {
+                ModdedEntity modded = (ModdedEntity) event.getEntity();
+                cam72cam.umc.api.world.World.get(modded.world).tracker
+                        .move(modded,
+                              //Don't calculate Y in 1.16- as no corresponding event posted
+                              ChunkPos.asLong(event.getOldChunkX(), 0, event.getOldChunkZ()),
+                              ChunkPos.asLong(event.getNewChunkX(), 0, event.getNewChunkZ()));
+            }
+        }
+    }
+}
