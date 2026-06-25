@@ -38,7 +38,7 @@ base.archivesName = archivesBaseName
 
 println("version: ${version}")
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 println("Java: ${providers.systemProperty("java.version").get()}, " +
         "JVM: ${providers.systemProperty("java.vm.version").get()} (${providers.systemProperty("java.vendor").get()}), " +
         "Arch: ${providers.systemProperty("os.arch").get()}")
@@ -55,6 +55,8 @@ minecraft {
 
     runs {
         configureEach {
+            jvmArgs '--add-opens', 'cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED'
+
             systemProperty "mixin.env.remapRefMap", "true"
             systemProperty "mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg"
 
@@ -69,7 +71,8 @@ minecraft {
             systemProperty "forge.logging.console.level", "debug"
         }
 
-        register("client")
+        register('client') {
+        }
 
         register("server") {
             args "--nogui"
@@ -93,8 +96,9 @@ dependencies {
     compileOnly ("org.lwjgl:lwjgl-opengl:3.2.2")
 
     annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
-    annotationProcessor(shade('io.github.llamalad7:mixinextras-common:0.5.0'))
-    testImplementation ('junit:junit:4.13.1')
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4"))
+    shade('io.github.llamalad7:mixinextras-forge:0.5.4')
+    testImplementation ('org.junit.jupiter:junit-jupiter:5.14.4')
 
     shade "javax.vecmath:vecmath:1.5.2"
     shade "at.yawk.lz4:lz4-java:1.10.2"
