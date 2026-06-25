@@ -56,7 +56,8 @@ minecraft {
     runs {
         configureEach {
             workingDir.convention layout.projectDirectory.dir('run')
-            args "--mixin.config=mixins.feat.universalmodcore.json", "--mixin.config=mixins.fix.universalmodcore.json"
+            args "--mixin.config=mixins.feat.universalmodcore.json",
+                    "--mixin.config=mixins.fix.universalmodcore.json"
 
             systemProperty "mixin.debug.verbose", "true"
             systemProperty "mixin.debug.export", "true"
@@ -83,6 +84,10 @@ repositories {
 
 dependencies {
     implementation minecraft.dependency("net.minecraftforge:forge:1.14.4-28.2.30")
+
+    compileOnly ("org.lwjgl:lwjgl:3.2.2")
+    compileOnly ("org.lwjgl:lwjgl-glfw:3.2.2")
+    compileOnly ("org.lwjgl:lwjgl-opengl:3.2.2")
 
     annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
     implementation renamer.dependency("curse.maven:mixinbootstrap-357178:3437402")
