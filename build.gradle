@@ -46,6 +46,12 @@ println("Java: ${providers.systemProperty("java.version").get()}, " +
 renamer.enableMixinRefmaps {
     config "mixins.feat.universalmodcore.json"
     config "mixins.fix.universalmodcore.json"
+    source(sourceSets.main) {
+        refMap = 'mixins.universalmodcore.refmap.json'
+    }
+    jar(tasks.named('jar'))
+    jar(tasks.named('shadowJar'))
+    minecraft.runs.each { run -> run(run) }
 }
 
 minecraft {
