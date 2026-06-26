@@ -7,38 +7,26 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
           matrix:
-            include:
-              - branch: 1.7.10-forge
-                java: 8
-              - branch: 1.10.2-forge
-                java: 8
-              - branch: 1.11.2-forge
-                java: 8
-              - branch: 1.12.2-forge
-                java: 8
-              - branch: 1.14.4-forge
-                java: 8
-              - branch: 1.15.2-forge
-                java: 8
-              - branch: 1.16.5-forge
-                java: 8
-              - branch: 1.17.1-forge
-                java: 16
-              - branch: 1.18.2-forge
-                java: 17
-              - branch: 1.19.4-forge
-                java: 17
-              - branch: 1.20.1-forge
-                java: 17
-              - branch: 1.21.1-neoforge
-                java: 21
+            branch: [1.7.10-forge,
+                     1.10.2-forge,
+                     1.11.2-forge,
+                     1.12.2-forge,
+                     1.14.4-forge,
+                     1.15.2-forge,
+                     1.16.5-forge,
+                     1.17.1-forge,
+                     1.18.2-forge,
+                     1.19.4-forge,
+                     1.20.1-forge,
+                     1.21.1-neoforge,
+                     ]
         steps:
             - uses: actions/checkout@v5
               with:
                 ref: ${{ matrix.branch }}
             - uses: actions/setup-java@v5
               with:
-                java-version: ${{ matrix.java }}
+                java-version: '25'
                 distribution: 'temurin'
             - run: |
                 ref=`echo ${github_ref} | sed -e 's,refs/heads/,,' | tr '/' '-'`
