@@ -3,7 +3,7 @@ plugins {
     id 'idea'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[7.0.30,8.0)'
+    id 'net.minecraftforge.gradle' version '[7.0.31,8.0)'
     id 'net.minecraftforge.renamer' version '1.1.2'
     id 'com.gradleup.shadow' version "9.4.2"
 }
@@ -46,6 +46,12 @@ println("Java: ${providers.systemProperty("java.version").get()}, " +
 renamer.enableMixinRefmaps {
     config "mixins.feat.universalmodcore.json"
     config "mixins.fix.universalmodcore.json"
+    source(sourceSets.main) {
+        refMap = 'mixins.universalmodcore.refmap.json'
+    }
+    jar(tasks.named('jar'))
+    jar(tasks.named('shadowJar'))
+    minecraft.runs.each { run -> run(run) }
 }
 
 minecraft {
