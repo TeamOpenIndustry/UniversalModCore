@@ -74,7 +74,7 @@ minecraft {
     groupsToExcludeFromAutoReobfMapping.addAll("com.diffplug", "com.diffplug.durian", "net.industrial-craft")
 }
 
-tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/META-INF/accesstransformer.cfg")}
+tasks.deobfuscateMergedJarToSrg.configure {accessTransformerFiles.from("src/main/resources/META-INF/UniversalModCore_at.cfg")}
 
 repositories {
     maven { url = "https://repo.spongepowered.org/maven" }
@@ -162,7 +162,7 @@ publishing {
     }
     repositories {
         maven {
-            url = "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
             credentials {
                 username = "mavenci"
                 password = System.getenv("MAVENCI_PASS")
@@ -171,7 +171,7 @@ publishing {
     }
 }
 
-tasks.register('showBuildInfo') {
+task ('showBuildInfo') {
     doLast {
         System.out.println("Build Uploaded to Maven at: ")
         System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${version}/UniversalModCore-${version}.jar")
