@@ -10,6 +10,7 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -121,6 +122,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
+        applySavedVelocity(data);
 
         if (!this.level().isClientSide()) {
             getEntityData().set(ROLL, this.roll);
@@ -572,6 +574,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (self.allowsDefaultMovement()) {
             super.setDeltaMovement(x, y, z);
         }
+    }
+
+    private void applySavedVelocity(TagCompound data) {
+        ListTag vel = data.internal.getList("Motion", 6);
+        double x = vel.getDouble(0);
+        double y = vel.getDouble(1);
+        double z = vel.getDouble(2);
+        super.setDeltaMovement(x, y, z);
     }
 
     /*
