@@ -17,6 +17,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -121,6 +123,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
+        applySavedVelocity(data);
 
         if (!this.world.isRemote) {
             dataManager.set(ROLL, this.roll);
@@ -565,6 +568,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (self.allowsDefaultMovement()) {
             super.setVelocity(x, y, z);
         }
+    }
+
+    private void applySavedVelocity(TagCompound data) {
+        ListNBT vel = data.internal.getList("Motion", 6);
+        double x = vel.getDouble(0);
+        double y = vel.getDouble(1);
+        double z = vel.getDouble(2);
+        super.setVelocity(x, y, z);
     }
 
     /*
