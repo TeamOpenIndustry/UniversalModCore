@@ -20,6 +20,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -100,7 +102,11 @@ public class EntityRegistry {
             if (w.isClientSide) {
                 // Cleanup client side since mc does not call setDead client side...
                 // See ClientEvents registration for related crap
-                for (net.minecraft.world.entity.Entity entity : ((ClientLevel) w).entitiesForRendering()) {
+                Iterable<net.minecraft.world.entity.Entity> iter = ((ClientLevel) w).entitiesForRendering();
+                if (iter instanceof Collection<net.minecraft.world.entity.Entity> e) {
+                    iter = new ArrayList<>(e);
+                }
+                for (net.minecraft.world.entity.Entity entity : iter) {
                     if (entity instanceof ModdedEntity) {
                         entity.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
                     }
