@@ -9,7 +9,7 @@ jobs:
       matrix:
         include:
           - branch: 1.7.10-forge
-            java: 8
+            java: 25 # RFG uses gradle 9
           - branch: 1.10.2-forge
             java: 8
           - branch: 1.11.2-forge
