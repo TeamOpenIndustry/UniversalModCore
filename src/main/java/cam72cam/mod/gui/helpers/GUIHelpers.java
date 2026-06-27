@@ -141,16 +141,13 @@ public class GUIHelpers {
     }
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
-        //Reset Z to prevent culling
-        matrix.m23 = 0;
         state.model_view().multiply(matrix);
         state.depth_test(false);
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
-                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
-                    font.isBidirectional()
+                    text, x - font.width(text) / 2f, y, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880
             );
             RenderContext.IMMEDIATE.endBatch();
         }
@@ -162,16 +159,13 @@ public class GUIHelpers {
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
-        //Reset Z to prevent culling
-        matrix.m23 = 0;
         state.model_view().multiply(matrix);
         state.depth_test(false);
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
-                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
-                    font.isBidirectional()
+                    text, x - font.width(text) / 2f, y, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880
             );
             RenderContext.IMMEDIATE.endBatch();
         }

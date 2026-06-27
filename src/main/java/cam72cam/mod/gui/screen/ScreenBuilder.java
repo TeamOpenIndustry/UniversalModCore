@@ -90,7 +90,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
     @Override
     public void drawCenteredString(String str, int x, int y, int color) {
-        graphics.drawCenteredString(this.font, str, this.width / 2 + x, this.height / 4 + y, color);
+        GUIHelpers.drawCenteredString(str, this.width / 2 + x, this.height / 4 + y, color);
     }
 
     @Override
