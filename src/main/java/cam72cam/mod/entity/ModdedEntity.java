@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -137,6 +138,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
+        applySavedVelocity(data);
 
         if (!this.worldObj.isRemote) {
             getDataWatcher().updateObject(ROLL, this.roll);
@@ -549,6 +551,14 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         if (self.allowsDefaultMovement()) {
             super.setVelocity(x, y, z);
         }
+    }
+
+    private void applySavedVelocity(TagCompound data) {
+        NBTTagList vel = data.internal.getTagList("Motion", 6);
+        double x = vel.getDoubleAt(0);
+        double y = vel.getDoubleAt(1);
+        double z = vel.getDoubleAt(2);
+        super.setVelocity(x, y, z);
     }
 
     /*
