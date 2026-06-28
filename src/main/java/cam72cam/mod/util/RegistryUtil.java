@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nonnull;
@@ -32,7 +32,7 @@ public class RegistryUtil {
 
     public static RegistryAccess getRegistry() {
         try {
-            if (FMLLoader.getDist().isClient()) {
+            if (EffectiveSide.get().isClient()) {
                 return Minecraft.getInstance().getConnection().registryAccess();
             } else {
                 return ServerLifecycleHooks.getCurrentServer().registryAccess();
