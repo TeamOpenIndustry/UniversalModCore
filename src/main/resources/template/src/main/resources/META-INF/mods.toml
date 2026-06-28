@@ -4,7 +4,7 @@ license="TODO"
 
 [[mods]]
 modId="#ID#"
-version="${file.jarVersion}"
+version="#VERSION#"
 displayName="#NAME#"
 
 [[dependencies.#ID#]]
