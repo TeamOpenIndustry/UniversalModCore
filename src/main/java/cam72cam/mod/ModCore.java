@@ -54,7 +54,7 @@ import java.util.List;
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.3.0";
+    public static final String VERSION = "1.3.1";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
