@@ -138,41 +138,19 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     protected GuiRenderFunc<T> foreground = (gui, widget) -> {};
 
     @Override
-    public void renderBackground(GuiRenderer renderer, ScissorStack stack) {
-        try (With ctx = stack.applyScissor()) {
-            background.draw(renderer, (T) this);
-        }
-    }
-    @Override
-    public void renderMain(GuiRenderer renderer, ScissorStack stack) {
+    public void render(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
             content.draw(renderer, (T) this);
         }
     }
-    @Override
-    public void renderForeground(GuiRenderer renderer, ScissorStack stack) {
-        try (With ctx = stack.applyScissor()) {
-            foreground.draw(renderer, (T) this);
-        }
-    }
 
     @Override
-    public void setBackgroundRenderFunc(GuiRenderFunc<T> handler) {
-        background = handler;
-    }
-    @Override
-    public void setMainRenderFunc(GuiRenderFunc<T> handler) {
+    public void setRenderer(GuiRenderFunc<T> handler) {
         content = handler;
-    }
-    @Override
-    public void setForegroundRenderFunc(GuiRenderFunc<T> handler) {
-        foreground = handler;
     }
 
     public void copyFacade(AbstractWidget<T> other) {
-        this.setBackgroundRenderFunc(other.background);
-        this.setMainRenderFunc(other.content);
-        this.setForegroundRenderFunc(other.foreground);
+        this.setRenderer(other.content);
     }
 
     public void requestLayout() {

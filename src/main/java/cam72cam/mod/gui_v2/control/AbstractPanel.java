@@ -28,8 +28,6 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         this.children = new ArrayList<>();
         this.childrenReverse = new ArrayList<>();
         this.controller = new LinkedHashSet<>();
-
-//        this.setForegroundRenderFunc((gui, panel) -> panel.renderBound(gui, 0xFFFFFFFF));
     }
 
     public void addChild(AbstractWidget<?> child) {
@@ -107,9 +105,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (widget != this && widget instanceof AbstractPanel) {
             ((AbstractPanel<?>) widget).renderPanel(renderer, stack);
         } else {
-            widget.renderBackground(renderer, stack);
-            widget.renderMain(renderer, stack);
-            widget.renderForeground(renderer, stack);
+            widget.render(renderer, stack);
         }
         if (widget instanceof IUpdatable) {
             ((IUpdatable) widget).postRender();

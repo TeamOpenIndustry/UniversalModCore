@@ -20,13 +20,9 @@ public interface ILayoutable<T> {
     boolean isVisible();
     void setVisible(boolean visible);
 
-    void renderBackground(GuiRenderer renderer, ScissorStack stack);
-    void renderMain(GuiRenderer renderer, ScissorStack stack);
-    void renderForeground(GuiRenderer renderer, ScissorStack stack);
+    void render(GuiRenderer renderer, ScissorStack stack);
 
-    void setBackgroundRenderFunc(GuiRenderFunc<T> handler);
-    void setMainRenderFunc(GuiRenderFunc<T> handler);
-    void setForegroundRenderFunc(GuiRenderFunc<T> handler);
+    void setRenderer(GuiRenderFunc<T> handler);
 
     //Layout
     void layout(int x, int y);

@@ -78,15 +78,13 @@ public class CheckBox extends AbstractWidget<CheckBox>
     }
 
     public void setVanillaFacade() {
-        this.setBackgroundRenderFunc((gui, cb) -> {
+        this.setRenderer((gui, cb) -> {
             gui.drawVanillaButton(cb.x(), cb.y(), CHECK_BOX_SIZE, CHECK_BOX_SIZE, 0);
 
             if (cb.isChecked()) {
                 //TODO Better appearance
                 gui.drawCenteredString("x", cb.x() + CHECK_BOX_SIZE / 2 + 1, cb.y() + 1, 14737632);
             }
-        });
-        this.setMainRenderFunc((gui, cb) -> {
             int color = cb.getNameColor() != 0 ? cb.getNameColor() :
                         !cb.isEnabled() ? 0xA0A0A0 : 0xE0E0E0;
             gui.drawString(cb.getName().internal.getFormattedText(), cb.x() + CHECK_BOX_SIZE + 2, cb.y() + 2, color);

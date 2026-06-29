@@ -17,7 +17,7 @@ public class Label extends AbstractWidget<Label> {
         this.setWidth(GuiUtils.getTextWidth(text));
         this.setHeight(GuiRenderer.TEXT_HEIGHT);
         this.formatted = text.internal.getFormattedText();
-        this.setMainRenderFunc((gui, label) -> gui.drawString(formatted, x(), y(), getNameColor()));
+        this.setRenderer((gui, label) -> gui.drawString(formatted, x(), y(), getNameColor()));
     }
 
     public static Label direct(String text) {

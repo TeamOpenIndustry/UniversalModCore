@@ -372,13 +372,11 @@ public class TextField extends AbstractWidget<TextField>
     }
 
     public void setVanillaFacade() {
-        this.setBackgroundRenderFunc((gui, txt) -> {
+        this.setRenderer((gui, txt) -> {
             int bgColor = 0xFF101010;
             int borderColor = txt.focusing ? 0xFFA0A0A0 : 0xFF808080;
             gui.drawRect(txt.x(), txt.y(), txt.width(), txt.height(), borderColor);
             gui.drawRect(txt.x()+1, txt.y()+1, txt.width()-2, txt.height()-2, bgColor);
-        });
-        this.setMainRenderFunc((gui, txt) -> {
             int xOff = txt.x() + SPAN - txt.textOffsetX;
             int yOff = txt.y() + (txt.height() - GuiRenderer.TEXT_HEIGHT) / 2;
 

@@ -51,12 +51,10 @@ public class Button extends AbstractWidget<Button>
     public static Button textured(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler,
                                   Identifier tex, float startU, float startV, float endU, float endV) {
         Button button = new Button(width, height, text, handler);
-        button.setBackgroundRenderFunc((gui, btn) -> {
+        button.setRenderer((gui, btn) -> {
             try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
                 gui.drawTexturedUvRect(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
             }
-        });
-        button.setMainRenderFunc((gui, btn) -> {
             int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
@@ -68,10 +66,7 @@ public class Button extends AbstractWidget<Button>
     public static Button item(ItemStack stack, Consumer<Button> callback) {
         Button button = new Button(GuiRenderer.ITEM_SIZE, GuiRenderer.ITEM_SIZE, PlayerMessage.direct(""),
                                    ((hand, btn) -> callback.accept(btn)));
-        button.setBackgroundRenderFunc((gui, btn) -> {
-//            gui.drawRect(btn.x(), btn.y(), btn.width(), btn.height(), 0x00000000);
-        });
-        button.setMainRenderFunc((gui, btn) -> {
+        button.setRenderer((gui, btn) -> {
             gui.drawItem(stack, btn.x(), btn.y());
         });
         return button;
@@ -104,12 +99,10 @@ public class Button extends AbstractWidget<Button>
 
     /* Facades */
     public void setVanillaFacade() {
-        this.setBackgroundRenderFunc((gui, btn) -> {
+        this.setRenderer((gui, btn) -> {
             int state = !btn.isEnabled() ? 0
-                    : btn.isHovering() ? 2 : 1;
+                                         : btn.isHovering() ? 2 : 1;
             gui.drawVanillaButton(btn.x(), btn.y(), btn.width(), btn.height(), state);
-        });
-        this.setMainRenderFunc((gui, btn) -> {
             int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;

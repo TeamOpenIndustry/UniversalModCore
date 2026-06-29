@@ -19,7 +19,7 @@ public class Image extends AbstractWidget<Image> {
         this.vStart = vStart;
         this.vEnd = vEnd;
 
-        this.setMainRenderFunc((gui, image) -> {
+        this.setRenderer((gui, image) -> {
             gui.drawTexturedUvRect(image.tex, image.x(), image.y(), image.width(), image.height(),
                                    image.uStart, image.uEnd, image.vStart, image.vEnd);
         });

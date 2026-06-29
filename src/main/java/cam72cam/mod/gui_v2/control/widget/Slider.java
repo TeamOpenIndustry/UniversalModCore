@@ -179,7 +179,7 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     public void setVanillaFacade() {
-        this.setBackgroundRenderFunc((gui, slid) -> {
+        this.setRenderer((gui, slid) -> {
             //Render track
             gui.drawVanillaButton(slid.x(), slid.y(), slid.width(), slid.height(), 0);
 
@@ -199,7 +199,7 @@ public class Slider extends AbstractWidget<Slider>
                 gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
         });
-        this.setMainRenderFunc((gui, slid) -> {
+        this.setRenderer((gui, slid) -> {
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
