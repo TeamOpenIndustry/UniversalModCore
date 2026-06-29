@@ -42,11 +42,11 @@ import java.util.Collections;
 import java.util.List;
 
 /** UMC Mod, do not touch... */
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)")
+@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "required-after:mixinbooter@[10.7,11.0)")
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.2.3";
+    public static final String VERSION = "1.3.1";
     public static ModCore instance;
 
     private List<Mod> mods = new ArrayList<>();
@@ -347,6 +347,10 @@ public class ModCore {
 
     public static int mcVersion() {
         return 11202;
+    }
+
+    public static String semanticVersion() {
+        return "1.12.2-forge";
     }
 
     private static Boolean isDev = null;

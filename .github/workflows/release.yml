@@ -3,34 +3,57 @@ name: Universal Mod Core Release
 on: [workflow_dispatch]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        strategy:
-          matrix:
-            branch: [1.7.10-forge, 1.10.2-forge, 1.11.2-forge, 1.12.2-forge, 1.14.4-forge, 1.15.2-forge, 1.16.5-forge]
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                ref: ${{ matrix.branch }}
-            - uses: actions/setup-java@v1
-              with:
-                java-version: '1.8' # The JDK version to make available on the path.
-                java-package: jdk # (jre, jdk, or jdk+fx) - defaults to jdk
-                architecture: x64 # (x64 or x86) - defaults to x64
-            - run: |
-                ref=`echo ${github_ref} | sed -e 's,refs/heads/,,' | tr '/' '-'`
-                echo $ref
-                echo "::set-env name=ref::$ref"
-              env:
-                github_ref: ${{ github.ref }}
-                ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-            - name: keyscan
-              run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
-            - name: Gradle publish
-              env:
-                MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
-              run: ./gradlew publish -Dtarget=release
-            - uses: actions/upload-artifact@v4
-              with:
-                name: UniversalModCore-${{ env.ref }}
-                path: build/libs/UniversalModCore-*.jar
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: 1.7.10-forge
+            java: 25 # RFG uses gradle 9
+          - branch: 1.10.2-forge
+            java: 8
+          - branch: 1.11.2-forge
+            java: 8
+          - branch: 1.12.2-forge
+            java: 8
+          - branch: 1.14.4-forge
+            java: 8
+          - branch: 1.15.2-forge
+            java: 8
+          - branch: 1.16.5-forge
+            java: 8
+          - branch: 1.17.1-forge
+            java: 16
+          - branch: 1.18.2-forge
+            java: 17
+          - branch: 1.19.4-forge
+            java: 17
+          - branch: 1.20.1-forge
+            java: 17
+          - branch: 1.21.1-neoforge
+            java: 21
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ matrix.branch }}
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - run: |
+          ref=`echo ${github_ref} | sed -e 's,refs/heads/,,' | tr '/' '-'`
+          echo $ref
+          echo "::set-env name=ref::$ref"
+        env:
+          github_ref: ${{ github.ref }}
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - name: keyscan
+        run: mkdir -p ~/.ssh/ && ssh-keyscan -t rsa teamopenindustry.cc >> ~/.ssh/known_hosts
+      - name: Gradle publish
+        env:
+          MAVENCI_PASS: ${{ secrets.MAVENCI_PASS }}
+        run: ./gradlew publish -Dtarget=release
+      - uses: actions/upload-artifact@v6
+        with:
+          name: UniversalModCore-${{ env.ref }}
+          path: build/libs/UniversalModCore-*.jar
