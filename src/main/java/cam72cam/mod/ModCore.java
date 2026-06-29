@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 
 /** UMC Mod, do not touch... */
-@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)", dependencies = "required-after:mixinbooter@[10.7,)")
+@net.minecraftforge.fml.common.Mod(modid = ModCore.MODID, name = ModCore.NAME, version = ModCore.VERSION, acceptedMinecraftVersions = "[1.10,1.11)", dependencies = "required-after:mixinbooter@[10.7,11.0)")
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
