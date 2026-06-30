@@ -526,6 +526,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void setVelocity(double x, double y, double z) {
         if (self.allowsDefaultMovement()) {
             super.setVelocity(x, y, z);
@@ -537,7 +538,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         double x = vel.getDoubleAt(0);
         double y = vel.getDoubleAt(1);
         double z = vel.getDoubleAt(2);
-        super.setVelocity(x, y, z);
+        super.motionX = x;
+        super.motionY = y;
+        super.motionZ = z;
     }
 
     @Override
