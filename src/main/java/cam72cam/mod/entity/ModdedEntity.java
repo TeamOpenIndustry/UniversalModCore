@@ -17,7 +17,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -564,6 +563,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public void setVelocity(double x, double y, double z) {
         if (self.allowsDefaultMovement()) {
             super.setVelocity(x, y, z);
@@ -575,7 +575,7 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         double x = vel.getDouble(0);
         double y = vel.getDouble(1);
         double z = vel.getDouble(2);
-        super.setVelocity(x, y, z);
+        super.setMotion(x, y, z);
     }
 
     /*
