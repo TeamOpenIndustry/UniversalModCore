@@ -133,25 +133,23 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
         this.setHeight(height);
     }
 
-    protected GuiRenderFunc<T> background = (gui, widget) -> {};
-    protected GuiRenderFunc<T> content = (gui, widget) -> {};
-    protected GuiRenderFunc<T> foreground = (gui, widget) -> {};
+    protected GuiRenderFunc<T> renderFunc = (gui, widget) -> {};
 
     @Override
-    public void render(GuiRenderer renderer, ScissorStack stack) {
+    public void draw(GuiRenderer renderer, ScissorStack stack) {
         try (With ctx = stack.applyScissor()) {
-            content.draw(renderer, (T) this);
+            this.renderFunc.draw(renderer, (T) this);
         }
     }
 
     @Override
     public T setRenderer(GuiRenderFunc<T> handler) {
-        content = handler;
+        renderFunc = handler;
         return (T) this;
     }
 
     public void copyFacade(AbstractWidget<T> other) {
-        this.setRenderer(other.content);
+        this.setRenderer(other.renderFunc);
     }
 
     public void requestLayout() {

@@ -105,7 +105,7 @@ public abstract class AbstractPanel<T extends AbstractPanel<T>> extends Abstract
         if (widget != this && widget instanceof AbstractPanel) {
             ((AbstractPanel<?>) widget).renderPanel(renderer, stack);
         } else {
-            widget.render(renderer, stack);
+            widget.draw(renderer, stack);
         }
         if (widget instanceof IUpdatable) {
             ((IUpdatable) widget).postRender();

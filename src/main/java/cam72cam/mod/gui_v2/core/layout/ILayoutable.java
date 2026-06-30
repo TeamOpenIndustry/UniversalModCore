@@ -20,7 +20,7 @@ public interface ILayoutable<T> {
     boolean isVisible();
     void setVisible(boolean visible);
 
-    void render(GuiRenderer renderer, ScissorStack stack);
+    void draw(GuiRenderer renderer, ScissorStack stack);
 
     T setRenderer(GuiRenderFunc<T> handler);
 

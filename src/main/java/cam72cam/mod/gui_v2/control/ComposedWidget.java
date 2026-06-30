@@ -81,7 +81,7 @@ public abstract class ComposedWidget<T extends ComposedWidget<T>> extends Abstra
     }
 
     @Override
-    public void render(GuiRenderer renderer, ScissorStack stack) {
+    public void draw(GuiRenderer renderer, ScissorStack stack) {
         stack.push(this);
         internal.renderPanel(renderer, stack);
         stack.pop();
