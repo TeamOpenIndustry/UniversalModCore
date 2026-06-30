@@ -80,15 +80,19 @@ public class HBox extends AbstractPanel<HBox> {
     }
 
     @Override
+    public void setBound(int x, int y, int width, int height) {
+        this.setX(x);
+        this.setY(y);
+    }
+
+    @Override
     public void setWidth(int width) {
         //HBox auto-calculates bounds
-        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setHeight(int height) {
         //HBox auto-calculates bounds
-        throw new UnsupportedOperationException();
     }
 
     protected void setWHInternal(int width, int height) {

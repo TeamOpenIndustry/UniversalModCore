@@ -180,7 +180,7 @@ public class Slider extends AbstractWidget<Slider>
     }
 
     public Slider vanilla() {
-        this.setRenderer((gui, slid) -> {
+        return this.setRenderer((gui, slid) -> {
             //Render track
             gui.drawVanillaButton(slid.x(), slid.y(), slid.width(), slid.height(), 0);
 
@@ -199,8 +199,7 @@ public class Slider extends AbstractWidget<Slider>
                 int handleY = slid.y() + (int) (ratio * trackHeight);
                 gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
-        });
-        return this.setRenderer((gui, slid) -> {
+
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 

@@ -4,6 +4,8 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.gui_v2.core.GuiManager;
+import cam72cam.mod.gui_v2.test.TestScreen;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
@@ -122,7 +124,10 @@ public abstract class CustomItem {
 
         @Override
         public final ActionResult<net.minecraft.item.ItemStack> onItemRightClick(net.minecraft.world.World world, EntityPlayer player, EnumHand hand) {
-            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
+            if (world.isRemote) {
+                GuiManager.openScreen(new TestScreen(), true);
+            }
+//            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
             return super.onItemRightClick(world, player, hand);
         }
 

@@ -4,38 +4,40 @@ import cam72cam.mod.gui_v2.core.layout.ILayoutable;
 import it.unimi.dsi.fastutil.objects.Object2LongArrayMap;
 
 /**
- * Abstraction of panels that could set children's relative positions statically, like AnchorPane
+ * Abstraction of panels that could set children's relative positions statically, like AnchorPane.
+ * <p>
+ * Inheritors should either extend and expose child positions related methods or provide their own ones.
  */
 public abstract class PositionedPanel<T extends PositionedPanel<T>> extends AbstractPanel<T> {
     private final Object2LongArrayMap<ILayoutable<?>> childrenPositions = new Object2LongArrayMap<>();
 
-    public PositionedPanel(int width, int height) {
+    protected PositionedPanel(int width, int height) {
         super(width, height);
     }
 
-    public void addChildren(AbstractWidget<?> child, int relX, int relY) {
+    protected void addChildren(AbstractWidget<?> child, int relX, int relY) {
         super.addChild(child);
         setChildPosition(child, relX, relY);
     }
 
-    public void setChildPosition(AbstractWidget<?> child, int relX, int relY) {
+    protected void setChildPosition(AbstractWidget<?> child, int relX, int relY) {
         if (!getChildren().contains(child)) {
             return;
         }
         childrenPositions.put(child, (long) relX << 32 | relY);
     }
 
-    public int getChildRelX(ILayoutable<?> child) {
+    public int getChildRelX(AbstractWidget<?> child) {
         if (childrenPositions.containsKey(child)) {
             return (int) (childrenPositions.getLong(child) >> 32);
         }
-        return 0;
+        return -1;
     }
 
-    public int getChildRelY(ILayoutable<?> child) {
+    public int getChildRelY(AbstractWidget<?> child) {
         if (childrenPositions.containsKey(child)) {
             return (int) childrenPositions.getLong(child);
         }
-        return 0;
+        return -1;
     }
 }

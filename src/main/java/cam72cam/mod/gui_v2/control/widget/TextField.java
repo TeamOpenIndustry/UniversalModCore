@@ -12,7 +12,7 @@ import com.google.common.base.Predicates;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-//TODO Multiline support
+//TODO TextArea
 public class TextField extends AbstractWidget<TextField>
         implements IClickable, IFocusable, IDraggable, IKeyboardListener, IUpdatable {
     private static final int SPAN = GuiRenderer.TEXT_HEIGHT / 2;
@@ -32,6 +32,8 @@ public class TextField extends AbstractWidget<TextField>
 
     protected TextField(int width, int height) {
         this.setBound(0, 0, width, height);
+        this.text = "";
+        vanilla();
     }
 
     public static TextField of(int width, int height) {

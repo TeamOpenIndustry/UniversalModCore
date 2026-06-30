@@ -25,6 +25,7 @@ public class Button extends AbstractWidget<Button>
     public Button(int width, int height, PlayerMessage text) {
         this.setName(text);
         this.setBound(0, 0, width, height);
+        vanilla();
     }
 
     public static Button of(int width, int height, PlayerMessage text) {

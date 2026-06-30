@@ -42,7 +42,7 @@ public class TestScreen extends ClientScreen {
                                     numberField1.setWidth((int) (50 + slider.getValue() * 100));
                                 });
 
-        ItemPicker picker = new ItemPicker(140, 200, itemStack -> System.out.println(itemStack.getDisplayName()));
+        ItemPicker picker = new ItemPicker(7, 9, itemStack -> System.out.println(itemStack.getDisplayName()));
         picker.addItems(Fuzzy.BRICK_BLOCK.enumerate());
         picker.addItems(Fuzzy.WOOL_BLOCK.enumerate());
         picker.addItems(Fuzzy.LOG_WOOD.enumerate());

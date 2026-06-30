@@ -13,7 +13,7 @@ public abstract class ClientScreen {
     public void onGuiResize(int newWidth, int newHeight) {}
 
     public final void requestClose() {
-        GuiManager.closeUMCScreen();
+        GuiManager.closeCurrentScreen();
     }
 
     public final void addEffect(PostEffect layer) {
