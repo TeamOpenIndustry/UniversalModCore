@@ -27,18 +27,23 @@ public class NumberField extends ComposedWidget<NumberField> {
     public NumberField(int width, int height, PlayerMessage name, double min, double max, double orig, boolean allowDecimal, Consumer<Double> callback) {
         super(width, height);
         this.value = Math.max(min, Math.min(max, orig));
-        this.button = Button.vanilla(height, height, PlayerMessage.direct("↺"), (hand, btn) -> onButtonChange());
-        this.slider = Slider.horizontal(width - height, height, name, min, max, value, allowDecimal ? 4 : 0, this::onSliderChange);
-        this.textField = new TextField(width - height, height, this::onTextChange) {
+        this.button = Button.of(height, height, PlayerMessage.direct("↺"))
+                            .callback((hand, btn) -> onButtonChange());
+        this.slider = Slider.horizontal(width - height, height, name)
+                            .bound(min, max, value)
+                            .setDisplayPrecision(allowDecimal ? 4 : 0)
+                            .callback(this::onSliderChange);
+        this.textField = new TextField(width - height, height) {
             @Override
             public void onFocusLost() {
                 super.onFocusLost();
                 String str = getText();
                 double d = str.isEmpty() ? slider.getMinBound() : Double.parseDouble(str);
-                setText(String.format(formatter, Math.max(slider.getMinBound(), Math.min(slider.getMaxBound(), d))));
+                text(String.format(formatter, Math.max(slider.getMinBound(), Math.min(slider.getMaxBound(), d))));
             }
-        };
-        this.textField.setValidator(this::verify);
+        }
+        .callback(this::onTextChange);
+        this.textField.validator(this::verify);
         this.allowDecimal = allowDecimal;
         this.formatter = allowDecimal ? "%.4f" : "%.0f";
         this.callback = callback;
@@ -91,7 +96,7 @@ public class NumberField extends ComposedWidget<NumberField> {
             this.slider.setVisible(true);
         } else {
             this.slider.setVisible(false);
-            this.textField.setText(String.format(formatter, this.value));
+            this.textField.text(String.format(formatter, this.value));
             this.textField.setVisible(true);
         }
     }

@@ -9,6 +9,7 @@ import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.gui_v2.control.panel.ScrollPane;
 import cam72cam.mod.gui_v2.control.widget.Button;
 import cam72cam.mod.gui_v2.control.widget.TextField;
+import cam72cam.mod.text.PlayerMessage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +39,9 @@ public class ItemPicker extends ComposedWidget<ItemPicker> {
 
         this.onItemSelected = onItemSelected;
 
-        searchField = new TextField(width, SEARCH_HEIGHT, this::onSearchTextChanged);
-        searchField.setValidator(s -> true);
+        searchField = TextField.of(width, SEARCH_HEIGHT)
+                               .callback(this::onSearchTextChanged);
+        searchField.validator(s -> true);
 
         addChildren(searchField, 0, 0);
         addChildren(scrollPane, 0, SEARCH_HEIGHT);
@@ -84,11 +86,13 @@ public class ItemPicker extends ComposedWidget<ItemPicker> {
                 rowsContainer.addChild(currentRow);
             }
             int finalI = i;
-            currentRow.addChild(Button.item(filteredItems.get(i), (btn) -> {
-                if (onItemSelected != null) {
-                    onItemSelected.accept(filteredItems.get(finalI));
-                }
-            }));
+            currentRow.addChild(Button.of(GuiRenderer.ITEM_SIZE, GuiRenderer.ITEM_SIZE, PlayerMessage.direct(""))
+                                      .callback((hand, btn) -> {
+                                            if (onItemSelected != null) {
+                                                onItemSelected.accept(filteredItems.get(finalI));
+                                            }
+                                        })
+                                      .item(filteredItems.get(i)));
         }
         requestLayout();
     }

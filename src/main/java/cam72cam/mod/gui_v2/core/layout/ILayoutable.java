@@ -22,7 +22,7 @@ public interface ILayoutable<T> {
 
     void render(GuiRenderer renderer, ScissorStack stack);
 
-    void setRenderer(GuiRenderFunc<T> handler);
+    T setRenderer(GuiRenderFunc<T> handler);
 
     //Layout
     void layout(int x, int y);

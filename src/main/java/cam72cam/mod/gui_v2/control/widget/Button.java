@@ -4,18 +4,12 @@ import cam72cam.mod.entity.Player;
 import cam72cam.mod.gui_v2.control.AbstractWidget;
 import cam72cam.mod.gui_v2.core.actions.IClickable;
 import cam72cam.mod.gui_v2.core.actions.ITooltipProvider;
-import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.RenderContext;
-import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
-import cam72cam.mod.util.With;
 
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class Button extends AbstractWidget<Button>
         implements IClickable, ITooltipProvider {
@@ -28,48 +22,51 @@ public class Button extends AbstractWidget<Button>
     protected List<PlayerMessage> tooltip;
 
     /* Constructor with no rendering */
-    public Button(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
+    public Button(int width, int height, PlayerMessage text) {
         this.setName(text);
         this.setBound(0, 0, width, height);
+    }
+
+    public static Button of(int width, int height, PlayerMessage text) {
+        return new Button(width, height, text);
+    }
+
+    public Button callback(BiConsumer<Player.Hand, Button> handler) {
         this.handler = handler;
-
-        setVanillaFacade();
+        return this;
     }
 
-    /* Semitic constructors */
-    public static Button vanilla(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler) {
-        return new Button(width, height, text, handler);
-    }
-
-    /* Render full texture */
-    public static Button textured(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler,
-                                  Identifier tex) {
-        return textured(width, height, text, handler, tex, 0, 0, 1, 1);
-    }
-
-    /* Render sprite texture */
-    public static Button textured(int width, int height, PlayerMessage text, BiConsumer<Player.Hand, Button> handler,
-                                  Identifier tex, float startU, float startV, float endU, float endV) {
-        Button button = new Button(width, height, text, handler);
-        button.setRenderer((gui, btn) -> {
-            try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
-                gui.drawTexturedUvRect(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
-            }
+    /* Default facades */
+    public Button vanilla() {
+        return this.setRenderer((gui, btn) -> {
+            int state = !btn.isEnabled() ? 0
+                                         : btn.isHovering() ? 2 : 1;
+            gui.drawVanillaButton(btn.x(), btn.y(), btn.width(), btn.height(), state);
             int color = btn.getNameColor() != 0 ? btn.getNameColor() :
                         !btn.isEnabled() ? 0xA0A0A0 :
                         btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
             gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
         });
-        return button;
     }
 
-    public static Button item(ItemStack stack, Consumer<Button> callback) {
-        Button button = new Button(GuiRenderer.ITEM_SIZE, GuiRenderer.ITEM_SIZE, PlayerMessage.direct(""),
-                                   ((hand, btn) -> callback.accept(btn)));
-        button.setRenderer((gui, btn) -> {
+    public Button textured(Identifier tex) {
+        return this.textured(tex, 0, 0, 1, 1);
+    }
+
+    public Button textured(Identifier tex, float startU, float startV, float endU, float endV) {
+        return this.setRenderer((gui, btn) -> {
+            gui.blitTexture(tex, btn.x(), btn.y(), btn.width(), btn.height(), startU, startV, endU, endV);
+            int color = btn.getNameColor() != 0 ? btn.getNameColor() :
+                        !btn.isEnabled() ? 0xA0A0A0 :
+                        btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
+            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
+        });
+    }
+
+    public Button item(ItemStack stack) {
+        return this.setRenderer((gui, btn) -> {
             gui.drawItem(stack, btn.x(), btn.y());
         });
-        return button;
     }
 
     @Override
@@ -95,18 +92,5 @@ public class Button extends AbstractWidget<Button>
     @Override
     public void setTooltip(List<PlayerMessage> text) {
         this.tooltip = text;
-    }
-
-    /* Facades */
-    public void setVanillaFacade() {
-        this.setRenderer((gui, btn) -> {
-            int state = !btn.isEnabled() ? 0
-                                         : btn.isHovering() ? 2 : 1;
-            gui.drawVanillaButton(btn.x(), btn.y(), btn.width(), btn.height(), state);
-            int color = btn.getNameColor() != 0 ? btn.getNameColor() :
-                        !btn.isEnabled() ? 0xA0A0A0 :
-                        btn.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
-            gui.drawCenteredString(btn.getName().internal.getFormattedText(), btn.x() + btn.width() / 2, btn.y() + (btn.height() - 8) / 2, color);
-        });
     }
 }

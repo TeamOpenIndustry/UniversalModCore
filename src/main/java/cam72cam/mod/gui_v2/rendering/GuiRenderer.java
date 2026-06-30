@@ -58,7 +58,7 @@ public class GuiRenderer {
         }
     }
 
-    public void drawTexturedUvRect(Identifier tex, int x, int y, int width, int height, float startU, float startV, float endU, float endV) {
+    public void blitTexture(Identifier tex, int x, int y, int width, int height, float startU, float startV, float endU, float endV) {
         try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(tex)))) {
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder builder = tessellator.getBuffer();

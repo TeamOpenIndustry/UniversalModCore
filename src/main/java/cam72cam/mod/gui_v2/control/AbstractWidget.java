@@ -145,8 +145,9 @@ public abstract class AbstractWidget<T extends AbstractWidget<T>>
     }
 
     @Override
-    public void setRenderer(GuiRenderFunc<T> handler) {
+    public T setRenderer(GuiRenderFunc<T> handler) {
         content = handler;
+        return (T) this;
     }
 
     public void copyFacade(AbstractWidget<T> other) {

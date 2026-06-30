@@ -18,7 +18,7 @@ public class TextField extends AbstractWidget<TextField>
     private static final int SPAN = GuiRenderer.TEXT_HEIGHT / 2;
 
     private String text;
-    private final Consumer<String> callback;
+    private Consumer<String> callback;
     private Predicate<String> validator = Predicates.alwaysTrue();
     private int cursorPos = 0;
     private int textOffsetX = 0;
@@ -30,32 +30,36 @@ public class TextField extends AbstractWidget<TextField>
 
     private boolean focusing;
 
-    public TextField(int width, int height, Consumer<String> callback) {
-        this(width, height, "", callback);
+    protected TextField(int width, int height) {
+        this.setBound(0, 0, width, height);
     }
 
-    public TextField(int width, int height, String original, Consumer<String> callback) {
-        this.setWidth(width);
-        this.setHeight(height);
-        this.text = original;
-        this.callback = callback;
+    public static TextField of(int width, int height) {
+        return new TextField(width, height);
+    }
 
-        this.setVanillaFacade();
+    public TextField callback(Consumer<String> callback) {
+        this.callback = callback;
+        return this;
+    }
+
+    public TextField text(String newText) {
+        if (canApplyText(newText)) {
+            this.text = newText;
+            if (this.callback != null) {
+                this.callback.accept(newText);
+            }
+        }
+        return this;
+    }
+
+    public TextField validator(Predicate<String> validator) {
+        this.validator = validator;
+        return this;
     }
 
     public String getText() {
         return text;
-    }
-
-    public void setText(String newText) {
-        if (canApplyText(newText)) {
-            this.text = newText;
-            this.callback.accept(newText);
-        }
-    }
-
-    public void setValidator(Predicate<String> validator) {
-        this.validator = validator;
     }
 
     public void setCursorPos(int newPos) {
@@ -371,8 +375,8 @@ public class TextField extends AbstractWidget<TextField>
         }
     }
 
-    public void setVanillaFacade() {
-        this.setRenderer((gui, txt) -> {
+    public TextField vanilla() {
+        return this.setRenderer((gui, txt) -> {
             int bgColor = 0xFF101010;
             int borderColor = txt.focusing ? 0xFFA0A0A0 : 0xFF808080;
             gui.drawRect(txt.x(), txt.y(), txt.width(), txt.height(), borderColor);

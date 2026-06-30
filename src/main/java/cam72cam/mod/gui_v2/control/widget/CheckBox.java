@@ -13,30 +13,40 @@ public class CheckBox extends AbstractWidget<CheckBox>
     protected static final int CHECK_BOX_SIZE = 11;
 
     protected boolean checked;
-    private final Consumer<CheckBox> callback;
+    private Consumer<CheckBox> callback;
 
-    public CheckBox(PlayerMessage name, Consumer<CheckBox> callback) {
-        this(name, false, callback);
-    }
-
-    public CheckBox(PlayerMessage name, boolean checked, Consumer<CheckBox> callback) {
+    protected CheckBox(PlayerMessage name, boolean checked) {
         this.setName(name);
         this.checked = checked;
-        this.callback = callback;
 
         int width = CHECK_BOX_SIZE + 2 + GuiUtils.getTextWidth(this.getName());
         setWHInternal(width, CHECK_BOX_SIZE);
 
-        setVanillaFacade();
+        vanilla();
+    }
+
+    public static CheckBox of(PlayerMessage name) {
+        return of(name, false);
+    }
+
+    public static CheckBox of(PlayerMessage name, boolean defaultValue) {
+        return new CheckBox(name, defaultValue);
     }
 
     public boolean isChecked() {
         return checked;
     }
-
-    public void setChecked(boolean newValue) {
+    public CheckBox setChecked(boolean newValue) {
         this.checked = newValue;
-        callback.accept(this);
+        if (callback != null) {
+            callback.accept(this);
+        }
+        return this;
+    }
+
+    public CheckBox clicker(Consumer<CheckBox> callback) {
+        this.callback = callback;
+        return this;
     }
 
     @Override
@@ -51,7 +61,9 @@ public class CheckBox extends AbstractWidget<CheckBox>
             return false;
         }
         checked = !checked;
-        this.callback.accept(this);
+        if (callback != null) {
+            callback.accept(this);
+        }
         return true;
     }
 
@@ -77,8 +89,9 @@ public class CheckBox extends AbstractWidget<CheckBox>
         super.setHeight(height);
     }
 
-    public void setVanillaFacade() {
-        this.setRenderer((gui, cb) -> {
+    /* Default facade */
+    public CheckBox vanilla() {
+        return this.setRenderer((gui, cb) -> {
             gui.drawVanillaButton(cb.x(), cb.y(), CHECK_BOX_SIZE, CHECK_BOX_SIZE, 0);
 
             if (cb.isChecked()) {

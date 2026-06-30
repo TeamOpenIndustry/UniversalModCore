@@ -10,58 +10,80 @@ import cam72cam.mod.gui_v2.core.actions.IUpdatable;
 import cam72cam.mod.gui_v2.rendering.GuiRenderer;
 import cam72cam.mod.text.PlayerMessage;
 
-import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
 public class Slider extends AbstractWidget<Slider>
         implements IClickable, IDraggable, IFocusable, IUpdatable {
     protected final boolean isHorizontal;
 
-    protected int handleSize;
+    protected int handleSize = 8;
 
-    private double min;
-    private double max;
-    private double value;
+    private double min = 0;
+    private double max = 1;
+    private double value = 0.5;
     private int displayPrecision;
 
     protected String formatted;
 
     protected boolean isDragging;
-
-    @Nonnull
     protected Consumer<Slider> handler;
 
-    public Slider(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler, boolean isHorizontal) {
+    protected Slider(int width, int height, PlayerMessage text, boolean isHorizontal) {
         this.setBound(0, 0, width, height);
-        this.min = min;
-        this.max = max;
-        this.value = start;
-        this.displayPrecision = displayPrecision;
-        this.handler = handler;
         this.isHorizontal = isHorizontal;
         this.setName(text);
-
-        this.handleSize = 8; //Default
-
-        setVanillaFacade();
+        vanilla();
     }
 
-    /* Semitic constructors */
-    public static Slider horizontal(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
-        return new Slider(width, height, text, min, max, start, displayPrecision, handler, true);
+    public static Slider horizontal(int width, int height, PlayerMessage text) {
+        return new Slider(width, height, text, true);
     }
 
-    public static Slider vertical(int width, int height, PlayerMessage text, double min, double max, double start, int displayPrecision, Consumer<Slider> handler) {
-        return new Slider(width, height, text, min, max, start, displayPrecision, handler, false);
+    public static Slider vertical(int width, int height, PlayerMessage text) {
+        return new Slider(width, height, text, false);
+    }
+
+    public Slider callback(Consumer<Slider> handler) {
+        this.handler = handler;
+        return this;
+    }
+
+    public Slider bound(double min, double max, double value) {
+        this.min = min;
+        this.max = max;
+        this.value = Math.max(min, Math.min(value, max));
+        if (handler != null) {
+            this.handler.accept(this);
+        }
+        return this;
+    }
+
+    public Slider setValue(double value) {
+        this.value = value;
+        if (handler != null) {
+            this.handler.accept(this);
+        }
+        return this;
+    }
+
+    public Slider setDisplayPrecision(int displayPrecision) {
+        this.displayPrecision = displayPrecision;
+        this.formatName();
+        return this;
+    }
+
+    public Slider setHandleSize(int handleSize) {
+        if (!isHorizontal && handleSize > this.height()) {
+            handleSize = this.height();
+        } else if (isHorizontal && handleSize > this.width()) {
+            handleSize = this.width();
+        }
+        this.handleSize = handleSize;
+        return this;
     }
 
     public double getValue() {
         return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
-        this.handler.accept(this);
     }
 
     public double getMinBound() {
@@ -70,27 +92,6 @@ public class Slider extends AbstractWidget<Slider>
 
     public double getMaxBound() {
         return max;
-    }
-
-    public void setSliderBound(double min, double max) {
-        this.min = min;
-        this.max = max;
-        this.value = Math.max(min, Math.min(value, max));
-        this.handler.accept(this);
-    }
-
-    public void setDisplayPrecision(int displayPrecision) {
-        this.displayPrecision = displayPrecision;
-        this.formatName();
-    }
-
-    public void setHandleSize(int handleSize) {
-        if (!isHorizontal && handleSize > this.height()) {
-            handleSize = this.height();
-        } else if (isHorizontal && handleSize > this.width()) {
-            handleSize = this.width();
-        }
-        this.handleSize = handleSize;
     }
 
     @Override
@@ -178,7 +179,7 @@ public class Slider extends AbstractWidget<Slider>
         formatted = text.replace("slidValue", "%."+displayPrecision+"f");
     }
 
-    public void setVanillaFacade() {
+    public Slider vanilla() {
         this.setRenderer((gui, slid) -> {
             //Render track
             gui.drawVanillaButton(slid.x(), slid.y(), slid.width(), slid.height(), 0);
@@ -199,7 +200,7 @@ public class Slider extends AbstractWidget<Slider>
                 gui.drawVanillaButton(handleX, handleY, slid.width(), handleSize, 1);
             }
         });
-        this.setRenderer((gui, slid) -> {
+        return this.setRenderer((gui, slid) -> {
             int j = slid.getNameColor() != 0 ? slid.getNameColor() :
                       slid.isHovering() ? 0xFFFFA0 : 0xE0E0E0;
 
