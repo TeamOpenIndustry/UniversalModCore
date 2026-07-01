@@ -5,7 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.*;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -107,7 +106,7 @@ public class BuiltinPack {
     /**
      * Registers a static datapack entry
      */
-    public static void putData(ResourceLocation location, byte[] content) {
+    public static void putData(Identifier resource, byte[] content) {
         //NO-OP below 1.12.2
     }
 
