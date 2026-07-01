@@ -43,33 +43,33 @@ import java.util.stream.Collectors;
  * */
 @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class BuiltinPack {
-    private static final HashMap<Identifier, byte[]> DIRECT_RESOURCES = new HashMap<>();
+    private static final HashMap<Identifier, byte[]> directResources = new HashMap<>();
     //Stringified identifier, longer is better
-    private static final TreeMap<String, String> REDIRECTS =
+    private static final TreeMap<String, String> redirectors =
             new TreeMap<>((a, b) -> {
                 int d = Integer.compare(b.length(), a.length());
                 return  d != 0 ? d : a.compareTo(b);
             });
-    private static final List<Function<Identifier, byte[]>> GENERATORS = new LinkedList<>();
-    private static final HashMap<Identifier, byte[]> CACHED_GENERATOR_RESULTS = new HashMap<>();
-    private static final HashSet<String> EXTRA_NAMESPACES = new HashSet<>();
+    private static final List<Function<Identifier, byte[]>> generators = new LinkedList<>();
+    private static final HashMap<Identifier, byte[]> generatorMemento = new HashMap<>();
+    private static final HashSet<String> extraNamespaces = new HashSet<>();
 
     static {
         addNamespace("universalmodcore");
     }
 
     /**
-     * Registers a static resource.
+     * Registers a static client resource.
      * <p>
      * The given bytes are returned as-is whenever this identifier is requested.
      * If the same identifier is registered again, the latest value wins.
      */
     public static void put(Identifier resource, byte[] content) {
-        DIRECT_RESOURCES.put(resource, content);
+        directResources.put(resource, content);
     }
 
     /**
-     * Registers a conditional resource generator.
+     * Registers a conditional client resource generator.
      * <p>
      * The function is called with the requested identifier and should return:
      * <ul>
@@ -79,11 +79,11 @@ public class BuiltinPack {
      * Generated results are cached after the first successful generation, until next resource reload.
      */
     public static void conditional(Function<Identifier, byte[]> func) {
-        GENERATORS.add(func);
+        generators.add(func);
     }
 
     /**
-     * Registers a resource path redirect.
+     * Registers a client resource path redirect.
      * <p>
      * Any requested identifier whose string form starts with {@code requestedPrefix}
      * will be remapped back to {@code actualPrefix} (simple replacement).
@@ -96,7 +96,7 @@ public class BuiltinPack {
         if (actual.startsWith(requested)) {
             throw new IllegalArgumentException("Attempting to redirect to child folders, this is not allowed! Redirect with full file name instead!");
         }
-        REDIRECTS.put(requested, actual);
+        redirectors.put(requested, actual);
     }
 
     /**
@@ -109,20 +109,6 @@ public class BuiltinPack {
         } else {
             return new UMCFilePack(path);
         }
-    }
-
-    /**
-     * Internal, for putting datapack entries
-     */
-    public static void putData(ResourceLocation location, byte[] content) {
-        InternalDataPack.data.put(location, content);
-    }
-
-    /**
-     * Internal
-     */
-    public static void addNamespace(String namespace) {
-        EXTRA_NAMESPACES.add(namespace);
     }
 
     /**
@@ -154,6 +140,20 @@ public class BuiltinPack {
                 ));
             }
         });
+    }
+
+    /**
+     * Registers a static datapack entry
+     */
+    public static void putData(Identifier resource, byte[] content) {
+        InternalDataPack.data.put(resource.internal, content);
+    }
+
+    /**
+     * Add a processable namespace other than loaded mods
+     */
+    public static void addNamespace(String namespace) {
+        extraNamespaces.add(namespace);
     }
 
     /**
@@ -196,7 +196,7 @@ public class BuiltinPack {
      * Internal
      */
     public static void reload() {
-        CACHED_GENERATOR_RESULTS.clear();
+        generatorMemento.clear();
     }
 
     /**
@@ -229,11 +229,11 @@ public class BuiltinPack {
             Identifier ident = nameToLocation(resourcePath);
 
             try {
-                if (DIRECT_RESOURCES.containsKey(ident)) {
-                    return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
+                if (directResources.containsKey(ident)) {
+                    return new ByteArrayInputStream(directResources.get(ident));
                 }
 
-                for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
+                for (Map.Entry<String, String> entry : redirectors.entrySet()) {
                     String src = ident.toString();
                     if (src.startsWith(entry.getKey())) {
                         Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
@@ -242,11 +242,10 @@ public class BuiltinPack {
                 }
 
                 //It must already have been populated in hasResourceName if exists
-                if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
-                    return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+                if (generatorMemento.containsKey(ident)) {
+                    return new ByteArrayInputStream(generatorMemento.get(ident));
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             return null;
         }
 
@@ -258,11 +257,11 @@ public class BuiltinPack {
 
             Identifier ident = nameToLocation(resourcePath);
 
-            if (DIRECT_RESOURCES.containsKey(ident)) {
+            if (directResources.containsKey(ident)) {
                 return true;
             }
 
-            for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
+            for (Map.Entry<String, String> entry : redirectors.entrySet()) {
                 //Check if it's start with any of the [to]s
                 if (ident.toString().startsWith(entry.getKey())
                         && handleRedirect(ident, entry.getKey(), entry.getValue()).canLoad()) {
@@ -270,15 +269,15 @@ public class BuiltinPack {
                 }
             }
 
-            if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
+            if (generatorMemento.containsKey(ident)) {
                 return true;
             }
 
-            synchronized (GENERATORS) {
-                for (Function<Identifier, byte[]> generator : GENERATORS) {
+            synchronized (generators) {
+                for (Function<Identifier, byte[]> generator : generators) {
                     byte[] stream = generator.apply(ident);
                     if (stream != null) {
-                        CACHED_GENERATOR_RESULTS.put(ident, stream);
+                        generatorMemento.put(ident, stream);
                         return true;
                     }
                 }
@@ -291,14 +290,14 @@ public class BuiltinPack {
         public void listResources(PackType type, String namespace, String pathIn, PackResources.ResourceOutput output) {
             //TODO list all redirect/conditional resources, may need new parameters in API?
             final String folder = pathIn + "/"; // Ensure folders
-            DIRECT_RESOURCES.forEach((k, v) -> {
+            directResources.forEach((k, v) -> {
                 String path = k.getPath();
                 if(k.getDomain().equals(namespace) && path.startsWith(folder)) {
                     output.accept(k.internal, () -> new ByteArrayInputStream(v));
                 }
             });
 
-            CACHED_GENERATOR_RESULTS.forEach((k, v) -> {
+            generatorMemento.forEach((k, v) -> {
                 String path = k.getPath();
                 if(k.getDomain().equals(namespace) && path.startsWith(folder)) {
                     output.accept(k.internal, () -> new ByteArrayInputStream(v));
@@ -309,7 +308,7 @@ public class BuiltinPack {
         @Override
         public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
-            collect.addAll(EXTRA_NAMESPACES);
+            collect.addAll(extraNamespaces);
             return collect;
         }
 
@@ -329,12 +328,12 @@ public class BuiltinPack {
      * Internal, Server side assets loading
      */
     @OnlyIn(Dist.DEDICATED_SERVER)
-    public static InputStream loadServerResource(Identifier ident) throws IOException {
-        if (DIRECT_RESOURCES.containsKey(ident)) {
-            return new ByteArrayInputStream(DIRECT_RESOURCES.get(ident));
+    public static InputStream loadServerSideResource(Identifier ident) throws IOException {
+        if (directResources.containsKey(ident)) {
+            return new ByteArrayInputStream(directResources.get(ident));
         }
 
-        for (Map.Entry<String, String> entry : REDIRECTS.entrySet()) {
+        for (Map.Entry<String, String> entry : redirectors.entrySet()) {
             String src = ident.toString();
             if (src.startsWith(entry.getKey())) {
                 Identifier redirect = handleRedirect(ident, entry.getKey(), entry.getValue());
@@ -342,16 +341,16 @@ public class BuiltinPack {
             }
         }
 
-        if (CACHED_GENERATOR_RESULTS.containsKey(ident)) {
-            return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+        if (generatorMemento.containsKey(ident)) {
+            return new ByteArrayInputStream(generatorMemento.get(ident));
         }
 
-        synchronized (GENERATORS) {
-            for (Function<Identifier, byte[]> generator : GENERATORS) {
+        synchronized (generators) {
+            for (Function<Identifier, byte[]> generator : generators) {
                 byte[] stream = generator.apply(ident);
                 if (stream != null) {
-                    CACHED_GENERATOR_RESULTS.put(ident, stream);
-                    return new ByteArrayInputStream(CACHED_GENERATOR_RESULTS.get(ident));
+                    generatorMemento.put(ident, stream);
+                    return new ByteArrayInputStream(generatorMemento.get(ident));
                 }
             }
         }
@@ -419,7 +418,7 @@ public class BuiltinPack {
         @Override
         public Set<String> getNamespaces(PackType type) {
             Set<String> collect = ModCore.instance.getLoadedMods().stream().map(ModCore.Mod::modID).collect(Collectors.toSet());
-            collect.addAll(EXTRA_NAMESPACES);
+            collect.addAll(extraNamespaces);
             return collect;
         }
 
