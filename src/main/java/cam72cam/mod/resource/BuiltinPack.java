@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -339,7 +338,7 @@ public class BuiltinPack {
     /**
      * Internal, Server side assets loading
      */
-    public static InputStream loadServerResource(Identifier ident) throws IOException {
+    public static InputStream loadServerSideResource(Identifier ident) throws IOException {
         if (directResources.containsKey(ident)) {
             return new ByteArrayInputStream(directResources.get(ident));
         }

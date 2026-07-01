@@ -57,8 +57,7 @@ public final class DamageType {
         this.id = cause;
         this.internal = ResourceKey.create(Registries.DAMAGE_TYPE, cause.internal);
         Identifier data = new Identifier(cause.getDomain(), "damage_type/" + cause.getPath() + ".json");
-        BuiltinPack.putData(data.internal,
-                            String.format(templateDatapack, cause.getDomain(), cause.getPath()).getBytes(StandardCharsets.UTF_8));
+        BuiltinPack.putData(data, String.format(templateDatapack, cause.getDomain(), cause.getPath()).getBytes(StandardCharsets.UTF_8));
     }
 
     private DamageType(ResourceKey<net.minecraft.world.damagesource.DamageType> key) {
