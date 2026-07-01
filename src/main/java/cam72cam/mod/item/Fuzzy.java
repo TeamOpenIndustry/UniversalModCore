@@ -2,9 +2,10 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.resource.BuiltinPack;
+import cam72cam.mod.resource.Identifier;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import cam72cam.mod.resource.BuiltinPack;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.SerializationTags;
 import net.minecraft.tags.Tag;
