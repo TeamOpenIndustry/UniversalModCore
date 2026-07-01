@@ -9,25 +9,22 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.model.TRSRTransformation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -37,27 +34,36 @@ import javax.vecmath.Matrix4f;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = Collections.emptyList();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
+    //String template for simple item models
+    private static final String modelTemplate = "models/item/%s.json";
+    private static final String jsonTemplate = "{\n" +
+                                               "    \"parent\": \"item/generated\",\n" +
+                                               "    \"textures\": {\n" +
+                                               "        \"layer0\": \"%s\"\n" +
+                                               "    }\n" +
+                                               "}";
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        // Link Item to Item Registry Name
+        // Link Item to Item Registry Name to find models
         ClientEvents.MODEL_CREATE.subscribe(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
-                new ModelResourceLocation(item.getRegistryName().internal, "")));
+                                                      new ModelResourceLocation(item.getRegistryName().internal, "")));
 
-        // Link Item Registry name to texture
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                tex.internal
-        )).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter())));
+        // And put our model data
+        BuiltinPack.addNamespace(tex.getDomain());
+        String modelPath = String.format(modelTemplate, item.getRegistryName().getPath());
+        Identifier ident = new Identifier(item.getRegistryName().getDomain(), modelPath);
+        BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
 
         // Add texture to texture map
         ClientEvents.TEXTURE_STITCH.subscribe(() -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
