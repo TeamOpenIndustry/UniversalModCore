@@ -3,6 +3,7 @@ package cam72cam.mod.item;
 import cam72cam.mod.config.ConfigFile;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.resource.BuiltinPack;
+import cam72cam.mod.resource.Identifier;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
@@ -98,8 +99,8 @@ public class Fuzzy {
                 "  \"values\": []\n" +
                 "}").getBytes(StandardCharsets.UTF_8);
         BuiltinPack.addNamespace("forge");
-        BuiltinPack.putData(new ResourceLocation("forge:tags/items/ingots/steel.json"), data);
-        BuiltinPack.putData(new ResourceLocation("forge:tags/items/storage_blocks/steel.json"), data);
+        BuiltinPack.putData(new Identifier("forge:tags/items/ingots/steel.json"), data);
+        BuiltinPack.putData(new Identifier("forge:tags/items/storage_blocks/steel.json"), data);
     }
 
     static Map<String, Fuzzy> registered;

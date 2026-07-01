@@ -13,8 +13,6 @@ import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.*;
@@ -26,8 +24,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Direction;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.SimpleModelState;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -42,7 +38,6 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.Objects;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -66,8 +61,6 @@ public class ItemRender {
         BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
-
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelMesher().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */
