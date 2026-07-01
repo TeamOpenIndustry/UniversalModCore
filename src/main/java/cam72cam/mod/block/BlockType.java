@@ -14,6 +14,8 @@ import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.BlockGetter;
@@ -184,11 +186,13 @@ public abstract class BlockType {
     public class BlockInternal extends net.minecraft.world.level.block.Block
                                implements LiquidBlockContainer {
         public BlockInternal() {
-            super(Block.Properties.of().mapColor(getMaterial().internal)
-                    .sound(BlockType.this.getMaterial().soundType)
-                    .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
-                    .noOcclusion()
-                    .dynamicShape());
+            super(Block.Properties.of()
+                                  .setId(ResourceKey.create(Registries.BLOCK, id.internal))
+                                  .mapColor(getMaterial().internal)
+                                  .sound(BlockType.this.getMaterial().soundType)
+                                  .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
+                                  .noOcclusion()
+                                  .dynamicShape());
         }
 
         /** Called server side at the end of the block break call chain as cleanup */
