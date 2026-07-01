@@ -1,0 +1,91 @@
+package cam72cam.mod.gui_v2;
+
+import cam72cam.mod.MinecraftClient;
+import cam72cam.mod.ModCore;
+import cam72cam.mod.gui_v2.control.AbstractWidget;
+import cam72cam.mod.gui_v2.control.PositionedPanel;
+import cam72cam.mod.gui_v2.core.ScreenWrapper;
+import cam72cam.mod.text.PlayerMessage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
+
+public class GuiUtils {
+    private GuiUtils() {}
+
+    private static int mouseX;
+    private static int mouseY;
+
+    public static void updateGuiMouse(int mouseX, int mouseY) {
+        GuiUtils.mouseX = mouseX;
+        GuiUtils.mouseY = mouseY;
+    }
+
+    public static int getGuiMouseX() {
+        return mouseX;
+    }
+
+    public static int getGuiMouseY() {
+        return mouseY;
+    }
+
+    public static int getTextWidth(PlayerMessage text) {
+        return getTextWidth(text.internal.getFormattedText());
+    }
+
+    public static int getTextWidth(String text) {
+        return Minecraft.getMinecraft().fontRenderer.getStringWidth(text);
+    }
+
+    public static int getScreenWidth() {
+        return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
+    }
+
+    public static int getScreenHeight() {
+        return new ScaledResolution(Minecraft.getMinecraft()).getScaledHeight();
+    }
+
+    public static boolean isPrintable(char c) {
+        return !Character.isISOControl(c) && Character.isDefined(c);
+    }
+
+    public static boolean insidePositionedPanel(AbstractWidget<?> widget) {
+        AbstractWidget<?> parent = widget;
+        while ((parent = parent.getParent()) != null) {
+            if (parent instanceof PositionedPanel) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Try to open an external link in player's browser */
+    public void openLink(String url){
+        if (ScreenWrapper.getInstance() != null) {
+            ITextComponent component = new TextComponentString("");
+            component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+            ScreenWrapper.getInstance().handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a link outside a screen: %s", url);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.url(url));
+            }
+        }
+    }
+
+    /** Try to open an external link in player's browser */
+    public static void openFile(String path){
+        if (ScreenWrapper.getInstance() != null) {
+            ITextComponent component = new TextComponentString("");
+            component.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path));
+            ScreenWrapper.getInstance().handleComponentClick(component);
+        } else {
+            ModCore.error("Trying to open a file outside a screen: %s", path);
+            if (MinecraftClient.isReady() && MinecraftClient.getPlayer() != null) {
+                MinecraftClient.getPlayer().sendMessage(PlayerMessage.direct("Please check this location on your computer: " + path));
+            }
+        }
+    }
+}

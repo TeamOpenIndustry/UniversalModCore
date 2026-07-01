@@ -2,6 +2,7 @@ package cam72cam.mod.input;
 
 import cam72cam.mod.event.ClientEvents;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -144,5 +145,25 @@ public class Keyboard {
                 handler.run();
             }
         });
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static boolean isPressing(KeyCode keyCode) {
+        return org.lwjgl.input.Keyboard.isKeyDown(keyCode.code);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static boolean isPressingCtrl() {
+        return GuiScreen.isCtrlKeyDown();
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static boolean isPressingShift() {
+        return GuiScreen.isShiftKeyDown();
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static boolean isPressingAlt() {
+        return GuiScreen.isAltKeyDown();
     }
 }
