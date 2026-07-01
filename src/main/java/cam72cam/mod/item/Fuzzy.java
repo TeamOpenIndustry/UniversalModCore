@@ -100,8 +100,8 @@ public class Fuzzy {
                 "  \"values\": []\n" +
                 "}").getBytes(StandardCharsets.UTF_8);
         BuiltinPack.addNamespace("forge");
-        BuiltinPack.putData(new ResourceLocation("forge:tags/items/ingots/steel.json"), data);
-        BuiltinPack.putData(new ResourceLocation("forge:tags/items/storage_blocks/steel.json"), data);
+        BuiltinPack.putData(new Identifier("forge:tags/items/ingots/steel.json"), data);
+        BuiltinPack.putData(new Identifier("forge:tags/items/storage_blocks/steel.json"), data);
     }
 
     static Map<String, Fuzzy> registered;
