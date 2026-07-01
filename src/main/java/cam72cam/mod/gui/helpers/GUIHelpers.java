@@ -94,10 +94,10 @@ public class GUIHelpers {
         BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);
-            float maxVScaled = sprite.getV((float) (16.0 * curHeight / iH));
+            float maxVScaled = sprite.getV((float) (curHeight / iH));
             for (int offX = 0; offX < width; offX += iW) {
                 double curWidth = Math.min(iW, width - offX);
-                float maxUScaled = sprite.getU((float) (16.0 * curWidth / iW));
+                float maxUScaled = sprite.getU((float) (curWidth / iW));
                 buffer.addVertex((float) (x + offX), (float) (y + offY), (float) zLevel).setUv(minU, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
                 buffer.addVertex((float) (x + offX), (float) (y + offY + curHeight), (float) zLevel).setUv(minU, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
                 buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY + curHeight), (float) zLevel).setUv(maxUScaled, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
@@ -107,7 +107,7 @@ public class GUIHelpers {
         //TODO 1.21.1 Am I right?
         MeshData data = buffer.build();
         if (data != null) {
-            BufferUploader.draw(data);
+            BufferUploader.drawWithShader(data);
         }
 
         RenderSystem.setShader(oldShader);
@@ -121,13 +121,13 @@ public class GUIHelpers {
     /** Draw the fluid in a tank with a colored background at % full */
     public static void drawTankBlock(int x, int y, int width, int height, Fluid fluid, float percentFull, boolean drawBackground, int color) {
         if (drawBackground) {
-            drawRect(x, y, width, height, 0xFF000000);
+//            drawRect(x, y, width, height, 0xFF000000);
         }
 
         if (percentFull > 0 && fluid != null) {
             int fullHeight = Math.max(1, (int) (height * percentFull));
             drawFluid(fluid, x, y + height - fullHeight, width, fullHeight);
-            drawRect(x, y + height - fullHeight, width, fullHeight, color);
+//            drawRect(x, y + height - fullHeight, width, fullHeight, color);
         }
     }
 

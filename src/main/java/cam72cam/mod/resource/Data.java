@@ -144,7 +144,7 @@ class Data {
     public static class ServerProxy extends DataProxy {
         private InputStream getEmbeddedResourceStream(Identifier location) throws IOException {
             //Check our custom logic first
-            InputStream stream = BuiltinPack.loadServerResource(location);
+            InputStream stream = BuiltinPack.loadServerSideResource(location);
             if (stream != null) {
                 return stream;
             }
