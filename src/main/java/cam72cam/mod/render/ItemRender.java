@@ -53,7 +53,7 @@ public class ItemRender {
     //String template for simple item models
     private static final String modelTemplate = "models/item/%s.json";
     private static final String jsonTemplate = "{\n" +
-                                               "    \"parent\": \"item/generated\",\n" +
+                                               "    \"parent\": \"minecraft:item/generated\",\n" +
                                                "    \"textures\": {\n" +
                                                "        \"layer0\": \"%s\"\n" +
                                                "    }\n" +
