@@ -8,6 +8,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import cam72cam.mod.resource.BuiltinPack;
+import cam72cam.mod.resource.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -96,13 +97,14 @@ public class Fuzzy {
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
 
         //Fallback for virtual steel binding...
-        byte[] data = ("{\n" +
-                "  \"replace\": false,\n" +
-                "  \"values\": []\n" +
-                "}").getBytes(StandardCharsets.UTF_8);
+        byte[] data = ("""
+                       {
+                         "replace": false,
+                         "values": []
+                       }""").getBytes(StandardCharsets.UTF_8);
         BuiltinPack.addNamespace("c");
-        BuiltinPack.putData(ResourceLocation.parse("c:tags/items/ingots/steel.json"), data);
-        BuiltinPack.putData(ResourceLocation.parse("c:tags/items/storage_blocks/steel.json"), data);
+        BuiltinPack.putData(new Identifier("c", "tags/items/ingots/steel.json"), data);
+        BuiltinPack.putData(new Identifier("c", "tags/items/storage_blocks/steel.json"), data);
     }
 
     static Map<String, Fuzzy> registered;
