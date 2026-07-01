@@ -1,5 +1,6 @@
 package cam72cam.mod.render.opengl;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.ShaderHelper;
@@ -36,9 +37,7 @@ public class VBO {
             }
         });
         ClientEvents.REGISTER_SHADER.subscribe(event -> {
-            event.registerShader(new ShaderProgram(ResourceLocation.tryParse("umc_core"),
-                                                   DefaultVertexFormat.NEW_ENTITY,
-                                                   ShaderDefines.EMPTY));
+            event.registerShader(RenderContext.UMC_CORE);
         });
     }
 
@@ -155,22 +154,17 @@ public class VBO {
             this.state = state;
 
             CompiledShaderProgram oldShader = RenderSystem.getShader();
-            //int oldVao = GL32.glGetInteger(GL32.GL_VERTEX_ARRAY_BUFFER_BINDING);
-            //int oldVbo = GL32.glGetInteger(GL32.GL_ARRAY_BUFFER_BINDING);
-
-
-            /*
-            GL32.glEnableClientState(GL32.GL_VERTEX_ARRAY);
-            GL32.glEnableClientState(GL32.GL_TEXTURE_COORD_ARRAY);
-            GL32.glEnableClientState(GL32.GL_COLOR_ARRAY);
-            if (vbInfo.hasNormals) {
-                GL32.glEnableClientState(GL32.GL_NORMAL_ARRAY);
-            } else {
-                GL32.glDisableClientState(GL32.GL_NORMAL_ARRAY);
-            }*/
 
             RenderType renderType;
             ShaderProgram shader;
+            renderType = switch (state.getStage()) {
+                case GUI -> RenderType.gui();
+                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
+                default -> ShaderHelper.isShaderPackEnabled()
+                           ? RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS)
+                           : RenderContext.UMC_CORE_RT;
+            };
+
             shader = switch (state.getStage()) {
                 //DirectDraw will set their shader respectively
                 case GUI -> CoreShaders.POSITION_TEX_COLOR;
@@ -179,11 +173,6 @@ public class VBO {
                            ? CoreShaders.RENDERTYPE_ENTITY_CUTOUT
                            : RenderContext.UMC_CORE;
             };
-            renderType = switch (state.getStage()) {
-                case GUI -> null;
-                default -> RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
-            };
-
             if (renderType != null) {
                 renderType.setupRenderState();
             }
@@ -201,7 +190,7 @@ public class VBO {
                      .color(1, 1, 1, 1);
             }
 
-            List<VertexFormatElement> elements = shader.getVertexFormat().getElements();
+            List<VertexFormatElement> elements = shader.vertexFormat().getElements();
             for (int i = 0; i < elements.size(); i++) {
                 VertexFormatElement element = elements.get(i);
                 switch (element.usage()) {
@@ -220,7 +209,7 @@ public class VBO {
                         GL32.glVertexAttribPointer(i, 4, GL32.GL_FLOAT, true, stride, (long) vbInfo.colorOffset * Float.BYTES);
                     }
                     case UV -> {
-                        for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                        for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
                             if (entry.getValue() == element) {
                                 switch (entry.getKey()) {
                                     case "UV0" -> {
@@ -257,13 +246,10 @@ public class VBO {
                     renderType.clearRenderState();
                 }
 
-                shader.getVertexFormat().clearBufferState();
+                shader.vertexFormat().clearBufferState();
 
                 RenderContext.checkError();
 
-                //GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, oldVbo);
-                //GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, 0);
-                //GL32.glBindVertexArray(oldVao);
                 RenderSystem.setShader(oldShader);
                 BufferUploader.reset();
             });

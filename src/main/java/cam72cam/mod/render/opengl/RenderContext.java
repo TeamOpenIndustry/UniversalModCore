@@ -7,13 +7,17 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
+import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -30,7 +34,15 @@ public class RenderContext {
     public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     //Modified from rendertype_entity_cutout, fix model normal
-    public static ShaderProgram UMC_CORE;
+    public static ShaderProgram UMC_CORE = new ShaderProgram(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"),
+                                                             DefaultVertexFormat.NEW_ENTITY,
+                                                             ShaderDefines.EMPTY);
+    //More a holder than renderer for now
+    public static RenderType UMC_CORE_RT = RenderType.create("umc_core",
+                                                             DefaultVertexFormat.NEW_ENTITY,
+                                                             VertexFormat.Mode.TRIANGLES,
+                                                             GL11.GL_2D,
+                                                             RenderType.CompositeState.builder().createCompositeState(false));
 
     private static IntBuffer fourIntBuffer;
 
@@ -224,12 +236,21 @@ public class RenderContext {
             shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         }
 
-//        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
-//            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
-//        }
+        if (shader.TEXTURE_MATRIX != null) {
+            shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
+        }
+
+        if (shader.SCREEN_SIZE != null) {
+            Window window = Minecraft.getInstance().getWindow();
+            shader.SCREEN_SIZE.set((float)window.getWidth(), (float)window.getHeight());
+        }
 
         if (shader.COLOR_MODULATOR != null) {
             shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
+        }
+
+        if (shader.GLINT_ALPHA != null) {
+            shader.GLINT_ALPHA.set(RenderSystem.getShaderGlintAlpha());
         }
 
         for (int i = 0; i < 8; ++i) {
@@ -254,17 +275,8 @@ public class RenderContext {
             shader.FOG_SHAPE.set(fogparameters.shape().getIndex());
         }
 
-        if (shader.TEXTURE_MATRIX != null) {
-            shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
-        }
-
         if (shader.GAME_TIME != null) {
             shader.GAME_TIME.set(RenderSystem.getShaderGameTime());
-        }
-
-        if (shader.SCREEN_SIZE != null) {
-            Window window = Minecraft.getInstance().getWindow();
-            shader.SCREEN_SIZE.set((float)window.getWidth(), (float)window.getHeight());
         }
 
         RenderSystem.setupShaderLights(shader);
@@ -272,21 +284,12 @@ public class RenderContext {
 
     //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
     private static void setupLightMap(CompiledShaderProgram shader, float oldX, float oldY) {
-        LightTexture light = Minecraft.getInstance().gameRenderer.lightTexture();
-
-        List<VertexFormatElement> elements1 = shader.vertexFormat().getElements();
-        for (int i = 0; i < elements1.size(); i++) {
-            VertexFormatElement element = elements1.get(i);
-            if (element.usage() == VertexFormatElement.Usage.UV) {
-                for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
-                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        //240 means full bright
-                        int x = (int) (oldX * RenderContext.FULL_BRIGHT);
-                        int y = (int) (oldY * RenderContext.FULL_BRIGHT);
-                        GL32.glVertexAttribI2i(i, x, y);
-                    }
-                }
-            }
+        int uv2Binding = GL20.glGetAttribLocation(shader.getProgramId(), "UV2");
+        if (uv2Binding != -1) {
+            //240 means full bright
+            int x = (int) (oldX * RenderContext.FULL_BRIGHT);
+            int y = (int) (oldY * RenderContext.FULL_BRIGHT);
+            GL32.glVertexAttribI2i(uv2Binding, x, y);
         }
     }
 
