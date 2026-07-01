@@ -9,11 +9,10 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -23,13 +22,11 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.block.model.ItemTransforms.TransformType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -42,6 +39,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
@@ -53,63 +51,24 @@ public class ItemRender {
     private static final List<BakedQuad> EMPTY = Collections.emptyList();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
+    //String template for simple item models
+    private static final String modelTemplate = "models/item/%s.json";
+    private static final String jsonTemplate = """
+            {
+                "parent": "minecraft:item/generated",
+                "textures": {
+                    "layer0": "%s"
+                }
+            }""";
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        SimpleModelState foo = new SimpleModelState(ImmutableMap.of());
-
-        ClientEvents.MODEL_BAKE.subscribe(event -> event.getModelRegistry().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new ItemLayerModel(ImmutableList.of(
-                new Material(InventoryMenu.BLOCK_ATLAS, tex.internal)
-        )).bake(new IModelConfiguration() {
-            @Nullable
-            @Override
-            public UnbakedModel getOwnerModel() {
-                return null;
-            }
-
-            @Override
-            public String getModelName() {
-                return null;
-            }
-
-            @Override
-            public boolean isTexturePresent(String name) {
-                return false;
-            }
-
-            @Override
-            public Material resolveTexture(String name) {
-                return null;
-            }
-
-            @Override
-            public boolean isShadedInGui() {
-                return false;
-            }
-
-            @Override
-            public boolean isSideLit() {
-                return false;
-            }
-
-            @Override
-            public boolean useSmoothLighting() {
-                return false;
-            }
-
-            @Override
-            public ItemTransforms getCameraTransforms() {
-                return ItemTransforms.NO_TRANSFORMS;
-            }
-
-            @Override
-            public ModelState getCombinedTransform() {
-                return new SimpleModelState(PerspectiveMapWrapper.getTransforms(getCameraTransforms()));
-            }
-        }, event.getModelLoader(), ForgeModelBakery.defaultTextureGetter(), foo, ItemOverrides.EMPTY, tex.internal)));
+        // Put our model data
+        BuiltinPack.addNamespace(tex.getDomain());
+        String modelPath = String.format(modelTemplate, item.getRegistryName().getPath());
+        Identifier ident = new Identifier(item.getRegistryName().getDomain(), modelPath);
+        BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
-
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */
