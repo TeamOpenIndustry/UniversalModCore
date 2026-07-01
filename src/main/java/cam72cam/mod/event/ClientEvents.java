@@ -99,10 +99,10 @@ public class ClientEvents {
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
-//    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
     public static final Event<Consumer<RegisterClientExtensionsEvent>> CLIENT_EXTENSIONS_REGISTER = new Event<>();
     public static final Event<Consumer<RegisterMenuScreensEvent>> MENU_SCREENS_REGISTER = new Event<>();
+    public static final Event<Consumer<AddClientReloadListenersEvent>> REGISTER_RELOAD_LISTENER = new Event<>();
 
     @EventBusSubscriber(modid = ModCore.MODID, value = Dist.CLIENT)
     public static class ClientEventBus {
@@ -234,19 +234,6 @@ public class ClientEvents {
             RenderType.cutout().clearRenderState();
         }
 
-        //Call in Mod Bus
-//        @SubscribeEvent
-//        public static void onSoundLoad(SoundEngineLoadEvent event) {
-//            SOUND_LOAD.execute(x -> x.accept(event));
-//        }
-
-//        @SubscribeEvent
-//        public static void optifineSucksEvent(RenderLevelStageEvent event) {
-//            if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
-//                OPTIFINE_SUCKS.execute(x -> x.accept(event));
-//            }
-//        }
-
         static boolean hasHacked = false;
         @SubscribeEvent
         public static void onHackShaders(RenderFrameEvent.Pre event) {
@@ -278,18 +265,6 @@ public class ClientEvents {
             TEXTURE_STITCH.execute(x -> x.accept(event));
         }
 
-        /*@SubscribeEvent(priority = EventPriority.LOW)
-        public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
-            //REGISTER_ENTITY.execute(Runnable::run);
-        }*/
-
-        /*@SubscribeEvent
-        public static void buildContents(CreativeModeTabEvent.Register event) {
-            List<Object> after = new ArrayList<>();
-            after.add(CreativeModeTabs.SPAWN_EGGS);
-            CREATIVE_TAB.execute(x -> x.accept(event, after));
-        }*/
-
         @SubscribeEvent
         public static void registerBindings(RegisterKeyMappingsEvent event) {
             KEY_MAPPING_REGISTER.execute(x -> x.accept(event));
@@ -308,6 +283,11 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerMenuScreen(RegisterMenuScreensEvent event) {
             MENU_SCREENS_REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerClientReloadListeners(AddClientReloadListenersEvent event) {
+            REGISTER_RELOAD_LISTENER.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent

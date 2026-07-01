@@ -16,17 +16,24 @@ import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.special.NoDataSpecialModelRenderer;
+import net.minecraft.client.renderer.special.SpecialModelRenderer;
+import net.minecraft.client.renderer.special.SpecialModelRenderers;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -46,23 +53,52 @@ public class ItemRender {
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
     //String template for simple item models
-    private static final String modelTemplate = "models/item/%s.json";
-    private static final String jsonTemplate = """
+    private static final String itemPath = "items/%s.json";
+    private static final String modelPath = "models/item/%s.json";
+    private static final String simpleTexItem = """
             {
-                "parent": "minecraft:item/generated",
-                "textures": {
-                    "layer0": "%s"
-                }
+              "model": {
+                "type": "minecraft:model",
+                "model": "%s"
+              }
             }""";
+    private static final String simpleTexModel = """
+            {
+              "parent": "minecraft:item/generated",
+              "textures": {
+                  "layer0": "%s"
+              }
+            }""";
+    private static final String composedItem = """
+            {
+              "model": {
+                "type": "minecraft:special",
+                "base": "minecraft:item/chest",
+                "model": {
+                  "type": "universalmodcore:items"
+                }
+              }
+            }""";
+
+    static {
+        SpecialModelRenderers.ID_MAPPER.put(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "items"),
+                                            UMCItemModelRenderer.Unbaked.MAP_CODEC);
+    }
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        // Put (deferred) our model data
+        // Put (deferred) model data
         CommonEvents.Item.REGISTER.post(() -> {
+            BuiltinPack.addNamespace(item.getRegistryName().getDomain());
             BuiltinPack.addNamespace(tex.getDomain());
-            String modelPath = String.format(modelTemplate, item.getRegistryName().getPath());
-            Identifier ident = new Identifier(item.getRegistryName().getDomain(), modelPath);
-            BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
+
+            String modelPath = String.format(ItemRender.modelPath, item.getRegistryName().getPath());
+            Identifier modelJson = new Identifier(item.getRegistryName().getDomain(), modelPath);
+            BuiltinPack.put(modelJson, String.format(simpleTexModel, tex).getBytes(StandardCharsets.UTF_8));
+
+            String itemPath = String.format(ItemRender.itemPath, item.getRegistryName().getPath());
+            Identifier itemJson = new Identifier(item.getRegistryName().getDomain(), itemPath);
+            BuiltinPack.put(itemJson, String.format(simpleTexItem, modelPath).getBytes(StandardCharsets.UTF_8));
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
@@ -70,8 +106,14 @@ public class ItemRender {
 
     /** Register a complex model for an item */
     public static void register(CustomItem item, IItemModel model) {
-        // Link Item to Item Registry Name
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        // Put (deferred) model data
+        CommonEvents.Item.REGISTER.post(() -> {
+            BuiltinPack.addNamespace(item.getRegistryName().getDomain());
+
+            String itemPath = String.format(ItemRender.itemPath, item.getRegistryName().getPath());
+            Identifier itemJson = new Identifier(item.getRegistryName().getDomain(), itemPath);
+            BuiltinPack.put(itemJson, composedItem.getBytes(StandardCharsets.UTF_8));
+        });
 
         // Link Item Registry Name to Custom Model
         ClientEvents.MODEL_BAKE.subscribe(event -> {
@@ -231,13 +273,26 @@ public class ItemRender {
     }
 
     static BiConsumer<PoseStack, Integer> doRender = (s, i) -> {};
-    public static BlockEntityWithoutLevelRenderer ISTER() {
-        return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
+
+    static class UMCItemModelRenderer implements NoDataSpecialModelRenderer {
+        @Override
+        public void render(ItemDisplayContext ctx, PoseStack matrixStack, MultiBufferSource source, int combinedLight, int combinedOverlay, boolean hasFoil) {
+            doRender.accept(matrixStack, combinedLight);
+        }
+
+        record Unbaked(Void data) implements SpecialModelRenderer.Unbaked {
+            public static final MapCodec<Unbaked> MAP_CODEC = MapCodec.unit(new UMCItemModelRenderer.Unbaked(null));
+
             @Override
-            public void renderByItem(net.minecraft.world.item.ItemStack stack, ItemDisplayContext p_270899_, PoseStack matrixStack, MultiBufferSource p_108833_, int combinedLight, int combinedOverlay) {
-                doRender.accept(matrixStack, combinedLight);
+            public MapCodec<? extends SpecialModelRenderer.Unbaked> type() {
+                return MAP_CODEC;
             }
-        };
+
+            @Override
+            public @NotNull SpecialModelRenderer<?> bake(EntityModelSet p_388631_) {
+                return new UMCItemModelRenderer();
+            }
+        }
     }
 
     /** Custom Model where we can hack into the MC/Forge render system */

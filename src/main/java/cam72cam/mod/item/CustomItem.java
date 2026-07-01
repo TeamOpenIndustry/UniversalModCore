@@ -102,42 +102,16 @@ public abstract class CustomItem {
 
         public ItemInternal(Properties p_i48487_1_) {
             super(p_i48487_1_);
-            ClientEvents.CLIENT_EXTENSIONS_REGISTER.subscribe(e -> {
-                e.registerItem(new IClientItemExtensions() {
-                    @Override
-                    public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                        return ItemRender.ISTER();
-                    }
-                }, this);
-            });
         }
 
+        //TODO 1.21.4 remove me if find removing getDescriptionId is doing no bad
         @Override
         public Component getName(net.minecraft.world.item.ItemStack stack) {
-            String custom = getCustomName(new ItemStack(stack));
-            if (custom != null) {
-                return Component.literal(custom);
-            }
-            //return new StringTextComponent(TextUtil.translate(getTranslationKey(stack)));
-            return super.getName(stack);
-        }
-
-        /*@Override
-        public void fillItemCategory(CreativeModeTab tab, NonNullList<net.minecraft.world.item.ItemStack> items) {
-            CreativeTab myTab = tab != CreativeModeTab.TAB_SEARCH ? new CreativeTab(tab) : null;
-            if (ModCore.hasResources) {
-                items.addAll(getItemVariants(myTab).stream().map((ItemStack stack) -> stack.internal()).collect(Collectors.toList()));
-            }
-        }*/
-
-        //TODO We need the stack ref
-        @Override
-        public String getDescriptionId(net.minecraft.world.item.ItemStack stack) {
             String cn = getCustomName(new ItemStack(stack));
             if (cn != null) {
-                return cn;
+                return Component.translatable(cn);
             }
-            return "item." + identifier + ".name";
+            return Component.translatable("item." + identifier + ".name");
         }
 
         @Override

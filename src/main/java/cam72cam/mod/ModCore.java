@@ -17,6 +17,7 @@ import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.util.Unit;
 import net.neoforged.api.distmarker.Dist;
@@ -329,11 +330,11 @@ public class ModCore {
         public void clientEvent(ModEvent event) {
             switch (event) {
                 case CONSTRUCT:
-                    // Instance can be null during data gen
-                    if (Minecraft.getInstance() != null) {
-                        ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener((barrier, resourceManager, backgroundExecutor, gameExecutor) ->
-                                barrier.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
-                    }
+                    ClientEvents.REGISTER_RELOAD_LISTENER.subscribe(e -> {
+                        e.addListener(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "client_listener"),
+                                      (barrier, resourceManager, backgroundExecutor, gameExecutor) ->
+                                                barrier.wait(Unit.INSTANCE).thenRun(ClientEvents::fireReload).thenRun(BuiltinPack::reload));
+                    });
                     break;
                 case SETUP:
                     try {

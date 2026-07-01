@@ -12,12 +12,15 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /** Entity Rendering Registry */
-public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client.renderer.entity.EntityRenderer<T, UMCRenderState> {
+public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client.renderer.entity.EntityRenderer<T, EntityRenderer.UMCEntityRenderState> {
     private static Map<Class<? extends Entity>, IEntityRender> renderers = new HashMap<>();
 
     static {
@@ -50,8 +53,8 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         // Don't render seat entities
         ClientEvents.REGISTER_ENTITY.subscribe(() -> EntityRenderers.register(SeatEntity.TYPE, manager -> new net.minecraft.client.renderer.entity.EntityRenderer<>(manager) {
             @Override
-            public UMCRenderState createRenderState() {
-                return new UMCRenderState();
+            public UMCEntityRenderState createRenderState() {
+                return new UMCEntityRenderState();
             }
         }));
     }
@@ -62,12 +65,12 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }
 
     @Override
-    public UMCRenderState createRenderState() {
-        return new UMCRenderState();
+    public UMCEntityRenderState createRenderState() {
+        return new UMCEntityRenderState();
     }
 
     @Override
-    public void extractRenderState(T entity, UMCRenderState state, float p_362204_) {
+    public void extractRenderState(T entity, UMCEntityRenderState state, float p_362204_) {
         super.extractRenderState(entity, state, p_362204_);
         state.entity = entity;
         state.rotationYaw = entity.getYRot(p_362204_);
@@ -136,7 +139,7 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
     }*/
 
     @Override
-    public void render(UMCRenderState stockState, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
+    public void render(UMCEntityRenderState stockState, PoseStack p_225623_4_, MultiBufferSource p_225623_5_, int i) {
         Entity self = stockState.entity.getSelf();
 
         RenderType.cutout().setupRenderState();
@@ -162,5 +165,11 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
         RenderType.translucent().setupRenderState();
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
         RenderType.translucent().clearRenderState();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static class UMCEntityRenderState extends EntityRenderState {
+        public ModdedEntity entity;
+        public float rotationYaw;
     }
 }
