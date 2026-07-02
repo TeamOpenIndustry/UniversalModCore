@@ -50,14 +50,7 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-//        try (With ctx = RenderContext.apply(
-//                new RenderState()
-//                        .color(1, 1, 1, 1)
-//                        .texture(Texture.NO_TEXTURE)
-//                        .blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA))
-//        )) {
-            graphics.fill(x, y, x + width, y + height, color);
-//        }
+        graphics.fill(x, y, x + width, y + height, color);
     }
 
     /** Draw a full image (tex) at coords with given width/height */
@@ -144,7 +137,7 @@ public class GUIHelpers {
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    Component.literal(text), -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    Component.literal(text), x, y, color, false, new Matrix4f(),
                     RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
                     font.isBidirectional()
             );
@@ -165,7 +158,7 @@ public class GUIHelpers {
         try (With with = RenderContext.apply(state)) {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
-                    Component.literal(text), -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    Component.literal(text), x - font.width(text) / 2f, y, color, false, new Matrix4f(),
                     RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
                     font.isBidirectional()
             );
