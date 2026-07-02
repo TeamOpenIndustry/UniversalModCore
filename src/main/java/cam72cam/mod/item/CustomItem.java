@@ -103,7 +103,6 @@ public abstract class CustomItem {
             super(p_i48487_1_);
         }
 
-        //TODO 1.21.4 remove me if find removing getDescriptionId is doing no bad
         @Override
         public Component getName(net.minecraft.world.item.ItemStack stack) {
             String cn = getCustomName(new ItemStack(stack));
