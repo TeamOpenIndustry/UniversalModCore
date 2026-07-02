@@ -31,7 +31,7 @@ public abstract class MixinRecipeManager extends SimplePreparableReloadListener<
     @Inject(method = "prepare(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Lnet/minecraft/world/item/crafting/RecipeMap;",
             at = @At(value = "INVOKE", target = "Ljava/util/SortedMap;forEach(Ljava/util/function/BiConsumer;)V"))
     public void captureBuilder(ResourceManager p_379845_, ProfilerFiller p_380058_, CallbackInfoReturnable<RecipeMap> cir, @Local SortedMap<ResourceLocation, Recipe<?>> map) {
-        RegistryUtil.recipeBuildingContext(this.makeConditionalOps().context);
+        RegistryUtil.recipeBuildingContext(this.getContext());
         RegisterRecipeEvent event = new RegisterRecipeEvent(map);
         ModLoader.postEvent(event);
         RegistryUtil.recipeBuildingContext(null);

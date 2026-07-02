@@ -2,11 +2,14 @@ package cam72cam.mod.item;
 
 
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.util.RegistryUtil;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.*;
 
 import java.util.ArrayList;
@@ -51,8 +54,13 @@ public class Recipes {
                     Fuzzy ingredient = ingredients[i];
                     if (ingredient != null) {
                         //ForgeHooks#L1171: If oc isn't loaded radio card's recipe will refuse to show, that's normal
-                        //TODO Mixing in ClientRecipeBook#L53 incomplete?
-                        input.set(i, Optional.of(Ingredient.of(BuiltInRegistries.ITEM.get(ingredient.getTag()).orElseThrow())));
+                        HolderSet<Item> tag = RegistryUtil.getRecipeItemTags(ingredient);
+                        try {
+                            input.set(i, Optional.of(Ingredient.of(tag)));
+                        } catch (UnsupportedOperationException e) {
+                            //Cannot resolve
+                            return;
+                        }
                     }
                 }
 

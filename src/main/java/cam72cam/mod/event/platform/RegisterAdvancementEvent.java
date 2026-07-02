@@ -7,6 +7,7 @@ import net.minecraft.advancements.*;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -24,9 +25,11 @@ import java.util.Optional;
 public class RegisterAdvancementEvent extends Event implements IModBusEvent {
     private static final ResourceLocation RECIPE_ROOT = ResourceLocation.tryParse("minecraft:recipes/root");
     private final ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map;
+    private final HolderLookup.Provider registries;
 
-    public RegisterAdvancementEvent(ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map) {
+    public RegisterAdvancementEvent(ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map, HolderLookup.Provider registries) {
         this.map = map;
+        this.registries = registries;
     }
 
     @SuppressWarnings("removal")
@@ -45,7 +48,7 @@ public class RegisterAdvancementEvent extends Event implements IModBusEvent {
             if (ingredient == null || ingredient.getTag() == null) continue;
 
             Criterion<InventoryChangeTrigger.TriggerInstance> hasItem = InventoryChangeTrigger.TriggerInstance
-                    .hasItems(ItemPredicate.Builder.item().of(RegistryUtil.getRegistry().lookupOrThrow(Registries.ITEM), ingredient.getTag()).build());
+                    .hasItems(ItemPredicate.Builder.item().of(registries.lookupOrThrow(Registries.ITEM), ingredient.getTag()).build());
             String name = "has" + ingredient + i;
             builder.addCriterion(name, hasItem);
             stringList.add(name);

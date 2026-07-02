@@ -5,12 +5,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.fml.ModLoader;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,11 +26,15 @@ import java.util.Map;
  */
 @Mixin(ServerAdvancementManager.class)
 public class MixinAdvancement {
+    @Shadow
+    @Final
+    private HolderLookup.Provider registries;
+
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V",
             at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap$Builder;buildOrThrow()Lcom/google/common/collect/ImmutableMap;"))
     public void postAdvancementReload(Map<ResourceLocation, JsonElement> p_136034_, ResourceManager p_136035_, ProfilerFiller p_136036_, CallbackInfo ci,
                                       @Local ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map) {
-        RegisterAdvancementEvent event = new RegisterAdvancementEvent(map);
+        RegisterAdvancementEvent event = new RegisterAdvancementEvent(map, registries);
         ModLoader.postEvent(event);
     }
 }

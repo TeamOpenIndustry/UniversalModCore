@@ -7,9 +7,11 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.FuelValues;
 import net.neoforged.fml.util.thread.EffectiveSide;
+import net.neoforged.neoforge.common.conditions.ConditionContext;
 import net.neoforged.neoforge.common.conditions.ICondition;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
@@ -23,6 +25,11 @@ public class RegistryUtil {
 
     public static void recipeBuildingContext(ICondition.IContext context) {
         CONTEXT = context;
+    }
+
+    public static HolderSet<Item> getRecipeItemTags(@Nonnull Fuzzy fuzzy) {
+        if (!(CONTEXT instanceof ConditionContext con) || !CONTEXT.isTagLoaded(fuzzy.getTag())) return HolderSet.empty();
+        return (HolderSet<Item>) con.pendingTags.get(fuzzy.getTag().registry()).get((TagKey) fuzzy.getTag()).get();
     }
 
     public static List<ItemStack> resolveTagsRecipePhase(@Nonnull Fuzzy fuzzy) {
