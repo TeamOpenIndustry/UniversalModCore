@@ -17,7 +17,6 @@ import cam72cam.mod.world.World;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -59,7 +58,7 @@ public class ItemRender {
             {
               "model": {
                 "type": "minecraft:model",
-                "model": "%s"
+                "model": "%s:item/%s"
               }
             }""";
     private static final String simpleTexModel = """
@@ -80,11 +79,6 @@ public class ItemRender {
               }
             }""";
 
-    static {
-        SpecialModelRenderers.ID_MAPPER.put(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "items"),
-                                            UMCItemModelRenderer.Unbaked.MAP_CODEC);
-    }
-
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
         // Put (deferred) model data
@@ -98,7 +92,8 @@ public class ItemRender {
 
             String itemPath = String.format(ItemRender.itemPath, item.getRegistryName().getPath());
             Identifier itemJson = new Identifier(item.getRegistryName().getDomain(), itemPath);
-            BuiltinPack.put(itemJson, String.format(simpleTexItem, modelPath).getBytes(StandardCharsets.UTF_8));
+            BuiltinPack.put(itemJson, String.format(simpleTexItem, item.getRegistryName().getDomain(), item.getRegistryName().getPath())
+                                            .getBytes(StandardCharsets.UTF_8));
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
@@ -273,6 +268,11 @@ public class ItemRender {
     }
 
     static BiConsumer<PoseStack, Integer> doRender = (s, i) -> {};
+
+    public static void setupRenderer() {
+        SpecialModelRenderers.ID_MAPPER.put(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "items"),
+                                            UMCItemModelRenderer.Unbaked.MAP_CODEC);
+    }
 
     static class UMCItemModelRenderer implements NoDataSpecialModelRenderer {
         @Override
