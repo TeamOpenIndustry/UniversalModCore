@@ -39,10 +39,21 @@ public class Mouse {
         return org.lwjgl.input.Mouse.getButtonCount() >= 3 && org.lwjgl.input.Mouse.isButtonDown(2);
     }
 
+    /**
+     * Registers a 3D space dragging handler.
+     *
+     * @param handler receives the pressing key ({@link cam72cam.mod.entity.Player.Hand#PRIMARY} as LMB, {@link cam72cam.mod.entity.Player.Hand#SECONDARY} for others)
+     *                and returns a boolean indicating whether the event should be passed down or not
+     */
     public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
         ClientEvents.DRAG.subscribe(handler);
     }
 
+    /**
+     * Get the screen space mouse position.
+     *
+     * @return  the screen space mouse position from the start point of dragging, or {@code null} if the mouse is not pressed.
+     */
     public static Vec3d getDrag() {
         return ClientEvents.ClientEventBus.getDragPos();
     }
