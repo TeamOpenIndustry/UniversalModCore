@@ -102,7 +102,7 @@ jar {
     manifest {
         attributes (
                 'FMLCorePlugin': 'cam72cam.mod.UMCMixinPlugin',
-                'FMLAT': 'accesstransformer.cfg',
+                'FMLAT': 'UniversalModCore_at.cfg',
                 'FMLCorePluginContainsFMLMod': true,
                 "ForceLoadAsMod": true,
                 'TweakOrder': '0',
