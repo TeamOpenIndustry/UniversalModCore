@@ -103,7 +103,7 @@ public class ClipVertex {
     }
 
     /**
-     * UV2(lightmap)格式:
+     * UV2(lightmap)format:
      * low16 = block light
      * high16 = sky light
      */

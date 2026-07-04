@@ -1,12 +1,11 @@
 package cam72cam.mod.render.cutter.adapter;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.cutter.ClipVertex;
-import cam72cam.mod.render.cutter.Plane;
-import cam72cam.mod.render.cutter.Polygon;
-import cam72cam.mod.render.cutter.PolygonQuadBuilder;
+import cam72cam.mod.render.cutter.*;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +91,16 @@ public class BakedQuadAdapter
             Polygon polygon,
             QuadTemplate template) {
 
+        applySpriteUV(
+                polygon,
+                template.sprite
+        );
+
+        applyNormal(
+                polygon,
+                template.direction
+        );
+
         List<BakedQuad> result = new ArrayList<>();
 
         if (polygon.vertices.size() < 3) {
@@ -128,8 +137,7 @@ public class BakedQuadAdapter
 
         CapUVGenerator.generate(
                 polygon,
-                plane,
-                template.sprite
+                plane
         );
     }
 
@@ -195,5 +203,31 @@ public class BakedQuadAdapter
                 (v.nx & 0xff)
                         | ((v.ny & 0xff) << 8)
                         | ((v.nz & 0xff) << 16);
+    }
+
+    private static void applySpriteUV(
+            Polygon polygon,
+            TextureAtlasSprite sprite) {
+
+        for (ClipVertex vertex : polygon.vertices) {
+
+            vertex.u = sprite.getU(vertex.u);
+            vertex.v = sprite.getV(vertex.v);
+        }
+    }
+
+    private static void applyNormal(
+            Polygon polygon,
+            Direction direction) {
+
+        byte nx = (byte) (direction.getStepX() * 127);
+        byte ny = (byte) (direction.getStepY() * 127);
+        byte nz = (byte) (direction.getStepZ() * 127);
+
+        for (ClipVertex vertex : polygon.vertices) {
+            vertex.nx = nx;
+            vertex.ny = ny;
+            vertex.nz = nz;
+        }
     }
 }

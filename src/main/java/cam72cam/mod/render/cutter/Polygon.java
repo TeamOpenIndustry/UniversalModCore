@@ -13,4 +13,15 @@ public class Polygon {
     public Polygon(Collection<ClipVertex> vertices) {
         this.vertices.addAll(vertices);
     }
+
+    public Polygon copy() {
+
+        Polygon polygon = new Polygon();
+
+        for (ClipVertex vertex : vertices) {
+            polygon.vertices.add(vertex.copy());
+        }
+
+        return polygon;
+    }
 }
