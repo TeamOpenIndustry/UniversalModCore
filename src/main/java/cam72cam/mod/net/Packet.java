@@ -1,72 +1,52 @@
 package cam72cam.mod.net;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
-
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.world.World;
+import io.netty.util.AttributeKey;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.*;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 /**
  * Packet abstraction and registration
  * @see TagSerializer
  */
+@Mod.EventBusSubscriber(modid = ModCore.MODID)
 public abstract class Packet {
-    private static final String VERSION = "1.0";
-    private static final SimpleChannel net = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath("universalmodcore", "cam72cam.mod"),
-            () -> VERSION,
-            VERSION::equals,
-            VERSION::equals
-    );
+    public static final String VERSION = "1.0";
     // Packet class name -> Packet Constructor
     private static Map<String, Supplier<Packet>> types = new HashMap<>();
 
-    static {
-        net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
-            ctx.get().enqueueWork(() -> {
-                msg.packet.ctx = ctx.get();
-                World world = ctx.get().getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer().getWorld() : World.get(ctx.get().getSender().level());
-                try {
-                    TagSerializer.deserialize(msg.packet.data, msg.packet, world);
-                } catch (SerializationException e) {
-                    ModCore.catching(e);
-                    return;
-                }
-                if (msg.packet.getPlayer() == null) {
-                    try {
-                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
-                    } catch (Exception e) {
-                        ModCore.catching(e);
-                        return;
-                    }
-                }
-                msg.packet.handle();
-            });
-            ctx.get().setPacketHandled(true);
-        });
-    }
-
-    // Received packet context
-    NetworkEvent.Context ctx;
     // Received packet data
     private TagCompound data = new TagCompound();
 
@@ -83,33 +63,38 @@ public abstract class Packet {
 
     /** How to register a packet (do in CONSTRUCT phase) */
     public static void register(Supplier<Packet> sup, PacketDirection dir) {
-        types.put(sup.get().getClass().toString(), sup);
+        String pktClass = sup.get().getClass().toString();
+        if (types.containsKey(pktClass)) {
+            //Already registered, goodbye
+            return;
+        }
+        types.put(pktClass, sup);
     }
+
+    CustomPayloadEvent.Context ctx;
 
     /** Called after deserialization */
     protected abstract void handle();
 
     /** Only valid during handle */
     protected final World getWorld() {
-        if (ctx.getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
-            return getPlayer().getWorld();
-        }
         return world;
     }
 
     /** Only valid during handle */
     protected final Player getPlayer() {
-        return ctx.getDirection() == NetworkDirection.PLAY_TO_CLIENT ? MinecraftClient.getPlayer() : player;
+        return player;
     }
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
-        net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.dimension())), new Message(this));
+        PacketDistributor.NEAR
+                .with(new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.dimension()))
+                        .send(new ClientboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
-        net.minecraft.world.entity.Entity internal = entity.internal;
         int syncDist = entity.internal.getType().clientTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
     }
@@ -118,39 +103,38 @@ public abstract class Packet {
     public void sendToServer() {
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
-        net.sendToServer(new Message(this));
+        PacketDistributor.SERVER.noArg()
+                .send(new ServerboundCustomPayloadPacket(new Message(this)));
     }
 
     /** Broadcast to all players from server */
     public void sendToAll() {
-        net.send(PacketDistributor.ALL.noArg(), new Message(this));
+        PacketDistributor.ALL.noArg()
+                .send(new ClientboundCustomPayloadPacket(new Message(this)));
     }
 
-	/** Send from server to player */
-	public void sendToPlayer(Player player) {
-		net.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player.internal), new Message(this));
-	}
+    /** Send from server to player */
+    public void sendToPlayer(Player player) {
+        PacketDistributor.PLAYER.with((ServerPlayer) player.internal)
+                .send(new ClientboundCustomPayloadPacket(new Message(this)));
+    }
 
     /** Forge message construct.  Do not use directly */
-    public static class Message {
+    public static class Message implements CustomPacketPayload {
         Packet packet;
+        ResourceLocation location;
+        CustomPacketPayload.Type<Message> type;
+
+        public static StreamCodec<FriendlyByteBuf, Message> codec = StreamCodec.composite(
+                ByteBufCodecs.COMPOUND_TAG, Message::write,
+                Message::new
+        );
 
         public Message(Packet pkt) {
             this.packet = pkt;
-        }
+            initLocation();
 
-        public Message(FriendlyByteBuf buff) {
-            fromBytes(buff);
-        }
-
-        public void fromBytes(FriendlyByteBuf buf) {
-            TagCompound data = new TagCompound(buf.readNbt());
-            String cls = data.getString("cam72cam.mod.pktid");
-            packet = types.get(cls).get();
-            packet.data = data;
-        }
-
-        public void toBytes(FriendlyByteBuf buf) {
+            //Set up data in advance for single player
             packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
             try {
                 TagSerializer.serialize(packet.data, packet);
@@ -158,7 +142,60 @@ public abstract class Packet {
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
-            buf.writeNbt(packet.data.internal);
+        }
+
+        public Message(CompoundTag buff) {
+            fromTag(buff);
+            initLocation();
+        }
+
+        private void initLocation() {
+            this.location = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, packet.getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
+            this.type = new Type<>(location);
+        }
+
+        public void fromTag(CompoundTag buf) {
+            TagCompound data = new TagCompound(buf);
+            String cls = data.getString("cam72cam.mod.pktid");
+            packet = types.get(cls).get();
+            packet.data = data;
+        }
+
+        public static CompoundTag write(Message message) {
+            return message.packet.data.internal;
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return type;
+        }
+    }
+
+    /**
+     * Internal
+     */
+    @SubscribeEvent
+    public static void onCustomPacket(CustomPayloadEvent event) {
+        if (event.getPayloadObject() instanceof Message message) {
+            event.getSource().enqueueWork(() -> {
+                World world = World.get(event.getSource().getSender().level());
+                try {
+                    TagSerializer.deserialize(message.packet.data, message.packet, world);
+                } catch (SerializationException e) {
+                    ModCore.catching(e);
+                    return;
+                }
+                if (message.packet.getPlayer() == null) {
+                    try {
+                        throw new Exception(
+                                String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                    } catch (Exception e) {
+                        ModCore.catching(e);
+                        return;
+                    }
+                }
+                message.packet.handle();
+            });
         }
     }
 }

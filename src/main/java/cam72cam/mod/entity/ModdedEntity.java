@@ -28,7 +28,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -300,9 +299,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     /** @see IKillable */
     @Override
-    protected void defineSynchedData() {
-        getEntityData().define(PREV_ROLL, 0F);
-        getEntityData().define(ROLL, 0F);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(PREV_ROLL, 0F);
+        builder.define(ROLL, 0F);
     }
 
     @Override
@@ -540,10 +539,11 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return cachedRenderBB.get(iCollision.getCollision());
     }
 
-    @Override
-    public net.minecraft.network.protocol.Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
+    //No more need to
+//    @Override
+//    public net.minecraft.network.protocol.Packet<ClientGamePacketListener> getAddEntityPacket() {
+//        return NetworkHooks.getEntitySpawningPacket(this);
+//    }
 
     /* Hacks */
     /** Needed for right click, probably a forge or MC bug */
@@ -563,9 +563,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
         if (self.allowsDefaultMovement()) {
-            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements, teleport);
+            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements);
         }
     }
 

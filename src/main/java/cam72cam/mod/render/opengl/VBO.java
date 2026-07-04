@@ -4,7 +4,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -42,7 +41,7 @@ public class VBO {
         ClientEvents.REGISTER_SHADER.subscribe(event -> {
             try {
                 event.registerShader(new ShaderInstance(event.getResourceProvider(),
-                                                        ResourceLocation.parse("umc_core"),
+                                                        ResourceLocation.tryParse("umc_core"),
                                                         DefaultVertexFormat.NEW_ENTITY),
                                      instance -> RenderContext.UMC_CORE = instance);
             } catch (IOException e) {
@@ -210,10 +209,10 @@ public class VBO {
                      .color(1, 1, 1, 1);
             }
 
-            ImmutableList<VertexFormatElement> elements = shader.getVertexFormat().getElements();
+            List<VertexFormatElement> elements = shader.getVertexFormat().getElements();
             for (int i = 0; i < elements.size(); i++) {
                 VertexFormatElement element = elements.get(i);
-                switch (element.getUsage()) {
+                switch (element.usage()) {
                     case POSITION -> {
                         //element.setupBufferState(i, (long) vbInfo.vertexOffset * Float.BYTES, stride);
                         GL32.glEnableVertexAttribArray(i);

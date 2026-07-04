@@ -32,6 +32,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.*;
+import net.minecraftforge.client.model.geometry.IGeometryBakingContext;
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -62,12 +64,70 @@ public class ItemRender {
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
-        // Put (deferred) our model data
-        CommonEvents.Item.REGISTER.post(() -> {
-            BuiltinPack.addNamespace(tex.getDomain());
-            String modelPath = String.format(modelTemplate, item.getRegistryName().getPath());
-            Identifier ident = new Identifier(item.getRegistryName().getDomain(), modelPath);
-            BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
+        SimpleModelState foo = new SimpleModelState(Transformation.identity());
+
+        ClientEvents.MODEL_BAKE.subscribe(event -> {
+            Map<ModelResourceLocation, BakedModel> models = event.getModels();
+            ModelResourceLocation location = new ModelResourceLocation(item.getRegistryName().internal, "");
+            Material mat = new Material(InventoryMenu.BLOCK_ATLAS, tex.internal);
+            ItemLayerModel model = new ItemLayerModel(ImmutableList.of(mat), new Int2ObjectArrayMap<>(), new Int2ObjectArrayMap<>());
+            event.getModels().put(location, model.bake(new IGeometryBakingContext(){
+                @Override
+                public String getModelName() {
+                    return null;
+                }
+                @Override
+                public boolean hasMaterial(String s) {
+                    return false;
+                }
+                @Override
+                public Material getMaterial(String s) {
+                    return null;
+                }
+                @Override
+                public boolean isGui3d() {
+                    return false;
+                }
+                @Override
+                public boolean useBlockLight() {
+                    return false;
+                }
+                @Override
+                public boolean useAmbientOcclusion() {
+                    return false;
+                }
+                @Override
+                public ItemTransforms getTransforms() {
+                    return ItemTransforms.NO_TRANSFORMS;
+                }
+                @Override
+                public Transformation getRootTransform() {
+                    return Transformation.identity();
+                }
+                @Override
+                public @org.jetbrains.annotations.Nullable ResourceLocation getRenderTypeHint() {
+                    return null;
+                }
+                @Override
+                public boolean isComponentVisible(String s, boolean b) {
+                    return true;
+                }
+            }, null, mat1 -> {
+                ModelManager modelManager = Minecraft.getInstance().getModelManager();
+                Map<ResourceLocation, CompletableFuture<AtlasSet.StitchResult>> atlas = modelManager.atlases.scheduleLoad(Minecraft.getInstance().getResourceManager(), modelManager.maxMipmapLevels, POOL);
+
+                Map<ResourceLocation, AtlasSet.StitchResult> collect = atlas.entrySet().stream().map(entry -> {
+                    try {
+                        return Pair.of(entry.getKey(), entry.getValue().get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
+                AtlasSet.StitchResult atlasset$stitchresult = collect.get(mat.atlasLocation());
+                TextureAtlasSprite textureatlassprite = atlasset$stitchresult.getSprite(mat.texture());
+                return Objects.requireNonNullElseGet(textureatlassprite, atlasset$stitchresult::missing);
+            }, foo, ItemOverrides.EMPTY/*, tex.internal*/));
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
@@ -325,7 +385,7 @@ public class ItemRender {
                  * before actually setting up the correct GL context.
                  */
                 if (!ModCore.isInReload()) {
-                    RenderType.solid().setupRenderState();
+                    RenderType.cutoutMipped().setupRenderState();
 
                     mat.pushPose();
                     // Maybe backwards?
@@ -345,7 +405,7 @@ public class ItemRender {
 
                     mat.popPose();
 
-                    RenderType.solid().clearRenderState();
+                    RenderType.cutoutMipped().setupRenderState();
                 }
                 // TODO return std.getQuads(side, rand);
             };

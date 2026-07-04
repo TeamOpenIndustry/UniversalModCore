@@ -1,14 +1,19 @@
 package cam72cam.mod.event.platform;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Fired when datapacks are reloaded, useful when injecting your dynamic datapack implementations.
@@ -22,15 +27,26 @@ public class LoadDatapackEvent extends Event implements IModBusEvent {
 
     public void addDataPack(PackResources pack) {
         infos.addPackFinder((consumer) -> {
-            consumer.accept(Pack.create(pack.packId(),
-                                        Component.literal(""),
-                                        true,
-                                        s -> pack,
-                                        new Pack.Info(Component.literal(""), 13, FeatureFlagSet.of()),
-                                        PackType.SERVER_DATA,
-                                        Pack.Position.TOP,
-                                        true,
-                                        PackSource.DEFAULT
+            //TODO 1.21.1
+            PackLocationInfo info = new PackLocationInfo(pack.packId(),
+                                                         Component.literal(""),
+                                                         PackSource.BUILT_IN,
+                                                         Optional.empty());
+            consumer.accept(new Pack(
+                    info,
+                    new Pack.ResourcesSupplier() {
+                        @Override
+                        public PackResources openPrimary(PackLocationInfo p_326301_) {
+                            return pack;
+                        }
+
+                        @Override
+                        public PackResources openFull(PackLocationInfo p_326241_, Pack.Metadata p_325959_) {
+                            return pack;
+                        }
+                    },
+                    new Pack.Metadata(Component.literal(""), PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), false),
+                    new PackSelectionConfig(true, Pack.Position.TOP, true)
             ));
         });
     }

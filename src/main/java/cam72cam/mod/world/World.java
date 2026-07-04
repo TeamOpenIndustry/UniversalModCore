@@ -39,18 +39,19 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -148,10 +149,12 @@ public class World {
     }
 
     private void checkLoadedEntities() {
-        Iterable<net.minecraft.world.entity.Entity> internalEntities = DistExecutor.runForDist(
-                () -> this::clientEntities,
-                () -> this::serverEntities
-        );
+        Iterable<net.minecraft.world.entity.Entity> internalEntities;
+        if (FMLEnvironment.dist.isClient()) {
+            internalEntities = clientEntities();
+        } else {
+            internalEntities = serverEntities();
+        }
 
         // Once a tick scan entities that may have de-sync'd with the UMC world
         for (net.minecraft.world.entity.Entity entity : internalEntities) {
@@ -403,7 +406,7 @@ public class World {
         TagCompound data = TileEntity.legacyConverter(datain);
         //We don't know the actual block state, pass in a default one here to avoid NPE for mixins
         BlockPos blockpos = new BlockPos(data.internal.getInt("x"), data.internal.getInt("y"), data.internal.getInt("z"));
-        TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), data.internal);
+        TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), data.internal, internal.registryAccess());
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);
             return null;
@@ -443,7 +446,7 @@ public class World {
             return 20;
         }
 
-        long[] ttl = internal.getServer().tickTimes;
+        long[] ttl = internal.getServer().getTickTimesNanos();
 
         sampleSize = Math.min(sampleSize, ttl.length);
         double ttus = 0;
@@ -551,7 +554,7 @@ public class World {
     /** Check if the block is currently in a loaded chunk */
     public boolean isBlockLoaded(Vec3i parent) {
         ChunkAccess chunk = internal.getChunkSource().getChunk(parent.x >> 4, parent.z >> 4, ChunkStatus.EMPTY, false);
-        return (chunk != null && chunk.getStatus() == ChunkStatus.FULL)
+        return (chunk != null && chunk.getPersistedStatus() == ChunkStatus.FULL)
                 && internal.isLoaded(parent.internal());
     }
 
@@ -637,7 +640,7 @@ public class World {
         if (block instanceof BushBlock) {
             return true;
         }
-        if (block instanceof IPlantable) {
+        if (block.asItem() instanceof IPlantable) {
             return true;
         }
         if (block instanceof LiquidBlock) {
@@ -670,7 +673,7 @@ public class World {
 
     /** Get the inventory at this block (accessed from given side) */
     public IInventory getInventory(Vec3i offset, Facing dir) {
-        net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
+		net.minecraft.world.level.block.entity.BlockEntity te = internal.getBlockEntity(offset.internal());
         Direction face = dir != null ? dir.internal : null;
         if (te != null && te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).isPresent()) {
             IItemHandler inv = te.getCapability(ForgeCapabilities.ITEM_HANDLER, face).orElse(null);
@@ -733,6 +736,8 @@ public class World {
         internal.setBlockAndUpdate(pos.internal(), info.internal);
     }
 
+    //TODO hook in the DamageType which takes json
+    // DeferredRegister.create(Registries.DAMAGE_TYPE, ModCore.MODID).;
     /** Opt in collision overriding */
     public boolean canEntityCollideWith(Vec3i bp, String damageType) {
         Block block = internal.getBlockState(bp.internal()).getBlock();

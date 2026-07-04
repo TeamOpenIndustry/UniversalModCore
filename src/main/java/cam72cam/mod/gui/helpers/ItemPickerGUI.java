@@ -1,7 +1,6 @@
 package cam72cam.mod.gui.helpers;
 
 import cam72cam.mod.item.ItemStack;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -65,7 +64,7 @@ public class ItemPickerGUI {
 
         @Override
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            this.renderBackground(graphics);
+            this.renderBackground(graphics, mouseX, mouseY, partialTicks);
             super.render(graphics, mouseX, mouseY, partialTicks);
 
             search.render(graphics, mouseX, mouseY, partialTicks);
@@ -115,7 +114,7 @@ public class ItemPickerGUI {
             List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
                     .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
                             stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
-                            stack.internal().getTooltipLines(null, TooltipFlag.Default.NORMAL).stream()
+                            stack.internal().getTooltipLines(null, null, TooltipFlag.Default.NORMAL).stream()
                                     .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
                     )).collect(Collectors.toList());
             startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;

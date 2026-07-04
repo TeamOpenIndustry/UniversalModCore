@@ -1,10 +1,5 @@
 package cam72cam.mod.util;
 
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import cam72cam.mod.ModCore;
 import cam72cam.mod.block.BlockEntity;
 import cam72cam.mod.entity.Entity;
@@ -16,8 +11,13 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class ModCoreCommand extends Command {
     @Override
@@ -136,8 +136,8 @@ public class ModCoreCommand extends Command {
 		boolean all = false;
 		Integer cx = null;
 		Integer cz = null;
-		if (args.size() > 0) {
-			switch (args.remove(0)) {
+		if (!args.isEmpty()) {
+			switch (args.removeFirst()) {
 				case "list":
 					list = true;
 					break;
@@ -149,8 +149,8 @@ public class ModCoreCommand extends Command {
 			}
 
 			if (!args.isEmpty()) {
-				if (args.get(0).equals("all")) {
-					args.remove(0);
+				if (args.getFirst().equals("all")) {
+					args.removeFirst();
 					all = true;
 				}
 			}
@@ -174,7 +174,7 @@ public class ModCoreCommand extends Command {
 
 
 		ServerChunkCache provider = (ServerChunkCache) world.internal.getChunkSource();
-		List<LevelChunk> chunks = StreamSupport.stream(provider.chunkMap.getChunks().spliterator(), false).filter(holder -> holder.getLastAvailableStatus() == ChunkStatus.FULL).map(ChunkHolder::getTickingChunk).filter(Objects::nonNull).sorted(Comparator.comparingInt((LevelChunk a) -> a.getPos().x * 1000000 + a.getPos().z)).collect(Collectors.toList());
+		List<LevelChunk> chunks = StreamSupport.stream(provider.chunkMap.getChunks().spliterator(), false).filter(holder -> holder.getLatestStatus() == ChunkStatus.FULL).map(ChunkHolder::getTickingChunk).filter(Objects::nonNull).sorted(Comparator.comparingInt((LevelChunk a) -> a.getPos().x * 1000000 + a.getPos().z)).toList();
 		long totalTeCount = 0;
 		long totalUmcCount = 0;
 		long totalEntityCount = 0;
@@ -187,7 +187,7 @@ public class ModCoreCommand extends Command {
 		for (LevelChunk chunk : chunks) {
 			int teCount = chunk.getBlockEntities().size();
 			long umcCount = chunk.getBlockEntities().values().stream().filter(x -> x instanceof cam72cam.mod.block.tile.TileEntity).count();
-			List<net.minecraft.world.entity.Entity> chunkEntities = entities.stream().filter(x -> x.chunkPosition().equals(chunk.getPos())).collect(Collectors.toList());
+			List<net.minecraft.world.entity.Entity> chunkEntities = entities.stream().filter(x -> x.chunkPosition().equals(chunk.getPos())).toList();
 			int entityCount = chunkEntities.size();
 
 			boolean isChunkLocation = hasChunkLocation && chunk.getPos().x == cx && chunk.getPos().z == cz;

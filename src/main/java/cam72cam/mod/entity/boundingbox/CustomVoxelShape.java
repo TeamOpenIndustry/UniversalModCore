@@ -73,7 +73,7 @@ public class CustomVoxelShape extends VoxelShape {
     }
 
     @Override
-    protected DoubleList getCoords(Direction.Axis axis) {
+    public DoubleList getCoords(Direction.Axis axis) {
         return switch (axis) {
             case X -> DoubleArrayList.wrap(
                     Arrays.copyOf(new double[]{bb.minX, bb.maxX}, shape.getSize(Direction.Axis.X) + 1));

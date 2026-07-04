@@ -1,5 +1,6 @@
 package cam72cam.mod.event.platform;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
@@ -7,7 +8,6 @@ import net.minecraft.tags.TagLoader;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +32,7 @@ public class RegisterBlockTagEvent extends Event implements IModBusEvent {
 
     public void registerTag(ResourceLocation ident, Block block) {
         List<TagLoader.EntryWithSource> builder = map.getOrDefault(ident, new ArrayList<>());
-        builder.add(new TagLoader.EntryWithSource(TagEntry.element(ForgeRegistries.BLOCKS.getKey(block)), "universalmodcore_generated"));
+        builder.add(new TagLoader.EntryWithSource(TagEntry.element(BuiltInRegistries.BLOCK.getKey(block)), "universalmodcore_generated"));
         map.put(ident, builder);
     }
 

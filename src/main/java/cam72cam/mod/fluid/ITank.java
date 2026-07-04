@@ -2,13 +2,12 @@ package cam72cam.mod.fluid;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -22,8 +21,8 @@ public interface ITank {
      * See ImmersiveRailroading's FreightTank for an example.
      */
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        LazyOptional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal());
-        if (!handler.isPresent()) {
+        Optional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal()).resolve();
+        if (handler.isEmpty()) {
             return null;
         }
         IFluidHandlerItem internal = handler.orElse(null);

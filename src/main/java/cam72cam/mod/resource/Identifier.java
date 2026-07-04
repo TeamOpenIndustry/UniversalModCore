@@ -22,12 +22,12 @@ public class Identifier {
 
     /** Parse identifier from string (domain:path) */
     public Identifier(String ident) {
-        this(ResourceLocation.parse(ident.toLowerCase(Locale.ROOT)));
+        this(ResourceLocation.tryParse(ident.toLowerCase(Locale.ROOT)));
     }
 
     /** Standard constructor */
     public Identifier(String domain, String path) {
-        this(ResourceLocation.fromNamespaceAndPath(domain.toLowerCase(Locale.ROOT), path.toLowerCase(Locale.ROOT)));
+        this(ResourceLocation.tryBuild(domain.toLowerCase(Locale.ROOT), path.toLowerCase(Locale.ROOT)));
     }
 
     @Override

@@ -306,7 +306,7 @@ public class TagCompound {
 
 
             BlockPos blockpos = new BlockPos(ted.get("data").internal.getInt("x"), ted.get("data").internal.getInt("y"), ted.get("data").internal.getInt("z"));
-            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), ted.get("data").internal);
+            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), ted.get("data").internal, world.internal.registryAccess());
             te.setLevel(world.internal);
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();
@@ -318,7 +318,7 @@ public class TagCompound {
             TagCompound ted = new TagCompound();
             ted.setWorld("world", tile.getWorld());
 
-            TagCompound data = new TagCompound(tile.internal.saveWithFullMetadata());
+            TagCompound data = new TagCompound(tile.internal.saveWithFullMetadata(tile.getWorld().internal.registryAccess()));
             ted.set("data", data);
 
             set(key, ted);

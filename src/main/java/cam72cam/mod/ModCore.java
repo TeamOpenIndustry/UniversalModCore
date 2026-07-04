@@ -8,15 +8,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.resource.BuiltinPack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.data.loading.DatagenModLoader;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 
 import java.util.*;
 
+import net.minecraft.util.Unit;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.common.CreativeModeTabRegistry;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.data.loading.DatagenModLoader;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraft.resources.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +44,6 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.Light;
-import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
@@ -37,17 +51,6 @@ import cam72cam.mod.util.ModCoreCommand;
 import cam72cam.mod.world.ChunkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.*;
-import net.minecraft.util.Unit;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -79,17 +82,17 @@ public class ModCore {
     public ModCore(FMLJavaModLoadingContext context) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
+        IEventBus modEventBus = context.getModEventBus();
 
         ModCore.register(new Internal());
         proxy.setup();
 
-
-        context.getModEventBus().addListener(this::preInit);
-        context.getModEventBus().addListener(this::init);
-        context.getModEventBus().addListener(this::postInit);
-        //context.getModEventBus().addListener(this::serverStarting);
-        //context.getModEventBus().addListener(this::serverStarted);
-        CommonEvents.Item.CREATIVE_TAB.register(context.getModEventBus());
+        modEventBus.addListener(this::preInit);
+        modEventBus.addListener(this::init);
+        modEventBus.addListener(this::postInit);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarting);
+        //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
+        CommonEvents.Item.CREATIVE_TAB.register(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -190,7 +193,7 @@ public class ModCore {
         return mods;
     }
 
-    private static Proxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+    private static Proxy proxy = FMLEnvironment.dist.isClient() ? new ClientProxy() : new ServerProxy();
     /** Hooked into forge's proxy system and fires off corresponding events */
     public static class Proxy {
         public Proxy() {
@@ -347,7 +350,7 @@ public class ModCore {
                     break;
                 case SETUP:
                     try {
-                        Minecraft.getInstance().createSearchTrees();
+                        CreativeModeTabRegistry.recalculateItemCreativeModeTabs();
                     } catch (Exception ex) {
                         ModCore.catching(ex);
                     }
@@ -445,11 +448,11 @@ public class ModCore {
     }
 
     public static int mcVersion() {
-        return 12001;
+        return 12101;
     }
 
     public static String semanticVersion() {
-        return "1.20.1-forge";
+        return "1.21.1-forge";
     }
 
     public static boolean isDevelopmentEnvironment() {

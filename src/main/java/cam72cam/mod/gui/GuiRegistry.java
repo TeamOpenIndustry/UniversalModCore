@@ -17,22 +17,22 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.IContainerFactory;
-import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.zip.CRC32;
@@ -47,7 +47,8 @@ public class GuiRegistry {
     );
 
     public static void registerEvents() {
-        CommonEvents.CONTAINER_REGISTRY.subscribe(helper -> helper.register(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "alltheguis"), TYPE));
+        CommonEvents.CONTAINER_REGISTRY.subscribe(helper ->
+                     helper.register(Objects.requireNonNull(ResourceLocation.tryBuild(ModCore.MODID, "alltheguis")), TYPE));
     }
 
 
@@ -95,7 +96,11 @@ public class GuiRegistry {
     public static GUI register(Identifier name, Supplier<IScreen> ctr) {
         int id = intFromName(name.toString());
         // TODO server packet with ID
-        return (player) -> DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> openScreen(ctr.get(), () -> true));
+        return (player) -> {
+            if (FMLEnvironment.dist.isClient()) {
+                openScreen(ctr.get(), () -> true);
+            }
+        };
     }
 
     /** Register a Block based GUI */
@@ -103,7 +108,7 @@ public class GuiRegistry {
         int id = intFromName(cls.toString());
         // TODO server packet with ID
         return (player, pos) -> {
-            DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
+            if (FMLEnvironment.dist.isClient()) {
                 T entity = player.getWorld().getBlockEntity(pos, cls);
                 if (entity == null) {
                     return;
@@ -114,7 +119,7 @@ public class GuiRegistry {
                 }
 
                 openScreen(screen, () -> !entity.internal.isRemoved());
-            });
+            }
         };
     }
 
@@ -130,11 +135,11 @@ public class GuiRegistry {
             return new ServerContainerBuilder(event.id, TYPE, event.inv, ctr.apply(entity), () -> !entity.internal.isRemoved());
         });
         return (player, pos) -> {
-            if (!(player.internal instanceof ServerPlayer)) {
+            if (!(player.internal instanceof ServerPlayer serverPlayer)) {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openScreen((ServerPlayer) player.internal, new MenuProvider() {
+			serverPlayer.openMenu(new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
                     return Component.literal("");
@@ -159,7 +164,7 @@ public class GuiRegistry {
         int id = intFromName(cls.toString());
 
         return (player, entity) -> {
-            DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
+            if (FMLEnvironment.dist.isClient()) {
                 if (entity == null) {
                     return;
                 }
@@ -169,7 +174,7 @@ public class GuiRegistry {
                 }
 
                 openScreen(screen, entity::isLiving);
-            });
+            }
         };
     }
 
@@ -185,11 +190,11 @@ public class GuiRegistry {
         });
 
         return (player, ent) -> {
-            if (!(player.internal instanceof ServerPlayer)) {
+            if (!(player.internal instanceof ServerPlayer serverPlayer)) {
                 System.out.println("PROBS SHOULD SEND PKT");
                 return;
             }
-            NetworkHooks.openScreen((ServerPlayer) player.internal, new MenuProvider() {
+            serverPlayer.openMenu(new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
                     return Component.literal("");

@@ -15,7 +15,8 @@ public class DirectDraw {
 
     public void draw(RenderState state) {
         Runnable render = () -> {
-            BufferBuilder builder = Tesselator.getInstance().getBuilder();
+            BufferBuilder builder = Tesselator.getInstance()
+                                              .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             ShaderInstance shader = RenderSystem.getShader();
             //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
@@ -30,11 +31,15 @@ public class DirectDraw {
             }
 
             try (With ctx = RenderContext.apply(state)) {
-                builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
                 for (VertexBuilder vert : verts) {
                     vert.draw(builder);
                 }
-                BufferUploader.draw(builder.end());
+
+                MeshData data = builder.build();
+                if (data != null) {
+                    BufferUploader.draw(data);
+                }
             }
             RenderSystem.setShader(() -> shader);
         };
@@ -56,9 +61,9 @@ public class DirectDraw {
     }
 
     public static class VertexBuilder {
-        private final double x;
-        private final double y;
-        private final double z;
+        private final float x;
+        private final float y;
+        private final float z;
         private Float u;
         private Float v;
         private Float j;
@@ -70,9 +75,9 @@ public class DirectDraw {
         private Float a;
 
         private VertexBuilder(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            this.x = (float) x;
+            this.y = (float) y;
+            this.z = (float) z;
         }
 
         public VertexBuilder uv(double u, double v) {
@@ -97,24 +102,24 @@ public class DirectDraw {
         }
 
         private void draw(BufferBuilder builder) {
-            VertexConsumer part = builder.vertex(x, y, z);
+            VertexConsumer part = builder.addVertex(x, y, z);
             if (u != null) {
-                part = part.uv(u, v);
+                part = part.setUv(u, v);
             } else {
-                part.uv(0, 0);
+                part.setUv(0, 0);
             }
             if (r != null) {
-                part = part.color(r, g, b, a);
+                part = part.setColor(r, g, b, a);
             } else {
-                part = part.color(1, 1, 1, 1);
+                part = part.setColor(1, 1, 1, 1);
             }
             if (j != null) {
-                part = part.normal(j, k, l);
+                part = part.setNormal(j, k, l);
             } else {
-                part = part.normal(1, 1, 1);
+                part = part.setNormal(1, 1, 1);
             }
-            part.uv2(15,15);
-            part.endVertex();
+            part.setLight(15 << 16 | 15);
+//            part.endVertex();
         }
     }
 }

@@ -1,6 +1,7 @@
 #version 150
 
 #moj_import <light.glsl>
+#moj_import <fog.glsl>
 
 in vec3 Position;
 in vec4 Color;
@@ -15,6 +16,8 @@ uniform sampler2D Sampler2;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 
+uniform int FogShape;
+
 uniform vec3 Light0_Direction;
 uniform vec3 Light1_Direction;
 
@@ -23,14 +26,12 @@ out vec4 vertexColor;
 out vec4 lightMapColor;
 out vec4 overlayColor;
 out vec2 texCoord0;
-out vec4 normal;
 
 void main() {
-    vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
-    gl_Position = ProjMat * viewPos;
-
-    vec4 norm = ModelViewMat * vec4(Normal, 0.0);
-    vertexDistance = length(viewPos.xyz);
+    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    //TODO model view matrix
+    vec4 norm = ProjMat * vec4(Normal, 0.0);
+    vertexDistance = fog_distance(gl_Position.xyz, FogShape);
 
     if (UV2.x == 240 && UV2.y == 240) {
         //Vanilla emissive
@@ -44,5 +45,4 @@ void main() {
 
     overlayColor = texelFetch(Sampler1, UV1, 0);
     texCoord0 = UV0;
-    normal = ProjMat * norm;
 }

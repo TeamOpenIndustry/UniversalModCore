@@ -10,6 +10,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.List;
 import java.util.UUID;
@@ -284,12 +285,12 @@ public class Entity {
 
     /** Damage entity directly (bypassing armor) */
     public void directDamage(DamageType type, double damage) {
-        internal.hurt(type.getDamageSource(), (float) damage);
+        internal.hurt(type.getDamageSource(this.internal.level()), (float) damage);
     }
 
     protected void createExplosion(Vec3d pos, float size, boolean damageTerrain) {
-        Explosion explosion = new Explosion(getWorld().internal, this.internal, null, null, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP);
-        if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
+        Explosion explosion = new Explosion(getWorld().internal, this.internal, pos.x, pos.y, pos.z, size, false, damageTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP);
+        if (ForgeEventFactory.onExplosionStart(getWorld().internal, explosion)) return;
         explosion.explode();
         explosion.finalizeExplosion(true);
     }

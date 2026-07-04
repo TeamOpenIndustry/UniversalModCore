@@ -33,8 +33,10 @@ public class RegistryUtil {
     public static RegistryAccess getRegistry() {
         try {
             if (EffectiveSide.get().isClient()) {
+                //Logical client
                 return Minecraft.getInstance().getConnection().registryAccess();
             } else {
+                //Integrated or dedicated server
                 return ServerLifecycleHooks.getCurrentServer().registryAccess();
             }
         } catch (Exception e) {

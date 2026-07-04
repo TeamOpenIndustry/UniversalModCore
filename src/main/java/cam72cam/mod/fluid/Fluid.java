@@ -1,8 +1,8 @@
 package cam72cam.mod.fluid;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,10 +30,10 @@ public class Fluid {
     public static Fluid getFluid(String type) {
         if (!registryCache.containsKey(type)) {
             List<net.minecraft.world.level.material.Fluid> fluids = new ArrayList<>();
-            for (ResourceLocation key : ForgeRegistries.FLUIDS.getKeys()) {
+            for (ResourceLocation key : BuiltInRegistries.FLUID.keySet()) {
                 if (key.getPath().equals(type)) {
-                    net.minecraft.world.level.material.Fluid fluid = ForgeRegistries.FLUIDS.getValue(key);
-                    if (fluid != null && !ForgeRegistries.FLUIDS.getDefaultKey().equals(ForgeRegistries.FLUIDS.getKey(fluid))) {
+                    net.minecraft.world.level.material.Fluid fluid = BuiltInRegistries.FLUID.get(key);
+                    if (!BuiltInRegistries.FLUID.getDefaultKey().equals(BuiltInRegistries.FLUID.getKey(fluid))) {
                         fluids.add(fluid);
                     }
                 }
@@ -47,7 +47,7 @@ public class Fluid {
     }
 
     public static Fluid getFluid(net.minecraft.world.level.material.Fluid fluid) {
-        return getFluid(ForgeRegistries.FLUIDS.getKey(fluid).getPath());
+        return getFluid(BuiltInRegistries.FLUID.getKey(fluid).getPath());
     }
 
     public int getDensity() {

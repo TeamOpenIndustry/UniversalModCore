@@ -2,11 +2,16 @@ package cam72cam.mod.item;
 
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.util.RegistryUtil;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.function.Supplier;
 
@@ -25,7 +30,12 @@ public class ItemStack {
 
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.world.item.ItemStack.of(nbt.internal));
+        this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.getRegistry(),
+                                                              (nbt.hasKey("id") && nbt.getString("id").equals("minecraft:air")) ? new CompoundTag() : nbt.internal));
+        if (nbt.hasKey("tag")) {
+            CompoundTag merged = getTagCompound().internal.merge(nbt.get("tag").internal);
+            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(merged));
+        }
     }
 
     /** Construct from customItem */
@@ -37,7 +47,7 @@ public class ItemStack {
 
     @Deprecated
     public ItemStack(String item, int i, int meta) {
-        this(new net.minecraft.world.item.ItemStack(ForgeRegistries.ITEMS.getValue(ResourceLocation.parse(item)), i));
+        this(new net.minecraft.world.item.ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(item)), i));
     }
 
     public net.minecraft.world.item.ItemStack internal() {
@@ -49,15 +59,16 @@ public class ItemStack {
 
     /** Tag attached to this stack */
     public TagCompound getTagCompound() {
-        if (internal().getTag() == null) {
-            internal().setTag(new TagCompound().internal);
+        if (!internal().has(DataComponents.CUSTOM_DATA)) {
+            internal().set(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag()));
         }
-        return new TagCompound(internal().getTag());
+        CustomData customData = internal().get(DataComponents.CUSTOM_DATA);
+        return new TagCompound(customData == null ? new CompoundTag() : customData.getUnsafe());
     }
 
     /** Tag attached to this stack */
     public void setTagCompound(TagCompound data) {
-        internal().setTag(data.internal);
+        internal().set(DataComponents.CUSTOM_DATA, CustomData.of(data.internal));
     }
 
     public ItemStack copy() {
@@ -66,7 +77,10 @@ public class ItemStack {
 
     /** Serialize */
     public TagCompound toTag() {
-        return new TagCompound(internal().serializeNBT());
+        if (internal().isEmpty()) {
+            return new TagCompound();
+        }
+        return new TagCompound((CompoundTag) internal().save(RegistryUtil.getRegistry()));
     }
 
     /** Items in this stack */
@@ -126,7 +140,7 @@ public class ItemStack {
 
     /** Ticks item will burn in a furnace (Make sure you multiply by count to get total burn time) */
     public int getBurnTime() {
-        return ForgeHooks.getBurnTime(internal(), RecipeType.SMELTING);
+        return internal().getBurnTime(RecipeType.SMELTING);
     }
 
     /** Max count of the stack */
@@ -146,11 +160,11 @@ public class ItemStack {
 
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
-        internal().hurtAndBreak(i, player.internal, (s) -> {});
+        internal().hurtAndBreak(i, (ServerLevel) player.internal.level(), (ServerPlayer) player.internal, (s) -> {});
     }
 
     /** Completely null out the tag compound */
     public void clearTagCompound() {
-        internal().setTag(null);
+        internal().set(DataComponents.CUSTOM_DATA, null);
     }
 }

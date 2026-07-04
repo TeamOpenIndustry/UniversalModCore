@@ -3,6 +3,7 @@ package cam72cam.mod.item;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -13,27 +14,23 @@ import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.world.World;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
@@ -41,7 +38,7 @@ public abstract class CustomItem {
     private final ResourceLocation identifier;
 
     public CustomItem(String modID, String name) {
-        identifier = ResourceLocation.fromNamespaceAndPath(modID, name);
+        identifier = ResourceLocation.tryBuild(modID, name);
 
         Item.Properties props = new Item.Properties().stacksTo(getStackSize());
         if (!getCreativeTabs().isEmpty()) {
@@ -100,13 +97,21 @@ public abstract class CustomItem {
 
     /** Identifier of this item */
     public final Identifier getRegistryName() {
-        return new Identifier(ForgeRegistries.ITEMS.getKey(internal));
+        return new Identifier(BuiltInRegistries.ITEM.getKey(internal));
     }
 
     private class ItemInternal extends Item {
 
         public ItemInternal(Properties p_i48487_1_) {
             super(p_i48487_1_);
+            /*ClientEvents.CLIENT_EXTENSIONS_REGISTER.subscribe(e -> {
+                e.registerItem(new IClientItemExtensions() {
+                    @Override
+                    public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                        return ItemRender.ISTER();
+                    }
+                }, this);
+            });*/
         }
 
         @Override
@@ -138,10 +143,10 @@ public abstract class CustomItem {
 
         @Override
         @OnlyIn(Dist.CLIENT)
-        public final void appendHoverText(net.minecraft.world.item.ItemStack stack, @Nullable net.minecraft.world.level.Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-            super.appendHoverText(stack, worldIn, tooltip, flagIn);
+        public void appendHoverText(net.minecraft.world.item.ItemStack stack, Item.TooltipContext context, List<Component> components, TooltipFlag flagIn) {
+            super.appendHoverText(stack, context, components, flagIn);
             if (ModCore.hasResources) {
-                tooltip.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).collect(Collectors.toList()));
+                components.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).toList());
             }
         }
 
@@ -152,8 +157,11 @@ public abstract class CustomItem {
 
         @Override
         public InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level world, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
-            onClickAir(new Player(player), World.get(world), Player.Hand.from(hand));
-            return super.use(world, player, hand);
+            Player umcPlayer = new Player(player);
+            Player.Hand umcHand = Player.Hand.from(hand);
+            onClickAir(umcPlayer, World.get(world), umcHand);
+            ItemStack stack = umcPlayer.getHeldItem(umcHand).copy();
+            return InteractionResultHolder.consume(stack.internal());
         }
 
         @Override
@@ -180,7 +188,7 @@ public abstract class CustomItem {
      * </pre>
      */
     public abstract static class ItemDataSerializer {
-        private final ItemStack stack;
+        private ItemStack stack;
 
         protected ItemDataSerializer(ItemStack stack) {
             this.stack = stack;

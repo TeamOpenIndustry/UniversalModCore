@@ -3,8 +3,8 @@ package cam72cam.mod.mixin.fix.direct_draw_call;
 import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.render.opengl.RenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -21,10 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
     //For DirectDraw call
     //Render our ones delayed for better occlusion
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;popPose()V", ordinal = 3))
-    public void renderDeferred(PoseStack stack, float partialTicks, long p_228426_3_, boolean p_228426_5_,
-                               Camera info, GameRenderer gameRenderer, LightTexture light,
-                               Matrix4f matrix, CallbackInfo ci) {
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderDebug(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/Camera;)V"))
+    public void renderDeferred(DeltaTracker delta, boolean outline, Camera camera, GameRenderer gameRenderer,
+                               LightTexture lightTexture, Matrix4f matrix4f1, Matrix4f matrix, CallbackInfo ci) {
         Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);

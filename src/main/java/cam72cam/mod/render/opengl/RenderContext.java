@@ -2,17 +2,19 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
-import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
@@ -28,6 +30,7 @@ import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 public class RenderContext {
     //Lightmap UV coordinate for full bright
     public static final int FULL_BRIGHT = 240;
+    public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
@@ -44,11 +47,9 @@ public class RenderContext {
     private RenderContext() {
     }
 
-    public static With apply(RenderState state) {
-        RenderContext.checkError();
+    public static With applyBaseState(RenderState state) {
         List<Runnable> restore = new ArrayList<>();
 
-        ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -82,21 +83,6 @@ public class RenderContext {
             float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
-        }
-
-        if (state.lightmap != null) {
-            //Our custom shader will handle vanilla emissive stuff
-            float oldX;
-            float oldY;
-            if (state.stage == Stage.ENTITY) {
-                oldX = lastLightX;
-                oldY = lastLightY;
-            } else {
-                oldX = GlStateManager.lastBrightnessX;
-                oldY = GlStateManager.lastBrightnessY;
-            }
-            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
-            restore.add(() -> setupLightMap(shader, oldX, oldY));
         }
 
 //        if (state.lighting != null) {
@@ -185,11 +171,43 @@ public class RenderContext {
             }
             restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
         }
+        RenderContext.checkError();
+
+        return () -> restore.forEach(Runnable::run);
+    }
+
+    public static With apply(RenderState state) {
+        With ctx = applyBaseState(state);
+        List<Runnable> restore = new ArrayList<>();
+        ShaderInstance shader = RenderSystem.getShader();
+
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
+            float oldX;
+            float oldY;
+            if (state.stage == Stage.ENTITY) {
+                oldX = lastLightX;
+                oldY = lastLightY;
+            } else {
+//                oldX = GlStateManager.lastBrightnessX;
+//                oldY = GlStateManager.lastBrightnessY;
+                //TODO Add our own tracer
+                oldX = 1;
+                oldY = 1;
+            }
+            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
+            restore.add(() -> {
+                setupLightMap(shader, oldX, oldY);
+            });
+        }
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
-            Matrix4 matrix4 = new Matrix4();
-            matrix4.rotate(Math.toRadians(90), 0, 1, 0);
-            Lighting.setupLevel(matrix4.convertToMoj());
+            Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
+//            Lighting.setupLevel(matrix4.convertToMoj());
+            Vector4f transformed0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
+            Vector4f transformed1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
+            RenderSystem.setShaderLights(new Vector3f(transformed0.x(), transformed0.y(), transformed0.z()),
+                                         new Vector3f(transformed1.x(), transformed1.y(), transformed1.z()));
         }
 
         applyShaderFields(shader);
@@ -197,7 +215,7 @@ public class RenderContext {
         shader.apply();
         restore.add(shader::clear);
         checkError();
-        return () -> restore.forEach(Runnable::run);
+        return ctx.and(() -> restore.forEach(Runnable::run));
     }
 
     private static void applyShaderFields(ShaderInstance shader) {
@@ -209,9 +227,9 @@ public class RenderContext {
             shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         }
 
-        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
-            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
-        }
+//        if (shader.INVERSE_VIEW_ROTATION_MATRIX != null) {
+//            shader.INVERSE_VIEW_ROTATION_MATRIX.set(RenderSystem.getInverseViewRotationMatrix());
+//        }
 
         if (shader.COLOR_MODULATOR != null) {
             shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
@@ -254,11 +272,14 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
+    //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
     private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
-        ImmutableList<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
+        LightTexture light = Minecraft.getInstance().gameRenderer.lightTexture();
+
+        List<VertexFormatElement> elements1 = shader.getVertexFormat().getElements();
         for (int i = 0; i < elements1.size(); i++) {
             VertexFormatElement element = elements1.get(i);
-            if (element.getUsage() == VertexFormatElement.Usage.UV) {
+            if (element.usage() == VertexFormatElement.Usage.UV) {
                 for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
                     if (entry.getValue() == element && entry.getKey().equals("UV2")) {
                         //240 means full bright

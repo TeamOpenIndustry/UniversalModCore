@@ -10,15 +10,12 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -33,15 +30,16 @@ public class GlobalRender {
     public static void registerClientEvents() {
         // Nice to have GPU info in F3
         ClientEvents.RENDER_DEBUG.subscribe(event -> {
-            if (Minecraft.getInstance().options.renderDebug && GPUInfo.hasGPUInfo()) {
+            if (Minecraft.getInstance().getDebugOverlay().showDebugScreen()
+                    && event.getSide() == CustomizeGuiOverlayEvent.DebugText.Side.Right && GPUInfo.hasGPUInfo()) {
                 int i;
-                for (i = 0; i < event.getRight().size(); i++) {
-                    if (event.getRight().get(i).startsWith("Display: ")) {
+                for (i = 0; i < event.getText().size(); i++) {
+                    if (event.getText().get(i).startsWith("Display: ")) {
                         i++;
                         break;
                     }
                 }
-                event.getRight().add(i, GPUInfo.debug());
+                event.getText().add(i, GPUInfo.debug());
             }
         });
     }
@@ -52,12 +50,12 @@ public class GlobalRender {
     }
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
-    public static void registerOverlay(RenderFunction func) {
-        ClientEvents.RENDER_OVERLAY.subscribe(event -> {
-            if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type()) {
-                func.render(new RenderState(event.getGuiGraphics().pose()).stage(RenderContext.Stage.GUI), event.getPartialTick());
-            }
-        });
+    public static void registerOverlay(RenderFunction func) { // TODO
+        //ClientEvents.RENDER_OVERLAY.subscribe(event -> {
+        //    if (event.getName().equals(VanillaGuiLayers.HOTBAR) && !Minecraft.getInstance().options.hideGui) {
+        //        func.render(new RenderState(event.getGuiGraphics().pose()).stage(RenderContext.Stage.GUI), event.getPartialTick().getRealtimeDeltaTicks());
+        //    }
+        //});
     }
 
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
@@ -66,8 +64,8 @@ public class GlobalRender {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal().getItem()) {
-                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(), MinecraftClient.getPosMouseOver(),
-                              new RenderState(event.getPoseStack()).stage(RenderContext.Stage.OVERLAY), event.getPartialTick());
+                    fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver().down(),
+                              MinecraftClient.getPosMouseOver(), new RenderState(event.getPoseStack()).stage(RenderContext.Stage.OVERLAY), event.getPartialTick());
                 }
             }
         });
@@ -97,7 +95,6 @@ public class GlobalRender {
         return Minecraft.getInstance().options.renderDistance().get() * 16;
     }
 
-
     /** Similar to drawNameplate */
     public static void drawText(String str, RenderState state, Vec3d pos, float scale, float rotate)
     {
@@ -120,9 +117,8 @@ public class GlobalRender {
                      .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
-            MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
-            buffer.endBatch();
+            fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -134,12 +130,10 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-//            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str) / 2, 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
-                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            multibuffersource$buffersource.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -152,12 +146,10 @@ public class GlobalRender {
         state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-//            fontRendererIn.draw(new PoseStack(), str, 0, 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
             fontRendererIn.drawInBatch(str, 0, 0, color, false, new Matrix4f(),
-                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            multibuffersource$buffersource.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 
@@ -169,12 +161,10 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.apply(state)) {
-//            fontRendererIn.draw(new PoseStack(), str, -fontRendererIn.width(str), 0, color);
-            MultiBufferSource.BufferSource multibuffersource$buffersource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
             fontRendererIn.drawInBatch(str, -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
-                                       multibuffersource$buffersource, Font.DisplayMode.NORMAL, 0, 15728880,
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
                                        fontRendererIn.isBidirectional());
-            multibuffersource$buffersource.endBatch();
+            RenderContext.IMMEDIATE.endBatch();
         }
     }
 

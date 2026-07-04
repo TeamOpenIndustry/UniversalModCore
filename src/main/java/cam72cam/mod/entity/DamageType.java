@@ -1,14 +1,16 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.RegistryUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.damagesource.DamageScaling;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.level.Level;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -26,6 +28,15 @@ public final class DamageType {
     public static final DamageType OTHER = new DamageType(DamageTypes.BAD_RESPAWN_POINT); //i.e. Intentional game design
 
     private static final HashMap<Identifier, DamageType> registered = new HashMap<>();
+    private static final String templateDatapack = """
+                                                   {
+                                                       "message_id": "%s.%s",
+                                                       "scaling": "never",
+                                                       "exhaustion": 0.1,
+                                                       "effects": "hurt",
+                                                       "death_message_type": "default"
+                                                   }
+                                                   """;
 
     public final Identifier id;
     public final ResourceKey<net.minecraft.world.damagesource.DamageType> internal;
@@ -45,6 +56,9 @@ public final class DamageType {
     private DamageType(Identifier cause) {
         this.id = cause;
         this.internal = ResourceKey.create(Registries.DAMAGE_TYPE, cause.internal);
+        Identifier data = new Identifier(cause.getDomain(), "damage_type/" + cause.getPath() + ".json");
+        BuiltinPack.putData(data.internal,
+                            String.format(templateDatapack, cause.getDomain(), cause.getPath()).getBytes(StandardCharsets.UTF_8));
     }
 
     private DamageType(ResourceKey<net.minecraft.world.damagesource.DamageType> key) {
@@ -52,15 +66,10 @@ public final class DamageType {
         this.internal = key;
     }
 
-    public DamageSource getDamageSource() {
-        try {
-            Holder.Reference<net.minecraft.world.damagesource.DamageType> type =
-                    RegistryUtil.getRegistry().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(internal);
-            return new DamageSource(type);
-        } catch (IllegalStateException e) {
-            //Meaning requested isn't registered in vanilla, use our fallback
-            return new DamageSource(Holder.direct(new net.minecraft.world.damagesource.DamageType(id.toString(), DamageScaling.NEVER, 0f)));
-        }
+    public DamageSource getDamageSource(Level level) {
+        Holder<net.minecraft.world.damagesource.DamageType> type =
+                RegistryUtil.getRegistry().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(internal);
+        return new DamageSource(type, null, null, null);
     }
 
     @Override

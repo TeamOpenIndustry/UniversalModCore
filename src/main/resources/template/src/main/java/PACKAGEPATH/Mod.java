@@ -1,7 +1,6 @@
 package #PACKAGE#;
 
 import cam72cam.mod.ModCore;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 @net.minecraftforge.fml.common.Mod(Mod.MODID)
 public class Mod {

@@ -1,9 +1,10 @@
 package cam72cam.mod.gui.helpers;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraftforge.client.gui.widget.ForgeSlider;
-import java.util.function.Consumer;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.client.gui.widget.ForgeSlider;
+
+import java.util.function.Consumer;
 
 
 /** Internal scrollbar class */

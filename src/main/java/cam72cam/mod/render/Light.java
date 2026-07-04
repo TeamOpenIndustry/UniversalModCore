@@ -5,22 +5,20 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import dev.lambdaurora.lambdynlights.api.DynamicLightHandlers;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Light {
@@ -37,7 +35,6 @@ public class Light {
 
     public void remove() {
         internal.remove(Entity.RemovalReason.KILLED);
-        lights.remove(internal);
         internal = null;
     }
 
@@ -76,7 +73,7 @@ public class Light {
                 builder.sized(0, 0);
 
                 EntityType<LightEntity> et = builder.build("light" + i);
-                helper.register(ResourceLocation.parse("universalmodcore:light" + i), et);
+                helper.register(Objects.requireNonNull(ResourceLocation.tryParse("universalmodcore:light" + i)), et);
                 types[i] = et;
             }
         });
@@ -84,11 +81,6 @@ public class Light {
 
     public static void registerClient() {
         if(isLDLInstalled()) {
-            for (int i = 1; i <= 15; i++) {
-                EntityType<LightEntity> et = types[i];
-                int finalI = i;
-                DynamicLightHandlers.registerDynamicLightHandler(et, e -> finalI);
-            }
             ClientEvents.TICK.subscribe(Light::onClientTick);
         }
     }
@@ -109,7 +101,7 @@ public class Light {
         }
 
         @Override
-        protected void defineSynchedData() {
+        protected void defineSynchedData(SynchedEntityData.Builder builder) {
 
         }
 
@@ -122,45 +114,33 @@ public class Light {
         protected void addAdditionalSaveData(CompoundTag p_20139_) {
 
         }
-
-        @Override
-        public Packet<ClientGamePacketListener> getAddEntityPacket() {
-            return null;
-        }
     }
 
     public static boolean enabled() {
         boolean flag = isLDLInstalled();
         if (flag) {
             try {
-                //Some branch specific stuff
-                //Need change once switch back to official LDL
-                //i.e.
-                // SodiumDynamicLights.get().config.getEntitiesLightSource().get()
-                // SodiumDynamicLights.get().config.getDynamicLightsMode().isEnabled()
-                Class<?> cls = Class.forName("toni.sodiumdynamiclights.SodiumDynamicLights");
-                Method m1 = cls.getDeclaredMethod("get");
-                Field f1 = cls.getDeclaredField("config");
-                Class<?> config = Class.forName("toni.sodiumdynamiclights.DynamicLightsConfig");
-                Object con = config.cast(f1.get(m1.invoke(null)));
-                Method m2 = config.getDeclaredMethod("getEntitiesLightSource");
-                Method m3 = config.getDeclaredMethod("getDynamicLightsMode");
-                Class<?> types = Class.forName("toni.sodiumdynamiclights.DynamicLightsMode");
-                Method m4 = types.getDeclaredMethod("isEnabled");
-                return ((ForgeConfigSpec.BooleanValue) m2.invoke(con)).get() && (boolean) m4.invoke(types.cast(m3.invoke(con)));
-            } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
-                     IllegalAccessException ignored) {
+                //TODO Optimize me!
+                Class<?> ldl = Class.forName("dev.lambdaurora.lambdynlights.LambDynLights");
+                Method getInstance = ldl.getDeclaredMethod("get");
+                Object inst = getInstance.invoke(null);
+                Field field = ldl.getDeclaredField("config");
+                field.setAccessible(true);
+                Object cfg = field.get(inst);
+                Class<?> config = Class.forName("dev.lambdaurora.lambdynlights.DynamicLightsConfig");
+                Method entities = config.getDeclaredMethod("getEntitiesLightSource");
+                Class<?> setting = Class.forName("dev.lambdaurora.lambdynlights.config.SettingEntry");
+                Method get = setting.getDeclaredMethod("get");
+                return (Boolean) get.invoke(setting.cast(entities.invoke(cfg)));
+            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+                     IllegalAccessException | NoSuchFieldException e) {
+                return true;
             }
         }
-        return flag;
+        return false;
     }
 
     private static boolean isLDLInstalled() {
-        try {
-            Class<?> cls = Class.forName("dev.lambdaurora.lambdynlights.api.DynamicLightsInitializer");
-            return true;
-        } catch (ClassNotFoundException ignored) {
-            return false;
-        }
+        return false; // Cannot be installed on MinecraftForge >1.20.1
     }
 }

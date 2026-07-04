@@ -7,7 +7,6 @@ import cam72cam.mod.input.Keyboard;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
@@ -128,6 +127,12 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
         first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
 
         GUIHelpers.runDelayed(mouseX, mouseY);
+    }
+
+    @Override
+    protected void renderBlurredBackground(float p_330683_) {
+        //Do nothing here, this doesn't exist below 1.20.5
+        //TODO backport?
     }
 
     @Override

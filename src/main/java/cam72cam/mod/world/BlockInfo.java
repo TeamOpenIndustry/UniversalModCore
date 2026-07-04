@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Optional;
 
@@ -40,7 +39,7 @@ public class BlockInfo {
                         @Override
                         public Optional<Holder.Reference<Block>> get(ResourceKey<Block> p_255645_) {
                             // This is some of the worst OOP spaghetti I've ever encountered...
-                            return ForgeRegistries.BLOCKS.getDelegate(p_255645_);
+                            return BuiltInRegistries.BLOCK.getHolder(p_255645_);
                         }
 
                         @Override

@@ -1,6 +1,10 @@
 package cam72cam.mod.item;
 
-import cam72cam.mod.serialization.*;
+import cam72cam.mod.serialization.SerializationException;
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagMapped;
+import cam72cam.mod.util.RegistryUtil;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -120,12 +124,12 @@ public class ItemStackHandler implements IInventory {
 
     @Deprecated
     public TagCompound save() {
-        return new TagCompound(internal.serializeNBT());
+        return new TagCompound(internal.serializeNBT(RegistryUtil.getRegistry()));
     }
 
     @Deprecated
     public void load(TagCompound items) {
-        internal.deserializeNBT(items.internal);
+        internal.deserializeNBT(RegistryUtil.getRegistry(), items.internal);
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
@@ -144,12 +148,12 @@ public class ItemStackHandler implements IInventory {
                             d.remove(fieldName);
                             return;
                         }
-                        d.set(fieldName, new TagCompound(o.internal.serializeNBT()));
+                        d.set(fieldName, new TagCompound(o.internal.serializeNBT(RegistryUtil.getRegistry())));
                     },
                     (d, w) -> {
                         try {
                             ItemStackHandler o = ctr.newInstance();
-                            o.internal.deserializeNBT(d.get(fieldName).internal);
+                            o.internal.deserializeNBT(RegistryUtil.getRegistry(), d.get(fieldName).internal);
                             return o;
                         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                             throw new SerializationException("Unable to construct item stack handler " + type, e);

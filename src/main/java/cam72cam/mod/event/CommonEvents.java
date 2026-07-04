@@ -5,8 +5,10 @@ import cam72cam.mod.event.platform.RegisterAdvancementEvent;
 import cam72cam.mod.event.platform.RegisterBlockTagEvent;
 import cam72cam.mod.event.platform.RegisterRecipeEvent;
 import cam72cam.mod.event.platform.RegisterItemTagEvent;
+import cam72cam.mod.net.Packet;
 import cam72cam.mod.entity.ModdedEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -16,16 +18,15 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.event.TickEvent.LevelTickEvent;
 import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
 import net.minecraftforge.server.permission.events.PermissionGatherEvent;
@@ -80,7 +81,7 @@ public class CommonEvents {
         public static final Event<Consumer<PermissionGatherEvent.Nodes>> NODES = new Event<>();
     }
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @EventBusSubscriber(modid = ModCore.MODID)
     public static final class EventBusForge {
         // World
         @SubscribeEvent
@@ -104,10 +105,10 @@ public class CommonEvents {
         }
 
         @SubscribeEvent
-        public static void onWorldTick(TickEvent.LevelTickEvent event) {
+        public static void onWorldTick(LevelTickEvent.Pre event) {
             //Since 1.18.2 this is called both server and client
             //We only want server side
-            if (event.phase == TickEvent.Phase.START && event.level != null && !event.level.isClientSide()) {
+            if (!event.level.isClientSide()) {
                 World.TICK.execute(x -> x.accept(event.level));
             }
         }
@@ -152,7 +153,7 @@ public class CommonEvents {
 
     }
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = ModCore.MODID, bus = EventBusSubscriber.Bus.MOD)
     public static final class EventBusMod {
         static {
             registerEvents();
@@ -160,12 +161,25 @@ public class CommonEvents {
 
         @SubscribeEvent
         public static void registerBlocks(RegisterEvent event) {
-            event.register(ForgeRegistries.Keys.BLOCKS, helper -> Block.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.BLOCK_ENTITY_TYPES, helper -> Tile.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.ITEMS, helper -> Item.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.ENTITY_TYPES, helper -> Entity.REGISTER.execute(x -> x.accept(helper)));
-            event.register(ForgeRegistries.Keys.MENU_TYPES, helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.BLOCK.key(), helper -> Block.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.BLOCK_ENTITY_TYPE.key(), helper -> Tile.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.ITEM.key(), helper -> Item.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.ENTITY_TYPE.key(), helper -> Entity.REGISTER.execute(x -> x.accept(helper)));
+            event.register(BuiltInRegistries.MENU.key(), helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
         }
+
+        /*@SubscribeEvent
+        public static void registerCapability(RegisterCapabilitiesEvent event) {
+            Block.REGISTER_CAPABILITY.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerPacket(RegisterPayloadHandlersEvent event) {
+            final PayloadRegistrar registrar = event.registrar(ModCore.MODID)
+                                                    .versioned(Packet.VERSION)
+                                                    .optional();
+            Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
+        }*/
 
         @SubscribeEvent
         public static void registerBlockTags(RegisterBlockTagEvent event) {

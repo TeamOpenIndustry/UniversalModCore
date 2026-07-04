@@ -4,9 +4,9 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
-import cam72cam.mod.util.With;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -241,7 +241,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
             spriteId = "minecraft:block/fire_1";
         }
 
-        TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(spriteId));
+        TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.tryParse(spriteId));
         RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         graphics.blit(x, y, 0, 16, 16, sprite);
     }

@@ -1,7 +1,11 @@
 package cam72cam.mod.fluid;
 
+import cam72cam.mod.serialization.TagCompound;
+import cam72cam.mod.serialization.TagField;
+import cam72cam.mod.serialization.TagMapped;
+import cam72cam.mod.serialization.TagMapper;
+import cam72cam.mod.util.RegistryUtil;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import cam72cam.mod.serialization.*;
 
 import java.util.HashSet;
 import java.util.List;

@@ -2,7 +2,7 @@ package cam72cam.mod.resource;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 
@@ -21,7 +21,7 @@ import java.util.zip.ZipFile;
 
 /** Internal, do not use directly */
 class Data {
-    public static DataProxy proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+    public static DataProxy proxy = FMLEnvironment.dist.isClient() ? new ClientProxy() : new ServerProxy();
 
     public static abstract class DataProxy {
         private String configDir;

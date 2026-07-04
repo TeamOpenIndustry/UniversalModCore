@@ -9,6 +9,7 @@ import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -17,7 +18,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -48,8 +48,8 @@ public class EntityRegistry {
             EntityType.Builder<ModdedEntity> builder = EntityType.Builder.of(factory, MobCategory.MISC)
                     .setShouldReceiveVelocityUpdates(false)
                     .setTrackingRange(distance)
-                    .setUpdateInterval(20)
-                    .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr));
+                    .setUpdateInterval(20);
+//                    .setCustomClientFactory((se, world) -> new ModdedEntity(registered.get(type), world, ctr));
             if (ctr.get().isImmuneToFire()) {
                 builder = builder.fireImmune();
             }
@@ -93,7 +93,7 @@ public class EntityRegistry {
             if (missingResources != null && !Minecraft.getInstance().hasSingleplayerServer() && Minecraft.getInstance().getConnection() != null) {
                 ModCore.error(missingResources);
                 Minecraft.getInstance().getConnection().getConnection().disconnect(PlayerMessage.direct(missingResources).internal);
-                Minecraft.getInstance().clearLevel();
+                Minecraft.getInstance().clearClientLevel(new ProgressScreen(true));
                 Minecraft.getInstance().setScreen(new DisconnectedScreen(new JoinMultiplayerScreen(new TitleScreen()), Component.translatable("disconnect.lost"), PlayerMessage.direct(missingResources).internal));
                 missingResources = null;
             }

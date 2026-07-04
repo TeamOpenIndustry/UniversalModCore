@@ -17,18 +17,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -100,30 +95,33 @@ public class ClientEvents {
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
     public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
-    public static final Event<Consumer<RenderGuiOverlayEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundEngineLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
 //    public static final Event<Consumer<RenderLevelStageEvent>> OPTIFINE_SUCKS = new Event<>();
     public static final Event<Consumer<RegisterKeyMappingsEvent>> KEY_MAPPING_REGISTER = new Event<>();
 
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-    public static class ClientEventBusForge {
+    @EventBusSubscriber(modid = ModCore.MODID, value = Dist.CLIENT)
+    public static class ClientEventBus {
         private static Vec3d dragPos = null;
         private static boolean skipNextMouseInputEvent = false;
 
+        static {
+            registerClientEvents();
+        }
+
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase == TickEvent.Phase.START) {
-                TICK.execute(Runnable::run);
-            }
-            if (event.phase == TickEvent.Phase.END) {
-                TICK_POST.execute(Runnable::run);
-            }
+        public static void onClientTick(TickEvent.ClientTickEvent.Pre event) {
+            TICK.execute(Runnable::run);
+        }
+
+        @SubscribeEvent
+        public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
+            TICK_POST.execute(Runnable::run);
         }
 
         private static void onGuiMouse(ScreenEvent event, int x, int y, int btn, MouseAction action) {
-            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getScrollDelta() : 0);
+            MouseGuiEvent mevt = new MouseGuiEvent(action, x, y, btn, action == MouseAction.SCROLL ? (int) ((ScreenEvent.MouseScrolled) event).getDeltaY() : 0);
 
             if (!MOUSE_GUI.executeCancellable(h -> h.apply(mevt))) {
                 event.setCanceled(true);
@@ -167,7 +165,7 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onScroll(InputEvent.MouseScrollingEvent event) {
-            if (!SCROLL.executeCancellable(x -> x.apply(event.getScrollDelta()))) {
+            if (!SCROLL.executeCancellable(x -> x.apply(event.getDeltaY()))) {
                 event.setCanceled(true);
             }
         }
@@ -203,7 +201,7 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onFrame(TickEvent.RenderTickEvent event) {
+        public static void onFrame(TickEvent.RenderTickEvent.Pre event) {
             if (dragPos != null) {
                 //Minecraft.getMinecraft().mouseHelper.mouseXYChange();
                 dragPos = dragPos.add(Minecraft.getInstance().mouseHandler.getXVelocity(), Minecraft.getInstance().mouseHandler.getYVelocity(), 0);
@@ -221,11 +219,6 @@ public class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onOverlayEvent(RenderGuiOverlayEvent.Pre event) {
-            RENDER_OVERLAY.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
         public static void onRenderMouseover(RenderHighlightEvent.Block event) {
             RenderType.cutout().setupRenderState();
             // TODO 1.15+ do we need to set lightmap coords here?
@@ -233,10 +226,11 @@ public class ClientEvents {
             RenderType.cutout().clearRenderState();
         }
 
-        @SubscribeEvent
-        public static void onSoundLoad(SoundEngineLoadEvent event) {
-            SOUND_LOAD.execute(x -> x.accept(event));
-        }
+        //Call in Mod Bus
+//        @SubscribeEvent
+//        public static void onSoundLoad(SoundEngineLoadEvent event) {
+//            SOUND_LOAD.execute(x -> x.accept(event));
+//        }
 
 //        @SubscribeEvent
 //        public static void optifineSucksEvent(RenderLevelStageEvent event) {
@@ -247,20 +241,13 @@ public class ClientEvents {
 
         static boolean hasHacked = false;
         @SubscribeEvent
-        public static void onHackShaders(TickEvent.RenderTickEvent event) {
-            if (!hasHacked && event.phase == TickEvent.Phase.START) {
+        public static void onHackShaders(TickEvent.RenderTickEvent.Pre event) {
+            if (!hasHacked/* && event.phase == TickEvent.Phase.START*/) {
                 if (GameRenderer.getRendertypeCutoutShader() != null) {
                     hasHacked = true;
                     HACKS.execute(Runnable::run);
                 }
             }
-        }
-    }
-
-    @Mod.EventBusSubscriber(modid = ModCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-    public static class ClientEventBusMod {
-        static {
-            registerClientEvents();
         }
 
         @SubscribeEvent
@@ -303,6 +290,21 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerVanillaShader(RegisterShadersEvent event) {
             REGISTER_SHADER.execute(x -> x.accept(event));
+        }
+
+        /*@SubscribeEvent
+        public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
+            CLIENT_EXTENSIONS_REGISTER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerMenuScreen(RegisterMenuScreensEvent event) {
+            MENU_SCREENS_REGISTER.execute(x -> x.accept(event));
+        }*/
+
+        @SubscribeEvent
+        public static void onSoundLoad(SoundEngineLoadEvent event) {
+            SOUND_LOAD.execute(x -> x.accept(event));
         }
     }
 }

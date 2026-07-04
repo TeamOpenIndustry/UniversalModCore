@@ -33,7 +33,8 @@ public class Mouse {
             Entity entity = MinecraftClient.getEntityMouseOver();
             if (entity != null && entity.internal instanceof ModdedEntity && entity instanceof IClickable) {
                 // Invert MC's built in logic for entity distance (assumes small entities)
-                if (!MinecraftClient.getPlayer().internal.canReach(entity.internal, 3)) {
+                //ServerGamePacketListenerImpl#L1558
+                if (!MinecraftClient.getPlayer().internal.canInteractWithEntity(entity.internal.getBoundingBox(), 1.0)) {
                     if (((IClickable)entity).onClick(MinecraftClient.getPlayer(), button) == ClickResult.ACCEPTED) {
                         new MousePressPacket(button, entity).sendToServer();
                     }
@@ -86,6 +87,6 @@ public class Mouse {
     }
 
     public static Vec3d getDrag() {
-        return ClientEvents.ClientEventBusForge.getDragPos();
+        return ClientEvents.ClientEventBus.getDragPos();
     }
 }

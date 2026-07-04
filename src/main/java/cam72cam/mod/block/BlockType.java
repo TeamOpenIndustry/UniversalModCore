@@ -1,5 +1,6 @@
 package cam72cam.mod.block;
 
+import cam72cam.mod.block.tile.TileEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
@@ -15,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -31,6 +33,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import javax.annotation.Nullable;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -169,12 +173,17 @@ public abstract class BlockType {
 
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
         @Override
-        public InteractionResult use(BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, InteractionHand hand, BlockHitResult hit) {
-            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, BlockHitResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.PRIMARY, Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         @Override
-        public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
+        protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack, BlockState state, Level world, BlockPos pos, net.minecraft.world.entity.player.Player player, InteractionHand hand, BlockHitResult hit) {
+            return BlockType.this.onClick(World.get(world), new Vec3i(pos), new Player(player), Player.Hand.from(hand), Facing.from(hit.getDirection()), new Vec3d(hit.getLocation()).subtract(new Vec3i(pos))) ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        @Override
+        public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, net.minecraft.world.entity.player.Player player) {
             World world = getWorldOrNull(level, pos);
             if (world != null) {
                 return BlockType.this.onPick(world, new Vec3i(pos)).internal();
@@ -276,12 +285,10 @@ public abstract class BlockType {
         }
 
         //Blocks liquid movement for now
-        @Override
-        public boolean canPlaceLiquid(BlockGetter p_54766_, BlockPos p_54767_, BlockState p_54768_, Fluid p_54769_) {
+        public boolean canPlaceLiquid(@Nullable net.minecraft.world.entity.player.Player p_295256_, BlockGetter p_54766_, BlockPos p_54767_, BlockState p_54768_, Fluid p_54769_) {
             return false;
         }
 
-        @Override
         public boolean placeLiquid(LevelAccessor p_54770_, BlockPos p_54771_, BlockState p_54772_, FluidState p_54773_) {
             return false;
         }

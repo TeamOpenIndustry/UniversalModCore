@@ -11,18 +11,25 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.minecraft.network.chat.ClickEvent;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
@@ -68,8 +75,9 @@ public class GUIHelpers {
 
     /** Draw fluid block at coords */
     public static void drawFluid(Fluid fluid, int x, int y, int width, int height) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(IClientFluidTypeExtensions.of(fluid.internal.get(0)).getStillTexture());
-        drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.get(0)).getTintColor(), x, y, width, height);
+        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                                             .apply(IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getStillTexture());
+        drawSprite(sprite, IClientFluidTypeExtensions.of(fluid.internal.getFirst()).getTintColor(), x, y, width, height);
     }
 
     /** Draw a texture sprite at coords, tinted with col  */
@@ -79,7 +87,7 @@ public class GUIHelpers {
         float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
         ShaderInstance oldShader = RenderSystem.getShader();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
+        RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
         int iW = sprite.contents().width();
         int iH = sprite.contents().height();
 
@@ -87,21 +95,24 @@ public class GUIHelpers {
         float minV = sprite.getV0();
 
         Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int offY = 0; offY < height; offY += iH) {
             double curHeight = Math.min(iH, height - offY);
-            float maxVScaled = sprite.getV(16.0 * curHeight / iH);
+            float maxVScaled = sprite.getV((float) (16.0 * curHeight / iH));
             for (int offX = 0; offX < width; offX += iW) {
                 double curWidth = Math.min(iW, width - offX);
-                float maxUScaled = sprite.getU(16.0 * curWidth / iW);
-                buffer.vertex(x + offX, y + offY, zLevel).uv(minU, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX, y + offY + curHeight, zLevel).uv(minU, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY + curHeight, zLevel).uv(maxUScaled, maxVScaled).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
-                buffer.vertex(x + offX + curWidth, y + offY, zLevel).uv(maxUScaled, minV).color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1).endVertex();
+                float maxUScaled = sprite.getU((float) (16.0 * curWidth / iW));
+                buffer.addVertex((float) (x + offX), (float) (y + offY), (float) zLevel).setUv(minU, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX), (float) (y + offY + curHeight), (float) zLevel).setUv(minU, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY + curHeight), (float) zLevel).setUv(maxUScaled, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY), (float) zLevel).setUv(maxUScaled, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
             }
         }
-        tessellator.end();
+        //TODO 1.21.1 Am I right?
+        MeshData data = buffer.build();
+        if (data != null) {
+            BufferUploader.draw(data);
+        }
 
         RenderSystem.setShader(() -> oldShader);
     }
@@ -129,16 +140,20 @@ public class GUIHelpers {
         drawString(text, x, y, color, new Matrix4());
     }
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
+        //Reset Z to prevent culling
+        matrix.m23 = 0;
         state.model_view().multiply(matrix);
-        matrix.m23 = 10;//Z transform
-        graphics.pose().pushPose();
-        graphics.pose().setIdentity();
-        graphics.pose().mulPoseMatrix(matrix.convertToMoj());
-        int xPos = (int) (x + matrix.m03 / matrix.m00);
-        int yPos = (int) (y + matrix.m13 / matrix.m11);
-        graphics.drawString(Minecraft.getInstance().font, text, xPos, yPos, color);
-        graphics.pose().popPose();
+        state.depth_test(false);
+        try (With with = RenderContext.apply(state)) {
+            Font font = Minecraft.getInstance().font;
+            font.drawInBatch(
+                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
+                    font.isBidirectional()
+            );
+            RenderContext.IMMEDIATE.endBatch();
+        }
     }
 
     /** Draw a shadowed string offset from the center of coords */
@@ -146,16 +161,20 @@ public class GUIHelpers {
         drawCenteredString(text, x, y, color, new Matrix4());
     }
     public static void drawCenteredString(String text, int x, int y, int color, Matrix4 matrix) {
-        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
+        RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true).stage(RenderContext.Stage.GUI);
+        //Reset Z to prevent culling
+        matrix.m23 = 0;
         state.model_view().multiply(matrix);
-        matrix.m23 = 0;//Z transform
-        graphics.pose().pushPose();
-        graphics.pose().setIdentity();
-        graphics.pose().mulPoseMatrix(matrix.convertToMoj());
-        int xPos = (int) (x + matrix.m03 / matrix.m00);
-        int yPos = (int) (y + matrix.m13 / matrix.m11);
-        graphics.drawCenteredString(Minecraft.getInstance().font, text, xPos, yPos, color);
-        graphics.pose().popPose();
+        state.depth_test(false);
+        try (With with = RenderContext.apply(state)) {
+            Font font = Minecraft.getInstance().font;
+            font.drawInBatch(
+                    text, -font.width(text) / 2f, 0, color, false, new Matrix4f(),
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
+                    font.isBidirectional()
+            );
+            RenderContext.IMMEDIATE.endBatch();
+        }
     }
 
     /** Gat a string's internal width for further use */
