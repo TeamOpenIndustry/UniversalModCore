@@ -14,8 +14,11 @@ import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Transformation;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -27,8 +30,10 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.*;
@@ -45,12 +50,19 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = Collections.emptyList();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
+
+    private static final Executor POOL = Executors.newFixedThreadPool(1);
 
     //String template for simple item models
     private static final String modelTemplate = "models/item/%s.json";
@@ -131,6 +143,8 @@ public class ItemRender {
         });
 
         ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper()
+                .register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */

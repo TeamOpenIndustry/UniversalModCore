@@ -4,7 +4,12 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[7.0.23,8.0)'
-    id 'net.minecraftforge.jarjar' version '0.2.3'
+    id 'com.gradleup.shadow' version '9.4.3'
+}
+
+configurations {
+    shade
+    implementation.extendsFrom shade
 }
 
 java {
@@ -27,7 +32,8 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
 }
 version = "1.21.1-forge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-base.archivesName = "UniversalModCore"
+String archivesBaseName = "UniversalModCore"
+base.archivesName = archivesBaseName
 
 println("version: ${version}")
 
@@ -84,13 +90,6 @@ minecraft {
 
 sourceSets.main.resources { srcDir layout.projectDirectory.dir('src/generated/resources') }
 
-// This methods registers jarJar for the default jar task.
-// The closure allows you to configure the task, instead of needing to do this:
-// tasks.named('jarJar', net.minecraftforge.jarjar.gradle.JarJar)
-jarJar.register() {
-    archiveClassifier = null
-}
-
 repositories {
     minecraft.mavenizer(it)
     maven fg.forgeMaven
@@ -133,27 +132,11 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0'))
-    implementation(jarJar('io.github.llamalad7:mixinextras-forge:0.5.0')) {
-        jarJar.configure(it) {
-            module {
-                group = 'io.github.llamalad7'
-                name = 'mixinextras'
-            }
-            range = "[0.5.0,)"
-        }
-    }
+    shade('io.github.llamalad7:mixinextras-forge:0.5.0')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
 
-    implementation(jarJar('javax.vecmath:vecmath:1.5.2')) {
-        jarJar.configure(it) {
-            module {
-                group = 'javax.vecmath'
-                name = 'vecmath'
-            }
-            range = "[1.5.2,)"
-        }
-    }
+    shade('javax.vecmath:vecmath:1.5.2')
 }
 
 repositories {
@@ -164,12 +147,8 @@ repositories {
     }
 }
 
-var mappingsAttribute = Attribute.of("net.minecraft.mappings", String.class)
-
-dependencies {
-    attributesSchema {
-        attribute(mappingsAttribute)
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
 jar {
@@ -187,30 +166,39 @@ jar {
     }
 }
 
+tasks.named("shadowJar") {
+    archiveClassifier = ''
+    configurations = project.configurations.named('shade').map { [it] }
+    relocate 'net.jpountz', "${project.group}.shade.net.jpountz"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+}
+
+assemble.dependsOn shadowJar
+
 test {
     useJUnit()
     maxHeapSize = '1G'
 }
 
 publishing {
-    publications.register('mavenJava', MavenPublication) {
-        artifact tasks.named("jar")
-        artifact tasks.named("jarJar")
-        artifact tasks.named("sourcesJar")
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifact shadowJar
+            artifact sourcesJar
+            artifactId = archivesBaseName
+        }
     }
     repositories {
         maven {
-            url = uri("sftp://teamopenindustry.cc:22/var/www/html/maven/")
+            url = "sftp://teamopenindustry.cc:22/var/www/html/maven/"
             credentials {
                 username = "mavenci"
                 password = System.getenv("MAVENCI_PASS")
             }
         }
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
 tasks.register('showBuildInfo') {
@@ -235,5 +223,3 @@ eclipse {
     // Run when importing the project
     //synchronizationTasks 'genEclipseRuns'
 }
-
-// NOTE: Merging of source sets is now controlled by the property 'net.minecraftforge.gradle.merge-source-sets'
