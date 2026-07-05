@@ -11,8 +11,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.function.Function;
 

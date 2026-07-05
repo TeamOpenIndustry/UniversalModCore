@@ -16,9 +16,13 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
@@ -30,6 +34,8 @@ public class RenderContext {
 
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
+
+    private static IntBuffer fourIntBuffer;
 
     public static float lastLightX;
     public static float lastLightY;
@@ -139,19 +145,31 @@ public class RenderContext {
             restore.add(state.blend.apply());
         }
 
-        //Always assume scissor test is disabled
-        if (state.scissor_test != null && state.scissor_test && state.scissor_range != null) {
-            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
-            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+        if (state.scissor_test != null) {
+            boolean oldValue = GL11.glGetBoolean(GL11.GL_SCISSOR_TEST);
+            applyBool(GL11.GL_SCISSOR_TEST, state.scissor_test);
+            if (state.scissor_test && state.scissor_range != null) {
+                int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
+                int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-            int x = (int) state.scissor_range.getMinX() * scaleFactor;
-            int y = (int) state.scissor_range.getMinY() * scaleFactor;
-            int width = (int) state.scissor_range.getWidth() * scaleFactor;
-            int height = (int) state.scissor_range.getHeight() * scaleFactor;
+                int x = (int) state.scissor_range.getMinX() * scaleFactor;
+                int y = (int) state.scissor_range.getMinY() * scaleFactor;
+                int width = (int) state.scissor_range.getWidth() * scaleFactor;
+                int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
-            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-            RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
-            restore.add(RenderSystem::disableScissor);
+                if (fourIntBuffer == null) {
+                    //16 ints in case it overflows...
+                    fourIntBuffer = ByteBuffer.allocateDirect(64).order(ByteOrder.nativeOrder()).asIntBuffer();
+                }
+                fourIntBuffer.position(0);
+                GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, fourIntBuffer);
+                int[] oldScissor = new int[]{fourIntBuffer.get(0), fourIntBuffer.get(1), fourIntBuffer.get(2), fourIntBuffer.get(3)};
+                restore.add(() -> GL11.glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]));
+
+                //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+                GL11.glScissor(x, screenHeight - y - height, width, height);
+            }
+            restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
         }
         RenderContext.checkError();
 

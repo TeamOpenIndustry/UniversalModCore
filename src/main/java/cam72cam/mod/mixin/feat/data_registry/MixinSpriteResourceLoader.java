@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.texture.atlas.SpriteSource;
 import net.minecraft.client.renderer.texture.atlas.SpriteSourceList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,7 +26,7 @@ public class MixinSpriteResourceLoader {
         if(p_261709_.getPath().equals("blocks")) {
             //Only hack into main sprite
             RegisterTextureSpriteEvent event = new RegisterTextureSpriteEvent(list);
-            net.neoforged.fml.ModLoader.postEvent(event);
+            ModLoader.get().postEvent(event);
         }
     }
 }

@@ -8,9 +8,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.neoforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidUtil;
 
 import java.util.function.Supplier;
 
@@ -159,7 +160,7 @@ public class ItemStack {
 
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
-        internal().hurtAndBreak(i, (ServerLevel) player.internal.level(), player.internal, (s) -> {});
+        internal().hurtAndBreak(i, (ServerLevel) player.internal.level(), (ServerPlayer) player.internal, (s) -> {});
     }
 
     /** Completely null out the tag compound */

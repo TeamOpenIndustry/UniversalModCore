@@ -16,21 +16,22 @@ import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import java.util.*;
 
 import net.minecraft.util.Unit;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.common.CreativeModeTabRegistry;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.data.loading.DatagenModLoader;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.common.CreativeModeTabRegistry;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.data.loading.DatagenModLoader;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraft.resources.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,11 +59,11 @@ import java.io.File;
 import java.io.IOException;
 
 /** UMC Mod, do not touch... */
-@net.neoforged.fml.common.Mod(ModCore.MODID)
+@net.minecraftforge.fml.common.Mod(ModCore.MODID)
 public class ModCore {
     public static final String MODID = "universalmodcore";
     public static final String NAME = "UniversalModCore";
-    public static final String VERSION = "1.2.3";
+    public static final String VERSION = "1.3.1";
     public static ModCore instance;
     public static boolean hasResources;
     private static boolean isInReload;
@@ -78,9 +79,10 @@ public class ModCore {
     }
 
     /** Called during Mod Construction phase */
-    public ModCore(IEventBus modEventBus, Dist dist) {
+    public ModCore(FMLJavaModLoadingContext context) {
         System.out.println("Welcome to UniversalModCore!");
         instance = this;
+        IEventBus modEventBus = context.getModEventBus();
 
         ModCore.register(new Internal());
         proxy.setup();
@@ -92,7 +94,7 @@ public class ModCore {
         //FMLJavaModLoadingContext.get().getModEventBus().addListener(this::serverStarted);
         CommonEvents.Item.CREATIVE_TAB.register(modEventBus);
 
-        NeoForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     /** INIT Phase (Forge) */
@@ -442,11 +444,15 @@ public class ModCore {
 
     /* Loader Utils */
     public static String loaderBrand() {
-        return "neoforge";
+        return "forge";
     }
 
     public static int mcVersion() {
         return 12101;
+    }
+
+    public static String semanticVersion() {
+        return "1.21.1-forge";
     }
 
     public static boolean isDevelopmentEnvironment() {

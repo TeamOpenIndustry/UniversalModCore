@@ -5,9 +5,6 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
-import dev.lambdaurora.lambdynlights.api.DynamicLightsContext;
-import dev.lambdaurora.lambdynlights.api.DynamicLightsInitializer;
-import dev.lambdaurora.lambdynlights.api.item.ItemLightSourceManager;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -144,29 +141,6 @@ public class Light {
     }
 
     private static boolean isLDLInstalled() {
-        try {
-            Class<?> cls = Class.forName("dev.lambdaurora.lambdynlights.LambDynLights");
-            return true;
-        } catch (ClassNotFoundException ignored) {
-            return false;
-        }
-    }
-
-    public static class UMCDynLightInitializer implements DynamicLightsInitializer {
-        @Override
-        public void onInitializeDynamicLights(DynamicLightsContext lightCtx) {
-            lightCtx.entityLightSourceManager().onRegisterEvent().register(context -> {
-                for (int i = 1; i <= 15; i++) {
-                    EntityType<LightEntity> et = types[i];
-                    context.register(et, i);
-                }
-            });
-        }
-
-        @Deprecated(forRemoval = true)
-        @Override
-        public void onInitializeDynamicLights(ItemLightSourceManager itemLightSourceManager) {
-            //Deprecated
-        }
+        return false; // Cannot be installed on MinecraftForge >1.20.1
     }
 }

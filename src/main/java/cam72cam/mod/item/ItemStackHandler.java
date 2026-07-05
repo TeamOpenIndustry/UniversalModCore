@@ -19,14 +19,14 @@ import java.util.function.Function;
 /** Standard IInventory implementation */
 @TagMapped(ItemStackHandler.TagMapper.class)
 public class ItemStackHandler implements IInventory {
-    public final net.neoforged.neoforge.items.ItemStackHandler internal;
+    public final net.minecraftforge.items.ItemStackHandler internal;
     protected BiPredicate<Integer, ItemStack> checkSlot = (integer, itemStack) -> true;
     private final List<Consumer<Integer>> onChanged = new ArrayList<>();
     private Function<Integer, Integer> slotLimit = null;
 
 
     public ItemStackHandler(int size) {
-        this.internal = new net.neoforged.neoforge.items.ItemStackHandler(size) {
+        this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
             @Override
             public void setStackInSlot(int slot, @Nonnull net.minecraft.world.item.ItemStack stack) {
                 if (checkSlot.test(slot, new ItemStack(stack))) {

@@ -39,7 +39,7 @@ void main() {
         vertexColor = Color;
         lightMapColor = texelFetch(Sampler2, ivec2(15, 15), 0);
     } else {
-        vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, norm.xyz, Color);
+        vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, normalize(norm.xyz), Color);
         lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
     }
 

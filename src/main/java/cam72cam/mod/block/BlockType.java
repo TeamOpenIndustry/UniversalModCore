@@ -33,7 +33,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.capabilities.Capabilities;
 
 import javax.annotation.Nullable;
 
@@ -68,33 +67,6 @@ public abstract class BlockType {
         CommonEvents.Block.REGISTER.subscribe(helper -> {
             internal = getBlock();
             helper.register(id.internal, internal);
-        });
-
-        CommonEvents.Block.REGISTER_CAPABILITY.subscribe(event -> {
-            event.registerBlock(Capabilities.ItemHandler.BLOCK,
-                                (level, pos, state, be, side) -> {
-                                    if (be instanceof TileEntity tile) {
-                                        return tile.getItemHandler(side);
-                                    }
-                                    return null;
-                                },
-                                internal);
-            event.registerBlock(Capabilities.FluidHandler.BLOCK,
-                                (level, pos, state, be, side) -> {
-                                    if (be instanceof TileEntity tile) {
-                                        return tile.getFluidHandler(side);
-                                    }
-                                    return null;
-                                },
-                                internal);
-            event.registerBlock(Capabilities.EnergyStorage.BLOCK,
-                                (level, pos, state, be, side) -> {
-                                    if (be instanceof TileEntity tile) {
-                                        return tile.getEnergyStorage(side);
-                                    }
-                                    return null;
-                                },
-                                internal);
         });
     }
 

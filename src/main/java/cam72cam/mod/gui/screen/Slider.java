@@ -2,7 +2,7 @@ package cam72cam.mod.gui.screen;
 
 import cam72cam.mod.entity.Player;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
+import net.minecraftforge.client.gui.widget.ForgeSlider;
 import java.util.function.Supplier;
 
 import java.util.function.Consumer;
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 /** Standard slider */
 public class Slider extends Button {
     /** Internal wrapper to add onSlider Hook */
-    private static class InternalForgeSlider extends ExtendedSlider {
+    private static class InternalForgeSlider extends ForgeSlider {
         private Runnable clicker = () -> {};
         private Supplier<String> setter = () -> "";
 
@@ -69,11 +69,11 @@ public class Slider extends Button {
     }
 
     public int getValueInt() {
-        return ((ExtendedSlider) button).getValueInt();
+        return ((ForgeSlider) button).getValueInt();
     }
 
     public double getValue() {
-        return ((ExtendedSlider) button).getValue();
+        return ((ForgeSlider) button).getValue();
     }
 
     @Override

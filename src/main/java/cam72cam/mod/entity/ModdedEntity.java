@@ -9,12 +9,12 @@ import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
-import net.minecraft.core.registries.BuiltInRegistries;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -24,9 +24,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -34,13 +35,22 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Internal class which extends MC's Entity.  Do not use directly */
-public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
+public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     // Reference to the entity that this is representing
     private CustomEntity self;
 
     // Keeps track of where passengers are within this entity
     @TagField(value = "passengers", mapper = PassengerMapper.class)
     private Map<UUID, Vec3d> passengerPositions = new HashMap<>();
+
+    //Data synchronization
+    static final EntityDataAccessor<Float> PREV_ROLL = SynchedEntityData.defineId(ModdedEntity.class, EntityDataSerializers.FLOAT);
+    static final EntityDataAccessor<Float> ROLL = SynchedEntityData.defineId(ModdedEntity.class, EntityDataSerializers.FLOAT);
+    //Data storage
+    @TagField
+    private float roll = 0;
+    @TagField
+    private float prevRoll = 0;
 
     // All of the known seats attached to this entity
     private final List<SeatEntity> seats = new ArrayList<>();
@@ -110,6 +120,12 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         } catch (SerializationException e) {
             ModCore.catching(e, "Error during entity load: %s - %s", this, data);
         }
+        applySavedVelocity(data);
+
+        if (!this.level().isClientSide()) {
+            getEntityData().set(ROLL, this.roll);
+            getEntityData().set(PREV_ROLL, this.prevRoll);
+        }
 
         TagCompound selfData = data.get("selfData");
         if (selfData == null) {
@@ -165,6 +181,9 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
      * @see #load
      */
     private void save(TagCompound data) {
+        this.roll = getEntityData().get(ROLL);
+        this.prevRoll = getEntityData().get(PREV_ROLL);
+
         try {
             TagSerializer.serialize(data, this);
         } catch (SerializationException e) {
@@ -192,7 +211,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see #load */
     @Override
-    public final void readSpawnData(RegistryFriendlyByteBuf additionalData) {
+    public final void readSpawnData(FriendlyByteBuf additionalData) {
         TagCompound data = new TagCompound(additionalData.readNbt());
         if (cam72cam.mod.world.World.get(level()) == null) {
             // This can happen during a sudden disconnect...
@@ -207,7 +226,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    public final void writeSpawnData(RegistryFriendlyByteBuf buffer) {
+    public final void writeSpawnData(FriendlyByteBuf buffer) {
         TagCompound data = new TagCompound();
         data.set("sync", self.sync);
         save(data);
@@ -216,7 +235,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     @Override
     public EntityType<?> getType() {
-        return legacyId == null ? super.getType() : BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.tryParse(legacyId));
+        return legacyId == null ? super.getType() : ForgeRegistries.ENTITY_TYPES.getValue(ResourceLocation.parse(legacyId));
     }
 
     /* ITickable */
@@ -228,6 +247,9 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
      */
     @Override
     public final void tick() {
+        if (!level().isClientSide()) {
+            this.getEntityData().set(PREV_ROLL, getEntityData().get(ROLL));
+        }
         iTickable.onTick();
         try {
             self.sync.send();
@@ -277,7 +299,8 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     /** @see IKillable */
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        //TODO 1.21.1
+        builder.define(PREV_ROLL, 0F);
+        builder.define(ROLL, 0F);
     }
 
     @Override
@@ -306,6 +329,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     /** Since 1.14 we can't get rider's world position simply as it returns their riding entity's position */
     public Vec3d calculateRiderWorldPosition(cam72cam.mod.entity.Entity entity) {
         //This should work without pitch applied now
+        //TODO Pitch and roll
         if (passengerPositions.containsKey(entity.getUUID())) {
             return calculatePassengerPosition(passengerPositions.get(entity.getUUID()));
         }
@@ -549,6 +573,14 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         if (self.allowsDefaultMovement()) {
             super.setDeltaMovement(x, y, z);
         }
+    }
+
+    private void applySavedVelocity(TagCompound data) {
+        ListTag vel = data.internal.getList("Motion", 6);
+        double x = vel.getDouble(0);
+        double y = vel.getDouble(1);
+        double z = vel.getDouble(2);
+        super.setDeltaMovement(x, y, z);
     }
 
     /*

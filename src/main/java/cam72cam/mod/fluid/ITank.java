@@ -2,9 +2,9 @@ package cam72cam.mod.fluid;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidUtil;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +21,7 @@ public interface ITank {
      * See ImmersiveRailroading's FreightTank for an example.
      */
     static ITank getTank(ItemStack inputCopy, Consumer<ItemStack> onUpdate) {
-        Optional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal());
+        Optional<IFluidHandlerItem> handler = FluidUtil.getFluidHandler(inputCopy.internal()).resolve();
         if (handler.isEmpty()) {
             return null;
         }
@@ -39,7 +39,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(0, new net.neoforged.neoforge.fluids.FluidStack(f, 1)));
+                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(0, new net.minecraftforge.fluids.FluidStack(f, 1)));
             }
 
             @Override
@@ -77,7 +77,7 @@ public interface ITank {
 
             @Override
             public boolean allows(Fluid fluid) {
-                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(i, new net.neoforged.neoforge.fluids.FluidStack(f, 1)));
+                return fluid.internal.stream().anyMatch(f -> internal.isFluidValid(i, new net.minecraftforge.fluids.FluidStack(f, 1)));
             }
 
             @Override

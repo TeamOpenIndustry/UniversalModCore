@@ -1,1 +1,1 @@
-You don't need to run anything manually, NeoGradle has done them for you
+You don't need to run anything manually, ForgeGradle 7 has done them for you

@@ -18,21 +18,18 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.event.entity.EntityEvent;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
-import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.RegisterEvent;
-import net.neoforged.neoforge.registries.RegisterEvent.RegisterHelper;
-import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.TickEvent.LevelTickEvent;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegisterEvent;
+import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
+import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 
 import java.util.function.Consumer;
 
@@ -54,7 +51,6 @@ public class CommonEvents {
 
     public static final class Block {
         public static final Event<Consumer<RegisterHelper<net.minecraft.world.level.block.Block>>> REGISTER = new Event<>();
-        public static final Event<Consumer<RegisterCapabilitiesEvent>> REGISTER_CAPABILITY = new Event<>();
         public static final Event<EventBusForge.BlockBrokenEvent> BROKEN = new Event<>();
         public static final Event<Consumer<RegisterBlockTagEvent>> TAGS = new Event<>();
     }
@@ -85,10 +81,6 @@ public class CommonEvents {
         public static final Event<Consumer<PermissionGatherEvent.Nodes>> NODES = new Event<>();
     }
 
-    public static final class Networking {
-        public static final Event<Consumer<PayloadRegistrar>> REGISTER_PACKET = new Event<>();
-    }
-
     @EventBusSubscriber(modid = ModCore.MODID)
     public static final class EventBusForge {
         // World
@@ -116,8 +108,8 @@ public class CommonEvents {
         public static void onWorldTick(LevelTickEvent.Pre event) {
             //Since 1.18.2 this is called both server and client
             //We only want server side
-            if (!event.getLevel().isClientSide()) {
-                World.TICK.execute(x -> x.accept(event.getLevel()));
+            if (!event.level.isClientSide()) {
+                World.TICK.execute(x -> x.accept(event.level));
             }
         }
 
@@ -161,7 +153,7 @@ public class CommonEvents {
 
     }
 
-    @EventBusSubscriber(modid = ModCore.MODID)
+    @EventBusSubscriber(modid = ModCore.MODID, bus = EventBusSubscriber.Bus.MOD)
     public static final class EventBusMod {
         static {
             registerEvents();
@@ -176,7 +168,7 @@ public class CommonEvents {
             event.register(BuiltInRegistries.MENU.key(), helper -> CONTAINER_REGISTRY.execute(x -> x.accept(helper)));
         }
 
-        @SubscribeEvent
+        /*@SubscribeEvent
         public static void registerCapability(RegisterCapabilitiesEvent event) {
             Block.REGISTER_CAPABILITY.execute(x -> x.accept(event));
         }
@@ -187,7 +179,7 @@ public class CommonEvents {
                                                     .versioned(Packet.VERSION)
                                                     .optional();
             Networking.REGISTER_PACKET.execute(x -> x.accept(registrar));
-        }
+        }*/
 
         @SubscribeEvent
         public static void registerBlockTags(RegisterBlockTagEvent event) {

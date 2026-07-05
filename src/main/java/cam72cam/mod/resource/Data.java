@@ -2,8 +2,8 @@ package cam72cam.mod.resource;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.Resource;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -144,7 +144,7 @@ class Data {
     public static class ServerProxy extends DataProxy {
         private InputStream getEmbeddedResourceStream(Identifier location) throws IOException {
             //Check our custom logic first
-            InputStream stream = BuiltinPack.loadServerResource(location);
+            InputStream stream = BuiltinPack.loadServerSideResource(location);
             if (stream != null) {
                 return stream;
             }

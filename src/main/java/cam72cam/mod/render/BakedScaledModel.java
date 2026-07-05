@@ -9,8 +9,8 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.IQuadTransformer;
-import net.neoforged.neoforge.client.model.QuadTransformers;
+import net.minecraftforge.client.model.IQuadTransformer;
+import net.minecraftforge.client.model.QuadTransformers;
 import org.joml.Matrix4f;
 import util.Matrix4;
 

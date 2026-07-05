@@ -4,11 +4,13 @@ import cam72cam.mod.Config;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
+import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
@@ -34,10 +36,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.ExtraFaceData;
-import net.neoforged.neoforge.client.model.ItemLayerModel;
-import net.neoforged.neoforge.client.model.SimpleModelState;
-import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
+import net.minecraftforge.client.model.*;
+import net.minecraftforge.client.model.geometry.IGeometryBakingContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -62,6 +63,16 @@ public class ItemRender {
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
 
     private static final Executor POOL = Executors.newFixedThreadPool(1);
+
+    //String template for simple item models
+    private static final String modelTemplate = "models/item/%s.json";
+    private static final String jsonTemplate = """
+            {
+                "parent": "minecraft:item/generated",
+                "textures": {
+                    "layer0": "%s"
+                }
+            }""";
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
@@ -131,8 +142,9 @@ public class ItemRender {
             }, foo, ItemOverrides.EMPTY/*, tex.internal*/));
         });
 
-        ClientEvents.TEXTURE_STITCH.subscribe(list -> list.addSprite(tex.internal));
-        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper().register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEvents.TEXTURE_STITCH.subscribe(evt -> evt.addSprite(tex.internal));
+        ClientEvents.MODEL_CREATE.subscribe(() -> Minecraft.getInstance().getItemRenderer().getItemModelShaper()
+                .register(item.internal, new ModelResourceLocation(item.getRegistryName().internal, "")));
     }
 
     /** Register a complex model for an item */

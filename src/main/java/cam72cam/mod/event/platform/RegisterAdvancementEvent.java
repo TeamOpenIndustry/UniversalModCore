@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.advancements.*;
 import net.minecraft.advancements.critereon.*;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.bus.api.Event;
-import net.neoforged.fml.event.IModBusEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.fml.event.IModBusEvent;
 
 import java.util.ArrayList;
 import java.util.List;

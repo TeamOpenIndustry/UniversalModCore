@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.neoforged.fml.ModLoader;
+import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,6 +28,6 @@ public class MixinAdvancement {
     public void postAdvancementReload(Map<ResourceLocation, JsonElement> p_136034_, ResourceManager p_136035_, ProfilerFiller p_136036_, CallbackInfo ci,
                                       @Local ImmutableMap.Builder<ResourceLocation, AdvancementHolder> map) {
         RegisterAdvancementEvent event = new RegisterAdvancementEvent(map);
-        ModLoader.postEvent(event);
+        ModLoader.get().postEvent(event);
     }
 }

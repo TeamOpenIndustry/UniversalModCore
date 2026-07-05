@@ -11,8 +11,8 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.SerializationException;
-import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.util.Facing;
+import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
 
 /**

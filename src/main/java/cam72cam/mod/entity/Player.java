@@ -12,9 +12,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.server.permission.PermissionAPI;
-import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
-import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
+import net.minecraftforge.server.permission.PermissionAPI;
+import net.minecraftforge.server.permission.nodes.PermissionNode;
+import net.minecraftforge.server.permission.nodes.PermissionTypes;
 
 import static net.minecraft.world.InteractionHand.MAIN_HAND;
 import static net.minecraft.world.InteractionHand.OFF_HAND;

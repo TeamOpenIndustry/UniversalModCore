@@ -1,7 +1,7 @@
 package cam72cam.mod.text;
 
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.common.CommonHooks;
+import net.minecraftforge.common.ForgeHooks;
 
 import java.util.Arrays;
 
@@ -26,6 +26,6 @@ public class PlayerMessage {
 
     /** URL Formatted (clickable) */
     public static PlayerMessage url(String url) {
-        return new PlayerMessage(CommonHooks.newChatWithLinks(url));
+        return new PlayerMessage(ForgeHooks.newChatWithLinks(url));
     }
 }
