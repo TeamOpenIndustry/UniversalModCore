@@ -1,12 +1,15 @@
-package cam72cam.mod.render.cutter.adapter;
+package cam72cam.mod.util;
 
 import cam72cam.mod.math.Vec3d;
 import net.minecraft.core.Direction;
 
-public final class BakedQuadDirectionUtil {
+public final class BlockDirectionUtil {
 
-    private BakedQuadDirectionUtil() {}
+    private BlockDirectionUtil() {}
 
+    /**
+     * This convert Vec3d normal to minecraft block direction
+     * */
     public static Direction fromNormal(Vec3d normal) {
 
         double ax = Math.abs(normal.x);

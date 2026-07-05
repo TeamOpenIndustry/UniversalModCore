@@ -2,6 +2,7 @@ package cam72cam.mod.render.cutter.adapter;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.cutter.*;
+import cam72cam.mod.util.BlockDirectionUtil;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -28,7 +29,7 @@ public class BakedQuadAdapter
 
         return new QuadTemplate(
                 quad.getSprite(),
-                BakedQuadDirectionUtil.fromNormal(
+                BlockDirectionUtil.fromNormal(
                         plane.normal.scale(-1)
                 ),
                 quad.getTintIndex(),
