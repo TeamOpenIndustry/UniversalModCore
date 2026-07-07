@@ -446,7 +446,7 @@ public class World {
 
     /** Height of the ground for precipitation purposes at the given block */
     public Vec3i getPrecipitationHeight(Vec3i pos) {
-        return new Vec3i(internal.getHeight(Heightmap.Type.WORLD_SURFACE, pos.internal()));
+        return new Vec3i(internal.getHeight(Heightmap.Type.MOTION_BLOCKING, pos.internal()));
     }
 
     /** Set the given pos to air */
