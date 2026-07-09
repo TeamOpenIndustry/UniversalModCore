@@ -37,8 +37,8 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 
     //Data synchronization
     //1.7 uses int as keys so here we hash the names...
-    static final int PREV_ROLL = 0x4DE076B2;
-    static final int ROLL = 0x41AEAD17;
+    static final int PREV_ROLL = 24;
+    static final int ROLL = 25;
     //Data storage
     @TagField
     private float roll = 0;
