@@ -3,10 +3,10 @@ package cam72cam.mod.render.cutter.adapter;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.cutter.*;
 import cam72cam.mod.util.BlockDirectionUtil;
+import cam72cam.mod.util.Facing;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +99,7 @@ public class BakedQuadAdapter
 
         applyNormal(
                 polygon,
-                template.direction
+                template.facing
         );
 
         List<BakedQuad> result = new ArrayList<>();
@@ -120,7 +120,7 @@ public class BakedQuadAdapter
             result.add(new BakedQuad(
                     data,
                     template.tintIndex,
-                    template.direction,
+                    template.facing.internal,
                     template.sprite,
                     template.shade,
                     template.ambientOcclusion
@@ -219,11 +219,11 @@ public class BakedQuadAdapter
 
     private static void applyNormal(
             Polygon polygon,
-            Direction direction) {
+            Facing facing) {
 
-        byte nx = (byte) (direction.getStepX() * 127);
-        byte ny = (byte) (direction.getStepY() * 127);
-        byte nz = (byte) (direction.getStepZ() * 127);
+        byte nx = (byte) (facing.getXMultiplier() * 127);
+        byte ny = (byte) (facing.getYMultiplier() * 127);
+        byte nz = (byte) (facing.getZMultiplier() * 127);
 
         for (ClipVertex vertex : polygon.vertices) {
             vertex.nx = nx;

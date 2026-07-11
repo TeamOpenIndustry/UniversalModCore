@@ -1,13 +1,13 @@
 package cam72cam.mod.render.cutter.adapter;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.Direction;
+import cam72cam.mod.util.Facing;
 
 public class QuadTemplate {
 
     public final TextureAtlasSprite sprite;
 
-    public final Direction direction;
+    public final Facing facing;
 
     public final int tintIndex;
 
@@ -17,13 +17,13 @@ public class QuadTemplate {
 
     public QuadTemplate(
             TextureAtlasSprite sprite,
-            Direction direction,
+            Facing facing,
             int tintIndex,
             boolean shade,
             boolean ambientOcclusion) {
 
         this.sprite = sprite;
-        this.direction = direction;
+        this.facing = facing;
         this.tintIndex = tintIndex;
         this.shade = shade;
         this.ambientOcclusion = ambientOcclusion;
