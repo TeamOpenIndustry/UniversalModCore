@@ -71,7 +71,10 @@ public class ItemStack {
     }
 
     public ItemStack copy() {
-        return new ItemStack(internal().copy());
+        ItemStack stack = new ItemStack(internal().copy());
+        //We want a deep copy here
+        stack.setTagCompound(new TagCompound(getTagCompound().internal.copy()));
+        return stack;
     }
 
     /** Serialize */
