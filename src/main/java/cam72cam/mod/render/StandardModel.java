@@ -59,7 +59,6 @@ public class StandardModel {
 
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform, plane));
-//        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(new net.minecraft.world.item.ItemStack(state.getBlock().asItem()), transform));
         return this;
@@ -71,7 +70,6 @@ public class StandardModel {
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(state, new BakedScaledModel(model, transform, plane)));
-//        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
         return this;
     }
 

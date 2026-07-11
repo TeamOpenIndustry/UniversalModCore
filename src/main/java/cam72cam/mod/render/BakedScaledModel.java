@@ -30,9 +30,9 @@ import java.util.Map;
 class BakedScaledModel implements BakedModel {
     // I know this is evil and I love it :D
 
-    private final boolean isCut;
     private final Matrix4 transform;
     private final BakedModel source;
+    private final boolean isCut;
     private final Map<Direction, List<BakedQuad>> quadCache = new HashMap<>();
 
     public BakedScaledModel(BakedModel source, Matrix4 transform) {
