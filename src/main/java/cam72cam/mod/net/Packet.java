@@ -182,7 +182,7 @@ public abstract class Packet {
             }
             if (message.packet.getPlayer() == null) {
                 try {
-                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.id));
+                    throw new Exception(String.format("Invalid Packet %s: missing player\nConsider installing an offline UUID fix mod.", message.packet.id));
                 } catch (Exception e) {
                     ModCore.catching(e);
                     return;
