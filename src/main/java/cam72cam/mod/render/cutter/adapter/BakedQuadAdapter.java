@@ -80,7 +80,7 @@ public class BakedQuadAdapter
                     primitive.getFace(),
                     primitive.getSprite(),
                     primitive.shouldApplyDiffuseLighting(),
-                    DefaultVertexFormats.BLOCK
+                    primitive.getFormat()
             ));
         }
 
