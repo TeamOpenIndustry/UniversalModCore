@@ -159,21 +159,19 @@ public class BakedQuadAdapter
 
         int light = data[base + 6];
 
-        int packed = data[base + 7];
-
-        byte nx = (byte) packed;
-        byte ny = (byte) (packed >> 8);
-        byte nz = (byte) (packed >> 16);
+// There is no normal for vertex in 1.12
+//        int packed = data[base + 7];
+//
+//        byte nx = (byte) packed;
+//        byte ny = (byte) (packed >> 8);
+//        byte nz = (byte) (packed >> 16);
 
         return new ClipVertex(
                 new Vec3d(x, y, z),
                 u,
                 v,
                 color,
-                light,
-                nx,
-                ny,
-                nz
+                light
         );
     }
 
@@ -200,10 +198,11 @@ public class BakedQuadAdapter
 
         data[base + 6] = v.light;
 
-        data[base + 7] =
-                (v.nx & 0xff)
-                        | ((v.ny & 0xff) << 8)
-                        | ((v.nz & 0xff) << 16);
+// There is no normal for vertex in 1.12
+//        data[base + 7] =
+//                (v.nx & 0xff)
+//                        | ((v.ny & 0xff) << 8)
+//                        | ((v.nz & 0xff) << 16);
     }
 
     private static void applySpriteUV(
@@ -212,8 +211,8 @@ public class BakedQuadAdapter
 
         for (ClipVertex vertex : polygon.vertices) {
 
-            vertex.u = sprite.getInterpolatedU(vertex.u);
-            vertex.v = sprite.getInterpolatedV(vertex.v);
+            vertex.u = sprite.getInterpolatedU(vertex.u * 16);
+            vertex.v = sprite.getInterpolatedV(vertex.v * 16);
         }
     }
 

@@ -58,7 +58,12 @@ public class StandardModel {
         IBlockState state = Blocks.CONCRETE.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform, plane)));
+        models.add(Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        ));
         return this;
     }
 
@@ -67,7 +72,12 @@ public class StandardModel {
         layers = Math.max(1, Math.min(8, layers));
         IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
+        models.add(Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        ));
         return this;
     }
 
@@ -75,7 +85,12 @@ public class StandardModel {
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform, Plane plane) {
         IBlockState state = itemToBlockState(bed);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform, plane)));
+        models.add(Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        ));
         return this;
     }
 
