@@ -34,7 +34,8 @@ public class BakedQuadAdapter
                 ),
                 quad.getTintIndex(),
                 quad.shouldApplyDiffuseLighting(),
-                false
+                false,
+                quad.getFormat()
         );
     }
 

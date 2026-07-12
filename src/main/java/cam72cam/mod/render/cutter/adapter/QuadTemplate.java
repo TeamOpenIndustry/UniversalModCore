@@ -2,6 +2,7 @@ package cam72cam.mod.render.cutter.adapter;
 
 import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 
 public class QuadTemplate {
 
@@ -15,17 +16,21 @@ public class QuadTemplate {
 
     public final boolean ambientOcclusion;
 
+    public final VertexFormat format;
+
     public QuadTemplate(
             TextureAtlasSprite sprite,
             Facing facing,
             int tintIndex,
             boolean shade,
-            boolean ambientOcclusion) {
+            boolean ambientOcclusion,
+            VertexFormat format) {
 
         this.sprite = sprite;
         this.facing = facing;
         this.tintIndex = tintIndex;
         this.shade = shade;
         this.ambientOcclusion = ambientOcclusion;
+        this.format = format;
     }
 }
