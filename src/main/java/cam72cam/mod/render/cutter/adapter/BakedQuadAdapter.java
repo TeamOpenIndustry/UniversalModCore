@@ -34,7 +34,8 @@ public class BakedQuadAdapter
                 ),
                 quad.getTintIndex(),
                 quad.isShade(),
-                quad.hasAmbientOcclusion()
+                quad.hasAmbientOcclusion(),
+                null // For 1.12 there is quad.getFormat but we do not need this in 1.21
         );
     }
 
