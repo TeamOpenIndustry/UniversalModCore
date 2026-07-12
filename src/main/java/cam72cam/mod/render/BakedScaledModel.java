@@ -62,13 +62,13 @@ class BakedScaledModel implements IBakedModel {
             all.addAll(source.getQuads(null, dir, rand));
         }
 
+        all = transformQuads(all);
+
         all = MeshPlaneCutter.cut(
                 all,
                 plane,
                 new BakedQuadAdapter()
         );
-
-        all = transformQuads(all);
 
         for (BakedQuad quad : all) {
 
