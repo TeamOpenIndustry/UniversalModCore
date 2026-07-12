@@ -58,7 +58,12 @@ public class StandardModel {
                 .findFirst().get();
 
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform, plane));
+        Pair<BlockState, BakedModel> pair = Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        );
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(new net.minecraft.world.item.ItemStack(state.getBlock().asItem()), transform));
         return this;
@@ -69,7 +74,12 @@ public class StandardModel {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform, plane)));
+        Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        );
         return this;
     }
 
@@ -80,7 +90,12 @@ public class StandardModel {
         if (model instanceof WeightedBakedModel weightedBakedModel) {
             //TODO Modify result to make it not dynamic
         }
-        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform, plane));
+        Pair<BlockState, BakedModel> pair = Pair.of(
+                state,
+                plane == null
+                        ? new BakedScaledModel(model, transform)
+                        : new BakedScaledModel(model, transform, plane)
+        );
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
