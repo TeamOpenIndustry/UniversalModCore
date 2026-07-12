@@ -124,7 +124,7 @@ public class BakedQuadAdapter
                     template.facing.internal,
                     template.sprite,
                     template.shade,
-                    DefaultVertexFormats.BLOCK
+                    template.format
             ));
         }
 
