@@ -13,7 +13,6 @@ import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Function;
 
@@ -23,21 +22,21 @@ public class Mouse {
      * Checks if the left mouse button is currently pressed.
      */
     public static boolean isLMBDown() {
-        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == 1;
+        return Minecraft.getInstance().mouseHelper.isLeftDown();
     }
 
     /**
      * Checks if the right mouse button is currently pressed.
      */
     public static boolean isRMBDown() {
-        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_RIGHT) == 1;
+        return Minecraft.getInstance().mouseHelper.isRightDown();
     }
 
     /**
      * Checks if the middle mouse button exists and is currently pressed.
      */
     public static boolean isMMBDown() {
-        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_MIDDLE) == 1;
+        return Minecraft.getInstance().mouseHelper.isMiddleDown();
     }
 
     /**

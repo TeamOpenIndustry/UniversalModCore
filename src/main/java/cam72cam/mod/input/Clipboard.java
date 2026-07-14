@@ -1,13 +1,13 @@
 package cam72cam.mod.input;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Utility class to interact with the system clipboard.
  */
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class Clipboard {
     /**
      * Retrieves the current text content of the system clipboard.
@@ -15,7 +15,7 @@ public class Clipboard {
      * @return the clipboard string, or {@code ""} if the clipboard is empty or inaccessible
      */
     public static String getClipboard() {
-        return GuiScreen.getClipboardString();
+        return Minecraft.getInstance().keyboardListener.getClipboardString();
     }
 
     /**
@@ -24,6 +24,6 @@ public class Clipboard {
      * @param newText the text to place on the clipboard
      */
     public static void setClipboard(String newText) {
-        GuiScreen.setClipboardString(newText);
+        Minecraft.getInstance().keyboardListener.setClipboardString(newText);
     }
 }
