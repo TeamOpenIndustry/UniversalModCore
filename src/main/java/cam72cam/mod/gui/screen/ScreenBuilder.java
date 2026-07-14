@@ -160,6 +160,9 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
 
         for (TextField field : textFields) {
             if (field.isVisible() && field.internal.mouseClicked(x, y, hand == Player.Hand.PRIMARY ? 0 : 1)) {
+                if (active != null) {
+                    active.setFocused(false);
+                }
                 active = field;
                 field.setFocused(true);
                 return true;

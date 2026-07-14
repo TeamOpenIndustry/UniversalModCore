@@ -6,7 +6,6 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.custom.IClickable;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.Event;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
@@ -14,12 +13,55 @@ import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Function;
 
-/** Only used for MC bugfixes, don't use directly */
+@OnlyIn(Dist.CLIENT)
 public class Mouse {
-    @OnlyIn(Dist.CLIENT)
+    /**
+     * Checks if the left mouse button is currently pressed.
+     */
+    public static boolean isLMBDown() {
+        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == 1;
+    }
+
+    /**
+     * Checks if the right mouse button is currently pressed.
+     */
+    public static boolean isRMBDown() {
+        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_RIGHT) == 1;
+    }
+
+    /**
+     * Checks if the middle mouse button exists and is currently pressed.
+     */
+    public static boolean isMMBDown() {
+        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), GLFW.GLFW_MOUSE_BUTTON_MIDDLE) == 1;
+    }
+
+    /**
+     * Registers a 3D space dragging handler.
+     *
+     * @param handler receives the pressing key ({@link cam72cam.mod.entity.Player.Hand#PRIMARY} as LMB, {@link cam72cam.mod.entity.Player.Hand#SECONDARY} for others)
+     *                and returns a boolean indicating whether the event should be passed down or not
+     */
+    public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
+        ClientEvents.DRAG.subscribe(handler);
+    }
+
+    /**
+     * Get the screen space mouse position.
+     *
+     * @return  the screen space mouse position from the start point of dragging, or {@code null} if the mouse is not pressed.
+     */
+    public static Vec3d getDrag() {
+        return ClientEvents.ClientEventBusForge.getDragPos();
+    }
+
+    /**
+     * Internal, don't use
+     */
     public static void registerClientEvents() {
         ClientEvents.CLICK.subscribe(button -> {
             // So it turns out that the client sends mouse click packets to the server regardless of
@@ -60,6 +102,9 @@ public class Mouse {
         });
     }
 
+    /**
+     * Internal, don't use
+     */
     public static class MousePressPacket extends Packet {
         @TagField
         private Player.Hand hand;
@@ -86,13 +131,5 @@ public class Mouse {
                 }
             }
         }
-    }
-
-    public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
-        ClientEvents.DRAG.subscribe(handler);
-    }
-
-    public static Vec3d getDrag() {
-        return ClientEvents.ClientEventBusForge.getDragPos();
     }
 }
