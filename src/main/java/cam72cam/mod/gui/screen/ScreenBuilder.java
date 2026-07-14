@@ -139,13 +139,17 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
                 this.selectedButton = guibutton;
                 guibutton.playPressSound(this.mc.getSoundHandler());
                 buttonMap.get(guibutton).onClick(hand);
+                return;
             }
         }
 
         for (TextField field : textFields) {
             if (field.isVisible() && field.internal.mouseClicked(mouseX, mouseY, mouseButton)) {
-                active = field;
+                if (active != null) {
+                    active.setFocused(false);
+                }
                 field.setFocused(true);
+                active = field;
                 return;
             }
             field.setFocused(false);
