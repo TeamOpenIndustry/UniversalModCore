@@ -4,6 +4,8 @@ import cam72cam.mod.event.ClientEvents;
 import net.minecraft.client.KeyMapping;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fmlclient.registry.ClientRegistry;
@@ -11,6 +13,7 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
+@OnlyIn(Dist.CLIENT)
 public class Keyboard {
     private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
 
@@ -137,7 +140,6 @@ public class Keyboard {
     }
 
     /** Registers a keybind */
-    @OnlyIn(Dist.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         if (Minecraft.getInstance() == null) {
             System.out.println("Shake hands with danger!");
@@ -150,5 +152,21 @@ public class Keyboard {
                 handler.run();
             }
         });
+    }
+
+    public static boolean isKeyDown(KeyCode keyCode) {
+        return GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), keyCode.code) == 1;
+    }
+
+    public static boolean isCtrlKeyDown() {
+        return Screen.hasControlDown();
+    }
+
+    public static boolean isShiftKeyDown() {
+        return Screen.hasShiftDown();
+    }
+
+    public static boolean isAltKeyDown() {
+        return Screen.hasAltDown();
     }
 }
