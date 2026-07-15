@@ -154,7 +154,7 @@ public class Keyboard {
     }
 
     public static boolean isKeyDown(KeyCode keyCode) {
-        return GLFW.glfwGetKey(Minecraft.getInstance().mainWindow.getHandle(), keyCode.code) == 1;
+        return GLFW.glfwGetKey(Minecraft.getInstance().getMainWindow().getHandle(), keyCode.code) == 1;
     }
 
     public static boolean isCtrlKeyDown() {
