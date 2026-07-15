@@ -4,10 +4,12 @@ import cam72cam.mod.event.ClientEvents;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
 
 import java.util.HashMap;
 
+@SideOnly(Side.CLIENT)
 public class Keyboard {
     private static final HashMap<Integer, KeyCode> keycodes = new HashMap<>();
 
@@ -134,7 +136,6 @@ public class Keyboard {
     }
 
     /** Registers a keybind */
-    @SideOnly(Side.CLIENT)
     public static void registerKey(String name, KeyCode keyCode, String category, Runnable handler) {
         KeyBinding key = new KeyBinding(name, keyCode.code, category);
         ClientRegistry.registerKeyBinding(key);
@@ -143,5 +144,21 @@ public class Keyboard {
                 handler.run();
             }
         });
+    }
+
+    public static boolean isKeyDown(KeyCode keyCode) {
+        return org.lwjgl.input.Keyboard.isKeyDown(keyCode.code);
+    }
+
+    public static boolean isCtrlKeyDown() {
+        return GuiScreen.isCtrlKeyDown();
+    }
+
+    public static boolean isShiftKeyDown() {
+        return GuiScreen.isShiftKeyDown();
+    }
+
+    public static boolean isAltKeyDown() {
+        return org.lwjgl.input.Keyboard.isKeyDown(56) || org.lwjgl.input.Keyboard.isKeyDown(184);
     }
 }
