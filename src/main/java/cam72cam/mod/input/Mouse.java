@@ -36,7 +36,7 @@ public class Mouse {
      * Checks if the middle mouse button exists and is currently pressed.
      */
     public static boolean isMMBDown() {
-        return Minecraft.getInstance().mouseHandler.isMiddleDown();
+        return Minecraft.getInstance().mouseHandler.isMiddlePressed();
     }
 
     /**
