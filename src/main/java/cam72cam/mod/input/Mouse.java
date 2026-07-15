@@ -22,21 +22,21 @@ public class Mouse {
      * Checks if the left mouse button is currently pressed.
      */
     public static boolean isLMBDown() {
-        return Minecraft.getInstance().mouseHelper.isLeftDown();
+        return Minecraft.getInstance().mouseHandler.isLeftPressed();
     }
 
     /**
      * Checks if the right mouse button is currently pressed.
      */
     public static boolean isRMBDown() {
-        return Minecraft.getInstance().mouseHelper.isRightDown();
+        return Minecraft.getInstance().mouseHandler.isRightPressed();
     }
 
     /**
      * Checks if the middle mouse button exists and is currently pressed.
      */
     public static boolean isMMBDown() {
-        return Minecraft.getInstance().mouseHelper.isMiddleDown();
+        return Minecraft.getInstance().mouseHandler.isMiddleDown();
     }
 
     /**

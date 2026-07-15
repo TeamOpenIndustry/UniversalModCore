@@ -15,7 +15,7 @@ public class Clipboard {
      * @return the clipboard string, or {@code ""} if the clipboard is empty or inaccessible
      */
     public static String getClipboard() {
-        return Minecraft.getInstance().keyboardListener.getClipboardString();
+        return Minecraft.getInstance().keyboardHandler.getClipboard();
     }
 
     /**
@@ -24,6 +24,6 @@ public class Clipboard {
      * @param newText the text to place on the clipboard
      */
     public static void setClipboard(String newText) {
-        Minecraft.getInstance().keyboardListener.setClipboardString(newText);
+        Minecraft.getInstance().keyboardHandler.setClipboard(newText);
     }
 }
