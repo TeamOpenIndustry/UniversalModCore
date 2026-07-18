@@ -358,11 +358,39 @@ public class ConfigFile {
                 }
 
                 String[] parts = line.split("[{=<]");
-                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0].trim()) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
+                String key = parts[0].trim();
+                Property prop = null;
+                for (Property p : properties) {
+                    String propName = p.getName();
+                    if (propName.equals(key)
+                            || (key.length() >= 2 && propName.equals(key.substring(2)))) { // [type]: prefix
+                        // Found same definition
+                        prop = p;
+                        break;
+                    }
+                }
                 if (prop != null) {
                     prop.read(lines);
                 } else {
-                    lines.remove(0);
+                    // Unknown, having to skip
+                    if (line.contains("{") || line.contains("<")) {
+                        // Block for maps/cl
+                        String openChar = line.contains("{") ? "{" : "<";
+                        String closeChar = openChar.equals("{") ? "}" : ">";
+                        int depth = 1;
+                        lines.remove(0); // remove the opening line
+                        while (!lines.isEmpty() && depth > 0) {
+                            String skipLine = lines.remove(0);
+                            if (skipLine.equals(openChar)) {
+                                depth++;
+                            } else if (skipLine.equals(closeChar)) {
+                                depth--;
+                            }
+                        }
+                    } else {
+                        // Single line
+                        lines.remove(0);
+                    }
                 }
             }
         }
