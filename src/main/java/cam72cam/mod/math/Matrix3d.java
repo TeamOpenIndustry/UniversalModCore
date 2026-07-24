@@ -1,5 +1,8 @@
 package cam72cam.mod.math;
 
+/**
+ * Internal helper for quick calculation, you may want to use {@link Orientation} instead
+ */
 public class Matrix3d {
     static final Vec3d FORWARD = new Vec3d(0, 0, 1);
     static final Vec3d RIGHT = new Vec3d(1, 0, 0);
@@ -169,6 +172,7 @@ public class Matrix3d {
         }
         return Quaternion.trusted(x, y, z, w);
     }
+
 
     @Override
     public String toString() {

@@ -86,6 +86,9 @@ public class Orientation {
         return up;
     }
 
+    /**
+     * Return the Euler representation of this Orientation in degrees, stored in Vec3d
+     */
     public Vec3d toEuler() {
         Matrix4 m = toMatrix();
         double pitch = -Math.asin(m.m12);
@@ -100,6 +103,11 @@ public class Orientation {
         return new Vec3d(Math.toDegrees(yaw), Math.toDegrees(pitch), Math.toDegrees(roll));
     }
 
+    /**
+     * Convert this to a {@link Matrix3d}
+     * <p>
+     * In most cases you would need the method below
+     */
     public Matrix3d toMatrix3d() {
         return internal.copy();
     }
