@@ -45,7 +45,6 @@ public class Quaternion {
             y = (m.m12 + m.m21) / s;
             z = 0.25 * s;
         }
-        this.normalize();
     }
 
     /**
@@ -91,6 +90,8 @@ public class Quaternion {
     }
 
     public static Quaternion slerp(Quaternion from, Quaternion to, double t) {
+        from = from.normalize();
+        to = to.normalize();
         double cosOmega = from.x * to.x +  from.y * to.y + from.z * to.z + from.w * to.w;
         // Take shortest path
         double sign = 1.0;

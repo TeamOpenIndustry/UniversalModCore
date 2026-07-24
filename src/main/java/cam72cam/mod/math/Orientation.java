@@ -21,7 +21,7 @@ public class Orientation {
     }
 
     private Orientation(Vec3d forward, Vec3d right, Vec3d up) {
-        this(new Matrix3d(right, up, forward));
+        this(new Matrix3d(forward, right, up));
     }
 
     /**
