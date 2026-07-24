@@ -230,6 +230,12 @@ public class Matrix3 {
         return leftMultiply(fromAxisAndAngle(axis, radians));
     }
 
+    public Matrix3 lerp(Matrix3 to, double t) {
+        if (t <= 0) return this.copy();
+        if (t >= 1) return to.copy();
+        return Quaternion.lerp(this.toQuaternion(), to.toQuaternion(), t).toMatrix3();
+    }
+
     public Vec3d apply(Vec3d v) {
         return new Vec3d(
                 m00 * v.x + m01 * v.y + m02 * v.z,

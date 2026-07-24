@@ -3,6 +3,8 @@ package cam72cam.mod.math;
 import util.Matrix4;
 
 /**
+ * Representation for standard rotation in another format
+ * <p>
  * Mainly a helper for some lerp related methods
  *
  * @author DeepseaSaltyFish
@@ -119,9 +121,16 @@ public class Quaternion {
             return IDENTITY;
         } else if (Math.abs(-1 - d) < 1e-6) {
             // 180° rotation around any orthogonal axis
-            Vec3d axis = Math.abs(a.x) < 0.9
-                         ? new Vec3d(1, 0, 0).crossProduct(a).normalize()
-                         : new Vec3d(0, 1, 0).crossProduct(a).normalize();
+            Vec3d axis;
+            if (Math.abs(a.x) < 0.9) {
+                axis = new Vec3d(1, 0, 0).crossProduct(a);
+            } else {
+                axis = new Vec3d(0, 1, 0).crossProduct(a);
+            }
+            if (axis.lengthSquared() < 1e-12) {
+                axis = new Vec3d(0, 0, 1).crossProduct(a);
+            }
+            axis = axis.normalize();
             return new Quaternion(axis.x, axis.y, axis.z, 0);
         } else {
             Vec3d axis = a.crossProduct(b);
@@ -156,7 +165,7 @@ public class Quaternion {
         return this.w * q.w + this.x * q.x + this.y * q.y + this.z * q.z;
     }
 
-    public static Quaternion slerp(Quaternion from, Quaternion to, double t) {
+    public static Quaternion lerp(Quaternion from, Quaternion to, double t) {
         from = from.normalize();
         to = to.normalize();
         double cosOmega = from.x * to.x +  from.y * to.y + from.z * to.z + from.w * to.w;
