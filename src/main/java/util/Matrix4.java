@@ -1,5 +1,6 @@
 package util;
 
+import cam72cam.mod.math.Matrix3d;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
 import net.minecraftforge.common.model.TRSRTransformation;
@@ -108,6 +109,19 @@ public class Matrix4
 		}
 		translate(-.5, -.5, -.5);
 	}
+
+	public Matrix4(Matrix3d matrix) {
+		this.m00 = matrix.m00;
+		this.m01 = matrix.m01;
+		this.m02 = matrix.m02;
+		this.m10 = matrix.m10;
+		this.m11 = matrix.m11;
+		this.m12 = matrix.m12;
+		this.m20 = matrix.m20;
+		this.m21 = matrix.m21;
+		this.m22 = matrix.m22;
+	}
+
 	public Matrix4 setIdentity()
 	{
 		m00 = m11 = m22 = m33 = 1;
