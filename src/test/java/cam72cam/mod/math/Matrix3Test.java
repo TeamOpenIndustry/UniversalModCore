@@ -1,5 +1,6 @@
 package cam72cam.mod.math;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -10,9 +11,10 @@ public class Matrix3Test {
     public void eulerTest() {
         double yaw = -5, pitch = 3, roll = -10;
         Matrix3 mat = Matrix3.fromEuler(yaw, pitch, roll);
-        System.out.println(mat);
         Vec3d ypr = mat.toEuler();
-        System.out.println(ypr);
+        Assert.assertEquals(yaw, ypr.x, 1e-9);
+        Assert.assertEquals(pitch, ypr.y, 1e-9);
+        Assert.assertEquals(roll, ypr.z, 1e-9);
     }
 
     @Test

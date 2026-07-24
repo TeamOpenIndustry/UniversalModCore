@@ -6,6 +6,7 @@ import util.Matrix4;
  * Representation for standard rotation.
  *
  * @author DeepseaSaltyFish
+ * @author Goldenfield192
  */
 public class Matrix3 {
     public static final Vec3d FORWARD = new Vec3d(0, 0, 1);

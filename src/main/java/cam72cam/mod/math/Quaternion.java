@@ -8,6 +8,7 @@ import util.Matrix4;
  * Mainly a helper for some lerp related methods
  *
  * @author DeepseaSaltyFish
+ * @author Goldenfield192
  */
 public class Quaternion {
     public static final Quaternion IDENTITY = new Quaternion(0, 0, 0, 1);
