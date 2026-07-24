@@ -38,11 +38,6 @@ public class Matrix3d {
         this.m21 = up.z;
     }
 
-    public static Matrix3d fromQuaternion(Quaternion q) {
-        q.normalize();
-        return fromAxisAngle(new Vec3d(q.x, q.y, q.z), q.w);
-    }
-
     public static Matrix3d fromAxisAngle(Vec3d axis, double radians) {
         axis = axis.normalize();
         double c = Math.cos(radians);
