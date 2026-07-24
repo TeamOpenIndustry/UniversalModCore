@@ -17,7 +17,7 @@ public class Orientation {
     private final Matrix3d internal;
 
     private Orientation(Matrix3d matrix) {
-        this.internal = matrix;
+        this.internal = matrix.copy();
     }
 
     private Orientation(Vec3d forward, Vec3d right, Vec3d up) {
@@ -48,6 +48,38 @@ public class Orientation {
         Vec3d forward = new Vec3d(mat.m02, mat.m12, mat.m22);
 
         return new Orientation(forward, right, up);
+    }
+
+    /**
+     * Constructs an Orientation representing the shortest rotation from direction a to direction b.
+     */
+    public static Orientation fromAtoB(Vec3d a, Vec3d b) {
+        return new Orientation(Quaternion.fromAtoB(a, b).toMatrix3d());
+    }
+
+    /**
+     * Calculate interpolation between two orientations.
+     * <p>
+     * Uses Nlerp for small angles and Slerp for large angles.
+     */
+    public Orientation lerp(Orientation to, double t) {
+        if (t >= 1) {
+            return to.copy();
+        }
+        if (t <= 0) {
+            return this.copy();
+        }
+        Quaternion qf = new Quaternion(this.internal);
+        Quaternion qt = new Quaternion(to.internal);
+        return new Orientation(Quaternion.slerp(qf, qt, t).toMatrix3d());
+    }
+
+    public Vec3d apply(Vec3d orig) {
+        return internal.apply(orig);
+    }
+
+    public Orientation copy() {
+        return new Orientation(internal.copy());
     }
 
     //Cached
@@ -118,10 +150,6 @@ public class Orientation {
 
     public Matrix4 toInverseMatrix() {
         return toMatrix().transpose();
-    }
-
-    public Quaternion toQuaternion() {
-        return internal.toQuaternion();
     }
 
     /**
