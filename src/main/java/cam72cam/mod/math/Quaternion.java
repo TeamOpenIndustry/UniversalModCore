@@ -164,25 +164,34 @@ public class Quaternion {
         ).normalize();
     }
 
-    public Matrix3 toMatrix3() {
-        double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
-        double xy = 2 * x * y, xz = 2 * x * z, yz = 2 * y * z;
-        double wx = 2 * w * x, wy = 2 * w * y, wz = 2 * w * z;
+    private Matrix3 m3Cache;
+    private Matrix4 m4Cache;
 
-        return new Matrix3(1 - yy - zz, xy - wz, xz + wy,
-                           xy + wz, 1 - xx - zz, yz - wx,
-                           xz - wy, yz + wx, 1 - xx - yy);
+    public Matrix3 toMatrix3() {
+        if (m3Cache == null) {
+            double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
+            double xy = 2 * x * y, xz = 2 * x * z, yz = 2 * y * z;
+            double wx = 2 * w * x, wy = 2 * w * y, wz = 2 * w * z;
+
+            m3Cache = new Matrix3(1 - yy - zz, xy - wz, xz + wy,
+                                  xy + wz, 1 - xx - zz, yz - wx,
+                                  xz - wy, yz + wx, 1 - xx - yy);
+        }
+        return m3Cache;
     }
 
     public Matrix4 toMatrix4() {
-        double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
-        double xy = 2 * x * y, xz = 2 * x * z, yz = 2 * y * z;
-        double wx = 2 * w * x, wy = 2 * w * y, wz = 2 * w * z;
+        if (m4Cache == null) {
+            double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
+            double xy = 2 * x * y, xz = 2 * x * z, yz = 2 * y * z;
+            double wx = 2 * w * x, wy = 2 * w * y, wz = 2 * w * z;
 
-        return new Matrix4(1 - yy - zz, xy - wz,     xz + wy,     0,
-                           xy + wz,     1 - xx - zz, yz - wx,     0,
-                           xz - wy,     yz + wx,     1 - xx - yy, 0,
-                           0,           0,           0,           0);
+            m4Cache =  new Matrix4(1 - yy - zz, xy - wz, xz + wy, 0,
+                                   xy + wz, 1 - xx - zz, yz - wx, 0,
+                                   xz - wy, yz + wx, 1 - xx - yy, 0,
+                                   0, 0, 0, 0);
+        }
+        return m4Cache;
     }
 
     public Vec3d apply(Vec3d orig) {
