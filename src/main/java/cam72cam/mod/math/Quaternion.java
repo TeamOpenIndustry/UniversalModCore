@@ -1,5 +1,6 @@
 package cam72cam.mod.math;
 
+import cam72cam.mod.serialization.*;
 import util.Matrix4;
 
 /**
@@ -10,6 +11,7 @@ import util.Matrix4;
  * @author DeepseaSaltyFish
  * @author Goldenfield192
  */
+@TagMapped(Quaternion.Mapper.class)
 public class Quaternion {
     public static final Quaternion IDENTITY = new Quaternion(0, 0, 0, 1);
 
@@ -51,7 +53,7 @@ public class Quaternion {
     /**
      * Builds a rotation from Euler angles in degrees.
      * <p>
-     * Rotation order: Yaw -> Pitch -> Roll
+     * Rotation order is YXZ (Yaw -> Pitch -> Roll)
      */
     public static Quaternion fromEuler(double yaw, double pitch, double roll) {
         double hy = Math.toRadians(yaw) * 0.5;
@@ -71,42 +73,7 @@ public class Quaternion {
     }
 
     public static Quaternion fromBasis(Vec3d forward, Vec3d right, Vec3d up) {
-        forward = forward.normalize();
-        right = right.normalize();
-        up = up.normalize();
-
-        double m00 = right.x, m01 = up.x, m02 = forward.x;
-        double m10 = right.y, m11 = up.y, m12 = forward.y;
-        double m20 = right.z, m21 = up.z, m22 = forward.z;
-
-        double t = m00 + m11 + m22;
-        double w, x, y, z;
-        if (t > 0.0) {
-            double s = Math.sqrt(t + 1.0) * 2.0;
-            w = 0.25 * s;
-            x = (m21 - m12) / s;
-            y = (m02 - m20) / s;
-            z = (m10 - m01) / s;
-        } else if (m00 > m11 && m00 > m22) {
-            double s = Math.sqrt(1.0 + m00 - m11 - m22) * 2.0;
-            w = (m21 - m12) / s;
-            x = 0.25 * s;
-            y = (m01 + m10) / s;
-            z = (m02 + m20) / s;
-        } else if (m11 > m22) {
-            double s = Math.sqrt(1.0 + m11 - m00 - m22) * 2.0;
-            w = (m02 - m20) / s;
-            x = (m01 + m10) / s;
-            y = 0.25 * s;
-            z = (m12 + m21) / s;
-        } else {
-            double s = Math.sqrt(1.0 + m22 - m00 - m11) * 2.0;
-            w = (m10 - m01) / s;
-            x = (m02 + m20) / s;
-            y = (m12 + m21) / s;
-            z = 0.25 * s;
-        }
-        return Quaternion.trusted(x, y, z, w);
+        return Matrix3.fromBasis(forward, right, up).toQuaternion();
     }
 
     /**
@@ -153,7 +120,7 @@ public class Quaternion {
         return new Quaternion(x * inv, y * inv, z * inv, w * inv);
     }
 
-    public Quaternion hamiltonProduct(Quaternion q) {
+    public Quaternion multiply(Quaternion q) {
         return new Quaternion(
                 w * q.x + x * q.w + y * q.z - z * q.y,
                 w * q.y - x * q.z + y * q.w + z * q.x,
@@ -208,7 +175,14 @@ public class Quaternion {
     }
 
     public Matrix4 toMatrix4() {
-        return toMatrix3().toMatrix4();
+        double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
+        double xy = 2 * x * y, xz = 2 * x * z, yz = 2 * y * z;
+        double wx = 2 * w * x, wy = 2 * w * y, wz = 2 * w * z;
+
+        return new Matrix4(1 - yy - zz, xy - wz,     xz + wy,     0,
+                           xy + wz,     1 - xx - zz, yz - wx,     0,
+                           xz - wy,     yz + wx,     1 - xx - yy, 0,
+                           0,           0,           0,           0);
     }
 
     public Vec3d apply(Vec3d orig) {
@@ -249,5 +223,15 @@ public class Quaternion {
         bits ^= Double.doubleToLongBits(z) * 631;
         bits ^= Double.doubleToLongBits(w) * 1271;
         return (int) (bits ^ (bits >> 32));
+    }
+
+    public static class Mapper implements TagMapper<Quaternion> {
+        @Override
+        public TagAccessor<Quaternion> apply(Class<Quaternion> type, String fieldName, TagField tag) throws SerializationException {
+            return new TagAccessor<>(
+                    (d, o) -> d.setDouble("x", o.x).setDouble("y", o.y).setDouble("z", o.z).setDouble("w", o.w),
+                    d -> new Quaternion(d.getDouble("x"), d.getDouble("y"), d.getDouble("z"), d.getDouble("w"))
+            );
+        }
     }
 }

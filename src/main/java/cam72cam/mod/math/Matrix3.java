@@ -64,7 +64,7 @@ public class Matrix3 {
     /**
      * Builds a rotation from Euler angles in degrees.
      * <p>
-     * Rotation order: Yaw -> Pitch -> Roll (YXZ)
+     * Rotation order is YXZ (Yaw -> Pitch -> Roll)
      */
     public static Matrix3 fromEuler(double yaw, double pitch, double roll) {
         return new Matrix3().rotateLocal(Math.toRadians(yaw), 0, 1, 0)
