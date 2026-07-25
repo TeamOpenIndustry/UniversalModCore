@@ -216,6 +216,17 @@ public class Matrix3 {
         return multiply(fromAxisAndAngle(localAxis, radians));
     }
 
+    //Local space helpers
+    public Matrix3 rotateLocalYaw(double degree) {
+        return rotateLocal(new Vec3d(0, 1, 0), Math.toRadians(degree));
+    }
+    public Matrix3 rotateLocalPitch(double degree) {
+        return rotateLocal(new Vec3d(1, 0, 0), Math.toRadians(degree));
+    }
+    public Matrix3 rotateLocalRoll(double degree) {
+        return rotateLocal(new Vec3d(0, 0, 1), Math.toRadians(degree));
+    }
+
     /**
      * Rotates around a world‑space axis
      */
