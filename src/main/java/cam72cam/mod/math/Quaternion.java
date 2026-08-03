@@ -150,7 +150,7 @@ public class Quaternion {
             scale0 = 1.0 - t;
             scale1 = t * sign;
         } else {
-            // Slerp for very close quaternions
+            // Slerp for not that close quaternions
             double omega = Math.acos(cosOmega);
             double sinOmega = Math.sin(omega);
             scale0 = Math.sin((1.0 - t) * omega) / sinOmega;
@@ -167,6 +167,10 @@ public class Quaternion {
     private Matrix3 m3Cache;
     private Matrix4 m4Cache;
 
+    public Vec3d toEuler() {
+        return toMatrix3().toEuler();
+    }
+
     public Matrix3 toMatrix3() {
         if (m3Cache == null) {
             double xx = 2 * x * x, yy = 2 * y * y, zz = 2 * z * z;
@@ -177,7 +181,7 @@ public class Quaternion {
                                   xy + wz, 1 - xx - zz, yz - wx,
                                   xz - wy, yz + wx, 1 - xx - yy);
         }
-        return m3Cache;
+        return m3Cache.copy();
     }
 
     public Matrix4 toMatrix4() {
@@ -189,9 +193,9 @@ public class Quaternion {
             m4Cache =  new Matrix4(1 - yy - zz, xy - wz, xz + wy, 0,
                                    xy + wz, 1 - xx - zz, yz - wx, 0,
                                    xz - wy, yz + wx, 1 - xx - yy, 0,
-                                   0, 0, 0, 0);
+                                   0, 0, 0, 1);
         }
-        return m4Cache;
+        return m4Cache.copy();
     }
 
     public Vec3d apply(Vec3d orig) {

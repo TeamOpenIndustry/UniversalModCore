@@ -9,16 +9,19 @@ import java.util.List;
 public class Matrix3Test {
     @Test
     public void eulerTest() {
-        double yaw = -5, pitch = 3, roll = -10;
+        double yaw = 90, pitch = 3, roll = 50;
         Matrix3 mat = Matrix3.fromEuler(yaw, pitch, roll);
         Vec3d ypr = mat.toEuler();
+        // yaw is normalized to (-180 180]
         Assert.assertEquals(yaw, ypr.x, 1e-9);
+        // pitch is normalized to [-90, 90]
         Assert.assertEquals(pitch, ypr.y, 1e-9);
+        // roll is normalized to [0, 360)
         Assert.assertEquals(roll, ypr.z, 1e-9);
     }
 
     @Test
-    public void vecCache() {
+    public void vecCacheBenchmark() {
         // If we compare and return then there's about 4x slower than rebuilding after every write
         // Cache like Entity.java -> 8500000 ns
         // Make them private and calculate once -> 2500000ns

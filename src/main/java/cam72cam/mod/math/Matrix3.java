@@ -13,9 +13,9 @@ public class Matrix3 {
     public static final Vec3d RIGHT = new Vec3d(1, 0, 0);
     public static final Vec3d UP = new Vec3d(0, 1, 0);
 
-    double m00, m10, m20;
-    double m01, m11, m21;
-    double m02, m12, m22;
+    private double m00, m10, m20;
+    private double m01, m11, m21;
+    private double m02, m12, m22;
 
     public Matrix3() {
         setIdentity();
@@ -261,16 +261,23 @@ public class Matrix3 {
      * @return A Vec3d containing the angle (yaw -> x, pitch -> y, roll -> z);
      */
     public Vec3d toEuler() {
+        // pitch = -asin(m12) is already constrained to [-90, 90]
         double pitch = -Math.asin(m12);
         double yaw, roll;
         if (Math.abs(Math.cos(pitch)) > 1E-6) {
-            yaw  = Math.atan2(m02, m22);
-            roll = Math.atan2(m10, m11);
+            yaw  = Math.atan2(m02, m22); // yaw in (-180, 180]
+            roll = Math.atan2(m10, m11); // roll in (-180, 180]
         } else {
-            yaw  = Math.atan2(-m20, m00);
+            // Gimbal lock: absorb all z-rotation into yaw, keep roll at 0
+            yaw  = Math.atan2(-m20, m00); // yaw in (-180, 180]
             roll = 0;
         }
-        return new Vec3d(Math.toDegrees(yaw), Math.toDegrees(pitch), Math.toDegrees(roll));
+        double yawDeg = Math.toDegrees(yaw);
+        if (yawDeg == -180) {
+            yawDeg = 180;
+        }
+
+        return new Vec3d(yawDeg, Math.toDegrees(pitch), Math.toDegrees(roll));
     }
 
     public Quaternion toQuaternion() {
