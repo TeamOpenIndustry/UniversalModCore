@@ -35,23 +35,25 @@ public class MixinEntitySectionStorage<T extends EntityAccess>  {
     public void init(AABB p_188363_, AbortableIterationConsumer<EntitySection<T>> p_261588_, CallbackInfo ci,
                      @Share("level") LocalRef<WorldEntityTracker> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef) {
         //Try to get corresponding level of the search
-        Optional<Long2ObjectMap.Entry<EntitySection<T>>> any = this.sections.long2ObjectEntrySet().stream().filter(
-                entry -> !entry.getValue().storage.isEmpty()).findAny();
-        any.flatMap(entitySectionEntry -> entitySectionEntry.getValue().getEntities().filter(
-                e -> e instanceof net.minecraft.world.entity.Entity).findFirst())
+        Optional<Long2ObjectMap.Entry<EntitySection<T>>> any = this.sections.long2ObjectEntrySet().stream()
+                                                                            .filter(entry -> !entry.getValue().storage.isEmpty())
+                                                                            .findAny();
+        any.flatMap(entitySectionEntry -> entitySectionEntry.getValue().getEntities()
+                                                            .filter(e -> e instanceof net.minecraft.world.entity.Entity).findFirst())
            .ifPresent(e -> {
                 levelLocalRef.set(World.get(((net.minecraft.world.entity.Entity)e).level()).tracker);
                 setLocalRef.set(new LongArraySet());
-            });
+           });
     }
 
-    @Inject(method = "forEachAccessibleNonEmptySection", at = @At(value = "INVOKE_ASSIGN", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;",
-            shift = At.Shift.BY, by = 2), remap = false) //To capture the EntitySection
+    @Inject(method = "forEachAccessibleNonEmptySection",
+            at = @At(value = "INVOKE_ASSIGN", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;",
+                    shift = At.Shift.BY, by = 2),
+            remap = false) //To capture the EntitySection
     public void capture(AABB p_188363_, AbortableIterationConsumer<EntitySection<T>> p_261588_, CallbackInfo ci,
                         @Share("level")LocalRef<WorldEntityTracker> levelLocalRef, @Share("pos")LocalRef<Set<Long>> setLocalRef,
-                        @Local LocalRef<EntitySection<T>> sectionLocalRef, @Local(ordinal = 2) long k2) {
+                        @Local EntitySection<T> section, @Local(ordinal = 2) long k2) {
         if (levelLocalRef.get() != null) {
-            EntitySection<T> section = sectionLocalRef.get();
             if (section != null && section.getStatus().isAccessible() && !section.isEmpty()) {
                 setLocalRef.get().addAll(levelLocalRef.get().queryPotentialPackedSectionPos(k2));
             }

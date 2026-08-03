@@ -20,7 +20,7 @@ import java.util.Objects;
  * Note that in order to make this work on 1.21.1 and upper, <code>DamageType</code>s should be treated as constants and created as soon as possible (like CONSTRUCT phase)
  */
 public final class DamageType {
-    //DamageType become a vanilla registry in 1.19, but not a exposed registry till 1.21
+    //DamageType become a datapack registry since 1.19
     public static final DamageType FIRE = new DamageType(DamageTypes.IN_FIRE);
     public static final DamageType PROJECTILE = new DamageType(DamageTypes.ARROW);
     public static final DamageType EXPLOSION = new DamageType(DamageTypes.EXPLOSION);
@@ -57,7 +57,9 @@ public final class DamageType {
         this.id = cause;
         this.internal = ResourceKey.create(Registries.DAMAGE_TYPE, cause.internal);
         Identifier data = new Identifier(cause.getDomain(), "damage_type/" + cause.getPath() + ".json");
-        BuiltinPack.putData(data, String.format(templateDatapack, cause.getDomain(), cause.getPath()).getBytes(StandardCharsets.UTF_8));
+        BuiltinPack.putData(data, String.format(templateDatapack, cause.getDomain(), cause.getPath())
+                                        .getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     private DamageType(ResourceKey<net.minecraft.world.damagesource.DamageType> key) {
