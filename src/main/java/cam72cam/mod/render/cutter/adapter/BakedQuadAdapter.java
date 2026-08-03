@@ -181,57 +181,52 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             Polygon polygon,
             QuadTemplate template) {
 
+        applyNormal(
+                polygon,
+                template.facing
+        );
+
         List<BakedQuad> result = new ArrayList<>();
 
         if (polygon.vertices.size() < 3) {
             return result;
         }
 
+        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
 
-        for (Polygon quad :
-                PolygonQuadBuilder.build(polygon)) {
+            int[] data = new int[STRIDE * 4];
 
+            writeVertex(data, 0, quad.vertices.get(0));
+            writeVertex(data, 1, quad.vertices.get(1));
+            writeVertex(data, 2, quad.vertices.get(2));
+            writeVertex(data, 3, quad.vertices.get(3));
 
-            int[] data =
-                    template.source.getVertices()
-                            .clone();
-
-
-            writeVertex(
+            result.add(new BakedQuad(
                     data,
-                    0,
-                    quad.vertices.get(0)
-            );
-            writeVertex(
-                    data,
-                    1,
-                    quad.vertices.get(1)
-            );
-            writeVertex(
-                    data,
-                    2,
-                    quad.vertices.get(2)
-            );
-            writeVertex(
-                    data,
-                    3,
-                    quad.vertices.get(3)
-            );
-
-
-            result.add(
-                    new BakedQuad(
-                            data,
-                            template.tintIndex,
-                            template.source.getDirection(),
-                            template.sprite,
-                            template.shade,
-                            template.ambientOcclusion
-                    )
-            );
+                    template.tintIndex,
+                    template.facing.internal,
+                    template.sprite,
+                    template.shade,
+                    template.ambientOcclusion
+            ));
         }
 
         return result;
+    }
+
+    private static void applyNormal(
+            Polygon polygon,
+            Facing facing) {
+
+        byte nx = (byte) (facing.getXMultiplier() * 127);
+        byte ny = (byte) (facing.getYMultiplier() * 127);
+        byte nz = (byte) (facing.getZMultiplier() * 127);
+
+        for (ClipVertex vertex : polygon.vertices) {
+            vertex.nx = nx;
+            vertex.ny = ny;
+            vertex.nz = nz;
+        }
     }
 
 
