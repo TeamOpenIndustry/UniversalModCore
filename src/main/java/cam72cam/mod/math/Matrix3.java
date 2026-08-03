@@ -272,12 +272,17 @@ public class Matrix3 {
             yaw  = Math.atan2(-m20, m00); // yaw in (-180, 180]
             roll = 0;
         }
+
         double yawDeg = Math.toDegrees(yaw);
+        double rollDeg = Math.toDegrees(roll);
         if (yawDeg == -180) {
             yawDeg = 180;
         }
+        if (rollDeg == -180) {
+            rollDeg = 180;
+        }
 
-        return new Vec3d(yawDeg, Math.toDegrees(pitch), Math.toDegrees(roll));
+        return new Vec3d(yawDeg, Math.toDegrees(pitch), rollDeg);
     }
 
     public Quaternion toQuaternion() {

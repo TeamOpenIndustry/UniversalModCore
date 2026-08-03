@@ -67,8 +67,8 @@ public class Quaternion {
         return new Quaternion(
                 cy * sp * cr + sy * cp * sr,
                 sy * cp * cr - cy * sp * sr,
-                cy * cp * sr + sy * sp * cr,
-                cy * cp * cr - sy * sp * sr
+                cy * cp * sr - sy * sp * cr,
+                cy * cp * cr + sy * sp * sr
         );
     }
 
