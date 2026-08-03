@@ -8,11 +8,13 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
-import java.util.Collection;
+import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * Track UMC Entities and handle inter chunk collision
@@ -24,7 +26,7 @@ public class WorldEntityTracker {
     private static final int HORIZONTAL_SEARCH_RADIUS_CHUNKS = 3;
     //Vertical distance (32 blocks)
     private static final int VERTICAL_SEARCH_RADIUS_CHUNKS = 2;
-    private final Map<Long, Set<ModdedEntity>> umcEntities = new Long2ObjectOpenHashMap<>();
+    private final Map<Long, Set<WeakReference<ModdedEntity>>> umcEntities = new Long2ObjectOpenHashMap<>();
     //K are chunks containing UMC entities, V are neighbor chunks(245 per now) that this entity may extend to
     //Query value to see which chunk may contain possible colliding entities
     private final LongBiMultiMap scanningRange = new LongBiMultiMap();
@@ -41,7 +43,7 @@ public class WorldEntityTracker {
 
         lock.writeLock().lock();
         try {
-            Set<ModdedEntity> moddedEntities = umcEntities.get(chunk);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(chunk);
             if (moddedEntities == null) {
                 moddedEntities = new ObjectArraySet<>();
                 umcEntities.put(chunk, moddedEntities);
@@ -54,7 +56,8 @@ public class WorldEntityTracker {
                     }
                 }
             }
-            moddedEntities.add(entity);
+            moddedEntities.removeIf(ref -> ref.get() == null);
+            moddedEntities.add(new WeakReference<>(entity));
         } finally {
             lock.writeLock().unlock();
         }
@@ -68,8 +71,8 @@ public class WorldEntityTracker {
             if (!umcEntities.containsKey(chunk)) {
                 return;
             }
-            Collection<ModdedEntity> moddedEntities = umcEntities.get(chunk);
-            moddedEntities.remove(entity);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(chunk);
+            moddedEntities.removeIf(ref -> ref.get() == null || ref.get() == entity);
 
             if (moddedEntities.isEmpty()) {
                 umcEntities.remove(chunk);
@@ -90,9 +93,9 @@ public class WorldEntityTracker {
             }
 
             // remove from old section
-            Set<ModdedEntity> moddedEntities = umcEntities.get(oldSection);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(oldSection);
             if (moddedEntities != null) {
-                moddedEntities.remove(entity);
+                moddedEntities.removeIf(ref -> ref.get() == null || ref.get() == entity);
                 if (moddedEntities.isEmpty()) {
                     umcEntities.remove(oldSection);
                     scanningRange.removeKey(oldSection);
@@ -118,7 +121,8 @@ public class WorldEntityTracker {
                 }
             }
 
-            moddedEntities.add(entity);
+            moddedEntities.removeIf(ref -> ref.get() == null);
+            moddedEntities.add(new WeakReference<>(entity));
         } finally {
             lock.writeLock().unlock();
         }
@@ -136,7 +140,14 @@ public class WorldEntityTracker {
     public Set<ModdedEntity> queryEntities(long pos) {
         lock.readLock().lock();
         try {
-            return umcEntities.get(pos);
+            Set<WeakReference<ModdedEntity>> refs = umcEntities.get(pos);
+            if (refs == null || refs.isEmpty()) {
+                return Collections.emptySet();
+            }
+            return refs.stream()
+                       .filter(ref -> ref.get() != null)
+                       .map(WeakReference::get)
+                       .collect(Collectors.toSet());
         } finally {
             lock.readLock().unlock();
         }
@@ -153,11 +164,9 @@ public class WorldEntityTracker {
             valueToKeys.computeIfAbsent(value, v -> new LongArraySet(4)).add(key);
         }
 
-        //DON't MODIFY RETURNED SET!
-        //If you want please clone()
         public Set<Long> getKeys(long value) {
             LongArraySet set = valueToKeys.get(value);
-            return set != null ? set : new LongArraySet();
+            return set != null ? new LongArraySet(set) : new LongArraySet();
         }
 
         public Set<Long> removeKey(long key) {
@@ -177,15 +186,6 @@ public class WorldEntityTracker {
             }
 
             return values;
-        }
-
-        public boolean contains(long key) {
-            return keyToValues.containsKey(key);
-        }
-
-        public void clear() {
-            keyToValues.clear();
-            valueToKeys.clear();
         }
     }
 }
