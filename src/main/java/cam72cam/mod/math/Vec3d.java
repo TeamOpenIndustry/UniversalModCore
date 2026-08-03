@@ -125,7 +125,12 @@ public class Vec3d {
 
     @Override
     public int hashCode() {
-        return (int) (x + y + z);
+        // Avoid -0.0
+        double nx = x == 0.0 ? 0.0 : x;
+        double ny = y == 0.0 ? 0.0 : y;
+        double nz = z == 0.0 ? 0.0 : z;
+
+        return (Double.hashCode(ny) + Double.hashCode(nz) * 31) * 31 + Double.hashCode(nx);
     }
 
     public Vector3d internal() {
