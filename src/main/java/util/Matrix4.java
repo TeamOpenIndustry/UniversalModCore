@@ -108,6 +108,7 @@ public class Matrix4
 		}
 		translate(-.5, -.5, -.5);
 	}
+
 	public Matrix4 setIdentity()
 	{
 		m00 = m11 = m22 = m33 = 1;
