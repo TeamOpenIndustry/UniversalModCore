@@ -7,6 +7,7 @@ import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,18 +26,48 @@ public class BakedQuadAdapter
             return null;
         }
 
-        BakedQuad quad = quads.get(0);
+        BakedQuad source = findBestQuad(quads, plane);
 
         return new QuadTemplate(
-                quad.getSprite(),
+                source.getSprite(),
+                BlockDirectionUtil.fromNormal(
+                        plane.normal
+                ),
+                source.getTintIndex(),
+                source.shouldApplyDiffuseLighting(),
+                false,
+                source.getFormat(),
+                source,
+                quads
+        );
+    }
+
+    private static BakedQuad findBestQuad(
+            List<BakedQuad> quads,
+            Plane plane) {
+
+        Facing target =
                 BlockDirectionUtil.fromNormal(
                         plane.normal.scale(-1)
-                ),
-                quad.getTintIndex(),
-                quad.shouldApplyDiffuseLighting(),
-                false,
-                quad.getFormat()
-        );
+                );
+
+        if (target == null) {
+            return null;
+        }
+
+        for (BakedQuad quad : quads) {
+
+            Facing face =
+                    Facing.from(
+                            quad.getFace()
+                    );
+
+            if (face == target) {
+                return quad;
+            }
+        }
+
+        return quads.isEmpty() ? null : quads.get(0);
     }
 
     @Override
@@ -93,42 +124,148 @@ public class BakedQuadAdapter
             Polygon polygon,
             QuadTemplate template) {
 
+
         applySpriteUV(
                 polygon,
                 template.sprite
         );
 
-        applyNormal(
-                polygon,
-                template.facing
-        );
 
         List<BakedQuad> result = new ArrayList<>();
+
 
         if (polygon.vertices.size() < 3) {
             return result;
         }
 
+
         for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
 
-            int[] data = new int[STRIDE * 4];
 
-            writeVertex(data, 0, quad.vertices.get(0));
-            writeVertex(data, 1, quad.vertices.get(1));
-            writeVertex(data, 2, quad.vertices.get(2));
-            writeVertex(data, 3, quad.vertices.get(3));
+            int[] data =
+                    template.source
+                            .getVertexData()
+                            .clone();
 
-            result.add(new BakedQuad(
+
+            writePosition(
                     data,
-                    template.tintIndex,
-                    template.facing.internal,
-                    template.sprite,
-                    template.shade,
+                    0,
+                    quad.vertices.get(0),
                     template.format
-            ));
+            );
+
+            writePosition(
+                    data,
+                    1,
+                    quad.vertices.get(1),
+                    template.format
+            );
+
+            writePosition(
+                    data,
+                    2,
+                    quad.vertices.get(2),
+                    template.format
+            );
+
+            writePosition(
+                    data,
+                    3,
+                    quad.vertices.get(3),
+                    template.format
+            );
+
+
+            writeUV(
+                    data,
+                    0,
+                    quad.vertices.get(0),
+                    template.format
+            );
+
+            writeUV(
+                    data,
+                    1,
+                    quad.vertices.get(1),
+                    template.format
+            );
+
+            writeUV(
+                    data,
+                    2,
+                    quad.vertices.get(2),
+                    template.format
+            );
+
+            writeUV(
+                    data,
+                    3,
+                    quad.vertices.get(3),
+                    template.format
+            );
+
+
+            result.add(
+                    new BakedQuad(
+                            data,
+                            template.source.getTintIndex(),
+                            template.source.getFace(),
+                            template.source.getSprite(),
+                            template.source.shouldApplyDiffuseLighting(),
+                            template.source.getFormat()
+                    )
+            );
         }
 
+
         return result;
+    }
+
+    private static void writePosition(
+            int[] data,
+            int index,
+            ClipVertex v,
+            VertexFormat format) {
+
+
+        int base =
+                index * format.getIntegerSize();
+
+
+        data[base] =
+                Float.floatToRawIntBits(
+                        (float)v.pos.x
+                );
+
+        data[base + 1] =
+                Float.floatToRawIntBits(
+                        (float)v.pos.y
+                );
+
+        data[base + 2] =
+                Float.floatToRawIntBits(
+                        (float)v.pos.z
+                );
+    }
+
+    private static void writeUV(
+            int[] data,
+            int index,
+            ClipVertex v,
+            VertexFormat format) {
+
+
+        int base =
+                index * format.getIntegerSize();
+
+
+        data[base + 4] =
+                Float.floatToRawIntBits(v.u);
+
+
+        data[base + 5] =
+                Float.floatToRawIntBits(v.v);
     }
 
     @Override
@@ -139,7 +276,8 @@ public class BakedQuadAdapter
 
         CapUVGenerator.generate(
                 polygon,
-                plane
+                plane,
+                template.sourceFace
         );
     }
 
@@ -214,21 +352,6 @@ public class BakedQuadAdapter
 
             vertex.u = sprite.getInterpolatedU(vertex.u * 16);
             vertex.v = sprite.getInterpolatedV(vertex.v * 16);
-        }
-    }
-
-    private static void applyNormal(
-            Polygon polygon,
-            Facing facing) {
-
-        byte nx = (byte) (facing.getXMultiplier() * 127);
-        byte ny = (byte) (facing.getYMultiplier() * 127);
-        byte nz = (byte) (facing.getZMultiplier() * 127);
-
-        for (ClipVertex vertex : polygon.vertices) {
-            vertex.nx = nx;
-            vertex.ny = ny;
-            vertex.nz = nz;
         }
     }
 }

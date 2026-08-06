@@ -51,7 +51,7 @@ public class MeshPlaneCutter {
 
             Template template =
                     adapter.createTemplate(
-                            result,
+                            primitives,
                             plane
                     );
 
@@ -75,7 +75,3 @@ public class MeshPlaneCutter {
         return result;
     }
 }
-
-
-
-
