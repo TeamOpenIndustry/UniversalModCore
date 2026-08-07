@@ -9,7 +9,7 @@ public final class CapBuilder {
 
     private CapBuilder() {}
 
-    public static Polygon build(
+    public static Polygon build( // TODO: we can build proper Concave Polygon yet
             List<ClipVertex> intersections,
             Plane plane) {
 
