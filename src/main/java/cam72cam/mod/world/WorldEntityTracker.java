@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -15,6 +16,8 @@ import java.util.stream.Collectors;
 
 /**
  * Track UMC Entities and handle inter chunk collision
+ * <p>
+ * Internal, don't use outside UMC!
  * @see cam72cam.mod.mixin.feat.large_entity_collision.MixinVanillaWorld
  */
 public class WorldEntityTracker {
@@ -139,8 +142,8 @@ public class WorldEntityTracker {
                 return Collections.emptySet();
             }
             return refs.stream()
-                       .filter(ref -> ref.get() != null)
                        .map(WeakReference::get)
+                       .filter(Objects::nonNull)
                        .collect(Collectors.toSet());
         } finally {
             lock.readLock().unlock();
@@ -160,13 +163,13 @@ public class WorldEntityTracker {
 
         public Set<Long> getKeys(long value) {
             LongArraySet set = valueToKeys.get(value);
-            return set != null ? new LongArraySet(set) : new LongArraySet();
+            return set != null ? set : Collections.emptySet();
         }
 
         public Set<Long> removeKey(long key) {
             LongArraySet values = keyToValues.remove(key);
             if (values == null) {
-                return new LongArraySet();
+                return Collections.emptySet();
             }
 
             for (long value : values) {
