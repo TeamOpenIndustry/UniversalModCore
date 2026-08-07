@@ -362,15 +362,4 @@ public class BakedQuadAdapter
 //                        | ((v.ny & 0xff) << 8)
 //                        | ((v.nz & 0xff) << 16);
     }
-
-    private static void applySpriteUV(
-            Polygon polygon,
-            TextureAtlasSprite sprite) {
-
-        for (ClipVertex vertex : polygon.vertices) {
-
-            vertex.u = sprite.getInterpolatedU(vertex.u * 16);
-            vertex.v = sprite.getInterpolatedV(vertex.v * 16);
-        }
-    }
 }
