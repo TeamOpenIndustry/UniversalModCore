@@ -1,7 +1,7 @@
 package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.util.Facing;
+import cam72cam.mod.render.cutter.adapter.QuadTemplate;
 
 import java.util.Collections;
 
@@ -11,150 +11,61 @@ public final class CapUVGenerator {
 
     public static void generate(
             Polygon polygon,
-            Plane plane,
-            Facing facing) {
+            QuadTemplate template) {
 
-        if(facing != null) {
-            generateBlockUV(
-                    polygon,
-                    facing
+        Vec3d p0 = template.sourcePos[0];
+        Vec3d p1 = template.sourcePos[1];
+        Vec3d p3 = template.sourcePos[3];
+
+        // position space basis
+        Vec3d e1 = p1.subtract(p0);
+        Vec3d e2 = p3.subtract(p0);
+
+        double a00 = e1.dotProduct(e1);
+        double a01 = e1.dotProduct(e2);
+        double a11 = e2.dotProduct(e2);
+
+        // 2x2 inverse determinant
+        double det = a00 * a11 - a01 * a01;
+
+        if (Math.abs(det) < 1E-8) {
+            return;
+        }
+
+        for (ClipVertex vertex : polygon.vertices) {
+            Vec3d d = vertex.pos.subtract(p0);
+
+            double b0 = d.dotProduct(e1);
+            double b1 = d.dotProduct(e2);
+
+            // solve:
+            //
+            // [a00 a01][x] = [b0]
+            // [a01 a11][y] = [b1]
+
+            double x = (b0 * a11 - b1 * a01) / det;
+            double y = (b1 * a00 - b0 * a01) / det;
+
+            /*
+             * x = p0 -> p1 direction
+             * y = p0 -> p3 direction
+             *
+             * UV uses the same weight
+             */
+
+            vertex.u = (float) (
+                    template.sourceU[0]
+                            + x * (template.sourceU[1] - template.sourceU[0])
+                            + y * (template.sourceU[3] - template.sourceU[0])
             );
-        } else {
-            generatePlaneUV(
-                    polygon,
-                    PlaneBasis.fromPlane(plane)
+
+            vertex.v = (float) (
+                    template.sourceV[0]
+                            + x * (template.sourceV[1] - template.sourceV[0])
+                            + y * (template.sourceV[3] - template.sourceV[0])
             );
         }
 
-        reverseWinding(polygon);
-    }
-
-    private static void generateBlockUV(
-            Polygon polygon,
-            Facing facing) {
-
-        double minU = Double.POSITIVE_INFINITY;
-        double maxU = Double.NEGATIVE_INFINITY;
-        double minV = Double.POSITIVE_INFINITY;
-        double maxV = Double.NEGATIVE_INFINITY;
-
-
-        for (ClipVertex vertex : polygon.vertices) {
-
-            Vec3d p = vertex.pos;
-
-            double[] uv = project(p, facing);
-
-            minU = Math.min(minU, uv[0]);
-            maxU = Math.max(maxU, uv[0]);
-
-            minV = Math.min(minV, uv[1]);
-            maxV = Math.max(maxV, uv[1]);
-        }
-
-
-        double du = maxU - minU;
-        double dv = maxV - minV;
-
-        if (du < 1E-6)
-            du = 1;
-
-        if (dv < 1E-6)
-            dv = 1;
-
-
-        for (ClipVertex vertex : polygon.vertices) {
-
-            double[] uv =
-                    project(vertex.pos, facing);
-
-            vertex.u =
-                    (float)((uv[0] - minU) / du);
-
-            vertex.v =
-                    (float)((uv[1] - minV) / dv);
-        }
-    }
-
-    private static double[] project(
-            Vec3d p,
-            Facing facing) {
-
-        switch (facing) {
-
-            case UP:
-                return new double[]{p.x, p.z};
-
-            case DOWN:
-                return new double[]{p.x, -p.z};
-
-            case NORTH:
-                return new double[]{-p.x, -p.y};
-
-            case SOUTH:
-                return new double[]{p.x, -p.y};
-
-            case WEST:
-                return new double[]{p.z, -p.y};
-
-            case EAST:
-                return new double[]{-p.z, -p.y};
-
-            default:
-                return new double[]{0, 0};
-        }
-    }
-
-    private static void reverseWinding(
-            Polygon polygon) {
-
-        Collections.reverse(
-                polygon.vertices
-        );
-    }
-
-    private static void generatePlaneUV(
-            Polygon polygon,
-            PlaneBasis basis) {
-
-        double minU = Double.POSITIVE_INFINITY;
-        double maxU = Double.NEGATIVE_INFINITY;
-
-        double minV = Double.POSITIVE_INFINITY;
-        double maxV = Double.NEGATIVE_INFINITY;
-
-        for (ClipVertex vertex : polygon.vertices) {
-
-            Vec3d p = vertex.pos;
-
-            double u = p.dotProduct(basis.u);
-            double v = p.dotProduct(basis.v);
-
-            minU = Math.min(minU, u);
-            maxU = Math.max(maxU, u);
-
-            minV = Math.min(minV, v);
-            maxV = Math.max(maxV, v);
-        }
-
-        double du = maxU - minU;
-        double dv = maxV - minV;
-
-        if (du < 1E-6) du = 1;
-        if (dv < 1E-6) dv = 1;
-
-        for (ClipVertex vertex : polygon.vertices) {
-
-            Vec3d p = vertex.pos;
-
-            double lu = p.dotProduct(basis.u);
-            double lv = p.dotProduct(basis.v);
-
-            float u = (float)((lu - minU) / du);
-            float v = (float)((lv - minV) / dv);
-
-            vertex.u = u;
-            vertex.v = v;
-        }
+        Collections.reverse(polygon.vertices);
     }
 }

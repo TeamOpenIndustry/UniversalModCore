@@ -28,6 +28,31 @@ public class BakedQuadAdapter
 
         BakedQuad source = findBestQuad(quads, plane);
 
+        Vec3d[] sourcePos = new Vec3d[4];
+        float[] sourceU = new float[4];
+        float[] sourceV = new float[4];
+
+        int[] data = source.getVertexData();
+
+        for (int i = 0; i < 4; i++) {
+
+            int base = i * STRIDE;
+
+            sourcePos[i] =
+                    new Vec3d(
+                            Float.intBitsToFloat(data[base]),
+                            Float.intBitsToFloat(data[base + 1]),
+                            Float.intBitsToFloat(data[base + 2])
+                    );
+
+            sourceU[i] =
+                    Float.intBitsToFloat(data[base + 4]);
+
+            sourceV[i] =
+                    Float.intBitsToFloat(data[base + 5]);
+        }
+
+
         return new QuadTemplate(
                 source.getSprite(),
                 BlockDirectionUtil.fromNormal(
@@ -38,7 +63,10 @@ public class BakedQuadAdapter
                 false,
                 source.getFormat(),
                 source,
-                quads
+                quads,
+                sourcePos,
+                sourceU,
+                sourceV
         );
     }
 
@@ -124,15 +152,7 @@ public class BakedQuadAdapter
             Polygon polygon,
             QuadTemplate template) {
 
-
-        applySpriteUV(
-                polygon,
-                template.sprite
-        );
-
-
         List<BakedQuad> result = new ArrayList<>();
-
 
         if (polygon.vertices.size() < 3) {
             return result;
@@ -276,8 +296,7 @@ public class BakedQuadAdapter
 
         CapUVGenerator.generate(
                 polygon,
-                plane,
-                template.sourceFace
+                template
         );
     }
 

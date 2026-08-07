@@ -1,10 +1,10 @@
 package cam72cam.mod.render.cutter.adapter;
 
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
-import cam72cam.mod.util.Facing;
-import net.minecraft.util.EnumFacing;
 
 import java.util.List;
 
@@ -28,6 +28,12 @@ public class QuadTemplate {
 
     public final List<BakedQuad> candidates;
 
+    public final Vec3d[] sourcePos;
+
+    public final float[] sourceU;
+
+    public final float[] sourceV;
+
 
     public QuadTemplate(
             TextureAtlasSprite sprite,
@@ -37,18 +43,26 @@ public class QuadTemplate {
             boolean ambientOcclusion,
             VertexFormat format,
             BakedQuad source,
-            List<BakedQuad> candidates) {
+            List<BakedQuad> candidates,
+            Vec3d[] sourcePos,
+            float[] sourceU,
+            float[] sourceV) {
 
         this.sprite = sprite;
         this.facing = facing;
+        this.sourceFace = Facing.from(source.getFace());
+
         this.tintIndex = tintIndex;
         this.shade = shade;
         this.ambientOcclusion = ambientOcclusion;
+
         this.format = format;
 
         this.source = source;
         this.candidates = candidates;
 
-        this.sourceFace = Facing.from(source.getFace());
+        this.sourcePos = sourcePos;
+        this.sourceU = sourceU;
+        this.sourceV = sourceV;
     }
 }
