@@ -11,9 +11,7 @@ public final class PolygonClipper {
     /**
      * Keep the positive side of the plane.
      */
-    public static ClipResult clip(
-            Polygon polygon,
-            Plane plane) {
+    public static ClipResult clip(Polygon polygon, Plane plane) {
         ClipResult result = new ClipResult();
 
         List<ClipVertex> vertices = polygon.vertices;
@@ -43,8 +41,7 @@ public final class PolygonClipper {
             } else if (currentInside) {
 
                 // inside -> outside
-                ClipVertex inter =
-                        intersection(current, next, dc, dn);
+                ClipVertex inter = intersection(current, next, dc, dn);
 
                 result.polygon.vertices.add(inter);
 
@@ -53,8 +50,7 @@ public final class PolygonClipper {
             } else if (nextInside) {
 
                 // outside -> inside
-                ClipVertex inter =
-                        intersection(current, next, dc, dn);
+                ClipVertex inter = intersection(current, next, dc, dn);
 
                 result.polygon.vertices.add(inter);
 

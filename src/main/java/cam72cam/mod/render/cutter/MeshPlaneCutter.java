@@ -17,18 +17,11 @@ public class MeshPlaneCutter {
 
         for (T primitive : primitives) {
 
-            Polygon polygon =
-                    adapter.toPolygon(primitive);
+            Polygon polygon = adapter.toPolygon(primitive);
 
-            ClipResult clipped =
-                    PolygonClipper.clip(
-                            polygon,
-                            plane
-                    );
+            ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
-            intersections.addAll(
-                    clipped.intersections
-            );
+            intersections.addAll(clipped.intersections);
 
             if (clipped.polygon.vertices.size() >= 3) {
 
@@ -41,19 +34,11 @@ public class MeshPlaneCutter {
             }
         }
 
-        Polygon cap =
-                CapBuilder.build(
-                        intersections,
-                        plane
-                );
+        Polygon cap = CapBuilder.build(intersections, plane);
 
         if (cap != null) {
 
-            Template template =
-                    adapter.createTemplate(
-                            primitives,
-                            plane
-                    );
+            Template template = adapter.createTemplate(primitives, plane);
 
             if (template != null) {
 
@@ -63,12 +48,7 @@ public class MeshPlaneCutter {
                         template
                 );
 
-                result.addAll(
-                        adapter.fromTemplate(
-                                cap,
-                                template
-                        )
-                );
+                result.addAll(adapter.fromTemplate(cap, template));
             }
         }
 

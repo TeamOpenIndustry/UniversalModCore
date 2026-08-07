@@ -9,13 +9,10 @@ public final class CapBuilder {
 
     private CapBuilder() {}
 
-    public static Polygon build( // TODO: we can build proper Concave Polygon yet
-            List<ClipVertex> intersections,
-            Plane plane) {
+    // TODO: we can build proper Concave Polygon yet
+    public static Polygon build(List<ClipVertex> intersections, Plane plane) {
 
-        List<ClipVertex> vertices =
-                VertexDeduplicator.deduplicate(
-                        intersections);
+        List<ClipVertex> vertices = VertexDeduplicator.deduplicate(intersections);
 
         if (vertices.size() < 3) {
             return null;
@@ -23,8 +20,7 @@ public final class CapBuilder {
 
         Vec3d center = computeCenter(vertices);
 
-        PlaneBasis basis =
-                PlaneBasis.fromPlane(plane);
+        PlaneBasis basis = PlaneBasis.fromPlane(plane);
 
         vertices.sort(
                 Comparator.comparingDouble(v -> {
@@ -44,8 +40,7 @@ public final class CapBuilder {
         return polygon;
     }
 
-    private static Vec3d computeCenter(
-            List<ClipVertex> vertices) {
+    private static Vec3d computeCenter(List<ClipVertex> vertices) {
 
         double x = 0;
         double y = 0;

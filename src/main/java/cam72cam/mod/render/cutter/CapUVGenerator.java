@@ -9,9 +9,7 @@ public final class CapUVGenerator {
 
     private CapUVGenerator() {}
 
-    public static void generate(
-            Polygon polygon,
-            QuadTemplate template) {
+    public static void generate(Polygon polygon, QuadTemplate template) {
 
         Vec3d p0 = template.sourcePos[0];
         Vec3d p1 = template.sourcePos[1];
