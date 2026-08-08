@@ -17,23 +17,26 @@ import java.util.stream.Collectors;
 
 public class ConfigFile {
 
-    private static Map<Class<?>, Function<Object, String>> encoders = new HashMap<>();
-    private static Map<Class<?>, Function<String, Object>> decoders = new HashMap<>();
+    private static final Map<Class<?>, Function<Object, String>> encoders = new HashMap<>();
+    private static final Map<Class<?>, Function<String, Object>> decoders = new HashMap<>();
 
     static {
-        addMapper(int.class, i -> (i.toString()), Integer::parseInt);
-        addMapper(Integer.class, i -> (i == null ? "" : i.toString()), Integer::parseInt);
-        addMapper(long.class, i -> (i.toString()), Long::parseLong);
-        addMapper(Long.class, i -> (i == null ? "" : i.toString()), Long::parseLong);
-        addMapper(float.class, i -> (i.toString()), Float::parseFloat);
-        addMapper(Float.class, i -> (i == null ? "" : i.toString()), Float::parseFloat);
-        addMapper(double.class, i -> (i.toString()), Double::parseDouble);
-        addMapper(Double.class, i -> (i == null ? "" : i.toString()), Double::parseDouble);
+        addMapper(int.class, i -> Integer.toString(i), Integer::parseInt);
+        addMapper(Integer.class, i -> i == null ? "" : i.toString(), Integer::parseInt);
 
-        addMapper(boolean.class, i -> (i.toString()), Boolean::parseBoolean);
-        addMapper(Boolean.class, i -> (i == null ? "" : i.toString()), Boolean::parseBoolean);
+        addMapper(long.class, l -> Long.toString(l), Long::parseLong);
+        addMapper(Long.class, l -> l == null ? "" : l.toString(), Long::parseLong);
 
-        addMapper(String.class, i -> (i == null ? "" : i), l -> l);
+        addMapper(float.class, f -> Float.toString(f), Float::parseFloat);
+        addMapper(Float.class, f -> f == null ? "" : f.toString(), Float::parseFloat);
+
+        addMapper(double.class, d -> Double.toString(d), Double::parseDouble);
+        addMapper(Double.class, d -> d == null ? "" : d.toString(), Double::parseDouble);
+
+        addMapper(boolean.class, b -> Boolean.toString(b), Boolean::parseBoolean);
+        addMapper(Boolean.class, b -> b == null ? "" : b.toString(), Boolean::parseBoolean);
+
+        addMapper(String.class, str -> str == null ? "" : str, str -> str);
 
     }
 
@@ -76,12 +79,12 @@ public class ConfigFile {
         }
     }
 
-    public static void write(Class cls) {
+    public static void write(Class<?> cls) {
         ConfigInstance ci = new ConfigInstance(cls);
         ci.write();
     }
 
-    public static void sync(Class cls) {
+    public static void sync(Class<?> cls) {
         ConfigInstance ci = new ConfigInstance(cls);
         ci.read();
         ci.write();
@@ -101,7 +104,7 @@ public class ConfigFile {
 
     private static String encode(Class<?> cls, Object o) {
         if (cls.isEnum()) {
-            return ((Enum) o).name();
+            return ((Enum<?>) o).name();
         }
         return encoders.get(cls).apply(o);
     }
@@ -159,7 +162,7 @@ public class ConfigFile {
         }
 
         protected List<String> getFormattedComment() {
-            if (getComment().length() == 0) {
+            if (getComment().isEmpty()) {
                 return new ArrayList<>();
             }
             List<String> result = new ArrayList<>();
@@ -167,7 +170,7 @@ public class ConfigFile {
             if (parts.length == 1) {
                 result.add("# " + parts[0]);
             } else {
-                int max = Arrays.stream(parts).map(String::length).sorted(Comparator.reverseOrder()).findFirst().get();
+                int max = Arrays.stream(parts).map(String::length).max(Comparator.naturalOrder()).get();
                 max = Math.max(max, getName().length());
                 result.add(StringUtils.repeat("#", max + 4));
                 result.add("# " + getName() + StringUtils.repeat(" ", max - getName().length()) + " #");
@@ -208,8 +211,7 @@ public class ConfigFile {
                             }
                             field.set(null, array);
                         } catch (IllegalAccessException | NullPointerException e) {
-                            ModCore.error("Error reading field " + field);
-                            e.printStackTrace();
+                            ModCore.catching(e, "Error reading field " + field);
                         }
                         return;
                     } else {
@@ -239,8 +241,7 @@ public class ConfigFile {
                                 data.put(key, val);
                             }
                         } catch (IllegalAccessException | NullPointerException e) {
-                            ModCore.error("Error reading field " + field);
-                            e.printStackTrace();
+                            ModCore.catching(e, "Error reading field " + field);
                         }
                         return;
                     } else {
@@ -253,18 +254,16 @@ public class ConfigFile {
             try {
                 field.set(null, decode(field.getType(), line.split("=", 2)[1]));
             } catch (IllegalAccessException | NullPointerException e) {
-                ModCore.error("Error reading field " + field);
-                e.printStackTrace();
+                ModCore.catching(e, "Error reading field " + field);
             }
         }
 
         @Override
         protected List<String> write() {
-            List<String> lines = new ArrayList<>();
-            lines.addAll(getFormattedComment());
+            List<String> lines = new ArrayList<>(getFormattedComment());
 
             if (field.getType().isArray()) {
-                Class aType = field.getType().getComponentType();
+                Class<?> aType = field.getType().getComponentType();
                 lines.add(getName() + " <");
                 try {
                     Object[] data = (Object[]) field.get(null);
@@ -358,19 +357,46 @@ public class ConfigFile {
                 }
 
                 String[] parts = line.split("[{=<]");
-                Property prop = properties.stream().filter(x -> x.getName().equals(parts[0].trim()) || x.getName().equals(parts[0].substring(2))).findFirst().orElse(null);
+                String key = parts[0].trim();
+                Property prop = null;
+                for (Property p : properties) {
+                    String propName = p.getName();
+                    if (propName.equals(key)
+                            || (key.length() >= 2 && propName.equals(key.substring(2)))) { // [type]: prefix
+                        // Found same definition
+                        prop = p;
+                        break;
+                    }
+                }
                 if (prop != null) {
                     prop.read(lines);
                 } else {
-                    lines.remove(0);
+                    // Unknown, having to skip
+                    if (line.contains("{") || line.contains("<")) {
+                        // Block for maps/cl
+                        String openChar = line.contains("{") ? "{" : "<";
+                        String closeChar = openChar.equals("{") ? "}" : ">";
+                        int depth = 1;
+                        lines.remove(0); // remove the opening line
+                        while (!lines.isEmpty() && depth > 0) {
+                            String skipLine = lines.remove(0);
+                            if (skipLine.equals(openChar)) {
+                                depth++;
+                            } else if (skipLine.equals(closeChar)) {
+                                depth--;
+                            }
+                        }
+                    } else {
+                        // Single line
+                        lines.remove(0);
+                    }
                 }
             }
         }
 
         @Override
         protected List<String> write() {
-            List<String> lines = new ArrayList<>();
-            lines.addAll(getFormattedComment());
+            List<String> lines = new ArrayList<>(getFormattedComment());
             lines.add(getName() + " {");
             for (Property p : properties) {
                 p.write().forEach(line -> lines.add("    " + line));

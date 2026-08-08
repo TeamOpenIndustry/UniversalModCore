@@ -6,14 +6,19 @@ import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 
-import java.util.Collection;
+import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * Track UMC Entities and handle inter chunk collision
+ * <p>
+ * Internal, don't use outside UMC!
  * @see cam72cam.mod.mixin.feat.large_entity_collision.MixinVanillaWorld
  */
 public class WorldEntityTracker {
@@ -22,7 +27,7 @@ public class WorldEntityTracker {
     private static final int HORIZONTAL_SEARCH_RADIUS_CHUNKS = 3;
     //Vertical distance (32 blocks)
     private static final int VERTICAL_SEARCH_RADIUS_CHUNKS = 2;
-    private final Map<Long, Set<ModdedEntity>> umcEntities = new Long2ObjectOpenHashMap<>();
+    private final Map<Long, Set<WeakReference<ModdedEntity>>> umcEntities = new Long2ObjectOpenHashMap<>();
     //K are chunks containing UMC entities, V are neighbor chunks(245 per now) that this entity may extend to
     //Query value to see which chunk may contain possible colliding entities
     private final LongBiMultiMap scanningRange = new LongBiMultiMap();
@@ -39,22 +44,20 @@ public class WorldEntityTracker {
 
         lock.writeLock().lock();
         try {
-            Set<ModdedEntity> moddedEntities = umcEntities.get(chunk);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(chunk);
             if (moddedEntities == null) {
                 moddedEntities = new ObjectArraySet<>();
                 umcEntities.put(chunk, moddedEntities);
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
                         //Handle Y below 1.17 is likely to cause more bug
-                        int k = 0;
-                            scanningRange.put(chunk, ChunkPos.asLong(i, k, j));
-//                        }
+                        scanningRange.put(chunk, ChunkPos.asLong(i, 0, j));
                     }
                 }
             }
-            moddedEntities.add(entity);
+            moddedEntities.removeIf(ref -> ref.get() == null);
+            moddedEntities.add(new WeakReference<>(entity));
         } finally {
             lock.writeLock().unlock();
         }
@@ -68,8 +71,8 @@ public class WorldEntityTracker {
             if (!umcEntities.containsKey(chunk)) {
                 return;
             }
-            Collection<ModdedEntity> moddedEntities = umcEntities.get(chunk);
-            moddedEntities.remove(entity);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(chunk);
+            moddedEntities.removeIf(ref -> ref.get() == null || ref.get() == entity);
 
             if (moddedEntities.isEmpty()) {
                 umcEntities.remove(chunk);
@@ -90,9 +93,9 @@ public class WorldEntityTracker {
             }
 
             // remove from old section
-            Set<ModdedEntity> moddedEntities = umcEntities.get(oldSection);
+            Set<WeakReference<ModdedEntity>> moddedEntities = umcEntities.get(oldSection);
             if (moddedEntities != null) {
-                moddedEntities.remove(entity);
+                moddedEntities.removeIf(ref -> ref.get() == null || ref.get() == entity);
                 if (moddedEntities.isEmpty()) {
                     umcEntities.remove(oldSection);
                     scanningRange.removeKey(oldSection);
@@ -111,15 +114,13 @@ public class WorldEntityTracker {
 
                 for (int i = x - HORIZONTAL_SEARCH_RADIUS_CHUNKS; i <= x + HORIZONTAL_SEARCH_RADIUS_CHUNKS; i++) {
                     for (int j = z - HORIZONTAL_SEARCH_RADIUS_CHUNKS; j <= z + HORIZONTAL_SEARCH_RADIUS_CHUNKS; j++) {
-//                        for (int k = y - VERTICAL_SEARCH_RADIUS_CHUNKS; k <= y + VERTICAL_SEARCH_RADIUS_CHUNKS; k++) {
-                            int k = 0;
-                            scanningRange.put(newSection, ChunkPos.asLong(i, k, j));
-//                        }
+                        scanningRange.put(newSection, ChunkPos.asLong(i, 0, j));
                     }
                 }
             }
 
-            moddedEntities.add(entity);
+            moddedEntities.removeIf(ref -> ref.get() == null);
+            moddedEntities.add(new WeakReference<>(entity));
         } finally {
             lock.writeLock().unlock();
         }
@@ -137,7 +138,14 @@ public class WorldEntityTracker {
     public Set<ModdedEntity> queryEntities(long pos) {
         lock.readLock().lock();
         try {
-            return umcEntities.get(pos);
+            Set<WeakReference<ModdedEntity>> refs = umcEntities.get(pos);
+            if (refs == null || refs.isEmpty()) {
+                return Collections.emptySet();
+            }
+            return refs.stream()
+                       .map(WeakReference::get)
+                       .filter(Objects::nonNull)
+                       .collect(Collectors.toSet());
         } finally {
             lock.readLock().unlock();
         }
@@ -154,17 +162,15 @@ public class WorldEntityTracker {
             valueToKeys.computeIfAbsent(value, v -> new LongArraySet(4)).add(key);
         }
 
-        //DON't MODIFY RETURNED SET!
-        //If you want please clone()
         public Set<Long> getKeys(long value) {
             LongArraySet set = valueToKeys.get(value);
-            return set != null ? set : new LongArraySet();
+            return set != null ? set : Collections.emptySet();
         }
 
         public Set<Long> removeKey(long key) {
             LongOpenHashSet values = keyToValues.remove(key);
             if (values == null) {
-                return new LongArraySet();
+                return Collections.emptySet();
             }
 
             for (long value : values) {
@@ -178,15 +184,6 @@ public class WorldEntityTracker {
             }
 
             return values;
-        }
-
-        public boolean contains(long key) {
-            return keyToValues.containsKey(key);
-        }
-
-        public void clear() {
-            keyToValues.clear();
-            valueToKeys.clear();
         }
     }
 }
