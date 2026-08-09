@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class PolygonClipper {
@@ -14,12 +15,14 @@ public final class PolygonClipper {
     public static ClipResult clip(Polygon polygon, Plane plane) {
         ClipResult result = new ClipResult();
 
-        List<ClipVertex> vertices = polygon.vertices;
+        List<ClipVertex> vertices = polygon.getVertices();
 
         if (vertices.isEmpty()) {
+            result.polygon = new Polygon(new ArrayList<>(), polygon.getNormal());
             return result;
         }
 
+        List<ClipVertex> clippedVerts = new ArrayList<>();
         int size = vertices.size();
 
         for (int i = 0; i < size; i++) {
@@ -34,34 +37,26 @@ public final class PolygonClipper {
             boolean nextInside = dn >= -EPS;
 
             if (currentInside && nextInside) {
-
                 // inside -> inside
-                result.polygon.vertices.add(next);
+                clippedVerts.add(next);
 
             } else if (currentInside) {
-
                 // inside -> outside
                 ClipVertex inter = intersection(current, next, dc, dn);
-
-                result.polygon.vertices.add(inter);
-
+                clippedVerts.add(inter);
                 result.intersections.add(inter.copy());
 
             } else if (nextInside) {
-
                 // outside -> inside
                 ClipVertex inter = intersection(current, next, dc, dn);
-
-                result.polygon.vertices.add(inter);
-
+                clippedVerts.add(inter);
                 result.intersections.add(inter.copy());
-
-                result.polygon.vertices.add(next);
-
+                clippedVerts.add(next);
             }
-            // outside -> outside
+            // outside -> outside → nothing
         }
 
+        result.polygon = new Polygon(clippedVerts, polygon.getNormal());
         return result;
     }
 
@@ -72,8 +67,6 @@ public final class PolygonClipper {
             double db) {
 
         double t = da / (da - db);
-
         return a.lerp(b, t);
     }
-
 }

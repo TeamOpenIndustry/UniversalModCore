@@ -9,20 +9,11 @@ public interface PrimitiveAdapter<T, Template> {
 
     Polygon toPolygon(T primitive);
 
-    List<T> fromPrimitive(
-            Polygon polygon,
-            T primitive);
+    List<T> fromPrimitive(Polygon polygon, T primitive);
 
-    List<T> fromTemplate(
-            Polygon polygon,
-            Template template);
+    List<T> fromTemplate(Polygon polygon, Template template);
 
-    Template createTemplate(
-            List<T> primitives,
-            Plane plane);
+    Template createTemplate(List<T> primitives, Plane plane);
 
-    void prepareCap(
-            Polygon polygon,
-            Plane plane,
-            Template template);
+    void prepareCap(Polygon polygon, Plane plane, Template template);
 }

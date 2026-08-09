@@ -5,7 +5,7 @@ import java.util.List;
 
 public class ClipResult {
 
-    public final Polygon polygon = new Polygon();
+    public Polygon polygon = null;
 
-    public final List<ClipVertex> intersections = new ArrayList<>();
+    public List<ClipVertex> intersections = new ArrayList<>();
 }

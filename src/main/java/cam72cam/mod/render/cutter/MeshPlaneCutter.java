@@ -2,8 +2,8 @@ package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.render.cutter.adapter.PrimitiveAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 public class MeshPlaneCutter {
 
     public static <T, Template> List<T> cut(
@@ -23,7 +23,7 @@ public class MeshPlaneCutter {
 
             intersections.addAll(clipped.intersections);
 
-            if (clipped.polygon.vertices.size() >= 3) {
+            if (clipped.polygon.getVertices().size() >= 3) {
 
                 result.addAll(
                         adapter.fromPrimitive(

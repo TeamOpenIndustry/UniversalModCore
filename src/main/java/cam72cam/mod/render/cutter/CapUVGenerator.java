@@ -3,13 +3,15 @@ package cam72cam.mod.render.cutter;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.cutter.adapter.QuadTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public final class CapUVGenerator {
 
     private CapUVGenerator() {}
 
-    public static void generate(Polygon polygon, QuadTemplate template) {
+    public static Polygon generate(Polygon polygon, QuadTemplate template) {
 
         Vec3d p0 = template.sourcePos[0];
         Vec3d p1 = template.sourcePos[1];
@@ -27,29 +29,19 @@ public final class CapUVGenerator {
         double det = a00 * a11 - a01 * a01;
 
         if (Math.abs(det) < 1E-8) {
-            return;
+            return polygon.copy();
         }
 
-        for (ClipVertex vertex : polygon.vertices) {
+        List<ClipVertex> vertices = new ArrayList<>(polygon.getVertices());
+
+        for (ClipVertex vertex : vertices) {
             Vec3d d = vertex.pos.subtract(p0);
 
             double b0 = d.dotProduct(e1);
             double b1 = d.dotProduct(e2);
 
-            // solve:
-            //
-            // [a00 a01][x] = [b0]
-            // [a01 a11][y] = [b1]
-
             double x = (b0 * a11 - b1 * a01) / det;
             double y = (b1 * a00 - b0 * a01) / det;
-
-            /*
-             * x = p0 -> p1 direction
-             * y = p0 -> p3 direction
-             *
-             * UV uses the same weight
-             */
 
             vertex.u = (float) (
                     template.sourceU[0]
@@ -64,6 +56,7 @@ public final class CapUVGenerator {
             );
         }
 
-        Collections.reverse(polygon.vertices);
+        Collections.reverse(vertices);
+        return new Polygon(vertices, polygon.getNormal());
     }
 }

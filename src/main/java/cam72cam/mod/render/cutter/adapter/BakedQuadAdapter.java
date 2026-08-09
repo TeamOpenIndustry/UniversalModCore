@@ -12,14 +12,11 @@ import java.util.List;
 
 public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplate> {
 
-    private static final int STRIDE =
-            DefaultVertexFormat.BLOCK.getVertexSize() / 4;
+    private static final int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
 
 
     @Override
-    public QuadTemplate createTemplate(
-            List<BakedQuad> quads,
-            Plane plane) {
+    public QuadTemplate createTemplate(List<BakedQuad> quads, Plane plane) {
 
         if (quads.isEmpty()) {
             return null;
@@ -48,11 +45,9 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     Float.intBitsToFloat(data[base + 2])
             );
 
-            sourceU[i] =
-                    Float.intBitsToFloat(data[base + 4]);
+            sourceU[i] = Float.intBitsToFloat(data[base + 4]);
 
-            sourceV[i] =
-                    Float.intBitsToFloat(data[base + 5]);
+            sourceV[i] = Float.intBitsToFloat(data[base + 5]);
         }
 
 
@@ -72,9 +67,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
     }
 
 
-    private static BakedQuad findBestQuad(
-            List<BakedQuad> quads,
-            Plane plane) {
+    private static BakedQuad findBestQuad(List<BakedQuad> quads, Plane plane) {
 
         Facing target = BlockDirectionUtil.fromNormal(plane.normal.scale(-1));
 
@@ -82,10 +75,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
             for (BakedQuad quad : quads) {
 
-                Facing face =
-                        Facing.from(
-                                quad.getDirection()
-                        );
+                Facing face = Facing.from(quad.getDirection());
 
                 if (face == target) {
                     return quad;
@@ -99,41 +89,39 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     @Override
     public Polygon toPolygon(BakedQuad quad) {
-
-        Polygon polygon = new Polygon();
-
+        List<ClipVertex> verts = new ArrayList<>(4);
         int[] data = quad.getVertices();
-
         for (int i = 0; i < 4; i++) {
-            polygon.vertices.add(
-                    readVertex(data, i)
-            );
+            verts.add(readVertex(data, i));
         }
-
-        return polygon;
+        Vec3d normal = null;
+        net.minecraft.core.Direction dir = quad.getDirection();
+        if (dir != null) {
+            normal = new Vec3d(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+        }
+        return new Polygon(verts, normal);
     }
 
 
     @Override
-    public List<BakedQuad> fromPrimitive(
-            Polygon polygon,
-            BakedQuad primitive) {
+    public List<BakedQuad> fromPrimitive(Polygon polygon, BakedQuad primitive) {
 
         List<BakedQuad> result = new ArrayList<>();
 
-        if (polygon.vertices.size() < 3) {
+        List<ClipVertex> verts = polygon.getVertices();
+        if (verts.size() < 3) {
             return result;
         }
 
-        for (Polygon quad :
-                PolygonQuadBuilder.build(polygon)) {
+        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
 
             int[] data = primitive.getVertices().clone();
+            List<ClipVertex> quadVerts = quad.getVertices();
 
-            writeVertex(data, 0, quad.vertices.get(3));// TODO: Seems only this order is right, do we need to keep order in polygon?
-            writeVertex(data, 1, quad.vertices.get(0));
-            writeVertex(data, 2, quad.vertices.get(1));
-            writeVertex(data, 3, quad.vertices.get(2));
+            writeVertex(data, 0, quadVerts.get(3));// TODO: Seems only this order is right, do we need to keep order in polygon?
+            writeVertex(data, 1, quadVerts.get(0));
+            writeVertex(data, 2, quadVerts.get(1));
+            writeVertex(data, 3, quadVerts.get(2));
 
             result.add(
                     new BakedQuad(
@@ -152,29 +140,26 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
 
     @Override
-    public List<BakedQuad> fromTemplate(
-            Polygon polygon,
-            QuadTemplate template) {
+    public List<BakedQuad> fromTemplate(Polygon polygon, QuadTemplate template) {
 
-        applyNormal(
-                polygon,
-                template.facing
-        );
+        applyNormal(polygon, template.facing);
 
         List<BakedQuad> result = new ArrayList<>();
 
-        if (polygon.vertices.size() < 3) {
+        List<ClipVertex> verts = polygon.getVertices();
+        if (verts.size() < 3) {
             return result;
         }
 
         for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
 
             int[] data = new int[STRIDE * 4];
+            List<ClipVertex> quadVerts = quad.getVertices();
 
-            writeVertex(data, 0, quad.vertices.get(0));
-            writeVertex(data, 1, quad.vertices.get(1));
-            writeVertex(data, 2, quad.vertices.get(2));
-            writeVertex(data, 3, quad.vertices.get(3));
+            writeVertex(data, 0, quadVerts.get(3));
+            writeVertex(data, 1, quadVerts.get(2));
+            writeVertex(data, 2, quadVerts.get(1));
+            writeVertex(data, 3, quadVerts.get(0));
 
             result.add(new BakedQuad(
                     data,
@@ -189,15 +174,13 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         return result;
     }
 
-    private static void applyNormal(
-            Polygon polygon,
-            Facing facing) {
+    private static void applyNormal(Polygon polygon, Facing facing) {
 
         byte nx = (byte) (facing.getXMultiplier() * 127);
         byte ny = (byte) (facing.getYMultiplier() * 127);
         byte nz = (byte) (facing.getZMultiplier() * 127);
 
-        for (ClipVertex vertex : polygon.vertices) {
+        for (ClipVertex vertex : polygon.getVertices()) {
             vertex.nx = nx;
             vertex.ny = ny;
             vertex.nz = nz;
@@ -206,51 +189,36 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
 
     @Override
-    public void prepareCap(
-            Polygon polygon,
-            Plane plane,
-            QuadTemplate template) {
+    public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
 
-        CapUVGenerator.generate(
-                polygon,
-                template
-        );
+        CapUVGenerator.generate(polygon, template);
     }
 
 
-    private static ClipVertex readVertex(
-            int[] data,
-            int index) {
+    private static ClipVertex readVertex(int[] data, int index) {
 
         int base = index * STRIDE;
 
 
-        float x =
-                Float.intBitsToFloat(data[base]);
+        float x = Float.intBitsToFloat(data[base]);
 
-        float y =
-                Float.intBitsToFloat(data[base + 1]);
+        float y = Float.intBitsToFloat(data[base + 1]);
 
-        float z =
-                Float.intBitsToFloat(data[base + 2]);
+        float z = Float.intBitsToFloat(data[base + 2]);
 
 
         int color = data[base + 3];
 
 
-        float u =
-                Float.intBitsToFloat(data[base + 4]);
+        float u = Float.intBitsToFloat(data[base + 4]);
 
-        float v =
-                Float.intBitsToFloat(data[base + 5]);
+        float v = Float.intBitsToFloat(data[base + 5]);
 
 
-        int light =
-                data[base + 6];
+        int light = data[base + 6];
 
 
-        int packed =
-                data[base + 7];
+        int packed = data[base + 7];
 
 
         byte nx = (byte)packed;
@@ -271,42 +239,29 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
     }
 
 
-    private static void writeVertex(
-            int[] data,
-            int index,
-            ClipVertex v) {
+    private static void writeVertex(int[] data, int index, ClipVertex v) {
 
         int base = index * STRIDE;
 
 
-        data[base] =
-                Float.floatToRawIntBits((float)v.pos.x);
+        data[base] = Float.floatToRawIntBits((float)v.pos.x);
 
-        data[base + 1] =
-                Float.floatToRawIntBits((float)v.pos.y);
+        data[base + 1] = Float.floatToRawIntBits((float)v.pos.y);
 
-        data[base + 2] =
-                Float.floatToRawIntBits((float)v.pos.z);
+        data[base + 2] = Float.floatToRawIntBits((float)v.pos.z);
 
 
-        data[base + 3] =
-                v.color;
+        data[base + 3] = v.color;
 
 
-        data[base + 4] =
-                Float.floatToRawIntBits(v.u);
+        data[base + 4] = Float.floatToRawIntBits(v.u);
 
-        data[base + 5] =
-                Float.floatToRawIntBits(v.v);
+        data[base + 5] = Float.floatToRawIntBits(v.v);
 
 
-        data[base + 6] =
-                v.light;
+        data[base + 6] = v.light;
 
 
-        data[base + 7] =
-                (v.nx & 0xff)
-                        | ((v.ny & 0xff) << 8)
-                        | ((v.nz & 0xff) << 16);
+        data[base + 7] = (v.nx & 0xff) | ((v.ny & 0xff) << 8) | ((v.nz & 0xff) << 16);
     }
 }
