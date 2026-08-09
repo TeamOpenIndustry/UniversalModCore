@@ -58,9 +58,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         return new QuadTemplate(
                 source.getSprite(),
-                BlockDirectionUtil.fromNormal(
-                        plane.normal.scale(-1)
-                ),
+                BlockDirectionUtil.fromNormal(plane.normal.scale(-1)),
                 source.getTintIndex(),
                 source.isShade(),
                 source.hasAmbientOcclusion(),
@@ -78,10 +76,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             List<BakedQuad> quads,
             Plane plane) {
 
-        Facing target =
-                BlockDirectionUtil.fromNormal(
-                        plane.normal.scale(-1)
-                );
+        Facing target = BlockDirectionUtil.fromNormal(plane.normal.scale(-1));
 
         if (target != null) {
 
@@ -130,34 +125,15 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
-
         for (Polygon quad :
                 PolygonQuadBuilder.build(polygon)) {
 
-            int[] data =
-                    primitive.getVertices().clone();
+            int[] data = primitive.getVertices().clone();
 
-            writeVertex(
-                    data,
-                    0,
-                    quad.vertices.get(0)
-            );
-            writeVertex(
-                    data,
-                    1,
-                    quad.vertices.get(1)
-            );
-            writeVertex(
-                    data,
-                    2,
-                    quad.vertices.get(2)
-            );
-            writeVertex(
-                    data,
-                    3,
-                    quad.vertices.get(3)
-            );
-
+            writeVertex(data, 0, quad.vertices.get(3));// TODO: Seems only this order is right, do we need to keep order in polygon?
+            writeVertex(data, 1, quad.vertices.get(0));
+            writeVertex(data, 2, quad.vertices.get(1));
+            writeVertex(data, 3, quad.vertices.get(2));
 
             result.add(
                     new BakedQuad(
@@ -170,7 +146,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     )
             );
         }
-
 
         return result;
     }
