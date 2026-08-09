@@ -94,11 +94,8 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         for (int i = 0; i < 4; i++) {
             verts.add(readVertex(data, i));
         }
-        Vec3d normal = null;
-        net.minecraft.core.Direction dir = quad.getDirection();
-        if (dir != null) {
-            normal = new Vec3d(dir.getStepX(), dir.getStepY(), dir.getStepZ());
-        }
+        Facing dir = Facing.from(quad.getDirection());
+        Vec3d normal = new Vec3d(dir.getXMultiplier(), dir.getYMultiplier(), dir.getZMultiplier());
         return new Polygon(verts, normal);
     }
 
