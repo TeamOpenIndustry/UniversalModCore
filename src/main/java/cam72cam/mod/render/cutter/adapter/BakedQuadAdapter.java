@@ -150,7 +150,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
 
-            int[] data = new int[STRIDE * 4];
+            int[] data = template.source.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
             writeVertex(data, 0, quadVerts.get(3));
