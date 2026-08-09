@@ -21,13 +21,13 @@ public class MeshPlaneCutter {
 
             ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
-            intersections.addAll(clipped.intersections);
+            intersections.addAll(clipped.getIntersections());
 
-            if (clipped.polygon.getVertices().size() >= 3) {
+            if (clipped.getPolygon().getVertices().size() >= 3) {
 
                 result.addAll(
                         adapter.fromPrimitive(
-                                clipped.polygon,
+                                clipped.getPolygon(),
                                 primitive
                         )
                 );

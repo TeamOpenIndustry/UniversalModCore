@@ -13,20 +13,20 @@ public final class PolygonClipper {
      * Keep the positive side of the plane.
      */
     public static ClipResult clip(Polygon polygon, Plane plane) {
-        ClipResult result = new ClipResult();
-
         List<ClipVertex> vertices = polygon.getVertices();
 
         if (vertices.isEmpty()) {
-            result.polygon = new Polygon(new ArrayList<>(), polygon.getNormal());
-            return result;
+            return new ClipResult(
+                    new Polygon(new ArrayList<>(), polygon.getNormal()),
+                    new ArrayList<>()
+            );
         }
 
         List<ClipVertex> clippedVerts = new ArrayList<>();
+        List<ClipVertex> intersections = new ArrayList<>();
         int size = vertices.size();
 
         for (int i = 0; i < size; i++) {
-
             ClipVertex current = vertices.get(i);
             ClipVertex next = vertices.get((i + 1) % size);
 
@@ -37,27 +37,27 @@ public final class PolygonClipper {
             boolean nextInside = dn >= -EPS;
 
             if (currentInside && nextInside) {
-                // inside -> inside
+                // inside → inside
                 clippedVerts.add(next);
 
             } else if (currentInside) {
-                // inside -> outside
+                // inside → outside
                 ClipVertex inter = intersection(current, next, dc, dn);
                 clippedVerts.add(inter);
-                result.intersections.add(inter.copy());
+                intersections.add(inter.copy());
 
             } else if (nextInside) {
-                // outside -> inside
+                // outside → inside
                 ClipVertex inter = intersection(current, next, dc, dn);
                 clippedVerts.add(inter);
-                result.intersections.add(inter.copy());
+                intersections.add(inter.copy());
                 clippedVerts.add(next);
             }
-            // outside -> outside → nothing
+            // outside → outside → nothing
         }
 
-        result.polygon = new Polygon(clippedVerts, polygon.getNormal());
-        return result;
+        Polygon clippedPolygon = new Polygon(clippedVerts, polygon.getNormal());
+        return new ClipResult(clippedPolygon, intersections);
     }
 
     private static ClipVertex intersection(
