@@ -32,7 +32,10 @@ public class CreativeTab {
             builder.displayItems((params, output) -> {
                 for (CustomItem customItem : inject) {
                     for (ItemStack itemVariant : customItem.getItemVariants(CreativeTab.this)) {
-                        output.accept(itemVariant.internal());
+                        output.accept(itemVariant.internal(), CreativeModeTab.TabVisibility.PARENT_TAB_ONLY);
+                    }
+                    for (ItemStack itemVariant : customItem.getItemVariants(null)) {
+                        output.accept(itemVariant.internal(), CreativeModeTab.TabVisibility.SEARCH_TAB_ONLY);
                     }
                 }
             });

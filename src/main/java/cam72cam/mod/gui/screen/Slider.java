@@ -51,12 +51,7 @@ public class Slider extends Button {
 
     @Deprecated
     public Slider(IScreenBuilder builder, int x, int y, String text, double min, double max, double start, boolean doublePrecision) {
-        super(builder,
-              new InternalForgeSlider(builder.getWidth() / 2 + x, builder.getHeight() / 4 + y, 150, 20,
-                                      Component.literal(text), Component.literal(""), min, max, start, 0, doublePrecision ? 4 : 0, true),
-              ((hand, button1) -> {}));
-        ((InternalForgeSlider)this.button).clicker = this::onSlider;
-        ((InternalForgeSlider)this.button).setter = this::getSliderText;
+        this(builder, x, y, 150, 20, text, min, max, start, doublePrecision, slid -> {});
     }
 
     /** Called when the slider value is changed */
