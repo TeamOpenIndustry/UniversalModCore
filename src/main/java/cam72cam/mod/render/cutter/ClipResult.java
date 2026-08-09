@@ -1,11 +1,23 @@
 package cam72cam.mod.render.cutter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class ClipResult {
+public final class ClipResult {
+    private final Polygon polygon;
+    private final List<ClipVertex> intersections;
 
-    public final Polygon polygon = new Polygon();
+    public ClipResult(Polygon polygon, List<ClipVertex> intersections) {
+        this.polygon = polygon;
+        this.intersections = Collections.unmodifiableList(new ArrayList<>(intersections));
+    }
 
-    public final List<ClipVertex> intersections = new ArrayList<>();
+    public Polygon getPolygon() {
+        return polygon;
+    }
+
+    public List<ClipVertex> getIntersections() {
+        return intersections;
+    }
 }

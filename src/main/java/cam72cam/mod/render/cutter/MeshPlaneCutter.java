@@ -4,6 +4,7 @@ import cam72cam.mod.render.cutter.adapter.PrimitiveAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+
 public class MeshPlaneCutter {
 
     public static <T, Template> List<T> cut(
@@ -21,13 +22,13 @@ public class MeshPlaneCutter {
 
             ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
-            intersections.addAll(clipped.intersections);
+            intersections.addAll(clipped.getIntersections());
 
-            if (clipped.polygon.vertices.size() >= 3) {
+            if (clipped.getPolygon().getVertices().size() >= 3) {
 
                 result.addAll(
                         adapter.fromPrimitive(
-                                clipped.polygon,
+                                clipped.getPolygon(),
                                 primitive
                         )
                 );

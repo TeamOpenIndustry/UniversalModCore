@@ -86,16 +86,15 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     @Override
     public Polygon toPolygon(BakedQuad quad) {
-
-        Polygon polygon = new Polygon();
-
+        List<ClipVertex> verts = new ArrayList<>(4);
         int[] data = quad.getVertexData();
-
         for (int i = 0; i < 4; i++) {
-            polygon.vertices.add(readVertex(data, i));
+            verts.add(readVertex(data, i));
         }
 
-        return polygon;
+        Facing dir = Facing.from(quad.getFace());
+        Vec3d normal = new Vec3d(dir.getXMultiplier(), dir.getYMultiplier(), dir.getZMultiplier());
+        return new Polygon(verts, normal);
     }
 
     @Override
@@ -103,7 +102,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         List<BakedQuad> result = new ArrayList<>();
 
-        if (polygon.vertices.size() < 3) {
+        if (polygon.getVertices().size() < 3) {
             return result;
         }
 
@@ -111,10 +110,10 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
             int[] data = primitive.getVertexData().clone();
 
-            writeVertex(data, 0, quad.vertices.get(0));
-            writeVertex(data, 1, quad.vertices.get(1));
-            writeVertex(data, 2, quad.vertices.get(2));
-            writeVertex(data, 3, quad.vertices.get(3));
+            writeVertex(data, 0, quad.getVertices().get(0));
+            writeVertex(data, 1, quad.getVertices().get(1));
+            writeVertex(data, 2, quad.getVertices().get(2));
+            writeVertex(data, 3, quad.getVertices().get(3));
 
             result.add(new BakedQuad(
                     data,
@@ -134,74 +133,24 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         List<BakedQuad> result = new ArrayList<>();
 
-        if (polygon.vertices.size() < 3) {
+        if (polygon.getVertices().size() < 3) {
             return result;
         }
 
-
         for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
-
 
             int[] data = template.source.getVertexData().clone();
 
-
-            writePosition(
-                    data,
-                    0,
-                    quad.vertices.get(0),
-                    template.format
-            );
-
-            writePosition(
-                    data,
-                    1,
-                    quad.vertices.get(1),
-                    template.format
-            );
-
-            writePosition(
-                    data,
-                    2,
-                    quad.vertices.get(2),
-                    template.format
-            );
-
-            writePosition(
-                    data,
-                    3,
-                    quad.vertices.get(3),
-                    template.format
-            );
+            writePosition(data, 0, quad.getVertices().get(3), template.format);
+            writePosition(data, 1, quad.getVertices().get(2), template.format);
+            writePosition(data, 2, quad.getVertices().get(1), template.format);
+            writePosition(data, 3, quad.getVertices().get(0), template.format);
 
 
-            writeUV(
-                    data,
-                    0,
-                    quad.vertices.get(0),
-                    template.format
-            );
-
-            writeUV(
-                    data,
-                    1,
-                    quad.vertices.get(1),
-                    template.format
-            );
-
-            writeUV(
-                    data,
-                    2,
-                    quad.vertices.get(2),
-                    template.format
-            );
-
-            writeUV(
-                    data,
-                    3,
-                    quad.vertices.get(3),
-                    template.format
-            );
-
+            writeUV(data, 0, quad.getVertices().get(3), template.format);
+            writeUV(data, 1, quad.getVertices().get(2), template.format);
+            writeUV(data, 2, quad.getVertices().get(1), template.format);
+            writeUV(data, 3, quad.getVertices().get(0), template.format);
 
             result.add(
                     new BakedQuad(
@@ -214,7 +163,6 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     )
             );
         }
-
 
         return result;
     }

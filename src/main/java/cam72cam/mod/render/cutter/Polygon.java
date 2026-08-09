@@ -1,27 +1,34 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.math.Vec3d;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-public class Polygon {
-
-    public final List<ClipVertex> vertices = new ArrayList<>();//max = 6 for now?
-
-    public Polygon() {}
+public final class Polygon {
+    private final List<ClipVertex> vertices;
+    private final Vec3d normal; // Could be null
 
     public Polygon(Collection<ClipVertex> vertices) {
-        this.vertices.addAll(vertices);
+        this(vertices, null);
+    }
+
+    public Polygon(Collection<ClipVertex> vertices, Vec3d normal) {
+        this.vertices = Collections.unmodifiableList(new ArrayList<>(vertices));
+        this.normal = normal;
+    }
+
+    public List<ClipVertex> getVertices() {
+        return vertices;
+    }
+
+    public Vec3d getNormal() {
+        return normal;
     }
 
     public Polygon copy() {
-
-        Polygon polygon = new Polygon();
-
-        for (ClipVertex vertex : vertices) {
-            polygon.vertices.add(vertex.copy());
-        }
-
-        return polygon;
+        return new Polygon(vertices, normal);
     }
 }

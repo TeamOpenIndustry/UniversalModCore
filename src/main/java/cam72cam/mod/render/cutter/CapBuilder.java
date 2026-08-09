@@ -34,10 +34,7 @@ public final class CapBuilder {
                 })
         );
 
-        Polygon polygon = new Polygon();
-        polygon.vertices.addAll(vertices);
-
-        return polygon;
+        return new Polygon(vertices, plane.normal);
     }
 
     private static Vec3d computeCenter(List<ClipVertex> vertices) {
