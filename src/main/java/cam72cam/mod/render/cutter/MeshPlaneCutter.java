@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -36,7 +37,7 @@ import java.util.*;
  */
 public final class MeshPlaneCutter {
 
-    private static final double EPS = 1e-6;
+    private static final double EPS = 1e-4;
 
     private MeshPlaneCutter() {
         // Private constructor to prevent instantiation.
@@ -79,6 +80,12 @@ public final class MeshPlaneCutter {
 
         // 2. Extract all closed loops (rings) from the intersection graph.
         List<List<ClipVertex>> rings = extractRings(allPairs);
+        if (rings.isEmpty()) {
+            ModCore.error("Fail to get ring with ClipVertex Pairs:");
+            for (Pair<ClipVertex, ClipVertex> pair : allPairs) {
+                ModCore.error("%s -> %s", pair.getLeft().pos, pair.getRight().pos);
+            }
+        }
 
         // 3. Generate a cap for each ring.
         Template template = adapter.createTemplate(primitives, plane);
