@@ -1,7 +1,4 @@
-package cam72cam.mod.render.cutter.adapter;
-
-import cam72cam.mod.render.cutter.Plane;
-import cam72cam.mod.render.cutter.Polygon;
+package cam72cam.mod.render.cutter;
 
 import java.util.List;
 
