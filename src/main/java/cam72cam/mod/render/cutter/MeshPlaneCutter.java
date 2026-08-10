@@ -1,8 +1,10 @@
 package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.render.cutter.adapter.PrimitiveAdapter;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MeshPlaneCutter {
 
@@ -12,19 +14,19 @@ public class MeshPlaneCutter {
             PrimitiveAdapter<T, Template> adapter) {
 
         List<T> result = new ArrayList<>();
-
-        List<ClipVertex> intersections = new ArrayList<>();
+        List<ClipVertex> allIntersections = new ArrayList<>();
 
         for (T primitive : primitives) {
-
             Polygon polygon = adapter.toPolygon(primitive);
-
             ClipResult clipped = PolygonClipper.clip(polygon, plane);
 
-            intersections.addAll(clipped.getIntersections());
+            // Extract individual intersection points from pairs
+            for (Pair<ClipVertex, ClipVertex> pair : clipped.getIntersections()) {
+                allIntersections.add(pair.getLeft());
+                allIntersections.add(pair.getRight());
+            }
 
             if (clipped.getPolygon().getVertices().size() >= 3) {
-
                 result.addAll(
                         adapter.fromPrimitive(
                                 clipped.getPolygon(),
@@ -34,20 +36,12 @@ public class MeshPlaneCutter {
             }
         }
 
-        Polygon cap = CapBuilder.build(intersections, plane);
+        Polygon cap = CapBuilder.build(allIntersections, plane);
 
         if (cap != null) {
-
             Template template = adapter.createTemplate(primitives, plane);
-
             if (template != null) {
-
-                adapter.prepareCap(
-                        cap,
-                        plane,
-                        template
-                );
-
+                adapter.prepareCap(cap, plane, template);
                 result.addAll(adapter.fromTemplate(cap, template));
             }
         }
