@@ -27,4 +27,10 @@ public class Plane {
     public Plane flip() {
         return new Plane(normal.scale(-1), -d);
     }
+
+    public Plane offset(Vec3d offset) {
+        Vec3d offsetVec = new Vec3d(offset.x, offset.y, offset.z);
+        double newD = this.d - this.normal.dotProduct(offsetVec);
+        return new Plane(this.normal, newD);
+    }
 }
