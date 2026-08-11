@@ -6,15 +6,15 @@ import cam72cam.mod.serialization.TagCompound;
 public class ModelGroup {
     public final String name;
     public final int faceStart;
-    public final int faceStop;
+    public final int faceEnd;
     public final Vec3d min;
     public final Vec3d max;
     public final Vec3d normal;
 
-    ModelGroup(String name, int faceStart, int faceStop, Vec3d min, Vec3d max, Vec3d normal) {
+    ModelGroup(String name, int faceStart, int faceEnd, Vec3d min, Vec3d max, Vec3d normal) {
         this.name = name;
         this.faceStart = faceStart;
-        this.faceStop = faceStop;
+        this.faceEnd = faceEnd;
         this.min = min;
         this.max = max;
         this.normal = normal;
@@ -35,7 +35,7 @@ public class ModelGroup {
         return new TagCompound()
                 .setString("name", name)
                 .setInteger("faceStart", faceStart)
-                .setInteger("faceStop", faceStop)
+                .setInteger("faceStop", faceEnd)
                 .setVec3d("min", min)
                 .setVec3d("max", max)
                 .setVec3d("normal", normal);

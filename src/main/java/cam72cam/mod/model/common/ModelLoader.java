@@ -2,7 +2,7 @@ package cam72cam.mod.model.common;
 
 import cam72cam.mod.model.common.format.OBJParser;
 import cam72cam.mod.model.common.format.Parser;
-import cam72cam.mod.model.common.mesh.GLModelBuilder;
+import cam72cam.mod.model.common.mesh.GlModelBuilder;
 import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.resource.Identifier;
@@ -24,7 +24,7 @@ public class ModelLoader {
             throw new RuntimeException("Unknown extension: " + extName);
         }
         Parser parser = PARSER.get(extName);
-        GLModelBuilder builder = new GLModelBuilder();
+        GlModelBuilder builder = new GlModelBuilder();
         parser.parse(model, builder);
         builder.finish();
         return builder.build(VAOLayout.POS_UV_COLOR_NORMAL);

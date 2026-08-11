@@ -11,13 +11,26 @@ public interface IModelBuilder {
     int addIndexedUv(float u, float v);
     int addIndexedNormal(float nx, float ny, float nz);
 
-    IFaceBuilder face();
+    IFaceBuilder newFace();
+
+    void doSmoothShading();
 
 	void finish();
+    boolean isFinished();
+
+    default void checkUnfinished() {
+        if (isFinished()) {
+            throw new IllegalStateException("Model builder already finished");
+        }
+    }
+    default void checkFinished() {
+        if (!isFinished()) {
+            throw new IllegalStateException("Must call finish() before this method");
+        }
+    }
 
     interface IFaceBuilder {
-        //Tracked by builder
-        IFaceBuilder vert(int posIdx, int uvIdx, int normalIdx);
+        IFaceBuilder addVert(int posIdx, int uvIdx, int normalIdx);
 
         void end();
     }
