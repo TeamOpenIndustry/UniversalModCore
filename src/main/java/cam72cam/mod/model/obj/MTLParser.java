@@ -22,10 +22,7 @@ public class MTLParser {
             Float KdA = null;
 
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("#")) {
-                    continue;
-                }
-                if (line.length() == 0) {
+                if (line.startsWith("#") || line.isEmpty()) {
                     continue;
                 }
                 String[] parts = line.split(" ");
