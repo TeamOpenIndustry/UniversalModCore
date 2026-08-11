@@ -4,55 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VAOLayout {
-    public static final VAOLayout POS_UV_COLOR = new VAOLayout()
-            .addElement(Usage.POSITION, Type.FLOAT, 3)
-            .addElement(Usage.UV, Type.FLOAT, 2)
-            .addElement(Usage.COLOR, Type.FLOAT, 4);
+    public static final VAOLayout POS_UV_COLOR = new VAOLayout(Element.POS, Element.UV, Element.COLOR);
+    public static final VAOLayout POS_UV_COLOR_NORMAL = new VAOLayout(Element.POS, Element.UV, Element.COLOR, Element.NORMAL);
 
-    public static final VAOLayout POS_UV_COLOR_NORMAL = new VAOLayout()
-            .addElement(Usage.POSITION, Type.FLOAT, 3)
-            .addElement(Usage.UV, Type.FLOAT, 2)
-            .addElement(Usage.COLOR, Type.FLOAT, 4)
-            .addElement(Usage.NORMAL, Type.FLOAT, 3);
+    private final List<Element> elements;
+    private final List<Integer> offsets;
+    private final int stride;
 
-    public enum Type {
-        FLOAT(4), UBYTE(1), BYTE(1), USHORT(2), SHORT(2), UINT(4), INT(4);
-        public final int size;
-        Type(int size) {
-            this.size = size;
+    public VAOLayout(Element... elements) {
+        this.elements = new ArrayList<>();
+        this.offsets = new ArrayList<>();
+        int offset = 0;
+        for (Element element : elements) {
+            this.elements.add(element);
+            this.offsets.add(offset);
+            offset += element.size;
         }
+        this.stride = offset;
     }
 
-    public enum Usage {
-        POSITION, NORMAL, COLOR, UV, PADDING
-    }
 
-    public static class Element {
-        public final Usage usage;
-        public final Type type;
-        public final int count;
-        final int size;
-
-        private Element(Usage usage, Type type, int count) {
-            this.usage = usage;
-            this.type = type;
-            this.count = count;
-            this.size = type.size * count;
-        }
-    }
-
-    private final List<Element> elements = new ArrayList<>();
-    private final List<Integer> offsets = new ArrayList<>();
-    private int stride;
-
-    public VAOLayout addElement(Usage usage, Type type, int count) {
-        Element element = new Element(usage, type, count);
-        elements.add(element);
-        offsets.add(stride);
-        stride += element.size;
-        return this;
-    }
-
+    /** Total size in bytes of a single vertex. */
     public int getStride() {
         return stride;
     }
@@ -78,5 +50,44 @@ public class VAOLayout {
             }
         }
         return -1;
+    }
+
+    public enum Type {
+        UBYTE(1),
+        BYTE(1),
+        USHORT(2),
+        SHORT(2),
+        UINT(4),
+        INT(4),
+        FLOAT(4),
+        DOUBLE(8),
+        ;
+        public final int size;
+        Type(int size) {
+            this.size = size;
+        }
+    }
+
+    public enum Usage {
+        POSITION, NORMAL, COLOR, UV, PADDING
+    }
+
+    public static class Element {
+        public static final Element POS = new Element(Usage.POSITION, Type.FLOAT, 3);
+        public static final Element UV = new Element(Usage.UV, Type.FLOAT, 2);
+        public static final Element NORMAL = new Element(Usage.NORMAL, Type.FLOAT, 3);
+        public static final Element COLOR = new Element(Usage.COLOR, Type.FLOAT, 4);
+
+        public final Usage usage;
+        public final Type type;
+        public final int count;
+        final int size;
+
+        public Element(Usage usage, Type type, int count) {
+            this.usage = usage;
+            this.type = type;
+            this.count = count;
+            this.size = type.size * count;
+        }
     }
 }
