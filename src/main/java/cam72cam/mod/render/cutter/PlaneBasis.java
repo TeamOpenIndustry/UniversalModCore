@@ -22,11 +22,9 @@ public final class PlaneBasis {
                 && Math.abs(n.x) <= Math.abs(n.z)) {
 
             helper = new Vec3d(1,0,0);
-
         } else if (Math.abs(n.y) <= Math.abs(n.z)) {
 
             helper = new Vec3d(0,1,0);
-
         } else {
 
             helper = new Vec3d(0,0,1);
