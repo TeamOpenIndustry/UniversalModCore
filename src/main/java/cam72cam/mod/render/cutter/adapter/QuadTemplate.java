@@ -11,29 +11,21 @@ import java.util.List;
 public class QuadTemplate {
 
     public final TextureAtlasSprite sprite;
-
     public final Facing facing;
-
     public final Facing sourceFace;
 
     public final int tintIndex;
-
     public final boolean shade;
-
     public final boolean ambientOcclusion;
 
     public final VertexFormat format;
 
     public final BakedQuad source;
-
     public final List<BakedQuad> candidates;
 
     public final Vec3d[] sourcePos;
-
     public final float[] sourceU;
-
     public final float[] sourceV;
-
 
     public QuadTemplate(
             TextureAtlasSprite sprite,

@@ -69,6 +69,10 @@ public class StandardModel {
         return this;
     }
 
+    public StandardModel addColorBlock(Color color, Matrix4 transform) {
+        return addColorBlock(color, transform, null);
+    }
+
     /** Add snow layers */
     public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
         layers = Math.max(1, Math.min(8, layers));
@@ -81,6 +85,10 @@ public class StandardModel {
                         : new BakedScaledModel(model, transform, plane)
         );
         return this;
+    }
+
+    public StandardModel addSnow(int layers, Matrix4 transform) {
+        return addSnow(layers, transform, null);
     }
 
     /** Add item as a block (best effort) */
@@ -99,6 +107,10 @@ public class StandardModel {
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
+    }
+
+    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
+        return addItemBlock(bed, transform, null);
     }
 
     /** Add item (think dropped item) */
