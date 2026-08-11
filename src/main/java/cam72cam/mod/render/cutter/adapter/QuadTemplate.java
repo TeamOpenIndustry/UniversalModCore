@@ -27,7 +27,6 @@ public class QuadTemplate {
     public final float[] sourceU;
     public final float[] sourceV;
 
-
     public QuadTemplate(
             TextureAtlasSprite sprite,
             Facing facing,

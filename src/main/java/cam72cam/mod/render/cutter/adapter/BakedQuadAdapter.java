@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplate> {
-
     private static final int STRIDE = DefaultVertexFormats.BLOCK.getIntegerSize();
 
     @Override
@@ -22,6 +21,10 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         }
 
         BakedQuad source = findBestQuad(quads, plane);
+        if (source == null) {
+            return null;
+        }
+
         Vec3d[] sourcePos = new Vec3d[4];
         float[] sourceU = new float[4];
         float[] sourceV = new float[4];
@@ -92,11 +95,12 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
             int[] data = primitive.getVertexData().clone();
+            List<ClipVertex> quadVerts = quad.getVertices();
 
-            writeVertex(data, 0, quad.getVertices().get(0));
-            writeVertex(data, 1, quad.getVertices().get(1));
-            writeVertex(data, 2, quad.getVertices().get(2));
-            writeVertex(data, 3, quad.getVertices().get(3));
+            writeVertex(data, 0, quadVerts.get(0));
+            writeVertex(data, 1, quadVerts.get(1));
+            writeVertex(data, 2, quadVerts.get(2));
+            writeVertex(data, 3, quadVerts.get(3));
 
             result.add(new BakedQuad(
                     data,
@@ -179,12 +183,16 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     private static void writeVertex(int[] data, int index, ClipVertex v) {
         int base = index * STRIDE;
+
         data[base] = Float.floatToRawIntBits((float) v.pos.x);
         data[base + 1] = Float.floatToRawIntBits((float) v.pos.y);
         data[base + 2] = Float.floatToRawIntBits((float) v.pos.z);
+
         data[base + 3] = v.color;
+
         data[base + 4] = Float.floatToRawIntBits(v.u);
         data[base + 5] = Float.floatToRawIntBits(v.v);
+
         data[base + 6] = v.light;
     }
 }
