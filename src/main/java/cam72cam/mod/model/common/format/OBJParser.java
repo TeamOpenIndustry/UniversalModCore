@@ -2,7 +2,6 @@ package cam72cam.mod.model.common.format;
 
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.mesh.IModelBuilder;
-import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
 
 import java.io.BufferedReader;
@@ -79,6 +78,8 @@ public class OBJParser {
             String name = null;
             float r = 1, g = 1, b = 1, a = 1;
             String texKd = null;
+            String texNs = null;
+            String texBump = null;
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -89,11 +90,13 @@ public class OBJParser {
                 switch (parts[0]) {
                     case "newmtl":
                         if (name != null) {
-                            materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd));
+                            materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd, texNs, texBump));
                         }
                         name = line.substring(7);
                         r = g = b = a = 1;
                         texKd = null;
+                        break;
+                    case "Ka":
                         break;
                     case "Kd":
                         r = Float.parseFloat(parts[1]);
@@ -101,26 +104,62 @@ public class OBJParser {
                         b = Float.parseFloat(parts[3]);
                         a = parts.length > 4 ? Float.parseFloat(parts[4]) : 1;
                         break;
+                    case "Ks":
+                        break;
                     case "map_Kd":
                         texKd = parts[1];
                         break;
+                    case "map_Ns":
+                        texNs = parts[1];
+                        break;
+                    case "map_Bump":
+                        texBump = parts[1];
+                        break;
+                    case "Ns":
+                        //Ignore
+                        break;
+                    case "Ke":
+                        //Ignore
+                        break;
+                    case "Ni":
+                        //Ignore
+                        break;
+                    case "d":
+                        //ignore
+                        break;
+                    case "illum":
+                        //ignore
+                        break;
                     default:
+                        //System.out.println("MTL: ignored line '" + line + "'");
                         break;
                 }
             }
             if (name != null) {
-                materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd));
+                materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd, texNs, texBump));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse MTL " + mtlId, e);
         }
     }
 
-    private static Material buildMaterial(Identifier modelLoc, String name, float r, float g, float b, float a, String texKd) {
+    private static Material buildMaterial(Identifier modelLoc, String name,
+                                          float r, float g, float b, float a,
+                                          String texKd, String texNs, String texBump) {
         Material material = new Material(name, r, g, b, a);
         if (texKd != null) {
             Identifier texId = modelLoc.getRelative(texKd);
-            material.texture(() -> Texture.wrap(texId));
+            material.texture(texId).defaultSpecular().defaultNormal();
+        }
+        if (texNs != null) {
+            Identifier texId = modelLoc.getRelative(texNs);
+            // Override
+            material.specular(texId);
+        }
+        if (texBump != null) {
+            Identifier texId = modelLoc.getRelative(texBump);
+            // Override
+            material.normal(texId);
         }
         return material;
     }

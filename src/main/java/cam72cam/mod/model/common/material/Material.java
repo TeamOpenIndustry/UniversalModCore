@@ -1,15 +1,16 @@
 package cam72cam.mod.model.common.material;
 
-import cam72cam.mod.render.opengl.Texture;
-
-import java.util.function.Supplier;
+import cam72cam.mod.resource.Identifier;
+import org.apache.commons.io.FilenameUtils;
 
 public class Material {
     public final String name;
     public final float r, g, b, a;
+    public int width, height;
 
-    private Supplier<Texture> texture;
-    private Texture cached;
+    public Identifier baseColor;
+    public Identifier specular;
+    public Identifier normal;
 
     public Material(String name) {
         this(name, 1, 1, 1, 1);
@@ -21,18 +22,39 @@ public class Material {
         this.g = g;
         this.b = b;
         this.a = a;
+
+        this.width = 16;
+        this.height = 16;
     }
 
-    /** Texture is resolved lazily so the asset is only loaded when the model is actually rendered. */
-    public Material texture(Supplier<Texture> texture) {
-        this.texture = texture;
+    public Material texture(Identifier base) {
+        this.baseColor = base;
         return this;
     }
 
-    public Texture getTexture() {
-        if (cached == null && texture != null) {
-            cached = texture.get();
+    public Material defaultSpecular() {
+        if (baseColor != null) {
+            String ext = FilenameUtils.getExtension(baseColor.getPath());
+            String name = FilenameUtils.getBaseName(baseColor.getPath());
+            this.specular = baseColor.getRelative(name + "_s." + ext);
         }
-        return cached;
+        return this;
+    }
+    public Material specular(Identifier spec) {
+        this.specular = spec;
+        return this;
+    }
+
+    public Material defaultNormal() {
+        if (baseColor != null) {
+            String ext = FilenameUtils.getExtension(baseColor.getPath());
+            String name = FilenameUtils.getBaseName(baseColor.getPath());
+            this.normal = baseColor.getRelative(name + "_n." + ext);
+        }
+        return this;
+    }
+    public Material normal(Identifier normal) {
+        this.normal = normal;
+        return this;
     }
 }
