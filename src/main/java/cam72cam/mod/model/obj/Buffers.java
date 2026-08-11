@@ -25,6 +25,13 @@ public class Buffers {
             return newBuffer;
         }
 
+        public float get(int index) {
+            if (index >= pos) {
+                throw new IndexOutOfBoundsException();
+            }
+            return buffer[index];
+        }
+
         public int size() {
             return pos;
         }
@@ -52,6 +59,13 @@ public class Buffers {
             int[] newBuffer = new int[pos];
             System.arraycopy(buffer, 0, newBuffer, 0, pos);
             return newBuffer;
+        }
+
+        public int get(int index) {
+            if (index >= pos) {
+                throw new IndexOutOfBoundsException();
+            }
+            return buffer[index];
         }
 
         public int size() {
