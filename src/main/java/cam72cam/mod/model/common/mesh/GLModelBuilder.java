@@ -3,7 +3,7 @@ package cam72cam.mod.model.common.mesh;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.util.FaceUtils;
-import cam72cam.mod.model.obj.Buffers;
+import cam72cam.mod.model.common.util.Buffers;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import java.util.*;
