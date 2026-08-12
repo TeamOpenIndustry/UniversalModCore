@@ -193,9 +193,14 @@ public class GlModelBuilder implements IModelBuilder {
                 int posIdx = faceBuffer.get(b + k * 3);
                 int uvIdx = faceBuffer.get(b + k * 3 + 1);
                 int nrmIdx = faceBuffer.get(b + k * 3 + 2);
-                if (converter != null && uvIdx >= 0 && mat.texAlbedo != null) {
-                    float u = uvIndices.get(uvIdx * 2) - offU;
-                    float v = uvIndices.get(uvIdx * 2 + 1) - offV;
+                if (uvIdx >= 0) {
+                    // Always re-emit the uv into the repacked buffer so the index stays valid
+                    float u = uvIndices.get(uvIdx * 2);
+                    float v = uvIndices.get(uvIdx * 2 + 1);
+                    if (converter != null && mat.texAlbedo != null) {
+                        u = converter.convertU(u - offU);
+                        v = converter.convertV(v - offV);
+                    }
                     uvIdx = repackedUv.size() / 2;
                     repackedUv.add(u);
                     repackedUv.add(v);
@@ -321,10 +326,14 @@ public class GlModelBuilder implements IModelBuilder {
                 indices = FaceUtils.triangulate(positions);
             }
 
-            for (int i : indices) {
-                faceBuffer.add(buffer.get(i * 3));
-                faceBuffer.add(buffer.get(i * 3 + 1));
-                faceBuffer.add(buffer.get(i * 3 + 2));
+            // materialByFace is one entry per triangle, so add it once per 3 vertices
+            for (int t = 0; t < indices.length; t += 3) {
+                for (int k = 0; k < 3; k++) {
+                    int i = indices[t + k];
+                    faceBuffer.add(buffer.get(i * 3));
+                    faceBuffer.add(buffer.get(i * 3 + 1));
+                    faceBuffer.add(buffer.get(i * 3 + 2));
+                }
                 materialByFace.add(currMaterial);
                 if (currMaterial >= 0) {
                     usedMaterials.add(currMaterial);

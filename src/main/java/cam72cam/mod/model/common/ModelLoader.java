@@ -42,11 +42,11 @@ public class ModelLoader {
     }
 
     public static Model load(Identifier modelLoc, float scale) {
-        return load(modelLoc, scale, Collections.emptySet(), 30, i -> null);
+        return load(modelLoc, scale, Collections.emptySet(), 30, null);
     }
 
     public static Model load(Identifier modelLoc, Collection<String> variants) {
-        return load(modelLoc, 1.0F, variants, 30, i -> null);
+        return load(modelLoc, 1.0F, variants, 30, null);
     }
 
     public static Model load(Identifier modelLoc, float scale, Collection<String> variants, int cacheSeconds, LodSupplier lod) {

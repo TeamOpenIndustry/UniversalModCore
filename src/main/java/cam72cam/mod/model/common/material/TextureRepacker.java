@@ -19,14 +19,10 @@ import java.util.stream.Collectors;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class TextureRepacker {
-    private static final Function<Material, Integer> normalFallback = m -> 0xFF8080FF;
-    private static final Function<Material, Integer> specularFallback = m -> 0xFF000000;
+    private static final Function<Material, Integer> normalFallback;
+    private static final Function<Material, Integer> specularFallback;
     //ARGB
-    private static final Function<Material, Integer> albedoFallback =
-            m -> ((int) (m.a * 255) << 24)
-                    | ((int) (Math.max(0, m.r) * 255) << 16)
-                    | ((int) (Math.max(0, m.g) * 255) << 8)
-                    | (int) (Math.max(0, m.b) * 255);
+    private static final Function<Material, Integer> albedoFallback;
 
     private int width = 0;
     private int height = 0;
@@ -42,6 +38,15 @@ public class TextureRepacker {
     public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> speculars = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
+
+    static {
+        normalFallback = m -> 0xFF8080FF;
+        specularFallback = m -> 0xFF000000;
+        albedoFallback = m -> ((int) (m.a * 255) << 24)
+                        | ((int) (Math.max(0, m.r) * 255) << 16)
+                        | ((int) (Math.max(0, m.g) * 255) << 8)
+                        | (int) (Math.max(0, m.b) * 255);
+    }
 
     private BufferedImage getImage(String path) {
         try (InputStream in = lookup.apply(path)) {
@@ -232,7 +237,7 @@ public class TextureRepacker {
         }
     }
 
-    public TextureRepacker(Identifier ident, Collection<Material> materials, Collection<String> variants) {
+    public TextureRepacker(Identifier modelLoc, Collection<Material> materials, Collection<String> variants) {
         ImageIO.setUseCache(false);
         if (materials.isEmpty()) {
             return;
@@ -240,7 +245,7 @@ public class TextureRepacker {
 
         this.lookup = p -> {
             try {
-                return ident.getRelative(p).getLastResourceStream();
+                return modelLoc.getRelative(p).getLastResourceStream();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -249,7 +254,7 @@ public class TextureRepacker {
         // Load texture dimensions before bin packing
         for (Material material : materials) {
             if (material.texAlbedo != null) {
-                material.populateSize();
+                Material.populateSize(material, modelLoc);
             }
         }
 
@@ -291,16 +296,16 @@ public class TextureRepacker {
         }
         rootNode.converters(0, 0);
 
-        this.hasSpecular = materials.stream().anyMatch(x -> x.texNormal != null);
-        this.hasNormal = materials.stream().anyMatch(x -> x.texSpecular != null);
+        this.hasSpecular = materials.stream().anyMatch(x -> modelLoc.getRelative(x.texSpecular).canLoad());
+        this.hasNormal = materials.stream().anyMatch(x -> modelLoc.getRelative(x.texNormal).canLoad());
 
         for (String variant : variants) {
-            textures.put(variant, sheet(ident, variant, m -> m.texAlbedo, albedoFallback));
+            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, albedoFallback));
             if (hasSpecular) {
-                speculars.put(variant, sheet(ident, variant, m -> m.texSpecular, specularFallback));
+                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, specularFallback));
             }
             if (hasNormal) {
-                normals.put(variant, sheet(ident, variant, m -> m.texNormal, normalFallback));
+                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, normalFallback));
             }
         }
     }

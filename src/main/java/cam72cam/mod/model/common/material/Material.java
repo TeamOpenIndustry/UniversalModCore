@@ -9,11 +9,12 @@ import javax.imageio.stream.ImageInputStream;
 import java.util.Iterator;
 
 public class Material {
+    public static final Material DEFAULT = new Material("default");
+
     public final String name;
     public final float r, g, b, a;
     public int width, height;
 
-    public Identifier modelLoc;
     //Relative paths from model
     public String texAlbedo;
     public String texSpecular;
@@ -22,12 +23,11 @@ public class Material {
     public int copiesOnU = 1;
     public int copiesOnV = 1;
 
-    public Material(Identifier modelLoc, String name) {
-        this(modelLoc, name, 1, 1, 1, 1);
+    public Material(String name) {
+        this(name, 1, 1, 1, 1);
     }
 
-    public Material(Identifier modelLoc, String name, float r, float g, float b, float a) {
-        this.modelLoc = modelLoc;
+    public Material(String name, float r, float g, float b, float a) {
         this.name = name;
         this.r = r;
         this.g = g;
@@ -38,9 +38,9 @@ public class Material {
         this.height = 16;
     }
 
-    public void populateSize() {
-        if (texAlbedo != null) {
-            Identifier relative = modelLoc.getRelative(texAlbedo);
+    public static void populateSize(Material material, Identifier modelLoc) {
+        if (material.texAlbedo != null) {
+            Identifier relative = modelLoc.getRelative(material.texAlbedo);
             if (relative.canLoad()) {
                 try (ImageInputStream iis = ImageIO.createImageInputStream(
                     relative.getLastResourceStream())) {
@@ -49,8 +49,8 @@ public class Material {
                         ImageReader reader = readers.next();
                         try {
                             reader.setInput(iis, true, true);
-                            this.width = reader.getWidth(0);
-                            this.height = reader.getHeight(0);
+                            material.width = reader.getWidth(0);
+                            material.height = reader.getHeight(0);
                         } finally {
                             reader.dispose();
                         }
@@ -72,7 +72,7 @@ public class Material {
             String ext = FilenameUtils.getExtension(texAlbedo);
             String path = FilenameUtils.getPath(texAlbedo);
             String name = FilenameUtils.getBaseName(texAlbedo);
-            this.texNormal = path + name + "_s." + ext;
+            this.texSpecular = path + name + "_s." + ext;
         }
         return this;
     }

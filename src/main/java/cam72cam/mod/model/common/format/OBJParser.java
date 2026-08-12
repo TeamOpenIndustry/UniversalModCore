@@ -14,6 +14,7 @@ import java.util.Map;
 public class OBJParser {
     public static void parse(final Identifier modelLoc, final IModelBuilder builder) {
         Map<String, Material> materials = new HashMap<>();
+        materials.put("default", Material.DEFAULT);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(modelLoc.getLastResourceStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -26,8 +27,7 @@ public class OBJParser {
                         parseMTL(modelLoc, args[1], materials);
                         break;
                     case "usemtl":
-                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "undefined",
-                                                                             name -> new Material(modelLoc, name)));
+                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "default", Material::new));
                         break;
                     case "o":
                     case "g":
@@ -92,7 +92,7 @@ public class OBJParser {
                 switch (parts[0]) {
                     case "newmtl":
                         if (name != null) {
-                            materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd, texNs, texBump));
+                            materials.put(name, buildMaterial(name, r, g, b, a, texKd, texNs, texBump));
                         }
                         name = line.substring(7);
                         r = g = b = a = 1;
@@ -140,17 +140,16 @@ public class OBJParser {
                 }
             }
             if (name != null) {
-                materials.put(name, buildMaterial(modelLoc, name, r, g, b, a, texKd, texNs, texBump));
+                materials.put(name, buildMaterial(name, r, g, b, a, texKd, texNs, texBump));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse MTL " + mtlId, e);
         }
     }
 
-    private static Material buildMaterial(Identifier modelLoc, String name,
-                                          float r, float g, float b, float a,
+    private static Material buildMaterial(String name, float r, float g, float b, float a,
                                           String texKd, String texNs, String texBump) {
-        Material material = new Material(modelLoc, name, r, g, b, a);
+        Material material = new Material(name, r, g, b, a);
         if (texKd != null) {
             material.setAlbedo(texKd).defaultSpecular().defaultNormal();
         }

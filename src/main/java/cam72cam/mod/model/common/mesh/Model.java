@@ -1,5 +1,6 @@
 package cam72cam.mod.model.common.mesh;
 
+import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
 
@@ -46,11 +47,12 @@ public class Model {
         return layout;
     }
 
-    public float[] getVboData() {
-        return vboData;
-    }
-
     public LinkedHashMap<String, ModelGroup> getGroups() {
         return groups;
+    }
+
+    public VertexBuffer getVBO() {
+        //Assuming pos_uv_col_norm
+        return new VertexBuffer(vboData, true);
     }
 }
