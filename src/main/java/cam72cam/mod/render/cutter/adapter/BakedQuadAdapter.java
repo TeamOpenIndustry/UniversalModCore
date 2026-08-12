@@ -157,7 +157,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     @Override
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
-        CapUVGenerator.generate(polygon, template);
+        Polygon.generate(polygon, template);
     }
 
     private static ClipVertex readVertex(int[] data, int index) {
