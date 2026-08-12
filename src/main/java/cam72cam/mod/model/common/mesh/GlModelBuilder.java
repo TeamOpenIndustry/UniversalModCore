@@ -17,7 +17,7 @@ public class GlModelBuilder implements IModelBuilder {
     private final Set<String> variants;
 
     private final Buffers.FloatBuffer posIndices = new Buffers.FloatBuffer(1024);
-    private final Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
+    private Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
     private final float scale;
 
@@ -115,6 +115,8 @@ public class GlModelBuilder implements IModelBuilder {
 
     @Override
     public void finish() {
+        checkUnfinished();
+
         // Build groups
         int triCount = faceBuffer.size() / 9;
         for (int i = 0; i < groupNames.size(); i++) {
@@ -124,39 +126,41 @@ public class GlModelBuilder implements IModelBuilder {
             boolean[] usedVerts = new boolean[posIndices.size() / 3];
             List<Vec3d> points = new ArrayList<>();
             for (int tri = start; tri < end; tri++) {
+                int idx = tri * 9;
+
+                // De-duplicated vertex data for group building
                 for (int k = 0; k < 3; k++) {
-                    int posIdx = faceBuffer.get(tri * 9 + k * 3);
+                    int posIdx = faceBuffer.get(idx + k * 3);
                     if (!usedVerts[posIdx]) {
                         usedVerts[posIdx] = true;
                         points.add(new Vec3d(posIndices.get(posIdx * 3), posIndices.get(posIdx * 3 + 1), posIndices.get(posIdx * 3 + 2)));
                     }
                 }
+
+                // Build UV repacking data
+                {
+                    int matId = materialByFace.get(tri);
+                    Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
+                    if (mat == null || mat.texAlbedo == null) {
+                        continue;
+                    }
+                    int u0 = faceBuffer.get(idx + 1);
+                    int u1 = faceBuffer.get(idx + 4);
+                    int u2 = faceBuffer.get(idx + 7);
+                    if (u0 < 0 || u1 < 0 || u2 < 0) {
+                        continue;
+                    }
+                    float vminU = Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
+                    float vmaxU = Math.max(uvIndices.get(u0 * 2), Math.max(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
+                    float vminV = Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
+                    float vmaxV = Math.max(uvIndices.get(u0 * 2 + 1), Math.max(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
+                    int offU = (int) Math.floor(vminU);
+                    int offV = (int) Math.floor(vminV);
+                    mat.copiesOnU = Math.max(mat.copiesOnU, (int) Math.ceil(vmaxU - offU));
+                    mat.copiesOnV = Math.max(mat.copiesOnV, (int) Math.ceil(vmaxV - offV));
+                }
             }
             groups.add(ModelGroup.buildGroup(groupNames.get(i), start, end, points));
-        }
-
-        // Determine per-triangle tiling so the repacker can size each texture slot
-        for (int tri = 0; tri < triCount; tri++) {
-            int b = tri * 9;
-            int matId = materialByFace.get(tri * 3);
-            Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
-            if (mat == null || mat.texAlbedo == null) {
-                continue;
-            }
-            int u0 = faceBuffer.get(b + 1);
-            int u1 = faceBuffer.get(b + 4);
-            int u2 = faceBuffer.get(b + 7);
-            if (u0 < 0 || u1 < 0 || u2 < 0) {
-                continue;
-            }
-            float vminU = Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
-            float vmaxU = Math.max(uvIndices.get(u0 * 2), Math.max(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
-            float vminV = Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
-            float vmaxV = Math.max(uvIndices.get(u0 * 2 + 1), Math.max(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
-            int offU = (int) Math.floor(vminU);
-            int offV = (int) Math.floor(vminV);
-            mat.copiesOnU = Math.max(mat.copiesOnU, (int) Math.ceil(vmaxU - offU));
-            mat.copiesOnV = Math.max(mat.copiesOnV, (int) Math.ceil(vmaxV - offV));
         }
 
         // Repack textures and rebuild the uv index space with the converted coordinates
@@ -164,9 +168,10 @@ public class GlModelBuilder implements IModelBuilder {
         TextureRepacker repacker = new TextureRepacker(modelLoc, used, variants);
 
         Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size());
+        Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size());
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
-            int matId = materialByFace.get(tri * 3);
+            int matId = materialByFace.get(tri);
             Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
             TextureRepacker.UVConverter converter = mat != null ? repacker.converters.get(mat.name) : null;
             int offU = 0;
@@ -187,7 +192,9 @@ public class GlModelBuilder implements IModelBuilder {
                 if (converter != null && uvIdx >= 0 && mat.texAlbedo != null) {
                     float u = uvIndices.get(uvIdx * 2) - offU;
                     float v = uvIndices.get(uvIdx * 2 + 1) - offV;
-                    uvIdx = addIndexedUv(converter.convertU(u), converter.convertV(v));
+                    uvIdx = repackedUv.size() / 2;
+                    repackedUv.add(u);
+                    repackedUv.add(v);
                 }
                 repackedFaces.add(posIdx);
                 repackedFaces.add(uvIdx);
@@ -195,6 +202,7 @@ public class GlModelBuilder implements IModelBuilder {
             }
         }
         faceBuffer = repackedFaces;
+        uvIndices = repackedUv;
 
         finished = true;
     }
@@ -210,9 +218,9 @@ public class GlModelBuilder implements IModelBuilder {
         boolean hasUv = layout.has(VAOLayout.Usage.UV);
         boolean hasColor = layout.has(VAOLayout.Usage.COLOR);
         boolean hasNormal = layout.has(VAOLayout.Usage.NORMAL);
-        int uvOff = hasUv ? layout.getOffset(VAOLayout.Usage.UV) / 4 : 0;
-        int colorOff = hasColor ? layout.getOffset(VAOLayout.Usage.COLOR) / 4 : 0;
-        int nrmOff = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) / 4 : 0;
+        int uvOff = hasUv ? layout.getOffset(VAOLayout.Usage.UV) / 4 : Integer.MIN_VALUE;
+        int colorOff = hasColor ? layout.getOffset(VAOLayout.Usage.COLOR) / 4 : Integer.MIN_VALUE;
+        int nrmOff = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) / 4 : Integer.MIN_VALUE;
 
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
@@ -224,7 +232,7 @@ public class GlModelBuilder implements IModelBuilder {
             Vec3d pb = new Vec3d(posIndices.get(posIdx1 * 3), posIndices.get(posIdx1 * 3 + 1), posIndices.get(posIdx1 * 3 + 2));
             Vec3d pc = new Vec3d(posIndices.get(posIdx2 * 3), posIndices.get(posIdx2 * 3 + 1), posIndices.get(posIdx2 * 3 + 2));
 
-            int matId = materialByFace.get(tri * 3);
+            int matId = materialByFace.get(tri);
             Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
 
             for (int k = 0; k < 3; k++) {
@@ -247,10 +255,10 @@ public class GlModelBuilder implements IModelBuilder {
 
                 if (hasColor) {
                     // Color-only materials already baked their color into the albedo slot
-                    boolean tint = mat != null && mat.texAlbedo != null;
-                    data[base + colorOff] = tint ? mat.r : 1;
-                    data[base + colorOff + 1] = tint ? mat.g : 1;
-                    data[base + colorOff + 2] = tint ? mat.b : 1;
+                    boolean baked = mat != null && mat.texAlbedo != null;
+                    data[base + colorOff] = baked ? mat.r : 1;
+                    data[base + colorOff + 1] = baked ? mat.g : 1;
+                    data[base + colorOff + 2] = baked ? mat.b : 1;
                     data[base + colorOff + 3] = mat != null ? mat.a : 1;
                 }
 
