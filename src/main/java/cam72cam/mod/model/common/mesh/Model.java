@@ -1,11 +1,18 @@
 package cam72cam.mod.model.common.mesh;
 
+import cam72cam.mod.render.obj.OBJTextureSheet;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Model {
     private final VAOLayout layout;
     private final float[] vboData;
     private final List<ModelGroup> groups;
+    private final Map<String, Map<Integer, OBJTextureSheet>> texture = new HashMap<>();
+    private final Map<String, Map<Integer, OBJTextureSheet>> specular = new HashMap<>();
+    private final Map<String, Map<Integer, OBJTextureSheet>> normal = new HashMap<>();
 
     public Model(VAOLayout layout, float[] vboData, List<ModelGroup> groups) {
         this.layout = layout;

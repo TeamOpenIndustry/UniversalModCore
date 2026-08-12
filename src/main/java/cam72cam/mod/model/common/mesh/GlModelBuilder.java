@@ -4,7 +4,9 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.util.FaceUtils;
 import cam72cam.mod.model.common.util.Buffers;
+import cam72cam.mod.model.obj.OBJTexturePacker;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,6 +16,8 @@ public class GlModelBuilder implements IModelBuilder {
     private final Buffers.FloatBuffer posIndices = new Buffers.FloatBuffer(1024);
     private final Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
+    private final float scale;
+    private final Set<String> variants;
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
     private final Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
@@ -21,9 +25,9 @@ public class GlModelBuilder implements IModelBuilder {
 
     private final List<Material> materials = new ArrayList<>();
     private final Map<String, Integer> materialIds = new HashMap<>();
+    private final Set<Integer> usedMaterials = new IntArraySet();
     private int currMaterial = -1;
 
-    // Parallel group metadata: name + index of the first triangle
     private final List<String> groupNames = new ArrayList<>();
     private final List<Integer> groupStartFaces = new IntArrayList();
     private boolean smoothShading;
@@ -31,6 +35,17 @@ public class GlModelBuilder implements IModelBuilder {
     private final List<ModelGroup> groups = new ArrayList<>();
 
     private boolean finished = false;
+
+    public GlModelBuilder(float scale, Set<String> variants) {
+        this.scale = scale;
+        if (variants == null) {
+            variants = Collections.singleton("");
+        }
+        if (variants.isEmpty()) {
+            variants.add("");
+        }
+        this.variants = variants;
+    }
 
     @Override
     public void newModelGroup(String name) {
@@ -55,9 +70,9 @@ public class GlModelBuilder implements IModelBuilder {
     public int addIndexedVert(float x, float y, float z) {
         checkUnfinished();
         int index = posIndices.size() / 3;
-        posIndices.add(x);
-        posIndices.add(y);
-        posIndices.add(z);
+        posIndices.add(x * scale);
+        posIndices.add(y * scale);
+        posIndices.add(z * scale);
         return index;
     }
 
@@ -264,6 +279,7 @@ public class GlModelBuilder implements IModelBuilder {
                 faceBuffer.add(buffer.get(i * 3 + 1));
                 faceBuffer.add(buffer.get(i * 3 + 2));
                 materialByFace.add(currMaterial);
+                usedMaterials.add(currMaterial);
             }
         }
     }
