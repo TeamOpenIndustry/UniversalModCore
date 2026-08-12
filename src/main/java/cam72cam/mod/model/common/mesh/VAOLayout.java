@@ -1,5 +1,7 @@
 package cam72cam.mod.model.common.mesh;
 
+import org.lwjgl.opengl.GL11;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,10 @@ public class VAOLayout {
             offset += element.size;
         }
         this.stride = offset;
+
+        if (!has(Usage.POSITION)) {
+            throw new RuntimeException("VAO doesn't have POSITION");
+        }
     }
 
 
@@ -52,15 +58,43 @@ public class VAOLayout {
         return -1;
     }
 
+    public void setup() {
+        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+        GL11.glVertexPointer(3, GL11.GL_FLOAT, stride, getOffset(Usage.POSITION));
+
+        if (has(Usage.UV)) {
+            GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+            GL11.glTexCoordPointer(2, GL11.GL_FLOAT, stride, getOffset(Usage.UV));
+        } else {
+            GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        }
+        if (has(Usage.COLOR)) {
+            GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
+            GL11.glColorPointer(4, GL11.GL_FLOAT, stride, getOffset(Usage.COLOR));
+        } else {
+            GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
+        }
+        if (has(Usage.NORMAL)) {
+            GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
+            GL11.glNormalPointer(GL11.GL_FLOAT, stride, getOffset(Usage.NORMAL));
+        } else {
+            GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
+        }
+    }
+
+    public void restore() {
+        //No need to do anything in 1.16-
+    }
+
     public enum Type {
-        UBYTE(1),
-        BYTE(1),
-        USHORT(2),
-        SHORT(2),
-        UINT(4),
-        INT(4),
-        FLOAT(4),
-        DOUBLE(8),
+        UBYTE(Byte.BYTES),
+        BYTE(Byte.BYTES),
+        USHORT(Short.BYTES),
+        SHORT(Short.BYTES),
+        UINT(Integer.BYTES),
+        INT(Integer.BYTES),
+        FLOAT(Float.BYTES),
+        DOUBLE(Double.BYTES),
         ;
         public final int size;
         Type(int size) {

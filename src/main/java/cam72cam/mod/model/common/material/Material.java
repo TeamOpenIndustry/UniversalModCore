@@ -20,6 +20,7 @@ public class Material {
     public String texSpecular;
     public String texNormal;
 
+    //For tex repacking
     public int copiesOnU = 1;
     public int copiesOnV = 1;
 

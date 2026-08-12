@@ -1,6 +1,5 @@
 package cam72cam.mod.model.common.mesh;
 
-import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
 
@@ -51,8 +50,19 @@ public class Model {
         return groups;
     }
 
-    public VertexBuffer getVBO() {
-        //Assuming pos_uv_col_norm
-        return new VertexBuffer(vboData, true);
+    public float[] getVboData() {
+        return vboData;
+    }
+
+    public Map<String, Map<Integer, OBJTextureSheet>> getTextures() {
+        return texture;
+    }
+
+    public Map<String, Map<Integer, OBJTextureSheet>> getSpeculars() {
+        return specular;
+    }
+
+    public Map<String, Map<Integer, OBJTextureSheet>> getNormals() {
+        return normal;
     }
 }
