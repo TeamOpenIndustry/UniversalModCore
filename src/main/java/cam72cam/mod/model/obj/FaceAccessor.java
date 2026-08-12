@@ -72,21 +72,12 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * @return OBJFace of current face
      */
     public OBJFace asOBJFace() {
-        OBJFace face = new OBJFace();
-
-        face.vertex0 = new OBJFace.Vertex(v0);
-        face.vertex1 = new OBJFace.Vertex(v1);
-        face.vertex2 = new OBJFace.Vertex(v2);
-
-        if (vbo.hasNormals) {
-            face.normal = v0.normAsVec3d();
-        } else {
-            Vec3d v0 = face.vertex0.pos;
-            Vec3d v1 = face.vertex1.pos;
-            Vec3d v2 = face.vertex2.pos;
-            face.normal = v1.subtract(v0).crossProduct(v2.subtract(v0)).normalize();
-        }
-        return face;
+        OBJFace.Vertex vert0 = new OBJFace.Vertex(v0);
+        OBJFace.Vertex vert1 = new OBJFace.Vertex(v1);
+        OBJFace.Vertex vert2 = new OBJFace.Vertex(v2);
+        return new OBJFace(vert0, vert1, vert2,
+                           vbo.hasNormals ? v0.normAsVec3d()
+                           : vert1.pos.subtract(vert0.pos).crossProduct(vert2.pos.subtract(vert0.pos)).normalize());
     }
 
     /**
