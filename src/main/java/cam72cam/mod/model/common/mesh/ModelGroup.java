@@ -3,6 +3,7 @@ package cam72cam.mod.model.common.mesh;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.serialization.TagCompound;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,10 @@ public class ModelGroup {
     }
 
     static ModelGroup buildGroup(String name, int start, int end, List<Vec3d> points) {
+        if (points.isEmpty()) {
+            points = Collections.singletonList(Vec3d.ZERO);
+        }
+
         Vec3d first = points.get(0);
         Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
         Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
@@ -51,9 +56,12 @@ public class ModelGroup {
         List<Vec3d> maxG = points.stream()
                                  .filter(p -> p.distanceToSquared(finalMin) > p.distanceToSquared(finalMax))
                                  .collect(Collectors.toList());
-        Vec3d minN = minG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1d / minG.size());
-        Vec3d maxN = maxG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1d / maxG.size());
-        Vec3d normal = maxN.subtract(minN).normalize();
+        Vec3d normal = new Vec3d(0, 0, 1);
+        if (!minG.isEmpty() && !maxG.isEmpty()) {
+            Vec3d minN = minG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1d / minG.size());
+            Vec3d maxN = maxG.stream().reduce(Vec3d.ZERO, Vec3d::add).scale(1d / maxG.size());
+            normal = maxN.subtract(minN).normalize();
+        }
 
         return new ModelGroup(name, start, end, groupMin, groupMax, normal);
     }

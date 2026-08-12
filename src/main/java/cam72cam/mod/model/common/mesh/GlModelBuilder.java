@@ -132,10 +132,7 @@ public class GlModelBuilder implements IModelBuilder {
                     }
                 }
             }
-
-            if (!points.isEmpty()) {
-                groups.add(ModelGroup.buildGroup(groupNames.get(i), start, end, points));
-            }
+            groups.add(ModelGroup.buildGroup(groupNames.get(i), start, end, points));
         }
 
         // Determine per-triangle tiling so the repacker can size each texture slot
