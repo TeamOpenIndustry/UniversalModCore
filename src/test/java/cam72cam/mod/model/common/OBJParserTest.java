@@ -14,6 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.Map;
 
 public class OBJParserTest {
     private static class FakeIdentifier extends Identifier {
@@ -88,9 +90,10 @@ public class OBJParserTest {
         Assert.assertEquals(1, data[11], 0.001);
 
         Assert.assertEquals(1, model.getGroups().size());
-        Assert.assertEquals("tri", model.getGroups().get(0).name);
-        Assert.assertEquals(0, model.getGroups().get(0).faceStart);
-        Assert.assertEquals(1, model.getGroups().get(0).faceEnd);
+        ModelGroup firstGroup = model.getGroups().entrySet().iterator().next().getValue();
+        Assert.assertEquals("tri", firstGroup.name);
+        Assert.assertEquals(0, firstGroup.faceStart);
+        Assert.assertEquals(1, firstGroup.faceEnd);
     }
 
     @Test
@@ -127,12 +130,15 @@ public class OBJParserTest {
                 "f 1 2 3\n"));
 
         Assert.assertEquals(2, model.getGroups().size());
-        Assert.assertEquals("A", model.getGroups().get(0).name);
-        Assert.assertEquals(0, model.getGroups().get(0).faceStart);
-        Assert.assertEquals(1, model.getGroups().get(0).faceEnd);
-        Assert.assertEquals("B", model.getGroups().get(1).name);
-        Assert.assertEquals(1, model.getGroups().get(1).faceStart);
-        Assert.assertEquals(3, model.getGroups().get(1).faceEnd);
+        Iterator<Map.Entry<String, ModelGroup>> iterator = model.getGroups().entrySet().iterator();
+        ModelGroup firstGroup = iterator.next().getValue();
+        ModelGroup secondGroup = iterator.next().getValue();
+        Assert.assertEquals("A", firstGroup.name);
+        Assert.assertEquals(0, firstGroup.faceStart);
+        Assert.assertEquals(1, firstGroup.faceEnd);
+        Assert.assertEquals("B", secondGroup.name);
+        Assert.assertEquals(1, secondGroup.faceStart);
+        Assert.assertEquals(3, secondGroup.faceEnd);
     }
 
     @Test
@@ -209,16 +215,17 @@ public class OBJParserTest {
                 Assert.assertEquals("vertex " + v + " component " + c, oldVbo.data[v * stride + c], model.getVboData()[v * stride + c], 1e-5);
             }
         }
+        Iterator<Map.Entry<String, ModelGroup>> iterator = model.getGroups().entrySet().iterator();
+        ModelGroup A2 = iterator.next().getValue();
+        ModelGroup B2 = iterator.next().getValue();
 
         //Group data
         OBJGroup A1 = oldParser.getGroups().get(0);
-        ModelGroup A2 = model.getGroups().get(0);
         Assert.assertEquals(A1.min, A2.min);
         Assert.assertEquals(A1.max, A2.max);
         Assert.assertEquals(A1.normal, A2.normal);
 
         OBJGroup B1 = oldParser.getGroups().get(1);
-        ModelGroup B2 = model.getGroups().get(1);
         Assert.assertEquals(B1.min, B2.min);
         Assert.assertEquals(B1.max, B2.max);
         Assert.assertEquals(B1.normal, B2.normal);

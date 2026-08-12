@@ -69,10 +69,10 @@ public class ModelLoader {
         TextureRepacker repacker = builder.getRepacker();
         if (repacker != null && Config.getMaxTextureSize() > 0) {
             result.linkTextures(processLod(modelLoc, repacker, repacker.textures, cacheSeconds, lodValues, ""),
-                                result.hasSpecular()
+                                result.hasSpecular
                                     ? processLod(modelLoc, repacker, repacker.speculars, cacheSeconds, lodValues, "_spec")
                                     : Collections.emptyMap(),
-                                result.hasNormal()
+                                result.hasNormal
                                     ? processLod(modelLoc, repacker, repacker.normals, cacheSeconds, lodValues, "_norm")
                                     : Collections.emptyMap());
         }

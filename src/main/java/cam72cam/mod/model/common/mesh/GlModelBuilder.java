@@ -38,7 +38,7 @@ public class GlModelBuilder implements IModelBuilder {
     private final List<Integer> groupStartFaces = new IntArrayList();
     private boolean smoothShading;
 
-    private final List<ModelGroup> groups = new ArrayList<>();
+    private final LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
 
     private boolean finished = false;
 
@@ -164,7 +164,7 @@ public class GlModelBuilder implements IModelBuilder {
                     mat.copiesOnV = Math.max(mat.copiesOnV, (int) Math.ceil(vmaxV - offV));
                 }
             }
-            groups.add(ModelGroup.buildGroup(groupNames.get(i), start, end, points));
+            groups.put(groupNames.get(i), ModelGroup.buildGroup(groupNames.get(i), start, end, points));
         }
 
         // Repack textures and rebuild the uv index space with the converted coordinates
@@ -259,7 +259,7 @@ public class GlModelBuilder implements IModelBuilder {
                 }
 
                 if (hasColor) {
-                    // Color-only materials already baked their color into the albedo slot
+                    // Color-only materials already baked their color into albedo slot
                     boolean baked = mat != null && mat.texAlbedo != null;
                     data[base + colorOff] = baked ? mat.r : 1;
                     data[base + colorOff + 1] = baked ? mat.g : 1;
@@ -282,7 +282,7 @@ public class GlModelBuilder implements IModelBuilder {
             }
         }
 
-        return new Model(modelLoc, layout, data, groups, repacker.hasSpecular(), repacker.hasNormal());
+        return new Model(modelLoc, layout, data, groups, repacker.hasSpecular(), repacker.hasNormal(), smoothShading);
     }
 
     @Override

@@ -4,29 +4,32 @@ import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Model {
     private final Identifier location;
     private final VAOLayout layout;
     private final float[] vboData;
-    private final List<ModelGroup> groups;
+    private final LinkedHashMap<String, ModelGroup> groups;
 
-    private final boolean hasSpecular;
-    private final boolean hasNormal;
+    public final boolean hasSpecular;
+    public final boolean hasNormal;
+    public final boolean isSmoothShading;
 
     private final Map<String, Map<Integer, OBJTextureSheet>> texture = new HashMap<>();
     private final Map<String, Map<Integer, OBJTextureSheet>> specular = new HashMap<>();
     private final Map<String, Map<Integer, OBJTextureSheet>> normal = new HashMap<>();
 
-    public Model(Identifier location, VAOLayout layout, float[] vboData, List<ModelGroup> groups, boolean hasSpecular, boolean hasNormal) {
+    public Model(Identifier location, VAOLayout layout, float[] vboData, LinkedHashMap<String, ModelGroup> groups,
+                 boolean hasSpecular, boolean hasNormal, boolean isSmoothShading) {
         this.location = location;
         this.layout = layout;
         this.vboData = vboData;
         this.groups = groups;
         this.hasSpecular = hasSpecular;
         this.hasNormal = hasNormal;
+        this.isSmoothShading = isSmoothShading;
     }
 
     public void linkTextures(Map<String, Map<Integer, OBJTextureSheet>> tex, Map<String, Map<Integer, OBJTextureSheet>> spec, Map<String, Map<Integer, OBJTextureSheet>> norm) {
@@ -47,15 +50,7 @@ public class Model {
         return vboData;
     }
 
-    public List<ModelGroup> getGroups() {
+    public LinkedHashMap<String, ModelGroup> getGroups() {
         return groups;
-    }
-
-    public boolean hasSpecular() {
-        return hasSpecular;
-    }
-
-    public boolean hasNormal() {
-        return hasNormal;
     }
 }
