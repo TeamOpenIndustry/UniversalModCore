@@ -70,6 +70,9 @@ public class TextField implements IWidget {
     @Override
     public void setEnabled(boolean enabled) {
         internal.setEnabled(enabled);
+        if (!enabled) {
+            this.setFocused(false);
+        }
     }
 
     @Override
