@@ -37,8 +37,8 @@ public class TextureRepacker {
 
     public final Map<String, UVConverter> converters = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
-    public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> speculars = new HashMap<>();
+    public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
 
     private BufferedImage getImage(String path) {
         try (InputStream in = lookup.apply(path)) {

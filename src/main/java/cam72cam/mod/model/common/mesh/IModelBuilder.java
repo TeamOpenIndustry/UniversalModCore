@@ -1,6 +1,7 @@
 package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.model.common.material.Material;
+import cam72cam.mod.model.common.material.TextureRepacker;
 
 public interface IModelBuilder {
     void newModelGroup(String name);
@@ -17,6 +18,10 @@ public interface IModelBuilder {
 
 	void finish();
     boolean isFinished();
+
+    Model build(VAOLayout layout);
+
+    TextureRepacker getRepacker();
 
     default void checkUnfinished() {
         if (isFinished()) {
