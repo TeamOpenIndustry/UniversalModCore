@@ -80,7 +80,7 @@ public final class MeshPlaneCutter {
 
         // 2. Extract all closed loops (rings) from the intersection graph.
         List<List<ClipVertex>> rings = extractRings(allPairs);
-        if (rings.isEmpty()) {
+        if (!allPairs.isEmpty() && rings.isEmpty()) {
             ModCore.error("Fail to get ring with ClipVertex Pairs:");
             for (Pair<ClipVertex, ClipVertex> pair : allPairs) {
                 ModCore.error("%s -> %s", pair.getLeft().pos, pair.getRight().pos);
