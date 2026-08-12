@@ -13,15 +13,20 @@ public class Model {
     private final float[] vboData;
     private final List<ModelGroup> groups;
 
+    private final boolean hasSpecular;
+    private final boolean hasNormal;
+
     private final Map<String, Map<Integer, OBJTextureSheet>> texture = new HashMap<>();
     private final Map<String, Map<Integer, OBJTextureSheet>> specular = new HashMap<>();
     private final Map<String, Map<Integer, OBJTextureSheet>> normal = new HashMap<>();
 
-    public Model(Identifier location, VAOLayout layout, float[] vboData, List<ModelGroup> groups) {
+    public Model(Identifier location, VAOLayout layout, float[] vboData, List<ModelGroup> groups, boolean hasSpecular, boolean hasNormal) {
         this.location = location;
         this.layout = layout;
         this.vboData = vboData;
         this.groups = groups;
+        this.hasSpecular = hasSpecular;
+        this.hasNormal = hasNormal;
     }
 
     public void linkTextures(Map<String, Map<Integer, OBJTextureSheet>> tex, Map<String, Map<Integer, OBJTextureSheet>> spec, Map<String, Map<Integer, OBJTextureSheet>> norm) {
@@ -44,5 +49,13 @@ public class Model {
 
     public List<ModelGroup> getGroups() {
         return groups;
+    }
+
+    public boolean hasSpecular() {
+        return hasSpecular;
+    }
+
+    public boolean hasNormal() {
+        return hasNormal;
     }
 }

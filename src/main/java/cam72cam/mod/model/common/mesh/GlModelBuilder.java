@@ -9,9 +9,7 @@ import cam72cam.mod.resource.Identifier;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
-import java.awt.image.BufferedImage;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class GlModelBuilder implements IModelBuilder {
@@ -41,7 +39,6 @@ public class GlModelBuilder implements IModelBuilder {
     private boolean smoothShading;
 
     private final List<ModelGroup> groups = new ArrayList<>();
-
 
     private boolean finished = false;
 
@@ -211,10 +208,6 @@ public class GlModelBuilder implements IModelBuilder {
         faceBuffer = repackedFaces;
         uvIndices = repackedUv;
 
-        this.textures = repacker.textures;
-        this.speculars = repacker.speculars;
-        this.normals = repacker.normals;
-
         finished = true;
     }
 
@@ -289,7 +282,7 @@ public class GlModelBuilder implements IModelBuilder {
             }
         }
 
-        return new Model(modelLoc, layout, data, groups);
+        return new Model(modelLoc, layout, data, groups, repacker.hasSpecular(), repacker.hasNormal());
     }
 
     @Override

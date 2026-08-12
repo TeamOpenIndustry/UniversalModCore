@@ -35,6 +35,9 @@ public class TextureRepacker {
     private Function<String, InputStream> lookup;
     private Node rootNode;
 
+    private boolean hasSpecular;
+    private boolean hasNormal;
+
     public final Map<String, UVConverter> converters = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> speculars = new HashMap<>();
@@ -288,13 +291,16 @@ public class TextureRepacker {
         }
         rootNode.converters(0, 0);
 
+        this.hasSpecular = materials.stream().anyMatch(x -> x.texNormal != null);
+        this.hasNormal = materials.stream().anyMatch(x -> x.texSpecular != null);
+
         for (String variant : variants) {
             textures.put(variant, sheet(ident, variant, m -> m.texAlbedo, albedoFallback));
-            if (materials.stream().anyMatch(x -> x.texNormal != null)) {
-                normals.put(variant, sheet(ident, variant, m -> m.texNormal, normalFallback));
-            }
-            if (materials.stream().anyMatch(x -> x.texSpecular != null)) {
+            if (hasSpecular) {
                 speculars.put(variant, sheet(ident, variant, m -> m.texSpecular, specularFallback));
+            }
+            if (hasNormal) {
+                normals.put(variant, sheet(ident, variant, m -> m.texNormal, normalFallback));
             }
         }
     }
@@ -324,5 +330,13 @@ public class TextureRepacker {
 
     public int getHeight() {
         return scaledHeight;
+    }
+
+    public boolean hasSpecular() {
+        return hasSpecular;
+    }
+
+    public boolean hasNormal() {
+        return hasNormal;
     }
 }
