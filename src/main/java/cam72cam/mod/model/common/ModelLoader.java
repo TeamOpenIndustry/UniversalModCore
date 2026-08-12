@@ -31,10 +31,10 @@ public class ModelLoader {
             throw new RuntimeException("Unknown extension: " + extName);
         }
         Parser parser = PARSER.get(extName);
-        GlModelBuilder builder = new GlModelBuilder(scale, variants);
+        GlModelBuilder builder = new GlModelBuilder(model, scale, variants);
         parser.parse(model, builder);
         builder.finish();
-        return builder.build(VAOLayout.POS_UV_COLOR_NORMAL);
+        return builder.build(VAOLayout.POS_TEX_COLOR_NORMAL);
     }
 
     static {

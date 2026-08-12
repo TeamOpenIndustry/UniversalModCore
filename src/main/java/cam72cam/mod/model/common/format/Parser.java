@@ -5,5 +5,5 @@ import cam72cam.mod.resource.Identifier;
 
 @FunctionalInterface
 public interface Parser {
-	void parse(Identifier modelLoc, IModelBuilder builder);
+	void parse(final Identifier modelLoc, final IModelBuilder builder);
 }

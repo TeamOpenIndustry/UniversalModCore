@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VAOLayout {
-    public static final VAOLayout POS_UV_COLOR = new VAOLayout(Element.POS, Element.UV, Element.COLOR);
-    public static final VAOLayout POS_UV_COLOR_NORMAL = new VAOLayout(Element.POS, Element.UV, Element.COLOR, Element.NORMAL);
+    public static final VAOLayout POS_TEX_COLOR = new VAOLayout(Element.POS, Element.UV, Element.COLOR);
+    public static final VAOLayout POS_TEX_COLOR_NORMAL = new VAOLayout(Element.POS, Element.UV, Element.COLOR, Element.NORMAL);
 
     private final List<Element> elements;
     private final List<Integer> offsets;
@@ -69,10 +69,11 @@ public class VAOLayout {
     }
 
     public enum Usage {
-        POSITION, NORMAL, COLOR, UV, PADDING
+        POSITION, UV, COLOR, NORMAL, PADDING
     }
 
     public static class Element {
+        //Default elements in float
         public static final Element POS = new Element(Usage.POSITION, Type.FLOAT, 3);
         public static final Element UV = new Element(Usage.UV, Type.FLOAT, 2);
         public static final Element NORMAL = new Element(Usage.NORMAL, Type.FLOAT, 3);

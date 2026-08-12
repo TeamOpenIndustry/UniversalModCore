@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OBJParser {
-    public static void parse(Identifier modelLoc, IModelBuilder builder) {
+    public static void parse(final Identifier modelLoc, final IModelBuilder builder) {
         Map<String, Material> materials = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(modelLoc.getLastResourceStream(), StandardCharsets.UTF_8))) {
             String line;
@@ -26,7 +26,8 @@ public class OBJParser {
                         parseMTL(modelLoc, args[1], materials);
                         break;
                     case "usemtl":
-                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "undefined", Material::new));
+                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "undefined",
+                                                                             name -> new Material(modelLoc, name)));
                         break;
                     case "o":
                     case "g":
@@ -83,6 +84,7 @@ public class OBJParser {
 
             String line;
             while ((line = reader.readLine()) != null) {
+                line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
@@ -95,6 +97,8 @@ public class OBJParser {
                         name = line.substring(7);
                         r = g = b = a = 1;
                         texKd = null;
+                        texNs = null;
+                        texBump = null;
                         break;
                     case "Ka":
                         break;
@@ -146,20 +150,17 @@ public class OBJParser {
     private static Material buildMaterial(Identifier modelLoc, String name,
                                           float r, float g, float b, float a,
                                           String texKd, String texNs, String texBump) {
-        Material material = new Material(name, r, g, b, a);
+        Material material = new Material(modelLoc, name, r, g, b, a);
         if (texKd != null) {
-            Identifier texId = modelLoc.getRelative(texKd);
-            material.texture(texId).defaultSpecular().defaultNormal();
+            material.setAlbedo(texKd).defaultSpecular().defaultNormal();
         }
         if (texNs != null) {
-            Identifier texId = modelLoc.getRelative(texNs);
             // Override
-            material.specular(texId);
+            material.setSpecular(texNs);
         }
         if (texBump != null) {
-            Identifier texId = modelLoc.getRelative(texBump);
             // Override
-            material.normal(texId);
+            material.setNormal(texBump);
         }
         return material;
     }

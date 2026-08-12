@@ -61,7 +61,7 @@ public class OBJParserTest {
                 "f 1/1/1 2/2/2 3/3/3\n"));
 
         Assert.assertNotNull(model);
-        Assert.assertSame(VAOLayout.POS_UV_COLOR_NORMAL, model.getLayout());
+        Assert.assertSame(VAOLayout.POS_TEX_COLOR_NORMAL, model.getLayout());
 
         float[] data = model.getVboData();
         Assert.assertEquals(3 * 12, data.length); // 3 verts * (pos3 + uv2 + color4 + nrm3)
@@ -158,10 +158,10 @@ public class OBJParserTest {
         float[] data = model.getVboData();
         Assert.assertEquals(3 * 12, data.length);
 
-        // Kd baked into color
+        // Color-only material: diffuse color is baked into the albedo slot, vertex color is white
         Assert.assertEquals(1, data[5], 0.001);
-        Assert.assertEquals(0, data[6], 0.001);
-        Assert.assertEquals(0, data[7], 0.001);
+        Assert.assertEquals(1, data[6], 0.001);
+        Assert.assertEquals(1, data[7], 0.001);
         Assert.assertEquals(1, data[8], 0.001);
 
         // No vn in the obj, face normal computed

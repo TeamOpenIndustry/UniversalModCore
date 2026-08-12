@@ -2,8 +2,10 @@ package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.material.Material;
+import cam72cam.mod.model.common.material.TextureRepacker;
 import cam72cam.mod.model.common.util.FaceUtils;
 import cam72cam.mod.model.common.util.Buffers;
+import cam72cam.mod.resource.Identifier;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
@@ -11,15 +13,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GlModelBuilder implements IModelBuilder {
+    private final Identifier modelLoc;
+    private final Set<String> variants;
 
     private final Buffers.FloatBuffer posIndices = new Buffers.FloatBuffer(1024);
     private final Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
     private final float scale;
-    private final Set<String> variants;
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
-    private final Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
+    private Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
     private final Buffers.IntBuffer materialByFace = new Buffers.IntBuffer(1024);
 
     private final List<Material> materials = new ArrayList<>();
@@ -35,15 +38,14 @@ public class GlModelBuilder implements IModelBuilder {
 
     private boolean finished = false;
 
-    public GlModelBuilder(float scale, Set<String> variants) {
+    public GlModelBuilder(Identifier modelLoc, float scale, Set<String> variants) {
+        this.modelLoc = modelLoc;
         this.scale = scale;
-        if (variants == null) {
-            variants = Collections.singleton("");
+        if (variants == null || variants.isEmpty()) {
+            this.variants = new HashSet<>(Collections.singleton(""));
+        } else {
+            this.variants = new HashSet<>(variants);
         }
-        if (variants.isEmpty()) {
-            variants.add("");
-        }
-        this.variants = variants;
     }
 
     @Override
@@ -135,6 +137,68 @@ public class GlModelBuilder implements IModelBuilder {
                 groups.add(ModelGroup.buildGroup(groupNames.get(i), start, end, points));
             }
         }
+
+        // Determine per-triangle tiling so the repacker can size each texture slot
+        for (int tri = 0; tri < triCount; tri++) {
+            int b = tri * 9;
+            int matId = materialByFace.get(tri * 3);
+            Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
+            if (mat == null || mat.texAlbedo == null) {
+                continue;
+            }
+            int u0 = faceBuffer.get(b + 1);
+            int u1 = faceBuffer.get(b + 4);
+            int u2 = faceBuffer.get(b + 7);
+            if (u0 < 0 || u1 < 0 || u2 < 0) {
+                continue;
+            }
+            float vminU = Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
+            float vmaxU = Math.max(uvIndices.get(u0 * 2), Math.max(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2)));
+            float vminV = Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
+            float vmaxV = Math.max(uvIndices.get(u0 * 2 + 1), Math.max(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1)));
+            int offU = (int) Math.floor(vminU);
+            int offV = (int) Math.floor(vminV);
+            mat.copiesOnU = Math.max(mat.copiesOnU, (int) Math.ceil(vmaxU - offU));
+            mat.copiesOnV = Math.max(mat.copiesOnV, (int) Math.ceil(vmaxV - offV));
+        }
+
+        // Repack textures and rebuild the uv index space with the converted coordinates
+        Set<Material> used = usedMaterials.stream().map(materials::get).collect(Collectors.toSet());
+        TextureRepacker repacker = new TextureRepacker(modelLoc, used, variants);
+
+        Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size());
+        for (int tri = 0; tri < triCount; tri++) {
+            int b = tri * 9;
+            int matId = materialByFace.get(tri * 3);
+            Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
+            TextureRepacker.UVConverter converter = mat != null ? repacker.converters.get(mat.name) : null;
+            int offU = 0;
+            int offV = 0;
+            if (converter != null && mat.texAlbedo != null) {
+                int u0 = faceBuffer.get(b + 1);
+                int u1 = faceBuffer.get(b + 4);
+                int u2 = faceBuffer.get(b + 7);
+                if (u0 >= 0 && u1 >= 0 && u2 >= 0) {
+                    offU = (int) Math.floor(Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2))));
+                    offV = (int) Math.floor(Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1))));
+                }
+            }
+            for (int k = 0; k < 3; k++) {
+                int posIdx = faceBuffer.get(b + k * 3);
+                int uvIdx = faceBuffer.get(b + k * 3 + 1);
+                int nrmIdx = faceBuffer.get(b + k * 3 + 2);
+                if (converter != null && uvIdx >= 0 && mat.texAlbedo != null) {
+                    float u = uvIndices.get(uvIdx * 2) - offU;
+                    float v = uvIndices.get(uvIdx * 2 + 1) - offV;
+                    uvIdx = addIndexedUv(converter.convertU(u), converter.convertV(v));
+                }
+                repackedFaces.add(posIdx);
+                repackedFaces.add(uvIdx);
+                repackedFaces.add(nrmIdx);
+            }
+        }
+        faceBuffer = repackedFaces;
+
         finished = true;
     }
 
@@ -185,9 +249,11 @@ public class GlModelBuilder implements IModelBuilder {
                 }
 
                 if (hasColor) {
-                    data[base + colorOff] = mat != null ? mat.r : 1;
-                    data[base + colorOff + 1] = mat != null ? mat.g : 1;
-                    data[base + colorOff + 2] = mat != null ? mat.b : 1;
+                    // Color-only materials already baked their color into the albedo slot
+                    boolean tint = mat != null && mat.texAlbedo != null;
+                    data[base + colorOff] = tint ? mat.r : 1;
+                    data[base + colorOff + 1] = tint ? mat.g : 1;
+                    data[base + colorOff + 2] = tint ? mat.b : 1;
                     data[base + colorOff + 3] = mat != null ? mat.a : 1;
                 }
 
@@ -244,7 +310,9 @@ public class GlModelBuilder implements IModelBuilder {
                 faceBuffer.add(buffer.get(i * 3 + 1));
                 faceBuffer.add(buffer.get(i * 3 + 2));
                 materialByFace.add(currMaterial);
-                usedMaterials.add(currMaterial);
+                if (currMaterial >= 0) {
+                    usedMaterials.add(currMaterial);
+                }
             }
         }
     }
