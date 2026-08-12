@@ -264,11 +264,11 @@ public class GlModelBuilder implements IModelBuilder {
                 }
 
                 if (hasColor) {
-                    // Color-only materials already baked their color into albedo slot
-                    boolean baked = mat != null && mat.texAlbedo != null;
-                    data[base + colorOff] = baked ? mat.r : 1;
-                    data[base + colorOff + 1] = baked ? mat.g : 1;
-                    data[base + colorOff + 2] = baked ? mat.b : 1;
+                    // Vertex color carries the material color; color-only materials draw a white
+                    // albedo slot so the color shows through directly (no double-application)
+                    data[base + colorOff] = mat != null ? mat.r : 1;
+                    data[base + colorOff + 1] = mat != null ? mat.g : 1;
+                    data[base + colorOff + 2] = mat != null ? mat.b : 1;
                     data[base + colorOff + 3] = mat != null ? mat.a : 1;
                 }
 

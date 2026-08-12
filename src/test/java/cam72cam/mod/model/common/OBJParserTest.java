@@ -164,10 +164,10 @@ public class OBJParserTest {
         float[] data = model.getVboData();
         Assert.assertEquals(3 * 12, data.length);
 
-        // Color-only material: diffuse color is baked into the albedo slot, vertex color is white
+        // Color-only material: diffuse color is kept in the VBO, the albedo slot is white
         Assert.assertEquals(1, data[5], 0.001);
-        Assert.assertEquals(1, data[6], 0.001);
-        Assert.assertEquals(1, data[7], 0.001);
+        Assert.assertEquals(0, data[6], 0.001);
+        Assert.assertEquals(0, data[7], 0.001);
         Assert.assertEquals(1, data[8], 0.001);
 
         // No vn in the obj, face normal computed
