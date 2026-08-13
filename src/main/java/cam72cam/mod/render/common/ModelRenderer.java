@@ -43,6 +43,11 @@ public class ModelRenderer extends VBO {
             super(state, wait);
         }
 
+        public Binding config(ModelConfig binder) {
+            binder.apply(state, model);
+            return this;
+        }
+
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
             if (!isLoaded()) {
                 return;
