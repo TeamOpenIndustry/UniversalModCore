@@ -7,10 +7,13 @@ import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJParser;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.resource.Identifier;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +21,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class OBJParserTest {
+    @Before
+    public void clearCache() throws IOException {
+        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
+    }
+
     private static class FakeIdentifier extends Identifier {
         @FunctionalInterface
         interface IOFunction {

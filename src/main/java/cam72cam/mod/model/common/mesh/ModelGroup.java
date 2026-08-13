@@ -61,7 +61,7 @@ public class ModelGroup {
         return new ModelGroup(name, start, end, groupMin, groupMax, normal);
     }
 
-    static ModelGroup deserialize(TagCompound d) {
+    public static ModelGroup deserialize(TagCompound d) {
         return new ModelGroup(
                 d.getString("name"),
                 d.getInteger("faceStart"),
@@ -72,7 +72,7 @@ public class ModelGroup {
         );
     }
 
-    TagCompound serialize() {
+    public TagCompound serialize() {
         return new TagCompound()
                 .setString("name", name)
                 .setInteger("faceStart", faceStart)
