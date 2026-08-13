@@ -55,15 +55,16 @@ public class ModelCache implements AutoCloseable {
             // Fixed for now, TODO Extension
             Model model = bm.build(VAOLayout.POS_TEX_COLOR_NORMAL);
             TextureRepacker repacker = bm.getRepacker();
-            TagCompound data = new TagCompound();
-            data.setBoolean("hasSpecular", model.hasSpecular);
-            data.setBoolean("hasNormal", model.hasNormal);
-            data.setBoolean("isSmoothShading", model.isSmoothShading);
-            data.set("layout", VAOLayout.POS_TEX_COLOR_NORMAL.serialize());
+            TagCompound data = new TagCompound()
+                    .setBoolean("hasSpecular", model.hasSpecular)
+                    .setBoolean("hasNormal", model.hasNormal)
+                    .setBoolean("isSmoothShading", model.isSmoothShading)
+                    .set("layout", VAOLayout.POS_TEX_COLOR_NORMAL.serialize());
             if (Config.getMaxTextureSize() > 0) {
-                data.setInteger("textureWidth", repacker.getWidth());
-                data.setInteger("textureHeight", repacker.getHeight());
-                data.setList("variants", new ArrayList<>(repacker.textures.keySet()), k -> new TagCompound().setString("variant", k));
+                data.setInteger("textureWidth", repacker.getWidth())
+                    .setInteger("textureHeight", repacker.getHeight())
+                    .setList("variants", new ArrayList<>(repacker.textures.keySet()),
+                             k -> new TagCompound().setString("variant", k));
             }
             data.setList("groups", new ArrayList<>(model.getGroups().values()), ModelGroup::serialize);
             try {
@@ -126,8 +127,8 @@ public class ModelCache implements AutoCloseable {
     }
 
     /** Generates (on cache miss) the RGBA bytes for a texture sheet; {@code lod} is null for the full-size sheet. */
-    private GenericByteBuffer textureBytes(GlModelBuilder bm, String variant, String suffix, Integer lod) {
-        TextureRepacker repacker = bm.getRepacker();
+    private GenericByteBuffer textureBytes(IModelBuilder builder, String variant, String suffix, Integer lod) {
+        TextureRepacker repacker = builder.getRepacker();
         Supplier<BufferedImage> source;
         switch (suffix) {
             default:
