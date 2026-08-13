@@ -107,19 +107,16 @@ public class ModelCache implements AutoCloseable {
         int textureWidth = meta.getInteger("textureWidth");
         int textureHeight = meta.getInteger("textureHeight");
         int texSize = Math.max(textureWidth, textureHeight);
-
-        String ext = suffix.isEmpty() ? "rgba" : suffix.substring(1);
-
         for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
             Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
             lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight,
-                    cache.getResource(variant + "." + ext, bm -> textureBytes(bm, variant, suffix, null)),
+                    cache.getResource(variant + suffix + ".rgba", bm -> textureBytes(bm, variant, suffix, null)),
                     cacheSeconds));
             for (Integer lodValue : lodValues) {
                 if (lodValue < texSize) {
                     Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
                     lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(),
-                            cache.getResource(variant + "_" + lodValue + "." + ext, bm -> textureBytes(bm, variant, suffix, lodValue)),
+                            cache.getResource(variant + "_" + lodValue + suffix + ".rgba", bm -> textureBytes(bm, variant, suffix, lodValue)),
                             cacheSeconds));
                 }
             }
