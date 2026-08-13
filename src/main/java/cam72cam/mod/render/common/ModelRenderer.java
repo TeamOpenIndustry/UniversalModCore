@@ -62,15 +62,16 @@ public class ModelRenderer extends VBO {
             if (!isLoaded()) {
                 return;
             }
-            List<String> sorted = new ArrayList<>(groups);
-            sorted.sort(Comparator.naturalOrder());
+
+            List<ModelGroup> ordered = new ArrayList<>(groups.size());
+            for (String name : groups) {
+                ordered.add(model.getGroups().get(name));
+            }
+            ordered.sort(Comparator.comparingInt(g -> g.faceStart));
+
             int start = -1;
             int stop = -1;
-            for (String name : sorted) {
-                ModelGroup info = model.getGroups().get(name);
-                if (info == null) {
-                    continue;
-                }
+            for (ModelGroup info : ordered) {
                 if (start == -1) {
                     start = info.faceStart;
                     stop = info.faceEnd;
