@@ -38,14 +38,19 @@ public class ModelRenderer extends VBO {
         return new Binding(state, waitForLoad);
     }
 
+    public Binding bind(ModelConfig config, RenderState state) {
+        config.apply(state, model);
+        return bind(state, false);
+    }
+
+    public Binding bind(ModelConfig config, RenderState state, boolean waitForLoad) {
+        config.apply(state, model);
+        return new Binding(state, waitForLoad);
+    }
+
     public class Binding extends VBO.Binding {
         protected Binding(RenderState state, boolean wait) {
             super(state, wait);
-        }
-
-        public Binding config(ModelConfig binder) {
-            binder.apply(state, model);
-            return this;
         }
 
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
@@ -57,7 +62,6 @@ public class ModelRenderer extends VBO {
             }
         }
 
-        /** Draws the given groups, batching contiguous face ranges into a single draw call. */
         public void draw(Collection<String> groups) {
             if (!isLoaded()) {
                 return;

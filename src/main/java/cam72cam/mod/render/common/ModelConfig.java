@@ -9,8 +9,8 @@ import java.util.Map;
 
 /** Per-draw texture/variant/LOD config. Built via of().lod().variant(), applied by ConfiguredRenderer. */
 public class ModelConfig {
-    private int lod;
-    private String variant;
+    private int lod = -1;
+    private String variant = "";
 
     public static ModelConfig of() {
         return new ModelConfig();
