@@ -6,6 +6,7 @@ import cam72cam.mod.resource.Identifier;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 public interface IModelBuilder {
     void newModelGroup(String name);
@@ -21,10 +22,12 @@ public interface IModelBuilder {
     void doSmoothShading();
 
 	void finish();
-    boolean isFinished();
 
     Model build(VAOLayout layout);
 
+    boolean isFinished();
+    Collection<ModelGroup> validGroups();
+    boolean isSmoothShading();
     Identifier getModelLoc();
     TextureRepacker getRepacker();
 

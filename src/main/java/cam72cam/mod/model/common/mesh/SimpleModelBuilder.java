@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GlModelBuilder implements IModelBuilder {
+public class SimpleModelBuilder implements IModelBuilder {
     private final Identifier modelLoc;
     private final Set<String> variants;
 
@@ -35,7 +35,7 @@ public class GlModelBuilder implements IModelBuilder {
     private final List<Material> materials = new ArrayList<>();
     private final Map<String, Integer> materialIds = new HashMap<>();
     private final Set<Integer> usedMaterials = new IntArraySet();
-    private int currMaterial = -1;
+    private int currMaterial;
     private TextureRepacker repacker;
 
     private final List<String> groupNames = new ArrayList<>();
@@ -46,7 +46,7 @@ public class GlModelBuilder implements IModelBuilder {
 
     private boolean finished = false;
 
-    public GlModelBuilder(Identifier modelLoc, float scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
+    public SimpleModelBuilder(Identifier modelLoc, float scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
         this.modelLoc = modelLoc;
         this.scale = scale;
         this.input = input;
@@ -57,6 +57,12 @@ public class GlModelBuilder implements IModelBuilder {
         }
         // Record the model file's hash so cache invalidation notices source edits.
         input.apply(modelLoc);
+        // Faces without an explicit usemtl resolve to this default material, so a face's
+        // material is never null. (The parser already maps undefined usemtl names to a
+        // default Material too.)
+        materials.add(new Material(this, "default"));
+        materialIds.put("default", 0);
+        currMaterial = 0;
     }
 
     @Override
@@ -119,6 +125,16 @@ public class GlModelBuilder implements IModelBuilder {
     }
 
     @Override
+    public Collection<ModelGroup> validGroups() {
+        return groups.values();
+    }
+
+    @Override
+    public boolean isSmoothShading() {
+        return smoothShading;
+    }
+
+    @Override
     public boolean isFinished() {
         return finished;
     }
@@ -154,9 +170,8 @@ public class GlModelBuilder implements IModelBuilder {
 
                 // Build UV repacking data
                 {
-                    int matId = materialByFace.get(tri);
-                    Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
-                    if (mat == null || mat.texAlbedo == null) {
+                    Material mat = materials.get(materialByFace.get(tri));
+                    if (mat.texAlbedo == null) {
                         continue;
                     }
                     int u0 = faceBuffer.get(idx + 1);
@@ -186,12 +201,11 @@ public class GlModelBuilder implements IModelBuilder {
         Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size());
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
-            int matId = materialByFace.get(tri);
-            Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
-            TextureRepacker.UVConverter converter = mat != null ? repacker.converters.get(mat.name) : null;
+            Material mat = materials.get(materialByFace.get(tri));
+            TextureRepacker.UVConverter converter = repacker.converters.get(mat.name);
             int offU = 0;
             int offV = 0;
-            if (converter != null && mat.texAlbedo != null) {
+            if (mat.texAlbedo != null) {
                 int u0 = faceBuffer.get(b + 1);
                 int u1 = faceBuffer.get(b + 4);
                 int u2 = faceBuffer.get(b + 7);
@@ -208,7 +222,7 @@ public class GlModelBuilder implements IModelBuilder {
                     // Always re-emit the uv into the repacked buffer so the index stays valid
                     float u = uvIndices.get(uvIdx * 2);
                     float v = uvIndices.get(uvIdx * 2 + 1);
-                    if (converter != null && mat.texAlbedo != null) {
+                    if (mat.texAlbedo != null) {
                         u = converter.convertU(u - offU);
                         v = converter.convertV(v - offV);
                     }
@@ -253,8 +267,7 @@ public class GlModelBuilder implements IModelBuilder {
             Vec3d pb = new Vec3d(posIndices.get(posIdx1 * 3), posIndices.get(posIdx1 * 3 + 1), posIndices.get(posIdx1 * 3 + 2));
             Vec3d pc = new Vec3d(posIndices.get(posIdx2 * 3), posIndices.get(posIdx2 * 3 + 1), posIndices.get(posIdx2 * 3 + 2));
 
-            int matId = materialByFace.get(tri);
-            Material mat = matId >= 0 && matId < materials.size() ? materials.get(matId) : null;
+            Material mat = materials.get(materialByFace.get(tri));
 
             for (int k = 0; k < 3; k++) {
                 int v = tri * 3 + k;
@@ -277,10 +290,10 @@ public class GlModelBuilder implements IModelBuilder {
                 if (hasColor) {
                     // Vertex color carries the material color; color-only materials draw a white
                     // albedo slot so the color shows through directly (no double-application)
-                    data[base + colorOff] = mat != null ? mat.r : 1;
-                    data[base + colorOff + 1] = mat != null ? mat.g : 1;
-                    data[base + colorOff + 2] = mat != null ? mat.b : 1;
-                    data[base + colorOff + 3] = mat != null ? mat.a : 1;
+                    data[base + colorOff] = mat.r;
+                    data[base + colorOff + 1] = mat.g;
+                    data[base + colorOff + 2] = mat.b;
+                    data[base + colorOff + 3] = mat.a;
                 }
 
                 if (hasNormal) {
@@ -357,9 +370,7 @@ public class GlModelBuilder implements IModelBuilder {
                     faceBuffer.add(buffer.get(i * 3 + 2));
                 }
                 materialByFace.add(currMaterial);
-                if (currMaterial >= 0) {
-                    usedMaterials.add(currMaterial);
-                }
+                usedMaterials.add(currMaterial);
             }
         }
     }

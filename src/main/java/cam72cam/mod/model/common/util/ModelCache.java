@@ -25,7 +25,7 @@ import static cam72cam.mod.model.common.util.ImageUtils.*;
 public class ModelCache implements AutoCloseable {
     private final Identifier modelLoc;
     private final List<Integer> lodValues;
-    private final ResourceCache<GlModelBuilder> cache;
+    private final ResourceCache<SimpleModelBuilder> cache;
     private final TagCompound meta;
 
     public ModelCache(Identifier modelLoc, float scale, Collection<String> variants, List<Integer> lodValues, Parser parser) throws IOException {
@@ -44,21 +44,20 @@ public class ModelCache implements AutoCloseable {
         Identifier cacheId = new Identifier(modelLoc.getDomain(), modelLoc.getPath() + "_" + settings.hashCode());
 
         this.cache = new ResourceCache<>(cacheId, provider -> {
-            GlModelBuilder builder = new GlModelBuilder(modelLoc, scale, variants, provider);
+            SimpleModelBuilder builder = new SimpleModelBuilder(modelLoc, scale, variants, provider);
             parser.parse(builder);
             builder.finish();
             return builder;
         });
 
         // Meta is read eagerly so the Model can be reconstructed on a cache hit without re-parsing.
-        this.meta = new TagCompound(cache.getResource("meta.nbt", bm -> {
-            // Fixed for now, TODO Extension
-            Model model = bm.build(VAOLayout.POS_TEX_COLOR_NORMAL);
-            TextureRepacker repacker = bm.getRepacker();
+        this.meta = new TagCompound(cache.getResource("meta.nbt", builder -> {
+            TextureRepacker repacker = builder.getRepacker();
             TagCompound data = new TagCompound()
-                    .setBoolean("hasSpecular", model.hasSpecular)
-                    .setBoolean("hasNormal", model.hasNormal)
-                    .setBoolean("isSmoothShading", model.isSmoothShading)
+                    .setBoolean("hasSpecular", repacker.hasSpecular())
+                    .setBoolean("hasNormal", repacker.hasNormal())
+                    .setBoolean("isSmoothShading", builder.isSmoothShading())
+                    // Fixed for now, TODO Extension
                     .set("layout", VAOLayout.POS_TEX_COLOR_NORMAL.serialize());
             if (Config.getMaxTextureSize() > 0) {
                 data.setInteger("textureWidth", repacker.getWidth())
@@ -66,7 +65,7 @@ public class ModelCache implements AutoCloseable {
                     .setList("variants", new ArrayList<>(repacker.textures.keySet()),
                              k -> new TagCompound().setString("variant", k));
             }
-            data.setList("groups", new ArrayList<>(model.getGroups().values()), ModelGroup::serialize);
+            data.setList("groups", new ArrayList<>(builder.validGroups()), ModelGroup::serialize);
             try {
                 return new GenericByteBuffer(data.toBytes());
             } catch (IOException e) {
@@ -77,7 +76,7 @@ public class ModelCache implements AutoCloseable {
 
     /** Reconstructs the {@link Model} from the cache, linking the cached texture sheets. */
     public Model buildModel(int cacheSeconds) throws IOException {
-        float[] vboData = cache.getResource("model.bin", bm -> new GenericByteBuffer(bm.build(VAOLayout.POS_TEX_COLOR_NORMAL).getVboData())).get().floats();
+        float[] vboData = cache.getResource("model.bin", builder -> new GenericByteBuffer(builder.build(VAOLayout.POS_TEX_COLOR_NORMAL).getVboData())).get().floats();
 
         LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
         for (ModelGroup group : meta.getList("groups", ModelGroup::deserialize)) {
