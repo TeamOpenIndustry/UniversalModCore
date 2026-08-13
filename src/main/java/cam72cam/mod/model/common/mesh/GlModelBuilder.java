@@ -126,7 +126,7 @@ public class GlModelBuilder implements IModelBuilder {
             int start = groupStartFaces.get(i);
             int end = i + 1 < groupStartFaces.size() ? groupStartFaces.get(i + 1) : triCount;
 
-            if (start == end - 1) {
+            if (start >= end - 1) {
                 //Skip empty groups
                 continue;
             }
