@@ -78,12 +78,13 @@ public class StandardModel {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        Pair.of(
+        Pair<BlockState, BakedModel> pair = Pair.of(
                 state,
                 plane == null
                         ? new BakedScaledModel(model, transform)
                         : new BakedScaledModel(model, transform, plane)
         );
+        models.add(pair);
         return this;
     }
 
