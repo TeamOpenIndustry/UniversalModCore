@@ -1,5 +1,6 @@
 package cam72cam.mod.model.common.material;
 
+import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.io.FilenameUtils;
 
@@ -9,8 +10,7 @@ import javax.imageio.stream.ImageInputStream;
 import java.util.Iterator;
 
 public class Material {
-    public static final Material DEFAULT = new Material("default");
-
+    public final IModelBuilder builder;
     public final String name;
     public final float r, g, b, a;
     public int width, height;
@@ -24,11 +24,12 @@ public class Material {
     public int copiesOnU = 1;
     public int copiesOnV = 1;
 
-    public Material(String name) {
-        this(name, 1, 1, 1, 1);
+    public Material(IModelBuilder builder, String name) {
+        this(builder, name, 1, 1, 1, 1);
     }
 
-    public Material(String name, float r, float g, float b, float a) {
+    public Material(IModelBuilder builder, String name, float r, float g, float b, float a) {
+        this.builder = builder;
         this.name = name;
         this.r = r;
         this.g = g;
@@ -39,19 +40,19 @@ public class Material {
         this.height = 16;
     }
 
-    public static void populateSize(Material material, Identifier modelLoc) {
-        if (material.texAlbedo != null) {
-            Identifier relative = modelLoc.getRelative(material.texAlbedo);
+    public void populateSize() {
+        if (this.texAlbedo != null) {
+            Identifier relative = builder.getModelLoc().getRelative(this.texAlbedo);
             if (relative.canLoad()) {
-                try (ImageInputStream iis = ImageIO.createImageInputStream(
-                    relative.getLastResourceStream())) {
+                try (ImageInputStream iis = ImageIO.createImageInputStream(builder.open(relative))) {
                     Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
                     if (readers.hasNext()) {
                         ImageReader reader = readers.next();
                         try {
+                            // Read size from texture metadata
                             reader.setInput(iis, true, true);
-                            material.width = reader.getWidth(0);
-                            material.height = reader.getHeight(0);
+                            this.width = reader.getWidth(0);
+                            this.height = reader.getHeight(0);
                         } finally {
                             reader.dispose();
                         }

@@ -2,6 +2,10 @@ package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.material.TextureRepacker;
+import cam72cam.mod.resource.Identifier;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public interface IModelBuilder {
     void newModelGroup(String name);
@@ -21,7 +25,17 @@ public interface IModelBuilder {
 
     Model build(VAOLayout layout);
 
+    Identifier getModelLoc();
     TextureRepacker getRepacker();
+
+    /**
+     * Open a resource via Builder, letting they handle cache things
+     * @param id The resource/cache key to open
+     * @return The opened stream
+     */
+    default InputStream open(Identifier id) throws IOException {
+        return id.getLastResourceStream();
+    }
 
     default void checkUnfinished() {
         if (isFinished()) {

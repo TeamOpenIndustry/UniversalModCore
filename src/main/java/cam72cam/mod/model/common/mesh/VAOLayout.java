@@ -1,9 +1,11 @@
 package cam72cam.mod.model.common.mesh;
 
+import cam72cam.mod.serialization.TagCompound;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VAOLayout {
     public static final VAOLayout POS_TEX_COLOR = new VAOLayout(Element.POS, Element.UV, Element.COLOR);
@@ -86,12 +88,30 @@ public class VAOLayout {
         //No need to do anything in 1.16-
     }
 
+    public TagCompound serialize() {
+        return new TagCompound().setList("elements",
+                elements.stream()
+                        .map(e -> new TagCompound()
+                                              .setEnum("usage", e.usage)
+                                              .setEnum("type", e.type)
+                                              .setInteger("count", e.count))
+                        .collect(Collectors.toList()),
+                t -> t);
+    }
+
+    public static VAOLayout deserialize(TagCompound data) {
+        List<Element> elements = data.getList("elements", t ->
+                new Element(t.getEnum("usage", Usage.class), t.getEnum("type", Type.class), t.getInteger("count")
+        ));
+        return new VAOLayout(elements.toArray(new Element[0]));
+    }
+
     public enum Type {
-        UBYTE(Byte.BYTES),
+        UNSIGNED_BYTE(Byte.BYTES),
         BYTE(Byte.BYTES),
-        USHORT(Short.BYTES),
+        UNSIGNED_SHORT(Short.BYTES),
         SHORT(Short.BYTES),
-        UINT(Integer.BYTES),
+        UNSIGNED_INT(Integer.BYTES),
         INT(Integer.BYTES),
         FLOAT(Float.BYTES),
         DOUBLE(Double.BYTES),

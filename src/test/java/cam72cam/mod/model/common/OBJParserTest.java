@@ -71,7 +71,9 @@ public class OBJParserTest {
                 "f 1/1/1 2/2/2 3/3/3\n"));
 
         Assert.assertNotNull(model);
-        Assert.assertSame(VAOLayout.POS_TEX_COLOR_NORMAL, model.getLayout());
+        // Layout is reconstructed from the cache, so compare structure rather than identity.
+        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), model.getLayout().getStride());
+        Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
 
         float[] data = model.getVboData();
         Assert.assertEquals(3 * 12, data.length); // 3 verts * (pos3 + uv2 + color4 + nrm3)

@@ -2,6 +2,7 @@ package cam72cam.mod.model.common.material;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.model.common.util.ImageUtils;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.lang3.tuple.Pair;
@@ -233,15 +234,16 @@ public class TextureRepacker {
         }
     }
 
-    public TextureRepacker(Identifier modelLoc, Collection<Material> materials, Collection<String> variants) {
+    public TextureRepacker(IModelBuilder builder, Collection<Material> materials, Collection<String> variants) {
         ImageIO.setUseCache(false);
         if (materials.isEmpty()) {
             return;
         }
+        Identifier modelLoc = builder.getModelLoc();
 
         this.lookup = p -> {
             try {
-                return modelLoc.getRelative(p).getLastResourceStream();
+                return builder.open(modelLoc.getRelative(p));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -250,7 +252,7 @@ public class TextureRepacker {
         // Load texture dimensions before bin packing
         for (Material material : materials) {
             if (material.texAlbedo != null) {
-                Material.populateSize(material, modelLoc);
+                material.populateSize();
             }
         }
 

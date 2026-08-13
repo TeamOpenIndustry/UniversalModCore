@@ -56,6 +56,7 @@ public class ModelLoader {
         if (parser == null) {
             throw new RuntimeException("Unknown model format: " + extName);
         }
+
         try (ModelCache cache = new ModelCache(modelLoc, scale, variants, lodValues, parser)) {
             return cache.buildModel(cacheSeconds);
         } catch (IOException e) {

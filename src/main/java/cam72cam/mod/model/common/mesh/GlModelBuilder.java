@@ -6,9 +6,12 @@ import cam72cam.mod.model.common.material.TextureRepacker;
 import cam72cam.mod.model.common.util.FaceUtils;
 import cam72cam.mod.model.common.util.Buffers;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.serialization.ResourceCache;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ public class GlModelBuilder implements IModelBuilder {
     // 3 floats per normal (x, y, z)
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
     private final float scale;
+    private final ResourceCache.ResourceProvider input;
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
     private Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
@@ -42,14 +46,17 @@ public class GlModelBuilder implements IModelBuilder {
 
     private boolean finished = false;
 
-    public GlModelBuilder(Identifier modelLoc, float scale, Collection<String> variants) {
+    public GlModelBuilder(Identifier modelLoc, float scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
         this.modelLoc = modelLoc;
         this.scale = scale;
+        this.input = input;
         if (variants == null || variants.isEmpty()) {
             this.variants = new HashSet<>(Collections.singleton(""));
         } else {
             this.variants = new HashSet<>(variants);
         }
+        // Record the model file's hash so cache invalidation notices source edits.
+        input.apply(modelLoc);
     }
 
     @Override
@@ -173,7 +180,7 @@ public class GlModelBuilder implements IModelBuilder {
 
         // Repack textures and rebuild the uv index space with the converted coordinates
         Set<Material> used = usedMaterials.stream().map(materials::get).collect(Collectors.toSet());
-        repacker = new TextureRepacker(modelLoc, used, variants);
+        repacker = new TextureRepacker(this, used, variants);
 
         Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size());
         Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size());
@@ -295,9 +302,20 @@ public class GlModelBuilder implements IModelBuilder {
     }
 
     @Override
+    public Identifier getModelLoc() {
+        return modelLoc;
+    }
+
+    @Override
     public TextureRepacker getRepacker() {
         checkFinished();
         return repacker;
+    }
+
+    @Override
+    public InputStream open(Identifier id) {
+        // Via cache
+        return new ByteArrayInputStream(input.apply(id));
     }
 
     public class GlFaceBuilder implements IFaceBuilder {
