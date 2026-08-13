@@ -54,7 +54,6 @@ public class GlModelBuilder implements IModelBuilder {
 
     @Override
     public void newModelGroup(String name) {
-        checkUnfinished();
         groupNames.add(name);
         groupStartFaces.add(faceBuffer.size() / 9);
     }
@@ -126,6 +125,11 @@ public class GlModelBuilder implements IModelBuilder {
         for (int i = 0; i < groupNames.size(); i++) {
             int start = groupStartFaces.get(i);
             int end = i + 1 < groupStartFaces.size() ? groupStartFaces.get(i + 1) : triCount;
+
+            if (start == end - 1) {
+                //Skip empty groups
+                continue;
+            }
 
             boolean[] usedVerts = new boolean[posIndices.size() / 3];
             List<Vec3d> points = new ArrayList<>();

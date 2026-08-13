@@ -3,7 +3,6 @@ package cam72cam.mod.model.common.mesh;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.serialization.TagCompound;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,10 +24,6 @@ public class ModelGroup {
     }
 
     static ModelGroup buildGroup(String name, int start, int end, List<Vec3d> points) {
-        if (points.isEmpty()) {
-            points = Collections.singletonList(Vec3d.ZERO);
-        }
-
         Vec3d first = points.get(0);
         Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
         Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
