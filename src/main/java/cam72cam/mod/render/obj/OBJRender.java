@@ -54,12 +54,16 @@ public class OBJRender extends VBO {
             if (!isLoaded()) {
                 return;
             }
-            List<String> sorted = new ArrayList<>(groups);
-            sorted.sort(Comparator.naturalOrder());
+
+            List<OBJGroup> ordered = new ArrayList<>(groups.size());
+            for (String name : groups) {
+                ordered.add(model.groups.get(name));
+            }
+            ordered.sort(Comparator.comparingInt(g -> g.faceStart));
+
             int start = -1;
             int stop = -1;
-            for (String group : sorted) {
-                OBJGroup info = model.groups.get(group);
+            for (OBJGroup info : ordered) {
                 if (start == stop) {
                     start = info.faceStart;
                     stop = info.faceStop + 1;
