@@ -12,7 +12,6 @@ import cam72cam.mod.serialization.ResourceCache;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/** Per-draw texture/variant/LOD config. Built via of().lod().variant(), applied by ConfiguredRenderer. */
 public class ModelConfig {
     private static final OBJTextureSheet defTex = OBJModel.defTex;
     private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
