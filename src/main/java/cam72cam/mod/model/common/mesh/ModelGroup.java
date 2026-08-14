@@ -14,7 +14,7 @@ public class ModelGroup {
     public final Vec3d max;
     public final Vec3d normal;
 
-    ModelGroup(String name, int faceStart, int faceEnd, Vec3d min, Vec3d max, Vec3d normal) {
+    public ModelGroup(String name, int faceStart, int faceEnd, Vec3d min, Vec3d max, Vec3d normal) {
         this.name = name;
         this.faceStart = faceStart;
         this.faceEnd = faceEnd;
@@ -23,7 +23,7 @@ public class ModelGroup {
         this.normal = normal;
     }
 
-    static ModelGroup buildGroup(String name, int start, int end, List<Vec3d> points) {
+    public static ModelGroup buildGroup(String name, int start, int end, List<Vec3d> points) {
         Vec3d first = points.get(0);
         Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
         Vec3d groupMax = points.stream().reduce(first, Vec3d::max);

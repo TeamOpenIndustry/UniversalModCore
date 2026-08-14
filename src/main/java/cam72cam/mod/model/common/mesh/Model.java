@@ -93,16 +93,16 @@ public class Model {
         return max.x - min.x;
     }
 
-    public double heightOfGroups(Iterable<String> groupNames) {
-        Vec3d min = minOfGroups(groupNames);
-        Vec3d max = maxOfGroups(groupNames);
-        return max.y - min.y;
-    }
-
     public double widthOfGroups(Iterable<String> groupNames) {
         Vec3d min = minOfGroups(groupNames);
         Vec3d max = maxOfGroups(groupNames);
         return max.z - min.z;
+    }
+
+    public double heightOfGroups(Iterable<String> groupNames) {
+        Vec3d min = minOfGroups(groupNames);
+        Vec3d max = maxOfGroups(groupNames);
+        return max.y - min.y;
     }
 
     /** WARNING This is a very slow function and should be used for debug only */
