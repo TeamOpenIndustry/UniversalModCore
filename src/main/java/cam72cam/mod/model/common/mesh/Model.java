@@ -1,6 +1,7 @@
 package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.model.common.util.FaceAccessor;
 import cam72cam.mod.render.common.ModelRenderer;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
@@ -111,6 +112,10 @@ public class Model {
             }
         }
         return points;
+    }
+
+    public FaceAccessor getFaceAccessor() {
+        return new FaceAccessor(this);
     }
 
     public Identifier location() {
