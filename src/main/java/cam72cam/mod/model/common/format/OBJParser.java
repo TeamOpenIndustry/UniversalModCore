@@ -26,8 +26,10 @@ public class OBJParser {
                         parseMTL(builder, args[1], materials);
                         break;
                     case "usemtl":
-                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "default",
-                                                                             name -> new Material(builder, name)));
+                        if (args.length < 2) {
+                            throw new IllegalArgumentException("Unknown OBJ group");
+                        }
+                        builder.setCurrentMaterial(materials.computeIfAbsent(line.substring(7), name -> new Material(builder, name)));
                         break;
                     case "o":
                     case "g":
