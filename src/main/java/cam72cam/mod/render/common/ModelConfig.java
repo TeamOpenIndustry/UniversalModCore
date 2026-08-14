@@ -1,5 +1,6 @@
 package cam72cam.mod.render.common;
 
+import cam72cam.mod.Config;
 import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.render.obj.OBJTextureSheet;
@@ -17,7 +18,7 @@ public class ModelConfig {
     private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
     private static final OBJTextureSheet defNormTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
 
-    private int lod = -1;
+    private int lod = Config.getMaxTextureSize();
     private String variant = "";
 
     public void lod(int lod) {
@@ -29,19 +30,19 @@ public class ModelConfig {
     }
 
     void apply(RenderState state, Model model, boolean waitForLoad) {
-        Texture albedo = pickLodSheet(model.getTextures(), waitForLoad);
+        Texture albedo = pickLodSheet(model.getTextures(), defTex, waitForLoad);
         state.texture(albedo != null ? albedo : defTex.synchronous(true));
 
-        Texture spec = model.hasSpecular ? pickLodSheet(model.getSpeculars(), waitForLoad) : null;
+        Texture spec = model.hasSpecular ? pickLodSheet(model.getSpeculars(), defSpecTex, waitForLoad) : null;
         state.specular(spec != null ? spec : defSpecTex.synchronous(true));
 
-        Texture norm = model.hasNormal ? pickLodSheet(model.getNormals(), waitForLoad) : null;
+        Texture norm = model.hasNormal ? pickLodSheet(model.getNormals(), defNormTex, waitForLoad) : null;
         state.normals(norm != null ? norm : defNormTex.synchronous(true));
 
         state.smooth_shading(model.isSmoothShading);
     }
 
-    private Texture pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants, boolean waitForLoad) {
+    private Texture pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants, OBJTextureSheet fallback, boolean waitForLoad) {
         NavigableMap<Integer, OBJTextureSheet> map = variants.get(variant);
         NavigableMap<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
         if (lodMap == null || lodMap.isEmpty()) {
@@ -68,6 +69,6 @@ public class ModelConfig {
                     .filter(CustomTexture::isLoaded)
                     .findAny().orElse(null);
         }
-        return tex != null ? tex : defTex.synchronous(true);
+        return tex != null ? tex : fallback.synchronous(true);
     }
 }
