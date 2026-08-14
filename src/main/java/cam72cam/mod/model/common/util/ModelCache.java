@@ -164,4 +164,13 @@ public class ModelCache implements AutoCloseable {
             ModCore.catching(e);
         }
     }
+
+    public String closeAndGetHash() {
+        try {
+            return cache.close();
+        } catch (IOException e) {
+            ModCore.catching(e);
+        }
+        return null;
+    }
 }

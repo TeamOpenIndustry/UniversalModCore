@@ -57,11 +57,16 @@ public class ModelLoader {
             throw new RuntimeException("Unknown model format: " + extName);
         }
 
-        try (ModelCache cache = new ModelCache(modelLoc, scale, variants, lodValues, parser)) {
-            return cache.buildModel(cacheSeconds);
+        Model result;
+        ModelCache cache;
+        try {
+            cache = new ModelCache(modelLoc, scale, variants, lodValues, parser);
+            result = cache.buildModel(cacheSeconds);
+            result.modelHash = cache.closeAndGetHash();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load model " + modelLoc, e);
+            throw new RuntimeException(e);
         }
+        return result;
     }
 
     @FunctionalInterface
