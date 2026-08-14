@@ -25,18 +25,18 @@ public class ModelConfig {
     }
 
     void apply(RenderState state, Model model) {
-        OBJTextureSheet albedo = pickSheet(model.getTextures());
+        OBJTextureSheet albedo = pickLodSheet(model.getTextures());
         if (albedo != null) {
             state.texture(albedo);
         }
         if (model.hasSpecular) {
-            OBJTextureSheet spec = pickSheet(model.getSpeculars());
+            OBJTextureSheet spec = pickLodSheet(model.getSpeculars());
             if (spec != null) {
                 state.specular(spec);
             }
         }
         if (model.hasNormal) {
-            OBJTextureSheet norm = pickSheet(model.getNormals());
+            OBJTextureSheet norm = pickLodSheet(model.getNormals());
             if (norm != null) {
                 state.normals(norm);
             }
@@ -44,7 +44,7 @@ public class ModelConfig {
         state.smooth_shading(model.isSmoothShading);
     }
 
-    private OBJTextureSheet pickSheet(Map<String, Map<Integer, OBJTextureSheet>> variants) {
+    private OBJTextureSheet pickLodSheet(Map<String, Map<Integer, OBJTextureSheet>> variants) {
         Map<Integer, OBJTextureSheet> map = variants.get(variant);
         Map<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
         if (lodMap == null || lodMap.isEmpty()) {

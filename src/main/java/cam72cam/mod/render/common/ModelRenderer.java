@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-/** Renderer for the common Model, mirroring the old OBJRender API (extends VBO, bind/draw). */
 public class ModelRenderer extends VBO {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
 
@@ -39,8 +38,7 @@ public class ModelRenderer extends VBO {
     }
 
     public Binding bind(ModelConfig config, RenderState state) {
-        config.apply(state, model);
-        return bind(state, false);
+        return bind(config, state, false);
     }
 
     public Binding bind(ModelConfig config, RenderState state, boolean waitForLoad) {

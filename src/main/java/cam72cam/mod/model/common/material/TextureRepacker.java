@@ -30,7 +30,8 @@ public class TextureRepacker {
     private int height = 0;
     private int scaledWidth = 0;
     private int scaledHeight = 0;
-    private Function<String, InputStream> lookup;
+    private Function<String, Identifier> locationResolver;
+    private Function<Identifier, InputStream> lookup;
     private Node rootNode;
 
     private boolean hasSpecular;
@@ -55,7 +56,8 @@ public class TextureRepacker {
                 // Variants should only be read once
                 String fileName = FilenameUtils.getName(origPath);
                 String path = origPath.replace(fileName, variant + "/" + fileName);
-                return ImageIO.read(lookup.apply(path));
+                Identifier applied = locationResolver.apply(path);
+                return ImageIO.read(lookup.apply(applied));
             } catch (Exception e) {
                 //Fallback
                 return getCachedImage(origPath, null);
@@ -65,7 +67,11 @@ public class TextureRepacker {
         // Base image should be cached and re-used when applicable
         return imageCache.computeIfAbsent(origPath, path -> {
             try {
-                return ImageIO.read(lookup.apply(origPath));
+                Identifier loc = locationResolver.apply(origPath);
+                if (!loc.canLoad()) {
+                    return null;
+                }
+                return ImageIO.read(lookup.apply(loc));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -258,9 +264,10 @@ public class TextureRepacker {
         }
         Identifier modelLoc = builder.getModelLoc();
 
+        this.locationResolver = str -> builder.getModelLoc().getRelative(str);
         this.lookup = p -> {
             try {
-                return builder.open(modelLoc.getRelative(p));
+                return builder.open(p);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -311,17 +318,29 @@ public class TextureRepacker {
         this.hasNormal = materials.stream().anyMatch(x -> x.texNormal != null && modelLoc.getRelative(x.texNormal).canLoad());
 
         for (String variant : variants) {
-            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, albedoFallback, true));
+            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, "albedo", true));
             if (hasSpecular) {
-                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, specularFallback, false));
+                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, "specular", false));
             }
             if (hasNormal) {
-                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, normalFallback, false));
+                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, "normal", false));
             }
         }
     }
 
-    private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, int fallbackColor, boolean isFatal) {
+    private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, String type, boolean isFatal) {
+        int fallbackColor;
+        switch (type) {
+            case "normal":
+                fallbackColor = normalFallback;
+                break;
+            case "specular":
+                fallbackColor = specularFallback;
+                break;
+            case "albedo":
+            default:
+                fallbackColor = albedoFallback;
+        }
         return () -> {
             BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = image.createGraphics();
@@ -330,7 +349,7 @@ public class TextureRepacker {
                 int originalWidth = image.getWidth();
                 int originalHeight = image.getHeight();
                 image = ImageUtils.scaleImage(image, Config.getMaxTextureSize());
-                ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
+                ModCore.warn("Scaling texture for %s (variant %s, channel %s) from (%s x %s) to (%s x %s)", ident, variant, type, originalWidth, originalHeight, image.getWidth(), image.getHeight());
             }
             return image;
         };

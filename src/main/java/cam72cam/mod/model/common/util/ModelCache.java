@@ -57,7 +57,7 @@ public class ModelCache implements AutoCloseable {
                     .setBoolean("hasSpecular", repacker.hasSpecular())
                     .setBoolean("hasNormal", repacker.hasNormal())
                     .setBoolean("isSmoothShading", builder.isSmoothShading())
-                    // Fixed for now, TODO Extension
+                    // Fixed to old VBO type for now, TODO Extension
                     .set("layout", VAOLayout.POS_TEX_COLOR_NORMAL.serialize());
             if (Config.getMaxTextureSize() > 0) {
                 data.setInteger("textureWidth", repacker.getWidth())
