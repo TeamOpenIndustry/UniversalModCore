@@ -9,6 +9,12 @@ public class Buffers {
             buffer = new float[startingSize];
         }
 
+        public FloatBuffer(float[] data) {
+            pos = data.length;
+            buffer = new float[data.length];
+            System.arraycopy(data, 0, buffer, 0, data.length);
+        }
+
         public void add(float f) {
             if (pos == buffer.length) {
                 float[] newBuffer = new float[buffer.length * 2];
@@ -43,6 +49,12 @@ public class Buffers {
         public IntBuffer(int startingSize) {
             pos = 0;
             buffer = new int[startingSize];
+        }
+
+        public IntBuffer(int[] original) {
+            pos = original.length;
+            buffer = new int[original.length];
+            System.arraycopy(original, 0, buffer, 0, original.length);
         }
 
         public void add(int f) {
