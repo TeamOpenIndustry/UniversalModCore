@@ -5,6 +5,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.model.common.util.ImageUtils;
 import cam72cam.mod.resource.Identifier;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -46,18 +47,35 @@ public class TextureRepacker {
         albedoFallback = 0xFFFFFFFF;
     }
 
-    private BufferedImage getImage(String path) {
-        try (InputStream in = lookup.apply(path)) {
-            return ImageIO.read(in);
-        } catch (Exception e) {
-            return null;
+    private final Map<String, BufferedImage> imageCache = new HashMap<>();
+
+    private BufferedImage getCachedImage(String origPath, String variant) {
+        if (variant != null && !variant.trim().isEmpty()) {
+            try {
+                // Variants should only be read once
+                String fileName = FilenameUtils.getName(origPath);
+                String path = origPath.replace(fileName, variant + "/" + fileName);
+                return ImageIO.read(lookup.apply(path));
+            } catch (Exception e) {
+                //Fallback
+                return getCachedImage(origPath, null);
+            }
         }
+
+        // Base image should be cached and re-used when applicable
+        return imageCache.computeIfAbsent(origPath, path -> {
+            try {
+                return ImageIO.read(lookup.apply(origPath));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     class Node {
         Dimension size;
         List<Material> materials;
-        Material texture;
+        Material material;
         int width;
         int height;
         Node down;
@@ -72,7 +90,7 @@ public class TextureRepacker {
             this.size = new Dimension(first.width, first.height);
             this.width = materials.stream().mapToInt(x -> x.copiesOnU).max().getAsInt() * size.width;
             this.height = materials.stream().mapToInt(x -> x.copiesOnV).max().getAsInt() * size.height;
-            this.texture = first.texAlbedo != null ? first : null;
+            this.material = first.texAlbedo != null ? first : null;
         }
 
         public Node(int width, int height) {
@@ -154,7 +172,7 @@ public class TextureRepacker {
             }
         }
 
-        public void draw(int x, int y, Graphics2D graphics, Function<Material, String> texlu, int fallbackColor) {
+        public void draw(int x, int y, Graphics2D graphics, String variant, Function<Material, String> texlu, int fallbackColor, boolean isFatal) {
             if (materials == null) {
                 graphics.setColor(Color.BLACK);
                 graphics.fillRect(x, y, width, height);
@@ -162,17 +180,18 @@ public class TextureRepacker {
             }
 
             BufferedImage image = null;
-            if (texture != null) {
-                String path = texlu.apply(texture);
+            if (material != null) {
+                String path = texlu.apply(material);
                 if (path != null) {
-                    image = getImage(path);
-                    if (image == null) {
+                    image = getCachedImage(path, variant);
+                    if (image == null && isFatal) {
+                        // Only the albedo channel is fatal; missing specular/normal is silent.
                         throw new RuntimeException("Missing texture: " + path);
                     }
                 }
             }
             if (image == null) {
-                // Untextured (or no texture for this sheet): solid tile, drawn copiesU*copiesV times.
+                // Untextured, or a missing specular/normal channel: solid tile, drawn copiesU*copiesV times.
                 image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
                 for (int px = 0; px < size.width; px++) {
                     for (int py = 0; py < size.height; py++) {
@@ -189,10 +208,10 @@ public class TextureRepacker {
                 }
             }
             if (right != null) {
-                right.draw(x + width, y, graphics, texlu, fallbackColor);
+                right.draw(x + width, y, graphics, variant, texlu, fallbackColor, isFatal);
             }
             if (down != null) {
-                down.draw(x, y + height, graphics, texlu, fallbackColor);
+                down.draw(x, y + height, graphics, variant, texlu, fallbackColor, isFatal);
             }
         }
     }
@@ -292,21 +311,21 @@ public class TextureRepacker {
         this.hasNormal = materials.stream().anyMatch(x -> x.texNormal != null && modelLoc.getRelative(x.texNormal).canLoad());
 
         for (String variant : variants) {
-            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, albedoFallback));
+            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, albedoFallback, true));
             if (hasSpecular) {
-                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, specularFallback));
+                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, specularFallback, false));
             }
             if (hasNormal) {
-                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, normalFallback));
+                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, normalFallback, false));
             }
         }
     }
 
-    private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, int fallbackColor) {
+    private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, int fallbackColor, boolean isFatal) {
         return () -> {
             BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = image.createGraphics();
-            rootNode.draw(0, 0, graphics, texlu, fallbackColor);
+            rootNode.draw(0, 0, graphics, variant, texlu, fallbackColor, isFatal);
             if (needsScaling()) {
                 int originalWidth = image.getWidth();
                 int originalHeight = image.getHeight();
