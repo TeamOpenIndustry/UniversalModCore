@@ -6,6 +6,7 @@ import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
+import cam72cam.mod.serialization.ResourceCache;
 
 import java.util.Map;
 import java.util.NavigableMap;
@@ -13,6 +14,8 @@ import java.util.NavigableMap;
 /** Per-draw texture/variant/LOD config. Built via of().lod().variant(), applied by ConfiguredRenderer. */
 public class ModelConfig {
     private static final OBJTextureSheet defTex = OBJModel.defTex;
+    private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
+    private static final OBJTextureSheet defNormTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
 
     private int lod = -1;
     private String variant = "";
@@ -31,21 +34,14 @@ public class ModelConfig {
 
     void apply(RenderState state, Model model, boolean waitForLoad) {
         Texture albedo = pickLodSheet(model.getTextures(), waitForLoad);
-        if (albedo != null) {
-            state.texture(albedo);
-        }
-        if (model.hasSpecular) {
-            Texture spec = pickLodSheet(model.getSpeculars(), waitForLoad);
-            if (spec != null) {
-                state.specular(spec);
-            }
-        }
-        if (model.hasNormal) {
-            Texture norm = pickLodSheet(model.getNormals(), waitForLoad);
-            if (norm != null) {
-                state.normals(norm);
-            }
-        }
+        state.texture(albedo != null ? albedo : defTex.synchronous(true));
+
+        Texture spec = model.hasSpecular ? pickLodSheet(model.getSpeculars(), waitForLoad) : null;
+        state.specular(spec != null ? spec : defSpecTex.synchronous(true));
+
+        Texture norm = model.hasNormal ? pickLodSheet(model.getNormals(), waitForLoad) : null;
+        state.normals(norm != null ? norm : defNormTex.synchronous(true));
+
         state.smooth_shading(model.isSmoothShading);
     }
 
