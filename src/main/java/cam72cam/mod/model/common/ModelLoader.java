@@ -26,23 +26,23 @@ public class ModelLoader {
     private ModelLoader() {
     }
 
-    public static void register(String extName, Parser parser) {
+    public static void register(String extName, Parser parser){
         PARSER.put(extName, parser);
     }
 
-    public static Model load(Identifier modelLoc) {
+    public static Model load(Identifier modelLoc) throws Exception {
         return load(modelLoc, 1f);
     }
 
-    public static Model load(Identifier modelLoc, float scale) {
+    public static Model load(Identifier modelLoc, float scale) throws Exception {
         return load(modelLoc, scale, Collections.emptySet(), 30, null);
     }
 
-    public static Model load(Identifier modelLoc, Collection<String> variants) {
+    public static Model load(Identifier modelLoc, Collection<String> variants) throws Exception {
         return load(modelLoc, 1.0F, variants, 30, null);
     }
 
-    public static Model load(Identifier modelLoc, float scale, Collection<String> variants, int cacheSeconds, LodSupplier lod) {
+    public static Model load(Identifier modelLoc, float scale, Collection<String> variants, int cacheSeconds, LodSupplier lod) throws Exception {
         List<Integer> lodValues;
         if (lod == null) {
             lodValues = new ArrayList<>();

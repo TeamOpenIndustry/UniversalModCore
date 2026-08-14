@@ -56,7 +56,7 @@ public class OBJParserTest {
     }
 
     @Test
-    public void triangle() {
+    public void triangle() throws Exception {
         Model model = ModelLoader.load(obj(
                 "v 0 0 0\n" +
                 "v 1 0 0\n" +
@@ -107,7 +107,7 @@ public class OBJParserTest {
     }
 
     @Test
-    public void quadTriangulates() {
+    public void quadTriangulates() throws Exception {
         Model model = ModelLoader.load(obj(
                 "v 0 0 0\n" +
                 "v 1 0 0\n" +
@@ -128,7 +128,7 @@ public class OBJParserTest {
     }
 
     @Test
-    public void groups() {
+    public void groups() throws Exception {
         Model model = ModelLoader.load(obj(
                 "v 0 0 0\n" +
                 "v 1 0 0\n" +
@@ -152,7 +152,7 @@ public class OBJParserTest {
     }
 
     @Test
-    public void materials() {
+    public void materials() throws Exception {
         String mtl = "newmtl red\nKd 1 0 0 1\n";
         String objData = "mtllib test.mtl\n" +
                 "v 0 0 0\n" +
@@ -187,7 +187,7 @@ public class OBJParserTest {
     }
 
     @Test
-    public void matchesOldVbo() throws IOException {
+    public void matchesOldVbo() throws Exception {
         // Only triangle faces, as triangulation is a separate concern, not part of this comparison
         StringBuilder objData = new StringBuilder();
         for (int i = 1; i <= 30; i++) {
