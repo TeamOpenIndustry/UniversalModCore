@@ -65,15 +65,14 @@ public class ModelRenderer extends VBO {
                 return;
             }
 
-            List<ModelGroup> ordered = new ArrayList<>(groups.size());
-            for (String name : groups) {
-                ordered.add(model.getGroups().get(name));
-            }
-            ordered.sort(Comparator.comparingInt(g -> g.faceStart));
+            // Model faces are ordered by group name at build time
+            List<String> names = new ArrayList<>(groups);
+            names.sort(String::compareTo);
 
             int start = -1;
             int stop = -1;
-            for (ModelGroup info : ordered) {
+            for (String name : names) {
+                ModelGroup info = model.getGroups().get(name);
                 if (start == -1) {
                     start = info.faceStart;
                     stop = info.faceEnd;

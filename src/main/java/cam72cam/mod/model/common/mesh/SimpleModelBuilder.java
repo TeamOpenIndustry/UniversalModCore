@@ -30,7 +30,7 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
     private Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
-    private final Buffers.IntBuffer materialByFace = new Buffers.IntBuffer(1024);
+    private Buffers.IntBuffer materialByFace = new Buffers.IntBuffer(1024);
 
     private final List<Material> materials = new ArrayList<>();
     private final Map<String, Integer> materialIds = new HashMap<>();
@@ -143,8 +143,42 @@ public class SimpleModelBuilder implements IModelBuilder {
     public void finish() {
         checkUnfinished();
 
-        // Build groups
         int triCount = faceBuffer.size() / 9;
+
+        // Reorder faces by group name so that vertex order matches name order
+        {
+            Integer[] order = new Integer[groupNames.size()];
+            for (int i = 0; i < order.length; i++) {
+                order[i] = i;
+            }
+            Arrays.sort(order, (a, b) -> groupNames.get(a).compareTo(groupNames.get(b)));
+
+            int[] srcFaces = faceBuffer.array();
+            int[] srcMat = materialByFace.array();
+            int[] sortedFaces = new int[srcFaces.length];
+            int[] sortedMat = new int[srcMat.length];
+            List<String> sortedNames = new ArrayList<>(groupNames.size());
+            List<Integer> sortedStarts = new IntArrayList(groupNames.size());
+            int cursor = 0;
+            for (int gi : order) {
+                int start = groupStartFaces.get(gi);
+                int end = gi + 1 < groupStartFaces.size() ? groupStartFaces.get(gi + 1) : triCount;
+                int triLen = end - start;
+                System.arraycopy(srcFaces, start * 9, sortedFaces, cursor * 9, triLen * 9);
+                System.arraycopy(srcMat, start, sortedMat, cursor, triLen);
+                sortedNames.add(groupNames.get(gi));
+                sortedStarts.add(cursor);
+                cursor += triLen;
+            }
+            faceBuffer = new Buffers.IntBuffer(sortedFaces);
+            materialByFace = new Buffers.IntBuffer(sortedMat);
+            groupNames.clear();
+            groupNames.addAll(sortedNames);
+            groupStartFaces.clear();
+            groupStartFaces.addAll(sortedStarts);
+        }
+
+        // Build groups data
         for (int i = 0; i < groupNames.size(); i++) {
             int start = groupStartFaces.get(i);
             int end = i + 1 < groupStartFaces.size() ? groupStartFaces.get(i + 1) : triCount;
