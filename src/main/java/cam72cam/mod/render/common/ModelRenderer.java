@@ -89,4 +89,10 @@ public class ModelRenderer extends VBO {
             }
         }
     }
+
+    @Override
+    public void free() {
+        super.free();
+        renderers.remove(model);
+    }
 }
