@@ -26,14 +26,15 @@ public class OBJParser {
                         parseMTL(builder, args[1], materials);
                         break;
                     case "usemtl":
-                        if (args.length < 2) {
-                            throw new IllegalArgumentException("Unknown OBJ group");
-                        }
-                        builder.setCurrentMaterial(materials.computeIfAbsent(line.substring(7), name -> new Material(builder, name)));
+                        builder.setCurrentMaterial(materials.computeIfAbsent(args.length > 1 ? line.substring(7) : "undefined",
+                                                                             name -> new Material(builder, name)));
                         break;
                     case "o":
                     case "g":
-                        builder.newModelGroup(args.length > 1 ? line.substring(2) : "default");
+                        if (args.length < 2) {
+                            throw new IllegalArgumentException("Unknown OBJ group");
+                        }
+                        builder.newModelGroup(line.substring(2));
                         break;
                     case "v":
                         builder.addIndexedVert(Float.parseFloat(args[1]), Float.parseFloat(args[2]), Float.parseFloat(args[3]));
