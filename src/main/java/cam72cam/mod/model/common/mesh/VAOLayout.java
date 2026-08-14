@@ -84,23 +84,23 @@ public class VAOLayout {
 
     public void setup() {
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-        GL11.glVertexPointer(3, getGlType(Usage.POSITION), stride, getOffset(Usage.POSITION));
+        GL11.glVertexPointer(3, getGlType(Usage.POSITION), getStrideBytes(), getOffsetBytes(Usage.POSITION));
 
         if (has(Usage.UV)) {
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            GL11.glTexCoordPointer(2, getGlType(Usage.UV), stride, getOffset(Usage.UV));
+            GL11.glTexCoordPointer(2, getGlType(Usage.UV), getStrideBytes(), getOffsetBytes(Usage.UV));
         } else {
             GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
         }
         if (has(Usage.COLOR)) {
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            GL11.glColorPointer(4, getGlType(Usage.COLOR), stride, getOffset(Usage.COLOR));
+            GL11.glColorPointer(4, getGlType(Usage.COLOR), getStrideBytes(), getOffsetBytes(Usage.COLOR));
         } else {
             GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
         }
         if (has(Usage.NORMAL)) {
             GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
-            GL11.glNormalPointer(getGlType(Usage.NORMAL), stride, getOffset(Usage.NORMAL));
+            GL11.glNormalPointer(getGlType(Usage.NORMAL), getStrideBytes(), getOffsetBytes(Usage.NORMAL));
         } else {
             GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
         }
