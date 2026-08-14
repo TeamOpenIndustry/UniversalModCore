@@ -6,11 +6,13 @@ import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 public class Model {
     private final Identifier location;
     private final VAOLayout layout;
-    private final float[] vboData;
+    private final Supplier<float[]> vboSupplier;
+    private float[] vboData = null;
     private final LinkedHashMap<String, ModelGroup> groups;
 
     public final boolean hasSpecular;
@@ -21,11 +23,11 @@ public class Model {
     private final Map<String, Map<Integer, OBJTextureSheet>> specular = new HashMap<>();
     private final Map<String, Map<Integer, OBJTextureSheet>> normal = new HashMap<>();
 
-    public Model(Identifier location, VAOLayout layout, float[] vboData, LinkedHashMap<String, ModelGroup> groups,
+    public Model(Identifier location, VAOLayout layout, Supplier<float[]> vboSupplier, LinkedHashMap<String, ModelGroup> groups,
                  boolean hasSpecular, boolean hasNormal, boolean isSmoothShading) {
         this.location = location;
         this.layout = layout;
-        this.vboData = vboData;
+        this.vboSupplier = vboSupplier;
         this.groups = groups;
         this.hasSpecular = hasSpecular;
         this.hasNormal = hasNormal;
@@ -100,6 +102,7 @@ public class Model {
 
     /** WARNING This is a very slow function and should be used for debug only */
     public List<Vec3d> points(ModelGroup group) {
+        getVboData(); //Populate
         List<Vec3d> points = new ArrayList<>();
         for (int face = group.faceStart; face <= group.faceEnd; face++) {
             for (int point = 0; point < 3; point++) {
@@ -119,6 +122,9 @@ public class Model {
     }
 
     public float[] getVboData() {
+        if (vboData == null) {
+            vboData = vboSupplier.get();
+        }
         return vboData;
     }
 

@@ -50,7 +50,7 @@ public class ModelCache implements AutoCloseable {
             return builder;
         });
 
-        // Meta is read eagerly so the Model can be reconstructed on a cache hit without re-parsing.
+        // Meta is read eagerly so the Model can be reconstructed on a cache hit without reparsing.
         this.meta = new TagCompound(cache.getResource("meta.nbt", builder -> {
             TextureRepacker repacker = builder.getRepacker();
             TagCompound data = new TagCompound()
@@ -74,9 +74,10 @@ public class ModelCache implements AutoCloseable {
         }).get().bytes());
     }
 
-    /** Reconstructs the {@link Model} from the cache, linking the cached texture sheets. */
+    /** Reconstructs the {@link Model} from the cache and links the cached texture sheets. */
     public Model buildModel(int cacheSeconds) throws IOException {
-        float[] vboData = cache.getResource("model.bin", builder -> new GenericByteBuffer(builder.build(VAOLayout.POS_TEX_COLOR_NORMAL).getVboData())).get().floats();
+        Supplier<GenericByteBuffer> vboData = cache.getResource("model.bin", builder ->
+                new GenericByteBuffer(builder.build(VAOLayout.POS_TEX_COLOR_NORMAL).getVboData()));
 
         LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
         for (ModelGroup group : meta.getList("groups", ModelGroup::deserialize)) {
@@ -84,7 +85,7 @@ public class ModelCache implements AutoCloseable {
         }
         VAOLayout layout = VAOLayout.deserialize(meta.get("layout"));
 
-        Model model = new Model(modelLoc, layout, vboData, groups,
+        Model model = new Model(modelLoc, layout, () -> vboData.get().floats(), groups,
                                 meta.getBoolean("hasSpecular"),
                                 meta.getBoolean("hasNormal"),
                                 meta.getBoolean("isSmoothShading"));
@@ -110,13 +111,13 @@ public class ModelCache implements AutoCloseable {
         for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
             Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
             lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight,
-                    cache.getResource(variant + suffix + ".rgba", bm -> textureBytes(bm, variant, suffix, null)),
-                    cacheSeconds));
+                                                    cache.getResource(variant + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, null)),
+                                                    cacheSeconds));
             for (Integer lodValue : lodValues) {
                 if (lodValue < texSize) {
                     Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
                     lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(),
-                            cache.getResource(variant + "_" + lodValue + suffix + ".rgba", bm -> textureBytes(bm, variant, suffix, lodValue)),
+                            cache.getResource(variant + "_" + lodValue + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, lodValue)),
                             cacheSeconds));
                 }
             }
@@ -126,7 +127,7 @@ public class ModelCache implements AutoCloseable {
     }
 
     /** Generates (on cache miss) the RGBA bytes for a texture sheet; {@code lod} is null for the full-size sheet. */
-    private GenericByteBuffer textureBytes(IModelBuilder builder, String variant, String suffix, Integer lod) {
+    private GenericByteBuffer getTextureBytes(IModelBuilder builder, String variant, String suffix, Integer lod) {
         TextureRepacker repacker = builder.getRepacker();
         Supplier<BufferedImage> source;
         switch (suffix) {
