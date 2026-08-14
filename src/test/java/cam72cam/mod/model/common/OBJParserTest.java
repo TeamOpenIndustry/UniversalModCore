@@ -213,13 +213,13 @@ public class OBJParserTest {
         Model model = ModelLoader.load(obj(data));
 
         int stride = oldVbo.stride;
-        Assert.assertEquals(stride, model.getLayout().getStrideBytes() / 4);
+        Assert.assertEquals(stride, model.getLayout().getStride());
         Assert.assertEquals(oldVbo.data.length, model.getVboData().length);
 
-        // Vertex data (skipping color) as they're both POS_UV_COLOR_NORMAL
+        // Vertex data (skipping uv & color) as they're both POS_UV_COLOR_NORMAL
         for (int v = 0; v < oldVbo.data.length / stride; v++) {
             for (int c = 0; c < stride; c++) {
-                if (c >= oldVbo.colorOffset && c < oldVbo.colorOffset + 4) {
+                if (c >= oldVbo.textureOffset && c < oldVbo.textureOffset + 4 || c >= oldVbo.colorOffset && c < oldVbo.colorOffset + 4) {
                     continue;
                 }
                 Assert.assertEquals("vertex " + v + " component " + c, oldVbo.data[v * stride + c], model.getVboData()[v * stride + c], 1e-5);
