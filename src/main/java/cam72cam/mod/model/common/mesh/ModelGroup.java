@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 public class ModelGroup {
     public final String name;
+    // Both inclusive
     public final int faceStart;
     public final int faceEnd;
     public final Vec3d min;
@@ -23,7 +24,7 @@ public class ModelGroup {
         this.normal = normal;
     }
 
-    public static ModelGroup buildGroup(String name, int start, int end, List<Vec3d> points) {
+    public static ModelGroup buildGroup(String name, int start, int faceEnd, List<Vec3d> points) {
         Vec3d first = points.get(0);
         Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
         Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
@@ -58,7 +59,7 @@ public class ModelGroup {
             normal = maxN.subtract(minN).normalize();
         }
 
-        return new ModelGroup(name, start, end, groupMin, groupMax, normal);
+        return new ModelGroup(name, start, faceEnd, groupMin, groupMax, normal);
     }
 
     public static ModelGroup deserialize(TagCompound d) {

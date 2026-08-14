@@ -81,13 +81,13 @@ public class ModelRenderer extends VBO {
                 ModelGroup info = model.getGroups().get(name);
                 if (start == -1) {
                     start = info.faceStart;
-                    stop = info.faceEnd;
+                    stop = info.faceEnd + 1;
                 } else if (info.faceStart == stop) {
-                    stop = info.faceEnd;
+                    stop = info.faceEnd + 1;
                 } else {
                     GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
                     start = info.faceStart;
-                    stop = info.faceEnd;
+                    stop = info.faceEnd + 1;
                 }
             }
             if (start != -1) {

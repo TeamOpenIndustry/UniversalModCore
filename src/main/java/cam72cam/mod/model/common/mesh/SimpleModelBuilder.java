@@ -181,16 +181,16 @@ public class SimpleModelBuilder implements IModelBuilder {
         // Build groups data
         for (int i = 0; i < groupNames.size(); i++) {
             int start = groupStartFaces.get(i);
-            int end = i + 1 < groupStartFaces.size() ? groupStartFaces.get(i + 1) : triCount;
+            int end = (i + 1 < groupStartFaces.size() ? groupStartFaces.get(i + 1) : triCount) - 1;
 
-            if (start >= end - 1) {
+            if (start > end) {
                 //Skip empty groups
                 continue;
             }
 
             boolean[] usedVerts = new boolean[posIndices.size() / 3];
             List<Vec3d> points = new ArrayList<>();
-            for (int tri = start; tri < end; tri++) {
+            for (int tri = start; tri <= end; tri++) {
                 int idx = tri * 9;
 
                 // De-duplicated vertex data for group building

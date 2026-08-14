@@ -103,7 +103,7 @@ public class OBJParserTest {
         ModelGroup firstGroup = model.getGroups().entrySet().iterator().next().getValue();
         Assert.assertEquals("tri", firstGroup.name);
         Assert.assertEquals(0, firstGroup.faceStart);
-        Assert.assertEquals(1, firstGroup.faceEnd);
+        Assert.assertEquals(0, firstGroup.faceEnd);
     }
 
     @Test
@@ -145,10 +145,10 @@ public class OBJParserTest {
         ModelGroup secondGroup = iterator.next().getValue();
         Assert.assertEquals("A", firstGroup.name);
         Assert.assertEquals(0, firstGroup.faceStart);
-        Assert.assertEquals(1, firstGroup.faceEnd);
+        Assert.assertEquals(0, firstGroup.faceEnd);
         Assert.assertEquals("B", secondGroup.name);
         Assert.assertEquals(1, secondGroup.faceStart);
-        Assert.assertEquals(3, secondGroup.faceEnd);
+        Assert.assertEquals(2, secondGroup.faceEnd);
     }
 
     @Test

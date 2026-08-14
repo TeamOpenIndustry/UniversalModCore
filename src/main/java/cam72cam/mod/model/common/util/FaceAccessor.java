@@ -72,7 +72,7 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * @return A {@link FaceAccessor} of given group, or {@code null} if group not present or this FaceAccessor is already grouped
      */
     public FaceAccessor getSubByGroup(String groupName) {
-        if (!model.getGroups().containsKey(groupName) || !canSplit) {
+        if (!canSplit || !model.getGroups().containsKey(groupName)) {
             return null;
         }
         ModelGroup group = model.getGroups().get(groupName);

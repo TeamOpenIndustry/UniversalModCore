@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** Structured re-implementation of OBJRender.Builder for the common Model. */
 public class ModelSetBuilder {
     private static final AtomicInteger nextId = new AtomicInteger(0);
 
@@ -39,7 +38,7 @@ public class ModelSetBuilder {
         actions.add((vbo, out) -> {
             for (String name : groups) {
                 ModelGroup group = model.getGroups().get(name);
-                add(out, vbo, group.faceStart * 3, group.faceEnd * 3, m);
+                add(out, vbo, group.faceStart * 3, (group.faceEnd + 1) * 3, m);
             }
         });
         return this;

@@ -109,7 +109,7 @@ public class Model {
     public List<Vec3d> points(ModelGroup group) {
         getVboData(); //Populate
         List<Vec3d> points = new ArrayList<>();
-        for (int face = group.faceStart; face < group.faceEnd; face++) {
+        for (int face = group.faceStart; face <= group.faceEnd; face++) {
             for (int point = 0; point < 3; point++) {
                 int idx = (face * 3 + point) * layout.getStride() + layout.getOffset(VAOLayout.Usage.POSITION);
                 points.add(new Vec3d(vboData[idx], vboData[idx+1], vboData[idx+2]));
