@@ -280,13 +280,13 @@ public class SimpleModelBuilder implements IModelBuilder {
         int triCount = faceBuffer.size() / 9;
         float[] data = new float[triCount * 3 * strideF];
 
-        int posOff = layout.getOffset(VAOLayout.Usage.POSITION) / 4;
+        int posOff = layout.getOffset(VAOLayout.Usage.POSITION);
         boolean hasUv = layout.has(VAOLayout.Usage.UV);
         boolean hasColor = layout.has(VAOLayout.Usage.COLOR);
         boolean hasNormal = layout.has(VAOLayout.Usage.NORMAL);
-        int uvOff = hasUv ? layout.getOffset(VAOLayout.Usage.UV) / 4 : Integer.MIN_VALUE;
-        int colorOff = hasColor ? layout.getOffset(VAOLayout.Usage.COLOR) / 4 : Integer.MIN_VALUE;
-        int nrmOff = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) / 4 : Integer.MIN_VALUE;
+        int uvOff = hasUv ? layout.getOffset(VAOLayout.Usage.UV) : Integer.MIN_VALUE;
+        int colorOff = hasColor ? layout.getOffset(VAOLayout.Usage.COLOR) : Integer.MIN_VALUE;
+        int nrmOff = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) : Integer.MIN_VALUE;
 
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
