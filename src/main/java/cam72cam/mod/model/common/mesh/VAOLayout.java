@@ -14,8 +14,6 @@ public class VAOLayout {
     private final List<Element> elements;
     private final List<Integer> offsets;
     private final int stride;
-    // By default, they are all floats, so add a fast accessor here
-    private final int strideF;
 
     public VAOLayout(Element... elements) {
         this.elements = new ArrayList<>();
@@ -26,7 +24,6 @@ public class VAOLayout {
             this.offsets.add(offsetBytes);
             offsetBytes += element.size;
         }
-        this.strideF = offsetBytes / Float.BYTES;
         this.stride = offsetBytes;
 
         if (!has(Usage.POSITION)) {
@@ -41,7 +38,7 @@ public class VAOLayout {
     }
 
     public int getStride() {
-        return strideF;
+        return stride / Float.BYTES;
     }
 
     public List<Element> getElements() {
@@ -58,10 +55,19 @@ public class VAOLayout {
     }
 
     /** Byte offset of the first element with the given usage, or -1 when absent. */
-    public int getOffset(Usage usage) {
+    public int getOffsetBytes(Usage usage) {
         for (int i = 0; i < elements.size(); i++) {
             if (elements.get(i).usage == usage) {
                 return offsets.get(i);
+            }
+        }
+        return -1;
+    }
+
+    public int getOffset(Usage usage) {
+        for (int i = 0; i < elements.size(); i++) {
+            if (elements.get(i).usage == usage) {
+                return offsets.get(i) / Float.BYTES;
             }
         }
         return -1;
