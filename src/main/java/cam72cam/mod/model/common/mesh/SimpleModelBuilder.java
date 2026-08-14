@@ -61,6 +61,8 @@ public class SimpleModelBuilder implements IModelBuilder {
         materials.add(new Material(this, "default"));
         materialIds.put("default", 0);
         currMaterial = 0;
+        //Add default group
+        newModelGroup("default");
     }
 
     @Override
