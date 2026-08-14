@@ -160,12 +160,8 @@ public class TextureRepacker {
             if (materials != null) {
                 int copiesU = materials.stream().mapToInt(m -> m.copiesOnU).max().getAsInt();
                 int copiesV = materials.stream().mapToInt(m -> m.copiesOnV).max().getAsInt();
-                UVConverter converter = new UVConverter(
-                        x, y,
-                        size.width, size.height,
-                        copiesU, copiesV,
-                        TextureRepacker.this.width, TextureRepacker.this.height
-                );
+                UVConverter converter = new UVConverter(x, y, size.width, size.height, copiesU, copiesV,
+                                                        TextureRepacker.this.width, TextureRepacker.this.height);
                 for (Material material : materials) {
                     converters.put(material.name, converter);
                 }

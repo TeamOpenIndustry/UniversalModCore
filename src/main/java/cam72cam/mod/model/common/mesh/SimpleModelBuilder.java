@@ -250,17 +250,16 @@ public class SimpleModelBuilder implements IModelBuilder {
                 int posIdx = faceBuffer.get(b + k * 3);
                 int uvIdx = faceBuffer.get(b + k * 3 + 1);
                 int nrmIdx = faceBuffer.get(b + k * 3 + 2);
-                if (uvIdx >= 0) {
-                    // Always re-emit the uv into the repacked buffer so the index stays valid
-                    float u = uvIndices.get(uvIdx * 2);
-                    float v = uvIndices.get(uvIdx * 2 + 1);
-                    // We have materials without texture drawn as white blocks so also repack them here
-                    u = converter.convertU(u - offU);
-                    v = converter.convertV(v - offV);
-                    uvIdx = repackedUv.size() / 2;
-                    repackedUv.add(u);
-                    repackedUv.add(v);
-                }
+                // Always re-emit the uv into the repacked buffer so the index stays valid
+                // For vertices without UV use 0.5 as fallback
+                float u = uvIdx >= 0 ? uvIndices.get(uvIdx * 2) : 0.5f;
+                float v = uvIdx >= 0 ? uvIndices.get(uvIdx * 2 + 1) : 0.5f;
+                // We have materials without texture drawn as white blocks so also repack them here
+                u = converter.convertU(u - offU);
+                v = converter.convertV(v - offV);
+                uvIdx = repackedUv.size() / 2;
+                repackedUv.add(u);
+                repackedUv.add(v);
                 repackedFaces.add(posIdx);
                 repackedFaces.add(uvIdx);
                 repackedFaces.add(nrmIdx);
