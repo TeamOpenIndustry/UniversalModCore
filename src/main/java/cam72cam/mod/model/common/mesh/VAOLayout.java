@@ -14,17 +14,20 @@ public class VAOLayout {
     private final List<Element> elements;
     private final List<Integer> offsets;
     private final int stride;
+    // By default, they are all floats, so add a fast accessor here
+    private final int strideF;
 
     public VAOLayout(Element... elements) {
         this.elements = new ArrayList<>();
         this.offsets = new ArrayList<>();
-        int offset = 0;
+        int offsetBytes = 0;
         for (Element element : elements) {
             this.elements.add(element);
-            this.offsets.add(offset);
-            offset += element.size;
+            this.offsets.add(offsetBytes);
+            offsetBytes += element.size;
         }
-        this.stride = offset;
+        this.strideF = offsetBytes / Float.BYTES;
+        this.stride = offsetBytes;
 
         if (!has(Usage.POSITION)) {
             throw new RuntimeException("VAO doesn't have POSITION");
@@ -33,8 +36,12 @@ public class VAOLayout {
 
 
     /** Total size in bytes of a single vertex. */
-    public int getStride() {
+    public int getStrideBytes() {
         return stride;
+    }
+
+    public int getStride() {
+        return strideF;
     }
 
     public List<Element> getElements() {
@@ -60,25 +67,34 @@ public class VAOLayout {
         return -1;
     }
 
+    private int getGlType(Usage usage) {
+        for (Element element : elements) {
+            if (element.usage == usage) {
+                return element.type.glType;
+            }
+        }
+        return -1;
+    }
+
     public void setup() {
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-        GL11.glVertexPointer(3, GL11.GL_FLOAT, stride, getOffset(Usage.POSITION));
+        GL11.glVertexPointer(3, getGlType(Usage.POSITION), stride, getOffset(Usage.POSITION));
 
         if (has(Usage.UV)) {
             GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            GL11.glTexCoordPointer(2, GL11.GL_FLOAT, stride, getOffset(Usage.UV));
+            GL11.glTexCoordPointer(2, getGlType(Usage.UV), stride, getOffset(Usage.UV));
         } else {
             GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
         }
         if (has(Usage.COLOR)) {
             GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            GL11.glColorPointer(4, GL11.GL_FLOAT, stride, getOffset(Usage.COLOR));
+            GL11.glColorPointer(4, getGlType(Usage.COLOR), stride, getOffset(Usage.COLOR));
         } else {
             GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
         }
         if (has(Usage.NORMAL)) {
             GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
-            GL11.glNormalPointer(GL11.GL_FLOAT, stride, getOffset(Usage.NORMAL));
+            GL11.glNormalPointer(getGlType(Usage.NORMAL), stride, getOffset(Usage.NORMAL));
         } else {
             GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
         }
@@ -107,17 +123,20 @@ public class VAOLayout {
     }
 
     public enum Type {
-        UNSIGNED_BYTE(Byte.BYTES),
-        BYTE(Byte.BYTES),
-        UNSIGNED_SHORT(Short.BYTES),
-        SHORT(Short.BYTES),
-        UNSIGNED_INT(Integer.BYTES),
-        INT(Integer.BYTES),
-        FLOAT(Float.BYTES),
-        DOUBLE(Double.BYTES),
+        UNSIGNED_BYTE(GL11.GL_UNSIGNED_BYTE, Byte.BYTES),
+        BYTE(GL11.GL_BYTE, Byte.BYTES),
+        UNSIGNED_SHORT(GL11.GL_UNSIGNED_SHORT, Short.BYTES),
+        SHORT(GL11.GL_SHORT, Short.BYTES),
+        UNSIGNED_INT(GL11.GL_UNSIGNED_INT, Integer.BYTES),
+        INT(GL11.GL_INT, Integer.BYTES),
+        FLOAT(GL11.GL_FLOAT, Float.BYTES),
+        DOUBLE(GL11.GL_DOUBLE, Double.BYTES),
         ;
+
+        public final int glType;
         public final int size;
-        Type(int size) {
+        Type(int glType, int size) {
+            this.glType = glType;
             this.size = size;
         }
     }

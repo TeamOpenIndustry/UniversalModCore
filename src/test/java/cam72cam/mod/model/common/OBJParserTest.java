@@ -72,7 +72,7 @@ public class OBJParserTest {
 
         Assert.assertNotNull(model);
         // Layout is reconstructed from the cache, so compare structure rather than identity.
-        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), model.getLayout().getStride());
+        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
         Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
 
         float[] data = model.getVboData();
@@ -213,7 +213,7 @@ public class OBJParserTest {
         Model model = ModelLoader.load(obj(data));
 
         int stride = oldVbo.stride;
-        Assert.assertEquals(stride, model.getLayout().getStride() / 4);
+        Assert.assertEquals(stride, model.getLayout().getStrideBytes() / 4);
         Assert.assertEquals(oldVbo.data.length, model.getVboData().length);
 
         // Vertex data (skipping color) as they're both POS_UV_COLOR_NORMAL

@@ -276,7 +276,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     public Model build(VAOLayout layout) {
         checkFinished();
 
-        int strideF = layout.getStride() / 4;
+        int strideF = layout.getStride();
         int triCount = faceBuffer.size() / 9;
         float[] data = new float[triCount * 3 * strideF];
 
