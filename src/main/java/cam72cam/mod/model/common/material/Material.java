@@ -58,7 +58,7 @@ public class Material {
                         }
                     }
                 } catch (Exception ignored) {
-                    //Unable to load, fall back to 16*16
+                    //Unable to load
                 }
             }
         }

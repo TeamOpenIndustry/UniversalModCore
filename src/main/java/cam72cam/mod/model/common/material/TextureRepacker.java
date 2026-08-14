@@ -65,19 +65,14 @@ public class TextureRepacker {
 
         public Node(List<Material> materials) {
             this.materials = materials;
-            this.width = this.height = 32;
-            this.texture = null;
-
-            size = new Dimension(width, height);
-
             Material first = materials.get(0);
-            if (first.texAlbedo != null) {
-                // Dimensions were populated by Material.populate()
-                size = new Dimension(first.width, first.height);
-                this.width = materials.stream().mapToInt(x -> x.copiesOnU).max().getAsInt() * size.width;
-                this.height = materials.stream().mapToInt(x -> x.copiesOnV).max().getAsInt() * size.height;
-                this.texture = first;
-            }
+            // size is one tile; width/height is the full tiled region.
+            // Textured materials use the dimensions read by Material.populateSize; untextured
+            // and missing-texture materials fall back to the 16x16 default.
+            this.size = new Dimension(first.width, first.height);
+            this.width = materials.stream().mapToInt(x -> x.copiesOnU).max().getAsInt() * size.width;
+            this.height = materials.stream().mapToInt(x -> x.copiesOnV).max().getAsInt() * size.height;
+            this.texture = first.texAlbedo != null ? first : null;
         }
 
         public Node(int width, int height) {
@@ -171,13 +166,16 @@ public class TextureRepacker {
                 String path = texlu.apply(texture);
                 if (path != null) {
                     image = getImage(path);
+                    if (image == null) {
+                        throw new RuntimeException("Missing texture: " + path);
+                    }
                 }
             }
             if (image == null) {
-                // Missing, use fallback
-                image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
-                for (int px = 0; px < this.width; px++) {
-                    for (int py = 0; py < this.height; py++) {
+                // Untextured (or no texture for this sheet): solid tile, drawn copiesU*copiesV times.
+                image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+                for (int px = 0; px < size.width; px++) {
+                    for (int py = 0; py < size.height; py++) {
                         image.setRGB(px, py, fallbackColor);
                     }
                 }
@@ -250,11 +248,7 @@ public class TextureRepacker {
         };
 
         // Load texture dimensions before bin packing
-        for (Material material : materials) {
-            if (material.texAlbedo != null) {
-                material.populateSize();
-            }
-        }
+        materials.forEach(Material::populateSize);
 
         List<Node> inputNodes = materials.stream()
                                          .collect(Collectors.groupingBy(k -> k.texAlbedo == null ? k.name : k.texAlbedo)).values().stream()

@@ -57,9 +57,7 @@ public class SimpleModelBuilder implements IModelBuilder {
         }
         // Record the model file's hash so cache invalidation notices source edits.
         input.apply(modelLoc);
-        // Faces without an explicit usemtl resolve to this default material, so a face's
-        // material is never null. (The parser already maps undefined usemtl names to a
-        // default Material too.)
+        // Faces without an explicit usemtl resolve to the default material
         materials.add(new Material(this, "default"));
         materialIds.put("default", 0);
         currMaterial = 0;
@@ -115,7 +113,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     @Override
     public IFaceBuilder newFace() {
         checkUnfinished();
-        return new GlFaceBuilder();
+        return new SimpleFaceBuilder();
     }
 
     @Override
@@ -126,11 +124,13 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     @Override
     public Collection<ModelGroup> validGroups() {
+        checkFinished();
         return groups.values();
     }
 
     @Override
     public boolean isSmoothShading() {
+        checkFinished();
         return smoothShading;
     }
 
@@ -168,12 +168,10 @@ public class SimpleModelBuilder implements IModelBuilder {
                     }
                 }
 
-                // Build UV repacking data
+                // Build UV repacking data. Untextured materials are included too: their
+                // UV tiling still determines the atlas tile count for the solid fallback.
                 {
                     Material mat = materials.get(materialByFace.get(tri));
-                    if (mat.texAlbedo == null) {
-                        continue;
-                    }
                     int u0 = faceBuffer.get(idx + 1);
                     int u1 = faceBuffer.get(idx + 4);
                     int u2 = faceBuffer.get(idx + 7);
@@ -205,14 +203,12 @@ public class SimpleModelBuilder implements IModelBuilder {
             TextureRepacker.UVConverter converter = repacker.converters.get(mat.name);
             int offU = 0;
             int offV = 0;
-            if (mat.texAlbedo != null) {
-                int u0 = faceBuffer.get(b + 1);
-                int u1 = faceBuffer.get(b + 4);
-                int u2 = faceBuffer.get(b + 7);
-                if (u0 >= 0 && u1 >= 0 && u2 >= 0) {
-                    offU = (int) Math.floor(Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2))));
-                    offV = (int) Math.floor(Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1))));
-                }
+            int u0 = faceBuffer.get(b + 1);
+            int u1 = faceBuffer.get(b + 4);
+            int u2 = faceBuffer.get(b + 7);
+            if (u0 >= 0 && u1 >= 0 && u2 >= 0) {
+                offU = (int) Math.floor(Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2))));
+                offV = (int) Math.floor(Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1))));
             }
             for (int k = 0; k < 3; k++) {
                 int posIdx = faceBuffer.get(b + k * 3);
@@ -222,10 +218,9 @@ public class SimpleModelBuilder implements IModelBuilder {
                     // Always re-emit the uv into the repacked buffer so the index stays valid
                     float u = uvIndices.get(uvIdx * 2);
                     float v = uvIndices.get(uvIdx * 2 + 1);
-                    if (mat.texAlbedo != null) {
-                        u = converter.convertU(u - offU);
-                        v = converter.convertV(v - offV);
-                    }
+                    // We have materials without texture drawn as white blocks so also repack them here
+                    u = converter.convertU(u - offU);
+                    v = converter.convertV(v - offV);
                     uvIdx = repackedUv.size() / 2;
                     repackedUv.add(u);
                     repackedUv.add(v);
@@ -331,7 +326,7 @@ public class SimpleModelBuilder implements IModelBuilder {
         return new ByteArrayInputStream(input.apply(id));
     }
 
-    public class GlFaceBuilder implements IFaceBuilder {
+    public class SimpleFaceBuilder implements IFaceBuilder {
         private final Buffers.IntBuffer buffer = new Buffers.IntBuffer(16);
 
         @Override
