@@ -20,10 +20,6 @@ public class ModelConfig {
     private int lod = -1;
     private String variant = "";
 
-    public static ModelConfig of() {
-        return new ModelConfig();
-    }
-
     public void lod(int lod) {
         this.lod = lod;
     }
