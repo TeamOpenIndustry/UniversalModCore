@@ -57,7 +57,7 @@ public class FaceUtils {
                     double d1 = b.subtract(a).crossProduct(p.subtract(a)).dotProduct(normal);
                     double d2 = c.subtract(b).crossProduct(p.subtract(b)).dotProduct(normal);
                     double d3 = a.subtract(c).crossProduct(p.subtract(c)).dotProduct(normal);
-                    if ((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)) {
+                    if ((d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0)) {
                         hasPointInside = true;
                         break;
                     }
