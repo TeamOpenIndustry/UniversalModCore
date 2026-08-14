@@ -4,8 +4,8 @@ import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.RenderState;
 
-import java.util.Collections;
 import java.util.Map;
+import java.util.NavigableMap;
 
 /** Per-draw texture/variant/LOD config. Built via of().lod().variant(), applied by ConfiguredRenderer. */
 public class ModelConfig {
@@ -44,21 +44,19 @@ public class ModelConfig {
         state.smooth_shading(model.isSmoothShading);
     }
 
-    private OBJTextureSheet pickLodSheet(Map<String, Map<Integer, OBJTextureSheet>> variants) {
-        Map<Integer, OBJTextureSheet> map = variants.get(variant);
-        Map<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
+    private OBJTextureSheet pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants) {
+        NavigableMap<Integer, OBJTextureSheet> map = variants.get(variant);
+        NavigableMap<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
         if (lodMap == null || lodMap.isEmpty()) {
             return null;
         }
         if (lod <= 0) {
-            return lodMap.get(Collections.max(lodMap.keySet()));
+            return lodMap.lastEntry().getValue();
         }
-        Integer best = null;
-        for (Integer size : lodMap.keySet()) {
-            if (size <= lod && (best == null || size > best)) {
-                best = size;
-            }
+        Map.Entry<Integer, OBJTextureSheet> entry = lodMap.floorEntry(lod);
+        if (entry == null) {
+            entry = lodMap.firstEntry();
         }
-        return lodMap.get(best != null ? best : Collections.min(lodMap.keySet()));
+        return entry.getValue();
     }
 }

@@ -100,8 +100,8 @@ public class ModelCache implements AutoCloseable {
         return model;
     }
 
-    private Map<String, Map<Integer, OBJTextureSheet>> loadTextures(String suffix, int cacheSeconds) throws IOException {
-        Map<String, Map<Integer, OBJTextureSheet>> result = new HashMap<>();
+    private Map<String, NavigableMap<Integer, OBJTextureSheet>> loadTextures(String suffix, int cacheSeconds) throws IOException {
+        Map<String, NavigableMap<Integer, OBJTextureSheet>> result = new HashMap<>();
         if (!meta.hasKey("textureWidth")) {
             return result;
         }
@@ -109,7 +109,8 @@ public class ModelCache implements AutoCloseable {
         int textureHeight = meta.getInteger("textureHeight");
         int texSize = Math.max(textureWidth, textureHeight);
         for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
-            Map<Integer, OBJTextureSheet> lodMap = new HashMap<>();
+            // TreeMap keeps LOD sizes sorted so ModelConfig can use floorEntry/lastEntry
+            NavigableMap<Integer, OBJTextureSheet> lodMap = new TreeMap<>();
             lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight,
                                                     cache.getResource(variant + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, null)),
                                                     cacheSeconds));

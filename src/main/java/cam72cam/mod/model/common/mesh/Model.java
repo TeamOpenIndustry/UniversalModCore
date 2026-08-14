@@ -19,9 +19,9 @@ public class Model {
     public final boolean hasNormal;
     public final boolean isSmoothShading;
 
-    private final Map<String, Map<Integer, OBJTextureSheet>> texture = new HashMap<>();
-    private final Map<String, Map<Integer, OBJTextureSheet>> specular = new HashMap<>();
-    private final Map<String, Map<Integer, OBJTextureSheet>> normal = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> texture = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> specular = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normal = new HashMap<>();
 
     public Model(Identifier location, VAOLayout layout, Supplier<float[]> vboSupplier, LinkedHashMap<String, ModelGroup> groups,
                  boolean hasSpecular, boolean hasNormal, boolean isSmoothShading) {
@@ -34,7 +34,7 @@ public class Model {
         this.isSmoothShading = isSmoothShading;
     }
 
-    public void linkTextures(Map<String, Map<Integer, OBJTextureSheet>> tex, Map<String, Map<Integer, OBJTextureSheet>> spec, Map<String, Map<Integer, OBJTextureSheet>> norm) {
+    public void linkTextures(Map<String, NavigableMap<Integer, OBJTextureSheet>> tex, Map<String, NavigableMap<Integer, OBJTextureSheet>> spec, Map<String, NavigableMap<Integer, OBJTextureSheet>> norm) {
         this.texture.putAll(tex);
         this.specular.putAll(spec);
         this.normal.putAll(norm);
@@ -128,15 +128,15 @@ public class Model {
         return vboData;
     }
 
-    public Map<String, Map<Integer, OBJTextureSheet>> getTextures() {
+    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getTextures() {
         return texture;
     }
 
-    public Map<String, Map<Integer, OBJTextureSheet>> getSpeculars() {
+    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getSpeculars() {
         return specular;
     }
 
-    public Map<String, Map<Integer, OBJTextureSheet>> getNormals() {
+    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getNormals() {
         return normal;
     }
 
