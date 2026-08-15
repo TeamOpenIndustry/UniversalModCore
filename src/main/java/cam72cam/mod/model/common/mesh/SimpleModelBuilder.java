@@ -289,12 +289,9 @@ public class SimpleModelBuilder implements IModelBuilder {
         float[] data = new float[triCount * 3 * strideF];
 
         int posOff = layout.getOffset(VAOLayout.Usage.POSITION);
-        boolean hasUv = layout.has(VAOLayout.Usage.UV);
-        boolean hasColor = layout.has(VAOLayout.Usage.COLOR);
-        boolean hasNormal = layout.has(VAOLayout.Usage.NORMAL);
-        int uvOff = hasUv ? layout.getOffset(VAOLayout.Usage.UV) : Integer.MIN_VALUE;
-        int colorOff = hasColor ? layout.getOffset(VAOLayout.Usage.COLOR) : Integer.MIN_VALUE;
-        int nrmOff = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) : Integer.MIN_VALUE;
+        int uvOff = layout.getOffset(VAOLayout.Usage.UV);
+        int colorOff = layout.getOffset(VAOLayout.Usage.COLOR);
+        int normalOff = layout.getOffset(VAOLayout.Usage.NORMAL);
 
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
@@ -319,14 +316,14 @@ public class SimpleModelBuilder implements IModelBuilder {
                 data[base + posOff + 1] = (float) p.y;
                 data[base + posOff + 2] = (float) p.z;
 
-                if (hasUv) {
+                if (uvOff != -1) {
                     if (uvIdx >= 0) {
                         data[base + uvOff] = uvIndices.get(uvIdx * 2);
                         data[base + uvOff + 1] = uvIndices.get(uvIdx * 2 + 1);
                     }
                 }
 
-                if (hasColor) {
+                if (colorOff != -1) {
                     // Vertex color carries the material color; color-only materials draw a white
                     // albedo slot so the color shows through directly (no double-application)
                     data[base + colorOff] = mat.r;
@@ -335,16 +332,16 @@ public class SimpleModelBuilder implements IModelBuilder {
                     data[base + colorOff + 3] = mat.a;
                 }
 
-                if (hasNormal) {
+                if (normalOff != -1) {
                     if (nrmIdx >= 0) {
-                        data[base + nrmOff] = normIndices.get(nrmIdx * 3);
-                        data[base + nrmOff + 1] = normIndices.get(nrmIdx * 3 + 1);
-                        data[base + nrmOff + 2] = normIndices.get(nrmIdx * 3 + 2);
+                        data[base + normalOff] = normIndices.get(nrmIdx * 3);
+                        data[base + normalOff + 1] = normIndices.get(nrmIdx * 3 + 1);
+                        data[base + normalOff + 2] = normIndices.get(nrmIdx * 3 + 2);
                     } else {
                         Vec3d normal = pb.subtract(pa).crossProduct(pc.subtract(pa)).normalize();
-                        data[base + nrmOff] = (float) normal.x;
-                        data[base + nrmOff + 1] = (float) normal.y;
-                        data[base + nrmOff + 2] = (float) normal.z;
+                        data[base + normalOff] = (float) normal.x;
+                        data[base + normalOff + 1] = (float) normal.y;
+                        data[base + normalOff + 2] = (float) normal.z;
                     }
                 }
             }
