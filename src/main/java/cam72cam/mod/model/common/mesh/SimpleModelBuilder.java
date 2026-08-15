@@ -44,6 +44,7 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     private final LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
 
+    private boolean hasNormal = true;
     private boolean finished = false;
 
     public SimpleModelBuilder(Identifier modelLoc, float scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
@@ -231,8 +232,9 @@ public class SimpleModelBuilder implements IModelBuilder {
         Set<Material> used = usedMaterials.stream().map(materials::get).collect(Collectors.toSet());
         repacker = new TextureRepacker(this, used, variants);
 
-        Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size());
-        Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size());
+        //Avoid empty base buffers
+        Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size() + 1);
+        Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size() + 1);
         for (int tri = 0; tri < triCount; tri++) {
             int b = tri * 9;
             Material mat = materials.get(materialByFace.get(tri));
@@ -269,6 +271,13 @@ public class SimpleModelBuilder implements IModelBuilder {
         uvIndices = repackedUv;
 
         finished = true;
+    }
+
+    public Model build() {
+        if (hasNormal) {
+            return build(VAOLayout.POS_TEX_COLOR_NORMAL);
+        }
+        return build(VAOLayout.POS_TEX_COLOR);
     }
 
     @Override
@@ -355,6 +364,10 @@ public class SimpleModelBuilder implements IModelBuilder {
         return repacker;
     }
 
+    public boolean hasNormal() {
+        return hasNormal;
+    }
+
     @Override
     public InputStream open(Identifier id) {
         // Via cache
@@ -369,6 +382,9 @@ public class SimpleModelBuilder implements IModelBuilder {
             buffer.add(posIdx);
             buffer.add(uvIdx);
             buffer.add(normalIdx);
+            if (normalIdx == -1) {
+                SimpleModelBuilder.this.hasNormal = false;
+            }
             return this;
         }
 

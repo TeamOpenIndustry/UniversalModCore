@@ -58,7 +58,7 @@ public class ModelCache implements AutoCloseable {
                     .setBoolean("hasNormal", repacker.hasNormal())
                     .setBoolean("isSmoothShading", builder.isSmoothShading())
                     // Fixed to old VBO type for now, TODO Extension
-                    .set("layout", VAOLayout.POS_TEX_COLOR_NORMAL.serialize());
+                    .set("layout", builder.hasNormal() ? VAOLayout.POS_TEX_COLOR_NORMAL.serialize() : VAOLayout.POS_TEX_COLOR.serialize());
             if (Config.getMaxTextureSize() > 0) {
                 data.setInteger("textureWidth", repacker.getWidth())
                     .setInteger("textureHeight", repacker.getHeight())
@@ -76,8 +76,7 @@ public class ModelCache implements AutoCloseable {
 
     /** Reconstructs the {@link Model} from the cache and links the cached texture sheets. */
     public Model buildModel(int cacheSeconds) throws IOException {
-        Supplier<GenericByteBuffer> vboData = cache.getResource("model.bin", builder ->
-                new GenericByteBuffer(builder.build(VAOLayout.POS_TEX_COLOR_NORMAL).getVboData()));
+        Supplier<GenericByteBuffer> vboData = cache.getResource("model.bin", builder -> new GenericByteBuffer(builder.build().getVboData()));
 
         LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
         for (ModelGroup group : meta.getList("groups", ModelGroup::deserialize)) {

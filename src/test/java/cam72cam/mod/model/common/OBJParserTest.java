@@ -71,7 +71,7 @@ public class OBJParserTest {
                 "f 1/1/1 2/2/2 3/3/3\n"));
 
         Assert.assertNotNull(model);
-        // Layout is reconstructed from the cache, so compare structure rather than identity.
+        // Layout may be reconstructed from the cache, so compare structure rather than identity.
         Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
         Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
 
@@ -172,18 +172,14 @@ public class OBJParserTest {
         }));
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * 12, data.length);
+        Assert.assertEquals(3 * model.getLayout().getStride(), data.length);
 
         // Color-only material: diffuse color is kept in the VBO, the albedo slot is white
         Assert.assertEquals(1, data[5], 0.001);
         Assert.assertEquals(0, data[6], 0.001);
         Assert.assertEquals(0, data[7], 0.001);
         Assert.assertEquals(1, data[8], 0.001);
-
-        // No vn in the obj, face normal computed
-        Assert.assertEquals(0, data[9], 0.001);
-        Assert.assertEquals(0, data[10], 0.001);
-        Assert.assertEquals(1, data[11], 0.001);
+        // No vn in the obj
     }
 
     @Test
