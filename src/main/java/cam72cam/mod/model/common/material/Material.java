@@ -36,8 +36,8 @@ public class Material {
         this.b = b;
         this.a = a;
 
-        this.width = 16;
-        this.height = 16;
+        this.width = 32;
+        this.height = 32;
     }
 
     public void populateSize() {
