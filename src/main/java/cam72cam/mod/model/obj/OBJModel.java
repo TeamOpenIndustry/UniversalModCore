@@ -23,6 +23,10 @@ import java.util.stream.Collectors;
 
 import static cam72cam.mod.model.common.util.ImageUtils.*;
 
+/**
+ * Use {@link cam72cam.mod.model.common.ModelLoader#load} and {@link cam72cam.mod.model.common.mesh.Model}
+ */
+@Deprecated
 public class OBJModel {
     public static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
     public final OBJRender vbo;
