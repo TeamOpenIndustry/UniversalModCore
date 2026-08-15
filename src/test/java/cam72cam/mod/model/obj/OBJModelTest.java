@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 public class OBJModelTest {
     @BeforeClass
     public static void setup() throws Exception {
-        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
+        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache/umcobj"));
     }
 
 
@@ -58,7 +58,7 @@ public class OBJModelTest {
         }
         String finalObjData = objData.toString();
         FakeIdentifier objId = new FakeIdentifier(
-                "umc:simplev.obj",
+                "umcobj:simplev.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
         OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);
@@ -92,7 +92,7 @@ public class OBJModelTest {
         }
         String finalObjData = objData.toString();
         FakeIdentifier objId = new FakeIdentifier(
-                "umc:simplevvn.obj",
+                "umcobj:simplevvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
         OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);
@@ -138,7 +138,7 @@ public class OBJModelTest {
         }
         String finalObjData = objData.toString();
         FakeIdentifier objId = new FakeIdentifier(
-                "umc:simplevvtvn.obj",
+                "umcobj:simplevvtvn.obj",
                 loc -> loc.toString().endsWith("obj") ? new ByteArrayInputStream(finalObjData.getBytes(StandardCharsets.UTF_8)) : null
         );
         OBJModel model = new OBJModel(objId, 1.0f, 1.0, null, 30, null);

@@ -26,7 +26,7 @@ public class OBJParserTest {
 
     @BeforeClass
     public static void clearCache() throws IOException {
-        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
+        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache/umccommon"));
     }
 
     private static class FakeIdentifier extends Identifier {
@@ -54,7 +54,7 @@ public class OBJParserTest {
     }
 
     private static Identifier obj(String obj) {
-        return new FakeIdentifier("umc:test" + counter.getAndIncrement() + ".obj", loc ->
+        return new FakeIdentifier("umccommon:test" + counter.getAndIncrement() + ".obj", loc ->
                 loc.toString().endsWith("obj") ? new ByteArrayInputStream(obj.getBytes(StandardCharsets.UTF_8)) : null);
     }
 
