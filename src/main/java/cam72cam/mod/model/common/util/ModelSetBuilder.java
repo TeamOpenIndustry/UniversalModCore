@@ -20,13 +20,11 @@ public class ModelSetBuilder {
 
     private final Model model;
     private final VAOLayout layout;
-    private final boolean hasNormal;
     private final List<Action> actions = new ArrayList<>();
 
     public ModelSetBuilder(Model model) {
         this.model = model;
         this.layout = model.getLayout();
-        this.hasNormal = layout.has(VAOLayout.Usage.NORMAL);
     }
 
     public ModelSetBuilder append(Matrix4 m) {
@@ -47,7 +45,7 @@ public class ModelSetBuilder {
     private void add(Buffers.FloatBuffer out, float[] vbo, int startVert, int endVert, Matrix4 m) {
         int stride = layout.getStride();
         int pos = layout.getOffset(VAOLayout.Usage.POSITION);
-        int nrm = hasNormal ? layout.getOffset(VAOLayout.Usage.NORMAL) : -1;
+        int nrm = layout.getOffset(VAOLayout.Usage.NORMAL);
         int start = startVert * stride;
         int stop = endVert * stride;
 

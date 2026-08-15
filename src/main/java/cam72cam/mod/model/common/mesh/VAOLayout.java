@@ -45,15 +45,6 @@ public class VAOLayout {
         return elements;
     }
 
-    public boolean has(Usage usage) {
-        for (Element element : elements) {
-            if (element.usage == usage) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** Byte offset of the first element with the given usage, or -1 when absent. */
     public int getOffsetBytes(Usage usage) {
         for (int i = 0; i < elements.size(); i++) {
@@ -71,6 +62,10 @@ public class VAOLayout {
             }
         }
         return -1;
+    }
+
+    public boolean has(Usage usage) {
+        return getOffsetBytes(usage) != -1;
     }
 
     private int getGlType(Usage usage) {
