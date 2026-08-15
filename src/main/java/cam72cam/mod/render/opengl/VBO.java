@@ -97,8 +97,8 @@ public class VBO {
     }
 
     public class Binding implements With {
-        protected final With restore;
-        protected final RenderState state;
+        private final With restore;
+        private final RenderState state;
 
         public boolean isLoaded() {
             return vbo != -1;

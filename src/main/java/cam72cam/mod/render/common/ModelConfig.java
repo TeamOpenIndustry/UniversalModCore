@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 public class ModelConfig {
-    private static final OBJTextureSheet defTex = OBJModel.defTex;
+    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);;
     private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
     private static final OBJTextureSheet defNormTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
 

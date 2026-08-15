@@ -7,6 +7,8 @@ import cam72cam.mod.resource.Identifier;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
