@@ -9,7 +9,7 @@ import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -19,10 +19,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class OBJParserTest {
-    @Before
-    public void clearCache() throws IOException {
+    public static final AtomicInteger counter = new AtomicInteger(0);
+
+    @BeforeClass
+    public static void clearCache() throws IOException {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache"));
     }
 
@@ -51,7 +54,7 @@ public class OBJParserTest {
     }
 
     private static Identifier obj(String obj) {
-        return new FakeIdentifier("umc:test.obj", loc ->
+        return new FakeIdentifier("umc:test" + counter.getAndIncrement() + ".obj", loc ->
                 loc.toString().endsWith("obj") ? new ByteArrayInputStream(obj.getBytes(StandardCharsets.UTF_8)) : null);
     }
 
