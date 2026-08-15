@@ -235,6 +235,15 @@ public class VBO {
                             }
                         }
                     }
+                    case GENERIC -> {
+                        for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                            // Iris fields for proper normal rendering
+                            if (entry.getValue() == element && "at_tangent".equals(entry.getKey())) {
+                                GL32.glDisableVertexAttribArray(i);
+                                GL32.glVertexAttrib4f(i, 1.0F, 0.0F, 0.0F, 1.0F);
+                            }
+                        }
+                    }
                 }
             }
             RenderContext.checkError();
