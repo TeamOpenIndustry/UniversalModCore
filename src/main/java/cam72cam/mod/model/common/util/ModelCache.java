@@ -62,8 +62,11 @@ public class ModelCache implements AutoCloseable {
             if (Config.getMaxTextureSize() > 0) {
                 meta.setInteger("packedTextureWidth", repacker.getWidth())
                     .setInteger("packedTextureHeight", repacker.getHeight())
-                    .setList("variants", new ArrayList<>(repacker.textures.keySet()),
-                             k -> new TagCompound().setString("variant", k));
+                    .setList("variants", new ArrayList<>(repacker.textures.keySet()), k -> new TagCompound().setString("variant", k));
+            } else {
+                meta.setInteger("packedTextureWidth", -1)
+                    .setInteger("packedTextureHeight", -1)
+                    .setList("variants", Collections.emptyList(), k -> new TagCompound().setString("variant", ""));
             }
             meta.setList("groups", new ArrayList<>(builder.validGroups()), ModelGroup::serialize);
             try {
