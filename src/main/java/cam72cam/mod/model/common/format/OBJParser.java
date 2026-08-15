@@ -1,5 +1,6 @@
 package cam72cam.mod.model.common.format;
 
+import cam72cam.mod.model.common.ModelLoader;
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.resource.Identifier;
@@ -12,6 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OBJParser {
+    public static final String EXTENSION = "obj";
+
+    static {
+        ModelLoader.registerFormat(EXTENSION, OBJParser::parse);
+    }
+
     public static void parse(final IModelBuilder builder) {
         Map<String, Material> materials = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(builder.open(builder.getModelLoc()), StandardCharsets.UTF_8))) {
