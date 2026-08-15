@@ -53,21 +53,21 @@ public class ModelCache implements AutoCloseable {
         // Meta is read eagerly so the Model can be reconstructed on a cache hit without reparsing.
         this.meta = new TagCompound(cache.getResource("meta.nbt", builder -> {
             TextureRepacker repacker = builder.getRepacker();
-            TagCompound data = new TagCompound()
+            TagCompound meta = new TagCompound()
                     .setBoolean("hasSpecular", repacker.hasSpecular())
                     .setBoolean("hasNormal", repacker.hasNormal())
                     .setBoolean("isSmoothShading", builder.isSmoothShading())
                     // Fixed to old VBO type for now, TODO Extension
                     .set("layout", builder.hasNormal() ? VAOLayout.POS_TEX_COLOR_NORMAL.serialize() : VAOLayout.POS_TEX_COLOR.serialize());
             if (Config.getMaxTextureSize() > 0) {
-                data.setInteger("textureWidth", repacker.getWidth())
-                    .setInteger("textureHeight", repacker.getHeight())
+                meta.setInteger("packedTextureWidth", repacker.getWidth())
+                    .setInteger("packedTextureHeight", repacker.getHeight())
                     .setList("variants", new ArrayList<>(repacker.textures.keySet()),
                              k -> new TagCompound().setString("variant", k));
             }
-            data.setList("groups", new ArrayList<>(builder.validGroups()), ModelGroup::serialize);
+            meta.setList("groups", new ArrayList<>(builder.validGroups()), ModelGroup::serialize);
             try {
-                return new GenericByteBuffer(data.toBytes());
+                return new GenericByteBuffer(meta.toBytes());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -87,7 +87,9 @@ public class ModelCache implements AutoCloseable {
         Model model = new Model(modelLoc, layout, () -> vboData.get().floats(), groups,
                                 meta.getBoolean("hasSpecular"),
                                 meta.getBoolean("hasNormal"),
-                                meta.getBoolean("isSmoothShading"));
+                                meta.getBoolean("isSmoothShading"),
+                                meta.getInteger("packedTextureWidth"),
+                                meta.getInteger("packedTextureHeight"));
 
         if (Config.getMaxTextureSize() > 0) {
             model.linkTextures(
@@ -101,11 +103,11 @@ public class ModelCache implements AutoCloseable {
 
     private Map<String, NavigableMap<Integer, OBJTextureSheet>> loadTextures(String suffix, int cacheSeconds) throws IOException {
         Map<String, NavigableMap<Integer, OBJTextureSheet>> result = new HashMap<>();
-        if (!meta.hasKey("textureWidth")) {
+        if (!meta.hasKey("packedTextureWidth")) {
             return result;
         }
-        int textureWidth = meta.getInteger("textureWidth");
-        int textureHeight = meta.getInteger("textureHeight");
+        int textureWidth = meta.getInteger("packedTextureWidth");
+        int textureHeight = meta.getInteger("packedTextureHeight");
         int texSize = Math.max(textureWidth, textureHeight);
         for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
             // TreeMap keeps LOD sizes sorted so ModelConfig can use floorEntry/lastEntry

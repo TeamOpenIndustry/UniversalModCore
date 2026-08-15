@@ -20,14 +20,19 @@ public class Model {
     public final boolean hasNormal;
     public final boolean isSmoothShading;
 
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> texture = new HashMap<>();
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> specular = new HashMap<>();
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normal = new HashMap<>();
+    public final int packedTextureWidth;
+    public final int packedTextureHeight;
+    private int defaultLodSize;
+
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> textures = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> speculars = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normals = new HashMap<>();
 
     public String modelHash;
 
     public Model(Identifier location, VAOLayout layout, Supplier<float[]> vboSupplier, LinkedHashMap<String, ModelGroup> groups,
-                 boolean hasSpecular, boolean hasNormal, boolean isSmoothShading) {
+                 boolean hasSpecular, boolean hasNormal, boolean isSmoothShading,
+                 int packedTextureWidth, int packedTextureHeight) {
         this.location = location;
         this.layout = layout;
         this.vboSupplier = vboSupplier;
@@ -35,14 +40,17 @@ public class Model {
         this.hasSpecular = hasSpecular;
         this.hasNormal = hasNormal;
         this.isSmoothShading = isSmoothShading;
+        this.packedTextureWidth = packedTextureWidth;
+        this.packedTextureHeight = packedTextureHeight;
     }
 
     public void linkTextures(Map<String, NavigableMap<Integer, OBJTextureSheet>> tex,
                              Map<String, NavigableMap<Integer, OBJTextureSheet>> spec,
                              Map<String, NavigableMap<Integer, OBJTextureSheet>> norm) {
-        this.texture.putAll(tex);
-        this.specular.putAll(spec);
-        this.normal.putAll(norm);
+        this.textures.putAll(tex);
+        this.speculars.putAll(spec);
+        this.normals.putAll(norm);
+        defaultLodSize = textures.get("").keySet().stream().mapToInt(i -> i).max().orElse(-1);
     }
 
     // ModelGroup helpers
@@ -138,29 +146,33 @@ public class Model {
     }
 
     public Map<String, NavigableMap<Integer, OBJTextureSheet>> getTextures() {
-        return texture;
+        return textures;
     }
 
     public Map<String, NavigableMap<Integer, OBJTextureSheet>> getSpeculars() {
-        return specular;
+        return speculars;
     }
 
     public Map<String, NavigableMap<Integer, OBJTextureSheet>> getNormals() {
-        return normal;
+        return normals;
+    }
+
+    public int getDefaultLodSize() {
+        return defaultLodSize;
     }
 
     public void free() {
-        for (Map<Integer, OBJTextureSheet> lodMap : texture.values()) {
+        for (Map<Integer, OBJTextureSheet> lodMap : textures.values()) {
             for (OBJTextureSheet texture : lodMap.values()) {
                 texture.dealloc();
             }
         }
-        for (Map<Integer, OBJTextureSheet> lodMap : specular.values()) {
+        for (Map<Integer, OBJTextureSheet> lodMap : speculars.values()) {
             for (OBJTextureSheet texture : lodMap.values()) {
                 texture.dealloc();
             }
         }
-        for (Map<Integer, OBJTextureSheet> lodMap : normal.values()) {
+        for (Map<Integer, OBJTextureSheet> lodMap : normals.values()) {
             for (OBJTextureSheet texture : lodMap.values()) {
                 texture.dealloc();
             }

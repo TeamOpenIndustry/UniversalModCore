@@ -13,8 +13,8 @@ import java.util.function.Supplier;
  * Internal, don't use directly
  */
 public final class GeneratedModel extends Model {
-    public GeneratedModel(Model baseModel, Identifier location, Supplier<float[]> vboSupplier) {
-        super(location, baseModel.getLayout(), vboSupplier, null, baseModel.hasSpecular, baseModel.hasNormal, baseModel.isSmoothShading);
+    public GeneratedModel(Model base, Identifier loc, Supplier<float[]> vboSupplier) {
+        super(loc, base.getLayout(), vboSupplier, null, base.hasSpecular, base.hasNormal, base.isSmoothShading, base.packedTextureWidth, base.packedTextureHeight);
     }
 
     @Override

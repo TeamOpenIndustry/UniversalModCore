@@ -350,7 +350,7 @@ public class SimpleModelBuilder implements IModelBuilder {
             }
         }
 
-        return new Model(modelLoc, layout, () -> data, groups, repacker.hasSpecular(), repacker.hasNormal(), smoothShading);
+        return new Model(modelLoc, layout, () -> data, groups, repacker.hasSpecular(), repacker.hasNormal(), smoothShading, repacker.getWidth(), repacker.getHeight());
     }
 
     @Override
