@@ -19,29 +19,37 @@ public class ModelConfig {
 
     private int lod = Config.getMaxTextureSize();
     private String variant = "";
+    private boolean waitForRightTexLoad = false;
 
-    public void lod(int lod) {
+    public ModelConfig lod(int lod) {
         this.lod = lod;
+        return this;
     }
 
-    public void variant(String variant) {
+    public ModelConfig variant(String variant) {
         this.variant = variant;
+        return this;
     }
 
-    void apply(RenderState state, Model model, boolean waitForLoad) {
-        Texture albedo = pickLodSheet(model.getTextures(), defTex, waitForLoad);
+    public ModelConfig synchronous() {
+        waitForRightTexLoad = true;
+        return this;
+    }
+
+    void apply(RenderState state, Model model) {
+        Texture albedo = pickLodSheet(model.getTextures(), defTex);
         state.texture(albedo != null ? albedo : defTex.synchronous(true));
 
-        Texture spec = model.hasSpecular ? pickLodSheet(model.getSpeculars(), defSpecTex, waitForLoad) : null;
+        Texture spec = model.hasSpecular ? pickLodSheet(model.getSpeculars(), defSpecTex) : null;
         state.specular(spec != null ? spec : defSpecTex.synchronous(true));
 
-        Texture norm = model.hasNormal ? pickLodSheet(model.getNormals(), defNormTex, waitForLoad) : null;
+        Texture norm = model.hasNormal ? pickLodSheet(model.getNormals(), defNormTex) : null;
         state.normals(norm != null ? norm : defNormTex.synchronous(true));
 
         state.smooth_shading(model.isSmoothShading);
     }
 
-    private Texture pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants, OBJTextureSheet fallback, boolean waitForLoad) {
+    private Texture pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants, OBJTextureSheet fallback) {
         NavigableMap<Integer, OBJTextureSheet> map = variants.get(variant);
         NavigableMap<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
         if (lodMap == null || lodMap.isEmpty()) {
@@ -56,7 +64,7 @@ public class ModelConfig {
             tex = (entry != null ? entry : lodMap.firstEntry()).getValue();
         }
 
-        if (waitForLoad) {
+        if (waitForRightTexLoad) {
             return tex.synchronous(true);
         }
 
@@ -65,8 +73,8 @@ public class ModelConfig {
         if (!tex.isLoaded()) {
             // Try to find a loaded LOD, with a sane default
             tex = lodMap.values().stream()
-                    .filter(CustomTexture::isLoaded)
-                    .findAny().orElse(null);
+                        .filter(CustomTexture::isLoaded)
+                        .findAny().orElse(null);
         }
         return tex != null ? tex : fallback.synchronous(true);
     }

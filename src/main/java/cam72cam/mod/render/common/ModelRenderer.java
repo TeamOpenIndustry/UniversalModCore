@@ -43,7 +43,7 @@ public class ModelRenderer extends VBO {
     }
 
     public Binding bind(ModelConfig config, RenderState state, boolean waitForLoad) {
-        config.apply(state, model, waitForLoad);
+        config.apply(state, model);
         return new Binding(state, waitForLoad);
     }
 
