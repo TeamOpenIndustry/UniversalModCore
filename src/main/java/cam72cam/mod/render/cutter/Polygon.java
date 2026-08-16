@@ -23,7 +23,7 @@ public final class Polygon {
         this.normal = normal;
     }
 
-    public static Polygon generate(Polygon polygon, QuadTemplate template) {
+    public static Polygon generateUV(Polygon polygon, QuadTemplate template) {
 
         Vec3d p0 = template.sourcePos[0];
         Vec3d p1 = template.sourcePos[1];
@@ -80,7 +80,7 @@ public final class Polygon {
      * @param polygon the convex polygon to split
      * @return a list of quads (each as a Polygon with 4 vertices)
      */
-    public static List<Polygon> build(Polygon polygon) {
+    public static List<Polygon> convexToQuads(Polygon polygon) {
         List<Polygon> result = new ArrayList<>();
         List<ClipVertex> verts = polygon.getVertices();
         int n = verts.size();
