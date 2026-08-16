@@ -93,7 +93,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = primitive.getVertexData().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
@@ -121,7 +121,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = template.source.getVertexData().clone();
 
             writePosition(data, 0, quad.getVertices().get(3), template.format);
@@ -161,7 +161,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     @Override
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
-        Polygon.generate(polygon, template);
+        Polygon.generateUV(polygon, template);
     }
 
     private static ClipVertex readVertex(int[] data, int index) {
