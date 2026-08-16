@@ -2,7 +2,6 @@ package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.util.BlockDirectionUtil;
 import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -43,7 +42,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         return new QuadTemplate(
                 source.getSprite(),
-                BlockDirectionUtil.fromNormal(plane.normal),
+                Facing.fromNormal(plane.normal),
                 source.getTintIndex(),
                 source.shouldApplyDiffuseLighting(),
                 false,
@@ -57,7 +56,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
     }
 
     private static BakedQuad findBestQuad(List<BakedQuad> quads, Plane plane) {
-        Facing target = BlockDirectionUtil.fromNormal(plane.normal.scale(-1));
+        Facing target = Facing.fromNormal(plane.normal.scale(-1));
         if (target == null) {
             return null;
         }

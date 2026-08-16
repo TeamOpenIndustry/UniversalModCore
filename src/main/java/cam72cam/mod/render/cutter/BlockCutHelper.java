@@ -10,7 +10,7 @@ import java.util.Map;
 
 public final class BlockCutHelper {
 
-    private static final double EPS = 1e-8;
+    private static final double EPS = 1e-6;
 
     private static final Map<Plane, List<Vec3d>> INTERSECTION_CACHE = new IdentityHashMap<>();
     private static final Map<Plane, List<Vec3d>> CLIPPED_CACHE = new IdentityHashMap<>();
