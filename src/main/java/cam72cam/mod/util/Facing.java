@@ -67,14 +67,15 @@ public enum Facing {
         double ay = Math.abs(normal.y);
         double az = Math.abs(normal.z);
 
-        if (ax >= ay && ax >= az) {
+        final double EPS = 1e-8;// Dead zone
+
+        double max = Math.max(ax, Math.max(ay, az));
+        if (max - ax < EPS) {
             return normal.x >= 0 ? EAST : WEST;
         }
-
-        if (ay >= ax && ay >= az) {
+        if (max - ay < EPS) {
             return normal.y >= 0 ? UP : DOWN;
         }
-
         return normal.z >= 0 ? SOUTH : NORTH;
     }
 
