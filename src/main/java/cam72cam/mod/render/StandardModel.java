@@ -1,7 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.cutter.Plane;
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;

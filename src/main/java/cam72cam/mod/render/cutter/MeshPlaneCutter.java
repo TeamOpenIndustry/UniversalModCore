@@ -1,6 +1,7 @@
 package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.ModCore;
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -11,11 +12,6 @@ import java.util.*;
  * Handles convex/concave polygons, multiple disjoint rings, and rings sharing edges/vertices.
  */
 public final class MeshPlaneCutter {
-
-    private static final double EPS = 1e-4;
-
-    private MeshPlaneCutter() {}
-
     /**
      * Main cutting entry.
      * Returns fragments and caps.
@@ -99,7 +95,7 @@ public final class MeshPlaneCutter {
         Map<Vec3d, ClipVertex> coordMap = new HashMap<>();
         java.util.function.Function<ClipVertex, ClipVertex> getMerged = (v) -> {
             for (Vec3d key : coordMap.keySet()) {
-                if (key.distanceTo(v.pos) < EPS) {
+                if (key.distanceTo(v.pos) < 1e-4) {
                     return coordMap.get(key);
                 }
             }

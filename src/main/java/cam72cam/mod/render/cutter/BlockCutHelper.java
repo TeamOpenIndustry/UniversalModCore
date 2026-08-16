@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 
 import java.util.ArrayList;
@@ -32,8 +33,6 @@ public final class BlockCutHelper {
             {4, 5}, {4, 6},
             {3, 7}, {5, 7}, {6, 7}
     };
-
-    private BlockCutHelper() {}
 
     public static float getCutCenterHeight(Plane plane) {
         List<Vec3d> intersections = getCachedIntersections(plane);
