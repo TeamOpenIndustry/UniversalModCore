@@ -1,4 +1,4 @@
-package cam72cam.mod.render.cutter.adapter;
+package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;

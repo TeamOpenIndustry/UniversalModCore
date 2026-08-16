@@ -2,7 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.render.cutter.MeshPlaneCutter;
 import cam72cam.mod.math.Plane;
-import cam72cam.mod.render.cutter.adapter.BakedQuadAdapter;
+import cam72cam.mod.render.cutter.BakedQuadAdapter;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
