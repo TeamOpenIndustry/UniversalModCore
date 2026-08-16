@@ -54,6 +54,10 @@ public class StandardModel {
     }
 
     /** Add a block with a solid color */
+    public StandardModel addColorBlock(Color color, Matrix4 transform) {
+        return addColorBlock(color, transform, null);
+    }
+
     public StandardModel addColorBlock(Color color, Matrix4 transform, Plane plane) {
         IBlockState state = Blocks.CONCRETE.getDefaultState();
         state = state.withProperty(BlockColored.COLOR, color.internal);
@@ -67,11 +71,11 @@ public class StandardModel {
         return this;
     }
 
-    public StandardModel addColorBlock(Color color, Matrix4 transform) {
-        return addColorBlock(color, transform, null);
+    /** Add snow layers */
+    public StandardModel addSnow(int layers, Matrix4 transform) {
+        return addSnow(layers, transform, null);
     }
 
-    /** Add snow layers */
     public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
         layers = Math.max(1, Math.min(8, layers));
         IBlockState state = Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers);
@@ -85,11 +89,11 @@ public class StandardModel {
         return this;
     }
 
-    public StandardModel addSnow(int layers, Matrix4 transform) {
-        return addSnow(layers, transform, null);
+    /** Add item as a block (best effort) */
+    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
+        return addItemBlock(bed, transform, null);
     }
 
-    /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform, Plane plane) {
         IBlockState state = itemToBlockState(bed);
         IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
@@ -100,10 +104,6 @@ public class StandardModel {
                         : new BakedScaledModel(model, transform, plane)
         ));
         return this;
-    }
-
-    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
-        return addItemBlock(bed, transform, null);
     }
 
     /** Add item (think dropped item) */
