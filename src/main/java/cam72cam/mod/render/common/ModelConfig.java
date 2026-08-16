@@ -2,7 +2,6 @@ package cam72cam.mod.render.common;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.model.common.mesh.Model;
-import cam72cam.mod.model.obj.OBJModel;
 import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
@@ -12,8 +11,13 @@ import cam72cam.mod.serialization.ResourceCache;
 import java.util.Map;
 import java.util.NavigableMap;
 
+/**
+ * Per-draw configuration for {@link ModelRenderer}.<br>
+ * Configures texture variant, LoD size, and whether texture loading should
+ * block synchronously.
+ */
 public class ModelConfig {
-    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);;
+    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);
     private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
     private static final OBJTextureSheet defNormTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
 
@@ -21,16 +25,36 @@ public class ModelConfig {
     private String variant = "";
     private boolean waitForRightTexLoad = false;
 
+    /**
+     * Requests the texture LOD whose max dimension is at most {@code lod}, and falls back to the
+     * largest available LOD if none is small enough. A value <= 0 always selects the full-size sheet.
+     *
+     * @param lod maximum desired texture dimension
+     * @return this config
+     */
     public ModelConfig lod(int lod) {
         this.lod = lod;
         return this;
     }
 
+    /**
+     * Selects the texture variant. Falls back to the default {@code ""} variant if the named
+     * one is absent.
+     *
+     * @param variant variant name, or {@code ""} for the default
+     * @return this config
+     */
     public ModelConfig variant(String variant) {
         this.variant = variant;
         return this;
     }
 
+    /**
+     * Makes binding block until the selected textures finish loading, instead of falling back
+     * to whatever LOD is already available.
+     *
+     * @return this config
+     */
     public ModelConfig synchronous() {
         waitForRightTexLoad = true;
         return this;

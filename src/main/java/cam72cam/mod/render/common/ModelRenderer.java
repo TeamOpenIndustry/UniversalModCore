@@ -14,6 +14,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+/**
+ * GPU-side renderer (VBO) for a {@link Model}.
+ *
+ * <p>Renderers are cached per model via {@link #getRendererFor}, so a model is uploaded to
+ * the GPU at most once. To draw, obtain a {@link Binding} with {@link #bind(ModelConfig, RenderState)}
+ * (or {@link #bind(RenderState)} for default settings), then call one of the {@code draw}
+ * methods. The returned binding must be closed with try-with-resources.</p>
+ */
 public class ModelRenderer extends VBO {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
 
@@ -52,6 +60,11 @@ public class ModelRenderer extends VBO {
             super(state, wait);
         }
 
+        /**
+         * Draws the named groups with the given state modifier applied during the draw.
+         * @param groups Group names to draw
+         * @param mod    Temporary render-state modifier applied while drawing
+         */
         public void draw(Collection<String> groups, Consumer<RenderState> mod) {
             if (!isLoaded()) {
                 return;
@@ -61,6 +74,10 @@ public class ModelRenderer extends VBO {
             }
         }
 
+        /**
+         * Draws the named groups.
+         * @param groups Group names to be drawn
+         */
         public void draw(Collection<String> groups) {
             if (!isLoaded()) {
                 return;
@@ -96,6 +113,7 @@ public class ModelRenderer extends VBO {
         }
     }
 
+    /** Releases this renderer's GPU resources and deletes it from the per-model cache. */
     @Override
     public void free() {
         super.free();

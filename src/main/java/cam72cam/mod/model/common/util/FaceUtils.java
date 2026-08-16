@@ -8,9 +8,10 @@ import java.util.stream.IntStream;
 
 public class FaceUtils {
     /**
-     * Triangulate given vertices
-     * @param vertices Ordered vertices
-     * @return Sorted indices, 3 per face
+     * Triangulates the given polygon vertices using the ear-cut method.
+     *
+     * @param vertices Ordered polygon vertices
+     * @return Triangulated indices, 3 per face
      */
     public static int[] triangulate(List<Vec3d> vertices) {
         int n = vertices.size();

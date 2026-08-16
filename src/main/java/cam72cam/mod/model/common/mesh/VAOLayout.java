@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Describes the vertex format of a {@link Model}'s interleaved vertex data.
+ */
 public class VAOLayout {
     public static final VAOLayout POS_TEX_COLOR = new VAOLayout(Element.POS, Element.UV, Element.COLOR);
     public static final VAOLayout POS_TEX_COLOR_NORMAL = new VAOLayout(Element.POS, Element.UV, Element.COLOR, Element.NORMAL);
@@ -123,6 +126,7 @@ public class VAOLayout {
         return new VAOLayout(elements.toArray(new Element[0]));
     }
 
+    /** GL component type of an element. Only {@link #FLOAT} is used by the model framework. */
     public enum Type {
         UNSIGNED_BYTE(GL11.GL_UNSIGNED_BYTE, Byte.BYTES),
         BYTE(GL11.GL_BYTE, Byte.BYTES),
@@ -142,10 +146,12 @@ public class VAOLayout {
         }
     }
 
+    /** Semantic role of a vertex element. */
     public enum Usage {
         POSITION, UV, COLOR, NORMAL, PADDING
     }
 
+    /** A single interleaved vertex element: a semantic {@link #usage}, GL {@link #type} and component {@link #count}. */
     public static class Element {
         //Default elements in float
         public static final Element POS = new Element(Usage.POSITION, Type.FLOAT, 3);

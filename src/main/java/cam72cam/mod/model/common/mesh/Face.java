@@ -5,13 +5,16 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.util.FaceAccessor;
 import cam72cam.mod.model.obj.Vec2f;
 
+/**
+ * An immutable snapshot of a single triangle.
+ */
 public class Face {
     public final Vertex vertex0;
     public final Vertex vertex1;
     public final Vertex vertex2;
 
     public final Vec3d normal;
-    //TODO more accurate one
+    //TODO more accurate one, like OBB
     private IBoundingBox box;
 
     public Face(Vertex vertex0, Vertex vertex1, Vertex vertex2, Vec3d normal) {
@@ -21,6 +24,9 @@ public class Face {
         this.normal = normal;
     }
 
+    /**
+     * @return The AABB of this face
+     */
     public IBoundingBox getBoundingBox() {
         if (box == null) {
             //Uses AABB for now but we may want OBB or something more accurate in the future
@@ -31,6 +37,10 @@ public class Face {
         return box;
     }
 
+    /**
+     * @param factor Scale factor applied to the vertices positions.
+     * @return A copy of this face with scaled vertices and unchanged normal
+     */
     public Face scale(double factor) {
         return new Face(vertex0.scale(factor), vertex1.scale(factor), vertex2.scale(factor), normal);
     }
@@ -50,8 +60,7 @@ public class Face {
         }
 
         public Vertex scale(double factor) {
-            Vec3d newPos = pos.scale(factor);
-            return new Vertex(newPos, uv);
+            return new Vertex(pos.scale(factor), uv);
         }
     }
 }

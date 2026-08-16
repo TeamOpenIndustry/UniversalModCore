@@ -12,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Wavefront OBJ {@link Parser} implementation.
+ */
 public class OBJParser {
     public static final String EXTENSION = "obj";
 

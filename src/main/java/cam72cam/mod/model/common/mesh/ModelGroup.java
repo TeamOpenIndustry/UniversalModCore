@@ -24,6 +24,15 @@ public class ModelGroup {
         this.normal = normal;
     }
 
+    /**
+     * Computes the bounds and normal of a group from its vertex points.
+     *
+     * @param name    Group name
+     * @param start   First face index (inclusive)
+     * @param faceEnd Last face index (inclusive)
+     * @param points  The de-duplicated vertex positions belonging to the group
+     * @return The constructed group
+     */
     public static ModelGroup buildGroup(String name, int start, int faceEnd, List<Vec3d> points) {
         Vec3d first = points.get(0);
         Vec3d groupMin = points.stream().reduce(first, Vec3d::min);

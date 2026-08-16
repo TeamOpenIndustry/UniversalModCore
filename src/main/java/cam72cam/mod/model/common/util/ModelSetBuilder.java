@@ -15,6 +15,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Bakes a set of transformed copies of a source {@link Model} (or selected groups) into a
+ * single drawable model.<br>
+ *
+ * The result of{@link #build()} is a {@link GeneratedModel} which shares the source model's texture sheets.
+ */
 public class ModelSetBuilder {
     private static final AtomicInteger nextId = new AtomicInteger(0);
 
@@ -22,16 +28,31 @@ public class ModelSetBuilder {
     private final VAOLayout layout;
     private final List<Action> actions = new ArrayList<>();
 
-    public ModelSetBuilder(Model model) {
+    public static ModelSetBuilder of(Model model) {
+        return new ModelSetBuilder(model);
+    }
+
+    private ModelSetBuilder(Model model) {
         this.model = model;
         this.layout = model.getLayout();
     }
 
+    /**
+     * Appends the entire model transformed by <code>m</code>.
+     * @param m The transform to apply, or <code>null</code> to append untransformed
+     * @return This builder
+     */
     public ModelSetBuilder append(Matrix4 m) {
         actions.add((vbo, out) -> add(out, vbo, 0, vbo.length / layout.getStride(), m));
         return this;
     }
 
+    /**
+     * Appends the enumerated groups, transformed by <code>m</code>.
+     * @param groups Group names to append
+     * @param m      The transform to apply, or {@code null} to append untransformed
+     * @return This builder
+     */
     public ModelSetBuilder append(Collection<String> groups, Matrix4 m) {
         actions.add((vbo, out) -> {
             for (String name : groups) {
@@ -95,6 +116,10 @@ public class ModelSetBuilder {
         }
     }
 
+    /**
+     * Build the transformed model into one {@link GeneratedModel}.
+     * @return A {@link GeneratedModel} which has a new VBO and shares the source model's texture sheets
+     */
     public Model build() {
         float[] vbo = model.getVboData();
         Buffers.FloatBuffer out = new Buffers.FloatBuffer(vbo.length);

@@ -40,6 +40,7 @@ public class Material {
         this.height = 32;
     }
 
+    /** Reads the albedo texture's dimensions from its image metadata, falling back to the default size on failure. */
     public void populateSize() {
         if (this.texAlbedo != null) {
             Identifier relative = builder.getModelLoc().getRelative(this.texAlbedo);

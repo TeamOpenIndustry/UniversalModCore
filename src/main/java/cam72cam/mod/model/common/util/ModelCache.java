@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 
 import static cam72cam.mod.model.common.util.ImageUtils.*;
 
+/**
+ * Helper class to load a model from cache, or rebuild the cache if invalid<br>
+ * Internal, don't use directly!
+ */
 public class ModelCache implements AutoCloseable {
     private final Identifier modelLoc;
     private final List<Integer> lodValues;
@@ -77,7 +81,12 @@ public class ModelCache implements AutoCloseable {
         }).get().bytes());
     }
 
-    /** Reconstructs the {@link Model} from the cache and links the cached texture sheets. */
+    /**
+     * Reconstructs the {@link Model} from the cache and links the cached texture sheets.
+     *
+     * @param cacheSeconds how long to keep the texture sheets in GPU memory after last use
+     * @return the loaded model
+     */
     public Model buildModel(int cacheSeconds) throws IOException {
         Supplier<GenericByteBuffer> vboData = cache.getResource("model.bin", builder -> new GenericByteBuffer(builder.build().getVboData()));
 
