@@ -177,7 +177,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         int light = data[base + 6];
 
-        return new ClipVertex(new Vec3d(x, y, z), u, v, color, light);
+        return new ClipVertex(new Vec3d(x, y, z), u, v, color, light, (byte)0, (byte)0, (byte)0);
     }
 
     private static void writeVertex(int[] data, int index, ClipVertex v) {

@@ -86,24 +86,4 @@ public class ClipVertex {
 
         return (sky << 16) | block;
     }
-
-    public ClipVertex(Vec3d pos) {
-        this(pos, 0, 0, -1, 0, (byte)0, (byte)0, (byte)0);
-    }
-
-    public ClipVertex(Vec3d pos, float u, float v) {
-        this(pos, u, v, -1, 0, (byte)0, (byte)0, (byte)0);
-    }
-
-    public ClipVertex(Vec3d pos, float u, float v, int color, int light) {
-        this(pos, u, v, color, light, (byte)0, (byte)0, (byte)0);
-    }
-
-    public static ClipVertex of(Vec3d pos) {
-        return new ClipVertex(pos);
-    }
-
-    public static ClipVertex of(Vec3d pos, float u, float v) {
-        return new ClipVertex(pos, u, v);
-    }
 }
