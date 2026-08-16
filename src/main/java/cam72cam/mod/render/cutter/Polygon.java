@@ -1,5 +1,6 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -12,10 +13,6 @@ public final class Polygon {
     private static final double EPS = 1E-6;
     private final List<ClipVertex> vertices;
     private final Vec3d normal; // Could be null
-
-    public Polygon(Collection<ClipVertex> vertices) {
-        this(vertices, null);
-    }
 
     public Polygon(Collection<ClipVertex> vertices, Vec3d normal) {
         this.vertices = Collections.unmodifiableList(new ArrayList<>(vertices));

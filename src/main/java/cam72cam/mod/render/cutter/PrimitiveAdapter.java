@@ -1,5 +1,7 @@
 package cam72cam.mod.render.cutter;
 
+import cam72cam.mod.math.Plane;
+
 import java.util.List;
 
 public interface PrimitiveAdapter<T, Template> {
