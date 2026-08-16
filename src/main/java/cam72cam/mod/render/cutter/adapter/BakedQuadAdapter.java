@@ -92,7 +92,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (Polygon quad : Polygon.build(polygon)) {
             int[] data = primitive.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
@@ -122,7 +122,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         applyNormal(polygon, template.facing);
 
-        for (Polygon quad : PolygonQuadBuilder.build(polygon)) {
+        for (Polygon quad : Polygon.build(polygon)) {
             int[] data = template.source.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
