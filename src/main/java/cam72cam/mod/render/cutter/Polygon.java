@@ -1,7 +1,6 @@
 package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.cutter.adapter.QuadTemplate;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;

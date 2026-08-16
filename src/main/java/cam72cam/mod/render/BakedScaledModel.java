@@ -2,7 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.render.cutter.MeshPlaneCutter;
 import cam72cam.mod.render.cutter.Plane;
-import cam72cam.mod.render.cutter.adapter.BakedQuadAdapter;
+import cam72cam.mod.render.cutter.BakedQuadAdapter;
 import com.mojang.math.Transformation;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;

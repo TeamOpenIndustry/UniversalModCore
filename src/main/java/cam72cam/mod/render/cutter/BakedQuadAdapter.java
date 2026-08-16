@@ -1,7 +1,6 @@
-package cam72cam.mod.render.cutter.adapter;
+package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.cutter.*;
 import cam72cam.mod.util.BlockDirectionUtil;
 import cam72cam.mod.util.Facing;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -92,7 +91,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
-        for (Polygon quad : Polygon.build(polygon)) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = primitive.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
@@ -122,7 +121,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         applyNormal(polygon, template.facing);
 
-        for (Polygon quad : Polygon.build(polygon)) {
+        for (Polygon quad : Polygon.convexToQuads(polygon)) {
             int[] data = template.source.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
@@ -157,7 +156,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
     @Override
     public void prepareCap(Polygon polygon, Plane plane, QuadTemplate template) {
-        Polygon.generate(polygon, template);
+        Polygon.generateUV(polygon, template);
     }
 
     private static ClipVertex readVertex(int[] data, int index) {
