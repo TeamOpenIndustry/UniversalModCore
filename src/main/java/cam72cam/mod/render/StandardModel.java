@@ -49,6 +49,10 @@ public class StandardModel {
     }
 
     /** Add a block with a solid color */
+    public StandardModel addColorBlock(Color color, Matrix4 transform) {
+        return addColorBlock(color, transform, null);
+    }
+
     public StandardModel addColorBlock(Color color, Matrix4 transform, Plane plane) {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
@@ -69,11 +73,11 @@ public class StandardModel {
         return this;
     }
 
-    public StandardModel addColorBlock(Color color, Matrix4 transform) {
-        return addColorBlock(color, transform, null);
+    /** Add snow layers */
+    public StandardModel addSnow(int layers, Matrix4 transform) {
+        return addSnow(layers, transform, null);
     }
 
-    /** Add snow layers */
     public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
@@ -88,11 +92,11 @@ public class StandardModel {
         return this;
     }
 
-    public StandardModel addSnow(int layers, Matrix4 transform) {
-        return addSnow(layers, transform, null);
+    /** Add item as a block (best effort) */
+    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
+        return addItemBlock(bed, transform, null);
     }
 
-    /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform, Plane plane) {
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
@@ -108,10 +112,6 @@ public class StandardModel {
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
-    }
-
-    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
-        return addItemBlock(bed, transform, null);
     }
 
     /** Add item (think dropped item) */
