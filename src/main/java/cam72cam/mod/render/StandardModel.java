@@ -82,7 +82,6 @@ public class StandardModel {
                 renderBlocks.blockAccess = pt.world;
                 renderBlocks.setRenderBounds(bmin.x, bmin.y, bmin.z, bmax.x, bmax.y, bmax.z);
                 renderBlocks.lockBlockBounds = true;
-                renderBlocks.setOverrideBlockTexture(block.getIcon(0, stack.internal.getMetadata()));
                 renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
                 renderBlocks.lockBlockBounds = false;
             }
