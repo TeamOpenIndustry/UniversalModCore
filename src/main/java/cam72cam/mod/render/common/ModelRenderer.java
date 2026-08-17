@@ -61,11 +61,58 @@ public class ModelRenderer extends VBO {
         }
 
         /**
-         * Draws the named groups with the given state modifier applied during the draw.
+         * Append a (set of) opaque part to the batch.
          * @param groups Group names to draw
          * @param mod    Temporary render-state modifier applied while drawing
          */
-        public void draw(Collection<String> groups, Consumer<RenderState> mod) {
+        public void drawOpaque(Collection<String> groups, Consumer<RenderState> mod) {
+            draw(groups, mod);
+        }
+
+        /**
+         * Append a (set of) opaque part to the batch.
+         * @param groups Group names to draw
+         */
+        public void drawOpaque(Collection<String> groups) {
+            draw(groups);
+        }
+
+        /**
+         * Append the entire model as opaque to the batch.
+         */
+        public void drawOpaque() {
+            draw();
+        }
+
+        /**
+         * Append a (set of) transparent part to the batch.
+         * @param groups Group names to draw
+         * @param mod    Temporary render-state modifier applied while drawing
+         */
+        public void drawTransparent(Collection<String> groups, Consumer<RenderState> mod) {
+            draw(groups, mod);
+        }
+
+        /**
+         * Append a (set of) transparent part to the batch.
+         * @param groups Group names to draw
+         */
+        public void drawTransparent(Collection<String> groups) {
+            draw(groups);
+        }
+
+        /**
+         * Append the entire model as transparent to the batch.
+         */
+        public void drawTransparent() {
+            draw();
+        }
+
+        /**
+         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
+         */
+        @Deprecated
+        private void draw(Collection<String> groups, Consumer<RenderState> mod) {
             if (!isLoaded()) {
                 return;
             }
@@ -75,15 +122,16 @@ public class ModelRenderer extends VBO {
         }
 
         /**
-         * Draws the named groups.
-         * @param groups Group names to be drawn
+         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
          */
-        public void draw(Collection<String> groups) {
+        @Deprecated
+        private void draw(Collection<String> groups) {
             if (!isLoaded()) {
                 return;
             }
 
             if (model instanceof GeneratedModel) {
+                // GeneratedModel don't have groups
                 draw();
                 return;
             }
@@ -110,6 +158,15 @@ public class ModelRenderer extends VBO {
             if (start != -1) {
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
             }
+        }
+
+        /**
+         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
+         */
+        @Override
+        @Deprecated
+        public void draw() {
+            super.draw();
         }
     }
 
