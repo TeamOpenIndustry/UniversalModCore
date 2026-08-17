@@ -22,10 +22,11 @@ public class OBJParser {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(builder.open(builder.getModelLoc()), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                String[] args = line.split(" ");
+                String[] args = line.split("\\s+");
                 switch (args[0]) {
                     case "mtllib":
                         parseMTL(builder, args[1], materials);
