@@ -35,7 +35,7 @@ public class Model {
     private final Map<String, NavigableMap<Integer, OBJTextureSheet>> speculars = new HashMap<>();
     private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normals = new HashMap<>();
 
-    public String modelHash;
+    public String hash;
 
     public Model(Identifier location, VAOLayout layout, Supplier<float[]> vboSupplier, LinkedHashMap<String, ModelGroup> groups,
                  boolean hasSpecular, boolean hasNormal, boolean isSmoothShading,

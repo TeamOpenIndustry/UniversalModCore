@@ -90,7 +90,7 @@ public class ModelLoader {
         try {
             ModelCache cache = new ModelCache(modelLoc, scale, variants, lodValues, parser);
             Model result = cache.buildModel(cacheSeconds);
-            result.modelHash = cache.closeAndGetHash();
+            result.hash = cache.closeAndGetHash();
             return result;
         } catch (IOException e) {
             throw new RuntimeException(e);
