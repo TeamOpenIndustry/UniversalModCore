@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * Internal, don't use directly
+ * Generated model with no group data
  */
 public final class GeneratedModel extends Model {
     public GeneratedModel(Model base, Identifier loc, Supplier<float[]> vboSupplier) {

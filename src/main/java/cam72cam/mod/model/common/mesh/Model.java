@@ -38,9 +38,7 @@ public class Model {
 
     public String hash;
 
-    // The model that owns the texture resources shared by this model and any models derived
-    // from it. For the root (source) model this is itself; for generated models it points to
-    // the ultimate source. refCount is only meaningful on the owner.
+    // The model where self textures came from, tracked for shared textures dealloc
     private Model textureOwner = this;
     private final AtomicInteger refCount = new AtomicInteger(1);
 
@@ -228,12 +226,16 @@ public class Model {
     }
 
     /**
-     * Decrements the reference count of the shared texture resources, deallocating the texture
+     * Decrements the reference count of the shared texture resources, and deallocating the texture
      * sheets once the last referencing model is released.
      */
     protected final void tryReleaseTexture() {
-        if (textureOwner.refCount.decrementAndGet() <= 0) {
-            textureOwner.deallocTextures();
+        Model owner = this;
+        while (owner.textureOwner != owner) {
+            owner = owner.textureOwner;
+        }
+        if (owner.refCount.decrementAndGet() <= 0) {
+            owner.deallocTextures();
         }
     }
 
@@ -242,8 +244,11 @@ public class Model {
      * models) that reference another model's texture sheets.
      */
     protected final void shareTexturesWith(Model owner) {
-        this.textureOwner = owner.textureOwner;
+        this.textureOwner = owner;
         this.linkTextures(owner.getTextures(), owner.getSpeculars(), owner.getNormals());
+        while (owner.textureOwner != owner) {
+            owner = owner.textureOwner;
+        }
         owner.refCount.getAndIncrement();
     }
 
