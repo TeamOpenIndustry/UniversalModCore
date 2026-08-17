@@ -24,6 +24,7 @@ import java.util.function.Consumer;
  */
 public class ModelRenderer extends VBO {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
+    private static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
 
     public final Model model;
 
@@ -43,6 +44,7 @@ public class ModelRenderer extends VBO {
 
     @Override
     public Binding bind(RenderState state, boolean waitForLoad) {
+        DEFAULT_CONFIG.apply(state, model);
         return new Binding(state, waitForLoad);
     }
 
