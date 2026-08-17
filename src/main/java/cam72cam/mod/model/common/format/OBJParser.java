@@ -59,9 +59,9 @@ public class OBJParser {
                         IModelBuilder.IFaceBuilder face = builder.newFace();
                         for (int i = 1; i < args.length; i++) {
                             String[] part = args[i].split("/");
-                            int pos = part.length > 0 && !part[0].isEmpty() ? Integer.parseInt(part[0]) - 1 : -1;
-                            int uv = part.length > 1 && !part[1].isEmpty() ? Integer.parseInt(part[1]) - 1 : -1;
-                            int nrm = part.length > 2 && !part[2].isEmpty() ? Integer.parseInt(part[2]) - 1 : -1;
+                            int pos = part.length > 0 && !part[0].trim().isEmpty() ? Integer.parseInt(part[0]) - 1 : -1;
+                            int uv = part.length > 1 && !part[1].trim().isEmpty() ? Integer.parseInt(part[1]) - 1 : -1;
+                            int nrm = part.length > 2 && !part[2].trim().isEmpty() ? Integer.parseInt(part[2]) - 1 : -1;
                             face.addVert(pos, uv, nrm);
                         }
                         face.end();

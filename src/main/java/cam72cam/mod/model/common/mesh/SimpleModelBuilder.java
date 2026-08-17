@@ -376,12 +376,14 @@ public class SimpleModelBuilder implements IModelBuilder {
 
         @Override
         public IFaceBuilder addVert(int posIdx, int uvIdx, int normalIdx) {
+            if (posIdx == -1) {
+                throw new IllegalArgumentException("Unable to read model geometry data because vertex position is invalid!");
+            } else if (normalIdx == -1) {
+                SimpleModelBuilder.this.hasNormal = false;
+            }
             buffer.add(posIdx);
             buffer.add(uvIdx);
             buffer.add(normalIdx);
-            if (normalIdx == -1) {
-                SimpleModelBuilder.this.hasNormal = false;
-            }
             return this;
         }
 
