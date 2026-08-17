@@ -68,9 +68,10 @@ public class Model {
         this.speculars.putAll(spec);
         this.normals.putAll(norm);
         try {
-            defaultLodSize = textures.values().stream().findFirst().get()
-                                     .keySet().stream().mapToInt(i -> i).max().getAsInt();
-        } catch (Throwable e) {
+            defaultLodSize = textures.values().stream()
+                                     .flatMap(m -> m.keySet().stream())
+                                     .mapToInt(i -> i).max().getAsInt();
+        } catch (NoSuchElementException e) {
             defaultLodSize = -1;
         }
     }
