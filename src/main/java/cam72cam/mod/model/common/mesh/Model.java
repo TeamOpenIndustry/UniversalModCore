@@ -8,6 +8,7 @@ import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.resource.Identifier;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -36,6 +37,12 @@ public class Model {
     private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normals = new HashMap<>();
 
     public String hash;
+
+    // The model that owns the texture resources shared by this model and any models derived
+    // from it. For the root (source) model this is itself; for generated models it points to
+    // the ultimate source. refCount is only meaningful on the owner.
+    private Model textureOwner = this;
+    private final AtomicInteger refCount = new AtomicInteger(1);
 
     public Model(Identifier location, VAOLayout layout, Supplier<float[]> vboSupplier, LinkedHashMap<String, ModelGroup> groups,
                  boolean hasSpecular, boolean hasNormal, boolean isSmoothShading,
@@ -67,13 +74,9 @@ public class Model {
         this.textures.putAll(tex);
         this.speculars.putAll(spec);
         this.normals.putAll(norm);
-        try {
-            defaultLodSize = textures.values().stream()
-                                     .flatMap(m -> m.keySet().stream())
-                                     .mapToInt(i -> i).max().getAsInt();
-        } catch (NoSuchElementException e) {
-            defaultLodSize = -1;
-        }
+        defaultLodSize = textures.values().stream()
+                                 .flatMap(m -> m.keySet().stream())
+                                 .mapToInt(i -> i).max().orElse(-1);
     }
 
     // ModelGroup helpers
@@ -217,10 +220,34 @@ public class Model {
     }
 
     /**
-     * Releases the GPU resources owned by this model (its texture sheets and its cached
-     * renderer). The model should not be used for drawing afterwards.
+     * Releases this model's reference to the shared texture sheets and its cached renderer.
      */
     public void free() {
+        tryReleaseTexture();
+        ModelRenderer.getRendererFor(this).free();
+    }
+
+    /**
+     * Decrements the reference count of the shared texture resources, deallocating the texture
+     * sheets once the last referencing model is released.
+     */
+    protected final void tryReleaseTexture() {
+        if (textureOwner.refCount.decrementAndGet() <= 0) {
+            textureOwner.deallocTextures();
+        }
+    }
+
+    /**
+     * Shares the texture lifetime of {@code owner}. Called by derived models (e.g. baked
+     * models) that reference another model's texture sheets.
+     */
+    protected final void shareTexturesWith(Model owner) {
+        this.textureOwner = owner.textureOwner;
+        this.linkTextures(owner.getTextures(), owner.getSpeculars(), owner.getNormals());
+        owner.refCount.getAndIncrement();
+    }
+
+    private void deallocTextures() {
         for (Map<Integer, OBJTextureSheet> lodMap : textures.values()) {
             for (OBJTextureSheet texture : lodMap.values()) {
                 texture.dealloc();
@@ -236,6 +263,5 @@ public class Model {
                 texture.dealloc();
             }
         }
-        ModelRenderer.getRendererFor(this).free();
     }
 }

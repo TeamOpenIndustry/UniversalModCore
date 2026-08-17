@@ -129,9 +129,7 @@ public class ModelSetBuilder {
         float[] data = out.array();
 
         Identifier loc = new Identifier(model.location().getDomain(), model.location().getPath() + "_build" + nextId.getAndIncrement());
-        GeneratedModel result = new GeneratedModel(model, loc, () -> data);
-        result.linkTextures(model.getTextures(), model.getSpeculars(), model.getNormals());
-        return result;
+        return new GeneratedModel(model, loc, () -> data);
     }
 
     @FunctionalInterface
