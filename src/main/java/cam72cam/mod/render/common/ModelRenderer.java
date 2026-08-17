@@ -61,50 +61,50 @@ public class ModelRenderer extends VBO {
         }
 
         /**
-         * Append a (set of) opaque part to the batch.
+         * Enqueue a (set of) opaque part to the batch.
          * @param groups Group names to draw
          * @param mod    Temporary render-state modifier applied while drawing
          */
-        public void drawOpaque(Collection<String> groups, Consumer<RenderState> mod) {
+        public void enqueueOpaque(Collection<String> groups, Consumer<RenderState> mod) {
             draw(groups, mod);
         }
 
         /**
-         * Append a (set of) opaque part to the batch.
+         * Enqueue a (set of) opaque part to the batch.
          * @param groups Group names to draw
          */
-        public void drawOpaque(Collection<String> groups) {
+        public void enqueueOpaque(Collection<String> groups) {
             draw(groups);
         }
 
         /**
          * Append the entire model as opaque to the batch.
          */
-        public void drawOpaque() {
+        public void enqueueOpaque() {
             draw();
         }
 
         /**
-         * Append a (set of) transparent part to the batch.
+         * Enqueue a (set of) transparent part to the batch.
          * @param groups Group names to draw
          * @param mod    Temporary render-state modifier applied while drawing
          */
-        public void drawTransparent(Collection<String> groups, Consumer<RenderState> mod) {
+        public void enqueueTransparent(Collection<String> groups, Consumer<RenderState> mod) {
             draw(groups, mod);
         }
 
         /**
-         * Append a (set of) transparent part to the batch.
+         * Enqueue a (set of) transparent part to the batch.
          * @param groups Group names to draw
          */
-        public void drawTransparent(Collection<String> groups) {
+        public void enqueueTransparent(Collection<String> groups) {
             draw(groups);
         }
 
         /**
-         * Append the entire model as transparent to the batch.
+         * Enqueue the entire model as transparent to the batch.
          */
-        public void drawTransparent() {
+        public void enqueueTransparent() {
             draw();
         }
 
@@ -116,7 +116,7 @@ public class ModelRenderer extends VBO {
             if (!isLoaded()) {
                 return;
             }
-            try (With pus = super.push(mod)) {
+            try (With ignored = super.push(mod)) {
                 draw(groups);
             }
         }
