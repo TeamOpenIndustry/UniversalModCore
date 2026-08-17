@@ -67,6 +67,11 @@ public class SimpleModelBuilder implements IModelBuilder {
     }
 
     @Override
+    public Identifier getModelLoc() {
+        return modelLoc;
+    }
+
+    @Override
     public void newModelGroup(String name) {
         groupNames.add(name);
         groupStartFaces.add(faceBuffer.size() / 9);
@@ -126,23 +131,21 @@ public class SimpleModelBuilder implements IModelBuilder {
     }
 
     @Override
-    public Collection<ModelGroup> validGroups() {
+    public InputStream open(Identifier id) {
+        // Via cache
+        return new ByteArrayInputStream(input.apply(id));
+    }
+
+    public Collection<ModelGroup> getValidGroups() {
         checkFinished();
         return groups.values();
     }
 
-    @Override
     public boolean isSmoothShading() {
         checkFinished();
         return smoothShading;
     }
 
-    @Override
-    public boolean isFinished() {
-        return finished;
-    }
-
-    @Override
     public void finish() {
         checkUnfinished();
 
@@ -280,7 +283,6 @@ public class SimpleModelBuilder implements IModelBuilder {
         return build(VAOLayout.POS_TEX_COLOR);
     }
 
-    @Override
     public Model build(VAOLayout layout) {
         checkFinished();
 
@@ -350,12 +352,6 @@ public class SimpleModelBuilder implements IModelBuilder {
         return new Model(modelLoc, layout, () -> data, groups, repacker.hasSpecular(), repacker.hasNormal(), smoothShading, repacker.getWidth(), repacker.getHeight());
     }
 
-    @Override
-    public Identifier getModelLoc() {
-        return modelLoc;
-    }
-
-    @Override
     public TextureRepacker getRepacker() {
         checkFinished();
         return repacker;
@@ -365,10 +361,15 @@ public class SimpleModelBuilder implements IModelBuilder {
         return hasNormal;
     }
 
-    @Override
-    public InputStream open(Identifier id) {
-        // Via cache
-        return new ByteArrayInputStream(input.apply(id));
+    private void checkUnfinished() {
+        if (finished) {
+            throw new IllegalStateException("Model builder already finished");
+        }
+    }
+    private void checkFinished() {
+        if (!finished) {
+            throw new IllegalStateException("Must call finish() before this method");
+        }
     }
 
     public class SimpleFaceBuilder implements IFaceBuilder {

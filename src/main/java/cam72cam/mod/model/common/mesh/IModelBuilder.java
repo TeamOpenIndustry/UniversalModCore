@@ -1,17 +1,20 @@
 package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.model.common.material.Material;
-import cam72cam.mod.model.common.material.TextureRepacker;
 import cam72cam.mod.resource.Identifier;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 
 /**
  * Builds a {@link Model} from parsed geometry.
  */
 public interface IModelBuilder {
+    /**
+     * @return The location of the model being built
+     * */
+    Identifier getModelLoc();
+
     /**
      * Starts a new named group, which contains all faces until next <code>newModelGroup()</code> call.
      * @param name The group name
@@ -51,35 +54,6 @@ public interface IModelBuilder {
      */
     void doSmoothShading();
 
-	/**
-	 * Finalizes the builder by doing non VAO-sensitive changes.
-	 */
-	void finish();
-
-    /**
-     * Assembles the final interleaved vertex data in the given layout.
-     * @param layout The vertex format to emit
-     * @return The finished model
-     */
-    Model build(VAOLayout layout);
-
-    /**
-     * @return Whether {@link #finish()} has been called
-     * */
-    boolean isFinished();
-    /**
-     * @return All non-empty groups of the finished model
-     * */
-    Collection<ModelGroup> validGroups();
-    /**
-     * @return Whether the model uses smooth shading
-     * */
-    boolean isSmoothShading();
-    /** @return the location of the model being built */
-    Identifier getModelLoc();
-    /** @return the texture repacker holding the packed atlas sheets */
-    TextureRepacker getRepacker();
-
     /**
      * Opens a resource.<br>
      * The builder will return the cached one if possible, aiming at speeding up the load routine.
@@ -88,17 +62,6 @@ public interface IModelBuilder {
      */
     default InputStream open(Identifier id) throws IOException {
         return id.getLastResourceStream();
-    }
-
-    default void checkUnfinished() {
-        if (isFinished()) {
-            throw new IllegalStateException("Model builder already finished");
-        }
-    }
-    default void checkFinished() {
-        if (!isFinished()) {
-            throw new IllegalStateException("Must call finish() before this method");
-        }
     }
 
     /** Incrementally builds a single face from vertex references. */

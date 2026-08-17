@@ -72,7 +72,7 @@ public class ModelCache implements AutoCloseable {
                     .setInteger("packedTextureHeight", -1)
                     .setList("variants", Collections.emptyList(), k -> new TagCompound().setString("variant", ""));
             }
-            meta.setList("groups", new ArrayList<>(builder.validGroups()), ModelGroup::serialize);
+            meta.setList("groups", new ArrayList<>(builder.getValidGroups()), ModelGroup::serialize);
             try {
                 return new GenericByteBuffer(meta.toBytes());
             } catch (IOException e) {
@@ -141,7 +141,7 @@ public class ModelCache implements AutoCloseable {
     }
 
     /** Generates (on cache miss) the RGBA bytes for a texture sheet; {@code lod} is null for the full-size sheet. */
-    private GenericByteBuffer getTextureBytes(IModelBuilder builder, String variant, String suffix, Integer lod) {
+    private GenericByteBuffer getTextureBytes(SimpleModelBuilder builder, String variant, String suffix, Integer lod) {
         TextureRepacker repacker = builder.getRepacker();
         Supplier<BufferedImage> source;
         switch (suffix) {
