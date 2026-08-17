@@ -25,16 +25,19 @@ public class SimpleModelBuilder implements IModelBuilder {
     private Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
     // 3 floats per normal (x, y, z)
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
+    // Internal scale for positions when building
     private final double scale;
+    // Cacheable input supplier
     private final ResourceCache.ResourceProvider input;
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
     private Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
+    // 1 int per face for material indexing
     private Buffers.IntBuffer materialByFace = new Buffers.IntBuffer(1024);
 
     private final List<Material> materials = new ArrayList<>();
     private final Map<String, Integer> materialIds = new HashMap<>();
-    private final Set<Integer> usedMaterials = new IntArraySet();
+    private final Set<Integer> usedMaterials = new IntArraySet(); // Useful when repacking UVs
     private int currMaterial;
     private TextureRepacker repacker;
 
