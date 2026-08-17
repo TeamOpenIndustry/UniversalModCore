@@ -67,7 +67,12 @@ public class Model {
         this.textures.putAll(tex);
         this.speculars.putAll(spec);
         this.normals.putAll(norm);
-        defaultLodSize = textures.get("").keySet().stream().mapToInt(i -> i).max().orElse(-1);
+        try {
+            defaultLodSize = textures.values().stream().findFirst().get()
+                                     .keySet().stream().mapToInt(i -> i).max().getAsInt();
+        } catch (Throwable e) {
+            defaultLodSize = -1;
+        }
     }
 
     // ModelGroup helpers
