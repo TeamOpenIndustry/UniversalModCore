@@ -5,8 +5,7 @@ import cam72cam.mod.model.common.util.FaceAccessor;
 import cam72cam.mod.render.common.ModelRenderer;
 import cam72cam.mod.resource.Identifier;
 
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -29,13 +28,13 @@ public final class GeneratedModel extends Model {
     }
 
     @Override
-    public LinkedHashMap<String, ModelGroup> getGroups() {
-        throw new UnsupportedOperationException("Not supported in generated model");
+    public Map<String, ModelGroup> getGroups() {
+        return Collections.emptyMap();
     }
 
     @Override
     public Set<String> groups() {
-        throw new UnsupportedOperationException("Not supported in generated model");
+        return Collections.emptySet();
     }
 
     @Override

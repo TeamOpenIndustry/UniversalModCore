@@ -120,7 +120,7 @@ public class ModelSetBuilder {
      * Build the transformed model into one {@link GeneratedModel}.
      * @return A {@link GeneratedModel} which has a new VBO and shares the source model's texture sheets
      */
-    public Model build() {
+    public GeneratedModel build() {
         float[] vbo = model.getVboData();
         Buffers.FloatBuffer out = new Buffers.FloatBuffer(vbo.length);
         for (Action action : actions) {
@@ -129,7 +129,7 @@ public class ModelSetBuilder {
         float[] data = out.array();
 
         Identifier loc = new Identifier(model.location().getDomain(), model.location().getPath() + "_build" + nextId.getAndIncrement());
-        Model result = new GeneratedModel(model, loc, () -> data);
+        GeneratedModel result = new GeneratedModel(model, loc, () -> data);
         result.linkTextures(model.getTextures(), model.getSpeculars(), model.getNormals());
         return result;
     }

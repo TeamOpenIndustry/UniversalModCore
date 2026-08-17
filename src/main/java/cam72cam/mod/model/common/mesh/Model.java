@@ -79,7 +79,7 @@ public class Model {
     // ModelGroup helpers
 
     /** @return the named groups of this model, keyed by group name */
-    public LinkedHashMap<String, ModelGroup> getGroups() {
+    public Map<String, ModelGroup> getGroups() {
         return groups;
     }
 
