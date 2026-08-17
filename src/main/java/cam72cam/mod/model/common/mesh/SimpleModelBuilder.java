@@ -25,7 +25,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     private Buffers.FloatBuffer uvIndices = new Buffers.FloatBuffer(1024);
     // 3 floats per normal (x, y, z)
     private final Buffers.FloatBuffer normIndices = new Buffers.FloatBuffer(1024);
-    private final float scale;
+    private final double scale;
     private final ResourceCache.ResourceProvider input;
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
@@ -47,7 +47,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     private boolean hasNormal = true;
     private boolean finished = false;
 
-    public SimpleModelBuilder(Identifier modelLoc, float scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
+    public SimpleModelBuilder(Identifier modelLoc, double scale, Collection<String> variants, ResourceCache.ResourceProvider input) {
         this.modelLoc = modelLoc;
         this.scale = scale;
         this.input = input;
@@ -88,9 +88,9 @@ public class SimpleModelBuilder implements IModelBuilder {
     public int addIndexedVert(float x, float y, float z) {
         checkUnfinished();
         int index = posIndices.size() / 3;
-        posIndices.add(x * scale);
-        posIndices.add(y * scale);
-        posIndices.add(z * scale);
+        posIndices.add((float) (x * scale));
+        posIndices.add((float) (y * scale));
+        posIndices.add((float) (z * scale));
         return index;
     }
 

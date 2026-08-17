@@ -52,7 +52,7 @@ public class ModelLoader {
         return load(modelLoc, 1f);
     }
 
-    public static Model load(Identifier modelLoc, float scale) throws Exception {
+    public static Model load(Identifier modelLoc, double scale) throws Exception {
         return load(modelLoc, scale, Collections.emptySet(), 30, null);
     }
 
@@ -72,7 +72,7 @@ public class ModelLoader {
      * @return The constructed model
      * @throws Exception if the format is unknown or the model fails to parse/load
      */
-    public static Model load(Identifier modelLoc, float scale, Collection<String> variants, int cacheSeconds, LodSupplier lod) throws Exception {
+    public static Model load(Identifier modelLoc, double scale, Collection<String> variants, int cacheSeconds, LodSupplier lod) throws Exception {
         List<Integer> lodValues;
         if (lod == null) {
             lodValues = new ArrayList<>();

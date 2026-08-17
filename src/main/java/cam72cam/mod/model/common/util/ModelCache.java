@@ -32,7 +32,7 @@ public class ModelCache implements AutoCloseable {
     private final ResourceCache<SimpleModelBuilder> cache;
     private final TagCompound meta;
 
-    public ModelCache(Identifier modelLoc, float scale, Collection<String> variants, List<Integer> lodValues, Parser parser) throws IOException {
+    public ModelCache(Identifier modelLoc, double scale, Collection<String> variants, List<Integer> lodValues, Parser parser) throws IOException {
         this.modelLoc = modelLoc;
         this.lodValues = lodValues != null ? lodValues : Collections.emptyList();
 
