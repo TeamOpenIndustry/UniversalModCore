@@ -26,7 +26,7 @@ public final class MeshPlaneCutter {
 
         for (T primitive : primitives) {
             Polygon polygon = adapter.toPolygon(primitive);
-            ClipResult clipped = Polygon.clip(polygon, plane);
+            ClipResult clipped = polygon.clip( plane);
 
             allPairs.addAll(clipped.getIntersections());
 
