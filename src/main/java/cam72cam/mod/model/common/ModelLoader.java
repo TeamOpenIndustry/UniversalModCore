@@ -1,6 +1,7 @@
 package cam72cam.mod.model.common;
 
 import cam72cam.mod.Config;
+import cam72cam.mod.model.common.format.OBJParser;
 import cam72cam.mod.model.common.format.Parser;
 import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.common.util.ModelCache;
@@ -32,6 +33,10 @@ import java.util.Map;
  */
 public class ModelLoader {
     private static final Map<String, Parser> PARSER = new HashMap<>();
+
+    static {
+        ModelLoader.registerFormat(OBJParser.EXTENSION, OBJParser::parse);
+    }
 
     /**
      * Registers a {@link Parser} for a model file extension.
