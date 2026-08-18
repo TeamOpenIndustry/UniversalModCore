@@ -17,7 +17,7 @@ import java.util.Map;
 public class OBJParser {
     public static final String EXTENSION = "obj";
 
-    public static void parse(final IModelBuilder builder) {
+    public static void parse(final IModelBuilder builder) throws IOException {
         Map<String, Material> materials = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(builder.open(builder.getModelLoc()), StandardCharsets.UTF_8))) {
             String line;
@@ -77,12 +77,10 @@ public class OBJParser {
                         break;
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to parse OBJ " + builder.getModelLoc(), e);
         }
     }
 
-    private static void parseMTL(IModelBuilder builder, String path, Map<String, Material> materials) {
+    private static void parseMTL(IModelBuilder builder, String path, Map<String, Material> materials) throws IOException {
         Identifier mtlLoc = builder.getModelLoc().getRelative(path);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(builder.open(mtlLoc), StandardCharsets.UTF_8))) {
             String name = null;
@@ -151,8 +149,6 @@ public class OBJParser {
             if (name != null) {
                 materials.put(name, buildMaterial(builder, name, r, g, b, a, texKd, texNs, texBump));
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to parse MTL " + mtlLoc, e);
         }
     }
 
