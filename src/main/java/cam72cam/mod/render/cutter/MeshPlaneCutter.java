@@ -16,11 +16,7 @@ public final class MeshPlaneCutter {
      * Main cutting entry.
      * Returns fragments and caps.
      */
-    public static <T, Template> List<T> cut(
-            List<T> primitives,
-            Plane plane,
-            PrimitiveAdapter<T, Template> adapter) {
-
+    public static <T, Template> List<T> cut(List<T> primitives, Plane plane, PrimitiveAdapter<T, Template> adapter) {
         List<T> result = new ArrayList<>();
         List<Pair<ClipVertex, ClipVertex>> allPairs = new ArrayList<>();
 

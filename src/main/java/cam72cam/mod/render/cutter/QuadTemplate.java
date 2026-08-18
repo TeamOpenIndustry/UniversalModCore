@@ -2,7 +2,7 @@ package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
-import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 
