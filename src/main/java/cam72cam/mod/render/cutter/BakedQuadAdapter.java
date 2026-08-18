@@ -3,14 +3,14 @@ package cam72cam.mod.render.cutter;
 import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplate> {
-    private static final int STRIDE = DefaultVertexFormats.BLOCK.getIntegerSize();
+    private static final int STRIDE = DefaultVertexFormat.BLOCK.getIntegerSize();
 
     @Override
     public QuadTemplate createTemplate(List<BakedQuad> quads, Plane plane) {
@@ -45,7 +45,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                 source.getTintIndex(),
                 source.isShade(),
                 false,
-                DefaultVertexFormats.BLOCK,
+                DefaultVertexFormat.BLOCK,
                 source,
                 quads,
                 sourcePos,
