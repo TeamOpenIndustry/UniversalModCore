@@ -1,9 +1,6 @@
-package cam72cam.mod.model.common.util;
+package cam72cam.mod.model.common.mesh;
 
-import cam72cam.mod.model.common.mesh.GeneratedModel;
-import cam72cam.mod.model.common.mesh.Model;
-import cam72cam.mod.model.common.mesh.ModelGroup;
-import cam72cam.mod.model.common.mesh.VAOLayout;
+import cam72cam.mod.model.common.util.Buffers;
 import cam72cam.mod.resource.Identifier;
 import util.Matrix4;
 
