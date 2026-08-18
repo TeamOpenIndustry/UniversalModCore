@@ -71,7 +71,7 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * @param groupName Desired group's name
      * @return A {@link FaceAccessor} of given group, or {@code null} if group not present or this FaceAccessor is already grouped
      */
-    public FaceAccessor getSubByGroup(String groupName) {
+    public FaceAccessor ofGroup(String groupName) {
         if (!canSplit || !model.getGroups().containsKey(groupName)) {
             return null;
         }
@@ -84,12 +84,12 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * Convert current accessing face into an {@link Face}.
      * @return OBJFace of current face
      */
-    public Face asOBJFace() {
+    public Face shot() {
         Face.Vertex vert0 = new Face.Vertex(v0);
         Face.Vertex vert1 = new Face.Vertex(v1);
         Face.Vertex vert2 = new Face.Vertex(v2);
         return new Face(vert0, vert1, vert2, normalOffset != -1 
-                                             ? v0.normAsVec3d() 
+                                             ? v0.shotNormal()
                                              : vert1.pos.subtract(vert0.pos).crossProduct(vert2.pos.subtract(vert0.pos)).normalize());
     }
 
@@ -152,18 +152,18 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
             this.vertOffset = vertOffset;
         }
 
-        public Vec3d posAsVec3d() {
+        public Vec3d shotPos() {
             return new Vec3d(x(), y(), z());
         }
 
-        public Vec2f uvAsVec2f() {
+        public Vec2f shotUv() {
             if (uvOffset == -1) {
                 return Vec2f.ZERO;
             }
             return new Vec2f(u(), v());
         }
 
-        public Vec3d normAsVec3d() {
+        public Vec3d shotNormal() {
             if (normalOffset == -1) {
                 return Vec3d.ZERO;
             }
