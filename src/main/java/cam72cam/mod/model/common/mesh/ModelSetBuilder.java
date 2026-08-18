@@ -128,12 +128,8 @@ public class ModelSetBuilder {
 
     /**
      * Build the transformed model into one {@link GeneratedModel}.
-     * <p>
-     * Per-group buffers are concatenated in group-name order (matching the renderer's assumption
-     * that faces are ordered by group name), and each output group is created with lazily
-     * computed bounds.
      *
-     * @return A {@link GeneratedModel} which has a new VBO, real group data, and shares the
+     * @return A {@link GeneratedModel} which has a new VBO and shares the
      *         source model's texture sheets
      */
     public GeneratedModel build() {
