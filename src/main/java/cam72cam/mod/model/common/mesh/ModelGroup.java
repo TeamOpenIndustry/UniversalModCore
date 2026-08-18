@@ -2,8 +2,10 @@ package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.serialization.TagCompound;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ModelGroup {
@@ -11,17 +13,64 @@ public class ModelGroup {
     // Both inclusive
     public final int faceStart;
     public final int faceEnd;
-    public final Vec3d min;
-    public final Vec3d max;
-    public final Vec3d normal;
 
-    public ModelGroup(String name, int faceStart, int faceEnd, Vec3d min, Vec3d max, Vec3d normal) {
+    private final Supplier<Pair<Vec3d, Vec3d>> bounds;
+    private Vec3d min;
+    private Vec3d max;
+
+    // Approximated direction
+    private final Vec3d normal;
+
+    private ModelGroup(String name, int faceStart, int faceEnd, Supplier<Pair<Vec3d, Vec3d>> bounds, Vec3d normal) {
         this.name = name;
         this.faceStart = faceStart;
         this.faceEnd = faceEnd;
-        this.min = min;
-        this.max = max;
+        this.bounds = bounds;
         this.normal = normal;
+    }
+
+    /**
+     * Creates a group with precomputed bounds, e.g. one loaded from the cache or built by a parser.
+     */
+    public static ModelGroup construct(String name, int faceStart, int faceEnd, Vec3d min, Vec3d max, Vec3d normal) {
+        return new ModelGroup(name, faceStart, faceEnd, () -> Pair.of(min, max), normal);
+    }
+
+    /**
+     * Creates a group whose bounds are computed lazily from the given VBO range on first access.
+     * The normal remains uncomputed and is <code>null</code>.
+     *
+     * @param vbo       Interleaved vertex data (the same array the owning model draws from)
+     * @param layout    Vertex layout describing the stride/position offset of {@code vbo}
+     */
+    public static ModelGroup lazy(String name, int faceStart, int faceEnd, float[] vbo, VAOLayout layout) {
+        return new ModelGroup(name, faceStart, faceEnd,
+                () -> computeBounds(vbo, layout, faceStart, faceEnd),
+                null);
+    }
+
+    /** @return The minimum corner of this group's axis-aligned bounds */
+    public Vec3d min() {
+        if (min == null) {
+            Pair<Vec3d, Vec3d> pair = bounds.get();
+            min = pair.getLeft();
+            max = pair.getRight();
+        }
+        return min;
+    }
+
+    /** @return The maximum corner of this group's axis-aligned bounds */
+    public Vec3d max() {
+        if (max == null) {
+            Pair<Vec3d, Vec3d> pair = bounds.get();
+            min = pair.getLeft();
+            max = pair.getRight();
+        }
+        return max;
+    }
+
+    public Vec3d normal() {
+        return normal;
     }
 
     /**
@@ -68,18 +117,23 @@ public class ModelGroup {
             normal = maxN.subtract(minN).normalize();
         }
 
-        return new ModelGroup(name, start, faceEnd, groupMin, groupMax, normal);
+        return construct(name, start, faceEnd, groupMin, groupMax, normal);
     }
 
-    public static ModelGroup deserialize(TagCompound d) {
-        return new ModelGroup(
-                d.getString("name"),
-                d.getInteger("faceStart"),
-                d.getInteger("faceStop"),
-                d.getVec3d("min"),
-                d.getVec3d("max"),
-                d.getVec3d("normal")
-        );
+    private static Pair<Vec3d, Vec3d> computeBounds(float[] vbo, VAOLayout layout, int faceStart, int faceEnd) {
+        int stride = layout.getStride();
+        int posOff = layout.getOffset(VAOLayout.Usage.POSITION);
+        Vec3d min = null;
+        Vec3d max = null;
+        for (int face = faceStart; face <= faceEnd; face++) {
+            for (int k = 0; k < 3; k++) {
+                int idx = (face * 3 + k) * stride + posOff;
+                Vec3d p = new Vec3d(vbo[idx], vbo[idx + 1], vbo[idx + 2]);
+                min = min == null ? p : min.min(p);
+                max = max == null ? p : max.max(p);
+            }
+        }
+        return Pair.of(min, max);
     }
 
     public TagCompound serialize() {
@@ -87,8 +141,19 @@ public class ModelGroup {
                 .setString("name", name)
                 .setInteger("faceStart", faceStart)
                 .setInteger("faceStop", faceEnd)
-                .setVec3d("min", min)
-                .setVec3d("max", max)
-                .setVec3d("normal", normal);
+                .setVec3d("min", min())
+                .setVec3d("max", max())
+                .setVec3d("normal", normal() == null ? Vec3d.ZERO : normal);
+    }
+
+    public static ModelGroup deserialize(TagCompound d) {
+        return construct(
+                d.getString("name"),
+                d.getInteger("faceStart"),
+                d.getInteger("faceStop"),
+                d.getVec3d("min"),
+                d.getVec3d("max"),
+                d.getVec3d("normal")
+        );
     }
 }

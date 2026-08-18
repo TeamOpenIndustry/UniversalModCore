@@ -96,7 +96,7 @@ public class Model {
     public Vec3d minOfGroups(Iterable<String> groupNames) {
         Vec3d min = null;
         for (String group : groupNames) {
-            Vec3d gmin = groups.get(group).min;
+            Vec3d gmin = groups.get(group).min();
             if (min == null) {
                 min = gmin;
             } else {
@@ -113,7 +113,7 @@ public class Model {
     public Vec3d maxOfGroups(Iterable<String> groupNames) {
         Vec3d max = null;
         for (String group : groupNames) {
-            Vec3d gmax = groups.get(group).max;
+            Vec3d gmax = groups.get(group).max();
             if (max == null) {
                 max = gmax;
             } else {

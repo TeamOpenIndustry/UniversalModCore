@@ -230,13 +230,13 @@ public class OBJParserTest {
 
         //Group data
         OBJGroup A1 = oldParser.getGroups().get(0);
-        Assert.assertEquals(A1.min, A2.min);
-        Assert.assertEquals(A1.max, A2.max);
-        Assert.assertEquals(A1.normal, A2.normal);
+        Assert.assertEquals(A1.min, A2.min());
+        Assert.assertEquals(A1.max, A2.max());
+        Assert.assertEquals(A1.normal, A2.normal());
 
         OBJGroup B1 = oldParser.getGroups().get(1);
-        Assert.assertEquals(B1.min, B2.min);
-        Assert.assertEquals(B1.max, B2.max);
-        Assert.assertEquals(B1.normal, B2.normal);
+        Assert.assertEquals(B1.min, B2.min());
+        Assert.assertEquals(B1.max, B2.max());
+        Assert.assertEquals(B1.normal, B2.normal());
     }
 }

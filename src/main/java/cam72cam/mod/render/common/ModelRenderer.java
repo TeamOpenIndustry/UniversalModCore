@@ -1,6 +1,5 @@
 package cam72cam.mod.render.common;
 
-import cam72cam.mod.model.common.mesh.GeneratedModel;
 import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.common.mesh.ModelGroup;
 import cam72cam.mod.model.common.mesh.VAOLayout;
@@ -129,12 +128,6 @@ public class ModelRenderer extends VBO {
         @Deprecated
         private void draw(Collection<String> groups) {
             if (!isLoaded()) {
-                return;
-            }
-
-            if (model instanceof GeneratedModel) {
-                // GeneratedModel don't have groups
-                draw();
                 return;
             }
 

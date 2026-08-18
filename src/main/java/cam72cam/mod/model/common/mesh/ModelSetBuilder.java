@@ -7,16 +7,16 @@ import util.Matrix4;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.SingularMatrixException;
 import javax.vecmath.Vector3f;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Bakes a set of transformed copies of a source {@link Model} (or selected groups) into a
  * single drawable model.<br>
  *
- * The result of{@link #build()} is a {@link GeneratedModel} which shares the source model's texture sheets.
+ * Faces are accumulated per group name, so the resulting {@link GeneratedModel} carries real
+ * group data pointing into its own VBO; group bounds (min/max) are computed lazily on first
+ * access via {@link ModelGroup#lazy}. The result shares the source model's texture sheets.
  */
 public class ModelSetBuilder {
     private static final AtomicInteger nextId = new AtomicInteger(0);
@@ -24,6 +24,7 @@ public class ModelSetBuilder {
     private final Model model;
     private final VAOLayout layout;
     private final List<Action> actions = new ArrayList<>();
+    private final Map<String, Buffers.FloatBuffer> groupedBuffers = new HashMap<>();
 
     public static ModelSetBuilder of(Model model) {
         return new ModelSetBuilder(model);
@@ -35,12 +36,16 @@ public class ModelSetBuilder {
     }
 
     /**
-     * Appends the entire model transformed by <code>m</code>.
+     * Appends every group of the model, transformed by <code>m</code>.
      * @param m The transform to apply, or <code>null</code> to append untransformed
      * @return This builder
      */
     public ModelSetBuilder append(Matrix4 m) {
-        actions.add((vbo, out) -> add(out, vbo, 0, vbo.length / layout.getStride(), m));
+        actions.add(vbo -> {
+            for (String name : model.groups()) {
+                appendGroup(vbo, name, m);
+            }
+        });
         return this;
     }
 
@@ -51,13 +56,21 @@ public class ModelSetBuilder {
      * @return This builder
      */
     public ModelSetBuilder append(Collection<String> groups, Matrix4 m) {
-        actions.add((vbo, out) -> {
+        actions.add(vbo -> {
             for (String name : groups) {
-                ModelGroup group = model.getGroups().get(name);
-                add(out, vbo, group.faceStart * 3, (group.faceEnd + 1) * 3, m);
+                appendGroup(vbo, name, m);
             }
         });
         return this;
+    }
+
+    private void appendGroup(float[] vbo, String name, Matrix4 m) {
+        ModelGroup group = model.getGroups().get(name);
+        if (group == null) {
+            throw new IllegalArgumentException("Unknown group: " + name);
+        }
+        Buffers.FloatBuffer out = groupedBuffers.computeIfAbsent(name, k -> new Buffers.FloatBuffer(1024));
+        add(out, vbo, group.faceStart * 3, (group.faceEnd + 1) * 3, m);
     }
 
     private void add(Buffers.FloatBuffer out, float[] vbo, int startVert, int endVert, Matrix4 m) {
@@ -115,22 +128,50 @@ public class ModelSetBuilder {
 
     /**
      * Build the transformed model into one {@link GeneratedModel}.
-     * @return A {@link GeneratedModel} which has a new VBO and shares the source model's texture sheets
+     * <p>
+     * Per-group buffers are concatenated in group-name order (matching the renderer's assumption
+     * that faces are ordered by group name), and each output group is created with lazily
+     * computed bounds.
+     *
+     * @return A {@link GeneratedModel} which has a new VBO, real group data, and shares the
+     *         source model's texture sheets
      */
     public GeneratedModel build() {
         float[] vbo = model.getVboData();
-        Buffers.FloatBuffer out = new Buffers.FloatBuffer(vbo.length);
         for (Action action : actions) {
-            action.add(vbo, out);
+            action.add(vbo);
         }
-        float[] data = out.array();
+
+        TreeMap<String, Buffers.FloatBuffer> sorted = new TreeMap<>(groupedBuffers);
+        int totalFloats = 0;
+        for (Buffers.FloatBuffer buf : sorted.values()) {
+            totalFloats += buf.size();
+        }
+
+        float[] data = new float[totalFloats];
+        int facesPerGroupStride = layout.getStride() * 3;
+        LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
+        int cursor = 0;
+        for (Map.Entry<String, Buffers.FloatBuffer> e : sorted.entrySet()) {
+            float[] arr = e.getValue().array();
+            int len = arr.length;
+            if (len == 0) {
+                // Empty group: nothing to draw, keep it out of the group map
+                continue;
+            }
+            System.arraycopy(arr, 0, data, cursor, len);
+            int faceStart = cursor / facesPerGroupStride;
+            int faceEnd = (cursor + len) / facesPerGroupStride - 1;
+            groups.put(e.getKey(), ModelGroup.lazy(e.getKey(), faceStart, faceEnd, data, layout));
+            cursor += len;
+        }
 
         Identifier loc = new Identifier(model.location().getDomain(), model.location().getPath() + "_build" + nextId.getAndIncrement());
-        return new GeneratedModel(model, loc, () -> data);
+        return new GeneratedModel(model, loc, () -> data, groups);
     }
 
     @FunctionalInterface
     private interface Action {
-        void add(float[] vbo, Buffers.FloatBuffer out);
+        void add(float[] vbo);
     }
 }
