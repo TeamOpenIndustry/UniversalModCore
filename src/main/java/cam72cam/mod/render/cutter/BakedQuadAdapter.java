@@ -5,7 +5,6 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.Facing;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,12 +40,12 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         }
 
         return new QuadTemplate(
-                source.getSprite(),
+                source.func_187508_a(),
                 Facing.fromNormal(plane.normal),
                 source.getTintIndex(),
                 source.shouldApplyDiffuseLighting(),
                 false,
-                source.getFormat(),
+                DefaultVertexFormats.BLOCK,
                 source,
                 quads,
                 sourcePos,
@@ -105,9 +104,8 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     data,
                     primitive.getTintIndex(),
                     primitive.getFace(),
-                    primitive.getSprite(),
-                    primitive.shouldApplyDiffuseLighting(),
-                    primitive.getFormat()
+                    primitive.func_187508_a(),
+                    primitive.shouldApplyDiffuseLighting()
             ));
         }
         return result;
@@ -120,42 +118,38 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             return result;
         }
 
+        applyNormal(polygon, template.facing);
+
         for (Polygon quad : polygon.convexToQuads()) {
             int[] data = template.source.getVertexData().clone();
+            List<ClipVertex> quadVerts = quad.getVertices();
 
-            writePosition(data, 0, quad.getVertices().get(3), template.format);
-            writePosition(data, 1, quad.getVertices().get(2), template.format);
-            writePosition(data, 2, quad.getVertices().get(1), template.format);
-            writePosition(data, 3, quad.getVertices().get(0), template.format);
-
-            writeUV(data, 0, quad.getVertices().get(3), template.format);
-            writeUV(data, 1, quad.getVertices().get(2), template.format);
-            writeUV(data, 2, quad.getVertices().get(1), template.format);
-            writeUV(data, 3, quad.getVertices().get(0), template.format);
+            writeVertex(data, 0, quadVerts.get(3));
+            writeVertex(data, 1, quadVerts.get(2));
+            writeVertex(data, 2, quadVerts.get(1));
+            writeVertex(data, 3, quadVerts.get(0));
 
             result.add(new BakedQuad(
                     data,
                     template.source.getTintIndex(),
                     template.source.getFace(),
-                    template.source.getSprite(),
-                    template.source.shouldApplyDiffuseLighting(),
-                    template.source.getFormat()
+                    template.source.func_187508_a(),
+                    template.source.shouldApplyDiffuseLighting()
             ));
         }
         return result;
     }
 
-    private static void writePosition(int[] data, int index, ClipVertex v, VertexFormat format) {
-        int base = index * format.getIntegerSize();
-        data[base] = Float.floatToRawIntBits((float) v.pos.x);
-        data[base + 1] = Float.floatToRawIntBits((float) v.pos.y);
-        data[base + 2] = Float.floatToRawIntBits((float) v.pos.z);
-    }
+    private static void applyNormal(Polygon polygon, Facing facing) {
+        byte nx = (byte) (facing.getXMultiplier() * 127);
+        byte ny = (byte) (facing.getYMultiplier() * 127);
+        byte nz = (byte) (facing.getZMultiplier() * 127);
 
-    private static void writeUV(int[] data, int index, ClipVertex v, VertexFormat format) {
-        int base = index * format.getIntegerSize();
-        data[base + 4] = Float.floatToRawIntBits(v.u);
-        data[base + 5] = Float.floatToRawIntBits(v.v);
+        for (ClipVertex vertex : polygon.getVertices()) {
+            vertex.nx = nx;
+            vertex.ny = ny;
+            vertex.nz = nz;
+        }
     }
 
     @Override
@@ -183,9 +177,10 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
     private static void writeVertex(int[] data, int index, ClipVertex v) {
         int base = index * STRIDE;
 
-        data[base] = Float.floatToRawIntBits((float) v.pos.x);
-        data[base + 1] = Float.floatToRawIntBits((float) v.pos.y);
-        data[base + 2] = Float.floatToRawIntBits((float) v.pos.z);
+        // DefaultVertexFormats.BLOCK as we can only cut blocks
+        data[base] = Float.floatToRawIntBits((float)v.pos.x);
+        data[base + 1] = Float.floatToRawIntBits((float)v.pos.y);
+        data[base + 2] = Float.floatToRawIntBits((float)v.pos.z);
 
         data[base + 3] = v.color;
 
@@ -193,5 +188,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         data[base + 5] = Float.floatToRawIntBits(v.v);
 
         data[base + 6] = v.light;
+
+        data[base + 7] = (v.nx & 0xff) | ((v.ny & 0xff) << 8) | ((v.nz & 0xff) << 16);
     }
 }
