@@ -5,7 +5,7 @@ import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.material.TextureRepacker;
 import cam72cam.mod.model.common.util.FaceUtils;
 import cam72cam.mod.model.common.util.Buffers;
-import cam72cam.mod.model.common.util.ModelFormatException;
+import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -97,7 +97,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     public int addIndexedVert(float x, float y, float z) {
         checkUnfinished();
         if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z)) {
-            throw new ModelFormatException(String.format("Model %s contain NaN values in position definition", modelLoc.toString()));
+            throw new MalformedModelException(String.format("Model %s contain NaN values in position definition", modelLoc.toString()));
         }
         int index = posIndices.size() / 3;
         posIndices.add((float) (x * scale));
@@ -110,7 +110,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     public int addIndexedUv(float u, float v) {
         checkUnfinished();
         if (Float.isNaN(u) || Float.isNaN(v)) {
-            throw new ModelFormatException(String.format("Model %s contain NaN values in uv definition", modelLoc.toString()));
+            throw new MalformedModelException(String.format("Model %s contain NaN values in uv definition", modelLoc.toString()));
         }
         int index = uvIndices.size() / 2;
         uvIndices.add(u);
@@ -122,7 +122,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     public int addIndexedNormal(float nx, float ny, float nz) {
         checkUnfinished();
         if (Float.isNaN(nx) || Float.isNaN(ny) || Float.isNaN(nz)) {
-            throw new ModelFormatException(String.format("Model %s contain NaN values in normal definition", modelLoc.toString()));
+            throw new MalformedModelException(String.format("Model %s contain NaN values in normal definition", modelLoc.toString()));
         }
         int index = normIndices.size() / 3;
         normIndices.add(nx);

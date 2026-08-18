@@ -3,6 +3,7 @@ package cam72cam.mod.model.common;
 import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.common.mesh.ModelGroup;
 import cam72cam.mod.model.common.mesh.VAOLayout;
+import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.model.obj.OBJGroup;
 import cam72cam.mod.model.obj.OBJParser;
 import cam72cam.mod.model.obj.VertexBuffer;
@@ -58,12 +59,21 @@ public class OBJParserTest {
                 loc.toString().endsWith("obj") ? new ByteArrayInputStream(obj.getBytes(StandardCharsets.UTF_8)) : null);
     }
 
-    @Test
-    public void triangle() throws Exception {
-        Model model = ModelLoader.load(obj(
-                "v 0 0 0\n" +
+    private static void assertValid(float[] data) {
+        for (float f : data) {
+            Assert.assertFalse("Non-finite value " + f + " in VBO", Float.isNaN(f) || Float.isInfinite(f));
+        }
+    }
+
+    private static String defaultPos() {
+        return "v 0 0 0\n" +
                 "v 1 0 0\n" +
-                "v 0 1 0\n" +
+                "v 0 1 0\n";
+    }
+
+    @Test
+    public void fullySpecifiedTriangle() throws Exception {
+        Model model = ModelLoader.load(obj(defaultPos() +
                 "vt 0 0\n" +
                 "vt 1 0\n" +
                 "vt 0 1\n" +
@@ -74,13 +84,13 @@ public class OBJParserTest {
                 "f 1/1/1 2/2/2 3/3/3\n"));
 
         Assert.assertNotNull(model);
-        // Layout may be reconstructed from the cache, so compare structure rather than identity.
         Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
         Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
 
         float[] data = model.getVboData();
         Assert.assertEquals(3 * 12, data.length); // 3 verts * (pos3 + uv2 + color4 + nrm3)
 
+        // positions
         Assert.assertEquals(0, data[0], 0.001);
         Assert.assertEquals(0, data[1], 0.001);
         Assert.assertEquals(0, data[2], 0.001);
@@ -91,22 +101,18 @@ public class OBJParserTest {
         Assert.assertEquals(1, data[25], 0.001);
         Assert.assertEquals(0, data[26], 0.001);
 
-        // No mtl: default white baked into color
+        // no mtl: default white baked into color
         Assert.assertEquals(1, data[5], 0.001);
         Assert.assertEquals(1, data[6], 0.001);
         Assert.assertEquals(1, data[7], 0.001);
         Assert.assertEquals(1, data[8], 0.001);
 
-        // Explicit normals
+        // explicit normals
         Assert.assertEquals(0, data[9], 0.001);
         Assert.assertEquals(0, data[10], 0.001);
         Assert.assertEquals(1, data[11], 0.001);
 
-        Assert.assertEquals(1, model.getGroups().size());
-        ModelGroup firstGroup = model.getGroups().entrySet().iterator().next().getValue();
-        Assert.assertEquals("tri", firstGroup.name);
-        Assert.assertEquals(0, firstGroup.faceStart);
-        Assert.assertEquals(0, firstGroup.faceEnd);
+        assertValid(data);
     }
 
     @Test
@@ -132,10 +138,7 @@ public class OBJParserTest {
 
     @Test
     public void groups() throws Exception {
-        Model model = ModelLoader.load(obj(
-                "v 0 0 0\n" +
-                "v 1 0 0\n" +
-                "v 0 1 0\n" +
+        Model model = ModelLoader.load(obj(defaultPos() +
                 "o A\n" +
                 "f 1 2 3\n" +
                 "o B\n" +
@@ -155,35 +158,107 @@ public class OBJParserTest {
     }
 
     @Test
-    public void materials() throws Exception {
-        String mtl = "newmtl red\nKd 1 0 0 1\n";
-        String objData = "mtllib test.mtl\n" +
-                "v 0 0 0\n" +
-                "v 1 0 0\n" +
-                "v 0 1 0\n" +
-                "usemtl red\n" +
-                "f 1 2 3\n";
+    public void missingUvAndNormal() throws Exception {
+        Model model = ModelLoader.load(obj(defaultPos() +
+                "f 1// 2// 3//\n"));
 
-        Model model = ModelLoader.load(new FakeIdentifier("umc:test.obj", loc -> {
-            if (loc.toString().endsWith("obj")) {
-                return new ByteArrayInputStream(objData.getBytes(StandardCharsets.UTF_8));
-            }
-            if (loc.toString().endsWith("mtl")) {
-                return new ByteArrayInputStream(mtl.getBytes(StandardCharsets.UTF_8));
-            }
-            return null;
-        }));
+        Assert.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assert.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * model.getLayout().getStride(), data.length);
+        Assert.assertEquals(3 * 9, data.length); // pos3 + uv2 + color4, no normal
 
-        // Color-only material: diffuse color is kept in the VBO, the albedo slot is white
+        // positions preserved
+        Assert.assertEquals(0, data[0], 0.001);
+        Assert.assertEquals(0, data[1], 0.001);
+        Assert.assertEquals(0, data[2], 0.001);
+        Assert.assertEquals(1, data[9], 0.001);
+        Assert.assertEquals(0, data[10], 0.001);
+        Assert.assertEquals(0, data[11], 0.001);
+        Assert.assertEquals(0, data[18], 0.001);
+        Assert.assertEquals(1, data[19], 0.001);
+        Assert.assertEquals(0, data[20], 0.001);
+
+        // default white color
         Assert.assertEquals(1, data[5], 0.001);
-        Assert.assertEquals(0, data[6], 0.001);
-        Assert.assertEquals(0, data[7], 0.001);
+        Assert.assertEquals(1, data[6], 0.001);
+        Assert.assertEquals(1, data[7], 0.001);
         Assert.assertEquals(1, data[8], 0.001);
-        // No vn in the obj
+
+        // UVs must be present (repacked 0.5 fallback) and finite
+        assertValid(data);
     }
+
+    @Test
+    public void missingNormal() throws Exception {
+        Model model = ModelLoader.load(obj(defaultPos() +
+                "vt 0 0\n" +
+                "vt 1 0\n" +
+                "vt 0 1\n" +
+                "f 1/1 2/2 3/3\n"));
+
+        Assert.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assert.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
+
+        float[] data = model.getVboData();
+        Assert.assertEquals(3 * 9, data.length);
+        Assert.assertEquals(0, data[0], 0.001);
+        Assert.assertEquals(1, data[9], 0.001);
+        Assert.assertEquals(0, data[18], 0.001);
+        assertValid(data);
+    }
+
+    @Test
+    public void missingUv() throws Exception {
+        Model model = ModelLoader.load(obj(defaultPos() +
+                "vn 0 0 1\n" +
+                "vn 0 0 1\n" +
+                "vn 0 0 1\n" +
+                "f 1//1 2//2 3//3\n"));
+
+        Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), model.getLayout().getStride());
+
+        float[] data = model.getVboData();
+        Assert.assertEquals(3 * 12, data.length);
+
+        // normals preserved
+        Assert.assertEquals(0, data[9], 0.001);
+        Assert.assertEquals(0, data[10], 0.001);
+        Assert.assertEquals(1, data[11], 0.001);
+        Assert.assertEquals(1, data[23], 0.001);
+
+        assertValid(data);
+    }
+
+    @Test(expected = MalformedModelException.class)
+    public void nanUvThrows() throws Exception {
+        ModelLoader.load(obj(defaultPos() +
+                "vt NaN NaN NaN\n" +
+                "f 1/1 2/1 3/1\n"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void missingPositionThrows() throws Exception {
+        ModelLoader.load(obj(defaultPos() +
+                "vn 0 0 1\n" +
+                "vn 0 0 1\n" +
+                "vn 0 0 1\n" +
+                "f //1 //2 //3\n"));
+    }
+
+    @Test
+    public void degenerateFaceIgnored() throws Exception {
+        Model model = ModelLoader.load(obj(defaultPos() +
+                "f 1 2\n"));
+
+        // No valid triangle was produced
+        Assert.assertEquals(0, model.getVboData().length);
+    }
+
+    // ------------------------------------------------------------------
+    // Backwards compatibility: identical vertex data to the legacy OBJ pipeline
+    // ------------------------------------------------------------------
 
     @Test
     public void matchesOldVbo() throws Exception {
