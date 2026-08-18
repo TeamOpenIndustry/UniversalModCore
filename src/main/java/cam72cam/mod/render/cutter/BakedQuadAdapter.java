@@ -26,7 +26,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         Vec3d[] sourcePos = new Vec3d[4];
         float[] sourceU = new float[4];
         float[] sourceV = new float[4];
-        int[] data = source.getVertexData();
+        int[] data = source.getVertices();
 
         for (int i = 0; i < 4; i++) {
             int base = i * STRIDE;
@@ -40,10 +40,10 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         }
 
         return new QuadTemplate(
-                source.func_187508_a(),
+                source.getSprite(),
                 Facing.fromNormal(plane.normal),
                 source.getTintIndex(),
-                source.shouldApplyDiffuseLighting(),
+                source.isShade(),
                 false,
                 DefaultVertexFormats.BLOCK,
                 source,
@@ -61,7 +61,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         }
 
         for (BakedQuad quad : quads) {
-            Facing face = Facing.from(quad.getFace());
+            Facing face = Facing.from(quad.getDirection());
             if (face == target) {
                 return quad;
             }
@@ -74,12 +74,12 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
     public Polygon toPolygon(BakedQuad quad) {
         List<ClipVertex> verts = new ArrayList<>(4);
 
-        int[] data = quad.getVertexData();
+        int[] data = quad.getVertices();
         for (int i = 0; i < 4; i++) {
             verts.add(readVertex(data, i));
         }
 
-        Facing dir = Facing.from(quad.getFace());
+        Facing dir = Facing.from(quad.getDirection());
         Vec3d normal = new Vec3d(dir.getXMultiplier(), dir.getYMultiplier(), dir.getZMultiplier());
         return new Polygon(verts, normal);
     }
@@ -92,7 +92,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         }
 
         for (Polygon quad : polygon.convexToQuads()) {
-            int[] data = primitive.getVertexData().clone();
+            int[] data = primitive.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
             writeVertex(data, 0, quadVerts.get(0));
@@ -103,9 +103,9 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             result.add(new BakedQuad(
                     data,
                     primitive.getTintIndex(),
-                    primitive.getFace(),
-                    primitive.func_187508_a(),
-                    primitive.shouldApplyDiffuseLighting()
+                    primitive.getDirection(),
+                    primitive.getSprite(),
+                    primitive.isShade()
             ));
         }
         return result;
@@ -121,7 +121,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
         applyNormal(polygon, template.facing);
 
         for (Polygon quad : polygon.convexToQuads()) {
-            int[] data = template.source.getVertexData().clone();
+            int[] data = template.source.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
             writeVertex(data, 0, quadVerts.get(3));
@@ -132,9 +132,9 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             result.add(new BakedQuad(
                     data,
                     template.source.getTintIndex(),
-                    template.source.getFace(),
-                    template.source.func_187508_a(),
-                    template.source.shouldApplyDiffuseLighting()
+                    template.source.getDirection(),
+                    template.source.getSprite(),
+                    template.source.isShade()
             ));
         }
         return result;

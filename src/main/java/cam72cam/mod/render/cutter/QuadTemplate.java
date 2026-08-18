@@ -42,7 +42,7 @@ public class QuadTemplate {
 
         this.sprite = sprite;
         this.facing = facing;
-        this.sourceFace = Facing.from(source.getFace());
+        this.sourceFace = Facing.from(source.getDirection());
 
         this.tintIndex = tintIndex;
         this.shade = shade;

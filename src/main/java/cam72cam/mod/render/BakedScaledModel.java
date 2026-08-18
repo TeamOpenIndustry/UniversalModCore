@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.TransformationMatrix;
-import net.minecraft.util.math.vector.Vector3f;
 import net.minecraftforge.client.model.QuadTransformer;
 import util.Matrix4;
 
@@ -62,7 +61,7 @@ class BakedScaledModel implements IBakedModel {
         all = MeshPlaneCutter.cut(transformQuads(all), plane, new BakedQuadAdapter());
         for (BakedQuad quad : all) {
             quadCache.get(null).add(quad);
-            Direction dir = quad.getFace();
+            Direction dir = quad.getDirection();
             if (dir != null) {
                 quadCache.get(dir).add(quad);
             }
