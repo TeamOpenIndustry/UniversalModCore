@@ -178,16 +178,16 @@ public class SimpleModelBuilder implements IModelBuilder {
             int[] sortedMat = new int[srcMat.length];
             List<String> sortedNames = new ArrayList<>(groupNames.size());
             List<Integer> sortedStarts = new IntArrayList(groupNames.size());
-            int cursor = 0;
+            int curr = 0;
             for (int gi : order) {
                 int start = groupStartFaces.get(gi);
                 int end = gi + 1 < groupStartFaces.size() ? groupStartFaces.get(gi + 1) : triCount;
                 int triLen = end - start;
-                System.arraycopy(srcFaces, start * 9, sortedFaces, cursor * 9, triLen * 9);
-                System.arraycopy(srcMat, start, sortedMat, cursor, triLen);
+                System.arraycopy(srcFaces, start * 9, sortedFaces, curr * 9, triLen * 9);
+                System.arraycopy(srcMat, start, sortedMat, curr, triLen);
                 sortedNames.add(groupNames.get(gi));
-                sortedStarts.add(cursor);
-                cursor += triLen;
+                sortedStarts.add(curr);
+                curr += triLen;
             }
             faceBuffer = new Buffers.IntBuffer(sortedFaces);
             materialByFace = new Buffers.IntBuffer(sortedMat);

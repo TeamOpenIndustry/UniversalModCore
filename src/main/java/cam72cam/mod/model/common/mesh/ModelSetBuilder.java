@@ -147,7 +147,7 @@ public class ModelSetBuilder {
         float[] data = new float[totalFloats];
         int facesPerGroupStride = layout.getStride() * 3;
         LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
-        int cursor = 0;
+        int curr = 0;
         for (Map.Entry<String, Buffers.FloatBuffer> e : sorted.entrySet()) {
             float[] arr = e.getValue().array();
             int len = arr.length;
@@ -155,11 +155,11 @@ public class ModelSetBuilder {
                 // Empty group: nothing to draw, keep it out of the group map
                 continue;
             }
-            System.arraycopy(arr, 0, data, cursor, len);
-            int faceStart = cursor / facesPerGroupStride;
-            int faceEnd = (cursor + len) / facesPerGroupStride - 1;
+            System.arraycopy(arr, 0, data, curr, len);
+            int faceStart = curr / facesPerGroupStride;
+            int faceEnd = (curr + len) / facesPerGroupStride - 1;
             groups.put(e.getKey(), ModelGroup.lazy(e.getKey(), faceStart, faceEnd, data, layout));
-            cursor += len;
+            curr += len;
         }
 
         Identifier loc = new Identifier(model.location().getDomain(), model.location().getPath() + "_build" + nextId.getAndIncrement());
