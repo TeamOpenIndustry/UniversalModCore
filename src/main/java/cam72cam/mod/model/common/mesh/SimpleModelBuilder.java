@@ -66,7 +66,7 @@ public class SimpleModelBuilder implements IModelBuilder {
         materials.add(new Material(this, "undefined"));
         materialIds.put("undefined", 0);
         currMaterial = 0;
-        //Add default group
+        // Add default group
         newModelGroup("defaultName");
     }
 
@@ -153,7 +153,7 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     @Override
     public InputStream open(Identifier id) {
-        // Via cache
+        // Via cache, records file modified time to invalid cache
         return new ByteArrayInputStream(input.apply(id));
     }
 
