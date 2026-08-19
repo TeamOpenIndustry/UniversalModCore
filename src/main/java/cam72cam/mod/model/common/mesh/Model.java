@@ -222,7 +222,7 @@ public class Model {
      */
     public void free() {
         tryReleaseTexture();
-        ModelRenderer.getRendererFor(this).free();
+        ModelRenderer.release(this);
     }
 
     /**

@@ -165,6 +165,12 @@ public class ModelRenderer extends VBO {
         }
     }
 
+    public static void release(Model holder) {
+        if (renderers.containsKey(holder)) {
+            renderers.get(holder).free();
+        }
+    }
+
     /** Releases this renderer's GPU resources and deletes it from the per-model cache. */
     @Override
     public void free() {
