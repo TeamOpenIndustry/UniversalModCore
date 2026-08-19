@@ -238,7 +238,7 @@ public class OBJParserTest {
                 "f 1/1 2/1 3/1\n"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = MalformedModelException.class)
     public void missingPositionThrows() throws Exception {
         ModelLoader.load(obj(defaultPos() +
                 "vn 0 0 1\n" +

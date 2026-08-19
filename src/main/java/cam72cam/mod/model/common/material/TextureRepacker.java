@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
 public class TextureRepacker {
+    //ARGB
     private static final int normalFallback;
     private static final int specularFallback;
-    //ARGB
     private static final int albedoFallback;
 
     private int width = 0;

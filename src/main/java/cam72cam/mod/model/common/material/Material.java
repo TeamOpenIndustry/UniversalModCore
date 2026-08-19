@@ -1,5 +1,6 @@
 package cam72cam.mod.model.common.material;
 
+import cam72cam.mod.ModCore;
 import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.io.FilenameUtils;
@@ -59,7 +60,7 @@ public class Material {
                         }
                     }
                 } catch (Exception ignored) {
-                    //Unable to load
+                    ModCore.warn("Unable to populate texture at %s, do you have a broken pack? This material is set to default size of 32!", relative);
                 }
             }
         }
