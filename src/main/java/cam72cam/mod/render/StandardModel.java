@@ -3,6 +3,7 @@ package cam72cam.mod.render;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -59,18 +60,30 @@ public class StandardModel {
 
     /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Matrix4 transform) {
-        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), transform);
+        return addColorBlock(color, transform, null);
+    }
+
+    public StandardModel addColorBlock(Color color, Matrix4 transform, Plane plane) {
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.stained_hardened_clay, 1, color.internal)), transform, plane);
         return this;
     }
 
     /** Add snow layers */
     public StandardModel addSnow(int layers, Matrix4 transform) {
-        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), transform.copy().scale(1, Math.max(1, Math.min(8, layers))/8f, 1));
+        return addSnow(layers, transform, null);
+    }
+
+    public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
+        addItemBlock(new ItemStack(new net.minecraft.item.ItemStack(Blocks.snow)), transform.copy().scale(1, Math.max(1, Math.min(8, layers))/8f, 1), plane);
         return this;
     }
 
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack stack, Matrix4 matrix4) {
+        return addItemBlock(stack, matrix4, null);
+    }
+
+    public StandardModel addItemBlock(ItemStack stack, Matrix4 matrix4, Plane plane) {
         if (stack.isEmpty()) {
             return this;
         }
@@ -84,6 +97,7 @@ public class StandardModel {
                 renderBlocks.lockBlockBounds = true;
                 renderBlocks.renderBlockAllFaces(block, pt.x, pt.y, pt.z);
                 renderBlocks.lockBlockBounds = false;
+                //TODO Plane cutting for 1.7.10
             }
         });
         return this;
