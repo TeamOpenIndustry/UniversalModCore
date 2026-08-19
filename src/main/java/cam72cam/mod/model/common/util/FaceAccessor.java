@@ -84,12 +84,12 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
      * Convert current accessing face into an {@link Face}.
      * @return OBJFace of current face
      */
-    public Face shot() {
+    public Face snapFace() {
         Face.Vertex vert0 = new Face.Vertex(v0);
         Face.Vertex vert1 = new Face.Vertex(v1);
         Face.Vertex vert2 = new Face.Vertex(v2);
         return new Face(vert0, vert1, vert2, normalOffset != -1 
-                                             ? v0.shotNormal()
+                                             ? v0.snapNormal()
                                              : vert1.pos.subtract(vert0.pos).crossProduct(vert2.pos.subtract(vert0.pos)).normalize());
     }
 
@@ -124,11 +124,6 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
             currentFaceIndex = iteratorIndex++;
             return FaceAccessor.this;
         }
-
-        @Override
-        public void remove() {
-            Iterator.super.remove();
-        }
     }
 
     @Override
@@ -152,18 +147,18 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
             this.vertOffset = vertOffset;
         }
 
-        public Vec3d shotPos() {
+        public Vec3d snapPos() {
             return new Vec3d(x(), y(), z());
         }
 
-        public Vec2f shotUv() {
+        public Vec2f snapUv() {
             if (uvOffset == -1) {
                 return Vec2f.ZERO;
             }
             return new Vec2f(u(), v());
         }
 
-        public Vec3d shotNormal() {
+        public Vec3d snapNormal() {
             if (normalOffset == -1) {
                 return Vec3d.ZERO;
             }
@@ -235,7 +230,7 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
             if (normalOffset == -1) {
                 return 0;
             }
-            return model.getVboData()[(currentFaceIndex * 3 + vertOffset) * stride + normalOffset + 1];
+            return data[(currentFaceIndex * 3 + vertOffset) * stride + normalOffset + 1];
         }
 
         public float nz() {

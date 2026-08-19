@@ -55,8 +55,8 @@ public class Face {
         }
 
         public Vertex(FaceAccessor.VertexAccessor accessor) {
-            this.pos = accessor.shotPos();
-            this.uv = accessor.shotUv();
+            this.pos = accessor.snapPos();
+            this.uv = accessor.snapUv();
         }
 
         public Vertex scale(double factor) {
