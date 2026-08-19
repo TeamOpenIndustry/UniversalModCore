@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Wavefront OBJ {@link Parser} implementation.
+ * Simple Wavefront OBJ {@link Parser} implementation, supports basic geometry data parsing.
  */
 public class OBJParser {
     public static final String EXTENSION = "obj";
