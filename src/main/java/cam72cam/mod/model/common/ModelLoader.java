@@ -78,8 +78,9 @@ public class ModelLoader {
             lodValues = new ArrayList<>();
             lodValues.add(Config.getMaxTextureSize());
         } else {
-            lodValues = lod.getValues(Config.getMaxTextureSize());
+            lodValues = new ArrayList<>(lod.getValues(Config.getMaxTextureSize()));
         }
+        Collections.sort(lodValues);
 
         String extName = FilenameUtils.getExtension(modelLoc.getPath());
         Parser parser = PARSER.get(extName);

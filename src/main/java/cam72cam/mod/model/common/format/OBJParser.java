@@ -2,6 +2,7 @@ package cam72cam.mod.model.common.format;
 
 import cam72cam.mod.model.common.material.Material;
 import cam72cam.mod.model.common.mesh.IModelBuilder;
+import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
 
 import java.io.BufferedReader;
@@ -38,7 +39,7 @@ public class OBJParser {
                     case "o":
                     case "g":
                         if (args.length < 2) {
-                            throw new IllegalArgumentException("Unknown OBJ group");
+                            throw new MalformedModelException(String.format("Cannot parse group from \"%s\" of OBJ model %s", line, builder.getModelLoc()));
                         }
                         builder.newModelGroup(line.substring(2));
                         break;
