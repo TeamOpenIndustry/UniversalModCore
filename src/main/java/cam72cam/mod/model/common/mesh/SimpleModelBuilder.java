@@ -124,6 +124,14 @@ public class SimpleModelBuilder implements IModelBuilder {
         if (Float.isNaN(nx) || Float.isNaN(ny) || Float.isNaN(nz)) {
             throw new MalformedModelException(String.format("Model %s contain NaN values in normal definition", modelLoc.toString()));
         }
+        // Normalize
+        double lengthSq = nx * nx + ny * ny + nz * nz;
+        if (Math.abs(lengthSq - 1.0) > 1e-8) {
+            double factor = 1 / Math.sqrt(lengthSq);
+            nx = (float) (nx * factor);
+            ny = (float) (ny * factor);
+            nz = (float) (nz * factor);
+        }
         int index = normIndices.size() / 3;
         normIndices.add(nx);
         normIndices.add(ny);
