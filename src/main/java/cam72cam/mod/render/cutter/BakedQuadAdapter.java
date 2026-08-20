@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplate> {
-    private static final int STRIDE = DefaultVertexFormat.BLOCK.getIntegerSize();
+    private static final int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize();
 
     @Override
     public QuadTemplate createTemplate(List<BakedQuad> quads, Plane plane) {
@@ -67,7 +67,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             }
         }
 
-        return quads.isEmpty() ? null : quads.get(0);
+        return quads.isEmpty() ? null : quads.getFirst();
     }
 
     @Override
