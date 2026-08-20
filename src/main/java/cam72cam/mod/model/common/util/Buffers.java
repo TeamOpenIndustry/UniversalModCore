@@ -1,4 +1,4 @@
-package cam72cam.mod.model.obj;
+package cam72cam.mod.model.common.util;
 
 public class Buffers {
     public static class FloatBuffer {
@@ -7,6 +7,12 @@ public class Buffers {
         public FloatBuffer(int startingSize) {
             pos = 0;
             buffer = new float[startingSize];
+        }
+
+        public FloatBuffer(float[] data) {
+            pos = data.length;
+            buffer = new float[data.length];
+            System.arraycopy(data, 0, buffer, 0, data.length);
         }
 
         public void add(float f) {
@@ -25,6 +31,13 @@ public class Buffers {
             return newBuffer;
         }
 
+        public float get(int index) {
+            if (index >= pos) {
+                throw new IndexOutOfBoundsException();
+            }
+            return buffer[index];
+        }
+
         public int size() {
             return pos;
         }
@@ -36,6 +49,12 @@ public class Buffers {
         public IntBuffer(int startingSize) {
             pos = 0;
             buffer = new int[startingSize];
+        }
+
+        public IntBuffer(int[] original) {
+            pos = original.length;
+            buffer = new int[original.length];
+            System.arraycopy(original, 0, buffer, 0, original.length);
         }
 
         public void add(int f) {
@@ -52,6 +71,13 @@ public class Buffers {
             int[] newBuffer = new int[pos];
             System.arraycopy(buffer, 0, newBuffer, 0, pos);
             return newBuffer;
+        }
+
+        public int get(int index) {
+            if (index >= pos) {
+                throw new IndexOutOfBoundsException();
+            }
+            return buffer[index];
         }
 
         public int size() {

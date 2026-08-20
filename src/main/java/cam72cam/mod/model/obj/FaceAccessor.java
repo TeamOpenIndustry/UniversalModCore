@@ -9,7 +9,9 @@ import java.util.stream.StreamSupport;
 
 /**
  * A {@link VertexBuffer} API wrapper, making accessing geometry completely separated from backend.
+ * @deprecated Use common.util.FaceAccessor for new Model framework, this is kept for compatibility.
  */
+
 public class FaceAccessor implements Iterable<FaceAccessor> {
     private final OBJModel model;
 
