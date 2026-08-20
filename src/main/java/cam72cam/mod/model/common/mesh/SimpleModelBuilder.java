@@ -8,8 +8,6 @@ import cam72cam.mod.model.common.util.Buffers;
 import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -38,12 +36,12 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     private final List<Material> materials = new ArrayList<>();
     private final Map<String, Integer> materialIds = new HashMap<>();
-    private final Set<Integer> usedMaterials = new IntArraySet(); // Useful when repacking UVs
+    private final Set<Integer> usedMaterials = new HashSet<>(); // Useful when repacking UVs
     private int currMaterial;
     private TextureRepacker repacker;
 
     private final List<String> groupNames = new ArrayList<>();
-    private final List<Integer> groupStartFaces = new IntArrayList();
+    private final List<Integer> groupStartFaces = new ArrayList<>();
     private boolean smoothShading;
 
     private final LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
@@ -185,7 +183,7 @@ public class SimpleModelBuilder implements IModelBuilder {
             int[] sortedFaces = new int[srcFaces.length];
             int[] sortedMat = new int[srcMat.length];
             List<String> sortedNames = new ArrayList<>(groupNames.size());
-            List<Integer> sortedStarts = new IntArrayList(groupNames.size());
+            List<Integer> sortedStarts = new ArrayList<>(groupNames.size());
             int curr = 0;
             for (int gi : order) {
                 int start = groupStartFaces.get(gi);

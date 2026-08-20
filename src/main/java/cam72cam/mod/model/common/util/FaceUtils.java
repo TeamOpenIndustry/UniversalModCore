@@ -1,8 +1,8 @@
 package cam72cam.mod.model.common.util;
 
 import cam72cam.mod.math.Vec3d;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -31,7 +31,8 @@ public class FaceUtils {
 
         Buffers.IntBuffer result = new Buffers.IntBuffer(n * 2);
 
-        List<Integer> remaining = new IntArrayList(IntStream.range(0, n).toArray());
+        List<Integer> remaining = new ArrayList<>();
+        IntStream.range(0, n).forEachOrdered(remaining::add);
         while (remaining.size() > 3) {
             int ear = -1;
             for (int i = 0; i < remaining.size(); i++) {
