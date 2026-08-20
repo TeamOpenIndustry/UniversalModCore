@@ -1,7 +1,7 @@
 package cam72cam.mod.model.obj;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.model.obj.Buffers.*;
+import cam72cam.mod.model.common.util.Buffers.*;
 
 import java.io.*;
 import java.util.*;
