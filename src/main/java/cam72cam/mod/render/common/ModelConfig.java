@@ -2,7 +2,6 @@ package cam72cam.mod.render.common;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.model.common.mesh.Model;
-import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -16,9 +15,9 @@ import java.util.NavigableMap;
  * Configures texture variant, LoD size, and whether texture loading should block synchronously.
  */
 public class ModelConfig {
-    private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);
-    private static final OBJTextureSheet defSpecTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
-    private static final OBJTextureSheet defNormTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
+    private static final CachedTexture defTex = new CachedTexture(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);
+    private static final CachedTexture defSpecTex = new CachedTexture(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x000000}), Integer.MAX_VALUE/2);
+    private static final CachedTexture defNormTex = new CachedTexture(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[]{0x8080FF}), Integer.MAX_VALUE/2);
 
     private int lod = Config.getMaxTextureSize();
     private String variant = "";
@@ -72,18 +71,18 @@ public class ModelConfig {
         state.smooth_shading(model.isSmoothShading);
     }
 
-    private Texture pickLodSheet(Map<String, NavigableMap<Integer, OBJTextureSheet>> variants, OBJTextureSheet fallback) {
-        NavigableMap<Integer, OBJTextureSheet> map = variants.get(variant);
-        NavigableMap<Integer, OBJTextureSheet> lodMap = map != null ? map : variants.get("");
+    private Texture pickLodSheet(Map<String, NavigableMap<Integer, CachedTexture>> variants, CachedTexture fallback) {
+        NavigableMap<Integer, CachedTexture> map = variants.get(variant);
+        NavigableMap<Integer, CachedTexture> lodMap = map != null ? map : variants.get("");
         if (lodMap == null || lodMap.isEmpty()) {
             return null;
         }
 
-        OBJTextureSheet tex;
+        CachedTexture tex;
         if (lod <= 0) {
             tex = lodMap.lastEntry().getValue();
         } else {
-            Map.Entry<Integer, OBJTextureSheet> entry = lodMap.floorEntry(lod);
+            Map.Entry<Integer, CachedTexture> entry = lodMap.floorEntry(lod);
             tex = (entry != null ? entry : lodMap.firstEntry()).getValue();
         }
 
