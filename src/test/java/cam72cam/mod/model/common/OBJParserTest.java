@@ -5,6 +5,8 @@ import cam72cam.mod.model.common.mesh.ModelGroup;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -14,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,8 +26,12 @@ public class OBJParserTest {
     public static final AtomicInteger counter = new AtomicInteger(0);
 
     @BeforeClass
-    public static void clearCache() throws IOException {
+    public static void clearCache() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache/umccommon"));
+
+        Field dist = FMLLoader.class.getDeclaredField("dist");
+        dist.setAccessible(true);
+        dist.set(null, Dist.CLIENT);
     }
 
     private static class FakeIdentifier extends Identifier {
