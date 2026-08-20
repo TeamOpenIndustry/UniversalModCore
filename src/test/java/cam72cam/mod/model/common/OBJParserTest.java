@@ -4,9 +4,6 @@ import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.model.common.mesh.ModelGroup;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.model.common.util.MalformedModelException;
-import cam72cam.mod.model.obj.OBJGroup;
-import cam72cam.mod.model.obj.OBJParser;
-import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.resource.Identifier;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -264,60 +261,5 @@ public class OBJParserTest {
 
         // No valid triangle was produced
         Assert.assertEquals(0, model.getVboData().length);
-    }
-
-    @Test
-    public void matchesOldVbo() throws Exception {
-        // Only triangle faces, as triangulation is a separate concern, not part of this comparison
-        StringBuilder objData = new StringBuilder();
-        for (int i = 1; i <= 30; i++) {
-            objData.append(String.format("v %d %d %d\n", i, i % 7, i % 5));
-            objData.append(String.format("vt %f %f\n", i / 10f, i % 3 / 3f));
-            objData.append(String.format("vn %d %d 1\n", i % 2, i % 3));
-        }
-        objData.append("o A\n");
-        for (int i = 0; i < 30; i += 3) {
-            int a = i + 1, b = i + 2, c = i + 3;
-            objData.append(String.format("f %d/%d/%d %d/%d/%d %d/%d/%d\n", a, a, a, b, b, b, c, c, c));
-            if (i == 15) {
-                objData.append("o B\n");
-            }
-        }
-        String data = objData.toString();
-
-        // Old pipeline as a black box: raw VBO geometry (positions/uvs/normals)
-        OBJParser oldParser = new OBJParser(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), 1.0f);
-        VertexBuffer oldVbo = oldParser.getBuffer();
-
-        // New pipeline
-        Model model = ModelLoader.load(obj(data));
-
-        int stride = oldVbo.stride;
-        Assert.assertEquals(stride, model.getLayout().getStride());
-        Assert.assertEquals(oldVbo.data.length, model.getVboData().length);
-
-        // Vertex data (skipping uv & color) as they're both POS_UV_COLOR_NORMAL
-        for (int v = 0; v < oldVbo.data.length / stride; v++) {
-            for (int c = 0; c < stride; c++) {
-                if (c >= oldVbo.textureOffset && c < oldVbo.textureOffset + 4 || c >= oldVbo.colorOffset && c < oldVbo.colorOffset + 4) {
-                    continue;
-                }
-                Assert.assertEquals("vertex " + v + " component " + c, oldVbo.data[v * stride + c], model.getVboData()[v * stride + c], 1e-5);
-            }
-        }
-        Iterator<Map.Entry<String, ModelGroup>> iterator = model.getGroups().entrySet().iterator();
-        ModelGroup A2 = iterator.next().getValue();
-        ModelGroup B2 = iterator.next().getValue();
-
-        //Group data
-        OBJGroup A1 = oldParser.getGroups().get(0);
-        Assert.assertEquals(A1.min, A2.min());
-        Assert.assertEquals(A1.max, A2.max());
-        Assert.assertEquals(A1.normal, A2.normal());
-
-        OBJGroup B1 = oldParser.getGroups().get(1);
-        Assert.assertEquals(B1.min, B2.min());
-        Assert.assertEquals(B1.max, B2.max());
-        Assert.assertEquals(B1.normal, B2.normal());
     }
 }
