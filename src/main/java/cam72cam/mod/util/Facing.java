@@ -1,6 +1,7 @@
 package cam72cam.mod.util;
 
 import cam72cam.mod.math.Rotation;
+import cam72cam.mod.math.Vec3d;
 import net.minecraft.core.Direction;
 
 /**
@@ -58,23 +59,35 @@ public enum Facing {
         return from(Direction.fromYRot(v));
     }
 
-    public Facing getOpposite() {
-        switch (this) {
-            case DOWN:
-                return UP;
-            case UP:
-                return DOWN;
-            case NORTH:
-                return SOUTH;
-            case SOUTH:
-                return NORTH;
-            case WEST:
-                return EAST;
-            case EAST:
-                return WEST;
-            default:
-                return null;
+    /**
+     * This convert Vec3d normal to minecraft block direction
+     * */
+    public static Facing fromNormal(Vec3d normal) {
+        double ax = Math.abs(normal.x);
+        double ay = Math.abs(normal.y);
+        double az = Math.abs(normal.z);
+
+        final double EPS = 1e-8;// Dead zone
+
+        double max = Math.max(ax, Math.max(ay, az));
+        if (max - ax < EPS) {
+            return normal.x >= 0 ? EAST : WEST;
         }
+        if (max - ay < EPS) {
+            return normal.y >= 0 ? UP : DOWN;
+        }
+        return normal.z >= 0 ? SOUTH : NORTH;
+    }
+
+    public Facing getOpposite() {
+        return switch (this) {
+            case DOWN -> UP;
+            case UP -> DOWN;
+            case NORTH -> SOUTH;
+            case SOUTH -> NORTH;
+            case WEST -> EAST;
+            case EAST -> WEST;
+        };
     }
 
     public Facing rotate(Rotation rot) {
