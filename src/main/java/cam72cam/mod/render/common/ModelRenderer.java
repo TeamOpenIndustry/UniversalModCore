@@ -14,12 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * GPU-side renderer (VBO) for a {@link Model}.
- *
- * <p>Renderers are cached per model via {@link #getRendererFor}, so a model is uploaded to
- * the GPU at most once. To draw, obtain a {@link Binding} with {@link #bind(ModelConfig, RenderState)}
- * (or {@link #bind(RenderState)} for default settings), then call one of the {@code draw}
- * methods. The returned binding must be closed with try-with-resources.</p>
+ * GPU-side renderer (VBO) for a {@link Model}.<br>
+ * Renderers are cached per model via {@link #getRendererFor}. To draw, obtain a {@link Binding} with <code>bind</code>,
+ * then call one of the {@code enqueue} methods.
  */
 public class ModelRenderer extends VBO {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();

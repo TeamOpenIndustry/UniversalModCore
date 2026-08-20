@@ -13,8 +13,7 @@ import java.util.NavigableMap;
 
 /**
  * Per-draw configuration for {@link ModelRenderer}.<br>
- * Configures texture variant, LoD size, and whether texture loading should
- * block synchronously.
+ * Configures texture variant, LoD size, and whether texture loading should block synchronously.
  */
 public class ModelConfig {
     private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] {0x0000FF}), Integer.MAX_VALUE/2);
