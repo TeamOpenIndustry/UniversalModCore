@@ -2,6 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.item.Fuzzy;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.math.Plane;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
@@ -48,6 +49,10 @@ public class StandardModel {
 
     /** Add a block with a solid color */
     public StandardModel addColorBlock(Color color, Matrix4 transform) {
+        return addColorBlock(color, transform, null);
+    }
+
+    public StandardModel addColorBlock(Color color, Matrix4 transform, Plane plane) {
         BlockState state = Fuzzy.CONCRETE.enumerate()
                 .stream()
                 .map(x -> Block.byItem(x.internal().getItem()))
@@ -56,7 +61,12 @@ public class StandardModel {
                 .findFirst().get();
 
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
+        Pair<BlockState, BakedModel> pair = Pair.of(
+                state,
+                plane == null
+                ? new BakedScaledModel(model, transform)
+                : new BakedScaledModel(model, transform, plane)
+        );
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(new net.minecraft.world.item.ItemStack(state.getBlock().asItem()), transform));
         return this;
@@ -64,21 +74,39 @@ public class StandardModel {
 
     /** Add snow layers */
     public StandardModel addSnow(int layers, Matrix4 transform) {
+        return addSnow(layers, transform, null);
+    }
+
+    public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        models.add(Pair.of(state, new BakedScaledModel(model, transform)));
+        models.add(Pair.of(
+                state,
+                plane == null
+                ? new BakedScaledModel(model, transform)
+                : new BakedScaledModel(model, transform, plane)
+        ));
         return this;
     }
 
     /** Add item as a block (best effort) */
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform) {
+        return addItemBlock(bed, transform, null);
+    }
+
+    public StandardModel addItemBlock(ItemStack bed, Matrix4 transform, Plane plane) {
         BlockState state = itemToBlockState(bed);
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        if (model instanceof WeightedBakedModel weightedBakedModel) {
+        if (model instanceof WeightedBakedModel) {
             //TODO Modify result to make it not dynamic
         }
-        Pair<BlockState, BakedModel> pair = Pair.of(state, new BakedScaledModel(model, transform));
+        Pair<BlockState, BakedModel> pair = Pair.of(
+                state,
+                plane == null
+                ? new BakedScaledModel(model, transform)
+                : new BakedScaledModel(model, transform, plane)
+        );
         models.add(pair);
         inGuiBlock.put(pair, getRenderFunc(bed.internal(), transform));
         return this;
