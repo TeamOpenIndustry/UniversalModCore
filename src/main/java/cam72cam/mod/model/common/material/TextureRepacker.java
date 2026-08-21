@@ -1,14 +1,14 @@
-package cam72cam.mod.model.obj;
+package cam72cam.mod.model.common.material;
 
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.model.common.mesh.IModelBuilder;
 import cam72cam.mod.model.common.util.ImageUtils;
 import cam72cam.mod.resource.Identifier;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -19,33 +19,45 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static cam72cam.mod.model.common.util.ImageUtils.scaleImage;
-
 /* primer: https://codeincomplete.com/articles/bin-packing/ */
-public class OBJTexturePacker {
+public class TextureRepacker {
+    //ARGB
+    private static final int normalFallback;
+    private static final int specularFallback;
+    private static final int albedoFallback;
+
     private int width = 0;
     private int height = 0;
     private int scaledWidth = 0;
     private int scaledHeight = 0;
-    private Function<String, Identifier> paths;
-    private Function<String, InputStream> lookup;
+    private Function<String, Identifier> locationResolver;
+    private Function<Identifier, InputStream> lookup;
+    private Node rootNode;
+
+    private boolean hasSpecular;
+    private boolean hasNormal;
 
     public final Map<String, UVConverter> converters = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> textures = new HashMap<>();
-    public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
     public final Map<String, Supplier<BufferedImage>> speculars = new HashMap<>();
+    public final Map<String, Supplier<BufferedImage>> normals = new HashMap<>();
+
+    static {
+        normalFallback = 0xFF8080FF;
+        specularFallback = 0xFF000000;
+        albedoFallback = 0xFFFFFFFF;
+    }
 
     private final Map<String, BufferedImage> imageCache = new HashMap<>();
 
     private BufferedImage getCachedImage(String origPath, String variant) {
-        if (variant != null && !variant.isEmpty()) {
+        if (variant != null && !variant.trim().isEmpty()) {
             try {
                 // Variants should only be read once
-                String path = origPath;
-                String[] sp = path.split("/");
-                String fname = sp[sp.length - 1];
-                path = path.replaceAll(fname, variant + "/" + fname);
-                return ImageIO.read(lookup.apply(path));
+                String fileName = FilenameUtils.getName(origPath);
+                String path = origPath.replace(fileName, variant + "/" + fileName);
+                Identifier applied = locationResolver.apply(path);
+                return ImageIO.read(lookup.apply(applied));
             } catch (Exception e) {
                 //Fallback
                 return getCachedImage(origPath, null);
@@ -55,7 +67,11 @@ public class OBJTexturePacker {
         // Base image should be cached and re-used when applicable
         return imageCache.computeIfAbsent(origPath, path -> {
             try {
-                return ImageIO.read(lookup.apply(origPath));
+                Identifier loc = locationResolver.apply(origPath);
+                if (!loc.canLoad()) {
+                    return null;
+                }
+                return ImageIO.read(lookup.apply(loc));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -65,7 +81,7 @@ public class OBJTexturePacker {
     class Node {
         Dimension size;
         List<Material> materials;
-        Material texture;
+        Material material;
         int width;
         int height;
         Node down;
@@ -73,22 +89,14 @@ public class OBJTexturePacker {
 
         public Node(List<Material> materials) {
             this.materials = materials;
-            this.width = this.height = 32;
-            this.texture = null; // Textured images will be color only if the image fails to load.
-
-            size = new Dimension(width, height);
-
-            if (materials.get(0).hasTexture()) {
-                try {
-                    BufferedImage image = getCachedImage(materials.get(0).texKd, null);
-                    size = new Dimension(image.getWidth(), image.getHeight());
-                    this.width = materials.stream().mapToInt(x -> x.copiesU).max().getAsInt() * size.width;
-                    this.height = materials.stream().mapToInt(x -> x.copiesV).max().getAsInt() * size.height;
-                    this.texture = materials.get(0);
-                } catch (Exception e) {
-                    ModCore.catching(e, "Unable to load image %s", paths.apply(materials.get(0).texKd));
-                }
-            }
+            Material first = materials.get(0);
+            // size is one tile; width/height is the full tiled region.
+            // Textured materials use the dimensions read by Material.populateSize; untextured
+            // and missing-texture materials fall back to the 16x16 default.
+            this.size = new Dimension(first.width, first.height);
+            this.width = materials.stream().mapToInt(x -> x.copiesOnU).max().getAsInt() * size.width;
+            this.height = materials.stream().mapToInt(x -> x.copiesOnV).max().getAsInt() * size.height;
+            this.material = first.texAlbedo != null ? first : null;
         }
 
         public Node(int width, int height) {
@@ -126,10 +134,7 @@ public class OBJTexturePacker {
                     this.down = node;
                     return true;
                 } else {
-                    boolean recursed = this.down.addNode(node);
-                    if (recursed) {
-                        return true;
-                    }
+                    return this.down.addNode(node);
                 }
             }
             return false;
@@ -138,6 +143,7 @@ public class OBJTexturePacker {
         public int getFullWidth() {
             return width + (this.right != null ? this.right.getFullWidth() : 0);
         }
+
         public int getFullHeight() {
             return height + (this.down != null ? this.down.getFullHeight() : 0);
         }
@@ -152,14 +158,10 @@ public class OBJTexturePacker {
 
         public void converters(int x, int y) {
             if (materials != null) {
-                int copiesU = materials.stream().mapToInt(m -> m.copiesU).max().getAsInt();
-                int copiesV = materials.stream().mapToInt(m -> m.copiesV).max().getAsInt();
-                UVConverter converter = new UVConverter(
-                        x, y,
-                        size.width, size.height,
-                        copiesU, copiesV,
-                        OBJTexturePacker.this.width, OBJTexturePacker.this.height
-                );
+                int copiesU = materials.stream().mapToInt(m -> m.copiesOnU).max().getAsInt();
+                int copiesV = materials.stream().mapToInt(m -> m.copiesOnV).max().getAsInt();
+                UVConverter converter = new UVConverter(x, y, size.width, size.height, copiesU, copiesV,
+                                                        TextureRepacker.this.width, TextureRepacker.this.height);
                 for (Material material : materials) {
                     converters.put(material.name, converter);
                 }
@@ -172,47 +174,46 @@ public class OBJTexturePacker {
             }
         }
 
-        public void draw(int x, int y, String variant, Graphics2D graphics, Function<Material, String> texlu) {
+        public void draw(int x, int y, Graphics2D graphics, String variant, Function<Material, String> texlu, int fallbackColor, boolean isFatal) {
             if (materials == null) {
                 graphics.setColor(Color.BLACK);
                 graphics.fillRect(x, y, width, height);
                 return;
             }
 
-            BufferedImage image;
-            if (texture != null) {
-                String origPath = texlu.apply(texture);
-                image = getCachedImage(origPath, variant);
-            } else {
-                Material mat = materials.get(0);
-                int r = (int) (Math.max(0, mat.KdR) * 255);
-                int g = (int) (Math.max(0, mat.KdG) * 255);
-                int b = (int) (Math.max(0, mat.KdB) * 255);
-                int a = (int) (mat.KdA * 255);
-                int cint = (a << 24) | (r << 16) | (g << 8) | b;
-                image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
-                for (int px = 0; px < this.width; px++) {
-                    for (int py = 0; py < this.height; py++) {
-                        image.setRGB(px, py, cint);
+            BufferedImage image = null;
+            if (material != null) {
+                String path = texlu.apply(material);
+                if (path != null) {
+                    image = getCachedImage(path, variant);
+                    if (image == null && isFatal) {
+                        // Only the albedo channel is fatal; missing specular/normal is silent.
+                        throw new RuntimeException("Missing texture: " + path);
+                    }
+                }
+            }
+            if (image == null) {
+                // Untextured, or a missing specular/normal channel: solid tile, drawn copiesU*copiesV times.
+                image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+                for (int px = 0; px < size.width; px++) {
+                    for (int py = 0; py < size.height; py++) {
+                        image.setRGB(px, py, fallbackColor);
                     }
                 }
             }
 
-            int copiesU = materials.stream().mapToInt(m -> m.copiesU).max().getAsInt();
-            int copiesV = materials.stream().mapToInt(m -> m.copiesV).max().getAsInt();
-
+            int copiesU = materials.stream().mapToInt(m -> m.copiesOnU).max().getAsInt();
+            int copiesV = materials.stream().mapToInt(m -> m.copiesOnV).max().getAsInt();
             for (int cU = 0; cU < copiesU; cU++) {
                 for (int cV = 0; cV < copiesV; cV++) {
-                    int offX = x + image.getWidth() * cU;
-                    int offY = y + image.getHeight() * cV;
-                    graphics.drawImage(image, null, offX, offY);
+                    graphics.drawImage(image, x + image.getWidth() * cU, y + image.getHeight() * cV, null);
                 }
             }
             if (right != null) {
-                right.draw(x + width, y, variant, graphics, texlu);
+                right.draw(x + width, y, graphics, variant, texlu, fallbackColor, isFatal);
             }
             if (down != null) {
-                down.draw(x, y + height, variant, graphics, texlu);
+                down.draw(x, y + height, graphics, variant, texlu, fallbackColor, isFatal);
             }
         }
     }
@@ -245,27 +246,37 @@ public class OBJTexturePacker {
         }
 
         public float convertV(float v) {
-            float originV = 1 - ((y+height*copiesV) / (float) sheetHeight);
+            //flipV
+            float originV = 1 - ((y + height * copiesV) / (float) sheetHeight);
             float offsetV = v * ((float) this.height / sheetHeight);
-            return 1-(originV + offsetV);
+            return 1 - (originV + offsetV);
         }
     }
 
-    public OBJTexturePacker(Identifier ident, Function<String, Identifier> paths, Function<String, InputStream> lookup, Collection<Material> materials, Collection<String> variants) {
+    public TextureRepacker(IModelBuilder builder, Collection<Material> materials, Collection<String> variants) {
         ImageIO.setUseCache(false);
         if (materials.isEmpty()) {
             return;
         }
+        Identifier modelLoc = builder.getModelLoc();
 
-        this.paths = paths;
-        this.lookup = lookup;
+        this.locationResolver = str -> builder.getModelLoc().getRelative(str);
+        this.lookup = p -> {
+            try {
+                return builder.open(p);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        // Load texture dimensions before bin packing
+        materials.forEach(Material::populateSize);
 
         List<Node> inputNodes = materials.stream()
-                .filter(m -> m.used)
-                .collect(Collectors.groupingBy(k -> k.texKd == null ? k.name : k.texKd)).values().stream()
-                .map(Node::new)
-                .sorted(Comparator.comparingInt(x -> -10000 * x.height + x.width))
-                .collect(Collectors.toList());
+                                         .collect(Collectors.groupingBy(k -> k.texAlbedo == null ? k.name : k.texAlbedo)).values().stream()
+                                         .map(Node::new)
+                                         .sorted(Comparator.comparingInt(x -> -10000 * x.height + x.width))
+                                         .collect(Collectors.toList());
 
         Node rootNode = inputNodes.remove(0);
         for (Node node : inputNodes) {
@@ -285,6 +296,7 @@ public class OBJTexturePacker {
                 rootNode.addNode(node);
             }
         }
+        this.rootNode = rootNode;
 
         this.width = rootNode.getFullWidth();
         this.height = rootNode.getFullHeight();
@@ -298,51 +310,45 @@ public class OBJTexturePacker {
         }
         rootNode.converters(0, 0);
 
+        this.hasSpecular = materials.stream().anyMatch(x -> x.texSpecular != null && modelLoc.getRelative(x.texSpecular).canLoad());
+        this.hasNormal = materials.stream().anyMatch(x -> x.texNormal != null && modelLoc.getRelative(x.texNormal).canLoad());
+
         for (String variant : variants) {
-            textures.put(variant, () -> {
-                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D graphics = image.createGraphics();
-                rootNode.draw(0, 0, variant, graphics, m -> m.texKd);
-                if (needsScaling()) {
-                    int originalWidth = image.getWidth();
-                    int originalHeight = image.getHeight();
-                    image = scaleImage(image, Config.getMaxTextureSize());
-                    ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
-                }
-                return image;
-            });
-
-            if (materials.stream().anyMatch(x -> x.texBump != null)) {
-                normals.put(variant, () -> {
-                    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                    Graphics2D graphics = image.createGraphics();
-                    rootNode.draw(0, 0, variant, graphics, m -> m.texBump);
-                    if (needsScaling()) {
-                        int originalWidth = image.getWidth();
-                        int originalHeight = image.getHeight();
-                        image = scaleImage(image, Config.getMaxTextureSize());
-                        ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
-                    }
-                    return image;
-                });
+            textures.put(variant, sheet(modelLoc, variant, m -> m.texAlbedo, "albedo", true));
+            if (hasSpecular) {
+                speculars.put(variant, sheet(modelLoc, variant, m -> m.texSpecular, "specular", false));
             }
-
-            if (materials.stream().anyMatch(x -> x.texNs != null)) {
-                speculars.put(variant, () -> {
-                    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                    Graphics2D graphics = image.createGraphics();
-                    rootNode.draw(0, 0, variant, graphics, m -> m.texNs);
-                    if (needsScaling()) {
-                        int originalWidth = image.getWidth();
-                        int originalHeight = image.getHeight();
-                        image = scaleImage(image, Config.getMaxTextureSize());
-                        ModCore.warn("Scaling texture '%s' for %s from (%s x %s) to (%s x %s)", variant, ident, originalWidth, originalHeight, image.getWidth(), image.getHeight());
-                    }
-                    return image;
-                });
+            if (hasNormal) {
+                normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, "normal", false));
             }
         }
-        imageCache.clear();
+    }
+
+    private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, String type, boolean isFatal) {
+        int fallbackColor;
+        switch (type) {
+            case "normal":
+                fallbackColor = normalFallback;
+                break;
+            case "specular":
+                fallbackColor = specularFallback;
+                break;
+            case "albedo":
+            default:
+                fallbackColor = albedoFallback;
+        }
+        return () -> {
+            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics = image.createGraphics();
+            rootNode.draw(0, 0, graphics, variant, texlu, fallbackColor, isFatal);
+            if (needsScaling()) {
+                int originalWidth = image.getWidth();
+                int originalHeight = image.getHeight();
+                image = ImageUtils.scaleImage(image, Config.getMaxTextureSize());
+                ModCore.warn("Scaling texture for %s (variant %s, channel %s) from (%s x %s) to (%s x %s)", ident, variant, type, originalWidth, originalHeight, image.getWidth(), image.getHeight());
+            }
+            return image;
+        };
     }
 
     private boolean needsScaling() {
@@ -352,7 +358,16 @@ public class OBJTexturePacker {
     public int getWidth() {
         return scaledWidth;
     }
+
     public int getHeight() {
         return scaledHeight;
+    }
+
+    public boolean hasSpecular() {
+        return hasSpecular;
+    }
+
+    public boolean hasNormal() {
+        return hasNormal;
     }
 }
