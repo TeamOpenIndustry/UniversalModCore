@@ -6,9 +6,9 @@ import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
 import cpw.mods.modlauncher.Launcher;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLLoader;
-import org.apache.commons.io.FileUtils;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLLoader;
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -76,22 +76,26 @@ public class OBJParserTest {
     }
 
     private static String defaultPos() {
-        return "v 0 0 0\n" +
-                "v 1 0 0\n" +
-                "v 0 1 0\n";
+        return """
+                v 0 0 0
+                v 1 0 0
+                v 0 1 0
+                """;
     }
 
     @Test
     public void fullySpecifiedTriangle() throws Exception {
         Model model = ModelLoader.load(obj(defaultPos() +
-                "vt 0 0\n" +
-                "vt 1 0\n" +
-                "vt 0 1\n" +
-                "vn 0 0 1\n" +
-                "vn 0 0 1\n" +
-                "vn 0 0 1\n" +
-                "o tri\n" +
-                "f 1/1/1 2/2/2 3/3/3\n"));
+                        """
+                        vt 0 0
+                        vt 1 0
+                        vt 0 1
+                        vn 0 0 1
+                        vn 0 0 1
+                        vn 0 0 1
+                        o tri
+                        f 1/1/1 2/2/2 3/3/3
+                        """));
 
         Assertions.assertNotNull(model);
         Assertions.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
@@ -128,19 +132,21 @@ public class OBJParserTest {
     @Test
     public void quadTriangulates() throws Exception {
         Model model = ModelLoader.load(obj(
-                "v 0 0 0\n" +
-                "v 1 0 0\n" +
-                "v 1 1 0\n" +
-                "v 0 1 0\n" +
-                "vt 0 0\n" +
-                "vt 1 0\n" +
-                "vt 1 1\n" +
-                "vt 0 1\n" +
-                "vn 0 0 1\n" +
-                "vn 0 0 1\n" +
-                "vn 0 0 1\n" +
-                "vn 0 0 1\n" +
-                "f 1/1/1 2/2/2 3/3/3 4/4/4\n"));
+                        """
+                        v 0 0 0
+                        v 1 0 0
+                        v 1 1 0
+                        v 0 1 0
+                        vt 0 0
+                        vt 1 0
+                        vt 1 1
+                        vt 0 1
+                        vn 0 0 1
+                        vn 0 0 1
+                        vn 0 0 1
+                        vn 0 0 1
+                        f 1/1/1 2/2/2 3/3/3 4/4/4
+                        """));
 
         float[] data = model.getVboData();
         Assertions.assertEquals(6 * VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), data.length); // Triangulated
