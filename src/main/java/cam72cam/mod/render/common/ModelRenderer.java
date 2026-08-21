@@ -9,7 +9,10 @@ import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL11;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -72,7 +75,10 @@ public class ModelRenderer extends VBO {
          * @param groups Group names to draw
          */
         public void enqueueOpaque(Collection<String> groups) {
-            draw(groups);
+            //So it turns out that in 1.17+ previous applied modifier will affect next operation and so on...
+            //Why not manually add a empty modifier in order to clear it?
+            //TODO Figure out why
+            draw(groups, state -> state.translate(0, 0, 0));
         }
 
         /**
@@ -96,7 +102,7 @@ public class ModelRenderer extends VBO {
          * @param groups Group names to draw
          */
         public void enqueueTransparent(Collection<String> groups) {
-            draw(groups);
+            draw(groups, state -> state.translate(0, 0, 0));
         }
 
         /**

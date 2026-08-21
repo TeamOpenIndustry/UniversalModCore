@@ -9,9 +9,9 @@ import cpw.mods.modlauncher.Launcher;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class OBJParserTest {
     public static final AtomicInteger counter = new AtomicInteger(0);
 
-    @BeforeClass
+    @BeforeAll
     public static void clearCache() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache/umccommon"));
 
@@ -71,7 +71,7 @@ public class OBJParserTest {
 
     private static void assertValid(float[] data) {
         for (float f : data) {
-            Assert.assertFalse("Non-finite value " + f + " in VBO", Float.isNaN(f) || Float.isInfinite(f));
+            Assertions.assertFalse(Float.isNaN(f) || Float.isInfinite(f), "Non-finite value " + f + " in VBO");
         }
     }
 
@@ -93,34 +93,34 @@ public class OBJParserTest {
                 "o tri\n" +
                 "f 1/1/1 2/2/2 3/3/3\n"));
 
-        Assert.assertNotNull(model);
-        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
-        Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStrideBytes(), model.getLayout().getStrideBytes());
+        Assertions.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * 12, data.length); // 3 verts * (pos3 + uv2 + color4 + nrm3)
+        Assertions.assertEquals(3 * 12, data.length); // 3 verts * (pos3 + uv2 + color4 + nrm3)
 
         // Position
-        Assert.assertEquals(0, data[0], 0.001);
-        Assert.assertEquals(0, data[1], 0.001);
-        Assert.assertEquals(0, data[2], 0.001);
-        Assert.assertEquals(1, data[12], 0.001);
-        Assert.assertEquals(0, data[13], 0.001);
-        Assert.assertEquals(0, data[14], 0.001);
-        Assert.assertEquals(0, data[24], 0.001);
-        Assert.assertEquals(1, data[25], 0.001);
-        Assert.assertEquals(0, data[26], 0.001);
+        Assertions.assertEquals(0, data[0], 0.001);
+        Assertions.assertEquals(0, data[1], 0.001);
+        Assertions.assertEquals(0, data[2], 0.001);
+        Assertions.assertEquals(1, data[12], 0.001);
+        Assertions.assertEquals(0, data[13], 0.001);
+        Assertions.assertEquals(0, data[14], 0.001);
+        Assertions.assertEquals(0, data[24], 0.001);
+        Assertions.assertEquals(1, data[25], 0.001);
+        Assertions.assertEquals(0, data[26], 0.001);
 
         // White as no Kd specified
-        Assert.assertEquals(1, data[5], 0.001);
-        Assert.assertEquals(1, data[6], 0.001);
-        Assert.assertEquals(1, data[7], 0.001);
-        Assert.assertEquals(1, data[8], 0.001);
+        Assertions.assertEquals(1, data[5], 0.001);
+        Assertions.assertEquals(1, data[6], 0.001);
+        Assertions.assertEquals(1, data[7], 0.001);
+        Assertions.assertEquals(1, data[8], 0.001);
 
         // Normals
-        Assert.assertEquals(0, data[9], 0.001);
-        Assert.assertEquals(0, data[10], 0.001);
-        Assert.assertEquals(1, data[11], 0.001);
+        Assertions.assertEquals(0, data[9], 0.001);
+        Assertions.assertEquals(0, data[10], 0.001);
+        Assertions.assertEquals(1, data[11], 0.001);
 
         assertValid(data);
     }
@@ -143,7 +143,7 @@ public class OBJParserTest {
                 "f 1/1/1 2/2/2 3/3/3 4/4/4\n"));
 
         float[] data = model.getVboData();
-        Assert.assertEquals(6 * VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), data.length); // Triangulated
+        Assertions.assertEquals(6 * VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), data.length); // Triangulated
     }
 
     @Test
@@ -155,17 +155,17 @@ public class OBJParserTest {
                 "f 1 2 3\n" +
                 "f 1 2 3\n"));
 
-        Assert.assertEquals(2, model.getGroups().size());
+        Assertions.assertEquals(2, model.getGroups().size());
         Iterator<Map.Entry<String, ModelGroup>> iterator = model.getGroups().entrySet().iterator();
         ModelGroup firstGroup = iterator.next().getValue();
         ModelGroup secondGroup = iterator.next().getValue();
-        Assert.assertEquals("A", firstGroup.name);
+        Assertions.assertEquals("A", firstGroup.name);
         // Inclusive, 0-based
-        Assert.assertEquals(0, firstGroup.faceStart);
-        Assert.assertEquals(0, firstGroup.faceEnd);
-        Assert.assertEquals("B", secondGroup.name);
-        Assert.assertEquals(1, secondGroup.faceStart);
-        Assert.assertEquals(2, secondGroup.faceEnd);
+        Assertions.assertEquals(0, firstGroup.faceStart);
+        Assertions.assertEquals(0, firstGroup.faceEnd);
+        Assertions.assertEquals("B", secondGroup.name);
+        Assertions.assertEquals(1, secondGroup.faceStart);
+        Assertions.assertEquals(2, secondGroup.faceEnd);
     }
 
     @Test
@@ -173,37 +173,37 @@ public class OBJParserTest {
         Model model = ModelLoader.load(obj(defaultPos() +
                 "f 1// 2// 3//\n"));
 
-        Assert.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
-        Assert.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
+        Assertions.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assertions.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * 9, data.length); // pos3 + uv2 + color4, no normal
+        Assertions.assertEquals(3 * 9, data.length); // pos3 + uv2 + color4, no normal
 
         // Positions
-        Assert.assertEquals(0, data[0], 0.001);
-        Assert.assertEquals(0, data[1], 0.001);
-        Assert.assertEquals(0, data[2], 0.001);
-        Assert.assertEquals(1, data[9], 0.001);
-        Assert.assertEquals(0, data[10], 0.001);
-        Assert.assertEquals(0, data[11], 0.001);
-        Assert.assertEquals(0, data[18], 0.001);
-        Assert.assertEquals(1, data[19], 0.001);
-        Assert.assertEquals(0, data[20], 0.001);
+        Assertions.assertEquals(0, data[0], 0.001);
+        Assertions.assertEquals(0, data[1], 0.001);
+        Assertions.assertEquals(0, data[2], 0.001);
+        Assertions.assertEquals(1, data[9], 0.001);
+        Assertions.assertEquals(0, data[10], 0.001);
+        Assertions.assertEquals(0, data[11], 0.001);
+        Assertions.assertEquals(0, data[18], 0.001);
+        Assertions.assertEquals(1, data[19], 0.001);
+        Assertions.assertEquals(0, data[20], 0.001);
 
         // UV defaults to 0.5
         for (int i = 0; i < 3; i ++) {
             int idx = i * VAOLayout.POS_TEX_COLOR.getStride() +
                     VAOLayout.POS_TEX_COLOR.getOffset(VAOLayout.Usage.UV);
 
-            Assert.assertEquals(0.5, data[idx], 1E-8);
-            Assert.assertEquals(0.5, data[idx + 1], 1E-8);
+            Assertions.assertEquals(0.5, data[idx], 1E-8);
+            Assertions.assertEquals(0.5, data[idx + 1], 1E-8);
         }
 
         // Color is white
-        Assert.assertEquals(1, data[5], 0.001);
-        Assert.assertEquals(1, data[6], 0.001);
-        Assert.assertEquals(1, data[7], 0.001);
-        Assert.assertEquals(1, data[8], 0.001);
+        Assertions.assertEquals(1, data[5], 0.001);
+        Assertions.assertEquals(1, data[6], 0.001);
+        Assertions.assertEquals(1, data[7], 0.001);
+        Assertions.assertEquals(1, data[8], 0.001);
 
         assertValid(data);
     }
@@ -216,11 +216,11 @@ public class OBJParserTest {
                 "vt 0 1\n" +
                 "f 1/1 2/2 3/3\n"));
 
-        Assert.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
-        Assert.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
+        Assertions.assertFalse(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assertions.assertEquals(VAOLayout.POS_TEX_COLOR.getStride(), model.getLayout().getStride());
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * VAOLayout.POS_TEX_COLOR.getStride(), data.length);
+        Assertions.assertEquals(3 * VAOLayout.POS_TEX_COLOR.getStride(), data.length);
         // Don't have normal in VBO
         assertValid(data);
     }
@@ -233,38 +233,38 @@ public class OBJParserTest {
                 "vn 0 0 1\n" +
                 "f 1//1 2//2 3//3\n"));
 
-        Assert.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
-        Assert.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), model.getLayout().getStride());
+        Assertions.assertTrue(model.getLayout().has(VAOLayout.Usage.NORMAL));
+        Assertions.assertEquals(VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), model.getLayout().getStride());
 
         float[] data = model.getVboData();
-        Assert.assertEquals(3 * VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), data.length);
+        Assertions.assertEquals(3 * VAOLayout.POS_TEX_COLOR_NORMAL.getStride(), data.length);
 
         // Missing UVs have 0.5 by default
         for (int i = 0; i < 3; i ++) {
             int idx = i * VAOLayout.POS_TEX_COLOR_NORMAL.getStride() +
                     VAOLayout.POS_TEX_COLOR_NORMAL.getOffset(VAOLayout.Usage.UV);
 
-            Assert.assertEquals(0.5, data[idx], 1E-8);
-            Assert.assertEquals(0.5, data[idx + 1], 1E-8);
+            Assertions.assertEquals(0.5, data[idx], 1E-8);
+            Assertions.assertEquals(0.5, data[idx + 1], 1E-8);
         }
 
         assertValid(data);
     }
 
-    @Test(expected = MalformedModelException.class)
-    public void nanUvThrows() throws Exception {
-        ModelLoader.load(obj(defaultPos() +
+    @Test
+    public void nanUvThrows() {
+        Assertions.assertThrows(MalformedModelException.class, () -> ModelLoader.load(obj(defaultPos() +
                 "vt NaN NaN \n" +
-                "f 1/1 2/1 3/1\n"));
+                "f 1/1 2/1 3/1\n")));
     }
 
-    @Test(expected = MalformedModelException.class)
-    public void missingPositionThrows() throws Exception {
-        ModelLoader.load(obj(defaultPos() +
+    @Test
+    public void missingPositionThrows() {
+        Assertions.assertThrows(MalformedModelException.class, () -> ModelLoader.load(obj(defaultPos() +
                 "vn 0 0 1\n" +
                 "vn 0 0 1\n" +
                 "vn 0 0 1\n" +
-                "f //1 //2 //3\n"));
+                "f //1 //2 //3\n")));
     }
 
     @Test
@@ -273,6 +273,6 @@ public class OBJParserTest {
                 "f 1 2\n"));
 
         // No valid triangle was produced
-        Assert.assertEquals(0, model.getVboData().length);
+        Assertions.assertEquals(0, model.getVboData().length);
     }
 }

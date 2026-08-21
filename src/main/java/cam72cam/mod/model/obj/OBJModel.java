@@ -3,13 +3,14 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.obj.OBJRender;
+import cam72cam.mod.render.obj.OBJTextureSheet;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.serialization.*;
+import cam72cam.mod.serialization.ResourceCache;
 import cam72cam.mod.serialization.ResourceCache.GenericByteBuffer;
+import cam72cam.mod.serialization.TagCompound;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -26,6 +27,7 @@ import static cam72cam.mod.model.common.util.ImageUtils.*;
 /**
  * @deprecated  Use {@link cam72cam.mod.model.common.ModelLoader#load} and {@link cam72cam.mod.model.common.mesh.Model}
  */
+@Deprecated(since = "1.3.1", forRemoval = true)
 public class OBJModel {
     private static final OBJTextureSheet defTex = new OBJTextureSheet(1, 1, () -> new ResourceCache.GenericByteBuffer(new int[] { 0x0000FF }), Integer.MAX_VALUE/2);
     public final OBJRender vbo;
