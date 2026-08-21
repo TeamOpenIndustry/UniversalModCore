@@ -3,13 +3,18 @@ package cam72cam.mod.model.obj;
 import cam72cam.mod.math.Vec3d;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
  * A {@link VertexBuffer} API wrapper, making accessing geometry completely separated from backend.
+ * @deprecated Use common.util.FaceAccessor for new Model framework, this is kept for compatibility.
  */
+@Deprecated(since = "1.3.1", forRemoval = true)
 public class FaceAccessor implements Iterable<FaceAccessor> {
     private final OBJModel model;
 
