@@ -44,7 +44,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                 Facing.fromNormal(plane.normal.scale(-1)),
                 source.getTintIndex(),
                 source.isShade(),
-                false,
+                source.hasAmbientOcclusion(),
                 DefaultVertexFormat.BLOCK,
                 source,
                 quads,
