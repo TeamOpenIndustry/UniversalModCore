@@ -41,7 +41,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         return new QuadTemplate(
                 source.getSprite(),
-                Facing.fromNormal(plane.normal),
+                Facing.fromNormal(plane.normal.scale(-1)),
                 source.getTintIndex(),
                 source.isShade(),
                 false,
@@ -95,10 +95,10 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             int[] data = primitive.getVertices().clone();
             List<ClipVertex> quadVerts = quad.getVertices();
 
-            writeVertex(data, 0, quadVerts.get(0));
-            writeVertex(data, 1, quadVerts.get(1));
-            writeVertex(data, 2, quadVerts.get(2));
-            writeVertex(data, 3, quadVerts.get(3));
+            writeVertex(data, 0, quadVerts.get(3)); // TODO: Seems only this order is right, do we need to keep order in polygon?
+            writeVertex(data, 1, quadVerts.get(0));
+            writeVertex(data, 2, quadVerts.get(1));
+            writeVertex(data, 3, quadVerts.get(2));
 
             result.add(new BakedQuad(
                     data,
@@ -132,7 +132,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             result.add(new BakedQuad(
                     data,
                     template.source.getTintIndex(),
-                    template.source.getDirection(),
+                    template.facing.internal,
                     template.source.getSprite(),
                     template.source.isShade()
             ));
@@ -171,7 +171,12 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         int light = data[base + 6];
 
-        return new ClipVertex(new Vec3d(x, y, z), u, v, color, light, (byte)0, (byte)0, (byte)0);
+        int packedNormal = data[base + 7];
+        byte nx = (byte) packedNormal;
+        byte ny = (byte) (packedNormal >> 8);
+        byte nz = (byte) (packedNormal >> 16);
+
+        return new ClipVertex(new Vec3d(x, y, z), u, v, color, light, nx, ny, nz);
     }
 
     private static void writeVertex(int[] data, int index, ClipVertex v) {
