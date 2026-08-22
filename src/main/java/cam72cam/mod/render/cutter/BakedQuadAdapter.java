@@ -42,7 +42,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
 
         return new QuadTemplate(
                 source.getSprite(),
-                Facing.fromNormal(plane.normal),
+                Facing.fromNormal(plane.normal.scale(-1)),
                 source.getTintIndex(),
                 source.shouldApplyDiffuseLighting(),
                 false,
