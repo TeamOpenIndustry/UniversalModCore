@@ -132,7 +132,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
             result.add(new BakedQuad(
                     data,
                     template.source.getTintIndex(),
-                    template.source.getFace(),
+                    template.facing.internal,
                     template.source.func_187508_a(),
                     template.source.shouldApplyDiffuseLighting()
             ));
