@@ -105,7 +105,8 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     primitive.getTintIndex(),
                     primitive.getDirection(),
                     primitive.getSprite(),
-                    primitive.isShade()
+                    primitive.isShade(),
+                    primitive.hasAmbientOcclusion()
             ));
         }
         return result;
@@ -134,7 +135,8 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     template.source.getTintIndex(),
                     template.facing.internal,
                     template.source.getSprite(),
-                    template.source.isShade()
+                    template.source.isShade(),
+                    template.source.hasAmbientOcclusion()
             ));
         }
         return result;
