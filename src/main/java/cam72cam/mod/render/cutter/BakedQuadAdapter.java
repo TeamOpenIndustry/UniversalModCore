@@ -44,6 +44,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                 Facing.fromNormal(plane.normal.scale(-1)),
                 source.getTintIndex(),
                 source.isShade(),
+                source.getLightEmission(),
                 source.hasAmbientOcclusion(),
                 DefaultVertexFormat.BLOCK,
                 source,
@@ -106,6 +107,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     primitive.getDirection(),
                     primitive.getSprite(),
                     primitive.isShade(),
+                    primitive.getLightEmission(),
                     primitive.hasAmbientOcclusion()
             ));
         }
@@ -136,6 +138,7 @@ public class BakedQuadAdapter implements PrimitiveAdapter<BakedQuad, QuadTemplat
                     template.facing.internal,
                     template.source.getSprite(),
                     template.source.isShade(),
+                    template.source.getLightEmission(),
                     template.source.hasAmbientOcclusion()
             ));
         }

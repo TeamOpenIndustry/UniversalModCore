@@ -103,6 +103,7 @@ public class ClientEvents {
     public static final Event<Consumer<RegisterClientExtensionsEvent>> CLIENT_EXTENSIONS_REGISTER = new Event<>();
     public static final Event<Consumer<RegisterMenuScreensEvent>> MENU_SCREENS_REGISTER = new Event<>();
     public static final Event<Consumer<AddClientReloadListenersEvent>> REGISTER_RELOAD_LISTENER = new Event<>();
+    public static final Event<Consumer<RegisterSpecialModelRendererEvent>> REGISTER_SPECIAL_MODEL = new Event<>();
 
     @EventBusSubscriber(modid = ModCore.MODID, value = Dist.CLIENT)
     public static class ClientEventBus {
@@ -288,6 +289,11 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerClientReloadListeners(AddClientReloadListenersEvent event) {
             REGISTER_RELOAD_LISTENER.execute(x -> x.accept(event));
+        }
+
+        @SubscribeEvent
+        public static void registerSpecialModel(RegisterSpecialModelRendererEvent event) {
+            REGISTER_SPECIAL_MODEL.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent

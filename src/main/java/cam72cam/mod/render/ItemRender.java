@@ -21,18 +21,11 @@ import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.special.NoDataSpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
-import net.minecraft.client.renderer.special.SpecialModelRenderers;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -43,13 +36,16 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Map;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
     private static final List<BakedQuad> EMPTY = Collections.emptyList();
     private static final SpriteSheet iconSheet = new SpriteSheet(Config.SpriteSize);
+
+    private static final Map<Item, IItemModel> reg = new HashMap<>();
 
     //String template for simple item models
     private static final String itemPath = "items/%s.json";
@@ -72,12 +68,17 @@ public class ItemRender {
             {
               "model": {
                 "type": "minecraft:special",
-                "base": "minecraft:item/chest",
+                "base": "minecraft:item/bamboo_door",
                 "model": {
                   "type": "universalmodcore:items"
                 }
               }
             }""";
+
+    static {
+        ClientEvents.REGISTER_SPECIAL_MODEL.subscribe(e ->
+                         e.register(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "items"), UMCItemModelRenderer.Unbaked.MAP_CODEC));
+    }
 
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
@@ -108,12 +109,8 @@ public class ItemRender {
             String itemPath = String.format(ItemRender.itemPath, item.getRegistryName().getPath());
             Identifier itemJson = new Identifier(item.getRegistryName().getDomain(), itemPath);
             BuiltinPack.put(itemJson, composedItem.getBytes(StandardCharsets.UTF_8));
-        });
 
-        // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe(event -> {
-            ModelBakery.BakingResult bakingResult = event.getBakingResult();
-            bakingResult.blockStateModels().put(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model));
+            reg.put(item.internal, model);
         });
 
         // Hook up Sprite Support (and generation)
@@ -267,17 +264,60 @@ public class ItemRender {
         restore.close();
     }
 
-    static BiConsumer<PoseStack, Integer> doRender = (s, i) -> {};
-
-    public static void setupRenderer() {
-        SpecialModelRenderers.ID_MAPPER.put(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "items"),
-                                            UMCItemModelRenderer.Unbaked.MAP_CODEC);
-    }
-
-    static class UMCItemModelRenderer implements NoDataSpecialModelRenderer {
+    static class UMCItemModelRenderer implements SpecialModelRenderer<ItemStack> {
         @Override
-        public void render(ItemDisplayContext ctx, PoseStack matrixStack, MultiBufferSource source, int combinedLight, int combinedOverlay, boolean hasFoil) {
-            doRender.accept(matrixStack, combinedLight);
+        public void render(ItemStack stack, ItemDisplayContext ctx, PoseStack matrix, MultiBufferSource source,
+                           int combinedLight, int combinedOverlay, boolean hasFoil) {
+            IItemModel model = reg.get(stack.internal().getItem());
+            cam72cam.mod.render.ItemRender.ItemRenderType type = ItemRenderType.from(ctx);
+
+            if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
+                iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack), new RenderState(matrix));
+                return ;
+            }
+
+            StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
+            if (std == null) {
+                return;
+            }
+            /*
+             * I am an evil wizard!
+             *
+             * So it turns out that I can stick a draw call in here to
+             * render my own stuff. This subverts forge's entire baked model
+             * system with a single line of code and injects my own OpenGL
+             * payload. Fuck you modeling restrictions.
+             *
+             * This is probably really fragile if someone calls getQuads
+             * before actually setting up the correct GL context.
+             */
+            if (!ModCore.isInReload()) {
+                RenderType.cutoutMipped().setupRenderState();
+
+                matrix.pushPose();
+                // Maybe backwards?
+                //mat.last().pose().mul(matrix.last().pose());
+
+                RenderState state = new RenderState(matrix);
+                model.applyTransform(stack, type, state);
+
+                int j = combinedLight % 65536;
+                int k = combinedLight / 65536;
+                state.lightmap(j/240f, k/240f);
+                RenderContext.lastLightX = j;
+                RenderContext.lastLightY = k;
+
+                std.render(state);
+
+                matrix.popPose();
+
+                RenderType.cutoutMipped().setupRenderState();
+            }
+        }
+
+        @Override
+        public ItemStack extractArgument(net.minecraft.world.item.ItemStack p_387212_) {
+            return new ItemStack(p_387212_);
         }
 
         record Unbaked(Void data) implements SpecialModelRenderer.Unbaked {
@@ -289,110 +329,9 @@ public class ItemRender {
             }
 
             @Override
-            public @NotNull SpecialModelRenderer<?> bake(EntityModelSet p_388631_) {
+            public SpecialModelRenderer<?> bake(EntityModelSet p_388631_) {
                 return new UMCItemModelRenderer();
             }
-        }
-    }
-
-    /** Custom Model where we can hack into the MC/Forge render system */
-    static class BakedItemModel implements BakedModel {
-        private ItemStack stack;
-        private final IItemModel model;
-        private ItemRenderType type;
-
-
-        BakedItemModel(IItemModel model) {
-            this.stack = null;
-            this.model = model;
-            this.type = ItemRenderType.NONE;
-        }
-
-        @Override
-        public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState p_235039_, @org.jetbrains.annotations.Nullable Direction p_235040_, RandomSource p_235041_) {
-            return EMPTY;
-        }
-
-        @Override
-        public boolean useAmbientOcclusion() {
-            return true;
-        }
-
-        @Override
-        public boolean isGui3d() {
-            return true;
-        }
-
-        @Override
-        public boolean usesBlockLight() {
-            return false;
-        }
-
-        @Override
-        public TextureAtlasSprite getParticleIcon() {
-            return null;
-        }
-
-        @Override
-        public ItemTransforms getTransforms() {
-            //TODO 1.21.4
-            return ItemTransforms.NO_TRANSFORMS;
-        }
-
-        @Override
-        public void applyTransform(ItemDisplayContext cameraTransformType, PoseStack mat, boolean applyLeftHandTransform) {
-            this.type = ItemRenderType.from(cameraTransformType);
-
-            doRender = (matrix, i) -> {
-                if (stack == null) {
-                    return;
-                }
-
-                if (type == ItemRenderType.GUI && model instanceof ISpriteItemModel) {
-                    iconSheet.renderSprite(((ISpriteItemModel) model).getSpriteKey(stack), new RenderState(matrix));
-                    return ;
-                }
-
-                StandardModel std = model.getModel(MinecraftClient.getPlayer().getWorld(), stack);
-                if (std == null) {
-                    return ;
-                }
-                /*
-                 * I am an evil wizard!
-                 *
-                 * So it turns out that I can stick a draw call in here to
-                 * render my own stuff. This subverts forge's entire baked model
-                 * system with a single line of code and injects my own OpenGL
-                 * payload. Fuck you modeling restrictions.
-                 *
-                 * This is probably really fragile if someone calls getQuads
-                 * before actually setting up the correct GL context.
-                 */
-                if (!ModCore.isInReload()) {
-                    RenderType.cutoutMipped().setupRenderState();
-
-                    mat.pushPose();
-                    // Maybe backwards?
-                    //mat.last().pose().mul(matrix.last().pose());
-
-                    RenderState state = new RenderState(mat);
-                    model.applyTransform(stack, type, state);
-
-                    int j = i % 65536;
-                    int k = i / 65536;
-                    state.lightmap(j/240f, k/240f);
-                    RenderContext.lastLightX = j;
-                    RenderContext.lastLightY = k;
-
-                    //std.renderCustom();
-                    std.render(state);
-
-                    mat.popPose();
-
-                    RenderType.cutoutMipped().setupRenderState();
-                }
-                // TODO return std.getQuads(side, rand);
-            };
         }
     }
 }

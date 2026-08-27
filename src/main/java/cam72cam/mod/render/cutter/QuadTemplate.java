@@ -16,6 +16,7 @@ public class QuadTemplate {
 
     public final int tintIndex;
     public final boolean shade;
+    public final int lightEmission;
     public final boolean ambientOcclusion;
 
     public final VertexFormat format;
@@ -32,6 +33,7 @@ public class QuadTemplate {
             Facing facing,
             int tintIndex,
             boolean shade,
+            int lightEmission,
             boolean ambientOcclusion,
             VertexFormat format,
             BakedQuad source,
@@ -46,6 +48,7 @@ public class QuadTemplate {
 
         this.tintIndex = tintIndex;
         this.shade = shade;
+        this.lightEmission = lightEmission;
         this.ambientOcclusion = ambientOcclusion;
 
         this.format = format;

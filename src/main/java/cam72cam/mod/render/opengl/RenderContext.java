@@ -77,7 +77,6 @@ public class RenderContext {
             currentState.set(state);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
             //Normal and Specular handled in mixin.feat.iris_pbr
-            //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
             restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
             RenderSystem.setShaderTexture(0, state.texture.getId());
@@ -93,18 +92,6 @@ public class RenderContext {
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
-
-//        if (state.lighting != null) {
-//            boolean oldValue = GL11.glGetBoolean(GL11.GL_LIGHTING);
-//            applyBool(GL11.GL_LIGHTING, state.lighting);
-//            restore.add(() -> applyBool(GL11.GL_LIGHTING, oldValue));
-//        }
-//
-//        if (state.alpha_test != null) {
-//            boolean oldValue = GL11.glGetBoolean(GL11.GL_ALPHA_TEST);
-//            applyBool(GL11.GL_ALPHA_TEST, state.alpha_test);
-//            restore.add(() -> applyBool(GL11.GL_ALPHA_TEST, oldValue));
-//        }
 
         if (state.depth_test != null) {
             boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
@@ -122,12 +109,6 @@ public class RenderContext {
                 }
             });
         }
-
-//        if (state.rescale_normal != null) {
-//            boolean oldValue = GL11.glGetBoolean(GL12.GL_RESCALE_NORMAL);
-//            applyBool(GL12.GL_RESCALE_NORMAL, state.rescale_normal);
-//            restore.add(() -> applyBool(GL12.GL_RESCALE_NORMAL, oldValue));
-//        }
 
         if (state.cull_face != null) {
             boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
@@ -282,7 +263,6 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
-    //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
     private static void setupLightMap(CompiledShaderProgram shader, float oldX, float oldY) {
         int uv2Binding = GL20.glGetAttribLocation(shader.getProgramId(), "UV2");
         if (uv2Binding != -1) {

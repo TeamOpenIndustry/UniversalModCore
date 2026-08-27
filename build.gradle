@@ -31,15 +31,8 @@ java {
 }
 
 repositories {
-    exclusiveContent {
-        forRepository {
-            maven {
-                url "https://cursemaven.com"
-            }
-        }
-        filter {
-            includeGroup "curse.maven"
-        }
+    maven {
+        url "https://cursemaven.com"
     }
 }
 

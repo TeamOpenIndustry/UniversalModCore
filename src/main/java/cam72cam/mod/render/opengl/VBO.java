@@ -236,7 +236,7 @@ public class VBO {
                         }
                     }
                     case GENERIC -> {
-                        for (Map.Entry<String, VertexFormatElement> entry : shader.getVertexFormat().getElementMapping().entrySet()) {
+                        for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
                             // Iris fields for proper normal rendering
                             if (entry.getValue() == element && "at_tangent".equals(entry.getKey())) {
                                 GL32.glDisableVertexAttribArray(i);
