@@ -35,7 +35,7 @@ public abstract class CustomTexture implements Texture {
             try {
                 synchronized (textures) {
                     for (CustomTexture texture : textures) {
-                        if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000 && (texture.loader == null || !texture.loader.isDone())) {
+                        if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000L && (texture.loader == null || !texture.loader.isDone())) {
                             texture.dealloc();
                         }
                     }
