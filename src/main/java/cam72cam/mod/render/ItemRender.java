@@ -16,6 +16,7 @@ import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -26,6 +27,7 @@ import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
+import org.joml.Quaternionf;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -174,13 +176,17 @@ public class ItemRender {
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {
             switch (type) {
-                case FRAME:
+                case FRAME, FIRST_PERSON_RIGHT_HAND:
                     state.rotate(90, 0, 1, 0);
                     state.translate(-0.9, 0, 0);
                     break;
                 case HEAD:
                     state.translate(-0.5, 1, 0);
                     state.scale(2, 2, 2);
+                    break;
+                case FIRST_PERSON_LEFT_HAND:
+                    state.translate(1, 0, 0);
+                    state.rotate(-90, 0, 1, 0);
                     break;
             }
         }
@@ -295,8 +301,6 @@ public class ItemRender {
                 RenderType.cutoutMipped().setupRenderState();
 
                 matrix.pushPose();
-                // Maybe backwards?
-                //mat.last().pose().mul(matrix.last().pose());
 
                 RenderState state = new RenderState(matrix);
                 model.applyTransform(stack, type, state);
