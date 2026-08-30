@@ -37,6 +37,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.capabilities.Capabilities;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 /** A standard block with no attached entity */
 public abstract class BlockType {
@@ -224,7 +225,10 @@ public abstract class BlockType {
 
         @Override
         public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, @Nullable Orientation neighbor, boolean isMoving) {
-            this.onNeighborChange(state, worldIn, pos, pos.relative(neighbor.getFront()));
+            List<Direction> neighbors = neighbor == null ? List.of(Direction.values()) : List.of(neighbor.getFront());
+            for (Direction direction : neighbors) {
+                this.onNeighborChange(state, worldIn, pos, pos.relative(direction));
+            }
         }
 
         @Override
