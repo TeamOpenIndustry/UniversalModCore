@@ -9,7 +9,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +16,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
@@ -75,11 +75,16 @@ public class RenderContext {
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
             currentState.set(state);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
             //Normal and Specular handled in mixin.feat.iris_pbr
             int oldTexture = RenderSystem.getShaderTexture(0);
-            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
+            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+            RenderSystem.bindTexture(state.texture.getId());
             RenderSystem.setShaderTexture(0, state.texture.getId());
+            restore.add(() -> {
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+                RenderSystem.bindTexture(oldTexture);
+                RenderSystem.setShaderTexture(0, oldTexture);
+            });
             currentState.remove();
         }
 

@@ -311,7 +311,7 @@ public class ItemRender {
 
                 matrix.popPose();
 
-                RenderType.cutoutMipped().setupRenderState();
+                RenderType.cutoutMipped().clearRenderState();
             }
         }
 
