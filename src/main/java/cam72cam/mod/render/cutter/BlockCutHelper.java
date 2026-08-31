@@ -3,17 +3,14 @@ package cam72cam.mod.render.cutter;
 import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class BlockCutHelper {
 
     private static final double EPS = 1e-6;
 
-    private static final Map<Plane, List<Vec3d>> INTERSECTION_CACHE = new IdentityHashMap<>();
-    private static final Map<Plane, List<Vec3d>> CLIPPED_CACHE = new IdentityHashMap<>();
+    private static final Map<Plane, List<Vec3d>> INTERSECTION_CACHE = new HashMap<>();
+    private static final Map<Plane, List<Vec3d>> CLIPPED_CACHE = new HashMap<>();
 
     private static final Vec3d[] CORNERS = {
             new Vec3d(0, 0, 0),

@@ -322,6 +322,7 @@ public class TextureRepacker {
                 normals.put(variant, sheet(modelLoc, variant, m -> m.texNormal, "normal", false));
             }
         }
+        imageCache.clear();
     }
 
     private Supplier<BufferedImage> sheet(Identifier ident, String variant, Function<Material, String> texlu, String type, boolean isFatal) {
