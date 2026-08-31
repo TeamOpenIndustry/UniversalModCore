@@ -187,18 +187,10 @@ public class GUIHelpers {
     }
 
     public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
-        RenderState state = new RenderState()
-                .color(1, 1, 1, 1)
-                .alpha_test(false)
-                .blend(new BlendMode(GL32.GL_SRC_ALPHA, GL32.GL_ONE_MINUS_SRC_ALPHA))
-                .rescale_normal(true);
-        //If it's handled by us then it'll be set to ITEM_IN_GUI later
-        //Otherwise we don't care
-//              .stage(RenderContext.Stage.GUI);
-        state.model_view().multiply(matrix);
-        try (With ctx = RenderContext.apply(state)) {
-            graphics.renderItem(stack.internal(), x, y);
-        }
+        graphics.pose().pushPose();
+        graphics.pose().last().pose().mul(matrix.convertToMoj());
+        graphics.renderItem(stack.internal(), x, y);
+        graphics.pose().popPose();
     }
 
     /** Try to open an external link in player's browser */
