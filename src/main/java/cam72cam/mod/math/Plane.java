@@ -4,6 +4,8 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 
+import java.util.Objects;
+
 @TagMapped(Plane.TagMapper.class)
 public class Plane {
     public final Vec3d normal;
@@ -34,6 +36,22 @@ public class Plane {
         Vec3d offsetVec = new Vec3d(offset.x, offset.y, offset.z);
         double newD = this.d - this.normal.dotProduct(offsetVec);
         return new Plane(this.normal, newD);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Plane plane = (Plane) o;
+        return Double.compare(d, plane.d) == 0
+                && Objects.equals(normal, plane.normal)
+                && Objects.equals(point, plane.point);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(normal, d, point);
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<Plane> {
