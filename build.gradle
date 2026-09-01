@@ -44,7 +44,7 @@ if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
         umcVersion += "-unknown"
     }
 }
-version = "1.21.4-neoforge-" + umcVersion
+version = "1.21.8-neoforge-" + umcVersion
 group = "cam72cam.universalmodcore" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "UniversalModCore"
 
@@ -122,35 +122,11 @@ repositories {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:21.4.157"
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
+    implementation "net.neoforged:neoforge:21.8.54"
 
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
-    // except that these dependencies get remapped to your current MCP mappings
-    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-//    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
-//    annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.0')
-
-    //testImplementation ('junit:junit:4.13')
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.2'
 
     minecraftLibrary(shade group: 'javax.vecmath', name: 'vecmath', version: '1.5.2')
-//    implementation(shade group: 'at.yawk.lz4', name: 'lz4-java', version: '1.10.2')
 }
 
 repositories {
@@ -169,29 +145,17 @@ dependencies {
     }
 
     //Iris
-    implementation "curse.maven:sodium-394468:6382663"
-    implementation "curse.maven:irisshaders-455508:6213645"
+    implementation "curse.maven:sodium-394468:7207591"
+    implementation "curse.maven:irisshaders-455508:7088025"
 
     //Lamb Dynamic Lights
-    //TODO 1.21.8 re-enable
-//    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.7+1.21.1") {
-//        attributes {
-//            attribute(mappingsAttribute, "mojmap")
-//        }
-//    }
-//    runtimeOnly "curse.maven:lambdynamiclights-393442:7306458"
+    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:4.8.7+1.21.8") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+    runtimeOnly "curse.maven:lambdynamiclights-393442:7306479"
 }
-
-//mixin {
-//    add sourceSets.main, 'mixins.universalmodcore.refmap.json'
-//
-//    config 'mixins.universalmodcore.json'
-//
-//    //Dev environment setup
-//    debug.verbose = true
-//    debug.export = true
-//    dumpTargetOnFailure = true
-//}
 
 jar {
     archiveClassifier = 'slim'
@@ -219,14 +183,9 @@ shadowJar {
 //    relocate 'org.spongepowered', "${project.group}.shade.org.spongepowered"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     mergeServiceFiles()
-//    finalizedBy 'reobfShadowJar'
 }
 
 assemble.dependsOn shadowJar
-
-//reobf {
-//    shadowJar {}
-//}
 
 test {
     useJUnit()
