@@ -88,7 +88,6 @@ public class ClientEvents {
     public static final Event<Function<Double, Boolean>> SCROLL = new Event<>();
     public static final Event<Function<Player.Hand, Boolean>> CLICK = new Event<>();
     public static final Event<Function<MouseGuiEvent, Boolean>> MOUSE_GUI = new Event<>();
-    public static final Event<Runnable> MODEL_CREATE = new Event<>();
     public static final Event<Consumer<ModelEvent.ModifyBakingResult>> MODEL_BAKE = new Event<>();
     public static final Event<Consumer<RegisterTextureSpriteEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
@@ -249,11 +248,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerModels(ModelEvent.ModifyBakingResult event) {
             MODEL_BAKE.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void onModelBakeEvent(ModelEvent.RegisterAdditional event) {
-            MODEL_CREATE.execute(Runnable::run);
         }
 
         @SubscribeEvent

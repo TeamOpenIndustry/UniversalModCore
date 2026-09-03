@@ -167,6 +167,9 @@ public class ItemStack {
     public boolean isValidTool(ToolType toolType) {
         //TODO 1.21.8 too hacky!
         Tool tool = internal().get(DataComponents.TOOL);
+        if (tool == null) {
+            return false;
+        }
         if (tool.rules().stream().anyMatch(rule -> rule.blocks() ==
                 BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK).get(BlockTags.MINEABLE_WITH_PICKAXE).orElseThrow())
             && toolType == ToolType.PICKAXE) {

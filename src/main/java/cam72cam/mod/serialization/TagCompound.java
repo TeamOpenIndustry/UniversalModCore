@@ -12,6 +12,10 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import java.io.*;
 import java.util.*;
@@ -28,6 +32,30 @@ public class TagCompound {
     /** Wraps MC object, do not use */
     public TagCompound(CompoundTag data) {
         this.internal = data;
+    }
+
+    public static TagCompound indirect(ValueInput input, ValueOutput output) {
+        if (input instanceof TagValueInput tag) {
+            return new TagCompound(tag.input);
+        }
+        if (output instanceof TagValueOutput tag) {
+            return new TagCompound(tag.output);
+        }
+        return new IndirectTagCompound(input, output);
+    }
+
+    public static TagCompound indirect(ValueInput input) {
+        if (input instanceof TagValueInput tag) {
+            return new TagCompound(tag.input);
+        }
+        return new IndirectTagCompound(input, null);
+    }
+
+    public static TagCompound indirect(ValueOutput output) {
+        if (output instanceof TagValueOutput tag) {
+            return new TagCompound(tag.output);
+        }
+        return new IndirectTagCompound(null, output);
     }
 
     public TagCompound(byte[] data) throws IOException {

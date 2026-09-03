@@ -10,7 +10,6 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.*;
 import cam72cam.mod.util.SingleCache;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -110,7 +109,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     /** @see #load */
     @Override
     public final void readAdditionalSaveData(ValueInput input) {
-        load(new TagCompound(input));
+        load(TagCompound.indirect(input));
     }
 
     /**
@@ -176,7 +175,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     /** @see #save */
     @Override
     public void addAdditionalSaveData(ValueOutput output) {
-        save(new TagCompound(output));
+        save(TagCompound.indirect(output));
     }
 
     /**
@@ -184,7 +183,8 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
      * @see IWorldData
      * @see #load
      */
-    private void save(TagCompound data) {
+    private void save(TagCompound output) {
+        TagCompound data = new TagCompound();
         this.roll = getEntityData().get(ROLL);
         this.prevRoll = getEntityData().get(PREV_ROLL);
 
