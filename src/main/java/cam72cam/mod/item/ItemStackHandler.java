@@ -5,6 +5,10 @@ import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 import cam72cam.mod.util.RegistryUtil;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -12,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -124,12 +129,15 @@ public class ItemStackHandler implements IInventory {
 
     @Deprecated
     public TagCompound save() {
-        return new TagCompound(internal.serializeNBT(RegistryUtil.getRegistry()));
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, RegistryUtil.getRegistry());
+        internal.serialize(output);
+        return new TagCompound(output.buildResult());
     }
 
     @Deprecated
     public void load(TagCompound items) {
-        internal.deserializeNBT(RegistryUtil.getRegistry(), items.internal);
+        ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, RegistryUtil.getRegistry(), items.internal);
+        internal.deserialize(input);
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
@@ -148,12 +156,12 @@ public class ItemStackHandler implements IInventory {
                             d.remove(fieldName);
                             return;
                         }
-                        d.set(fieldName, new TagCompound(o.internal.serializeNBT(RegistryUtil.getRegistry())));
+                        d.set(fieldName, o.save());
                     },
                     (d, w) -> {
                         try {
                             ItemStackHandler o = ctr.newInstance();
-                            o.internal.deserializeNBT(RegistryUtil.getRegistry(), d.get(fieldName).internal);
+                            o.load(d.get(fieldName));
                             return o;
                         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                             throw new SerializationException("Unable to construct item stack handler " + type, e);

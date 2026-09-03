@@ -4,9 +4,8 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -170,7 +169,7 @@ public class VBO {
                            : RenderContext.UMC_CORE;
             };
             //Keep render target setting
-            int boundFBO = GlStateManager.getBoundFramebuffer();
+            int boundFBO = GlStateManager.getFrameBuffer(GL32.GL_DRAW_FRAMEBUFFER);
             if (renderType != null) {
                 renderType.setupRenderState();
             }

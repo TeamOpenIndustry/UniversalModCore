@@ -66,11 +66,11 @@ public class ItemEntity extends Entity {
             return null;
         }
 
-        if (internal.thrower == null || this.internal.level().getPlayerByUUID(internal.thrower) == null) {
+        if (internal.thrower == null || this.internal.level().getPlayerByUUID(internal.thrower.getUUID()) == null) {
             return null;
         }
         return World.get(this.internal.level())
-                    .getEntity(this.internal.level().getPlayerByUUID(internal.thrower))
+                    .getEntity(this.internal.level().getPlayerByUUID(internal.thrower.getUUID()))
                     .asPlayer();
     }
 

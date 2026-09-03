@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
+import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -11,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import javax.annotation.Nullable;
 import java.awt.geom.Rectangle2D;
@@ -49,7 +51,12 @@ public class RenderState {
 
     //Avoid potential server-side load
     private static final Lazy<Consumer<RenderState>> clientInitializer = Lazy.of(() -> (state) -> {
-        if(!RenderSystem.isOnRenderThread()) return;RenderSystem.getModelViewMatrix().get(mbuf);
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        if(!RenderSystem.isOnRenderThread()) {
+            return;
+        }
+
+        RenderSystem.getModelViewMatrix().get(mbuf);
         state.model_view = new Matrix4(
                 mbuf[0],
                 mbuf[1],
@@ -69,7 +76,9 @@ public class RenderState {
                 mbuf[15]
         ).transpose();
 
-        RenderSystem.getProjectionMatrix().get(mbuf);
+        //Read-only
+        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
+        buffer.asFloatBuffer().get(mbuf);
         state.projection = new Matrix4(
                 mbuf[0],
                 mbuf[1],
@@ -97,6 +106,7 @@ public class RenderState {
     }
 
     public RenderState(PoseStack stack) {
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         Matrix4f tmp = new Matrix4f(RenderSystem.getModelViewMatrix());
         tmp.mul(stack.last().pose());
         tmp.get(mbuf);
@@ -119,7 +129,8 @@ public class RenderState {
                 mbuf[15]
         ).transpose();
 
-        RenderSystem.getProjectionMatrix().get(mbuf);
+        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
+        buffer.asFloatBuffer().get(mbuf);
         this.projection = new Matrix4(
                 mbuf[0],
                 mbuf[1],

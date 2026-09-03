@@ -32,8 +32,8 @@ public class MixinChunkStorage {
     public void captureEntitiesTag(ResourceKey<Level> p_188289_, Supplier<DimensionDataStorage> p_188290_, CompoundTag p_188291_, Optional<ResourceKey<Codec<? extends ChunkGenerator>>> p_188292_,
                                    CallbackInfoReturnable<CompoundTag> cir, @Share("tag") LocalRef<ListTag> tag) {
         if(p_188291_.contains("Level")
-           && p_188291_.getCompound("Level").contains("Entities")) {
-            tag.set(p_188291_.getCompound("Level").getList("Entities", CompoundTag.TAG_COMPOUND));
+           && p_188291_.getCompoundOrEmpty("Level").getList("Entities").isPresent()) {
+            tag.set(p_188291_.getCompoundOrEmpty("Level").getList("Entities").orElseThrow());
         }
     }
 

@@ -25,7 +25,10 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
@@ -106,8 +109,8 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see #load */
     @Override
-    public final void readAdditionalSaveData(CompoundTag compound) {
-        load(new TagCompound(compound));
+    public final void readAdditionalSaveData(ValueInput input) {
+        load(new TagCompound(input));
     }
 
     /**
@@ -172,8 +175,8 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     /** @see #save */
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        save(new TagCompound(compound));
+    public void addAdditionalSaveData(ValueOutput output) {
+        save(new TagCompound(output));
     }
 
     /**
@@ -548,7 +551,7 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
         return true;
     }
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean canBeCollidedWith(Entity colliding) {
         return true;
     }
 
@@ -559,9 +562,9 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
+    public void moveOrInterpolateTo(Vec3 vec, float yaw, float pitch) {
         if (self.allowsDefaultMovement()) {
-            super.lerpTo(x, y, z, yaw, pitch, posRotationIncrements);
+            super.moveOrInterpolateTo(vec, yaw, pitch);
         }
     }
 
@@ -573,10 +576,10 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     private void applySavedVelocity(TagCompound data) {
-        ListTag vel = data.internal.getList("Motion", 6);
-        double x = vel.getDouble(0);
-        double y = vel.getDouble(1);
-        double z = vel.getDouble(2);
+        ListTag vel = data.internal.getList("Motion").orElseThrow();
+        double x = vel.getDouble(0).orElseThrow();
+        double y = vel.getDouble(1).orElseThrow();
+        double z = vel.getDouble(2).orElseThrow();
         super.setDeltaMovement(x, y, z);
     }
 

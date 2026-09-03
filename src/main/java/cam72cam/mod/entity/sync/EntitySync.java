@@ -81,7 +81,7 @@ public class EntitySync extends TagCompound {
         TagCompound sync = new TagCompound();
         List<String> removed = new ArrayList<>();
 
-        for (String key : internal.getAllKeys()) {
+        for (String key : internal.keySet()) {
             Tag newVal = internal.get(key);
             if (old.internal.contains(key)) {
                 Tag oldVal = old.internal.get(key);
@@ -89,12 +89,12 @@ public class EntitySync extends TagCompound {
                     continue;
                 }
                 if (oldVal.getId() == 5) {
-                    if (Math.abs(old.internal.getFloat(key) - internal.getFloat(key)) < syncs[precision.get(key)]) {
+                    if (Math.abs(old.internal.getFloatOr(key, 0) - internal.getFloatOr(key, 0)) < syncs[precision.get(key)]) {
                         continue;
                     }
                 }
                 if (oldVal.getId() == 6) {
-                    if (Math.abs(old.internal.getDouble(key) - internal.getDouble(key)) < syncs[precision.get(key)]) {
+                    if (Math.abs(old.internal.getDoubleOr(key, 0) - internal.getDoubleOr(key, 0)) < syncs[precision.get(key)]) {
                         continue;
                     }
                 }
@@ -102,7 +102,7 @@ public class EntitySync extends TagCompound {
             sync.internal.put(key, newVal);
         }
 
-        for (String key : old.internal.getAllKeys()) {
+        for (String key : old.internal.keySet()) {
             if (!internal.contains(key)) {
                 removed.add(key);
             }
@@ -115,7 +115,7 @@ public class EntitySync extends TagCompound {
             });
         }
 
-        if (!sync.internal.getAllKeys().isEmpty()) {
+        if (!sync.internal.keySet().isEmpty()) {
             old = new TagCompound(this.internal.copy());
             new EntitySyncPacket(entity, sync).sendToObserving(entity);
         }
@@ -123,7 +123,7 @@ public class EntitySync extends TagCompound {
 
     /** Receive update (should only be called from packets) */
     public void receive(TagCompound sync) throws SerializationException {
-        for (String key : sync.internal.getAllKeys()) {
+        for (String key : sync.internal.keySet()) {
             if (key.equals("sync_internal_removed")) {
                 for (String removed : sync.getList(key, x -> x.getString("removed"))) {
                     internal.remove(removed);

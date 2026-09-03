@@ -88,7 +88,7 @@ public class Player extends Entity {
         private final PermissionNode<Boolean> node;
 
         private PermissionAction(String node, boolean opRequiredDefault) {
-            this.node = new PermissionNode<>("permission", node, PermissionTypes.BOOLEAN, ((player, playerUUID, context) -> !opRequiredDefault || player != null && player.server.getPlayerList().isOp(player.getGameProfile())));
+            this.node = new PermissionNode<>("permission", node, PermissionTypes.BOOLEAN, ((player, playerUUID, context) -> !opRequiredDefault || player != null && player.level().getServer().getPlayerList().isOp(player.getGameProfile())));
             CommonEvents.Permissions.NODES.subscribe(event -> event.addNodes(this.node));
         }
     }

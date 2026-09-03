@@ -16,8 +16,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -198,9 +200,9 @@ public abstract class BlockType {
 
         /** Called server side at the end of the block break call chain as cleanup */
         @Override
-        public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
+        public void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean isMoving) {
             BlockType.this.onBreak(World.get(world), new Vec3i(pos));
-            super.onRemove(state, world, pos, newState, isMoving);
+            super.affectNeighborsAfterRemoval(state, world, pos, isMoving);
         }
 
         /** Called both client and server side when a player right clicks on a block.  Can cancel the event by returning true (handled) */
@@ -320,10 +322,12 @@ public abstract class BlockType {
         }
 
         //Blocks liquid movement for now
-        public boolean canPlaceLiquid(@Nullable net.minecraft.world.entity.player.Player p_295256_, BlockGetter p_54766_, BlockPos p_54767_, BlockState p_54768_, Fluid p_54769_) {
+        @Override
+        public boolean canPlaceLiquid(LivingEntity p_295256_, BlockGetter p_54766_, BlockPos p_54767_, BlockState p_54768_, Fluid p_54769_) {
             return false;
         }
 
+        @Override
         public boolean placeLiquid(LevelAccessor p_54770_, BlockPos p_54771_, BlockState p_54772_, FluidState p_54773_) {
             return false;
         }

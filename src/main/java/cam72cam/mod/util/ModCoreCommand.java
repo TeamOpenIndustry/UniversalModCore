@@ -16,7 +16,6 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class ModCoreCommand extends Command {
@@ -81,15 +80,15 @@ public class ModCoreCommand extends Command {
 		}
 	}
 
-	private String ticketIdentifier(Ticket<?> ticket) {
+	private String ticketIdentifier(Ticket ticket) {
 		return ticket.getType().toString();
 	}
 
 	private boolean sendTicketInfo(World world, Consumer<PlayerMessage> sender, Optional<Player> player, List<String> args) {
 		boolean list = false;
 		boolean debug = false;
-		if (args.size() > 0) {
-			switch (args.remove(0)) {
+		if (!args.isEmpty()) {
+			switch (args.removeFirst()) {
 				case "list":
 					list = true;
 					break;
@@ -103,21 +102,27 @@ public class ModCoreCommand extends Command {
 
 
 		sender.accept(PlayerMessage.direct(String.format(
-				"%s forced chunks in %s",
-				((ServerLevel) world.internal).getChunkSource().distanceManager.tickets.size(), world.getId()
+                "%s forced chunks in %s",
+                ((ServerLevel) world.internal).getChunkSource().distanceManager.ticketStorage.tickets
+                        .values()
+                        .stream()
+                        .mapToInt(List::size).sum(), world.getId()
 		)));
 
-		Map<TicketType<?>, List<ChunkPos>> tickets = new HashMap<>();
+		Map<TicketType, List<ChunkPos>> tickets = new HashMap<>();
 
-		((ServerLevel) world.internal).getChunkSource().distanceManager.tickets.forEach((pos, ticketList) -> {
-			ChunkPos chunkpos = new ChunkPos(pos);
-			for (Ticket<?> ticket : ticketList) {
-				tickets.computeIfAbsent(ticket.getType(), p -> new ArrayList<>()).add(chunkpos);
-			}
+		((ServerLevel) world.internal).getChunkSource().distanceManager.ticketStorage.tickets
+                .long2ObjectEntrySet().forEach((entry) -> {
+					long pos = entry.getLongKey();
+					List<Ticket> list1 = entry.getValue();
+					ChunkPos chunkpos = new ChunkPos(pos);
+					for (Ticket ticket : list1) {
+						tickets.computeIfAbsent(ticket.getType(), p -> new ArrayList<>()).add(chunkpos);
+					}
 		});
 
 		if (list || debug) {
-			for (TicketType<?> ttype : tickets.keySet()) {
+			for (TicketType ttype : tickets.keySet()) {
 				sender.accept(PlayerMessage.direct(String.format("%s : %s forced", ttype, tickets.get(ttype).size())));
 				if (debug) {
 					for (ChunkPos chunkPos : tickets.get(ttype)) {

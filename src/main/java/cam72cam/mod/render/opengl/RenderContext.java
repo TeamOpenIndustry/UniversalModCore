@@ -3,6 +3,7 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -34,9 +35,9 @@ public class RenderContext {
     public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
 
     //Modified from rendertype_entity_cutout, fix model normal
-    public static ShaderProgram UMC_CORE = new ShaderProgram(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"),
-                                                             DefaultVertexFormat.NEW_ENTITY,
-                                                             ShaderDefines.EMPTY);
+    public static RenderPipeline UMC_CORE = new RenderPipeline(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"),
+                                                              DefaultVertexFormat.NEW_ENTITY,
+                                                              ShaderDefines.EMPTY);
     //More a holder than renderer for now
     public static RenderType UMC_CORE_RT = RenderType.create("umc_core",
                                                              DefaultVertexFormat.NEW_ENTITY,

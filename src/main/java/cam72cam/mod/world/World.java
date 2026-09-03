@@ -401,7 +401,9 @@ public class World {
     public BlockEntity reconstituteBlockEntity(TagCompound datain) {
         TagCompound data = TileEntity.legacyConverter(datain);
         //We don't know the actual block state, pass in a default one here to avoid NPE for mixins
-        BlockPos blockpos = new BlockPos(data.internal.getInt("x"), data.internal.getInt("y"), data.internal.getInt("z"));
+        BlockPos blockpos = new BlockPos(data.internal.getInt("x").orElseThrow(),
+                                         data.internal.getInt("y").orElseThrow(),
+                                         data.internal.getInt("z").orElseThrow());
         TileEntity te = (TileEntity) TileEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), data.internal, internal.registryAccess());
         if (te == null) {
             ModCore.warn("BAD TE DATA " + data);

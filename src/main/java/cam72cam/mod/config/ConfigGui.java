@@ -270,7 +270,7 @@ public class ConfigGui implements IScreen {
 
     @Override
     public void draw(IScreenBuilder builder) {
-        ((Screen)builder).renderBackground(new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource()), 0, 0, 0);
+        ((Screen)builder).renderBackground(new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().gameRenderer.guiRenderState), 0, 0, 0);
 
         String name = "";
         ConfigGui iter = this;

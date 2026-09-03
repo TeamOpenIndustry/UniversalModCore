@@ -8,6 +8,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.world.World;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.level.block.Blocks;
@@ -65,7 +66,7 @@ public class TagCompound {
     }
 
     public Boolean getBoolean(String key) {
-        return getter(key, internal::getBoolean);
+        return getter(key, k -> internal.getBooleanOr(k, false));
     }
 
     public TagCompound setBoolean(String key, Boolean value) {
@@ -73,7 +74,7 @@ public class TagCompound {
     }
 
     public Byte getByte(String key) {
-        return getter(key, internal::getByte);
+        return getter(key, k -> internal.getByteOr(k, (byte) 0));
     }
 
     public TagCompound setByte(String key, Byte value) {
@@ -81,7 +82,7 @@ public class TagCompound {
     }
 
     public Integer getInteger(String key) {
-        return getter(key, internal::getInt);
+        return getter(key, k -> internal.getIntOr(k, 0));
     }
 
     public TagCompound setInteger(String key, Integer value) {
@@ -89,7 +90,7 @@ public class TagCompound {
     }
 
     public Long getLong(String key) {
-        return getter(key, internal::getLong);
+        return getter(key, k -> internal.getLongOr(k, 0L));
     }
 
     public TagCompound setLong(String key, Long value) {
@@ -97,7 +98,7 @@ public class TagCompound {
     }
 
     public Float getFloat(String key) {
-        return getter(key, internal::getFloat);
+        return getter(key, k -> internal.getFloatOr(k, 0f));
     }
 
     public TagCompound setFloat(String key, Float value) {
@@ -105,7 +106,7 @@ public class TagCompound {
     }
 
     public Double getDouble(String key) {
-        return getter(key, internal::getDouble);
+        return getter(key, k -> internal.getDoubleOr(k, 0d));
     }
 
     public TagCompound setDouble(String key, Double value) {
@@ -113,7 +114,7 @@ public class TagCompound {
     }
 
     public String getString(String key) {
-        return getter(key, (Function<String, String>) internal::getString);
+        return getter(key, k -> internal.getString(k).get());
     }
 
     public TagCompound setString(String key, String value) {
@@ -121,8 +122,8 @@ public class TagCompound {
     }
 
     public UUID getUUID(String key) {
-        if (internal.hasUUID(key)) {
-            return internal.getUUID(key);
+        if (internal.contains(key) && internal.get(key).getId() == CompoundTag.TAG_INT_ARRAY) {
+            return internal.read(key, UUIDUtil.CODEC).orElse(null);
         }
         return getter(key, s -> UUID.fromString(getString(s)));
     }
@@ -133,11 +134,11 @@ public class TagCompound {
 
     public Vec3i getVec3i(String key) {
         return getter(key, () -> {
-            if (internal.getTagType(key) == 4) {
-                return new Vec3i(internal.getLong(key));
+            if (internal.contains(key) && internal.get(key).getId() == CompoundTag.TAG_LONG) {
+                return new Vec3i(internal.getLongOr(key, 0L));
             }
-            CompoundTag tag = internal.getCompound(key);
-            return new Vec3i(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z"));
+            CompoundTag tag = internal.getCompoundOrEmpty(key);
+            return new Vec3i(tag.getInt("X").get(), tag.getInt("Y").get(), tag.getInt("Z").get());
         });
     }
 
@@ -153,8 +154,8 @@ public class TagCompound {
 
     public Vec3d getVec3d(String key) {
         return getter(key, () -> {
-            CompoundTag nbt = internal.getCompound(key);
-            return new Vec3d(nbt.getDouble("x"), nbt.getDouble("y"), nbt.getDouble("z"));
+            CompoundTag nbt = internal.getCompoundOrEmpty(key);
+            return new Vec3d(nbt.getDouble("x").get(), nbt.getDouble("y").get(), nbt.getDouble("z").get());
         });
     }
 
@@ -196,7 +197,7 @@ public class TagCompound {
     }
 
     public <T extends Enum<?>> T getEnum(String key, Class<T> cls) {
-        return getter(key, () -> safeEnumDecode(cls, internal.getInt(key)));
+        return getter(key, () -> safeEnumDecode(cls, internal.getInt(key).get()));
     }
 
     public TagCompound setEnum(String key, Enum<?> value) {
@@ -205,7 +206,7 @@ public class TagCompound {
 
     public <T extends Enum<?>> List<T> getEnumList(String key, Class<T> cls) {
         return getter(key, () ->
-            Arrays.stream(internal.getIntArray(key)).mapToObj((int i) -> safeEnumDecode(cls, i)).collect(Collectors.toList())
+            Arrays.stream(internal.getIntArray(key).get()).mapToObj((int i) -> safeEnumDecode(cls, i)).collect(Collectors.toList())
         );
     }
 
@@ -216,7 +217,7 @@ public class TagCompound {
     }
 
     public TagCompound get(String key) {
-        return getter(key, () -> new TagCompound(internal.getCompound(key)));
+        return getter(key, () -> new TagCompound(internal.getCompoundOrEmpty(key)));
     }
 
     public TagCompound set(String key, TagCompound value) {
@@ -253,7 +254,7 @@ public class TagCompound {
         return getter(key, () -> {
             Map<K, V> map = new HashMap<>();
             TagCompound data = get(key);
-            for (String item : data.internal.getAllKeys()) {
+            for (String item : data.internal.keySet()) {
                 map.put(keyFn.apply(item), valFn.apply(data.get(item)));
             }
             return map;
@@ -305,8 +306,10 @@ public class TagCompound {
             }
 
 
-            BlockPos blockpos = new BlockPos(ted.get("data").internal.getInt("x"), ted.get("data").internal.getInt("y"), ted.get("data").internal.getInt("z"));
-            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), ted.get("data").internal, world.internal.registryAccess());
+            CompoundTag data = ted.get("data").internal;
+            BlockPos blockpos = new BlockPos(data.getInt("x").get(), data.getInt("y").get(), data.getInt("z").get());
+            net.minecraft.world.level.block.entity.BlockEntity te =
+                    net.minecraft.world.level.block.entity.BlockEntity.loadStatic(blockpos, Blocks.AIR.defaultBlockState(), data, world.internal.registryAccess());
             te.setLevel(world.internal);
             assert te instanceof TileEntity;
             return (T) ((TileEntity) te).instance();

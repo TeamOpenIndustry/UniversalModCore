@@ -14,11 +14,9 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
 import cam72cam.mod.util.MinecraftFiles;
 import cam72cam.mod.util.ModCoreCommand;
-import cam72cam.mod.world.ChunkManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.util.Unit;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -211,7 +209,7 @@ public class ModCore {
             }
 
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                MaxTextureSize = RenderSystem.maxSupportedTextureSize();
+                MaxTextureSize = RenderSystem.getDevice().getMaxTextureSize();
                 ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
@@ -316,10 +314,8 @@ public class ModCore {
                 case INITIALIZE:
                     break;
                 case SETUP:
-//                    CommonEvents.World.LOAD.subscribe(w -> w.increaseMaxEntityRadius(32));
                     break;
                 case FINALIZE:
-                    ChunkManager.setup();
                     break;
                 case START:
                     break;

@@ -3,6 +3,7 @@ package cam72cam.mod.mixin.feat.iris_pbr;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,7 +33,7 @@ public class MixinNewWorldRenderingPipeline {
     private boolean isRenderingWorld;
 
     @Inject(method = "onSetShaderTexture", at = @At("HEAD"), cancellable = true)
-    public void onSetPBRTex(int id, CallbackInfo ci) {
+    public void onSetPBRTex(GpuTextureView id, CallbackInfo ci) {
         if (this.shouldBindPBR && this.isRenderingWorld) {
             if (RenderContext.currentState.get() != null) {
                 RenderState state = RenderContext.currentState.get();

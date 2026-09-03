@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ResolvedModel;
 import net.minecraft.client.resources.model.WeightedBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -32,10 +32,10 @@ import java.util.*;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<BlockState, BakedModel>> models = new ArrayList<>();
+    private final List<Pair<BlockState, ResolvedModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
     //Special hack for in-gui/item block model(quads)
-    private final Map<Pair<BlockState, BakedModel>, LitRenderFunc> inGuiBlock = new HashMap<>();
+    private final Map<Pair<BlockState, ResolvedModel>, LitRenderFunc> inGuiBlock = new HashMap<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
@@ -61,7 +61,7 @@ public class StandardModel {
                 .findFirst().get();
 
         BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        Pair<BlockState, BakedModel> pair = Pair.of(
+        Pair<BlockState, ResolvedModel> pair = Pair.of(
                 state,
                 plane == null
                 ? new BakedScaledModel(model, transform)

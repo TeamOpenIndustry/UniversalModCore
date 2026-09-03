@@ -16,6 +16,7 @@ import cam72cam.mod.serialization.SerializationException;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.serialization.TagSerializer;
 import cam72cam.mod.util.Facing;
+import cam72cam.mod.util.RegistryUtil;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
 import com.google.common.collect.HashBiMap;
@@ -27,6 +28,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -34,17 +36,20 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.capabilities.BlockCapability;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.model.data.ModelData;
+import net.neoforged.neoforge.model.data.ModelProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -125,7 +130,9 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                 if (myState == null) {
                     myState = blocks.get(data.getString("instanceId")).internal.defaultBlockState();
                 }
-                BlockPos pos = new BlockPos(data.getInt("x"), data.getInt("y"), data.getInt("z"));
+                BlockPos pos = new BlockPos(data.getInt("x").orElseThrow(),
+                                            data.getInt("y").orElseThrow(),
+                                            data.getInt("z").orElseThrow());
                 data.putString("id", BlockEntityType.getKey(((EntityBlock)myState.getBlock()).newBlockEntity(pos, Blocks.AIR.defaultBlockState()).getType()).toString());
                 return myState;
             }
@@ -146,7 +153,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                     BlockState state = migration.apply(data);
                     if (state != null) {
                         // Usually this is a ChunkPrimer which does not propagate changes
-                        chunk.setBlockState(pos, state, false);
+                        chunk.setBlockState(pos, state, Block.UPDATE_NONE);
                         break;
                     }
                 }
@@ -213,15 +220,17 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public final void loadAdditional(CompoundTag compound, HolderLookup.Provider provider) {
-        super.loadAdditional(compound, provider);
+    public final void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
         hasTileData = true;
         //Add check here in order to avoid accessing newly created TE which doesn't have this field
-        if(compound.contains("x")){
+        if(input.getInt("x").isPresent()){
             // Hack; Because of the new BlockEntity Constructor we now have to set the position manually after loading the BE
-            setPos(new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z")));
+            setPos(new BlockPos(input.getInt("x").orElseThrow(),
+                                input.getInt("y").orElseThrow(),
+                                input.getInt("z").orElseThrow()));
         }
-        TagCompound data = new TagCompound(compound);
+        TagCompound data = new TagCompound(input);
         TagCompound instanceData = data.get("instanceData");
         if (instanceData == null) {
             // Legacy fallback
@@ -242,10 +251,10 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
      * @see TagSerializer
      */
     @Override
-    public void saveAdditional(CompoundTag compound, HolderLookup.Provider provider) {
-        super.saveAdditional(compound, provider);
+    public void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
 
-        TagCompound data = new TagCompound(compound);
+        TagCompound data = new TagCompound(output);
 
         if (instance() != null) {
             TagCompound instanceData = new TagCompound();
@@ -274,7 +283,9 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public final CompoundTag getUpdateTag(boolean writeUpdate, HolderLookup.Provider provider) {
         CompoundTag tag = super.getUpdateTag(provider);
         if (this.isLoaded()) {
-            this.saveAdditional(tag, provider);
+            TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, RegistryUtil.getRegistry());
+            this.saveAdditional(output);
+            tag.merge(output.buildResult());
             TagCompound umcUpdate = new TagCompound();
             if (writeUpdate) {
                 try {
@@ -289,26 +300,26 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider provider) {
-        handleUpdateTag(pkt.getTag(), provider);
+    public void onDataPacket(Connection net, ValueInput input) {
+        handleUpdateTag(input);
     }
 
     /** Active Synchronization from markDirty */
     @Override
-    public final void handleUpdateTag(CompoundTag tag, HolderLookup.Provider provider) {
+    public final void handleUpdateTag(ValueInput input) {
         try {
-            this.loadAdditional(tag, provider);
+            this.loadAdditional(input);
             if (instance() != null) {
-                if (tag.contains("umcUpdate")) {
+                if (input.child("umcUpdate").isPresent()) {
                     try {
-                        instance().readUpdate(new TagCompound(tag.getCompound("umcUpdate")));
+                        instance().readUpdate(new TagCompound(input.child("umcUpdate")));
                     } catch (SerializationException e) {
                         ModCore.catching(e);
                     }
                 }
             }
         } catch (Exception ex) {
-            ModCore.error("IN UPDATE: %s", tag);
+            ModCore.error("IN UPDATE: %s", input);
             ModCore.catching(ex);
         }
         level.sendBlockUpdated(super.worldPosition, null, super.level.getBlockState(super.worldPosition), 3);
@@ -325,29 +336,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     }
 
     /* Forge Overrides */
-
     public final SingleCache<IBoundingBox, AABB> bbCache =
             new SingleCache<>(internal -> BoundingBox.from(internal).move(getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ()));
-
-    /* Moved to cam72cam.mod.render.BlockRender
-      @Override
-      public net.minecraft.world.phys.AABB getRenderBoundingBox() {
-          if (instance() != null) {
-              return bbCache.get(instance().getRenderBoundingBox());
-          }
-          return INFINITE_EXTENT_AABB;
-      }
-      */
-
-    /**
-     * @return Instance's render distance
-     * @see BlockEntity
-     */
-    /* Moved to BlockEntityRenderer
-    @Override
-    public double getViewDistance() {
-        return instance() != null ? instance().getRenderDistance() * instance().getRenderDistance() : Integer.MAX_VALUE;
-    }*/
 
     public static final BlockCapability<IItemHandler, Direction> ITEM_HANDLER_BLOCK =
             BlockCapability.create(ResourceLocation.tryBuild(ModCore.MODID, "item_handler"),

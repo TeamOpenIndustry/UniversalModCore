@@ -130,7 +130,7 @@ public class ScreenBuilder extends Screen implements IScreenBuilder {
     }
 
     @Override
-    protected void renderBlurredBackground() {
+    protected void renderBlurredBackground(GuiGraphics p_420069_) {
         //Do nothing here, this doesn't exist below 1.20.5
         //TODO backport?
     }

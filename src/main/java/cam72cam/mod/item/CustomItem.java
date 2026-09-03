@@ -20,6 +20,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
@@ -28,6 +29,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 /** Implement to create/register a custom item */
 public abstract class CustomItem {
@@ -114,10 +116,10 @@ public abstract class CustomItem {
 
         @Override
         @OnlyIn(Dist.CLIENT)
-        public void appendHoverText(net.minecraft.world.item.ItemStack stack, Item.TooltipContext context, List<Component> components, TooltipFlag flagIn) {
-            super.appendHoverText(stack, context, components, flagIn);
+        public void appendHoverText(net.minecraft.world.item.ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> consumer, TooltipFlag flagIn) {
+            super.appendHoverText(stack, context, display, consumer, flagIn);
             if (ModCore.hasResources) {
-                components.addAll(CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).toList());
+                CustomItem.this.getTooltip(new ItemStack(stack)).stream().map(Component::literal).forEachOrdered(consumer::accept);
             }
         }
 

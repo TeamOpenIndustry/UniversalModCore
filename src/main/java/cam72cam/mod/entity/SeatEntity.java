@@ -5,8 +5,8 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.world.World;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
@@ -19,6 +19,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
@@ -79,19 +81,17 @@ public class SeatEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag compound) {
-        TagCompound data = new TagCompound(compound);
-        parent = data.getUUID("parent");
-        passenger = data.getUUID("passenger");
-        shouldSit = data.getBoolean("shouldSit");
+    protected void readAdditionalSaveData(ValueInput input) {
+        parent = input.read("parent", UUIDUtil.CODEC).orElseThrow();
+        passenger = input.read("passenger", UUIDUtil.CODEC).orElseThrow();
+        shouldSit = input.getBooleanOr("shouldSit", false);
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag compound) {
-        TagCompound data = new TagCompound(compound);
-        data.setUUID("parent", parent);
-        data.setUUID("passenger", passenger);
-        data.setBoolean("shouldSit", shouldSit);
+    protected void addAdditionalSaveData(ValueOutput output) {
+        output.store("parent", UUIDUtil.CODEC, parent);
+        output.store("passenger", UUIDUtil.CODEC, passenger);
+        output.putBoolean("shouldSit", shouldSit);
     }
 
     @Override

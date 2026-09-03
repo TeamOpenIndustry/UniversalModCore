@@ -8,10 +8,18 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.fluids.FluidUtil;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
@@ -29,8 +37,11 @@ public class ItemStack {
 
     /** Deserialize from tag */
     public ItemStack(TagCompound nbt) {
-        this(net.minecraft.world.item.ItemStack.parseOptional(RegistryUtil.getRegistry(),
-                                                              (nbt.hasKey("id") && nbt.getString("id").equals("minecraft:air")) ? new CompoundTag() : nbt.internal));
+        CompoundTag compound = new CompoundTag();
+        compound.put("item", nbt.internal);
+        ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, RegistryUtil.getRegistry(), compound);
+        Optional<net.minecraft.world.item.ItemStack> stack = input.read("item", net.minecraft.world.item.ItemStack.CODEC);
+        supplier = () -> stack.orElse(net.minecraft.world.item.ItemStack.EMPTY);
         if (nbt.hasKey("tag")) {
             CompoundTag merged = getTagCompound().internal.merge(nbt.get("tag").internal);
             internal().set(DataComponents.CUSTOM_DATA, CustomData.of(merged));
@@ -82,7 +93,9 @@ public class ItemStack {
         if (internal().isEmpty()) {
             return new TagCompound();
         }
-        return new TagCompound((CompoundTag) internal().save(RegistryUtil.getRegistry()));
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, RegistryUtil.getRegistry());
+        output.store(net.minecraft.world.item.ItemStack.MAP_CODEC, internal());
+        return new TagCompound(output.buildResult());
     }
 
     /** Items in this stack */
@@ -151,8 +164,24 @@ public class ItemStack {
     }
 
     /** Is the item this type of tool? */
-    public boolean isValidTool(ToolType tool) {
-        return internal().getItem().canPerformAction(internal(), tool.internal);
+    public boolean isValidTool(ToolType toolType) {
+        //TODO 1.21.8 too hacky!
+        Tool tool = internal().get(DataComponents.TOOL);
+        if (tool.rules().stream().anyMatch(rule -> rule.blocks() ==
+                BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK).get(BlockTags.MINEABLE_WITH_PICKAXE).orElseThrow())
+            && toolType == ToolType.PICKAXE) {
+            return true;
+        }
+        if (tool.rules().stream().anyMatch(rule -> rule.blocks() ==
+                BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK).get(BlockTags.MINEABLE_WITH_SHOVEL).orElseThrow())
+                && toolType == ToolType.SHOVEL) {
+            return true;
+        }
+        if (ItemAbilities.DEFAULT_AXE_ACTIONS.stream().anyMatch(a -> internal().getItem().canPerformAction(internal(), a))
+                && toolType == ToolType.AXE) {
+            return true;
+        }
+        return false;
     }
 
     @Override

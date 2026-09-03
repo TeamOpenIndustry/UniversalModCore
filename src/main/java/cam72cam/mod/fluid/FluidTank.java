@@ -5,6 +5,10 @@ import cam72cam.mod.serialization.TagField;
 import cam72cam.mod.serialization.TagMapped;
 import cam72cam.mod.serialization.TagMapper;
 import cam72cam.mod.util.RegistryUtil;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 import java.util.HashSet;
@@ -93,11 +97,14 @@ public class FluidTank implements ITank {
     }
 
     public TagCompound write(TagCompound tag) {
-        return new TagCompound(internal.writeToNBT(RegistryUtil.getRegistry(), tag.internal));
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, RegistryUtil.getRegistry());
+        internal.serialize(output);
+        return new TagCompound(output.buildResult());
     }
 
     public void read(TagCompound tag) {
-        internal.readFromNBT(RegistryUtil.getRegistry(), tag.internal);
+        ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, RegistryUtil.getRegistry(), tag.internal);
+        internal.deserialize(input);
     }
 
     static class Mapper implements TagMapper<FluidTank> {
