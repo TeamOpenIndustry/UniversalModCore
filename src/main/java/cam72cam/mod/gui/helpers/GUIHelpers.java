@@ -124,13 +124,13 @@ public class GUIHelpers {
     /** Draw the fluid in a tank with a colored background at % full */
     public static void drawTankBlock(int x, int y, int width, int height, Fluid fluid, float percentFull, boolean drawBackground, int color) {
         if (drawBackground) {
-//            drawRect(x, y, width, height, 0xFF000000);
+            drawRect(x, y, width, height, 0xFF000000);
         }
 
         if (percentFull > 0 && fluid != null) {
             int fullHeight = Math.max(1, (int) (height * percentFull));
             drawFluid(fluid, x, y + height - fullHeight, width, fullHeight);
-//            drawRect(x, y + height - fullHeight, width, fullHeight, color);
+            drawRect(x, y + height - fullHeight, width, fullHeight, color);
         }
     }
 
