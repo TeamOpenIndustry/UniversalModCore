@@ -5,7 +5,7 @@ import org.jetbrains.annotations.ApiStatus;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-@ApiStatus.AvailableSince("1.3.1")
+@ApiStatus.AvailableSince("1.3.2")
 public class ExpireableMap<K,V> {
 	private final Map<K, V> map = new HashMap<>();
 	private final Map<K, Long> mapUsage = new HashMap<>();

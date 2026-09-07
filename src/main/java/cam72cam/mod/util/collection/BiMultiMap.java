@@ -4,7 +4,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
 
-@ApiStatus.AvailableSince("1.3.1")
+@ApiStatus.AvailableSince("1.3.2")
 public class BiMultiMap<K, V> {
     private final Map<K, Set<V>> keyToValues = new HashMap<>();
     private final Map<V, Set<K>> valueToKeys = new HashMap<>();
