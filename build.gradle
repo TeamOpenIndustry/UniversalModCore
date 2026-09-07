@@ -36,7 +36,7 @@ repositories {
     }
 }
 
-String umcVersion = "1.3.1"
+String umcVersion = "1.3.2"
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         umcVersion += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -88,6 +88,8 @@ repositories {
 }
 
 dependencies {
+    compileOnly 'org.jetbrains:annotations:26.1.0'
+
     shade "curse.maven:invtweaks-223094:2431302"
 
     modUtils.enableMixins(implementation(annotationProcessor("curse.maven:unimixins-826970:8153136")), 'mixins.universalmodcore.refmap.json')
