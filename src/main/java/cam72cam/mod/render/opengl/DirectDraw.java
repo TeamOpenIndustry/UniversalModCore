@@ -2,10 +2,8 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.CompiledShaderProgram;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +15,6 @@ public class DirectDraw {
         Runnable render = () -> {
             BufferBuilder builder = Tesselator.getInstance()
                                               .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            CompiledShaderProgram shader = RenderSystem.getShader();
-            //As IR doesn't use normal() at all I think we could change here to meet 1.19 need
-            RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-
             //Add missing state
             if (state.color != null) {
                 for (VertexBuilder vert : verts) {
@@ -31,17 +25,16 @@ public class DirectDraw {
             }
 
             try (With ctx = RenderContext.apply(state)) {
-//            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
                 for (VertexBuilder vert : verts) {
                     vert.draw(builder);
                 }
 
                 MeshData data = builder.build();
                 if (data != null) {
-                    BufferUploader.draw(data);
+                    //TODO other render types?
+                    RenderType.cutout().draw(data);
                 }
             }
-            RenderSystem.setShader(shader);
         };
         if (state.getStage() != RenderContext.Stage.ENTITY) {
             render.run();

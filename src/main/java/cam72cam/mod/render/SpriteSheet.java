@@ -1,14 +1,12 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.render.opengl.DirectDraw;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
-import cam72cam.mod.util.With;
-import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.*;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -23,6 +21,8 @@ public class SpriteSheet {
     public final int spriteSize;
     private final Map<Identifier, SpriteInfo> sprites = new HashMap<>();
     private final List<SpriteInfo> unallocated = new ArrayList<>();
+    private GpuTextureView view;
+    private NativeImage holder;
 
     /**
      * sprite width/height in px
@@ -35,22 +35,22 @@ public class SpriteSheet {
      * Create new blank sheet and add slots to unallocated
      */
     private void allocateSheet() {
-        int textureID = GL11.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
-            TextureUtil.prepareImage(textureID, sheetSize, sheetSize);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-            for (int uPx = 0; uPx < sheetSize; uPx += spriteSize) {
-                for (int vPx = 0; vPx < sheetSize; vPx += spriteSize) {
-                    float u = uPx / (float) sheetSize;
-                    float uMax = (uPx + spriteSize) / (float) sheetSize;
-                    float v = vPx / (float) sheetSize;
-                    float vMax = (vPx + spriteSize) / (float) sheetSize;
-                    unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, textureID, sheetSize));
-                }
+        int sheetSize = Math.min(1024, GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE));
+        GpuTexture tex = RenderSystem.getDevice().createTexture("UMC",
+                                                                GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT,
+                                                                TextureFormat.RGBA8, sheetSize, sheetSize, 1, 1);
+        tex.setTextureFilter(FilterMode.NEAREST, FilterMode.NEAREST, false);
+        tex.setAddressMode(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE);
+        this.view = RenderSystem.getDevice().createTextureView(tex);
+        this.holder = new NativeImage(sheetSize, sheetSize, false);
+
+        for (int uPx = 0; uPx < sheetSize; uPx += spriteSize) {
+            for (int vPx = 0; vPx < sheetSize; vPx += spriteSize) {
+                float u = uPx / (float) sheetSize;
+                float uMax = (uPx + spriteSize) / (float) sheetSize;
+                float v = vPx / (float) sheetSize;
+                float vMax = (vPx + spriteSize) / (float) sheetSize;
+                unallocated.add(new SpriteInfo(u, uMax, uPx, v, vMax, vPx, view, sheetSize));
             }
         }
     }
@@ -66,16 +66,16 @@ public class SpriteSheet {
             sprites.put(id, unallocated.remove(0));
         }
         SpriteInfo sprite = sprites.get(id);
+        byte[] data = new byte[pixels.capacity()];
+        pixels.get(data);
 
-        //try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(sprite.texID)))) {
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, sprite.texID);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-
-        GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, sprite.uPx, sprite.vPx, spriteSize, spriteSize, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixels);
-        //}
+        int idx = 0;
+        for (int x = sprite.uPx; x < sprite.uPx + spriteSize; x++) {
+            for (int y = sprite.vPx; y < sprite.vPx + spriteSize; y++) {
+                int col = data[idx++] >> 8 | data[idx++] >> 8 | data[idx++] >> 8 | data[idx++] << 24;
+                holder.setPixelABGR(x, y, col);
+            }
+        }
     }
 
     /**
@@ -86,7 +86,7 @@ public class SpriteSheet {
         if (sprite == null) {
             return;
         }
-        state.texture(Texture.wrap(sprite.texID))
+        state.texture(() -> sprite.view)
                 .rotate(180, 1, 0, 0)
                 .translate(0, -1, 0);
         DirectDraw buffer = new DirectDraw();
@@ -112,17 +112,17 @@ public class SpriteSheet {
         final float vMin;
         final float vMax;
         final int vPx;
-        final int texID;
+        final GpuTextureView view;
         private final int sheetSize;
 
-        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, int texID, int sheetSize) {
+        private SpriteInfo(float u, float uMax, int uPx, float v, float vMax, int vPx, GpuTextureView view, int sheetSize) {
             this.uMin = u;
             this.uMax = uMax;
             this.uPx = uPx;
             this.vMin = v;
             this.vMax = vMax;
             this.vPx = vPx;
-            this.texID = texID;
+            this.view = view;
             this.sheetSize = sheetSize;
         }
     }

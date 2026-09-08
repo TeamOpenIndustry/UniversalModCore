@@ -6,14 +6,11 @@ import net.minecraft.client.KeyMapping;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
-@OnlyIn(Dist.CLIENT)
 public class Keyboard {
     private static final Int2ObjectArrayMap<KeyCode> keycodes = new Int2ObjectArrayMap<>();
 

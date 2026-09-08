@@ -92,7 +92,7 @@ public class ModelConfig {
         }
 
         // Start the load even if it is not ready yet
-        tex.getId();
+        tex.getTexView();
         if (!tex.isLoaded()) {
             // Try to find a loaded LOD, with a sane default
             tex = lodMap.values().stream()

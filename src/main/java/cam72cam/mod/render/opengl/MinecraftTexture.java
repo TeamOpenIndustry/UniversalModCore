@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.resource.Identifier;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
@@ -27,7 +28,7 @@ public class MinecraftTexture implements Texture {
     }
 
     @Override
-    public int getId() {
+    public GpuTextureView getTexView() {
         TextureManager texManager = Minecraft.getInstance().getTextureManager();
 
         AbstractTexture tex = texManager.getTexture(id.internal);
@@ -84,6 +85,6 @@ public class MinecraftTexture implements Texture {
                 tex = texManager.getTexture(id.internal);
             }
         }
-        return tex.getId();
+        return tex.getTextureView();
     }
 }

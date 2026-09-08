@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -65,7 +66,7 @@ public abstract class Packet {
         ResourceLocation name = ResourceLocation.tryBuild(ModCore.MODID, sup.get().getClass().getName().toLowerCase(Locale.ROOT).replace("$", "."));
         CustomPacketPayload.Type<Message> type = new CustomPacketPayload.Type<>(name);
         CommonEvents.Networking.REGISTER_PACKET.subscribe(reg -> {
-            reg.commonBidirectional(type, Message.codec, (msg, context) -> {
+            IPayloadHandler<Message> handler = (msg, context) -> {
                 context.enqueueWork(() -> {
                     msg.packet.ctx = context;
                     Packet newPacket = copyFreshPacket(msg);
@@ -89,7 +90,8 @@ public abstract class Packet {
                     }
                     newPacket.handle();
                 });
-            });
+            };
+            reg.commonBidirectional(type, Message.codec, handler, handler);
         });
     }
 

@@ -5,6 +5,8 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
+import dev.lambdaurora.lambdynlights.api.DynamicLightsContext;
+import dev.lambdaurora.lambdynlights.api.DynamicLightsInitializer;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -18,6 +20,8 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import java.lang.reflect.Field;
@@ -115,12 +119,12 @@ public class Light {
         }
 
         @Override
-        protected void readAdditionalSaveData(CompoundTag p_20052_) {
+        protected void readAdditionalSaveData(ValueInput p_20052_) {
 
         }
 
         @Override
-        protected void addAdditionalSaveData(CompoundTag p_20139_) {
+        protected void addAdditionalSaveData(ValueOutput p_20139_) {
 
         }
     }
@@ -158,21 +162,15 @@ public class Light {
         }
     }
 
-//    public static class UMCDynLightInitializer implements DynamicLightsInitializer {
-//        @Override
-//        public void onInitializeDynamicLights(DynamicLightsContext lightCtx) {
-//            lightCtx.entityLightSourceManager().onRegisterEvent().register(context -> {
-//                for (int i = 1; i <= 15; i++) {
-//                    EntityType<LightEntity> et = types[i];
-//                    context.register(et, i);
-//                }
-//            });
-//        }
-//
-//        @Deprecated(forRemoval = true)
-//        @Override
-//        public void onInitializeDynamicLights(ItemLightSourceManager itemLightSourceManager) {
-//            //Deprecated
-//        }
-//    }
+    public static class UMCDynLightInitializer implements DynamicLightsInitializer {
+        @Override
+        public void onInitializeDynamicLights(DynamicLightsContext lightCtx) {
+            lightCtx.entityLightSourceManager().onRegisterEvent().register(context -> {
+                for (int i = 1; i <= 15; i++) {
+                    EntityType<LightEntity> et = types[i];
+                    context.register(et, i);
+                }
+            });
+        }
+    }
 }

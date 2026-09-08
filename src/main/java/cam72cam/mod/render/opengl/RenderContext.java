@@ -2,30 +2,29 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
+import cam72cam.mod.mixin.accessor.ARenderPass;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.client.config.NeoForgeClientConfig;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
-import util.Matrix4;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
@@ -33,16 +32,18 @@ public class RenderContext {
     //Lightmap UV coordinate for full bright
     public static final int FULL_BRIGHT = 240;
     public static final MultiBufferSource.BufferSource IMMEDIATE = MultiBufferSource.immediate(new ByteBufferBuilder(16*1024));
+    public static final Supplier<String> UMC_DEBUG = () -> "UMC";
+    private static final PerspectiveProjectionMatrixBuffer projectionBuffer = new PerspectiveProjectionMatrixBuffer("umc");
 
     //Modified from rendertype_entity_cutout, fix model normal
-    public static RenderPipeline UMC_CORE = new RenderPipeline(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"),
-                                                              DefaultVertexFormat.NEW_ENTITY,
-                                                              ShaderDefines.EMPTY);
+    public static RenderPipeline UMC_CORE = RenderPipeline.builder()
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
+            .withLocation(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
+            .withVertexFormat(DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS).build();
+
     //More a holder than renderer for now
-    public static RenderType UMC_CORE_RT = RenderType.create("umc_core",
-                                                             DefaultVertexFormat.NEW_ENTITY,
-                                                             VertexFormat.Mode.TRIANGLES,
-                                                             GL11.GL_2D,
+    public static RenderType UMC_CORE_RT = RenderType.create("umc_core", 4194304, UMC_CORE,
                                                              RenderType.CompositeState.builder().createCompositeState(false));
 
     private static IntBuffer fourIntBuffer;
@@ -58,8 +59,10 @@ public class RenderContext {
     }
 
     public static With applyBaseState(RenderState state) {
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        RenderPipeline.Builder builder = RenderPipeline.builder();
+        OptionalInt color;
         List<Runnable> restore = new ArrayList<>();
-
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -68,84 +71,62 @@ public class RenderContext {
         }
 
         if (state.projection != null) {
-            Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
-            restore.add(() -> RenderSystem.getProjectionMatrix().set(oldProjection));
+            RenderSystem.backupProjectionMatrix();
+            restore.add(RenderSystem::restoreProjectionMatrix);
             Matrix4f target = state.projection.copy().transpose().convertToMoj();
-            RenderSystem.getProjectionMatrix().set(target);
+            RenderSystem.setProjectionMatrix(projectionBuffer.getBuffer(target), ProjectionType.PERSPECTIVE);
         }
 
+        GpuTextureView view;
         if (state.texture != NO_TEXTURE && state.texture != null) {
             currentState.set(state);
             //Normal and Specular handled in mixin.feat.iris_pbr
-            int oldTexture = RenderSystem.getShaderTexture(0);
-            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-            RenderSystem.bindTexture(state.texture.getId());
-            RenderSystem.setShaderTexture(0, state.texture.getId());
-            restore.add(() -> {
-                RenderSystem.activeTexture(GL13.GL_TEXTURE0);
-                RenderSystem.bindTexture(oldTexture);
-                RenderSystem.setShaderTexture(0, oldTexture);
-            });
+            view = state.texture.getTexView();
+            RenderSystem.setShaderTexture(0, view);
             currentState.remove();
+        } else {
+            view = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
         }
 
         {
-            float[] color = state.color;
-            if (color == null) {
-                color = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
+            if (state.color == null) {
+                color = OptionalInt.of(0xFFFFFFFF);
+            } else {
+                color = OptionalInt.of((int) (state.color[0] * 256) << 24
+                                             | (int) (state.color[1] * 256) << 16
+                                             | (int) (state.color[2] * 256) << 8
+                                             | (int) (state.color[3] * 256));
             }
-            float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
-            RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
-            restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
         }
+        RenderPass pass = encoder.createRenderPass(UMC_DEBUG, view, color);
 
         if (state.depth_test != null) {
-            boolean oldState = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
             if(state.depth_test) {
-                RenderSystem.enableDepthTest();
-                RenderSystem.depthFunc(GL11.GL_LEQUAL);
+                builder.withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST);
             } else {
-                RenderSystem.disableDepthTest();
+                builder.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
             }
-            restore.add(() -> {
-                if(oldState) {
-                    RenderSystem.enableDepthTest();
-                } else {
-                    RenderSystem.disableDepthTest();
-                }
-            });
         }
 
         if (state.cull_face != null) {
-            boolean oldState = GL11.glGetBoolean(GL11.GL_CULL_FACE);
-            if(state.cull_face) {
-                RenderSystem.enableCull();
-            } else {
-                RenderSystem.disableCull();
-            }
-            restore.add(() -> {
-                if(oldState) {
-                    RenderSystem.enableCull();
-                } else {
-                    RenderSystem.disableCull();
-                }
-            });
+            builder.withCull(state.cull_face);
         }
 
         if (state.depth_mask != null) {
-            RenderSystem.depthMask(state.depth_mask);
-            restore.add(() -> RenderSystem.depthMask(true));
+            builder.withDepthWrite(state.depth_mask);
         }
 
         if (state.blend != null) {
-            restore.add(state.blend.apply());
+            if (state.blend.enabled) {
+                builder.withBlend(state.blend.function);
+            } else {
+                builder.withoutBlend();
+            }
         }
 
         if (state.scissor_test != null) {
-            boolean oldValue = GL11.glGetBoolean(GL11.GL_SCISSOR_TEST);
-            applyBool(GL11.GL_SCISSOR_TEST, state.scissor_test);
             if (state.scissor_test && state.scissor_range != null) {
-                int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
+                int scaleFactor = Minecraft.getInstance().getWindow().getGuiScale();
                 int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
                 int x = (int) state.scissor_range.getMinX() * scaleFactor;
@@ -153,29 +134,30 @@ public class RenderContext {
                 int width = (int) state.scissor_range.getWidth() * scaleFactor;
                 int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
-                if (fourIntBuffer == null) {
-                    //16 ints in case it overflows...
-                    fourIntBuffer = ByteBuffer.allocateDirect(64).order(ByteOrder.nativeOrder()).asIntBuffer();
-                }
-                fourIntBuffer.position(0);
-                GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, fourIntBuffer);
-                int[] oldScissor = new int[]{fourIntBuffer.get(0), fourIntBuffer.get(1), fourIntBuffer.get(2), fourIntBuffer.get(3)};
-                restore.add(() -> GL11.glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]));
-
                 //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-                GL11.glScissor(x, screenHeight - y - height, width, height);
+                pass.enableScissor(x, screenHeight - y - height, width, height);
             }
-            restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
         }
         RenderContext.checkError();
 
-        return () -> restore.forEach(Runnable::run);
+        pass.setPipeline(builder.build());
+
+        return new With() {
+            @Override
+            public void restore() {
+                pass.close();
+            }
+
+            @Override
+            public RenderPass getContent() {
+                return pass;
+            }
+        }.and(() -> restore.forEach(Runnable::run));
     }
 
     public static With apply(RenderState state) {
-        With ctx = applyBaseState(state);
+        RenderPass pass = applyBaseState(state).getContent();
         List<Runnable> restore = new ArrayList<>();
-        CompiledShaderProgram shader = RenderSystem.getShader();
 
         if (state.lightmap != null) {
             //Our custom shader will handle vanilla emissive stuff
@@ -191,93 +173,56 @@ public class RenderContext {
                 oldX = 1;
                 oldY = 1;
             }
-            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
+            setupLightMap(ARenderPass.from(pass).getRenderPipeline(), state, state.lightmap[0], state.lightmap[1]);
             restore.add(() -> {
-                setupLightMap(shader, oldX, oldY);
+                setupLightMap(ARenderPass.from(pass).getRenderPipeline(), state, oldX, oldY);
             });
         }
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
-            Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
-//            Lighting.setupLevel(matrix4.convertToMoj());
-            Vector4f transformed0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
-            Vector4f transformed1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
-            RenderSystem.setShaderLights(new Vector3f(transformed0.x(), transformed0.y(), transformed0.z()),
-                                         new Vector3f(transformed1.x(), transformed1.y(), transformed1.z()));
+            //TODO Still necessary?
+//            Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
+//            Vector4f transformed0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
+//            Vector4f transformed1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
+            Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
         }
 
-        applyShaderFields(shader);
-
-        shader.apply();
-        restore.add(shader::clear);
         checkError();
-        return ctx.and(() -> restore.forEach(Runnable::run));
+        return new With() {
+            @Override
+            public void restore() {
+                pass.close();
+            }
+
+            @Override
+            public RenderPass getContent() {
+                return pass;
+            }
+        }.and(() -> restore.forEach(Runnable::run));
     }
 
-    private static void applyShaderFields(CompiledShaderProgram shader) {
-        if (shader.MODEL_VIEW_MATRIX != null) {
-            shader.MODEL_VIEW_MATRIX.set(RenderSystem.getModelViewMatrix());
-        }
-
-        if (shader.PROJECTION_MATRIX != null) {
-            shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
-        }
-
-        if (shader.TEXTURE_MATRIX != null) {
-            shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
-        }
-
-        if (shader.SCREEN_SIZE != null) {
-            Window window = Minecraft.getInstance().getWindow();
-            shader.SCREEN_SIZE.set((float)window.getWidth(), (float)window.getHeight());
-        }
-
-        if (shader.COLOR_MODULATOR != null) {
-            shader.COLOR_MODULATOR.set(RenderSystem.getShaderColor());
-        }
-
-        if (shader.GLINT_ALPHA != null) {
-            shader.GLINT_ALPHA.set(RenderSystem.getShaderGlintAlpha());
-        }
-
-        for (int i = 0; i < 8; ++i) {
-            int o = RenderSystem.getShaderTexture(i);
-            shader.bindSampler("Sampler" + i, o);
-        }
-
-        FogParameters fogparameters = RenderSystem.getShaderFog();
-        if (shader.FOG_START != null) {
-            shader.FOG_START.set(fogparameters.start());
-        }
-
-        if (shader.FOG_END != null) {
-            shader.FOG_END.set(fogparameters.end());
-        }
-
-        if (shader.FOG_COLOR != null) {
-            shader.FOG_COLOR.set(fogparameters.red(), fogparameters.green(), fogparameters.blue(), fogparameters.alpha());
-        }
-
-        if (shader.FOG_SHAPE != null) {
-            shader.FOG_SHAPE.set(fogparameters.shape().getIndex());
-        }
-
-        if (shader.GAME_TIME != null) {
-            shader.GAME_TIME.set(RenderSystem.getShaderGameTime());
-        }
-
-        RenderSystem.setupShaderLights(shader);
-    }
-
-    private static void setupLightMap(CompiledShaderProgram shader, float oldX, float oldY) {
-        int uv2Binding = GL20.glGetAttribLocation(shader.getProgramId(), "UV2");
-        if (uv2Binding != -1) {
-            //240 means full bright
-            int x = (int) (oldX * RenderContext.FULL_BRIGHT);
-            int y = (int) (oldY * RenderContext.FULL_BRIGHT);
-            GL32.glVertexAttribI2i(uv2Binding, x, y);
+    private static void setupLightMap(RenderPipeline pipeline, RenderState state, float oldX, float oldY) {
+        List<VertexFormatElement> elements = pipeline.getVertexFormat().getElements();
+        for (int i = 0; i < elements.size(); i++) {
+            VertexFormatElement element = elements.get(i);
+            if (element.usage() == VertexFormatElement.Usage.UV) {
+                for (Map.Entry<String, VertexFormatElement> entry : pipeline.getVertexFormat().getElementMapping().entrySet()) {
+                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
+                        GL32.glDisableVertexAttribArray(i);
+                        //240 means full bright
+                        int x = RenderContext.FULL_BRIGHT;
+                        int y = RenderContext.FULL_BRIGHT;
+                        if (state.lightmap != null) {
+                            x = (int) (state.lightmap[0] * RenderContext.FULL_BRIGHT);
+                            y = (int) (state.lightmap[1] * RenderContext.FULL_BRIGHT);
+                        }
+                        GL32.glVertexAttribI2i(i, x, y);
+                    }
+                }
+            }
         }
     }
+
 
     public static void applyBool(int opt, boolean currState) {
         if (currState) {

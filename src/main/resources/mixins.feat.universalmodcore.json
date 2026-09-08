@@ -14,12 +14,15 @@
     "data_registry.MixinMinecraftServer",
     "data_registry.MixinRecipeManager",
     "data_registry.MixinTagCollection",
-    "large_entity_collision.MixinEntitySectionStorage"
+    "large_entity_collision.MixinEntitySectionStorage",
+    "pipeline_access.MixinValidationRenderPass"
   ],
   "client": [
     "data_registry.MixinSpriteResourceLoader",
     "global_renderer.MixinRenderGlobal",
     "iris_pbr.MixinDeferredWorldRenderingPipeline",
-    "iris_pbr.MixinNewWorldRenderingPipeline"
+    "iris_pbr.MixinNewWorldRenderingPipeline",
+    "pipeline_access.MixinGlRenderPass",
+    "sprite_total_size.MixinTextureAtlasSprite"
   ]
 }

@@ -11,12 +11,9 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
 import cam72cam.mod.serialization.TagField;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.function.Function;
 
-@OnlyIn(Dist.CLIENT)
 public class Mouse {
     /**
      * Checks if the left mouse button is currently pressed.

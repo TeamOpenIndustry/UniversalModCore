@@ -4,6 +4,7 @@ import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import net.irisshaders.iris.mixinterface.GpuTextureInterface;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,11 +38,11 @@ public class MixinNewWorldRenderingPipeline {
         if (this.shouldBindPBR && this.isRenderingWorld) {
             if (RenderContext.currentState.get() != null) {
                 RenderState state = RenderContext.currentState.get();
-                if (state.getNormals() != Texture.NO_TEXTURE && state.getNormals() != null && state.getNormals().getId() != -1) {
-                    currentNormalTexture = state.getNormals().getId();
+                if (state.getNormals() != Texture.NO_TEXTURE && state.getNormals() != null && !state.getNormals().getTexView().isClosed()) {
+                    currentNormalTexture = ((GpuTextureInterface) state.getNormals().getTexView().texture()).iris$getGlId();
                 }
-                if (state.getSpecular() != Texture.NO_TEXTURE && state.getSpecular() != null && state.getSpecular().getId() != -1) {
-                    currentSpecularTexture = state.getSpecular().getId();
+                if (state.getSpecular() != Texture.NO_TEXTURE && state.getSpecular() != null && !state.getSpecular().getTexView().isClosed()) {
+                    currentSpecularTexture = ((GpuTextureInterface) state.getSpecular().getTexView().texture()).iris$getGlId();
                 }
 
                 PBRTextureManager.notifyPBRTexturesChanged();

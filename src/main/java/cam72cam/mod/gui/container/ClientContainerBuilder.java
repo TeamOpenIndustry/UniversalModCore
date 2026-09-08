@@ -10,6 +10,7 @@ import cam72cam.mod.util.With;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -75,13 +76,13 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     @Override
     public int drawTopBar(int x, int y, int slots) {
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, 0, paddingLeft, topOffset, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, 0, paddingLeft, topOffset, 256, 256);
             // Top Bar
             for (int k = 1; k <= slots; k++) {
-                graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, 0, slotSize, topOffset, 256, 256);
             }
             // Top Right Corner
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, 0, paddingRight, topOffset, 256, 256);
         }
         return y + topOffset;
     }
@@ -91,7 +92,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
             x += paddingLeft;
             if (handler != null && handler.getSlotCount() > slotID) {
-                graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize, 256, 256);
             } else {
                 drawRect(centerX + x, centerY + y, slotSize, slotSize, 0xFF444444);
             }
@@ -102,7 +103,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
             // Left Side
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize, 256, 256);
             // Middle Slots
             for (int slotID = start; slotID < start + cols; slotID++) {
                 int slotOff = (slotID - start);
@@ -111,7 +112,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         }
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
             // Right Side
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize, 256, 256);
         }
         return y + slotSize;
     }
@@ -132,13 +133,13 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     public int drawBottomBar(int x, int y, int slots) {
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
             // Left Bottom
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset, 256, 256);
             // Middle Bottom
             for (int k = 1; k <= slots; k++) {
-                graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + (k - 1) * slotSize, centerY + y, paddingLeft, textureHeight - bottomOffset, slotSize, bottomOffset, 256, 256);
             }
             // Right Bottom
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x + paddingLeft + slots * slotSize, centerY + y, paddingLeft + 9 * slotSize, textureHeight - bottomOffset, paddingRight, bottomOffset, 256, 256);
         }
         return y + bottomOffset;
     }
@@ -146,7 +147,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     @Override
     public int drawPlayerTopBar(int x, int y) {
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset, 256, 256);
         }
         return y + bottomOffset;
     }
@@ -154,7 +155,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     @Override
     public int drawPlayerMidBar(int x, int y) {
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight, 256, 256);
         }
         return y + midBarHeight;
     }
@@ -163,7 +164,7 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
         /*try (With ctx = RenderContext.apply(CHEST_TEXTURE))*/ {
-            graphics.blit(RenderType::guiTextured, CHEST_GUI_TEXTURE.internal, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96, 256, 256);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, CHEST_GUI_TEXTURE.internal, centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96, 256, 256);
         }
         drawPlayerInventoryLabel(normInvOffset + paddingLeft, y - 1);
         return y + 96;
@@ -208,21 +209,10 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
 
         // TODO 1.20.1 decorations?
         graphics.renderItem(stack.internal(), x, y);
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 200);
-        graphics.fill(RenderType.guiOverlay(), x, y, x + 16, y + 16, 0x80FFFFFF);
-        graphics.pose().popPose();
-
-//        try (With ctx = RenderContext.apply(
-//                new RenderState()
-//                        .color(1, 1, 1, 1)
-//                        .alpha_test(true)
-//                        .depth_test(false)
-//        )) {
-//        GlStateManager._disableDepthTest();
-//
-//        GlStateManager._enableDepthTest();
-//        }
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(0, 0);
+        graphics.fill(RenderPipelines.GUI_TEXTURED, x, y, x + 16, y + 16, 0x80FFFFFF);
+        graphics.pose().popMatrix();
     }
 
     @Override
@@ -230,10 +220,10 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
+        graphics.fill(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
         try (With ctx = RenderContext.apply(
                 new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
-            graphics.fill(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
         }
 
         // TODO better sprite map, but this kinda sucks between versions.  maybe add an enum...
@@ -242,8 +232,8 @@ public class ClientContainerBuilder extends AbstractContainerScreen<ServerContai
         }
 
         TextureAtlasSprite sprite = minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.tryParse(spriteId));
-        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
-        graphics.blitSprite(RenderType::guiTextured, sprite, x, y, 0, 16, 16);
+        RenderSystem.setShaderTexture(0, minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView());
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, 0, 16, 16);
     }
 
     //Handle here to avoid wrong label offset

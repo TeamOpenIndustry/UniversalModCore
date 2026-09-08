@@ -230,7 +230,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
                                 input.getInt("y").orElseThrow(),
                                 input.getInt("z").orElseThrow()));
         }
-        TagCompound data = new TagCompound(input);
+        TagCompound data = TagCompound.indirect(input);
         TagCompound instanceData = data.get("instanceData");
         if (instanceData == null) {
             // Legacy fallback
@@ -254,7 +254,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
     public void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
 
-        TagCompound data = new TagCompound(output);
+        TagCompound data = TagCompound.indirect(output);
 
         if (instance() != null) {
             TagCompound instanceData = new TagCompound();
@@ -312,7 +312,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             if (instance() != null) {
                 if (input.child("umcUpdate").isPresent()) {
                     try {
-                        instance().readUpdate(new TagCompound(input.child("umcUpdate")));
+                        instance().readUpdate(TagCompound.indirect(input.child("umcUpdate").get()));
                     } catch (SerializationException e) {
                         ModCore.catching(e);
                     }
@@ -525,6 +525,7 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
 
     /* Render */
     public static ModelProperty<TileEntity> TE_PROPERTY = new ModelProperty<>();
+    @Override
     public final ModelData getModelData() {
         return ModelData.builder().with(TE_PROPERTY, this).build();
     }

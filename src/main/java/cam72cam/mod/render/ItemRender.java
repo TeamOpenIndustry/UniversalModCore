@@ -14,7 +14,14 @@ import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import cam72cam.mod.world.World;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.resource.RenderTargetDescriptor;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.mojang.serialization.MapCodec;
@@ -25,9 +32,11 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -37,10 +46,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /** Item Render Registry (Here be dragons...) */
 public class ItemRender {
@@ -220,37 +226,43 @@ public class ItemRender {
         With restore = OptiFine.overrideFastRender(false);
         RenderType.cutout().setupRenderState();
 
-        TextureTarget fb = new TextureTarget(width, height, true, true);
-        fb.setClearColor(0, 0, 0, 0);
-        fb.clear();
-        fb.bindWrite(true);
+        RenderTargetDescriptor descriptor = new RenderTargetDescriptor(width, height, true, 0x00000000, true);
+        RenderTarget fb = descriptor.allocate();
+        descriptor.prepare(fb);
 
         RenderState state = new RenderState();
         state.model_view().setIdentity();
         state.projection().setIdentity();
 
         try (With with = RenderContext.apply(state)) {
-            boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-            int oldDepth = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
-
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GL11.glDepthFunc(GL11.GL_LESS);
-            GL11.glClearDepth(1);
-
+            fb.blitToScreen();
             model.renderCustom(new RenderState().stage(RenderContext.Stage.ITEM_SPRITE_TEX));
-
-            fb.bindRead();
+            GpuTexture result = fb.getColorTexture();
+            GpuBuffer buffer = RenderSystem.getDevice().createBuffer(() -> "Sprite buffer", 9, width * height * result.getFormat().pixelSize());
+            CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
             ByteBuffer buff = ByteBuffer.allocateDirect(4 * width * height);
-            GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
-            fb.unbindRead();
-
-            fb.unbindWrite();
-            fb.destroyBuffers();
-
-            GL11.glDepthFunc(oldDepth);
-
+            encoder.copyTextureToBuffer(result,
+                                        buffer,
+                                        0,
+                                        () -> {
+                                            try (GpuBuffer.MappedView gpubuffer$mappedview = encoder.mapBuffer(buffer, true, false)) {
+                                                for (int i = 0; i < width; i++) {
+                                                    for (int j = 0; j < height; j++) {
+                                                        int k1 = 0;
+                                                        int l1 = 0;
+                                                        int i2 = 0;
+                                                        int l2 = gpubuffer$mappedview.data().getInt((j + i * width) * result.getFormat().pixelSize());
+                                                        k1 += ARGB.red(l2);
+                                                        l1 += ARGB.green(l2);
+                                                        i2 += ARGB.blue(l2);
+                                                        buff.put((byte) i2).put((byte) l1).put((byte) k1).put((byte) 255);
+                                                    }
+                                                }
+                                            }
+                                            buffer.close();
+                                        },
+                                        0);
             iconSheet.setSprite(id, buff);
-
             try {
                 byte[] data = new byte[buff.capacity()];
                 buff.get(data);
@@ -259,11 +271,6 @@ public class ItemRender {
                 ModCore.catching(e);
                 sprite.delete();
             }
-
-            if (!depthEnabled) {
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
-            }
-            GL11.glDepthFunc(oldDepth);
         }
 
         RenderType.cutout().clearRenderState();
@@ -317,6 +324,11 @@ public class ItemRender {
 
                 RenderType.cutoutMipped().clearRenderState();
             }
+        }
+
+        @Override
+        public void getExtents(Set<Vector3f> p_428206_) {
+            //TODO 1.21.6???
         }
 
         @Override

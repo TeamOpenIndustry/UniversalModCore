@@ -1,5 +1,6 @@
 package cam72cam.mod.gui.helpers;
 
+import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -7,10 +8,16 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
+import net.neoforged.neoforge.client.ClientTooltipFlag;
+import net.neoforged.neoforge.client.config.NeoForgeClientConfig;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -70,12 +77,23 @@ public class ItemPickerGUI {
             search.render(graphics, mouseX, mouseY, partialTicks);
 
             for (Renderable button : this.renderables) {
-                if (button instanceof ItemButton) {
+                if (button instanceof ItemButton itemButton) {
                     if (scrollBar != null) {
                         ((AbstractWidget) button).setY(buttonCoordList.get(button).getY() - (int) Math.floor(scrollBar.getValue() * 32));
                     }
-                    if (((ItemButton) button).isMouseOver(mouseX, mouseY)) {
-                        graphics.renderTooltip(font, ((ItemButton) button).stack.internal(), mouseX, mouseY);
+                    if (itemButton.isMouseOver(mouseX, mouseY)) {
+                        //TODO 1.21.8
+                        List<ClientTooltipComponent> tooltipLines = itemButton.stack.internal()
+                                                                                    .getTooltipLines(Item.TooltipContext.of(MinecraftClient.getPlayer().getWorld().internal),
+                                                                                                     MinecraftClient.getPlayer().internal,
+                                                                                                     ClientTooltipFlag.of(Minecraft.getInstance().options.advancedItemTooltips
+                                                                                                                          ? TooltipFlag.Default.ADVANCED
+                                                                                                                          : TooltipFlag.Default.NORMAL))
+                                                                                    .stream()
+                                                                                    .map(Component::getVisualOrderText)
+                                                                                    .map(ClientTooltipComponent::create)
+                                                                                    .toList();
+                        graphics.renderTooltip(font, tooltipLines, mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, itemButton.stack.internal());
                     }
                 }
             }

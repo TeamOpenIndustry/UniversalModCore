@@ -7,18 +7,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.util.Lazy;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import util.Matrix4;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import javax.annotation.Nullable;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Rectangle2D;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
 public class RenderState {
@@ -52,7 +48,7 @@ public class RenderState {
     //Avoid potential server-side load
     private static final Lazy<Consumer<RenderState>> clientInitializer = Lazy.of(() -> (state) -> {
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-        if(!RenderSystem.isOnRenderThread()) {
+        if (!RenderSystem.isOnRenderThread()) {
             return;
         }
 
@@ -151,6 +147,53 @@ public class RenderState {
         ).transpose();
     }
 
+    // Gui
+    public RenderState(Matrix3x2fStack stack) {
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        Matrix4f tmp = new Matrix4f(RenderSystem.getModelViewMatrix());
+        tmp.mul(stack.get(new Matrix3x2f()));
+        tmp.get(mbuf);
+        this.model_view = new Matrix4(
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
+        ).transpose();
+
+        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
+        buffer.asFloatBuffer().get(mbuf);
+        this.projection = new Matrix4(
+                mbuf[0],
+                mbuf[1],
+                mbuf[2],
+                mbuf[3],
+                mbuf[4],
+                mbuf[5],
+                mbuf[6],
+                mbuf[7],
+                mbuf[8],
+                mbuf[9],
+                mbuf[10],
+                mbuf[11],
+                mbuf[12],
+                mbuf[13],
+                mbuf[14],
+                mbuf[15]
+        ).transpose();
+    }
+
     private RenderState(RenderState ctx) {
         this.model_view = ctx.model_view != null ? ctx.model_view.copy() : null;
         this.projection = ctx.projection != null ? ctx.projection.copy() : null;
@@ -180,7 +223,7 @@ public class RenderState {
     }
 
     public RenderState color(float r, float g, float b, float a) {
-        color = new float[] {r, g, b, a};
+        color = new float[]{r, g, b, a};
         return this;
     }
 
@@ -201,20 +244,25 @@ public class RenderState {
     public RenderState translate(Vec3d vec) {
         return this.translate(vec.x, vec.y, vec.z);
     }
+
     public RenderState translate(double x, double y, double z) {
         this.model_view().translate(x, y, z);
         return this;
     }
+
     public RenderState scale(Vec3d vec) {
         return this.scale(vec.x, vec.y, vec.z);
     }
-    public RenderState scale(double factor){
+
+    public RenderState scale(double factor) {
         return this.scale(factor, factor, factor);
     }
+
     public RenderState scale(double x, double y, double z) {
         this.model_view().scale(x, y, z);
         return this;
     }
+
     public RenderState rotate(double degrees, double x, double y, double z) {
         this.model_view().rotate(Math.toRadians(degrees), x, y, z);
         return this;
@@ -247,51 +295,63 @@ public class RenderState {
         this.lighting = lighting;
         return this;
     }
+
     public RenderState alpha_test(boolean alpha_test) {
         this.alpha_test = alpha_test;
         return this;
     }
+
     public RenderState depth_test(boolean depth_test) {
         this.depth_test = depth_test;
         return this;
     }
+
     public RenderState scissor(boolean scissor, @Nullable Rectangle2D range) {
         this.scissor_test = scissor;
         this.scissor_range = range;
         return this;
     }
+
     public RenderState depth_mask(boolean depth_mask) {
         this.depth_mask = depth_mask;
         return this;
     }
+
     public RenderState smooth_shading(boolean smooth_shading) {
         this.smooth_shading = smooth_shading;
         return this;
     }
+
     public RenderState rescale_normal(boolean rescale_normal) {
         this.rescale_normal = rescale_normal;
         return this;
     }
+
     public RenderState cull_face(boolean cull_face) {
         this.cull_face = cull_face;
         return this;
     }
+
     public RenderState lightmap(float block, float sky) {
-        this.lightmap = new float[] {block, sky};
+        this.lightmap = new float[]{block, sky};
         return this;
     }
+
     public RenderState blend(BlendMode blend) {
         this.blend = blend;
         return this;
     }
+
     public RenderState shader(OptiFine.Shaders shader) {
         this.shader = shader;
         return this;
     }
+
     public RenderState stage(RenderContext.Stage stage) {
         this.stage = stage != null ? stage : RenderContext.Stage.NONE;
         return this;
     }
+
     public RenderContext.Stage getStage() {
         return this.stage;
     }

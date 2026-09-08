@@ -1,13 +1,10 @@
 package cam72cam.mod.input;
 
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /**
- * Utility class to interact with the system clipboard.
+ * Client utility class to interact with the system clipboard.
  */
-@OnlyIn(Dist.CLIENT)
 public class Clipboard {
     /**
      * Retrieves the current text content of the system clipboard.

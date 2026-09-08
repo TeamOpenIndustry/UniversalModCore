@@ -23,8 +23,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.IContainerFactory;
 
@@ -52,7 +50,6 @@ public class GuiRegistry {
 
 
     /** Internal event registration, do not use */
-    @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.MENU_SCREENS_REGISTER.subscribe(e -> e.register(TYPE, ClientContainerBuilder::new));
     }
@@ -86,7 +83,6 @@ public class GuiRegistry {
         return (int) hasher.getValue();
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static void openScreen(IScreen screen, Supplier<Boolean> valid) {
         Minecraft.getInstance().setScreen(new ScreenBuilder(screen, valid));
     }

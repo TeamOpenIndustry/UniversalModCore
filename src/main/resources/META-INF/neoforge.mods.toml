@@ -24,13 +24,13 @@ config="mixins.fix.universalmodcore.json"
 [[dependencies.universalmodcore]]
     modId="neoforge"
     type='required'
-    versionRange="[21.4.157,)"
+    versionRange="[21.8.54,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.universalmodcore]]
     modId="minecraft"
     type='required'
-    versionRange="[1.21.4]"
+    versionRange="[1.21.8]"
     ordering="NONE"
     side="BOTH"

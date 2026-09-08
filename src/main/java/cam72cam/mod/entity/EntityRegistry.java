@@ -19,8 +19,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -89,7 +87,6 @@ public class EntityRegistry {
         });
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static void registerClientEvents() {
         ClientEvents.TICK.subscribe(() -> {
             if (missingResources != null && !Minecraft.getInstance().hasSingleplayerServer() && Minecraft.getInstance().getConnection() != null) {

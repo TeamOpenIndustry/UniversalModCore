@@ -41,8 +41,6 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.SpecialPlantable;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -134,12 +132,10 @@ public class World {
         });
     }
 
-    @OnlyIn(Dist.CLIENT)
     private Iterable<net.minecraft.world.entity.Entity> clientEntities() {
         return internal instanceof ClientLevel ? ((ClientLevel) internal).entitiesForRendering() : ((ServerLevel) internal).getEntities().getAll();
     }
 
-    @OnlyIn(Dist.DEDICATED_SERVER)
     private Iterable<net.minecraft.world.entity.Entity> serverEntities() {
         return ((ServerLevel) internal).getEntities().getAll();
     }

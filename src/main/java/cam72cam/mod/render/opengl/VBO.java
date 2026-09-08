@@ -5,6 +5,8 @@ import cam72cam.mod.model.obj.VertexBuffer;
 import cam72cam.mod.render.ShaderHelper;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.*;
@@ -33,7 +35,6 @@ public class VBO {
                 }
             }
         });
-        ClientEvents.REGISTER_SHADER.subscribe(event -> event.registerShader(RenderContext.UMC_CORE));
     }
 
     private final Supplier<VertexBuffer> buffer;
@@ -148,24 +149,21 @@ public class VBO {
             settings.accept(state);
             this.state = state;
 
-            CompiledShaderProgram oldShader = RenderSystem.getShader();
-
             RenderType renderType;
-            ShaderProgram shader;
+            RenderPipeline pipeline;
             renderType = switch (state.getStage()) {
-                case GUI -> RenderType.gui();
-                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
+                case GUI, ITEM_IN_WORLD, ITEM_SPRITE_TEX -> RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS);
                 default -> ShaderHelper.isShaderPackEnabled()
                            ? RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS)
                            : RenderContext.UMC_CORE_RT;
             };
 
-            shader = switch (state.getStage()) {
+            pipeline = switch (state.getStage()) {
                 //DirectDraw will set their shader respectively
-                case GUI -> CoreShaders.POSITION_TEX_COLOR;
-                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> CoreShaders.RENDERTYPE_ENTITY_CUTOUT;
+                case GUI -> RenderPipelines.GUI;
+                case ITEM_IN_WORLD, ITEM_SPRITE_TEX -> RenderPipelines.ENTITY_CUTOUT;
                 default -> ShaderHelper.isShaderPackEnabled()
-                           ? CoreShaders.RENDERTYPE_ENTITY_CUTOUT
+                           ? RenderPipelines.ENTITY_CUTOUT
                            : RenderContext.UMC_CORE;
             };
             //Keep render target setting
@@ -174,9 +172,6 @@ public class VBO {
                 renderType.setupRenderState();
             }
             GlStateManager._glBindFramebuffer(36160, boundFBO);
-
-
-            RenderSystem.setShader(shader);
 
             GL32.glBindVertexArray(vao);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vbo);
@@ -189,7 +184,7 @@ public class VBO {
                      .color(1, 1, 1, 1);
             }
 
-            List<VertexFormatElement> elements = shader.vertexFormat().getElements();
+            List<VertexFormatElement> elements = pipeline.getVertexFormat().getElements();
             for (int i = 0; i < elements.size(); i++) {
                 VertexFormatElement element = elements.get(i);
                 switch (element.usage()) {
@@ -208,7 +203,7 @@ public class VBO {
                         GL32.glVertexAttribPointer(i, 4, GL32.GL_FLOAT, true, stride, (long) vbInfo.colorOffset * Float.BYTES);
                     }
                     case UV -> {
-                        for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
+                        for (Map.Entry<String, VertexFormatElement> entry : pipeline.getVertexFormat().getElementMapping().entrySet()) {
                             if (entry.getValue() == element) {
                                 switch (entry.getKey()) {
                                     case "UV0" -> {
@@ -235,7 +230,7 @@ public class VBO {
                         }
                     }
                     case GENERIC -> {
-                        for (Map.Entry<String, VertexFormatElement> entry : shader.vertexFormat().getElementMapping().entrySet()) {
+                        for (Map.Entry<String, VertexFormatElement> entry : pipeline.getVertexFormat().getElementMapping().entrySet()) {
                             // Iris fields for proper normal rendering
                             if (entry.getValue() == element && "at_tangent".equals(entry.getKey())) {
                                 GL32.glDisableVertexAttribArray(i);
@@ -249,17 +244,10 @@ public class VBO {
 
             this.restore = RenderContext.apply(state).and(() -> {
                 RenderContext.checkError();
-
                 if (renderType != null) {
                     renderType.clearRenderState();
                 }
-
-                shader.vertexFormat().clearBufferState();
-
                 RenderContext.checkError();
-
-                RenderSystem.setShader(oldShader);
-                BufferUploader.reset();
             });
         }
 

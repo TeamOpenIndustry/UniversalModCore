@@ -13,7 +13,7 @@ public class Config {
     public static int MaxTextureSize = -1;
 
     public static int getMaxTextureSize() {
-        return MaxTextureSize >= 128 ? MaxTextureSize : ModCore.ClientProxy.MaxTextureSize;
+        return MaxTextureSize >= 128 ? MaxTextureSize : ModCore.ClientProxy.MaxTextureSize.get();
     }
 
     @ConfigFile.Comment("Enable Debug Logging")

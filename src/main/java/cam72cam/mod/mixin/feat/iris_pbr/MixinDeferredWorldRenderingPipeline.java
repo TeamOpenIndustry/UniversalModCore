@@ -1,5 +1,6 @@
 package cam72cam.mod.mixin.feat.iris_pbr;
 
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = VanillaRenderingPipeline.class, remap = false)
 public class MixinDeferredWorldRenderingPipeline {
     @Inject(method = "onSetShaderTexture", at = @At(value = "HEAD"))
-    public void onSetPBRTex(int id, CallbackInfo ci) {
+    public void onSetPBRTex(GpuTextureView id, CallbackInfo ci) {
         //Nothing to do with vanilla
     }
 }

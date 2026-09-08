@@ -15,23 +15,24 @@ import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.resources.model.QuadCollection;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.DynamicBlockStateModel;
+import net.neoforged.neoforge.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -91,7 +92,7 @@ public class BlockRender {
                 }
 
                 @Override
-                public void render(TileEntity te, float partialTicks, PoseStack var3, MultiBufferSource var4, int combinedLightIn, int var6) {
+                public void render(TileEntity te, float partialTicks, PoseStack var3, MultiBufferSource p_112310_, int combinedLightIn, int p_112312_, Vec3 p_401186_) {
                     if (ModCore.isInReload()) {
                         return;
                     }
@@ -119,16 +120,16 @@ public class BlockRender {
                 }
 
                 @Override
-                public boolean shouldRenderOffScreen(TileEntity te) {
-                    return true;
-                }
-
-                @Override
                 public AABB getRenderBoundingBox(TileEntity blockEntity) {
                     if (blockEntity.instance() != null) {
                         return blockEntity.bbCache.get(blockEntity.instance().getRenderBoundingBox());
                     }
                     return TileEntity.INFINITE_EXTENT_AABB;
+                }
+
+                @Override
+                public boolean shouldRenderOffScreen() {
+                    return true;
                 }
             });
         });
@@ -145,57 +146,37 @@ public class BlockRender {
 
         ClientEvents.MODEL_BAKE.subscribe(event -> {
             ModelBakery.BakingResult bakingResult = event.getBakingResult();
-            bakingResult.blockStateModels().put(new ModelResourceLocation(block.id.internal, ""), new BakedModel() {
+            bakingResult.blockStateModels().put(block.internal.defaultBlockState(), new DynamicBlockStateModel() {
                 @Override
-                public @NotNull List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData properties, @org.jetbrains.annotations.Nullable RenderType renderType) {
+                public void collectParts(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random, List<BlockModelPart> parts) {
                     if (block instanceof BlockTypeEntity) {
-                        TileEntity data = properties.get(TileEntity.TE_PROPERTY);
+                        TileEntity data = level.getModelData(pos).get(TileEntity.TE_PROPERTY);
                         if (data == null || !cls.isInstance(data.instance())) {
                             System.out.println(data);
-                            return EMPTY;
+                            return;
                         }
                         StandardModel out = model.apply(cls.cast(data.instance()));
                         if (out == null) {
-                            return EMPTY;
+                            return;
                         }
-                        return out.getQuads(side, rand);
+
+                        QuadCollection.Builder builder = new QuadCollection.Builder();
+                        out.getQuads(null, random).forEach(builder::addUnculledFace);
+                        for (Direction dir : Direction.values()) {
+                            out.getQuads(dir, random).forEach(quad -> builder.addCulledFace(dir, quad));
+                        }
+                        parts.add(new SimpleModelWrapper(builder.build(), true, particleIcon(), null));
                     } else {
                         // TODO
-                        return EMPTY;
                     }
                 }
 
                 @Override
-                public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState p_235039_, @org.jetbrains.annotations.Nullable Direction p_235040_, RandomSource p_235041_) {
-                    return EMPTY;
-                }
-
-                @Override
-                public boolean useAmbientOcclusion() {
-                    return true;
-                }
-
-                @Override
-                public boolean isGui3d() {
-                    return true;
-                }
-
-                @Override
-                public boolean usesBlockLight() {
-                    return false;
-                }
-
-                @Override
-                public TextureAtlasSprite getParticleIcon() {
+                public TextureAtlasSprite particleIcon() {
                     if (block.internal.defaultMapColor() == MapColor.METAL) {
-                        return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
+                        return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).particleIcon();
                     }
-                    return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.STONE.defaultBlockState()).getParticleIcon();
-                }
-
-                @Override
-                public ItemTransforms getTransforms() {
-                    return ItemTransforms.NO_TRANSFORMS;
+                    return Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(Blocks.STONE.defaultBlockState()).particleIcon();
                 }
             });
         });

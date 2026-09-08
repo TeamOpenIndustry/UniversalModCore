@@ -117,7 +117,7 @@ public class GlobalRender {
                      .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.apply(state)) {
-            fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str) / 2, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880, fontRendererIn.isBidirectional());
+            fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str) / 2f, 0, -1, false, new Matrix4f(), RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
             RenderContext.IMMEDIATE.endBatch();
         }
     }
@@ -131,8 +131,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str) / 2f, 0, color, false, new Matrix4f(),
-                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
-                                       fontRendererIn.isBidirectional());
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880);
             RenderContext.IMMEDIATE.endBatch();
         }
     }
@@ -147,8 +146,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(Component.literal(str), 0, 0, color, false, new Matrix4f(),
-                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
-                                       fontRendererIn.isBidirectional());
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880);
             RenderContext.IMMEDIATE.endBatch();
         }
     }
@@ -162,8 +160,7 @@ public class GlobalRender {
 
         try (With ignored = RenderContext.apply(state)) {
             fontRendererIn.drawInBatch(Component.literal(str), -fontRendererIn.width(str), 0, color, false, new Matrix4f(),
-                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880,
-                                       fontRendererIn.isBidirectional());
+                                       RenderContext.IMMEDIATE, Font.DisplayMode.NORMAL, 0, 15728880);
             RenderContext.IMMEDIATE.endBatch();
         }
     }

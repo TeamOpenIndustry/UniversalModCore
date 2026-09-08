@@ -24,7 +24,6 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -115,7 +114,6 @@ public abstract class CustomItem {
         }
 
         @Override
-        @OnlyIn(Dist.CLIENT)
         public void appendHoverText(net.minecraft.world.item.ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> consumer, TooltipFlag flagIn) {
             super.appendHoverText(stack, context, display, consumer, flagIn);
             if (ModCore.hasResources) {

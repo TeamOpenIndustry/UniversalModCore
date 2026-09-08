@@ -10,11 +10,12 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.ResolvedModel;
-import net.minecraft.client.resources.model.WeightedBakedModel;
+import net.minecraft.client.resources.model.WeightedVariants;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -32,10 +33,10 @@ import java.util.*;
 
 /** A model that can render both standard MC constructs and custom OpenGL */
 public class StandardModel {
-    private final List<Pair<BlockState, ResolvedModel>> models = new ArrayList<>();
+    private final List<Pair<BlockState, BakedScaledModel>> models = new ArrayList<>();
     private final List<RenderFunction> custom = new ArrayList<>();
     //Special hack for in-gui/item block model(quads)
-    private final Map<Pair<BlockState, ResolvedModel>, LitRenderFunc> inGuiBlock = new HashMap<>();
+    private final Map<Pair<BlockState, BakedScaledModel>, LitRenderFunc> inGuiBlock = new HashMap<>();
 
     /** Hacky way to turn an item into a blockstate, probably has some weird edge cases */
     private static BlockState itemToBlockState(cam72cam.mod.item.ItemStack stack) {
@@ -60,8 +61,8 @@ public class StandardModel {
                 .map(Block::defaultBlockState)
                 .findFirst().get();
 
-        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        Pair<BlockState, ResolvedModel> pair = Pair.of(
+        BlockStateModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        Pair<BlockState, BakedScaledModel> pair = Pair.of(
                 state,
                 plane == null
                 ? new BakedScaledModel(model, transform)
@@ -80,7 +81,7 @@ public class StandardModel {
     public StandardModel addSnow(int layers, Matrix4 transform, Plane plane) {
         layers = Math.max(1, Math.min(8, layers));
         BlockState state = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers);
-        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        BlockStateModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
         models.add(Pair.of(
                 state,
                 plane == null
@@ -97,11 +98,11 @@ public class StandardModel {
 
     public StandardModel addItemBlock(ItemStack bed, Matrix4 transform, Plane plane) {
         BlockState state = itemToBlockState(bed);
-        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
-        if (model instanceof WeightedBakedModel) {
+        BlockStateModel model = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state);
+        if (model instanceof WeightedVariants) {
             //TODO Modify result to make it not dynamic
         }
-        Pair<BlockState, BakedModel> pair = Pair.of(
+        Pair<BlockState, BakedScaledModel> pair = Pair.of(
                 state,
                 plane == null
                 ? new BakedScaledModel(model, transform)
@@ -117,10 +118,11 @@ public class StandardModel {
         custom.add((matrix, pt) -> {
             matrix.model_view().multiply(transform);
 
-            //Otherwise we'll get brown-tinted light texture with iris...find out why
-            try (With ctx = RenderContext.applyBaseState(matrix)) {
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY,
-                                                                       new PoseStack(), RenderContext.IMMEDIATE, null, 0);
+            try (With pass = RenderContext.applyBaseState(matrix)) {
+                Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE,
+                                                                       15728880, OverlayTexture.NO_OVERLAY,
+                                                                       new PoseStack(), RenderContext.IMMEDIATE, null,
+                                                                       0);
                 RenderContext.IMMEDIATE.endBatch();
             }
         });
@@ -136,7 +138,7 @@ public class StandardModel {
     /** Get the quads for the MC standard rendering */
     List<BakedQuad> getQuads(Direction side, RandomSource rand) {
         List<BakedQuad> quads = new ArrayList<>();
-        for (Pair<BlockState, BakedModel> model : models) {
+        for (Pair<BlockState, BakedScaledModel> model : models) {
             quads.addAll(model.getValue().getQuads(model.getKey(), side, rand));
         }
 
@@ -164,7 +166,7 @@ public class StandardModel {
         try (With ctx = RenderContext.apply(state.clone().texture(Texture.wrap(new Identifier(TextureAtlas.LOCATION_BLOCKS))))) {
             BufferBuilder worldRenderer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 
-            for (Pair<BlockState, BakedModel> model : models) {
+            for (Pair<BlockState, BakedScaledModel> model : models) {
                 if ((state.getStage() == RenderContext.Stage.GUI
                         || state.getStage() == RenderContext.Stage.ITEM_IN_WORLD
                         || state.getStage() == RenderContext.Stage.ITEM_IN_GUI
@@ -190,7 +192,8 @@ public class StandardModel {
             }
             MeshData data = worldRenderer.build();
             if (data != null) {
-                BufferUploader.draw(data);
+                //TODO other render types?
+                RenderType.cutout().draw(data);
             }
         }
     }

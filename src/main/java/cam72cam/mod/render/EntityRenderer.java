@@ -13,8 +13,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -159,15 +157,13 @@ public class EntityRenderer<T extends ModdedEntity> extends net.minecraft.client
 
         // State may be modified in render, before calling in to post-render
         renderers.get(self.getClass()).render(self, state.clone(), partialTicks);
-        RenderType.cutout().clearRenderState();
 
         //Enable translucent for post render
-        RenderType.translucent().setupRenderState();
+        //TODO Blending!
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
-        RenderType.translucent().clearRenderState();
+        RenderType.cutout().clearRenderState();
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static class UMCEntityRenderState extends EntityRenderState {
         public ModdedEntity entity;
         public float rotationYaw;

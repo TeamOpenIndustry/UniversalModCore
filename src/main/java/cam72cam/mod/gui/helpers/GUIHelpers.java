@@ -4,31 +4,32 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.BlendMode;
+import cam72cam.mod.mixin.accessor.ATextureAtlasSprite;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.CompiledShaderProgram;
-import net.minecraft.client.renderer.CoreShaders;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class GUIHelpers {
 
     //Initial value
     public static GuiGraphics graphics
-            = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().gameRenderer.renderBuffers.bufferSource());
+            = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().gameRenderer.guiRenderState);
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
@@ -58,8 +59,7 @@ public class GUIHelpers {
         // X Y, U V, UW VH, W H, TW TH
         // AbstractGui.blit(x, y, 0, 0, 1, 1, width, height, 1, 1);
         // X Y, W H, U V, UW VH, TW TH
-        RenderSystem.setShaderTexture(0, tex.internal);
-        graphics.blit(RenderType::guiTextured, tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, tex.internal, x, y, width, height, 0, 0, 1, 1, 1, 1);
     }
 
     /** Draw fluid block at coords */
@@ -71,39 +71,20 @@ public class GUIHelpers {
 
     /** Draw a texture sprite at coords, tinted with col  */
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
-        double zLevel = 0;
-
-        float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
-        CompiledShaderProgram oldShader = RenderSystem.getShader();
-        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-        RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
         int iW = sprite.contents().width();
         int iH = sprite.contents().height();
 
-        float minU = sprite.getU0();
-        float minV = sprite.getV0();
-
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int offY = 0; offY < height; offY += iH) {
-            double curHeight = Math.min(iH, height - offY);
-            float maxVScaled = sprite.getV((float) (curHeight / iH));
+            int curHeight = Math.min(iH, height - offY);
             for (int offX = 0; offX < width; offX += iW) {
-                double curWidth = Math.min(iW, width - offX);
-                float maxUScaled = sprite.getU((float) (curWidth / iW));
-                buffer.addVertex((float) (x + offX), (float) (y + offY), (float) zLevel).setUv(minU, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
-                buffer.addVertex((float) (x + offX), (float) (y + offY + curHeight), (float) zLevel).setUv(minU, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
-                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY + curHeight), (float) zLevel).setUv(maxUScaled, maxVScaled).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
-                buffer.addVertex((float) (x + offX + curWidth), (float) (y + offY), (float) zLevel).setUv(maxUScaled, minV).setColor((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1);
+                int curWidth = Math.min(iW, width - offX);
+                ATextureAtlasSprite spriteAccessor = ATextureAtlasSprite.from(sprite);
+
+                graphics.blit(RenderPipelines.GUI_TEXTURED, TextureAtlas.LOCATION_BLOCKS,
+                              x + offX, y + offY, sprite.getX(), sprite.getY(), curWidth, curHeight, iW, iH,
+                              spriteAccessor.getAtlasWidth(), spriteAccessor.getAtlasHeight());
             }
         }
-        //TODO 1.21.1 Am I right?
-        MeshData data = buffer.build();
-        if (data != null) {
-            BufferUploader.drawWithShader(data);
-        }
-
-        RenderSystem.setShader(oldShader);
     }
 
     /** Draw the fluid in a tank with a black background at % full */
@@ -138,8 +119,7 @@ public class GUIHelpers {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
                     Component.literal(text), x, y, color, false, new Matrix4f(),
-                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
-                    font.isBidirectional()
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880
             );
             RenderContext.IMMEDIATE.endBatch();
         }
@@ -159,8 +139,7 @@ public class GUIHelpers {
             Font font = Minecraft.getInstance().font;
             font.drawInBatch(
                     Component.literal(text), x - font.width(text) / 2f, y, color, false, new Matrix4f(),
-                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880,
-                    font.isBidirectional()
+                    RenderContext.IMMEDIATE, Font.DisplayMode.SEE_THROUGH, 0, 15728880
             );
             RenderContext.IMMEDIATE.endBatch();
         }
@@ -187,16 +166,29 @@ public class GUIHelpers {
     }
 
     public static void drawItem(ItemStack stack, int x, int y, Matrix4 matrix) {
-        graphics.pose().pushPose();
-        graphics.pose().last().pose().mul(matrix.convertToMoj());
+        //TODO doesn't work properly with Z translations...should we restrict it?
+        Matrix3x2f matrix3x2f = new Matrix3x2f();
+        Matrix4f matrix4f = new Matrix4f();
+        matrix3x2f.m00 = matrix4f.m00();
+        matrix3x2f.m01 = matrix4f.m01();
+        matrix3x2f.m10 = matrix4f.m10();
+        matrix3x2f.m11 = matrix4f.m11();
+        matrix3x2f.m20 = matrix4f.m30();
+        matrix3x2f.m21 = matrix4f.m31();
+
+        graphics.pose().pushMatrix().mul(matrix3x2f);
         graphics.renderItem(stack.internal(), x, y);
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     /** Try to open an external link in player's browser */
     public static void openLink(String url){
         MutableComponent component = Component.literal("");
-        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
+        try {
+            component.setStyle(component.getStyle().withClickEvent(new ClickEvent.OpenUrl(new URI(url))));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
         } else {
@@ -210,7 +202,7 @@ public class GUIHelpers {
     /** Try to open an external link in player's browser */
     public static void openFile(String path){
         MutableComponent component = Component.literal("");
-        component.setStyle(component.getStyle().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, path)));
+        component.setStyle(component.getStyle().withClickEvent(new ClickEvent.OpenFile(path)));
         if (Minecraft.getInstance().screen != null) {
             Minecraft.getInstance().screen.handleComponentClicked(component.getStyle());
         } else {
@@ -229,10 +221,13 @@ public class GUIHelpers {
         if (delayedRenderFunctions.peek() != null && Minecraft.getInstance().screen != null) {
             //Use map to ensure only 1 tooltip is drawn
             delayedRenderFunctions.peek().put("tooltip", (x, y) ->{
-                List<Component> components = content.stream()
-                                                    .map(Component::literal)
-                                                    .collect(Collectors.toList());
-                graphics.renderTooltip(Minecraft.getInstance().font, components, Optional.empty(), x, y);
+                List<ClientTooltipComponent> components = content.stream()
+                                                                 .map(Component::literal)
+                                                                 .map(Component::getVisualOrderText)
+                                                                 .map(ClientTooltipComponent::create)
+                                                                 .collect(Collectors.toList());
+                graphics.renderTooltip(Minecraft.getInstance().font, components, x, y,
+                                       DefaultTooltipPositioner.INSTANCE, null);
             });
         } else {
             ModCore.error("Trying to call drawTooltipAtCursor outside any IScreen.draw(), which isn't allowed!");

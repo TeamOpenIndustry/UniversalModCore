@@ -92,7 +92,6 @@ public class ClientEvents {
     public static final Event<Consumer<RegisterTextureSpriteEvent>> TEXTURE_STITCH = new Event<>();
     public static final Event<Runnable> HACKS = new Event<>();
     public static final Event<Runnable> REGISTER_ENTITY = new Event<>();
-    public static final Event<Consumer<RegisterShadersEvent>> REGISTER_SHADER = new Event<>();
     public static final Event<Consumer<CustomizeGuiOverlayEvent.DebugText>> RENDER_DEBUG = new Event<>();
     public static final Event<Consumer<RenderGuiLayerEvent.Pre>> RENDER_OVERLAY = new Event<>();
     public static final Event<Consumer<RenderHighlightEvent.Block>> RENDER_MOUSEOVER = new Event<>();
@@ -263,11 +262,6 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerBindings(RegisterKeyMappingsEvent event) {
             KEY_MAPPING_REGISTER.execute(x -> x.accept(event));
-        }
-
-        @SubscribeEvent
-        public static void registerVanillaShader(RegisterShadersEvent event) {
-            REGISTER_SHADER.execute(x -> x.accept(event));
         }
 
         @SubscribeEvent

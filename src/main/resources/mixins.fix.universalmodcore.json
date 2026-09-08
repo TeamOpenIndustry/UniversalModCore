@@ -12,7 +12,8 @@
   "mixins": [
     "always_shown_tab.MixinCreativeModeTab",
     "custom_bb_collision.MixinVoxelShapes",
-    "entity_data_migration.MixinChunkStorage"
+    "entity_data_migration.MixinChunkStorage",
+    "sodium_dev_Environment.MixinNeoForgeClientConfig"
   ],
   "client": [
     "block_replacement.MixinBlockStatePredictionHandler",

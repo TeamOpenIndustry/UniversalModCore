@@ -196,6 +196,7 @@ public abstract class BlockType {
                                   .strength(BlockType.this.getHardness(), BlockType.this.getExplosionResistance())
                                   .noOcclusion()
                                   .dynamicShape());
+            this.registerDefaultState(this.stateDefinition.any());
         }
 
         /** Called server side at the end of the block break call chain as cleanup */

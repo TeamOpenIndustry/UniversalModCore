@@ -338,7 +338,7 @@ public class OBJModel {
                 state.texture(tex.synchronous(true));
             } else {
                 // Start load even if not loaded
-                tex.getId();
+                tex.getTexView();
 
                 if (!tex.isLoaded()) {
                     // Try to find a loaded LOD, with a sane default
@@ -370,7 +370,7 @@ public class OBJModel {
                 if (wait) {
                     state.normals(normTex.synchronous(true));
                 } else {
-                    normTex.getId();
+                    normTex.getTexView();
                     if (!normTex.isLoaded()) {
                         normTex = OBJModel.this.normals.get(texName).values().stream()
                                 .filter(CustomTexture::isLoaded)
@@ -398,7 +398,7 @@ public class OBJModel {
                 if (wait) {
                     state.specular(specTex.synchronous(true));
                 } else {
-                    specTex.getId();
+                    specTex.getTexView();
                     if (!specTex.isLoaded()) {
                         specTex = OBJModel.this.speculars.get(texName).values().stream()
                                 .filter(CustomTexture::isLoaded)

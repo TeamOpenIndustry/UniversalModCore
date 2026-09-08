@@ -28,8 +28,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -561,7 +559,6 @@ public class ModdedEntity extends Entity implements IEntityWithComplexSpawn {
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public void moveOrInterpolateTo(Vec3 vec, float yaw, float pitch) {
         if (self.allowsDefaultMovement()) {
             super.moveOrInterpolateTo(vec, yaw, pitch);

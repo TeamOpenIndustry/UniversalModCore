@@ -3,9 +3,12 @@ package cam72cam.mod.render.opengl;
 import cam72cam.mod.Config;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.util.With;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.*;
 import org.lwjgl.opengl.GL32;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +28,7 @@ public abstract class CustomTexture implements Texture {
 
     private Future<ByteBuffer> loader = null;
     private long lastUsed;
-    private Integer textureID;
+    private GpuTextureView view;
 
     private static final List<CustomTexture> textures = new ArrayList<>();
 
@@ -35,7 +38,7 @@ public abstract class CustomTexture implements Texture {
             try {
                 synchronized (textures) {
                     for (CustomTexture texture : textures) {
-                        if (texture.textureID != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000L && (texture.loader == null || !texture.loader.isDone())) {
+                        if (texture.view != null && System.currentTimeMillis() - texture.lastUsed > texture.cacheSeconds * 1000L && (texture.loader == null || !texture.loader.isDone())) {
                             texture.dealloc();
                         }
                     }
@@ -62,22 +65,19 @@ public abstract class CustomTexture implements Texture {
     }
 
     private void createTexture(ByteBuffer buffer) {
-        textureID = GL32.glGenTextures();
-        try (With ctx = RenderContext.apply(new RenderState().texture(Texture.wrap(textureID)))) {
-            GL32.glPixelStorei(GL32.GL_UNPACK_SWAP_BYTES, GL32.GL_FALSE);
-            GL32.glPixelStorei(GL32.GL_UNPACK_LSB_FIRST, GL32.GL_FALSE);
-            GL32.glPixelStorei(GL32.GL_UNPACK_ROW_LENGTH, 0);
-            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_ROWS, 0);
-            GL32.glPixelStorei(GL32.GL_UNPACK_SKIP_PIXELS, 0);
-            GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 4);
-
-            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MIN_FILTER, GL32.GL_NEAREST);
-            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MAG_FILTER, GL32.GL_NEAREST);
-            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_EDGE);
-            GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_EDGE);
-
-            GL32.glTexImage2D(GL32.GL_TEXTURE_2D, 0, internalGLFormat(), width, height, 0, GL32.GL_RGBA, GL32.GL_UNSIGNED_BYTE, buffer);
+        NativeImage image;
+        try {
+            image = NativeImage.read(buffer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        GpuTexture tex = RenderSystem.getDevice().createTexture("UMC",
+                                               GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT,
+                                               TextureFormat.RGBA8, width, height, 1, 1);
+        tex.setTextureFilter(FilterMode.NEAREST, FilterMode.NEAREST, false);
+        tex.setAddressMode(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE);
+        RenderSystem.getDevice().createCommandEncoder().writeToTexture(tex, image);
+        this.view = RenderSystem.getDevice().createTextureView(tex);
     }
 
     private void threadedLoader() {
@@ -105,41 +105,39 @@ public abstract class CustomTexture implements Texture {
     public Texture synchronous(boolean sync) {
         lastUsed = System.currentTimeMillis();
 
-        if (textureID == null) {
+        if (view == null) {
             if (sync) {
                 directLoader();
             } else {
                 return this;
             }
         }
-        return () -> textureID;
+        return () -> view;
     }
 
     public boolean isLoaded() {
-        return textureID != null;
+        return view != null;
     }
 
     @Override
-    public int getId() {
+    public GpuTextureView getTexView() {
         lastUsed = System.currentTimeMillis();
 
-        if (textureID == null) {
+        if (view == null) {
             if (Config.ThreadedTextureLoading) {
                 threadedLoader();
             } else {
                 directLoader();
             }
         }
-        return textureID == null ? NO_TEXTURE.getId() : this.textureID;
+        return view == null ? NO_TEXTURE.getTexView() : this.view;
     }
 
     public void dealloc() {
         synchronized (textures) {
-            if (this.textureID != null) {
-                GL32.glDeleteTextures(this.textureID);
-                this.textureID = null;
-                this.loader = null;
-            }
+            this.view.close();
+            this.view = null;
+            this.loader = null;
         }
     }
 }

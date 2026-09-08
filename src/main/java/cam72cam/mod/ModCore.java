@@ -27,8 +27,10 @@ import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.config.NeoForgeClientConfig;
 import net.neoforged.neoforge.common.CreativeModeTabRegistry;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.Lazy;
 import net.neoforged.neoforge.data.loading.DatagenModLoader;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -198,18 +200,19 @@ public class ModCore {
     }
 
     public static class ClientProxy extends Proxy {
-        static int MaxTextureSize = -1;
+        static Lazy<Integer> MaxTextureSize;
 
         public ClientProxy() {
             super();
 
             if (DatagenModLoader.isRunningDataGen()) {
                 ModCore.warn("Skipping MaxTextureSize detection during data generation");
+                MaxTextureSize = Lazy.of(() -> -1);
                 return;
             }
 
             if (FMLPaths.CONFIGDIR.get() != null) { /* not a test environment */
-                MaxTextureSize = RenderSystem.getDevice().getMaxTextureSize();
+                MaxTextureSize = Lazy.of(() -> RenderSystem.getDevice().getMaxTextureSize());
                 ModCore.info("Detected GL_MAX_TEXTURE_SIZE as: %s", MaxTextureSize);
             }
         }
