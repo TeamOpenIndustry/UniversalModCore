@@ -3,7 +3,6 @@ package cam72cam.mod.event.platform;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
 import cam72cam.mod.event.Event;
 import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.input.Mouse;
@@ -55,7 +54,7 @@ public class ClientEventListener {
         ClientEvents.TICK.subscribe(() -> {
             WorldClient currentWorld = Minecraft.getMinecraft().world;
             if (clientLast != currentWorld && clientLast != null) {
-                CommonEvents.World.UNLOAD.execute(worldConsumer -> worldConsumer.accept(clientLast));
+                CommonEventListener.World.UNLOAD.execute(worldConsumer -> worldConsumer.accept(clientLast));
             }
             clientLast = currentWorld;
         });

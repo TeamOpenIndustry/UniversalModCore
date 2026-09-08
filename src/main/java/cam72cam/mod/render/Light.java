@@ -1,7 +1,7 @@
 package cam72cam.mod.render;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.world.World;
 import net.minecraft.entity.Entity;
@@ -80,7 +80,7 @@ public class Light {
     private static class LightEntity15 extends LightEntity {public LightEntity15(net.minecraft.world.World world) { super(world);}}
 
     public static void register() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
+        CommonEventListener.Entity.REGISTER.subscribe(() -> {
             net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(new ResourceLocation("universalmodcore:light1"), LightEntity1.class, "LightEntity", -1, ModCore.instance, 0, 0, false);
             net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(new ResourceLocation("universalmodcore:light2"), LightEntity2.class, "LightEntity", -1, ModCore.instance, 0, 0, false);
             net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(new ResourceLocation("universalmodcore:light3"), LightEntity3.class, "LightEntity", -1, ModCore.instance, 0, 0, false);
