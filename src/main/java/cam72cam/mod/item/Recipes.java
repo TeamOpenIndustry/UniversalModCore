@@ -1,7 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
@@ -30,7 +30,7 @@ public class Recipes {
         private List<Fuzzy> conflicts = new ArrayList<>();
 
         private ShapedRecipeBuilder(ItemStack item, int width, Fuzzy... ingredients) {
-            CommonEvents.Recipe.REGISTER.subscribe(() -> {
+            CommonEventListener.Recipe.REGISTER.subscribe(() -> {
                 for (Fuzzy dependency : dependencies) {
                     if (dependency.enumerate().isEmpty()) {
                         // Don't register recipe

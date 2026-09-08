@@ -1,7 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.config.ConfigFile;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -57,12 +57,12 @@ public class Fuzzy {
         if(isPostItemRegistration) {
             fn.run();
         } else {
-            CommonEvents.Item.REGISTER.post(fn);
+            CommonEventListener.Item.REGISTER.post(fn);
         }
     }
 
     static {
-        CommonEvents.Item.REGISTER.post(() -> isPostItemRegistration = true);
+        CommonEventListener.Item.REGISTER.post(() -> isPostItemRegistration = true);
         ConfigFile.addMapper(Fuzzy.class, Fuzzy::toString, Fuzzy::get);
     }
 

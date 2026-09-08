@@ -22,14 +22,13 @@ public class Event<T> {
         post.add(callback);
     }
 
-    void execute(Consumer<T> handler) {
+   public void execute(Consumer<T> handler) {
         pre.forEach(Runnable::run);
         callbacks.forEach(handler);
-
         post.forEach(Runnable::run);
     }
 
-    boolean executeCancellable(Function<T, Boolean> handler) {
+    public boolean executeCancellable(Function<T, Boolean> handler) {
         pre.forEach(Runnable::run);
         for (T callback : callbacks) {
             if (!handler.apply(callback)) {
@@ -43,14 +42,14 @@ public class Event<T> {
     /**
      * For those events fired multiple times and should be handled respectively
      */
-    static class TransientEvent<T> extends Event<T> {
+    public static class TransientEvent<T> extends Event<T> {
         @Override
-        void execute(Consumer<T> handler) {
+        public void execute(Consumer<T> handler) {
             super.execute(handler);
             callbacks.clear();
         }
 
-        boolean executeCancellable(Function<T, Boolean> handler) {
+        public boolean executeCancellable(Function<T, Boolean> handler) {
             boolean result = super.executeCancellable(handler);
             callbacks.clear();
             return result;
