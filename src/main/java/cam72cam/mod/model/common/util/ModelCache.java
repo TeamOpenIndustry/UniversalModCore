@@ -5,7 +5,7 @@ import cam72cam.mod.ModCore;
 import cam72cam.mod.model.common.format.Parser;
 import cam72cam.mod.model.common.material.TextureRepacker;
 import cam72cam.mod.model.common.mesh.*;
-import cam72cam.mod.render.obj.OBJTextureSheet;
+import cam72cam.mod.render.common.CachedTexture;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.ResourceCache;
 import cam72cam.mod.serialization.ResourceCache.GenericByteBuffer;
@@ -113,8 +113,8 @@ public class ModelCache implements AutoCloseable {
         return model;
     }
 
-    private Map<String, NavigableMap<Integer, OBJTextureSheet>> loadTextures(String suffix, int cacheSeconds) throws IOException {
-        Map<String, NavigableMap<Integer, OBJTextureSheet>> result = new HashMap<>();
+    private Map<String, NavigableMap<Integer, CachedTexture>> loadTextures(String suffix, int cacheSeconds) throws IOException {
+        Map<String, NavigableMap<Integer, CachedTexture>> result = new HashMap<>();
         if (!meta.hasKey("packedTextureWidth")) {
             return result;
         }
@@ -123,16 +123,16 @@ public class ModelCache implements AutoCloseable {
         int texSize = Math.max(textureWidth, textureHeight);
         for (String variant : meta.getList("variants", k -> k.getString("variant"))) {
             // TreeMap keeps LOD sizes sorted so ModelConfig can use floorEntry/lastEntry
-            NavigableMap<Integer, OBJTextureSheet> lodMap = new TreeMap<>();
-            lodMap.put(texSize, new OBJTextureSheet(textureWidth, textureHeight,
-                                                    cache.getResource(variant + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, null)),
-                                                    cacheSeconds));
+            NavigableMap<Integer, CachedTexture> lodMap = new TreeMap<>();
+            lodMap.put(texSize, new CachedTexture(textureWidth, textureHeight,
+                                                  cache.getResource(variant + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, null)),
+                                                  cacheSeconds));
             for (Integer lodValue : lodValues) {
                 if (lodValue < texSize) {
                     Pair<Integer, Integer> size = scaleSize(textureWidth, textureHeight, lodValue);
-                    lodMap.put(lodValue, new OBJTextureSheet(size.getLeft(), size.getRight(),
-                            cache.getResource(variant + "_" + lodValue + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, lodValue)),
-                            cacheSeconds));
+                    lodMap.put(lodValue, new CachedTexture(size.getLeft(), size.getRight(),
+                                                           cache.getResource(variant + "_" + lodValue + suffix + ".rgba", bm -> getTextureBytes(bm, variant, suffix, lodValue)),
+                                                           cacheSeconds));
                 }
             }
             result.put(variant, lodMap);

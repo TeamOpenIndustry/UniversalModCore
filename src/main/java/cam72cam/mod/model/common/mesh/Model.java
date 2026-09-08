@@ -4,7 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.ModelLoader;
 import cam72cam.mod.model.common.util.FaceAccessor;
 import cam72cam.mod.render.common.ModelRenderer;
-import cam72cam.mod.render.obj.OBJTextureSheet;
+import cam72cam.mod.render.common.CachedTexture;
 import cam72cam.mod.resource.Identifier;
 
 import java.util.*;
@@ -32,9 +32,9 @@ public class Model {
     public final int packedTextureHeight;
     private int defaultLodSize;
 
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> textures = new HashMap<>();
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> speculars = new HashMap<>();
-    private final Map<String, NavigableMap<Integer, OBJTextureSheet>> normals = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, CachedTexture>> textures = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, CachedTexture>> speculars = new HashMap<>();
+    private final Map<String, NavigableMap<Integer, CachedTexture>> normals = new HashMap<>();
 
     public String hash;
 
@@ -66,9 +66,9 @@ public class Model {
      * @param spec specular sheets per variant/LOD (may be empty)
      * @param norm normal sheets per variant/LOD (may be empty)
      */
-    public void linkTextures(Map<String, NavigableMap<Integer, OBJTextureSheet>> tex,
-                             Map<String, NavigableMap<Integer, OBJTextureSheet>> spec,
-                             Map<String, NavigableMap<Integer, OBJTextureSheet>> norm) {
+    public void linkTextures(Map<String, NavigableMap<Integer, CachedTexture>> tex,
+                             Map<String, NavigableMap<Integer, CachedTexture>> spec,
+                             Map<String, NavigableMap<Integer, CachedTexture>> norm) {
         this.textures.putAll(tex);
         this.speculars.putAll(spec);
         this.normals.putAll(norm);
@@ -198,17 +198,17 @@ public class Model {
     }
 
     /** @return albedo texture sheets, keyed by variant name then LOD size */
-    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getTextures() {
+    public Map<String, NavigableMap<Integer, CachedTexture>> getTextures() {
         return textures;
     }
 
     /** @return specular texture sheets, keyed by variant name then LOD size */
-    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getSpeculars() {
+    public Map<String, NavigableMap<Integer, CachedTexture>> getSpeculars() {
         return speculars;
     }
 
     /** @return normal texture sheets, keyed by variant name then LOD size */
-    public Map<String, NavigableMap<Integer, OBJTextureSheet>> getNormals() {
+    public Map<String, NavigableMap<Integer, CachedTexture>> getNormals() {
         return normals;
     }
 
@@ -253,18 +253,18 @@ public class Model {
     }
 
     private void deallocTextures() {
-        for (Map<Integer, OBJTextureSheet> lodMap : textures.values()) {
-            for (OBJTextureSheet texture : lodMap.values()) {
+        for (Map<Integer, CachedTexture> lodMap : textures.values()) {
+            for (CachedTexture texture : lodMap.values()) {
                 texture.dealloc();
             }
         }
-        for (Map<Integer, OBJTextureSheet> lodMap : speculars.values()) {
-            for (OBJTextureSheet texture : lodMap.values()) {
+        for (Map<Integer, CachedTexture> lodMap : speculars.values()) {
+            for (CachedTexture texture : lodMap.values()) {
                 texture.dealloc();
             }
         }
-        for (Map<Integer, OBJTextureSheet> lodMap : normals.values()) {
-            for (OBJTextureSheet texture : lodMap.values()) {
+        for (Map<Integer, CachedTexture> lodMap : normals.values()) {
+            for (CachedTexture texture : lodMap.values()) {
                 texture.dealloc();
             }
         }
