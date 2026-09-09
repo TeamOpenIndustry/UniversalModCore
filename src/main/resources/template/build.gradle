@@ -39,16 +39,16 @@ jvmdg {
 }
 
 unimined.minecraft {
-    version "1.21.4"
+    version "1.21.8"
 
     mappings {
         intermediary()
         mojmap()
-        parchment("1.21.4", "2025.03.23")
+        parchment("1.21.8", "2025.09.14")
     }
 
     neoForge {
-        loader("157")
+        loader("54")
     }
 
     mods {
