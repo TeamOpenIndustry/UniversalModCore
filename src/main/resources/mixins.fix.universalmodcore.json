@@ -13,5 +13,6 @@
     "multi_release.MixinJarDiscoverer"
   ],
   "client": [
+    "client_player_handling.MixinMinecraft"
   ]
 }

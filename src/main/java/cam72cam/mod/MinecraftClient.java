@@ -8,12 +8,20 @@ import cam72cam.mod.world.World;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.math.RayTraceResult;
+import org.jetbrains.annotations.ApiStatus;
 
 /** Static Minecraft Client props, don't touch server side */
 public class MinecraftClient {
     /** Minecraft is loaded and has a loaded world */
+    private static boolean clientReady;
+
     public static boolean isReady() {
-        return Minecraft.getMinecraft().player != null;
+        return clientReady;
+    }
+
+    @ApiStatus.Internal
+    public static void setReady(boolean newState) {
+        clientReady = newState;
     }
 
     private static Player playerCache;
