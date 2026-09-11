@@ -16,13 +16,10 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL32;
 import util.Matrix4;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
@@ -35,8 +32,6 @@ public class RenderContext {
     //Modified from rendertype_entity_cutout, fix model normal
     public static ShaderInstance UMC_CORE;
 
-    private static IntBuffer fourIntBuffer;
-
     public static float lastLightX;
     public static float lastLightY;
 
@@ -47,9 +42,11 @@ public class RenderContext {
     private RenderContext() {
     }
 
-    public static With applyBaseState(RenderState state) {
+    public static With apply(RenderState state) {
+        RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
+        ShaderInstance shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -66,11 +63,16 @@ public class RenderContext {
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
             currentState.set(state);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, state.texture.getId());
+            RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+            RenderSystem.bindTexture(state.texture.getId());
             //Normal and Specular handled in mixin.feat.iris_pbr
             //TODO create handler for OptiFine?
             int oldTexture = RenderSystem.getShaderTexture(0);
-            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
+            restore.add(() -> {
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0);
+                RenderSystem.bindTexture(oldTexture);
+                RenderSystem.setShaderTexture(0, oldTexture);
+            });
             RenderSystem.setShaderTexture(0, state.texture.getId());
             currentState.remove();
         }
@@ -83,6 +85,26 @@ public class RenderContext {
             float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
+        }
+
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
+            float oldX;
+            float oldY;
+            if (state.stage == Stage.ENTITY) {
+                oldX = lastLightX;
+                oldY = lastLightY;
+            } else {
+//                oldX = GlStateManager.lastBrightnessX;
+//                oldY = GlStateManager.lastBrightnessY;
+                //TODO Add our own tracer
+                oldX = 1;
+                oldY = 1;
+            }
+            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
+            restore.add(() -> {
+                setupLightMap(shader, oldX, oldY);
+            });
         }
 
 //        if (state.lighting != null) {
@@ -145,60 +167,19 @@ public class RenderContext {
             restore.add(state.blend.apply());
         }
 
-        if (state.scissor_test != null) {
-            boolean oldValue = GL11.glGetBoolean(GL11.GL_SCISSOR_TEST);
-            applyBool(GL11.GL_SCISSOR_TEST, state.scissor_test);
-            if (state.scissor_test && state.scissor_range != null) {
-                int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
-                int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
+        //Always assume scissor test is disabled
+        if (state.scissor_test != null && state.scissor_test && state.scissor_range != null) {
+            int scaleFactor = (int) Minecraft.getInstance().getWindow().getGuiScale();
+            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-                int x = (int) state.scissor_range.getMinX() * scaleFactor;
-                int y = (int) state.scissor_range.getMinY() * scaleFactor;
-                int width = (int) state.scissor_range.getWidth() * scaleFactor;
-                int height = (int) state.scissor_range.getHeight() * scaleFactor;
+            int x = (int) state.scissor_range.getMinX() * scaleFactor;
+            int y = (int) state.scissor_range.getMinY() * scaleFactor;
+            int width = (int) state.scissor_range.getWidth() * scaleFactor;
+            int height = (int) state.scissor_range.getHeight() * scaleFactor;
 
-                if (fourIntBuffer == null) {
-                    //16 ints in case it overflows...
-                    fourIntBuffer = ByteBuffer.allocateDirect(64).order(ByteOrder.nativeOrder()).asIntBuffer();
-                }
-                fourIntBuffer.position(0);
-                GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, fourIntBuffer);
-                int[] oldScissor = new int[]{fourIntBuffer.get(0), fourIntBuffer.get(1), fourIntBuffer.get(2), fourIntBuffer.get(3)};
-                restore.add(() -> GL11.glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]));
-
-                //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-                GL11.glScissor(x, screenHeight - y - height, width, height);
-            }
-            restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
-        }
-        RenderContext.checkError();
-
-        return () -> restore.forEach(Runnable::run);
-    }
-
-    public static With apply(RenderState state) {
-        With ctx = applyBaseState(state);
-        List<Runnable> restore = new ArrayList<>();
-        ShaderInstance shader = RenderSystem.getShader();
-
-        if (state.lightmap != null) {
-            //Our custom shader will handle vanilla emissive stuff
-            float oldX;
-            float oldY;
-            if (state.stage == Stage.ENTITY) {
-                oldX = lastLightX;
-                oldY = lastLightY;
-            } else {
-//                oldX = GlStateManager.lastBrightnessX;
-//                oldY = GlStateManager.lastBrightnessY;
-                //TODO Add our own tracer
-                oldX = 1;
-                oldY = 1;
-            }
-            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
-            restore.add(() -> {
-                setupLightMap(shader, oldX, oldY);
-            });
+            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+            RenderSystem.enableScissor(x, screenHeight - y - height, width, height);
+            restore.add(RenderSystem::disableScissor);
         }
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
@@ -215,7 +196,7 @@ public class RenderContext {
         shader.apply();
         restore.add(shader::clear);
         checkError();
-        return ctx.and(() -> restore.forEach(Runnable::run));
+        return () -> restore.forEach(Runnable::run);
     }
 
     private static void applyShaderFields(ShaderInstance shader) {
