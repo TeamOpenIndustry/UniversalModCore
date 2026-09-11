@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 
 import java.util.*;
@@ -114,9 +115,9 @@ public class ItemPickerGUI {
             List<ItemStack> filteredItems = ItemPickerGUI.this.items.stream()
                     .filter(stack -> Arrays.stream(searchParts).allMatch(searchText ->
                             stack.getDisplayName().toLowerCase(Locale.ROOT).contains(searchText) ||
-                            stack.internal().getTooltipLines(null, null, TooltipFlag.Default.NORMAL).stream()
-                                    .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
-                    )).collect(Collectors.toList());
+                            stack.internal().getTooltipLines(Item.TooltipContext.of(Minecraft.getInstance().level), null, TooltipFlag.Default.NORMAL).stream()
+                                 .anyMatch(tip -> tip.getString().toLowerCase(Locale.ROOT).contains(searchText))
+                    )).toList();
             startX += Math.max(0, (stacksX - filteredItems.size()) / 2) * 32;
             int i;
             for (i = 0; i < filteredItems.size(); i++) {

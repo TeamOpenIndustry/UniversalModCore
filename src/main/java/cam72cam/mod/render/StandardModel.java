@@ -117,8 +117,7 @@ public class StandardModel {
         custom.add((matrix, pt) -> {
             matrix.model_view().multiply(transform);
 
-            //Otherwise we'll get brown-tinted light texture with iris...find out why
-            try (With ctx = RenderContext.applyBaseState(matrix)) {
+            try (With ctx = RenderContext.apply(matrix)) {
                 Minecraft.getInstance().getItemRenderer().renderStatic(stack.internal(), ItemDisplayContext.NONE, 15728880, OverlayTexture.NO_OVERLAY,
                                                                        new PoseStack(), RenderContext.IMMEDIATE, null, 0);
                 RenderContext.IMMEDIATE.endBatch();

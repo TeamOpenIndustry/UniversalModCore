@@ -56,9 +56,11 @@ public class RenderContext {
     private RenderContext() {
     }
 
-    public static With applyBaseState(RenderState state) {
+    public static With apply(RenderState state) {
+        RenderContext.checkError();
         List<Runnable> restore = new ArrayList<>();
 
+        CompiledShaderProgram shader = RenderSystem.getShader();
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -96,6 +98,26 @@ public class RenderContext {
             float[] oldColor = Arrays.copyOf(RenderSystem.getShaderColor(), 4);
             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
             restore.add(() -> RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]));
+        }
+
+        if (state.lightmap != null) {
+            //Our custom shader will handle vanilla emissive stuff
+            float oldX;
+            float oldY;
+            if (state.stage == Stage.ENTITY) {
+                oldX = lastLightX;
+                oldY = lastLightY;
+            } else {
+//                oldX = GlStateManager.lastBrightnessX;
+//                oldY = GlStateManager.lastBrightnessY;
+                //TODO Add our own tracer
+                oldX = 1;
+                oldY = 1;
+            }
+            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
+            restore.add(() -> {
+                setupLightMap(shader, oldX, oldY);
+            });
         }
 
         if (state.depth_test != null) {
@@ -166,35 +188,6 @@ public class RenderContext {
             }
             restore.add(() -> applyBool(GL11.GL_SCISSOR_TEST, oldValue));
         }
-        RenderContext.checkError();
-
-        return () -> restore.forEach(Runnable::run);
-    }
-
-    public static With apply(RenderState state) {
-        With ctx = applyBaseState(state);
-        List<Runnable> restore = new ArrayList<>();
-        CompiledShaderProgram shader = RenderSystem.getShader();
-
-        if (state.lightmap != null) {
-            //Our custom shader will handle vanilla emissive stuff
-            float oldX;
-            float oldY;
-            if (state.stage == Stage.ENTITY) {
-                oldX = lastLightX;
-                oldY = lastLightY;
-            } else {
-//                oldX = GlStateManager.lastBrightnessX;
-//                oldY = GlStateManager.lastBrightnessY;
-                //TODO Add our own tracer
-                oldX = 1;
-                oldY = 1;
-            }
-            setupLightMap(shader, state.lightmap[0], state.lightmap[1]);
-            restore.add(() -> {
-                setupLightMap(shader, oldX, oldY);
-            });
-        }
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
             Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
@@ -210,7 +203,7 @@ public class RenderContext {
         shader.apply();
         restore.add(shader::clear);
         checkError();
-        return ctx.and(() -> restore.forEach(Runnable::run));
+        return () -> restore.forEach(Runnable::run);
     }
 
     private static void applyShaderFields(CompiledShaderProgram shader) {
