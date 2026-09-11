@@ -2,13 +2,24 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.util.With;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DirectDraw {
+    private static final RenderType DIRECT_DRAW =
+            RenderType.create("UMC_DD", 32768, true, false,
+                                               RenderPipeline.builder()
+                                                             .withVertexShader("core/position_tex_color")
+                                                             .withFragmentShader("core/position_tex_color")
+                                                             .withSampler("Sampler0")
+                                                             .withBlend(BlendFunction.TRANSLUCENT).build(),
+                                               RenderType.CompositeState.builder().setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(true));
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
@@ -32,7 +43,7 @@ public class DirectDraw {
                 MeshData data = builder.build();
                 if (data != null) {
                     //TODO other render types?
-                    RenderType.cutout().draw(data);
+                    DIRECT_DRAW.draw(data);
                 }
             }
         };

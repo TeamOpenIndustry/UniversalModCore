@@ -72,27 +72,28 @@ public class RenderState {
                 mbuf[15]
         ).transpose();
 
-        //Read-only
-        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
-        buffer.asFloatBuffer().get(mbuf);
-        state.projection = new Matrix4(
-                mbuf[0],
-                mbuf[1],
-                mbuf[2],
-                mbuf[3],
-                mbuf[4],
-                mbuf[5],
-                mbuf[6],
-                mbuf[7],
-                mbuf[8],
-                mbuf[9],
-                mbuf[10],
-                mbuf[11],
-                mbuf[12],
-                mbuf[13],
-                mbuf[14],
-                mbuf[15]
-        ).transpose();
+        //TODO 1.21.8
+//        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
+//        buffer.asFloatBuffer().get(mbuf);
+//        state.projection = new Matrix4(
+//                mbuf[0],
+//                mbuf[1],
+//                mbuf[2],
+//                mbuf[3],
+//                mbuf[4],
+//                mbuf[5],
+//                mbuf[6],
+//                mbuf[7],
+//                mbuf[8],
+//                mbuf[9],
+//                mbuf[10],
+//                mbuf[11],
+//                mbuf[12],
+//                mbuf[13],
+//                mbuf[14],
+//                mbuf[15]
+//        ).transpose();
+        state.projection = new Matrix4().setIdentity();
     });
 
     public RenderState() {
@@ -125,26 +126,7 @@ public class RenderState {
                 mbuf[15]
         ).transpose();
 
-        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
-        buffer.asFloatBuffer().get(mbuf);
-        this.projection = new Matrix4(
-                mbuf[0],
-                mbuf[1],
-                mbuf[2],
-                mbuf[3],
-                mbuf[4],
-                mbuf[5],
-                mbuf[6],
-                mbuf[7],
-                mbuf[8],
-                mbuf[9],
-                mbuf[10],
-                mbuf[11],
-                mbuf[12],
-                mbuf[13],
-                mbuf[14],
-                mbuf[15]
-        ).transpose();
+        this.projection = new Matrix4().setIdentity();
     }
 
     // Gui
@@ -172,26 +154,7 @@ public class RenderState {
                 mbuf[15]
         ).transpose();
 
-        ByteBuffer buffer = encoder.mapBuffer(RenderSystem.getProjectionMatrixBuffer().buffer(), true, false).data();
-        buffer.asFloatBuffer().get(mbuf);
-        this.projection = new Matrix4(
-                mbuf[0],
-                mbuf[1],
-                mbuf[2],
-                mbuf[3],
-                mbuf[4],
-                mbuf[5],
-                mbuf[6],
-                mbuf[7],
-                mbuf[8],
-                mbuf[9],
-                mbuf[10],
-                mbuf[11],
-                mbuf[12],
-                mbuf[13],
-                mbuf[14],
-                mbuf[15]
-        ).transpose();
+        this.projection = new Matrix4().setIdentity();
     }
 
     private RenderState(RenderState ctx) {

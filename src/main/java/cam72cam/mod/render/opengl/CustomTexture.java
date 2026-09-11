@@ -65,18 +65,13 @@ public abstract class CustomTexture implements Texture {
     }
 
     private void createTexture(ByteBuffer buffer) {
-        NativeImage image;
-        try {
-            image = NativeImage.read(buffer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         GpuTexture tex = RenderSystem.getDevice().createTexture("UMC",
-                                               GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT,
+                                               GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING,
                                                TextureFormat.RGBA8, width, height, 1, 1);
         tex.setTextureFilter(FilterMode.NEAREST, FilterMode.NEAREST, false);
         tex.setAddressMode(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE);
-        RenderSystem.getDevice().createCommandEncoder().writeToTexture(tex, image);
+        RenderSystem.getDevice().createCommandEncoder().writeToTexture(tex, buffer.asIntBuffer(), NativeImage.Format.RGBA,
+                                                                       0, 0, 0, 0, width, height);
         this.view = RenderSystem.getDevice().createTextureView(tex);
     }
 
@@ -135,7 +130,9 @@ public abstract class CustomTexture implements Texture {
 
     public void dealloc() {
         synchronized (textures) {
-            this.view.close();
+            if (this.view != null) {
+                this.view.close();
+            }
             this.view = null;
             this.loader = null;
         }

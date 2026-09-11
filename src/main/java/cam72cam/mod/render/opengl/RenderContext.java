@@ -2,27 +2,29 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.mixin.accessor.ARenderPass;
 import cam72cam.mod.util.With;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.systems.ScissorState;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.client.config.NeoForgeClientConfig;
+import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL32;
 
-import java.nio.IntBuffer;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -36,17 +38,22 @@ public class RenderContext {
     private static final PerspectiveProjectionMatrixBuffer projectionBuffer = new PerspectiveProjectionMatrixBuffer("umc");
 
     //Modified from rendertype_entity_cutout, fix model normal
-    public static RenderPipeline UMC_CORE = RenderPipeline.builder()
+    public static RenderPipeline UMC_CORE = RenderPipeline.builder(RenderPipelines.MATRICES_FOG_LIGHT_DIR_SNIPPET)
             .withVertexShader(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
             .withFragmentShader(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
+            .withSampler("Sampler0")
+            .withSampler("Sampler1")
+            .withSampler("Sampler2")
+            .withVertexFormat(DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS)
             .withLocation(ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "umc_core"))
-            .withVertexFormat(DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS).build();
+            .build();
 
     //More a holder than renderer for now
     public static RenderType UMC_CORE_RT = RenderType.create("umc_core", 4194304, UMC_CORE,
                                                              RenderType.CompositeState.builder().createCompositeState(false));
 
-    private static IntBuffer fourIntBuffer;
+    //Cache UMC_CORE variants derived from RenderState (pipeline state is immutable in 1.21.8)
+    private static final Map<PipelineKey, RenderPipeline> PIPELINE_CACHE = new HashMap<>();
 
     public static float lastLightX;
     public static float lastLightY;
@@ -58,11 +65,33 @@ public class RenderContext {
     private RenderContext() {
     }
 
+    private record PipelineKey(boolean depthTest, boolean cullFace, boolean depthMask, BlendFunction blend) {
+    }
+
+    private static RenderPipeline getPipeline(RenderState state) {
+        boolean depthTest = state.depth_test == null || state.depth_test;
+        boolean cullFace = state.cull_face == null || state.cull_face;
+        boolean depthMask = state.depth_mask == null || state.depth_mask;
+        BlendFunction blend = state.blend != null && state.blend.enabled ? state.blend.function : null;
+
+        PipelineKey key = new PipelineKey(depthTest, cullFace, depthMask, blend);
+        return PIPELINE_CACHE.computeIfAbsent(key, k -> {
+            RenderPipeline.Builder builder = UMC_CORE.toBuilder()
+                    .withDepthTestFunction(k.depthTest() ? DepthTestFunction.LEQUAL_DEPTH_TEST : DepthTestFunction.NO_DEPTH_TEST)
+                    .withCull(k.cullFace())
+                    .withDepthWrite(k.depthMask());
+            if (k.blend() != null) {
+                builder.withBlend(k.blend());
+            } else {
+                builder.withoutBlend();
+            }
+            return builder.build();
+        });
+    }
+
     public static With applyBaseState(RenderState state) {
-        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-        RenderPipeline.Builder builder = RenderPipeline.builder();
-        OptionalInt color;
         List<Runnable> restore = new ArrayList<>();
+
         if (state.model_view != null) {
             Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             restore.add(() -> RenderSystem.getModelViewMatrix().set(oldModelView));
@@ -77,152 +106,126 @@ public class RenderContext {
             RenderSystem.setProjectionMatrix(projectionBuffer.getBuffer(target), ProjectionType.PERSPECTIVE);
         }
 
-        GpuTextureView view;
-        if (state.texture != NO_TEXTURE && state.texture != null) {
+        if (state.texture != null && state.texture != NO_TEXTURE) {
             currentState.set(state);
             //Normal and Specular handled in mixin.feat.iris_pbr
-            view = state.texture.getTexView();
-            RenderSystem.setShaderTexture(0, view);
+            GpuTextureView view = state.texture.getTexView();
             currentState.remove();
-        } else {
-            view = Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTextureView();
+
+            GpuTextureView oldTexture = RenderSystem.getShaderTexture(0);
+            RenderSystem.setShaderTexture(0, view);
+            restore.add(() -> RenderSystem.setShaderTexture(0, oldTexture));
         }
 
-        {
-            if (state.color == null) {
-                color = OptionalInt.of(0xFFFFFFFF);
-            } else {
-                color = OptionalInt.of((int) (state.color[0] * 256) << 24
-                                             | (int) (state.color[1] * 256) << 16
-                                             | (int) (state.color[2] * 256) << 8
-                                             | (int) (state.color[3] * 256));
-            }
-        }
-        RenderPass pass = encoder.createRenderPass(UMC_DEBUG, view, color);
+        if (state.scissor_test != null && state.scissor_test && state.scissor_range != null) {
+            int scaleFactor = Minecraft.getInstance().getWindow().getGuiScale();
+            int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
 
-        if (state.depth_test != null) {
-            if(state.depth_test) {
-                builder.withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST);
-            } else {
-                builder.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
-            }
+            int x = (int) state.scissor_range.getMinX() * scaleFactor;
+            int y = (int) state.scissor_range.getMinY() * scaleFactor;
+            int width = (int) state.scissor_range.getWidth() * scaleFactor;
+            int height = (int) state.scissor_range.getHeight() * scaleFactor;
+
+            //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
+            RenderSystem.enableScissorForRenderTypeDraws(x, screenHeight - y - height, width, height);
+            restore.add(RenderSystem::disableScissorForRenderTypeDraws);
         }
 
-        if (state.cull_face != null) {
-            builder.withCull(state.cull_face);
-        }
-
-        if (state.depth_mask != null) {
-            builder.withDepthWrite(state.depth_mask);
-        }
-
-        if (state.blend != null) {
-            if (state.blend.enabled) {
-                builder.withBlend(state.blend.function);
-            } else {
-                builder.withoutBlend();
-            }
-        }
-
-        if (state.scissor_test != null) {
-            if (state.scissor_test && state.scissor_range != null) {
-                int scaleFactor = Minecraft.getInstance().getWindow().getGuiScale();
-                int screenHeight = GUIHelpers.getScreenHeight() * scaleFactor;
-
-                int x = (int) state.scissor_range.getMinX() * scaleFactor;
-                int y = (int) state.scissor_range.getMinY() * scaleFactor;
-                int width = (int) state.scissor_range.getWidth() * scaleFactor;
-                int height = (int) state.scissor_range.getHeight() * scaleFactor;
-
-                //We set origin point at Top-Left corner but OpenGL takes Bottom-Left corner, so wraps y
-                pass.enableScissor(x, screenHeight - y - height, width, height);
-            }
-        }
-        RenderContext.checkError();
-
-        pass.setPipeline(builder.build());
-
-        return new With() {
-            @Override
-            public void restore() {
-                pass.close();
-            }
-
-            @Override
-            public RenderPass getContent() {
-                return pass;
-            }
-        }.and(() -> restore.forEach(Runnable::run));
+        return () -> restore.forEach(Runnable::run);
     }
 
     public static With apply(RenderState state) {
-        RenderPass pass = applyBaseState(state).getContent();
-        List<Runnable> restore = new ArrayList<>();
-
-        if (state.lightmap != null) {
-            //Our custom shader will handle vanilla emissive stuff
-            float oldX;
-            float oldY;
-            if (state.stage == Stage.ENTITY) {
-                oldX = lastLightX;
-                oldY = lastLightY;
-            } else {
-//                oldX = GlStateManager.lastBrightnessX;
-//                oldY = GlStateManager.lastBrightnessY;
-                //TODO Add our own tracer
-                oldX = 1;
-                oldY = 1;
-            }
-            setupLightMap(ARenderPass.from(pass).getRenderPipeline(), state, state.lightmap[0], state.lightmap[1]);
-            restore.add(() -> {
-                setupLightMap(ARenderPass.from(pass).getRenderPipeline(), state, oldX, oldY);
-            });
-        }
+        With ctx = applyBaseState(state);
 
         if (state.stage == Stage.ITEM_SPRITE_TEX) {
-            //TODO Still necessary?
-//            Matrix4f matrix4 = new Matrix4().rotate(Math.toRadians(90), 0, 1, 0).convertToMoj();
-//            Vector4f transformed0 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_0, 1));
-//            Vector4f transformed1 = matrix4.transform(new Vector4f(Lighting.DIFFUSE_LIGHT_1, 1));
             Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
         }
 
         checkError();
-        return new With() {
-            @Override
-            public void restore() {
-                pass.close();
-            }
-
-            @Override
-            public RenderPass getContent() {
-                return pass;
-            }
-        }.and(() -> restore.forEach(Runnable::run));
+        return ctx;
     }
 
-    private static void setupLightMap(RenderPipeline pipeline, RenderState state, float oldX, float oldY) {
-        List<VertexFormatElement> elements = pipeline.getVertexFormat().getElements();
-        for (int i = 0; i < elements.size(); i++) {
-            VertexFormatElement element = elements.get(i);
-            if (element.usage() == VertexFormatElement.Usage.UV) {
-                for (Map.Entry<String, VertexFormatElement> entry : pipeline.getVertexFormat().getElementMapping().entrySet()) {
-                    if (entry.getValue() == element && entry.getKey().equals("UV2")) {
-                        GL32.glDisableVertexAttribArray(i);
-                        //240 means full bright
-                        int x = RenderContext.FULL_BRIGHT;
-                        int y = RenderContext.FULL_BRIGHT;
-                        if (state.lightmap != null) {
-                            x = (int) (state.lightmap[0] * RenderContext.FULL_BRIGHT);
-                            y = (int) (state.lightmap[1] * RenderContext.FULL_BRIGHT);
-                        }
-                        GL32.glVertexAttribI2i(i, x, y);
+    @ApiStatus.Internal
+    public static With applyAndDraw(MeshData data, RenderState state) {
+        With ctx = apply(state);
+
+        if (RenderSystem.getShaderTexture(0) == null) {
+            RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager()
+                                                              .getTexture(TextureAtlas.LOCATION_BLOCKS)
+                                                              .getTextureView());
+        }
+        Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+        Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
+
+        RenderPipeline pipeline = getPipeline(state);
+
+        try {
+            GpuBufferSlice transforms = RenderSystem.getDynamicUniforms().writeTransform(
+                    RenderSystem.getModelViewMatrix(),
+                    state.color != null ? new Vector4f(state.color[0], state.color[1], state.color[2], state.color[3])
+                                        : new Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+                    RenderSystem.getModelOffset(),
+                    RenderSystem.getTextureMatrix(),
+                    RenderSystem.getShaderLineWidth());
+
+            VertexFormat format = pipeline.getVertexFormat();
+            GpuBuffer vertexBuffer = format.uploadImmediateVertexBuffer(data.vertexBuffer());
+
+            GpuBuffer indexBuffer;
+            VertexFormat.IndexType indexType;
+            if (data.indexBuffer() == null) {
+                RenderSystem.AutoStorageIndexBuffer sequential = RenderSystem.getSequentialBuffer(data.drawState().mode());
+                indexBuffer = sequential.getBuffer(data.drawState().indexCount());
+                indexType = sequential.type();
+            } else {
+                indexBuffer = format.uploadImmediateIndexBuffer(data.indexBuffer());
+                indexType = data.drawState().indexType();
+            }
+
+            RenderTarget target = Minecraft.getInstance().getMainRenderTarget();
+            GpuTextureView color = RenderSystem.outputColorTextureOverride != null
+                                   ? RenderSystem.outputColorTextureOverride
+                                   : target.getColorTextureView();
+            GpuTextureView depth = target.useDepth
+                                   ? (RenderSystem.outputDepthTextureOverride != null
+                                      ? RenderSystem.outputDepthTextureOverride
+                                      : target.getDepthTextureView())
+                                   : null;
+
+            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
+                                             .createRenderPass(UMC_DEBUG, color, OptionalInt.empty(), depth, OptionalDouble.empty())) {
+                pass.setPipeline(pipeline);
+
+                ScissorState scissor = RenderSystem.getScissorStateForRenderTypeDraws();
+                if (scissor.enabled()) {
+                    pass.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                }
+
+                RenderSystem.bindDefaultUniforms(pass);
+                pass.setUniform("DynamicTransforms", transforms);
+                pass.setVertexBuffer(0, vertexBuffer);
+
+                for (int i = 0; i < 12; i++) {
+                    GpuTextureView sampler = RenderSystem.getShaderTexture(i);
+                    if (sampler != null) {
+                        pass.bindSampler("Sampler" + i, sampler);
                     }
                 }
-            }
-        }
-    }
 
+                pass.setIndexBuffer(indexBuffer, indexType);
+                pass.drawIndexed(0, 0, data.drawState().indexCount(), 1);
+            }
+        } finally {
+            Minecraft.getInstance().gameRenderer.overlayTexture().teardownOverlayColor();
+            Minecraft.getInstance().gameRenderer.lightTexture().turnOffLightLayer();
+            if (data != null) {
+                data.close();
+            }
+            checkError();
+        }
+
+        return ctx;
+    }
 
     public static void applyBool(int opt, boolean currState) {
         if (currState) {
