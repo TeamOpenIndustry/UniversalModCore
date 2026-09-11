@@ -269,7 +269,6 @@ public class RenderContext {
         RenderSystem.setupShaderLights(shader);
     }
 
-    //Note: with Iris sometimes we get corrupted light texture (32*32, tinted brown)
     private static void setupLightMap(ShaderInstance shader, float oldX, float oldY) {
         LightTexture light = Minecraft.getInstance().gameRenderer.lightTexture();
 
