@@ -63,17 +63,16 @@ public class RenderContext {
 
         if (state.texture != NO_TEXTURE && state.texture != null) {
             currentState.set(state);
+            //Normal and Specular handled in mixin.feat.iris_pbr
+            int oldTexture = RenderSystem.getShaderTexture(0);
             RenderSystem.activeTexture(GL13.GL_TEXTURE0);
             RenderSystem.bindTexture(state.texture.getId());
-            //Normal and Specular handled in mixin.feat.iris_pbr
-            //TODO create handler for OptiFine?
-            int oldTexture = RenderSystem.getShaderTexture(0);
+            RenderSystem.setShaderTexture(0, state.texture.getId());
             restore.add(() -> {
                 RenderSystem.activeTexture(GL13.GL_TEXTURE0);
                 RenderSystem.bindTexture(oldTexture);
                 RenderSystem.setShaderTexture(0, oldTexture);
             });
-            RenderSystem.setShaderTexture(0, state.texture.getId());
             currentState.remove();
         }
 
