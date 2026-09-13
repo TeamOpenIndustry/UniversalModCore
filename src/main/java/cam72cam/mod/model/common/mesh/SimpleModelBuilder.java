@@ -62,7 +62,7 @@ public class SimpleModelBuilder implements IModelBuilder {
         }
         // Record the model file's hash so cache invalidation notices source edits.
         input.apply(modelLoc);
-        // Faces without an explicit usemtl resolve to the default material
+        // Faces without an explicit material spec resolve to the default material
         materials.add(new Material(this, "undefined"));
         materialIds.put("undefined", 0);
         currMaterial = 0;

@@ -1,6 +1,7 @@
 package cam72cam.mod.model.common;
 
 import cam72cam.mod.Config;
+import cam72cam.mod.model.common.format.MQOParser;
 import cam72cam.mod.model.common.format.OBJParser;
 import cam72cam.mod.model.common.format.Parser;
 import cam72cam.mod.model.common.mesh.Model;
@@ -36,6 +37,7 @@ public class ModelLoader {
 
     static {
         ModelLoader.registerFormat(OBJParser.EXTENSION, OBJParser::parse);
+        ModelLoader.registerFormat(MQOParser.EXTENSION, MQOParser::parse);
     }
 
     /**
