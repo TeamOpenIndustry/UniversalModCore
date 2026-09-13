@@ -1,6 +1,5 @@
 package cam72cam.mod.model.common.mesh;
 
-import cam72cam.mod.model.common.util.Buffers;
 import cam72cam.mod.resource.Identifier;
 import util.Matrix4;
 
@@ -21,18 +20,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ModelSetBuilder {
     private static final AtomicInteger nextId = new AtomicInteger(0);
 
-    private final Model model;
+    private final Model base;
     private final VAOLayout layout;
-    private final List<Action> actions = new ArrayList<>();
-    private final Map<String, Buffers.FloatBuffer> groupedBuffers = new HashMap<>();
+    private final int stride;
+    private final int pos;
+    private final int norm;
+
+    private final TreeMap<String, List<Matrix4>> actions = new TreeMap<>(Comparator.naturalOrder());
+    private final IdentityHashMap<Matrix4, Matrix3f> normalMats = new IdentityHashMap<>();
+    private final Vector3f positionGetter = new Vector3f();
+    private final Vector3f normalGetter = new Vector3f();
+    private int faceCount;
 
     public static ModelSetBuilder of(Model model) {
         return new ModelSetBuilder(model);
     }
 
-    private ModelSetBuilder(Model model) {
-        this.model = model;
-        this.layout = model.getLayout();
+    private ModelSetBuilder(Model base) {
+        this.base = base;
+        this.layout = base.getLayout();
+        this.stride = layout.getStride();
+        this.pos = layout.getOffset(VAOLayout.Usage.POSITION);
+        this.norm = layout.getOffset(VAOLayout.Usage.NORMAL);
     }
 
     /**
@@ -41,11 +50,13 @@ public class ModelSetBuilder {
      * @return This builder
      */
     public ModelSetBuilder append(Matrix4 m) {
-        actions.add(vbo -> {
-            for (String name : model.groups()) {
-                appendGroup(vbo, name, m);
-            }
-        });
+        if (m != null) {
+            m = m.copy();
+        }
+        for (Map.Entry<String, ModelGroup> name : base.getGroups().entrySet()) {
+            actions.computeIfAbsent(name.getKey(), k -> new ArrayList<>()).add(m);
+            faceCount += name.getValue().faceEnd - name.getValue().faceStart + 1;
+        }
         return this;
     }
 
@@ -56,118 +67,84 @@ public class ModelSetBuilder {
      * @return This builder
      */
     public ModelSetBuilder append(Collection<String> groups, Matrix4 m) {
-        actions.add(vbo -> {
-            for (String name : groups) {
-                appendGroup(vbo, name, m);
+        if (m != null) {
+            m = m.copy();
+        }
+        for (String name : groups) {
+            ModelGroup group = base.getGroups().get(name);
+            if (group == null) {
+                throw new IllegalArgumentException(name + " is not a valid group for model" + base.location());
             }
-        });
+            actions.computeIfAbsent(name, k -> new ArrayList<>()).add(m);
+            faceCount += group.faceEnd - group.faceStart + 1;
+        }
         return this;
     }
 
-    private void appendGroup(float[] vbo, String name, Matrix4 m) {
-        ModelGroup group = model.getGroups().get(name);
-        if (group == null) {
-            throw new IllegalArgumentException("Unknown group: " + name);
-        }
-        Buffers.FloatBuffer out = groupedBuffers.computeIfAbsent(name, k -> new Buffers.FloatBuffer(1024));
-        add(out, vbo, group.faceStart * 3, (group.faceEnd + 1) * 3, m);
-    }
-
-    private void add(Buffers.FloatBuffer out, float[] vbo, int startVert, int endVert, Matrix4 m) {
-        int stride = layout.getStride();
-        int pos = layout.getOffset(VAOLayout.Usage.POSITION);
-        int nrm = layout.getOffset(VAOLayout.Usage.NORMAL);
-        int start = startVert * stride;
-        int stop = endVert * stride;
-
-        if (m == null) {
-            for (int i = start; i < stop; i++) {
-                out.add(vbo[i]);
-            }
-            return;
-        }
-
-        Matrix3f normalMat = null;
-        if (nrm != -1) {
-            normalMat = new Matrix3f(
-                    (float) m.m00, (float) m.m01, (float) m.m02,
-                    (float) m.m10, (float) m.m11, (float) m.m12,
-                    (float) m.m20, (float) m.m21, (float) m.m22);
-            try {
-                normalMat.invert();
-            } catch (SingularMatrixException ignore) {
-                //Nothing to do here
-            }
-            normalMat.transpose();
-        }
-
-        float[] vert = new float[stride];
-        for (int i = start; i < stop; i += stride) {
-            System.arraycopy(vbo, i, vert, 0, stride);
-
-            Vector3f p = new Vector3f(vert[pos], vert[pos + 1], vert[pos + 2]);
-            m.apply(p);
-            vert[pos] = p.x;
-            vert[pos + 1] = p.y;
-            vert[pos + 2] = p.z;
-
-            if (normalMat != null) {
-                Vector3f n = new Vector3f(vert[nrm], vert[nrm + 1], vert[nrm + 2]);
-                normalMat.transform(n);
-                n.normalize();
-                vert[nrm] = n.x;
-                vert[nrm + 1] = n.y;
-                vert[nrm + 2] = n.z;
-            }
-
-            for (int k = 0; k < stride; k++) {
-                out.add(vert[k]);
-            }
-        }
-    }
-
-    /**
-     * Build the transformed model into one {@link GeneratedModel}.
-     *
-     * @return A {@link GeneratedModel} which has a new VBO and shares the
-     *         source model's texture sheets
-     */
     public GeneratedModel build() {
-        float[] vbo = model.getVboData();
-        for (Action action : actions) {
-            action.add(vbo);
-        }
+        float[] srcData = base.getVboData();
+        float[] dstData = new float[faceCount * 3 * stride];
+        int faceStride = stride * 3;
 
-        TreeMap<String, Buffers.FloatBuffer> sorted = new TreeMap<>(groupedBuffers);
-        int totalFloats = 0;
-        for (Buffers.FloatBuffer buf : sorted.values()) {
-            totalFloats += buf.size();
-        }
-
-        float[] data = new float[totalFloats];
-        int facesPerGroupStride = layout.getStride() * 3;
-        LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
-        int curr = 0;
-        for (Map.Entry<String, Buffers.FloatBuffer> e : sorted.entrySet()) {
-            float[] arr = e.getValue().array();
-            int len = arr.length;
-            if (len == 0) {
-                // Empty group: nothing to draw, keep it out of the group map
-                continue;
+        LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>(actions.size());
+        int dstCursor = 0;
+        for (Map.Entry<String, List<Matrix4>> entry : actions.entrySet()) {
+            String name = entry.getKey();
+            ModelGroup group = base.getGroups().get(name);
+            int length = (group.faceEnd - group.faceStart + 1) * 3 * stride;
+            int faceStart = dstCursor / faceStride;
+            for (Matrix4 m : entry.getValue()) {
+                dstCursor = copyAndTransform(srcData, group.faceStart * 3 * stride, dstData, dstCursor, length, m);
             }
-            System.arraycopy(arr, 0, data, curr, len);
-            int faceStart = curr / facesPerGroupStride;
-            int faceEnd = (curr + len) / facesPerGroupStride - 1;
-            groups.put(e.getKey(), ModelGroup.lazy(e.getKey(), faceStart, faceEnd, data, layout));
-            curr += len;
+            int faceEnd = (dstCursor / faceStride) - 1;
+            if (faceEnd - faceStart >= 0) {
+                // The group is not empty
+                groups.put(name, ModelGroup.lazy(name, faceStart, faceEnd, dstData, layout));
+            }
         }
 
-        Identifier loc = new Identifier(model.location().getDomain(), model.location().getPath() + "_build" + nextId.getAndIncrement());
-        return new GeneratedModel(model, loc, () -> data, groups);
+        Identifier loc = new Identifier(base.location().getDomain(), base.location().getPath() + "_build" + nextId.getAndIncrement());
+        return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
-    @FunctionalInterface
-    private interface Action {
-        void add(float[] vbo);
+    private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
+        System.arraycopy(source, src, target, dst, len);
+        if (transform != null) {
+            Matrix3f normalMat = null;
+            if (norm != -1) {
+                normalMat = normalMats.get(transform);
+                if (normalMat == null) {
+                    normalMat = new Matrix3f(
+                            (float) transform.m00, (float) transform.m01, (float) transform.m02,
+                            (float) transform.m10, (float) transform.m11, (float) transform.m12,
+                            (float) transform.m20, (float) transform.m21, (float) transform.m22);
+                    try {
+                        normalMat.invert();
+                    } catch (SingularMatrixException ignore) {
+                        //Nothing to do here
+                    }
+                    normalMat.transpose();
+                    normalMats.put(transform, normalMat);
+                }
+            }
+
+            for (int i = dst; i < dst + len; i += stride) {
+                positionGetter.set(target[i + this.pos], target[i + this.pos + 1], target[i + this.pos + 2]);
+                transform.apply(positionGetter);
+                target[i + this.pos] = positionGetter.x;
+                target[i + this.pos + 1] = positionGetter.y;
+                target[i + this.pos + 2] = positionGetter.z;
+
+                if (normalMat != null) {
+                    normalGetter.set(target[i + this.norm], target[i + this.norm + 1], target[i + this.norm + 2]);
+                    normalMat.transform(normalGetter);
+                    normalGetter.normalize();
+                    target[i + this.norm] = normalGetter.x;
+                    target[i + this.norm + 1] = normalGetter.y;
+                    target[i + this.norm + 2] = normalGetter.z;
+                }
+            }
+        }
+        return dst + len;
     }
 }
