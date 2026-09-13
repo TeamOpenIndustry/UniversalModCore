@@ -106,10 +106,16 @@ public class EntityRegistry {
                 if (iter instanceof Collection<net.minecraft.world.entity.Entity> e) {
                     iter = new ArrayList<>(e);
                 }
-                for (net.minecraft.world.entity.Entity entity : iter) {
-                    if (entity instanceof ModdedEntity) {
-                        entity.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+                try {
+                    for (net.minecraft.world.entity.Entity entity : iter) {
+                        if (entity instanceof ModdedEntity) {
+                            entity.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+                        }
                     }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    // We can't know if the copy succeed, and this is a predictable cause of failure which isn't fatal
+                    // Catch it
+                    ModCore.warn("Entity data modified on client, can't continue processing entity removal for UMC!");
                 }
             }
         });
