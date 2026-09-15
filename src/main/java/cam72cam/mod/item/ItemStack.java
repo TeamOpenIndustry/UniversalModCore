@@ -5,11 +5,13 @@ import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.fluids.FluidUtil;
+import org.jetbrains.annotations.ApiStatus;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
     public static final ItemStack EMPTY = new ItemStack(net.minecraft.item.ItemStack.EMPTY);
 
+    @ApiStatus.Internal
     public final net.minecraft.item.ItemStack internal;
 
     /** Wrap Minecraft ItemStack.  Do not use directly */
@@ -79,13 +81,6 @@ public class ItemStack {
         internal.shrink(i);
     }
 
-    /** Compares: item, count, damage, data */
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
-    }
-
-
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
         return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
@@ -124,18 +119,38 @@ public class ItemStack {
         return internal.getItem().getToolClasses(internal).contains(tool.toString());
     }
 
-    @Override
-    public String toString() {
-        return internal.toString();
-    }
-
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
         internal.damageItem(i, player.internal);
     }
 
+    /**
+     * Return the remainder that should be left in inventory when this stack's content is consumed, or {@link ItemStack#EMPTY} if this item doesn't have anything to leave
+     * <p>
+     * Think about milk bucket when crafting cakes
+     */
+    public ItemStack getRemainder() {
+        if (internal.getItem().hasContainerItem(internal)) {
+            return new ItemStack(internal.getItem().getContainerItem(internal));
+        }
+        return EMPTY;
+    }
+
     /** Completely null out the tag compound */
+    @ApiStatus.Internal
     public void clearTagCompound() {
         internal.setTagCompound(null);
     }
+
+    @Override
+    public String toString() {
+        return internal.toString();
+    }
+
+    /** Compares: item, count, damage, data */
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
+    }
+
 }
