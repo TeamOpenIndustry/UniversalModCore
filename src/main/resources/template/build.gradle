@@ -55,7 +55,7 @@ unimined.minecraft {
     }
 
     minecraftForge {
-        loader("28.2.26")
+        loader("28.2.30")
     }
 
     defaultRemapJar = true
