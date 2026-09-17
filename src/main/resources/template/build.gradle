@@ -66,13 +66,13 @@ unimined.minecraft {
     }
 
     runs.config("client") {
-        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_1_8))
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_17))
         var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
         environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
     }
 
     runs.config("server") {
-        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_1_8))
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_17))
         var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
         environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
     }
