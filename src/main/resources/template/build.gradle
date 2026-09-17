@@ -58,6 +58,25 @@ unimined.minecraft {
         loader("37.1.1")
     }
 
+    // Support for running in dev environment
+    def downgrade = tasks.register("downgrade", xyz.wagyourtail.jvmdg.gradle.task.files.DowngradeFiles) {
+        inputCollection = sourceSet.output.classesDirs + sourceSet.runtimeClasspath
+        classpath = project.files()
+        outputCollection.files
+    }
+
+    runs.config("client") {
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_1_8))
+        var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
+        environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
+    }
+
+    runs.config("server") {
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_1_8))
+        var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
+        environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
+    }
+
     defaultRemapJar = true
 }
 
