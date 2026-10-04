@@ -285,7 +285,8 @@ public class TileEntity extends net.minecraft.tileentity.TileEntity {
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
         }
-        world.notifyBlockUpdate(super.pos, null, super.world.getBlockState(super.pos), 3);
+        BlockState state = super.world.getBlockState(super.pos);
+        world.notifyBlockUpdate(super.pos, state, state, 3);
     }
 
     /** Fire off update packet if on server, re-render if on client */
