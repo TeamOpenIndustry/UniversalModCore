@@ -306,7 +306,8 @@ public class TileEntity extends net.minecraft.world.level.block.entity.BlockEnti
             ModCore.error("IN UPDATE: %s", tag);
             ModCore.catching(ex);
         }
-        level.sendBlockUpdated(super.worldPosition, null, super.level.getBlockState(super.worldPosition), 3);
+        BlockState state1 = super.level.getBlockState(super.worldPosition);
+        level.sendBlockUpdated(super.worldPosition, state1, state1, 3);
     }
 
     /** Fire off update packet if on server, re-render if on client */
