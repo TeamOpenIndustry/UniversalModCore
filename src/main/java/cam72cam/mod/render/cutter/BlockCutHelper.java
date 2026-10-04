@@ -2,6 +2,7 @@ package cam72cam.mod.render.cutter;
 
 import cam72cam.mod.math.Plane;
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.util.collection.ExpireableMap;
 
 import java.util.*;
 
@@ -9,8 +10,8 @@ public final class BlockCutHelper {
 
     private static final double EPS = 1e-6;
 
-    private static final Map<Plane, List<Vec3d>> INTERSECTION_CACHE = new HashMap<>();
-    private static final Map<Plane, List<Vec3d>> CLIPPED_CACHE = new HashMap<>();
+    private static final ExpireableMap<Plane, List<Vec3d>> INTERSECTION_CACHE = new ExpireableMap<>(10, true);
+    private static final ExpireableMap<Plane, List<Vec3d>> CLIPPED_CACHE = new ExpireableMap<>(10, true);
 
     private static final Vec3d[] CORNERS = {
             new Vec3d(0, 0, 0),

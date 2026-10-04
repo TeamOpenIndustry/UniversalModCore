@@ -6,7 +6,7 @@ plugins {
     id 'xyz.wagyourtail.unimined' version "1.4.18-kappa"
     id 'com.gradleup.shadow' version "9.4.1"
     id "maven-publish"
-    id 'xyz.wagyourtail.jvmdowngrader' version '1.3.6'
+    id 'xyz.wagyourtail.jvmdowngrader' version '2.0.1'
 }
 configurations {
     umcShade
@@ -60,6 +60,25 @@ unimined.minecraft {
 
     minecraftRemapper.config {
         ignoreConflicts(true)
+    }
+
+    // Support for running in dev environment
+    def downgrade = tasks.register("downgrade", xyz.wagyourtail.jvmdg.gradle.task.files.DowngradeFiles) {
+        inputCollection = sourceSet.output.classesDirs + sourceSet.runtimeClasspath
+        classpath = project.files()
+        outputCollection.files
+    }
+
+    runs.config("client") {
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_21))
+        var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
+        environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
+    }
+
+    runs.config("server") {
+        classpath = downgrade.get().outputCollection + files(jvmdg.getDowngradedApi(JavaVersion.VERSION_21))
+        var downgradedSrc = project.getLayout().getBuildDirectory().dir("tmp/downgrade/main").get().asFile.toString()
+        environment["MOD_CLASSES"] = "${downgradedSrc};${downgradedSrc}"
     }
 
     defaultRemapJar = true
