@@ -1,6 +1,7 @@
 package cam72cam.mod.item;
 
 import cam72cam.mod.serialization.*;
+import org.jetbrains.annotations.ApiStatus;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -22,31 +23,7 @@ public class ItemStackHandler implements IInventory {
 
 
     public ItemStackHandler(int size) {
-        this.internal = new net.minecraftforge.items.ItemStackHandler(size) {
-            @Override
-            public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
-                if (checkSlot.test(slot, new ItemStack(stack))) {
-                    super.setStackInSlot(slot, stack);
-                }
-            }
-
-            @Override
-            @Nonnull
-            public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
-                return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
-            }
-
-            @Override
-            public int getSlotLimit(int slot) {
-                return slotLimit == null ? super.getSlotLimit(slot) : Math.min(super.getSlotLimit(slot), slotLimit.apply(slot));
-            }
-
-            @Override
-            protected void onContentsChanged(int slot) {
-                super.onContentsChanged(slot);
-                onChanged.forEach(f -> f.accept(slot));
-            }
-        };
+        this.internal = new ItemStackHandlerWrapper(size);
     }
 
     public ItemStackHandler() {
@@ -98,9 +75,21 @@ public class ItemStackHandler implements IInventory {
         internal.setStackInSlot(slot, stack.internal);
     }
 
+    /** Don't call this method unless you know what you're doing! */
+    @ApiStatus.AvailableSince("1.3.2")
+    public void setUnchecked(int slot, ItemStack stack) {
+        ((ItemStackHandlerWrapper)internal).setStackInSlotUnchecked(slot, stack.internal);
+    }
+
     @Override
     public ItemStack insert(int slot, ItemStack stack, boolean simulate) {
         return new ItemStack(internal.insertItem(slot, stack.internal, simulate));
+    }
+
+    /** Don't call this method unless you know what you're doing! */
+    @ApiStatus.AvailableSince("1.3.2")
+    public ItemStack insertUnchecked(int slot, ItemStack stack, boolean simulate) {
+        return new ItemStack(((ItemStackHandlerWrapper)internal).insertItemUnchecked(slot, stack.internal, simulate));
     }
 
     @Override
@@ -121,6 +110,44 @@ public class ItemStackHandler implements IInventory {
     @Deprecated
     public void load(TagCompound items) {
         internal.deserializeNBT(items.internal);
+    }
+
+    class ItemStackHandlerWrapper extends net.minecraftforge.items.ItemStackHandler {
+        public ItemStackHandlerWrapper(int size) {
+            super(size);
+        }
+
+        @Override
+        public void setStackInSlot(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            if (checkSlot.test(slot, new ItemStack(stack))) {
+                super.setStackInSlot(slot, stack);
+            }
+        }
+
+        @Override
+        @Nonnull
+        public net.minecraft.item.ItemStack insertItem(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
+            return checkSlot.test(slot, new ItemStack(stack)) ? super.insertItem(slot, stack.copy(), simulate) : stack;
+        }
+
+        public void setStackInSlotUnchecked(int slot, @Nonnull net.minecraft.item.ItemStack stack) {
+            super.setStackInSlot(slot, stack);
+        }
+
+        public net.minecraft.item.ItemStack insertItemUnchecked(int slot, @Nonnull net.minecraft.item.ItemStack stack, boolean simulate) {
+            return super.insertItem(slot, stack.copy(), simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return slotLimit == null ? super.getSlotLimit(slot) : Math.min(super.getSlotLimit(slot), slotLimit.apply(slot));
+        }
+
+        @Override
+        protected void onContentsChanged(int slot) {
+            super.onContentsChanged(slot);
+            onChanged.forEach(f -> f.accept(slot));
+        }
     }
 
     public static class TagMapper implements cam72cam.mod.serialization.TagMapper<ItemStackHandler> {
