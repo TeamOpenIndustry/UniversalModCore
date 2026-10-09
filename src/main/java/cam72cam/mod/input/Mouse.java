@@ -6,6 +6,7 @@ import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.custom.IClickable;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.platform.ClientEventListener;
 import cam72cam.mod.item.ClickResult;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.net.Packet;
@@ -46,7 +47,7 @@ public class Mouse {
      *                and returns a boolean indicating whether the event should be passed down or not
      */
     public static void registerDragHandler(Function<Player.Hand, Boolean> handler) {
-        ClientEvents.DRAG.subscribe(handler);
+        ClientEventListener.DRAG.subscribe(handler);
     }
 
     /**
@@ -55,7 +56,7 @@ public class Mouse {
      * @return  the screen space mouse position from the start point of dragging, or {@code null} if the mouse is not pressed.
      */
     public static Vec3d getDrag() {
-        return ClientEvents.ClientEventBus.getDragPos();
+        return ClientEventListener.getDragPos();
     }
 
     /**

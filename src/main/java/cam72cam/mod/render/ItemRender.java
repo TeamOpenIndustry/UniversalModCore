@@ -4,6 +4,7 @@ import cam72cam.mod.Config;
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.platform.ClientEventListener;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
@@ -56,8 +57,8 @@ public class ItemRender {
     /** Register a simple image for an item */
     public static void register(CustomItem item, Identifier tex) {
         // Link Item to Item Registry Name to find models
-        ClientEvents.MODEL_CREATE.subscribe(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
-                                                      new ModelResourceLocation(item.getRegistryName().internal, "")));
+        ClientEventListener.MODEL_CREATE.subscribe(() -> ModelLoader.setCustomModelResourceLocation(item.internal, 0,
+                                                                                                    new ModelResourceLocation(item.getRegistryName().internal, "")));
 
         // And put our model data
         BuiltinPack.addNamespace(tex.getDomain());
@@ -66,18 +67,18 @@ public class ItemRender {
         BuiltinPack.put(ident, String.format(jsonTemplate, tex).getBytes(StandardCharsets.UTF_8));
 
         // Add texture to texture map
-        ClientEvents.TEXTURE_STITCH.subscribe(() -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
+        ClientEventListener.TEXTURE_STITCH.subscribe(() -> Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(tex.internal));
     }
 
     /** Register a complex model for an item */
     public static void register(CustomItem item, IItemModel model) {
         // Link Item to Item Registry Name
-        ClientEvents.MODEL_CREATE.subscribe(() ->
+        ClientEventListener.MODEL_CREATE.subscribe(() ->
                 ModelLoader.setCustomModelResourceLocation(item.internal, 0, new ModelResourceLocation(item.getRegistryName().internal, ""))
         );
 
         // Link Item Registry Name to Custom Model
-        ClientEvents.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
+        ClientEventListener.MODEL_BAKE.subscribe((ModelBakeEvent event) -> event.getModelRegistry().putObject(new ModelResourceLocation(item.getRegistryName().internal, ""), new BakedItemModel(model)));
 
         // Hook up Sprite Support (and generation)
         if (model instanceof ISpriteItemModel) {

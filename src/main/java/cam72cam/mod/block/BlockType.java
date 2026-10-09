@@ -3,7 +3,7 @@ package cam72cam.mod.block;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
@@ -11,7 +11,6 @@ import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.util.Facing;
 import cam72cam.mod.util.SingleCache;
 import cam72cam.mod.world.World;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -31,7 +30,7 @@ public abstract class BlockType {
     Hook into the Block Broken event (not specific per block)
      */
     static {
-        CommonEvents.Block.BROKEN.subscribe((world, pos, player) -> {
+        CommonEventListener.Block.BROKEN.subscribe((world, pos, player) -> {
             net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
             if (block instanceof BlockInternal) {
                 return ((BlockInternal) block).tryBreak(world, pos, player);
@@ -54,7 +53,7 @@ public abstract class BlockType {
     public BlockType(String modID, String name) {
         this.id = new Identifier(modID, name);
         internal = getBlock();
-        CommonEvents.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
+        CommonEventListener.Block.REGISTER.subscribe(() -> ForgeRegistries.BLOCKS.register(internal));
     }
 
     /** Override to provide a custom Minecraft Block implementation (ex: support tile entities) */

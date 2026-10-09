@@ -4,7 +4,7 @@ import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.entity.SeatEntity;
-import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.platform.ClientEventListener;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -32,10 +32,10 @@ public class EntityRenderer extends Render<ModdedEntity> {
 
     public static void registerClientEvents() {
         // Hook in our entity renderer which will dispatch to the IEntityRenderers
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, EntityRenderer::new));
+        ClientEventListener.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(ModdedEntity.class, EntityRenderer::new));
 
         // Don't render seat entities
-        ClientEvents.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.class, manager -> new Render<SeatEntity>(manager) {
+        ClientEventListener.REGISTER_ENTITY.subscribe(() -> RenderingRegistry.registerEntityRenderingHandler(SeatEntity.class, manager -> new Render<SeatEntity>(manager) {
             @Nullable
             @Override
             protected ResourceLocation getEntityTexture(SeatEntity entity) {
