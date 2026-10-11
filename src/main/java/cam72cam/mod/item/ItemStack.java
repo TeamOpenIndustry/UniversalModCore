@@ -5,11 +5,13 @@ import cam72cam.mod.serialization.TagCompound;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.fluids.FluidUtil;
+import org.jetbrains.annotations.ApiStatus;
 
 /** Wrapper around Minecraft ItemStack (Item, count, NBT) */
 public class ItemStack {
     public static final ItemStack EMPTY = new ItemStack((net.minecraft.item.ItemStack)null);
 
+    @ApiStatus.Internal
     public final net.minecraft.item.ItemStack internal;
 
     /** Wrap Minecraft ItemStack.  Do not use directly */
@@ -89,13 +91,6 @@ public class ItemStack {
         }
     }
 
-    /** Compares: item, count, damage, data */
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
-    }
-
-
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
         return net.minecraft.item.ItemStack.areItemsEqual(internal, stack.internal);
@@ -107,6 +102,12 @@ public class ItemStack {
 
     public boolean is(CustomItem item) {
         return internal != null && item != null && item.internal == this.internal.getItem();
+    }
+
+    /** Compares: item, count, damage, data */
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ItemStack && net.minecraft.item.ItemStack.areItemStacksEqual(internal, ((ItemStack)other).internal);
     }
 
     /** Is a bucket or similar item */
@@ -134,11 +135,6 @@ public class ItemStack {
         return internal != null && internal.getItem().getToolClasses(internal).contains(tool.toString());
     }
 
-    @Override
-    public String toString() {
-        return internal != null ? internal.toString() : "Empty";
-    }
-
     /** Increase the damage counter on the item by the player */
     public void damageItem(int i, Player player) {
         if (internal != null) {
@@ -146,8 +142,26 @@ public class ItemStack {
         }
     }
 
+    /**
+     * Return the remainder that should be left in inventory when this stack's content is consumed, or {@link ItemStack#EMPTY} if this item doesn't have anything to leave
+     * <p>
+     * Think about milk bucket when crafting cakes
+     */
+    public ItemStack getRemainder() {
+        if (internal.getItem().hasContainerItem(internal)) {
+            return new ItemStack(internal.getItem().getContainerItem(internal));
+        }
+        return EMPTY;
+    }
+
     /** Completely null out the tag compound */
+    @ApiStatus.Internal
     public void clearTagCompound() {
         internal.setTagCompound(null);
+    }
+
+    @Override
+    public String toString() {
+        return internal != null ? internal.toString() : "Empty";
     }
 }
