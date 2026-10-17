@@ -2,7 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.event.platform.ClientEventListener;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
@@ -30,7 +30,7 @@ public class GlobalRender {
     /** Internal, hooked into event system directly */
     public static void registerClientEvents() {
         // Nice to have GPU info in F3
-        ClientEvents.RENDER_DEBUG.subscribe(event -> {
+        ClientEventListener.RENDER_DEBUG.subscribe(event -> {
             if (Minecraft.getMinecraft().gameSettings.showDebugInfo && GPUInfo.hasGPUInfo()) {
                 int i;
                 for (i = 0; i < event.getRight().size(); i++) {
@@ -51,7 +51,7 @@ public class GlobalRender {
 
     /** Register a function that is called (with partial ticks) during the UI render phase */
     public static void registerOverlay(RenderFunction func) {
-        ClientEvents.RENDER_OVERLAY.subscribe(event -> {
+        ClientEventListener.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
                 func.render(new RenderState().stage(RenderContext.Stage.GUI), event.getPartialTicks());
             }
@@ -60,7 +60,7 @@ public class GlobalRender {
 
     /** Register a function that is called to render during the mouse over phase (only if a block is moused over) */
     public static void registerItemMouseover(CustomItem item, MouseoverEvent fn) {
-        ClientEvents.RENDER_MOUSEOVER.subscribe(partialTicks -> {
+        ClientEventListener.RENDER_MOUSEOVER.subscribe(partialTicks -> {
             if (MinecraftClient.getBlockMouseOver() != null) {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
