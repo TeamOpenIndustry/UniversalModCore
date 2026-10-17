@@ -33,8 +33,8 @@ import net.minecraftforge.fml.relauncher.Side;
 public abstract class Packet {
     private static final SimpleNetworkWrapper net = NetworkRegistry.INSTANCE.newSimpleChannel("cam72cam.mod");
 
-    // Packet class name -> Packet Constructor
-    private static final Map<String, Supplier<Packet>> types = new HashMap<>();
+    // Packet id -> Packet Constructor
+    private static final Map<String, Supplier<? extends Packet>> packetFactories = new HashMap<>();
 
     static {
         // Client to server
@@ -48,6 +48,8 @@ public abstract class Packet {
     // Received packet data
     private TagCompound data;
 
+    protected final String id = this.getClass().getName();
+
     /**
      * So either forge or minecraft has a bug where it mixes up the player in the context handler...
      *
@@ -59,9 +61,24 @@ public abstract class Packet {
     @TagField("umcWorld")
     private World world;
 
+    /**
+     * How to register a packet (do in CONSTRUCT phase)
+     * Overload that assumes the packet protocol is {@see PacketProtocol.PLAY}
+     * */
+    public static void register(Supplier<? extends Packet> sup, PacketDirection dir) {
+        register(sup, dir, PacketProtocol.PLAY);
+    }
+
     /** How to register a packet (do in CONSTRUCT phase) */
-    public static void register(Supplier<Packet> sup, PacketDirection dir) {
-        types.put(sup.get().getClass().toString(), sup);
+    public static void register(Supplier<? extends Packet> sup, PacketDirection dir,
+                                                   PacketProtocol protocol) {
+        Packet packet = sup.get();
+        if (packetFactories.containsKey(packet.id)) {
+            //Already registered, goodbye
+            return;
+        }
+        packetFactories.put(packet.id, sup);
+        // Packet Directions and Protocols are ignored in 1.12.2.
     }
 
     /** Called after deserialization */
@@ -128,15 +145,15 @@ public abstract class Packet {
         @Override
         public void fromBytes(ByteBuf buf) {
             TagCompound data = new TagCompound(ByteBufUtils.readTag(buf));
-            String cls = data.getString("cam72cam.mod.pktid");
-            packet = types.get(cls).get();
+            String id = data.getString("cam72cam.mod.pktid");
+            packet = packetFactories.get(id).get();
             packet.data = data;
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
             TagCompound data = new TagCompound();
-            data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            data.setString("cam72cam.mod.pktid", packet.id);
             try {
                 TagSerializer.serialize(data, packet);
             } catch (SerializationException e) {
@@ -165,7 +182,7 @@ public abstract class Packet {
             }
             if (message.packet.getPlayer() == null) {
                 try {
-                    throw new Exception(String.format("Invalid Packet %s: missing player", message.packet.getClass()));
+                    throw new Exception(String.format("Invalid Packet %s: missing player\nConsider installing an offline UUID fix mod.", message.packet.id));
                 } catch (Exception e) {
                     ModCore.catching(e);
                     return;
