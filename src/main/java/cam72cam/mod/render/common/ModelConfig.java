@@ -61,7 +61,7 @@ public class ModelConfig {
     }
 
     /**
-     * Marks the first draw should block until the model geometry has been baked and uploaded,
+     * Marks draw should be blocked until the model geometry has been baked and uploaded,
      *
      * @return this config
      */

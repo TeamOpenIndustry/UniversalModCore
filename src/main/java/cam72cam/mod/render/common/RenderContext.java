@@ -32,10 +32,10 @@ public abstract class RenderContext {
 
     //Draw call encoder
 
-    public void enqueueOpaque(IDrawable drawable, RenderState state) {
+    public void enqueueOpaque(IGeomDrawable drawable, RenderState state) {
         opaqueCalls.add(new DrawCall(drawable, state));
     }
-    public void enqueueTransparent(IDrawable drawable, RenderState state) {
+    public void enqueueTransparent(IGeomDrawable drawable, RenderState state) {
         transCalls.add(new DrawCall(drawable, state));
     }
     public void flushEnqueued() {

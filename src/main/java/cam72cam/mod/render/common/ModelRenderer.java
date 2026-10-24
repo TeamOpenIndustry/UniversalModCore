@@ -55,8 +55,13 @@ public class ModelRenderer {
     }
 
     /** Enqueue a (set of) opaque part to the batch. */
-    public void enqueueOpaque(RenderState state, Collection<String> groups) {
-        enqueueOpaque(DEFAULT_CONFIG, state, groups, s -> {});
+    public void enqueueOpaque(ModelConfig config, RenderState state) {
+        enqueueOpaque(config, state, null, s -> {});
+    }
+
+    /** Enqueue a (set of) opaque part to the batch. */
+    public void enqueueOpaque(ModelConfig config, RenderState state, Collection<String> groups) {
+        enqueueOpaque(config, state, groups, s -> {});
     }
 
     /**
@@ -84,8 +89,13 @@ public class ModelRenderer {
     }
 
     /** Enqueue a (set of) transparent part to the batch. */
-    public void enqueueTransparent(RenderState state, Collection<String> groups) {
-        enqueueTransparent(DEFAULT_CONFIG, state, groups, s -> {});
+    public void enqueueTransparent(ModelConfig config, RenderState state) {
+        enqueueTransparent(config, state, null, s -> {});
+    }
+
+    /** Enqueue a (set of) transparent part to the batch. */
+    public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups) {
+        enqueueTransparent(config, state, groups, s -> {});
     }
 
     /** Flush all deferred calls */

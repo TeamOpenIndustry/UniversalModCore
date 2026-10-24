@@ -13,10 +13,10 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * An {@link IDrawable} that draws a selection of groups of a {@link ModelRenderer}.
+ * An {@link IGeomDrawable} that draws a selection of groups of a {@link ModelRenderer}.
  * A <code>null</code> or empty group collection means the entire model.
  */
-public class GroupedDrawable implements IDrawable {
+public class GroupedDrawable implements IGeomDrawable {
     private final Model model;
     private final String handle;
     private final ModelConfig config;

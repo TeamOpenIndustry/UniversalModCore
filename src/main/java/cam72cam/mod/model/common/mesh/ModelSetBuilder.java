@@ -1,7 +1,7 @@
 package cam72cam.mod.model.common.mesh;
 
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.common.IDrawable;
+import cam72cam.mod.render.common.IGeomDrawable;
 import cam72cam.mod.render.common.ModelRenderer;
 import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
@@ -117,10 +117,10 @@ public class ModelSetBuilder {
     }
 
     /**
-     * Bake the actions into a {@link IDrawable} object<br>
-     * Note that calling {@link IDrawable#free()} here will remove the resulting geometry completely!
+     * Bake the actions into a {@link IGeomDrawable} object<br>
+     * Note that calling {@link IGeomDrawable#free()} here will remove the resulting geometry completely!
      */
-    public IDrawable buildDrawable() {
+    public IGeomDrawable buildDrawable(boolean waitForUpload) {
         Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
         int faceCount = this.faceCount;
         int vertexCount = faceCount * 3;
@@ -141,7 +141,7 @@ public class ModelSetBuilder {
         return new DirectDrawable(state -> {
             RenderContext ctx = RenderContext.get();
             if (!ctx.isUploaded(handle)) {
-                ctx.uploadGeometry(handle, ModelRenderer.DEFAULT_CONFIG.shouldWaitForLoad());
+                ctx.uploadGeometry(handle, waitForUpload);
                 if (!ctx.isUploaded(handle)) {
                     return;
                 }
@@ -197,7 +197,7 @@ public class ModelSetBuilder {
         return dst + len;
     }
 
-    private static class DirectDrawable implements IDrawable {
+    private static class DirectDrawable implements IGeomDrawable {
         final Consumer<RenderState> drawer;
         final String handle;
 

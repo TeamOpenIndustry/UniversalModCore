@@ -4,7 +4,7 @@ import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.opengl.RenderState;
 import org.jetbrains.annotations.Nullable;
 
-public interface IDrawable {
+public interface IGeomDrawable {
     void draw(RenderState state);
     //Used for batching
     @Nullable String getRenderHandle();
