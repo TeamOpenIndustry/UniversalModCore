@@ -13,9 +13,8 @@ import java.util.function.Supplier;
 
 /**
  * The runtime representation of a parsed model.<br>
- * Models are normally obtained via {@link ModelLoader#load} and drawn with
- * {@link ModelRenderer#getRendererFor}. Call {@link #free()} to manually release GPU resources when
- * the model is no longer needed.</p>
+ * Models are normally obtained via {@link ModelLoader#load} and drawn with {@link ModelRenderer#getRendererFor}.<br>
+ * Call {@link #free()} to manually release resources when the model is no longer needed.</p>
  */
 public class Model {
     private final Identifier location;
@@ -197,6 +196,13 @@ public class Model {
         return vboData;
     }
 
+    /**
+     * Deletes initialized VBO data
+     */
+    public void clearVboCache() {
+        vboData = null;
+    }
+
     /** @return albedo texture sheets, keyed by variant name then LOD size */
     public Map<String, NavigableMap<Integer, OBJTextureSheet>> getTextures() {
         return textures;
@@ -217,12 +223,19 @@ public class Model {
         return defaultLodSize;
     }
 
+    private final List<Runnable> onFree = new ArrayList<>();
+
     /**
-     * Releases this model's reference to the shared texture sheets and its cached renderer.
+     * Releases this model's reference to the shared texture sheets, uploaded geometry and cached geometry data.
      */
     public void free() {
         tryReleaseTexture();
-        ModelRenderer.release(this);
+        clearVboCache();
+        onFree.forEach(Runnable::run);
+    }
+
+    public void addFreeCallback(Runnable callback) {
+        onFree.add(callback);
     }
 
     /**

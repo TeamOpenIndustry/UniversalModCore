@@ -1,177 +1,110 @@
 package cam72cam.mod.render.common;
 
 import cam72cam.mod.model.common.mesh.Model;
-import cam72cam.mod.model.common.mesh.ModelGroup;
-import cam72cam.mod.model.common.mesh.VAOLayout;
-import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
-import cam72cam.mod.render.opengl.VBO;
-import cam72cam.mod.util.With;
-import org.lwjgl.opengl.GL11;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
- * GPU-side renderer (VBO) for a {@link Model}.<br>
- * Renderers are cached per model via {@link #getRendererFor}. To draw, obtain a {@link Binding} with <code>bind</code>,
- * then call one of the {@code enqueue} methods.
+ * Enqueue proxy for a {@link Model}.<br>
+ * Renderers are cached per model via {@link #getRendererFor}. The geometry is uploaded lazily by the
+ * active {@link RenderContext}; callers only enqueue {@link GroupedDrawable}s.<br>
+ * Never cache this class!
  */
-public class ModelRenderer extends VBO {
+public class ModelRenderer {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
-    private static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
+    public static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
 
-    public final Model model;
+    public Model model;
+    public String handle;
 
-    public ModelRenderer(Model model) {
-        super(() -> new VertexBuffer(model.getVboData(), model.getLayout().has(VAOLayout.Usage.NORMAL)), s -> {});
+    private ModelRenderer(Model model) {
         this.model = model;
+        this.handle = RenderContext.get().setGeometryUploader(model::getVboData, model.getLayout());
+        model.addFreeCallback(() -> {
+            renderers.remove(model);
+            RenderContext.get().deleteGeometry(handle);
+            this.model = null;
+            this.handle = null;
+        });
     }
 
     public static ModelRenderer getRendererFor(Model model) {
         return renderers.computeIfAbsent(model, ModelRenderer::new);
     }
 
-    @Override
-    public Binding bind(RenderState state) {
-        return bind(state, false);
+    /**
+     * Enqueue a (set of) opaque part to the batch.
+     * @param config Material configuration (texture LOD/variant) to apply
+     * @param state  Base render state
+     * @param groups Group names to draw, or <code>null</code> for the entire model
+     */
+    public void enqueueOpaque(ModelConfig config, RenderState state, Collection<String> groups) {
+        if (this.handle == null) {
+            throw new IllegalStateException("ModelRenderer called after Model is freed");
+        }
+        RenderContext.get().enqueueOpaque(new GroupedDrawable(this, config, groups), state.clone());
     }
 
-    @Override
-    public Binding bind(RenderState state, boolean waitForLoad) {
-        DEFAULT_CONFIG.apply(state, model);
-        return new Binding(state, waitForLoad);
+    /** Enqueue the entire model as opaque. */
+    public void enqueueOpaque(RenderState state) {
+        enqueueOpaque(DEFAULT_CONFIG, state, null);
     }
 
-    public Binding bind(ModelConfig config, RenderState state) {
-        return bind(config, state, false);
+    /** Enqueue a (set of) opaque part to the batch. */
+    public void enqueueOpaque(ModelConfig config, RenderState state) {
+        enqueueOpaque(config, state, null);
     }
 
-    public Binding bind(ModelConfig config, RenderState state, boolean waitForLoad) {
-        config.apply(state, model);
-        return new Binding(state, waitForLoad);
+    /** Enqueue a (set of) opaque part to the batch. */
+    public void enqueueOpaque(RenderState state, Collection<String> groups) {
+        enqueueOpaque(DEFAULT_CONFIG, state, groups);
     }
 
-    public class Binding extends VBO.Binding {
-        protected Binding(RenderState state, boolean wait) {
-            super(state, wait);
+    private static final BlendMode TRANS = new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA);
+
+    /**
+     * Enqueue a (set of) transparent part to the batch.
+     * @param config Material configuration (texture LOD/variant) to apply
+     * @param state  Base render state
+     * @param groups Group names to draw, or <code>null</code> for the entire model
+     */
+    public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups) {
+        if (this.handle == null) {
+            throw new IllegalStateException("ModelRenderer called after Model is freed");
         }
-
-        /**
-         * Enqueue a (set of) opaque part to the batch.
-         * @param groups Group names to draw
-         * @param mod    Temporary render-state modifier applied while drawing
-         */
-        public void enqueueOpaque(Collection<String> groups, Consumer<RenderState> mod) {
-            draw(groups, mod);
+        if (groups == null) {
+            groups = this.model.groups();
         }
-
-        /**
-         * Enqueue a (set of) opaque part to the batch.
-         * @param groups Group names to draw
-         */
-        public void enqueueOpaque(Collection<String> groups) {
-            draw(groups);
+        if (state.getBlendMode() == null){
+            state = state.clone().blend(TRANS);
         }
-
-        /**
-         * Append the entire model as opaque to the batch.
-         */
-        public void enqueueOpaque() {
-            draw();
-        }
-
-        /**
-         * Enqueue a (set of) transparent part to the batch.
-         * @param groups Group names to draw
-         * @param mod    Temporary render-state modifier applied while drawing
-         */
-        public void enqueueTransparent(Collection<String> groups, Consumer<RenderState> mod) {
-            draw(groups, mod);
-        }
-
-        /**
-         * Enqueue a (set of) transparent part to the batch.
-         * @param groups Group names to draw
-         */
-        public void enqueueTransparent(Collection<String> groups) {
-            draw(groups);
-        }
-
-        /**
-         * Enqueue the entire model as transparent to the batch.
-         */
-        public void enqueueTransparent() {
-            draw();
-        }
-
-        /**
-         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
-         */
-        @Deprecated
-        private void draw(Collection<String> groups, Consumer<RenderState> mod) {
-            if (!isLoaded()) {
-                return;
-            }
-            try (With ignored = super.push(mod)) {
-                draw(groups);
-            }
-        }
-
-        /**
-         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
-         */
-        @Deprecated
-        private void draw(Collection<String> groups) {
-            if (!isLoaded()) {
-                return;
-            }
-
-            // Model faces are ordered by group name at build time
-            List<String> names = new ArrayList<>(groups);
-            names.sort(String::compareTo);
-
-            int start = -1;
-            int stop = -1;
-            for (String name : names) {
-                ModelGroup info = model.getGroups().get(name);
-                if (start == -1) {
-                    start = info.faceStart;
-                    stop = info.faceEnd + 1;
-                } else if (info.faceStart == stop) {
-                    stop = info.faceEnd + 1;
-                } else {
-                    GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
-                    start = info.faceStart;
-                    stop = info.faceEnd + 1;
-                }
-            }
-            if (start != -1) {
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, start * 3, (stop - start) * 3);
-            }
-        }
-
-        /**
-         * @deprecated Kept for legacy compatibility, per-batch rendering will be implemented in upcoming UMC versions
-         */
-        @Override
-        @Deprecated
-        public void draw() {
-            super.draw();
+        for (String str : groups) {
+            RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, Collections.singleton(str)), state);
         }
     }
 
-    public static void release(Model holder) {
-        if (renderers.containsKey(holder)) {
-            renderers.get(holder).free();
-        }
+    /** Enqueue the entire model as transparent. */
+    public void enqueueTransparent(RenderState state) {
+        enqueueTransparent(DEFAULT_CONFIG, state, null);
     }
 
-    /** Releases this renderer's GPU resources and deletes it from the per-model cache. */
-    @Override
-    public void free() {
-        super.free();
-        renderers.remove(model);
+    /** Enqueue a (set of) transparent part to the batch. */
+    public void enqueueTransparent(ModelConfig config, RenderState state) {
+        enqueueTransparent(config, state, null);
+    }
+
+    /** Enqueue a (set of) transparent part to the batch. */
+    public void enqueueTransparent(RenderState state, Collection<String> groups) {
+        enqueueTransparent(DEFAULT_CONFIG, state, groups);
+    }
+
+    /** Flush all deferred calls */
+    public static void endModel() {
+        RenderContext.get().flushEnqueued();
     }
 }

@@ -1,6 +1,13 @@
 package cam72cam.mod.model.common.mesh;
 
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.common.IGeomDrawable;
+import cam72cam.mod.render.common.ModelRenderer;
+import cam72cam.mod.render.common.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
+import org.jetbrains.annotations.Nullable;
 import util.Matrix4;
 
 import javax.vecmath.Matrix3f;
@@ -8,6 +15,7 @@ import javax.vecmath.SingularMatrixException;
 import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Bakes a set of transformed copies of a source {@link Model} (or selected groups) into a
@@ -28,8 +36,6 @@ public class ModelSetBuilder {
 
     private final TreeMap<String, List<Matrix4>> actions = new TreeMap<>(Comparator.naturalOrder());
     private final IdentityHashMap<Matrix4, Matrix3f> normalMats = new IdentityHashMap<>();
-    private final Vector3f positionGetter = new Vector3f();
-    private final Vector3f normalGetter = new Vector3f();
     private int faceCount;
 
     public static ModelSetBuilder of(Model model) {
@@ -81,6 +87,9 @@ public class ModelSetBuilder {
         return this;
     }
 
+    /**
+     * Bake the actions into a new model
+     */
     public GeneratedModel build() {
         float[] srcData = base.getVboData();
         float[] dstData = new float[faceCount * 3 * stride];
@@ -107,6 +116,44 @@ public class ModelSetBuilder {
         return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
+    /**
+     * Bake the actions into a {@link IGeomDrawable} object<br>
+     * Note that calling {@link IGeomDrawable#free()} here will remove the resulting geometry completely!
+     */
+    public IGeomDrawable buildDrawable(boolean waitForUpload) {
+        Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
+        int faceCount = this.faceCount;
+        int vertexCount = faceCount * 3;
+        String handle = RenderContext.get().setGeometryUploader(() -> {
+            float[] srcData = base.getVboData();
+            float[] dstData = new float[faceCount * 3 * stride];
+            int dstCursor = 0;
+            for (Map.Entry<String, List<Matrix4>> entry : actions.entrySet()) {
+                String name = entry.getKey();
+                ModelGroup group = base.getGroups().get(name);
+                int length = (group.faceEnd - group.faceStart + 1) * 3 * stride;
+                for (Matrix4 m : entry.getValue()) {
+                    dstCursor = copyAndTransform(srcData, group.faceStart * 3 * stride, dstData, dstCursor, length, m);
+                }
+            }
+            return dstData;
+        }, base.getLayout());
+        return new DirectDrawable(state -> {
+            RenderContext ctx = RenderContext.get();
+            if (!ctx.isUploaded(handle)) {
+                ctx.uploadGeometry(handle, waitForUpload);
+                if (!ctx.isUploaded(handle)) {
+                    return;
+                }
+            }
+            RenderState s = state.clone();
+            ModelRenderer.DEFAULT_CONFIG.apply(s, base);
+            try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
+                ctx.drawGeometry(handle, 0, vertexCount);
+            }
+        }, handle);
+    }
+
     private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
         System.arraycopy(source, src, target, dst, len);
         if (transform != null) {
@@ -128,8 +175,10 @@ public class ModelSetBuilder {
                 }
             }
 
+            Vector3f positionGetter = new Vector3f();
+            Vector3f normalGetter = new Vector3f();
             for (int i = dst; i < dst + len; i += stride) {
-                positionGetter.set(target[i + this.pos], target[i + this.pos + 1], target[i + this.pos + 2]);
+                 positionGetter.set(target[i + this.pos], target[i + this.pos + 1], target[i + this.pos + 2]);
                 transform.apply(positionGetter);
                 target[i + this.pos] = positionGetter.x;
                 target[i + this.pos + 1] = positionGetter.y;
@@ -146,5 +195,35 @@ public class ModelSetBuilder {
             }
         }
         return dst + len;
+    }
+
+    private static class DirectDrawable implements IGeomDrawable {
+        final Consumer<RenderState> drawer;
+        final String handle;
+
+        public DirectDrawable(Consumer<RenderState> drawer, String handle) {
+            this.drawer = drawer;
+            this.handle = handle;
+        }
+
+        @Override
+        public void draw(RenderState state) {
+            drawer.accept(state);
+        }
+
+        @Override
+        public @Nullable String getRenderHandle() {
+            return handle;
+        }
+
+        @Override
+        public @Nullable Vec3d getCenter() {
+            return null;
+        }
+
+        @Override
+        public void free() {
+            RenderContext.get().deleteGeometry(handle);
+        }
     }
 }
