@@ -10,6 +10,8 @@ import cam72cam.mod.net.Packet;
 import cam72cam.mod.net.PacketDirection;
 import cam72cam.mod.render.BlockRender;
 import cam72cam.mod.render.Light;
+import cam72cam.mod.render.common.RenderContext;
+import cam72cam.mod.render.opengl.GlRenderContext;
 import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.text.Command;
@@ -245,6 +247,9 @@ public class ModCore {
         @Override
         public void clientEvent(ModEvent event) {
             switch (event) {
+                case CONSTRUCT:
+                    RenderContext.set(new GlRenderContext());
+                    break;
                 case SETUP:
                     ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(resourceManager -> {
                         if (skipN > 0) {

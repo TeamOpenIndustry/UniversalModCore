@@ -1,10 +1,13 @@
 package cam72cam.mod.model.common.mesh;
 
-import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.common.IDrawable;
 import cam72cam.mod.render.common.ModelRenderer;
-import cam72cam.mod.render.obj.OBJRender;
-import cam72cam.mod.render.opengl.VBO;
+import cam72cam.mod.render.common.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
+import org.jetbrains.annotations.Nullable;
 import util.Matrix4;
 
 import javax.vecmath.Matrix3f;
@@ -109,12 +112,13 @@ public class ModelSetBuilder {
         return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
-    public VBO buildVBO() {
+    public IDrawable buildDrawable() {
         Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
-        return new VBO(() -> {
+        int faceCount = this.faceCount;
+        int vertexCount = faceCount * 3;
+        String handle = RenderContext.get().setGeometryUploader(() -> {
             float[] srcData = base.getVboData();
             float[] dstData = new float[faceCount * 3 * stride];
-
             int dstCursor = 0;
             for (Map.Entry<String, List<Matrix4>> entry : actions.entrySet()) {
                 String name = entry.getKey();
@@ -124,8 +128,34 @@ public class ModelSetBuilder {
                     dstCursor = copyAndTransform(srcData, group.faceStart * 3 * stride, dstData, dstCursor, length, m);
                 }
             }
-            return new VertexBuffer(dstData, layout.has(VAOLayout.Usage.NORMAL));
-        }, s -> ModelRenderer.DEFAULT_CONFIG.apply(s, base));
+            return dstData;
+        }, base.getLayout());
+        return new IDrawable() {
+            @Override
+            public void draw(RenderState state) {
+                RenderContext ctx = RenderContext.get();
+                if (!ctx.isLoaded(handle)) {
+                    ctx.uploadGeometry(handle);
+                    return;
+                }
+                RenderState s = state.clone();
+                ModelRenderer.DEFAULT_CONFIG.apply(s, base);
+                try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
+                    ctx.drawGeometry(handle, 0, vertexCount);
+                }
+            }
+
+            @Override
+            public String getRenderHandle() {
+                return handle;
+            }
+
+            @Override
+            public @Nullable Vec3d getCenter() {
+                //TODO if possible!
+                return null;
+            }
+        };
     }
 
     private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
