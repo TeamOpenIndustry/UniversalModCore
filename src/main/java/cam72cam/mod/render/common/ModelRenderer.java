@@ -4,6 +4,7 @@ import cam72cam.mod.model.common.mesh.Model;
 import cam72cam.mod.render.opengl.RenderState;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -62,7 +63,12 @@ public class ModelRenderer {
     public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups, Consumer<RenderState> mod) {
         RenderState applied = state.clone();
         mod.accept(applied);
-        RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, groups), applied);
+        if (groups == null) {
+            groups = this.model.groups();
+        }
+        for (String str : groups) {
+            RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, Collections.singleton(str)), applied);
+        }
     }
 
     /** Enqueue the entire model as transparent. */
@@ -75,8 +81,8 @@ public class ModelRenderer {
         enqueueTransparent(DEFAULT_CONFIG, state, groups, s -> {});
     }
 
-    //Flush all deferred calls
-    public void endModel(float partialTicks) {
+    /** Flush all deferred calls */
+    public static void endModel(float partialTicks) {
         RenderContext.get().flushEnqueued(partialTicks);
     }
 

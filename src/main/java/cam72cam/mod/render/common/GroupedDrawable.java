@@ -33,8 +33,10 @@ public class GroupedDrawable implements IDrawable {
     public void draw(RenderState state) {
         RenderContext ctx = RenderContext.get();
         if (!ctx.isLoaded(handle)) {
-            ctx.uploadGeometry(handle);
-            return;
+            ctx.uploadGeometry(handle, config.shouldWaitForLoad());
+            if (!ctx.isLoaded(handle)) {
+                return;
+            }
         }
 
         RenderState s = state.clone();

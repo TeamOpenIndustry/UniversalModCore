@@ -137,24 +137,13 @@ public class GlRenderContext extends RenderContext {
     }
 
     @Override
-    public void uploadGeometry(String handle) {
+    public void uploadGeometry(String handle, boolean waitForLoad) {
         GlModelBuffer buffer = buffers.get(handle);
-        if (buffer.loader != null) {
-            if (buffer.loader.isDone()) {
-                try {
-                    FloatBuffer data = buffer.loader.get();
-                    int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
-                    buffer.vbo = GL15.glGenBuffers();
-                    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, buffer.vbo);
-                    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
-                    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
-                    buffer.vertexCount = data.limit() / buffer.layout.getStride();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException("Cannot create geometry buffer", e);
-                }
-                buffer.loader = null;
-            }
-        } else {
+        if (buffer == null || buffer.vbo != -1) {
+            return;
+        }
+
+        if (buffer.loader == null) {
             buffer.loader = pool.submit(() -> {
                 // Baked inside the lambda; only the resulting direct buffer survives.
                 float[] data = buffer.data.get();
@@ -164,6 +153,33 @@ public class GlRenderContext extends RenderContext {
                 return fb;
             });
         }
+
+        if (waitForLoad) {
+            try {
+                buffer.loader.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while loading geometry", e);
+            } catch (ExecutionException e) {
+                buffer.loader = null;
+                throw new RuntimeException("Cannot create geometry buffer", e);
+            }
+        } else if (!buffer.loader.isDone()) {
+            return;
+        }
+
+        try {
+            FloatBuffer data = buffer.loader.get();
+            int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+            buffer.vbo = GL15.glGenBuffers();
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, buffer.vbo);
+            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
+            buffer.vertexCount = data.limit() / buffer.layout.getStride();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Cannot create geometry buffer", e);
+        }
+        buffer.loader = null;
     }
 
     private static final class GlModelBuffer {

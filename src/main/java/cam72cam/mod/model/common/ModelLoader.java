@@ -25,10 +25,8 @@ import java.util.Map;
  * <p>Typical usage:</p>
  * <pre>{@code
  * Model model = ModelLoader.load(new Identifier("mymod:models/thing.obj"));
- * try (ModelRenderer.Binding binding =
- *              ModelRenderer.getRendererFor(model).bind(state, true)) {
- *     binding.draw();
- * }
+ * ModelRenderer.getRendererFor(model).enqueueOpaque(state, true);
+ * ModelRenderer.getRendererFor(model).endModel(); // Remember to flush
  * }</pre>
  */
 public class ModelLoader {

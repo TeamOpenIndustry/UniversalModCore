@@ -23,6 +23,7 @@ public class ModelConfig {
     private int lod = Config.getMaxTextureSize();
     private String variant = "";
     private boolean waitForRightTexLoad = false;
+    private boolean waitForGeometryLoad = false;
 
     /**
      * Requests the texture LOD whose max dimension is at most {@code lod}, and falls back to the
@@ -57,6 +58,20 @@ public class ModelConfig {
     public ModelConfig synchronous() {
         waitForRightTexLoad = true;
         return this;
+    }
+
+    /**
+     * Marks the first draw should block until the model geometry has been baked and uploaded,
+     *
+     * @return this config
+     */
+    public ModelConfig waitForModelLoad() {
+        this.waitForGeometryLoad = true;
+        return this;
+    }
+
+    public boolean shouldWaitForLoad() {
+        return waitForGeometryLoad;
     }
 
     public void apply(RenderState state, Model model) {
