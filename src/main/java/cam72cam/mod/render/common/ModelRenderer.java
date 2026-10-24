@@ -1,6 +1,7 @@
 package cam72cam.mod.render.common;
 
 import cam72cam.mod.model.common.mesh.Model;
+import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 
 import java.util.Collection;
@@ -66,6 +67,7 @@ public class ModelRenderer {
         if (groups == null) {
             groups = this.model.groups();
         }
+        applied.blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA));
         for (String str : groups) {
             RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, Collections.singleton(str)), applied);
         }
