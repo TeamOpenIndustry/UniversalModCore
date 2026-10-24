@@ -45,15 +45,12 @@ public class GlRenderContext extends RenderContext {
     private final IntBuffer intBuffer = BufferUtils.createIntBuffer(16);
     private final FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);
 
-    public static void registerClientEvents() {
+    public GlRenderContext() {
         // free unused geometry
         ClientEvents.TICK.subscribe(() -> {
-            if (!(RenderContext.get() instanceof GlRenderContext)) {
-                return;
-            }
-            GlRenderContext context = (GlRenderContext) RenderContext.get();
+            GlRenderContext ctx = (GlRenderContext) RenderContext.get();
             long now = System.currentTimeMillis();
-            for (GlModelBuffer buffer : context.buffers.values()) {
+            for (GlModelBuffer buffer : ctx.buffers.values()) {
                 if (buffer.vbo != -1 && now - buffer.lastUsed > (long) (30 * 1000)) {
                     deleteBuffer(buffer);
                 }
@@ -61,11 +58,6 @@ public class GlRenderContext extends RenderContext {
         });
     }
 
-    /**
-     * Registers a (lazy) geometry source and returns its handle.<br>
-     * The supplier is stored as-is: the vertex array is only baked when the loader thread runs,
-     * and never leaves the lambda, so the baked data can be collected right after upload.
-     */
     @Override
     public String setGeometryUploader(Supplier<float[]> vboData, VAOLayout layout) {
         String key = "geometry-" + nextHandle.getAndIncrement();
@@ -108,6 +100,11 @@ public class GlRenderContext extends RenderContext {
     @Override
     public void drawGeometry(String key, int first, int count) {
         GL11.glDrawArrays(GL11.GL_TRIANGLES, first, count);
+    }
+
+    @Override
+    public void freeGeometry(String key) {
+        deleteBuffer(buffers.get(key));
     }
 
     @Override

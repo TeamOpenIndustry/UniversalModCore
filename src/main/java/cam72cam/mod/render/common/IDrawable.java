@@ -11,6 +11,12 @@ public interface IDrawable {
     //Used for transparent sorting
     @Nullable Vec3d getCenter();
 
+    default void free() {
+        if (getRenderHandle() != null) {
+            RenderContext.get().freeGeometry(getRenderHandle());
+        }
+    }
+
     //TODO Due to historical issues UMC 1.3 doesn't call flush, use at your own risk!
     default void enqueueOpaque(RenderState state) {
         RenderContext.get().enqueueOpaque(this, state);

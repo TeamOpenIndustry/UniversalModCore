@@ -42,14 +42,14 @@ public abstract class RenderContext {
         List<DrawCall> opaqueView = new ArrayList<>(opaqueCalls);
         opaqueCalls.clear();
         for (DrawCall call : opaqueView) {
-            call.target.draw(call.state);
+            call.target().draw(call.state());
         }
 
         ToDoubleFunction<Vec3d> depth = getDepthSorter();
         if (depth != null) {
             transCalls.sort((a, b) -> {
-                Vec3d va = a.center;
-                Vec3d vb = b.center;
+                Vec3d va = a.center();
+                Vec3d vb = b.center();
                 if(va == null && vb == null) {
                     return 0;
                 }
@@ -64,7 +64,7 @@ public abstract class RenderContext {
         }
 
         for (DrawCall call : transCalls) {
-            call.target.draw(call.state);
+            call.target().draw(call.state());
         }
         transCalls.clear();
     }
@@ -109,7 +109,13 @@ public abstract class RenderContext {
     public abstract void drawGeometry(String handle, int first, int count);
 
     /**
-     * Remove an uploaded geometry from GPU memory
+     * Remove an uploaded geometry from GPU side
+     * @param handle The geometry handle
+     */
+    public abstract void freeGeometry(String handle);
+
+    /**
+     * Completely remove an uploaded geometry and delete the handle
      * @param handle The geometry handle
      */
     public abstract void deleteGeometry(String handle);

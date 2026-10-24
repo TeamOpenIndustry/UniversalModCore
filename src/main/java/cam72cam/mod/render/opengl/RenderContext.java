@@ -19,6 +19,7 @@ import java.util.*;
 
 import static cam72cam.mod.render.opengl.Texture.NO_TEXTURE;
 
+@Deprecated
 public class RenderContext {
     private static FloatBuffer fourFloatBuffer;
     private static IntBuffer fourIntBuffer;

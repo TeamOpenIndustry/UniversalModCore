@@ -13,18 +13,20 @@ import java.util.function.Consumer;
 /**
  * Enqueue proxy for a {@link Model}.<br>
  * Renderers are cached per model via {@link #getRendererFor}. The geometry is uploaded lazily by the
- * active {@link RenderContext}; callers only enqueue {@link GroupedDrawable}s.
+ * active {@link RenderContext}; callers only enqueue {@link GroupedDrawable}s.<br>
+ * Never cache this class!
  */
 public class ModelRenderer {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
     public static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
 
-    public Model model;
-    final String handle;
+    public final Model model;
+    public final String handle;
 
     private ModelRenderer(Model model) {
         this.model = model;
         this.handle = RenderContext.get().setGeometryUploader(model::getVboData, model.getLayout());
+        model.addFreeCallback(() -> RenderContext.get().deleteGeometry(handle));
     }
 
     public static ModelRenderer getRendererFor(Model model) {
@@ -86,18 +88,5 @@ public class ModelRenderer {
     /** Flush all deferred calls */
     public static void endModel() {
         RenderContext.get().flushEnqueued();
-    }
-
-    public static void release(Model holder) {
-        if (renderers.containsKey(holder)) {
-            renderers.get(holder).free();
-        }
-    }
-
-    /** Releases this renderer, its geometry and its entry in the per-model cache. */
-    public void free() {
-        renderers.remove(model);
-        RenderContext.get().deleteGeometry(handle);
-        this.model = null;
     }
 }
