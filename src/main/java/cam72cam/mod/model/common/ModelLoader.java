@@ -25,7 +25,7 @@ import java.util.Map;
  * <p>Typical usage:</p>
  * <pre>{@code
  * Model model = ModelLoader.load(new Identifier("mymod:models/thing.obj"));
- * ModelRenderer.getRendererFor(model).enqueueOpaque(state, true);
+ * ModelRenderer.getRendererFor(model).enqueueOpaque(config, state);
  * ModelRenderer.getRendererFor(model).endModel(); // Remember to flush
  * }</pre>
  */

@@ -6,6 +6,7 @@ import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
+@ApiStatus.Internal
 public class GlRenderContext extends RenderContext {
     private static final ExecutorService pool = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
             5L, TimeUnit.SECONDS,
@@ -119,7 +121,6 @@ public class GlRenderContext extends RenderContext {
         if (buffer.vbo != -1) {
             GL15.glDeleteBuffers(buffer.vbo);
             buffer.vbo = -1;
-            buffer.vertexCount = -1;
         }
         buffer.loader = null;
     }

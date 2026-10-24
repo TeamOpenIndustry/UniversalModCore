@@ -26,7 +26,10 @@ public class ModelRenderer {
     private ModelRenderer(Model model) {
         this.model = model;
         this.handle = RenderContext.get().setGeometryUploader(model::getVboData, model.getLayout());
-        model.addFreeCallback(() -> RenderContext.get().deleteGeometry(handle));
+        model.addFreeCallback(() -> {
+            renderers.remove(model);
+            RenderContext.get().deleteGeometry(handle);
+        });
     }
 
     public static ModelRenderer getRendererFor(Model model) {

@@ -15,6 +15,7 @@ import javax.vecmath.SingularMatrixException;
 import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Bakes a set of transformed copies of a source {@link Model} (or selected groups) into a
@@ -86,6 +87,9 @@ public class ModelSetBuilder {
         return this;
     }
 
+    /**
+     * Bake the actions into a new model
+     */
     public GeneratedModel build() {
         float[] srcData = base.getVboData();
         float[] dstData = new float[faceCount * 3 * stride];
@@ -112,6 +116,10 @@ public class ModelSetBuilder {
         return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
+    /**
+     * Bake the actions into a {@link IDrawable} object<br>
+     * Note that calling {@link IDrawable#free()} here will remove the resulting geometry completely!
+     */
     public IDrawable buildDrawable() {
         Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
         int faceCount = this.faceCount;
@@ -130,34 +138,20 @@ public class ModelSetBuilder {
             }
             return dstData;
         }, base.getLayout());
-        return new IDrawable() {
-            @Override
-            public void draw(RenderState state) {
-                RenderContext ctx = RenderContext.get();
+        return new DirectDrawable(state -> {
+            RenderContext ctx = RenderContext.get();
+            if (!ctx.isUploaded(handle)) {
+                ctx.uploadGeometry(handle, ModelRenderer.DEFAULT_CONFIG.shouldWaitForLoad());
                 if (!ctx.isUploaded(handle)) {
-                    ctx.uploadGeometry(handle, ModelRenderer.DEFAULT_CONFIG.shouldWaitForLoad());
-                    if (!ctx.isUploaded(handle)) {
-                        return;
-                    }
-                }
-                RenderState s = state.clone();
-                ModelRenderer.DEFAULT_CONFIG.apply(s, base);
-                try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
-                    ctx.drawGeometry(handle, 0, vertexCount);
+                    return;
                 }
             }
-
-            @Override
-            public String getRenderHandle() {
-                return handle;
+            RenderState s = state.clone();
+            ModelRenderer.DEFAULT_CONFIG.apply(s, base);
+            try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
+                ctx.drawGeometry(handle, 0, vertexCount);
             }
-
-            @Override
-            public @Nullable Vec3d getCenter() {
-                //TODO if possible!
-                return null;
-            }
-        };
+        }, handle);
     }
 
     private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
@@ -201,5 +195,35 @@ public class ModelSetBuilder {
             }
         }
         return dst + len;
+    }
+
+    private static class DirectDrawable implements IDrawable {
+        final Consumer<RenderState> drawer;
+        final String handle;
+
+        public DirectDrawable(Consumer<RenderState> drawer, String handle) {
+            this.drawer = drawer;
+            this.handle = handle;
+        }
+
+        @Override
+        public void draw(RenderState state) {
+            drawer.accept(state);
+        }
+
+        @Override
+        public @Nullable String getRenderHandle() {
+            return handle;
+        }
+
+        @Override
+        public @Nullable Vec3d getCenter() {
+            return null;
+        }
+
+        @Override
+        public void free() {
+            RenderContext.get().deleteGeometry(handle);
+        }
     }
 }
