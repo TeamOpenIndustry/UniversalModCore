@@ -166,6 +166,9 @@ public class RenderState {
         this.stage = stage != null ? stage : RenderContext.Stage.NONE;
         return this;
     }
+    public BlendMode getBlendMode() {
+        return blend;
+    }
     public RenderContext.Stage getStage() {
         return this.stage;
     }

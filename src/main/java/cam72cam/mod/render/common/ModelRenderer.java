@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
  * Enqueue proxy for a {@link Model}.<br>
@@ -20,8 +19,8 @@ public class ModelRenderer {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
     public static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
 
-    public final Model model;
-    public final String handle;
+    public Model model;
+    public String handle;
 
     private ModelRenderer(Model model) {
         this.model = model;
@@ -29,6 +28,8 @@ public class ModelRenderer {
         model.addFreeCallback(() -> {
             renderers.remove(model);
             RenderContext.get().deleteGeometry(handle);
+            this.model = null;
+            this.handle = null;
         });
     }
 
@@ -41,61 +42,65 @@ public class ModelRenderer {
      * @param config Material configuration (texture LOD/variant) to apply
      * @param state  Base render state
      * @param groups Group names to draw, or <code>null</code> for the entire model
-     * @param mod    Temporary render-state modifier applied while drawing
      */
-    public void enqueueOpaque(ModelConfig config, RenderState state, Collection<String> groups, Consumer<RenderState> mod) {
-        RenderState applied = state.clone();
-        mod.accept(applied);
-        RenderContext.get().enqueueOpaque(new GroupedDrawable(this, config, groups), applied);
+    public void enqueueOpaque(ModelConfig config, RenderState state, Collection<String> groups) {
+        if (this.handle == null) {
+            throw new IllegalStateException("ModelRenderer called after Model is freed");
+        }
+        RenderContext.get().enqueueOpaque(new GroupedDrawable(this, config, groups), state.clone());
     }
 
     /** Enqueue the entire model as opaque. */
     public void enqueueOpaque(RenderState state) {
-        enqueueOpaque(DEFAULT_CONFIG, state, null, s -> {});
+        enqueueOpaque(DEFAULT_CONFIG, state, null);
     }
 
     /** Enqueue a (set of) opaque part to the batch. */
     public void enqueueOpaque(ModelConfig config, RenderState state) {
-        enqueueOpaque(config, state, null, s -> {});
+        enqueueOpaque(config, state, null);
     }
 
     /** Enqueue a (set of) opaque part to the batch. */
-    public void enqueueOpaque(ModelConfig config, RenderState state, Collection<String> groups) {
-        enqueueOpaque(config, state, groups, s -> {});
+    public void enqueueOpaque(RenderState state, Collection<String> groups) {
+        enqueueOpaque(DEFAULT_CONFIG, state, groups);
     }
+
+    private static final BlendMode TRANS = new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA);
 
     /**
      * Enqueue a (set of) transparent part to the batch.
      * @param config Material configuration (texture LOD/variant) to apply
      * @param state  Base render state
      * @param groups Group names to draw, or <code>null</code> for the entire model
-     * @param mod    Temporary render-state modifier applied while drawing
      */
-    public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups, Consumer<RenderState> mod) {
-        RenderState applied = state.clone();
-        mod.accept(applied);
+    public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups) {
+        if (this.handle == null) {
+            throw new IllegalStateException("ModelRenderer called after Model is freed");
+        }
         if (groups == null) {
             groups = this.model.groups();
         }
-        applied.blend(new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA));
+        if (state.getBlendMode() == null){
+            state = state.clone().blend(TRANS);
+        }
         for (String str : groups) {
-            RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, Collections.singleton(str)), applied);
+            RenderContext.get().enqueueTransparent(new GroupedDrawable(this, config, Collections.singleton(str)), state);
         }
     }
 
     /** Enqueue the entire model as transparent. */
     public void enqueueTransparent(RenderState state) {
-        enqueueTransparent(DEFAULT_CONFIG, state, null, s -> {});
+        enqueueTransparent(DEFAULT_CONFIG, state, null);
     }
 
     /** Enqueue a (set of) transparent part to the batch. */
     public void enqueueTransparent(ModelConfig config, RenderState state) {
-        enqueueTransparent(config, state, null, s -> {});
+        enqueueTransparent(config, state, null);
     }
 
     /** Enqueue a (set of) transparent part to the batch. */
-    public void enqueueTransparent(ModelConfig config, RenderState state, Collection<String> groups) {
-        enqueueTransparent(config, state, groups, s -> {});
+    public void enqueueTransparent(RenderState state, Collection<String> groups) {
+        enqueueTransparent(DEFAULT_CONFIG, state, groups);
     }
 
     /** Flush all deferred calls */
