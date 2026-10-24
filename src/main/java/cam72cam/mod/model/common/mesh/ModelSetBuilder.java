@@ -134,9 +134,9 @@ public class ModelSetBuilder {
             @Override
             public void draw(RenderState state) {
                 RenderContext ctx = RenderContext.get();
-                if (!ctx.isLoaded(handle)) {
+                if (!ctx.isUploaded(handle)) {
                     ctx.uploadGeometry(handle, ModelRenderer.DEFAULT_CONFIG.shouldWaitForLoad());
-                    if (!ctx.isLoaded(handle)) {
+                    if (!ctx.isUploaded(handle)) {
                         return;
                     }
                 }

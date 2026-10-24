@@ -82,8 +82,8 @@ public class ModelRenderer {
     }
 
     /** Flush all deferred calls */
-    public static void endModel(float partialTicks) {
-        RenderContext.get().flushEnqueued(partialTicks);
+    public static void endModel() {
+        RenderContext.get().flushEnqueued();
     }
 
     public static void release(Model holder) {

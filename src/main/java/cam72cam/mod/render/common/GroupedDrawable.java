@@ -32,9 +32,9 @@ public class GroupedDrawable implements IDrawable {
     @Override
     public void draw(RenderState state) {
         RenderContext ctx = RenderContext.get();
-        if (!ctx.isLoaded(handle)) {
+        if (!ctx.isUploaded(handle)) {
             ctx.uploadGeometry(handle, config.shouldWaitForLoad());
-            if (!ctx.isLoaded(handle)) {
+            if (!ctx.isUploaded(handle)) {
                 return;
             }
         }
@@ -44,7 +44,7 @@ public class GroupedDrawable implements IDrawable {
 
         try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
             if (groups == null || groups.isEmpty()) {
-                ctx.drawGeometry(handle, 0, ctx.vertexCount(handle));
+                ctx.drawGeometry(handle, 0, model.getVboData().length / model.getLayout().getStride());
             } else {
                 // Model faces are ordered by group name at build time
                 List<String> names = new ArrayList<>(groups);

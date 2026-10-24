@@ -1,14 +1,18 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
+import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -20,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 
 public class GlRenderContext extends RenderContext {
     private static final ExecutorService pool = new ThreadPoolExecutor(0, Runtime.getRuntime().availableProcessors(),
@@ -36,6 +41,9 @@ public class GlRenderContext extends RenderContext {
 
     private static final AtomicLong nextHandle = new AtomicLong();
     private final Map<String, GlModelBuffer> buffers = new HashMap<>();
+
+    private final IntBuffer intBuffer = BufferUtils.createIntBuffer(16);
+    private final FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);
 
     public static void registerClientEvents() {
         // free unused geometry
@@ -73,7 +81,7 @@ public class GlRenderContext extends RenderContext {
         if (bound.get()) {
             throw new IllegalStateException("UMC Model is already bound!");
         }
-        if(!isLoaded(handle)) {
+        if(!isUploaded(handle)) {
             throw new IllegalStateException("VBO data is used before fully loaded!");
         }
 
@@ -92,15 +100,9 @@ public class GlRenderContext extends RenderContext {
     }
 
     @Override
-    public boolean isLoaded(String key) {
+    public boolean isUploaded(String key) {
         GlModelBuffer buffer = buffers.get(key);
         return buffer != null && buffer.vbo != -1;
-    }
-
-    @Override
-    public int vertexCount(String key) {
-        GlModelBuffer buffer = buffers.get(key);
-        return buffer == null ? -1 : buffer.vertexCount;
     }
 
     @Override
@@ -180,6 +182,22 @@ public class GlRenderContext extends RenderContext {
             throw new RuntimeException("Cannot create geometry buffer", e);
         }
         buffer.loader = null;
+    }
+
+    @Override
+    protected @Nullable ToDoubleFunction<Vec3d> getDepthSorter() {
+        GL11.glGetInteger(GL11.GL_VIEWPORT, intBuffer);
+        if (intBuffer.get(2) <= 0 || intBuffer.get(3) <= 0) {
+            return null;
+        }
+
+        // Snapshot the matrix
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, floatBuffer);
+        float[] m = new float[16];
+        floatBuffer.rewind();
+        floatBuffer.get(m);
+
+        return pos -> -(m[2] * pos.x + m[6] * pos.y + m[10] * pos.z);
     }
 
     private static final class GlModelBuffer {
