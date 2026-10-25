@@ -44,7 +44,7 @@ public class GroupedDrawable implements IGeomDrawable {
 
         try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
             if (groups == null || groups.isEmpty()) {
-                ctx.drawGeometry(handle, 0, model.getVboData().length / model.getLayout().getStride());
+                ctx.drawGeometry(handle, 0, RenderContext.get().getVertexCount(handle));
             } else {
                 // Model faces are ordered by group name at build time
                 List<String> names = new ArrayList<>(groups);

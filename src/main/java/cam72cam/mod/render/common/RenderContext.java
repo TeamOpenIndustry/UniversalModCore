@@ -30,7 +30,6 @@ public abstract class RenderContext {
             throw new IllegalStateException("RenderContext is already initialized!");
         }
         INSTANCE = renderContext;
-        ClientEvents.AFTER_ENTITY_RENDER.subscribe(e -> get().flushEnqueued());
     }
 
     //Draw call encoder
@@ -52,28 +51,30 @@ public abstract class RenderContext {
             call.target().draw(call.state());
         }
 
-        ToDoubleFunction<Vec3d> depth = getDepthSorter();
-        if (depth != null) {
-            transCalls.sort((a, b) -> {
-                Vec3d va = a.center();
-                Vec3d vb = b.center();
-                if(va == null && vb == null) {
-                    return 0;
-                }
-                if(vb == null) {
-                    return -1;
-                }
-                if(va == null) {
-                    return 1;
-                }
-                return Double.compare(depth.applyAsDouble(vb), depth.applyAsDouble(va));
-            });
-        }
+        if(!transCalls.isEmpty()) {
+            ToDoubleFunction<Vec3d> depth = getDepthSorter();
+            if (depth != null) {
+                transCalls.sort((a, b) -> {
+                    Vec3d va = a.center();
+                    Vec3d vb = b.center();
+                    if (va == null && vb == null) {
+                        return 0;
+                    }
+                    if (vb == null) {
+                        return -1;
+                    }
+                    if (va == null) {
+                        return 1;
+                    }
+                    return Double.compare(depth.applyAsDouble(vb), depth.applyAsDouble(va));
+                });
+            }
 
-        for (DrawCall call : transCalls) {
-            call.target().draw(call.state());
+            for (DrawCall call : transCalls) {
+                call.target().draw(call.state());
+            }
+            transCalls.clear();
         }
-        transCalls.clear();
     }
 
     //Geometry part
@@ -114,6 +115,13 @@ public abstract class RenderContext {
      * @param count Total vertices count
      */
     public abstract void drawGeometry(String handle, int first, int count);
+
+    /**
+     * Get the vertex count of an uploaded geometry
+     * @param handle The geometry handle
+     * @return Total vertices count
+     */
+    public abstract int getVertexCount(String handle);
 
     /**
      * Remove an uploaded geometry from GPU side

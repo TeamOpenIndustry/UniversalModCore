@@ -169,6 +169,11 @@ public class GlRenderContext extends RenderContext {
     }
 
     @Override
+    public int getVertexCount(String handle) {
+        return bindings.containsKey(handle) ? bindings.get(handle).vertexCount : -1;
+    }
+
+    @Override
     public void drawGeometry(String key, int first, int count) {
         GL11.glDrawArrays(GL11.GL_TRIANGLES, first, count);
     }
@@ -340,7 +345,6 @@ public class GlRenderContext extends RenderContext {
             }
         }
 
-
         if (state.color != null) {
             boolean oldColorMaterial = GL11.glGetBoolean(GL11.GL_COLOR_MATERIAL);
             applyBool(GL11.GL_COLOR_MATERIAL, true);
@@ -351,7 +355,7 @@ public class GlRenderContext extends RenderContext {
             GL11.glColor4f(state.color[0], state.color[1], state.color[2], state.color[3]);
 
             restore.add(() -> {
-                GL11.glColor4f(oldR, oldB, oldG, oldA);
+                GL11.glColor4f(oldR, oldG, oldB, oldA);
                 applyBool(GL11.GL_COLOR_MATERIAL, oldColorMaterial);
             });
         }

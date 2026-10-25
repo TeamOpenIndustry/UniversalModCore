@@ -11,7 +11,11 @@ public class DrawCall {
     public DrawCall(IGeomDrawable target, RenderState state) {
         this.target = target;
         this.state = state;
-        this.center = target.getCenter() != null ? state.model_view().apply(target.getCenter()) : null;
+        this.center = target.getCenter() != null
+                      ? state.hasModelViewMatrix()
+                        ? state.model_view().apply(target.getCenter())
+                        : target.getCenter()
+                      : null;
     }
 
     public IGeomDrawable target() {
