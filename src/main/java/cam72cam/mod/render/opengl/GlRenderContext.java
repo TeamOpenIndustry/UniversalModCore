@@ -10,6 +10,7 @@ import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -70,6 +71,16 @@ public class GlRenderContext extends RenderContext {
 
         intBuffer = BufferUtils.createIntBuffer(16);
         floatBuffer = BufferUtils.createFloatBuffer(16);
+    }
+
+    @Override
+    public void flushEnqueued() {
+        boolean oldBlend = GL11.glGetBoolean(GL11.GL_BLEND);
+        GlStateManager.disableBlend();
+        super.flushEnqueued();
+        if (oldBlend) {
+            GlStateManager.enableBlend();
+        }
     }
 
     @Override

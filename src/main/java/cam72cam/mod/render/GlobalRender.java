@@ -54,7 +54,6 @@ public class GlobalRender {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
                 func.render(new RenderState().stage(RenderContext.Stage.GUI), event.getPartialTicks());
-                RenderContext.get().flushEnqueued();
             }
         });
     }
@@ -67,7 +66,6 @@ public class GlobalRender {
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(),
                               new RenderState().stage(RenderContext.Stage.OVERLAY), partialTicks);
-                    RenderContext.get().flushEnqueued();
                 }
             }
         });
