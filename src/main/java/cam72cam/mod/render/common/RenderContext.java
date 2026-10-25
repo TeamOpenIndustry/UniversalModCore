@@ -1,6 +1,5 @@
 package cam72cam.mod.render.common;
 
-import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.render.opengl.BlendMode;
@@ -117,7 +116,7 @@ public abstract class RenderContext {
     public abstract void drawGeometry(String handle, int first, int count);
 
     /**
-     * Get the vertex count of an uploaded geometry
+     * Query the vertex count of an uploaded geometry
      * @param handle The geometry handle
      * @return Total vertices count
      */

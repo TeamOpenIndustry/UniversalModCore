@@ -138,7 +138,7 @@ public class ModelSetBuilder {
             }
             return dstData;
         }, base.getLayout());
-        return new DirectDrawable(state -> {
+        return new BuiltDrawable(state -> {
             RenderContext ctx = RenderContext.get();
             if (!ctx.isUploaded(handle)) {
                 ctx.uploadGeometry(handle, waitForUpload);
@@ -197,11 +197,11 @@ public class ModelSetBuilder {
         return dst + len;
     }
 
-    private static class DirectDrawable implements IGeomDrawable {
+    private static class BuiltDrawable implements IGeomDrawable {
         final Consumer<RenderState> drawer;
         final String handle;
 
-        public DirectDrawable(Consumer<RenderState> drawer, String handle) {
+        public BuiltDrawable(Consumer<RenderState> drawer, String handle) {
             this.drawer = drawer;
             this.handle = handle;
         }

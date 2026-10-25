@@ -31,7 +31,7 @@ public class DirectDraw {
     };
 
     public void draw(RenderState state) {
-        if (state.stage == RenderContext.Stage.BLOCK || state.stage == RenderContext.Stage.ENTITY) {
+        if (state.getBlendMode() != null && (state.stage == RenderContext.Stage.BLOCK || state.stage == RenderContext.Stage.ENTITY)) {
             RenderContext.get().enqueueTransparent(handle, state);
         } else {
             handle.draw(state);
