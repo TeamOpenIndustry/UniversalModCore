@@ -1,6 +1,7 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.util.With;
 import org.lwjgl.opengl.GL11;
 
@@ -11,7 +12,7 @@ public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
 
     public void draw(RenderState state) {
-        try (With ctx = RenderContext.apply(state)) {
+        try (With ctx = RenderContext.get().apply(state)) {
             GL11.glBegin(GL11.GL_QUADS);
             for (VertexBuilder vert : verts) {
                 vert.draw();

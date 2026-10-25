@@ -2,7 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.block.Block;

@@ -7,7 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
@@ -133,9 +133,9 @@ public class ItemRender {
         default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
             if (type == ItemRenderType.GUI) {
-                ctx.stage(RenderContext.Stage.ITEM_IN_GUI);
+                ctx.stage(cam72cam.mod.render.common.RenderContext.Stage.ITEM_IN_GUI);
             } else {
-                ctx.stage(RenderContext.Stage.ITEM_IN_WORLD);
+                ctx.stage(cam72cam.mod.render.common.RenderContext.Stage.ITEM_IN_WORLD);
             }
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {

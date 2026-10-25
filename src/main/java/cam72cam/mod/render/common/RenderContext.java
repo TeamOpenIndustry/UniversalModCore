@@ -143,4 +143,21 @@ public abstract class RenderContext {
      * @return A function mapping position to distance from camera/in the direction camera views, useful for transparency sorting
      */
     protected abstract @Nullable ToDoubleFunction<Vec3d> getDepthSorter();
+
+    public enum Stage {
+        BLOCK,
+
+        ENTITY,
+
+        ITEM_SPRITE_TEX,
+        ITEM_IN_WORLD,
+        ITEM_IN_GUI,
+
+        GUI,
+
+        OVERLAY,      //Mouseover...
+        OVERLAY_TEXT, //Name plates...
+
+        NONE
+    }
 }
