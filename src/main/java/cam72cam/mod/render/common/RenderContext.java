@@ -2,6 +2,7 @@ package cam72cam.mod.render.common;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.mesh.VAOLayout;
+import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import org.jetbrains.annotations.ApiStatus;
@@ -33,9 +34,13 @@ public abstract class RenderContext {
     //Draw call encoder
 
     public void enqueueOpaque(IGeomDrawable drawable, RenderState state) {
-        opaqueCalls.add(new DrawCall(drawable, state));
+        opaqueCalls.add(new DrawCall(drawable, state.clone()));
     }
     public void enqueueTransparent(IGeomDrawable drawable, RenderState state) {
+        state = state.clone().depth_mask(false);
+        if (state.getBlendMode() == null){
+            state = state.clone().blend(BlendMode.ALPHA_BLEND);
+        }
         transCalls.add(new DrawCall(drawable, state));
     }
     public void flushEnqueued() {

@@ -184,12 +184,14 @@ public class GlRenderContext extends RenderContext {
 
     @Override
     protected @Nullable ToDoubleFunction<Vec3d> getDepthSorter() {
+        intBuffer.clear();
         GL11.glGetInteger(GL11.GL_VIEWPORT, intBuffer);
         if (intBuffer.get(2) <= 0 || intBuffer.get(3) <= 0) {
             return null;
         }
 
         // Snapshot the matrix
+        floatBuffer.clear();
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, floatBuffer);
         float[] m = new float[16];
         floatBuffer.rewind();

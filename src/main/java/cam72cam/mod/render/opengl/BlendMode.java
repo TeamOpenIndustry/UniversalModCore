@@ -31,6 +31,7 @@ public class BlendMode {
 
     private static FloatBuffer fourFloatBuffer;
     public static final BlendMode OPAQUE = new BlendMode(false);
+    public static final BlendMode ALPHA_BLEND = new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA);
 
     private BlendMode(boolean enabled) {
         apply = w -> {
