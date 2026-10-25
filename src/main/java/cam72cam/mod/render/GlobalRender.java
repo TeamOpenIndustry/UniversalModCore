@@ -120,7 +120,7 @@ public class GlobalRender {
                 .rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F)
                 .scale(scale, scale, scale)
                 .scale(-0.025F, -0.025F, 0.025F)
-                .stage(cam72cam.mod.render.common.RenderContext.Stage.OVERLAY_TEXT);
+                .stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ctx = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
@@ -132,7 +132,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
-        state.color(1,1,1,1).alpha_test(true).stage(cam72cam.mod.render.common.RenderContext.Stage.OVERLAY_TEXT);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
@@ -145,7 +145,7 @@ public class GlobalRender {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
         state.color(1,1,1,1).alpha_test(true);
-        state.stage(cam72cam.mod.render.common.RenderContext.Stage.OVERLAY_TEXT);
+        state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, 0, 0, color);
@@ -157,7 +157,7 @@ public class GlobalRender {
     {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().fontRenderer;
 
-        state.color(1,1,1,1).alpha_test(true).stage(cam72cam.mod.render.common.RenderContext.Stage.OVERLAY_TEXT);
+        state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
         try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);

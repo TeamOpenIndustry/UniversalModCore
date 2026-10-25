@@ -142,7 +142,7 @@ public class GUIHelpers {
     public static void drawString(String text, int x, int y, int color, Matrix4 matrix) {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
-        state.stage(cam72cam.mod.render.common.RenderContext.Stage.GUI);
+        state.stage(RenderContext.Stage.GUI);
         try (With ctx = RenderContext.get().apply(state)) {
             GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, color);

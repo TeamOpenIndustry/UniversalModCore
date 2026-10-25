@@ -133,9 +133,9 @@ public class ItemRender {
         default void applyTransform(ItemStack stack, ItemRenderType type, RenderState ctx) {
             defaultTransform(type, ctx);
             if (type == ItemRenderType.GUI) {
-                ctx.stage(cam72cam.mod.render.common.RenderContext.Stage.ITEM_IN_GUI);
+                ctx.stage(RenderContext.Stage.ITEM_IN_GUI);
             } else {
-                ctx.stage(cam72cam.mod.render.common.RenderContext.Stage.ITEM_IN_WORLD);
+                ctx.stage(RenderContext.Stage.ITEM_IN_WORLD);
             }
         }
         static void defaultTransform(ItemRenderType type, RenderState state) {

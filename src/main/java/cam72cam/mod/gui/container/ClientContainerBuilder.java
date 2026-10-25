@@ -38,7 +38,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     private static final RenderState CHEST_TEXTURE = new RenderState().color(1, 1, 1, 1)
                                                                       .texture(Texture.wrap(CHEST_GUI_TEXTURE))
-                                                                      .stage(cam72cam.mod.render.common.RenderContext.Stage.GUI);
+                                                                      .stage(RenderContext.Stage.GUI);
 
     public ClientContainerBuilder(ServerContainerBuilder serverContainer, Supplier<Boolean> valid) {
         super(serverContainer);
