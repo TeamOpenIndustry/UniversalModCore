@@ -207,6 +207,7 @@ public class ItemRender {
         GL11.glClearDepth(1);
 
         model.renderCustom(new RenderState().stage(RenderContext.Stage.ITEM_SPRITE_TEX));
+        RenderContext.get().flushEnqueued();
 
         ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
         GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
@@ -288,6 +289,7 @@ public class ItemRender {
                 RenderState ctx = new RenderState();
                 model.applyTransform(stack, type, ctx);
                 std.renderCustom(ctx);
+                RenderContext.get().flushEnqueued();
             }
 
             return std.getQuads(side, rand);

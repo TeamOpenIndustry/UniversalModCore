@@ -248,5 +248,6 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     {
         super.drawScreen(mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
+        RenderContext.get().flushEnqueued();
     }
 }

@@ -107,6 +107,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         state.rotate(-90, 0, 1, 0);
         state.stage(cam72cam.mod.render.common.RenderContext.Stage.ENTITY);
         renderers.get(self.getClass()).render(self, state, partialTicks);
+        //Flush after world rendering finished
     }
 
     @Override
@@ -126,6 +127,7 @@ public class EntityRenderer extends Render<ModdedEntity> {
         state.rotate(-90, 0, 1, 0);
         state.stage(RenderContext.Stage.ENTITY);
         renderers.get(self.getClass()).postRender(self, state, partialTicks);
+        //Flush after world rendering finished
     }
 
     @Nullable

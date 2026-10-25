@@ -10,9 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Enqueue proxy for a {@link Model}.<br>
+ * The draw calls are enqueued and called as late as possible.<br>
  * Renderers are cached per model via {@link #getRendererFor}. The geometry is uploaded lazily by the
  * active {@link RenderContext}; callers only enqueue {@link GroupedDrawable}s.<br>
- * Never cache this class!
+ * Never cache this class externally!
  */
 public class ModelRenderer {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
@@ -95,10 +96,5 @@ public class ModelRenderer {
     /** Enqueue a (set of) transparent part to the batch. */
     public void enqueueTransparent(RenderState state, Collection<String> groups) {
         enqueueTransparent(DEFAULT_CONFIG, state, groups);
-    }
-
-    /** Flush all deferred calls */
-    public static void endModel() {
-        RenderContext.get().flushEnqueued();
     }
 }

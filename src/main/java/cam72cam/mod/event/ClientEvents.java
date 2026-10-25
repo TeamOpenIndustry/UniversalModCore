@@ -91,6 +91,7 @@ public class ClientEvents {
     public static final Event<Consumer<Float>> RENDER_MOUSEOVER = new Event<>();
     public static final Event<Consumer<SoundLoadEvent>> SOUND_LOAD = new Event<>();
     public static final Event<Runnable> RELOAD = new Event<>();
+    public static final Event<Consumer<RenderWorldLastEvent>> AFTER_ENTITY_RENDER = new Event<>();
 
     @Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModCore.MODID)
     public static class ClientEventBus {

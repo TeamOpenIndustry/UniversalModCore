@@ -1,5 +1,6 @@
 package cam72cam.mod.render.common;
 
+import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.render.opengl.BlendMode;
@@ -29,6 +30,7 @@ public abstract class RenderContext {
             throw new IllegalStateException("RenderContext is already initialized!");
         }
         INSTANCE = renderContext;
+        ClientEvents.AFTER_ENTITY_RENDER.subscribe(e -> get().flushEnqueued());
     }
 
     //Draw call encoder

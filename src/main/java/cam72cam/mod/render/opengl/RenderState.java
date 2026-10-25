@@ -29,7 +29,7 @@ public class RenderState {
     protected float[] lightmap = null;
     protected BlendMode blend = null;
     protected OptiFine.Shaders shader;
-    protected cam72cam.mod.render.common.RenderContext.Stage stage = cam72cam.mod.render.common.RenderContext.Stage.NONE;
+    protected RenderContext.Stage stage = RenderContext.Stage.NONE;
 
     public RenderState() {
     }
@@ -163,8 +163,8 @@ public class RenderState {
         this.shader = shader;
         return this;
     }
-    public RenderState stage(cam72cam.mod.render.common.RenderContext.Stage stage) {
-        this.stage = stage != null ? stage : cam72cam.mod.render.common.RenderContext.Stage.NONE;
+    public RenderState stage(RenderContext.Stage stage) {
+        this.stage = stage != null ? stage : RenderContext.Stage.NONE;
         return this;
     }
     public BlendMode getBlendMode() {

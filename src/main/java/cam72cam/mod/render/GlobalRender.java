@@ -53,7 +53,8 @@ public class GlobalRender {
     public static void registerOverlay(RenderFunction func) {
         ClientEvents.RENDER_OVERLAY.subscribe(event -> {
             if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-                func.render(new RenderState().stage(cam72cam.mod.render.common.RenderContext.Stage.GUI), event.getPartialTicks());
+                func.render(new RenderState().stage(RenderContext.Stage.GUI), event.getPartialTicks());
+                RenderContext.get().flushEnqueued();
             }
         });
     }
@@ -65,7 +66,8 @@ public class GlobalRender {
                 Player player = MinecraftClient.getPlayer();
                 if (item.internal == player.getHeldItem(Player.Hand.PRIMARY).internal.getItem()) {
                     fn.render(player, player.getHeldItem(Player.Hand.PRIMARY), MinecraftClient.getBlockMouseOver(), MinecraftClient.getPosMouseOver(),
-                              new RenderState().stage(cam72cam.mod.render.common.RenderContext.Stage.OVERLAY), partialTicks);
+                              new RenderState().stage(RenderContext.Stage.OVERLAY), partialTicks);
+                    RenderContext.get().flushEnqueued();
                 }
             }
         });

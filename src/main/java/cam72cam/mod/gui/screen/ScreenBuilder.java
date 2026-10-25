@@ -117,6 +117,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
 
         GUIHelpers.runDelayed(mouseX, mouseY);
+        RenderContext.get().flushEnqueued();
     }
 
     @Override

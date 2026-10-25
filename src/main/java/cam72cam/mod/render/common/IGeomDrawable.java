@@ -17,7 +17,6 @@ public interface IGeomDrawable {
         }
     }
 
-    //TODO Due to historical issues UMC 1.3 doesn't call flush, use at your own risk!
     default void enqueueOpaque(RenderState state) {
         RenderContext.get().enqueueOpaque(this, state);
     }
