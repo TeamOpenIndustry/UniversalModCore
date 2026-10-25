@@ -121,7 +121,7 @@ public abstract class RenderContext {
 
     /**
      * Completely remove an uploaded geometry and delete the handle
-     * @param handle The geometry handle
+     * @param handle The geometry handle, which is not usable anymore after this operation
      */
     public abstract void deleteGeometry(String handle);
 
