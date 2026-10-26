@@ -128,7 +128,7 @@ public abstract class RenderContext {
     public enum Stage {
         BLOCK,
 
-        ENTITY,
+        ENTITY, // Normal entity and particles
 
         ITEM_SPRITE_TEX,
         ITEM_IN_WORLD,

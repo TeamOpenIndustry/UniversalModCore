@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
-    private final IGeomDrawable handle = new IGeomDrawable() {
+    private final IGeomDrawable dynHandler = new IGeomDrawable() {
         @Override
         public void draw(RenderState state) {
             try (With ctx = RenderContext.get().apply(state)) {
@@ -27,14 +27,23 @@ public class DirectDraw {
         @Override
         public @Nullable String getRenderHandle() { return null; }
         @Override
-        public @Nullable Vec3d getCenter() { return null; }
+        public @Nullable Vec3d getCenter() {
+            double x = 0, y = 0, z = 0;
+            for (VertexBuilder vert : verts) {
+                x += vert.x;
+                y += vert.y;
+                z += vert.z;
+            }
+            return new Vec3d(x / verts.size(),  y / verts.size(), z / verts.size());
+        }
     };
 
     public void draw(RenderState state) {
-        if (state.getBlendMode() != null && (state.stage == RenderContext.Stage.BLOCK || state.stage == RenderContext.Stage.ENTITY)) {
-            RenderContext.get().enqueueTransparent(handle, state);
+        if (state.getBlendMode() != null
+                && (state.stage == RenderContext.Stage.BLOCK || state.stage == RenderContext.Stage.ENTITY)) {
+            RenderContext.get().enqueueTransparent(dynHandler, state);
         } else {
-            handle.draw(state);
+            dynHandler.draw(state);
         }
     }
 

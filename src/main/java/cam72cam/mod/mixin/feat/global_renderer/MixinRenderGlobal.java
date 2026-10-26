@@ -2,9 +2,7 @@ package cam72cam.mod.mixin.feat.global_renderer;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.GlobalRender;
-import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.entity.Entity;
@@ -21,7 +19,5 @@ public class MixinRenderGlobal {
         Vec3d pos = GlobalRender.getCameraPos(partialTicks);
         RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
-
-        RenderContext.get().flushEnqueued(RenderContext.Stage.ENTITY);
     }
 }
