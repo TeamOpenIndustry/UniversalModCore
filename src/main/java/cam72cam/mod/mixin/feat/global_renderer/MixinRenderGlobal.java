@@ -22,7 +22,6 @@ public class MixinRenderGlobal {
         RenderState state = new RenderState().translate(-pos.x, -pos.y, -pos.z);
         GlobalRender.renderGlobalFuncs(state.clone(), partialTicks);
 
-        GlStateManager.disableBlend();
-        RenderContext.get().flushEnqueued();
+        RenderContext.get().flushEnqueued(RenderContext.Stage.ENTITY);
     }
 }

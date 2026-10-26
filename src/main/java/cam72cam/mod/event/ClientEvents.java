@@ -205,14 +205,16 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
+            RenderContext.get().startStage(RenderContext.Stage.GUI);
             RENDER_OVERLAY.execute(x -> x.accept(event));
-            RenderContext.get().flushEnqueued();
+            RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
         }
 
         @SubscribeEvent
         public static void onRenderMouseover(DrawBlockHighlightEvent event) {
+            RenderContext.get().startStage(RenderContext.Stage.OVERLAY);
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
-            RenderContext.get().flushEnqueued();
+            RenderContext.get().flushEnqueued(RenderContext.Stage.OVERLAY);
         }
 
         @SubscribeEvent

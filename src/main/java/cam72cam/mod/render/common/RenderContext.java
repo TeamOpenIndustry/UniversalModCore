@@ -2,23 +2,19 @@ package cam72cam.mod.render.common;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.model.common.mesh.VAOLayout;
-import cam72cam.mod.render.opengl.BlendMode;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
 @ApiStatus.Internal
 public abstract class RenderContext {
     private static RenderContext INSTANCE;
-
-    protected List<DrawCall> opaqueCalls = new ArrayList<>();
-    protected List<DrawCall> transCalls = new ArrayList<>();
+    private DrawBatcher BATCHER;
 
     public static RenderContext get() {
         return INSTANCE;
@@ -28,52 +24,28 @@ public abstract class RenderContext {
         if(INSTANCE != null) {
             throw new IllegalStateException("RenderContext is already initialized!");
         }
+        renderContext.BATCHER = new DrawBatcher();
         INSTANCE = renderContext;
     }
 
-    //Draw call encoder
+    // Draw call encoder
+    private Stage enqueueTo;
 
+    // Callers are responsible and are only responsible to the following operations! No need to restore!
+    public void startStage(@NotNull Stage stage) {
+        enqueueTo = stage;
+    }
     public void enqueueOpaque(IGeomDrawable drawable, RenderState state) {
-        opaqueCalls.add(new DrawCall(drawable, state.clone()));
+        BATCHER.enqueueOpaque(enqueueTo, drawable, state);
     }
     public void enqueueTransparent(IGeomDrawable drawable, RenderState state) {
-        state = state.clone().depth_mask(false);
-        if (state.getBlendMode() == null){
-            state = state.clone().blend(BlendMode.ALPHA_BLEND);
-        }
-        transCalls.add(new DrawCall(drawable, state));
+        BATCHER.enqueueTransparent(enqueueTo, drawable, state);
     }
     public void flushEnqueued() {
-        List<DrawCall> opaqueView = new ArrayList<>(opaqueCalls);
-        opaqueCalls.clear();
-        for (DrawCall call : opaqueView) {
-            call.target().draw(call.state());
-        }
-
-        if(!transCalls.isEmpty()) {
-            ToDoubleFunction<Vec3d> depth = getDepthSorter();
-            if (depth != null) {
-                transCalls.sort((a, b) -> {
-                    Vec3d va = a.center();
-                    Vec3d vb = b.center();
-                    if (va == null && vb == null) {
-                        return 0;
-                    }
-                    if (vb == null) {
-                        return -1;
-                    }
-                    if (va == null) {
-                        return 1;
-                    }
-                    return Double.compare(depth.applyAsDouble(vb), depth.applyAsDouble(va));
-                });
-            }
-
-            for (DrawCall call : transCalls) {
-                call.target().draw(call.state());
-            }
-            transCalls.clear();
-        }
+        BATCHER.flushEnqueued(null);
+    }
+    public void flushEnqueued(Stage stage) {
+        BATCHER.flushEnqueued(stage);
     }
 
     //Geometry part
@@ -100,7 +72,7 @@ public abstract class RenderContext {
     public abstract boolean isUploaded(String handle);
 
     /**
-     * Bind our geom data for rendering<br>
+     * Bind our geom data and setup essential fields for rendering<br>
      * Must be called after {@code isLoaded} check or uploading
      * @param handle The geometry handle
      * @return The restorer to restore geometry binding

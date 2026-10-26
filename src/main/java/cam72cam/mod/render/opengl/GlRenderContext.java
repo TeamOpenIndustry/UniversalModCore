@@ -31,7 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
@@ -51,7 +51,7 @@ public class GlRenderContext extends RenderContext {
 
     private final AtomicBoolean bound = new AtomicBoolean(false);
 
-    private static final AtomicLong nextGeomHandle = new AtomicLong();
+    private static final AtomicInteger nextGeomHandle = new AtomicInteger();
     private final Map<String, GlModelBuffer> bindings = new HashMap<>();
 
     private final IntBuffer intBuffer;
@@ -74,10 +74,10 @@ public class GlRenderContext extends RenderContext {
     }
 
     @Override
-    public void flushEnqueued() {
+    public void flushEnqueued(Stage stage) {
         boolean oldBlend = GL11.glGetBoolean(GL11.GL_BLEND);
         GlStateManager.disableBlend();
-        super.flushEnqueued();
+        super.flushEnqueued(stage);
         if (oldBlend) {
             GlStateManager.enableBlend();
         }

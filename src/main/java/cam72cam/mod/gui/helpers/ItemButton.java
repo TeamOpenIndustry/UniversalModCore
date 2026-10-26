@@ -27,9 +27,7 @@ class ItemButton extends GuiButton {
         RenderHelper.enableGUIStandardItemLighting();
 
         FontRenderer font = stack.internal.getItem().getFontRenderer(stack.internal);
-        try (With ctx = RenderContext.get().apply(
-                new RenderState().translate(x, y, 0).scale(2, 2, 1)
-        )) {
+        try (With ctx = RenderContext.get().apply(new RenderState().translate(x, y, 0).scale(2, 2, 1))) {
             mc.getRenderItem().renderItemAndEffectIntoGUI(stack.internal, 0, 0);
             mc.getRenderItem().renderItemOverlays(font, stack.internal, 0, 0);
         }

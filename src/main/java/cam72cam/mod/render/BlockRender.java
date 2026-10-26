@@ -92,8 +92,9 @@ public class BlockRender {
                     return;
                 }
 
+                RenderContext.get().startStage(RenderContext.Stage.BLOCK);
                 model.renderCustom(new RenderState().translate(x, y, z).stage(RenderContext.Stage.BLOCK), partialTicks);
-                //Flush after world rendering finished
+                RenderContext.get().flushEnqueued(RenderContext.Stage.BLOCK);
             }
 
             public boolean isGlobalRenderer(TileEntity te) {

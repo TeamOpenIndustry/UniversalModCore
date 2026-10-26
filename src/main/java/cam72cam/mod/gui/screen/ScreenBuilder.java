@@ -98,6 +98,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        RenderContext.get().startStage(RenderContext.Stage.GUI);
         GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
@@ -117,7 +118,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
 
         GUIHelpers.runDelayed(mouseX, mouseY);
-        RenderContext.get().flushEnqueued();
+        RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
     }
 
     @Override
