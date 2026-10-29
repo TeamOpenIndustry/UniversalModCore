@@ -1,10 +1,9 @@
 package cam72cam.mod.world;
 
 import cam72cam.mod.ModCore;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.serialization.TagCompound;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -37,8 +36,8 @@ public class ChunkManager implements ForgeChunkManager.LoadingCallback {
         ModCore.debug("Setting up chunk loading...");
         if (instance == null) {
             instance = new ChunkManager();
-            CommonEvents.World.TICK.subscribe(ChunkManager::onWorldTick);
-            CommonEvents.World.UNLOAD.subscribe(ChunkManager::saveChunks);
+            CommonEventListener.World.TICK.subscribe(ChunkManager::onWorldTick);
+            CommonEventListener.World.UNLOAD.subscribe(ChunkManager::saveChunks);
         }
     }
 

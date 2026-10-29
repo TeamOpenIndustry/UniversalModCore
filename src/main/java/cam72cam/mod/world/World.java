@@ -11,7 +11,7 @@ import cam72cam.mod.entity.boundingbox.BoundingBox;
 import cam72cam.mod.entity.boundingbox.DefaultBoundingBox;
 import cam72cam.mod.entity.boundingbox.IBoundingBox;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.fluid.ITank;
 import cam72cam.mod.item.IInventory;
 import cam72cam.mod.item.ItemStack;
@@ -103,13 +103,13 @@ public class World {
 
     /** Called from Event system, wires into common world events */
     public static void registerEvents() {
-        CommonEvents.World.LOAD.subscribe(World::loadWorld);
+        CommonEventListener.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.getDimension()));
+        CommonEventListener.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.getDimension()));
 
-        CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
+        CommonEventListener.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 
-        CommonEvents.World.TICK.subscribe(world -> get(world).checkLoadedEntities());
+        CommonEventListener.World.TICK.subscribe(world -> get(world).checkLoadedEntities());
     }
 
     public static void registerClientEvnets() {
