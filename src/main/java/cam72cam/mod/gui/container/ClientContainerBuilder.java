@@ -5,7 +5,7 @@ import cam72cam.mod.gui.helpers.GUIHelpers;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.item.ItemStackHandler;
 import cam72cam.mod.util.With;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
@@ -50,7 +50,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             //this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
@@ -75,7 +75,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawTopBar(int x, int y, int slots) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, paddingLeft, topOffset);
             // Top Bar
             for (int k = 1; k <= slots; k++) {
@@ -89,7 +89,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public void drawSlot(ItemStackHandler handler, int slotID, int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             x += paddingLeft;
             if (handler != null && handler.getSlotCount() > slotID) {
                 super.drawTexturedModalRect(centerX + x, centerY + y, paddingLeft, topOffset, slotSize, slotSize);
@@ -101,7 +101,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawSlotRow(ItemStackHandler handler, int start, int cols, int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             // Left Side
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, topOffset, paddingLeft, slotSize);
             // Middle Slots
@@ -110,7 +110,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
                 drawSlot(handler, slotID, x + slotOff * slotSize, y);
             }
         }
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             // Right Side
             super.drawTexturedModalRect(centerX + x + paddingLeft + cols * slotSize, centerY + y, paddingLeft + stdUiHorizSlots * slotSize, topOffset, paddingRight, slotSize);
         }
@@ -131,7 +131,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawBottomBar(int x, int y, int slots) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             // Left Bottom
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, textureHeight - bottomOffset, paddingLeft, bottomOffset);
             // Middle Bottom
@@ -146,7 +146,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerTopBar(int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, 0, playerXSize, bottomOffset);
         }
         return y + bottomOffset;
@@ -154,7 +154,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
     @Override
     public int drawPlayerMidBar(int x, int y) {
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + x, centerY + y, 0, midBarOffset, playerXSize, midBarHeight);
         }
         return y + midBarHeight;
@@ -163,7 +163,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     @Override
     public int drawPlayerInventory(int y, int horizSlots) {
         int normInvOffset = (horizSlots - stdUiHorizSlots) * slotSize / 2 + paddingLeft - 7;
-        try (With ctx = RenderContext.apply(CHEST_TEXTURE)) {
+        try (With ctx = RenderContext.get().apply(CHEST_TEXTURE)) {
             super.drawTexturedModalRect(centerX + normInvOffset, centerY + y, 0, 126 + 4, playerXSize, 96);
         }
         return y + 96;
@@ -208,7 +208,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
 
         this.mc.getRenderItem().renderItemIntoGUI(stack.internal, x, y);
 
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .alpha_test(true)
@@ -224,7 +224,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         x += centerX + 1 + paddingLeft;
         y += centerY + 1;
 
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState().color(1, 1, 1, 1).stage(RenderContext.Stage.GUI)
         )) {
             drawRect(x, y + (int) (16 - 16 * height), x + 16, y + 16, color);
@@ -233,7 +233,7 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
         }
 
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteId);
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
@@ -246,7 +246,9 @@ public class ClientContainerBuilder extends GuiContainer implements IContainerBu
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks)
     {
+        RenderContext.get().startStage(RenderContext.Stage.GUI);
         super.drawScreen(mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
+        RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
     }
 }

@@ -8,6 +8,7 @@ import cam72cam.mod.input.Mouse;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.EntityRenderer;
 import cam72cam.mod.render.GlobalRender;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.CustomTexture;
 import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.world.World;
@@ -204,12 +205,16 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void onOverlayEvent(RenderGameOverlayEvent.Pre event) {
+            RenderContext.get().startStage(RenderContext.Stage.GUI);
             RENDER_OVERLAY.execute(x -> x.accept(event));
+            RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
         }
 
         @SubscribeEvent
         public static void onRenderMouseover(DrawBlockHighlightEvent event) {
+            RenderContext.get().startStage(RenderContext.Stage.OVERLAY);
             RENDER_MOUSEOVER.execute(x -> x.accept(event.getPartialTicks()));
+            RenderContext.get().flushEnqueued(RenderContext.Stage.OVERLAY);
         }
 
         @SubscribeEvent

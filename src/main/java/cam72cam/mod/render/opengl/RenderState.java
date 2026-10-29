@@ -2,6 +2,8 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.render.OptiFine;
+import cam72cam.mod.render.common.RenderContext;
+import org.jetbrains.annotations.ApiStatus;
 import util.Matrix4;
 
 import javax.annotation.Nullable;
@@ -166,6 +168,15 @@ public class RenderState {
         this.stage = stage != null ? stage : RenderContext.Stage.NONE;
         return this;
     }
+    @ApiStatus.Internal
+    public boolean hasModelViewMatrix() {
+        return model_view != null;
+    }
+    @ApiStatus.Internal
+    public BlendMode getBlendMode() {
+        return blend;
+    }
+    @ApiStatus.Internal
     public RenderContext.Stage getStage() {
         return this.stage;
     }

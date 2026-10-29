@@ -7,7 +7,7 @@ import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.util.With;
 import net.minecraft.client.Minecraft;
@@ -122,7 +122,7 @@ public class GlobalRender {
                 .scale(-0.025F, -0.025F, 0.025F)
                 .stage(RenderContext.Stage.OVERLAY_TEXT);
 
-        try (With ctx = RenderContext.apply(state)) {
+        try (With ctx = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, -1);
         }
     }
@@ -134,7 +134,7 @@ public class GlobalRender {
 
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
-        try (With ignored = RenderContext.apply(state)) {
+        try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str) / 2, 0, color);
         }
     }
@@ -147,7 +147,7 @@ public class GlobalRender {
         state.color(1,1,1,1).alpha_test(true);
         state.stage(RenderContext.Stage.OVERLAY_TEXT);
 
-        try (With ignored = RenderContext.apply(state)) {
+        try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, 0, 0, color);
         }
     }
@@ -159,7 +159,7 @@ public class GlobalRender {
 
         state.color(1,1,1,1).alpha_test(true).stage(RenderContext.Stage.OVERLAY_TEXT);
 
-        try (With ignored = RenderContext.apply(state)) {
+        try (With ignored = RenderContext.get().apply(state)) {
             fontRendererIn.drawString(str, -fontRendererIn.getStringWidth(str), 0, color);
         }
     }

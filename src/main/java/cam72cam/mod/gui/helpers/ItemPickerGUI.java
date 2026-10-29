@@ -1,7 +1,7 @@
 package cam72cam.mod.gui.helpers;
 
-import cam72cam.mod.gui.screen.TextField;
 import cam72cam.mod.item.ItemStack;
+import cam72cam.mod.render.common.RenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -62,6 +62,7 @@ public class ItemPickerGUI {
 
         @Override
         public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+            RenderContext.get().startStage(RenderContext.Stage.GUI);
             this.drawDefaultBackground();
             super.drawScreen(mouseX, mouseY, partialTicks);
 
@@ -76,6 +77,7 @@ public class ItemPickerGUI {
                     this.renderToolTip(((ItemButton) button).stack.internal, mouseX, mouseY);
                 }
             }
+            RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
         }
 
         @Override

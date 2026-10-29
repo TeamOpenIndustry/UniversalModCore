@@ -2,7 +2,7 @@ package cam72cam.mod.render;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.math.Vec3d;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.world.World;
 import net.minecraft.block.Block;
@@ -76,19 +76,20 @@ public abstract class Particle {
 
                 @Override
                 public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
+                    RenderContext.get().startStage(RenderContext.Stage.ENTITY);
                     ip.ticks = particleAge;
                     ip.renderX = posX - interpPosX + this.motionX * partialTicks;
                     ip.renderY = posY - interpPosY + this.motionY * partialTicks;
                     ip.renderZ = posZ - interpPosZ + this.motionZ * partialTicks;
 
                     if (renderer == null) {
-                        RenderState state = new RenderState();
-                        state.stage(RenderContext.Stage.ENTITY);
-                        state.translate(ip.renderX, ip.renderY, ip.renderZ);
+                        RenderState state = new RenderState()
+                                .stage(RenderContext.Stage.ENTITY)
+                                .translate(ip.renderX, ip.renderY, ip.renderZ);
                         ip.render(state, partialTicks);
                     } else {
                         if (!ip.canRender) {
-                            renderer.accept(particles, new RenderState(), partialTicks);
+                            renderer.accept(particles, new RenderState().stage(RenderContext.Stage.ENTITY), partialTicks);
                             particles.forEach(p -> p.canRender = true);
                             particles.clear();
                         }

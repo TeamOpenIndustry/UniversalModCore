@@ -13,6 +13,7 @@
     "large_entity_collision.MixinVanillaWorld"
   ],
   "client": [
+    "entity_render_batcher.MixinEntityRenderer",
     "global_renderer.MixinRenderGlobal"
   ]
 }

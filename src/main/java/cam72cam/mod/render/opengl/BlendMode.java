@@ -8,8 +8,6 @@ import org.lwjgl.opengl.GL14;
 import java.nio.FloatBuffer;
 import java.util.function.Function;
 
-import static cam72cam.mod.render.opengl.RenderContext.applyBool;
-
 public class BlendMode {
     public static final int GL_ZERO = GL11.GL_ZERO;
     public static final int GL_ONE = GL11.GL_ONE;
@@ -31,12 +29,13 @@ public class BlendMode {
 
     private static FloatBuffer fourFloatBuffer;
     public static final BlendMode OPAQUE = new BlendMode(false);
+    public static final BlendMode ALPHA_BLEND = new BlendMode(BlendMode.GL_SRC_ALPHA, BlendMode.GL_ONE_MINUS_SRC_ALPHA);
 
     private BlendMode(boolean enabled) {
         apply = w -> {
             boolean oldBlend = GL11.glGetBoolean(GL11.GL_BLEND);
-            applyBool(GL11.GL_BLEND, enabled);
-            return w.and(() -> applyBool(GL11.GL_BLEND, oldBlend));
+            GlRenderContext.applyBool(GL11.GL_BLEND, enabled);
+            return w.and(() -> GlRenderContext.applyBool(GL11.GL_BLEND, oldBlend));
         };
     }
     public BlendMode(int srcColor, int dstColor) {

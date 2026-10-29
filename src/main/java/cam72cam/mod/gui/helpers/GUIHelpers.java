@@ -6,8 +6,8 @@ import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.item.ItemStack;
 import cam72cam.mod.text.PlayerMessage;
 import cam72cam.mod.util.With;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.BlendMode;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.render.opengl.Texture;
 import cam72cam.mod.resource.Identifier;
@@ -42,7 +42,7 @@ public class GUIHelpers {
 
     /** Draw a solid color block */
     public static void drawRect(int x, int y, int width, int height, int color) {
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState()
                         .color(1, 1, 1, 1)
                         .texture(Texture.NO_TEXTURE)
@@ -55,7 +55,7 @@ public class GUIHelpers {
 
     /** Draw a full image (tex) at coords with given width/height */
     public static void texturedRect(Identifier tex, int x, int y, int width, int height) {
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState().texture(Texture.wrap(tex)).stage(RenderContext.Stage.GUI)
         )) {
             Gui.drawScaledCustomSizeModalRect(x, y, 0, 0, 1, 1, width, height, 1, 1);
@@ -89,7 +89,7 @@ public class GUIHelpers {
     private static void drawSprite(TextureAtlasSprite sprite, int col, int x, int y, int width, int height) {
         double zLevel = 0;
 
-        try (With ctx = RenderContext.apply(
+        try (With ctx = RenderContext.get().apply(
                 new RenderState()
                         .texture(Texture.wrap(new Identifier(TextureMap.LOCATION_BLOCKS_TEXTURE)))
                         .color((col >> 16 & 255) / 255.0f, (col >> 8 & 255) / 255.0f, (col & 255) / 255.0f, 1)
@@ -143,7 +143,7 @@ public class GUIHelpers {
         RenderState state = new RenderState().color(1, 1, 1, 1).alpha_test(true);
         state.model_view().multiply(matrix);
         state.stage(RenderContext.Stage.GUI);
-        try (With ctx = RenderContext.apply(state)) {
+        try (With ctx = RenderContext.get().apply(state)) {
             GlStateManager.color(1, 1, 1, 0);
             Minecraft.getMinecraft().fontRenderer.drawString(text, x, y, color);
         }
@@ -180,7 +180,7 @@ public class GUIHelpers {
 //              .stage(RenderContext.Stage.GUI);
         state.model_view().multiply(matrix);
         RenderHelper.enableGUIStandardItemLighting();
-        try (With ctx = RenderContext.apply(state)) {
+        try (With ctx = RenderContext.get().apply(state)) {
             Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.internal, x, y);
         }
         RenderHelper.disableStandardItemLighting();

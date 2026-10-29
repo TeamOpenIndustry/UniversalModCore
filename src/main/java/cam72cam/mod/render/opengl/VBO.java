@@ -2,6 +2,7 @@ package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.util.With;
 import net.minecraft.client.renderer.GLAllocation;
 import org.lwjgl.opengl.GL11;
@@ -135,7 +136,7 @@ public class VBO {
             int oldVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
 
-            this.restore = RenderContext.apply(state).and(() -> {
+            this.restore = RenderContext.get().apply(state).and(() -> {
                 GL11.glPopClientAttrib();
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldVbo);
             });
@@ -174,7 +175,7 @@ public class VBO {
             //We have to create a new RenderState for 1.16 and below
             RenderState state = new RenderState().stage(this.state.stage);
             mod.accept(state);
-            return RenderContext.apply(state);
+            return RenderContext.get().apply(state);
         }
 
         /**

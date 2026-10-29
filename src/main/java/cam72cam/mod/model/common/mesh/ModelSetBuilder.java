@@ -1,10 +1,13 @@
 package cam72cam.mod.model.common.mesh;
 
-import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.common.IGeomDrawable;
 import cam72cam.mod.render.common.ModelRenderer;
-import cam72cam.mod.render.obj.OBJRender;
-import cam72cam.mod.render.opengl.VBO;
+import cam72cam.mod.render.common.RenderContext;
+import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
+import cam72cam.mod.util.With;
+import org.jetbrains.annotations.Nullable;
 import util.Matrix4;
 
 import javax.vecmath.Matrix3f;
@@ -12,6 +15,7 @@ import javax.vecmath.SingularMatrixException;
 import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Bakes a set of transformed copies of a source {@link Model} (or selected groups) into a
@@ -83,6 +87,9 @@ public class ModelSetBuilder {
         return this;
     }
 
+    /**
+     * Bake the actions into a new model
+     */
     public GeneratedModel build() {
         float[] srcData = base.getVboData();
         float[] dstData = new float[faceCount * 3 * stride];
@@ -109,12 +116,17 @@ public class ModelSetBuilder {
         return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
-    public VBO buildVBO() {
+    /**
+     * Bake the actions into a {@link IGeomDrawable} object<br>
+     * Note that calling {@link IGeomDrawable#free()} here will remove the resulting geometry completely!
+     */
+    public IGeomDrawable buildDrawable(boolean waitForUpload) {
         Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
-        return new VBO(() -> {
+        int faceCount = this.faceCount;
+        int vertexCount = faceCount * 3;
+        String handle = RenderContext.get().setGeometryUploader(() -> {
             float[] srcData = base.getVboData();
             float[] dstData = new float[faceCount * 3 * stride];
-
             int dstCursor = 0;
             for (Map.Entry<String, List<Matrix4>> entry : actions.entrySet()) {
                 String name = entry.getKey();
@@ -124,8 +136,22 @@ public class ModelSetBuilder {
                     dstCursor = copyAndTransform(srcData, group.faceStart * 3 * stride, dstData, dstCursor, length, m);
                 }
             }
-            return new VertexBuffer(dstData, layout.has(VAOLayout.Usage.NORMAL));
-        }, s -> ModelRenderer.DEFAULT_CONFIG.apply(s, base));
+            return dstData;
+        }, base.getLayout());
+        return new BuiltDrawable(state -> {
+            RenderContext ctx = RenderContext.get();
+            if (!ctx.isUploaded(handle)) {
+                ctx.uploadGeometry(handle, waitForUpload);
+                if (!ctx.isUploaded(handle)) {
+                    return;
+                }
+            }
+            RenderState s = state.clone();
+            ModelRenderer.DEFAULT_CONFIG.apply(s, base);
+            try (With ignored = ctx.apply(s).and(ctx.bindGeometry(handle))) {
+                ctx.drawGeometry(handle, 0, vertexCount);
+            }
+        }, handle);
     }
 
     private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
@@ -169,5 +195,35 @@ public class ModelSetBuilder {
             }
         }
         return dst + len;
+    }
+
+    private static class BuiltDrawable implements IGeomDrawable {
+        final Consumer<RenderState> drawer;
+        final String handle;
+
+        public BuiltDrawable(Consumer<RenderState> drawer, String handle) {
+            this.drawer = drawer;
+            this.handle = handle;
+        }
+
+        @Override
+        public void draw(RenderState state) {
+            drawer.accept(state);
+        }
+
+        @Override
+        public @Nullable String getRenderHandle() {
+            return handle;
+        }
+
+        @Override
+        public @Nullable Vec3d getCenter() {
+            return null;
+        }
+
+        @Override
+        public void free() {
+            RenderContext.get().deleteGeometry(handle);
+        }
     }
 }

@@ -3,8 +3,8 @@ package cam72cam.mod.gui.screen;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.fluid.Fluid;
 import cam72cam.mod.gui.helpers.GUIHelpers;
-import cam72cam.mod.render.opengl.RenderContext;
 import cam72cam.mod.input.Keyboard;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.Identifier;
 import net.minecraft.client.gui.GuiButton;
@@ -98,6 +98,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        RenderContext.get().startStage(RenderContext.Stage.GUI);
         GUIHelpers.initDelayed();
         for (Button btn : buttonMap.values()) {
             btn.onUpdate();
@@ -117,6 +118,7 @@ public class ScreenBuilder extends GuiScreen implements IScreenBuilder {
         first.ifPresent(button -> GUIHelpers.drawTooltipAtCursor(button.tooltips));
 
         GUIHelpers.runDelayed(mouseX, mouseY);
+        RenderContext.get().flushEnqueued(RenderContext.Stage.GUI);
     }
 
     @Override

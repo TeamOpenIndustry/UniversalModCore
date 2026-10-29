@@ -7,7 +7,7 @@ import cam72cam.mod.event.ClientEvents;
 import cam72cam.mod.gui.Progress;
 import cam72cam.mod.item.CustomItem;
 import cam72cam.mod.item.ItemStack;
-import cam72cam.mod.render.opengl.RenderContext;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.render.opengl.RenderState;
 import cam72cam.mod.resource.BuiltinPack;
 import cam72cam.mod.resource.Identifier;
@@ -28,6 +28,7 @@ import net.minecraftforge.client.model.ModelLoader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import scala.tools.nsc.settings.RC;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Matrix4f;
@@ -206,7 +207,9 @@ public class ItemRender {
         GL11.glDepthFunc(GL11.GL_LESS);
         GL11.glClearDepth(1);
 
+        RenderContext.get().startStage(RenderContext.Stage.ITEM_SPRITE_TEX);
         model.renderCustom(new RenderState().stage(RenderContext.Stage.ITEM_SPRITE_TEX));
+        RenderContext.get().flushEnqueued(RenderContext.Stage.ITEM_SPRITE_TEX);
 
         ByteBuffer buff = GLAllocation.createDirectByteBuffer(4 * width * height);
         GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, buff);
@@ -287,7 +290,9 @@ public class ItemRender {
             if (side == null) {
                 RenderState ctx = new RenderState();
                 model.applyTransform(stack, type, ctx);
+                RenderContext.get().startStage(ctx.getStage());
                 std.renderCustom(ctx);
+                RenderContext.get().flushEnqueued(ctx.getStage());
             }
 
             return std.getQuads(side, rand);

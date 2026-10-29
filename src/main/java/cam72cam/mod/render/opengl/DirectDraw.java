@@ -1,7 +1,10 @@
 package cam72cam.mod.render.opengl;
 
 import cam72cam.mod.math.Vec3d;
+import cam72cam.mod.render.common.IGeomDrawable;
+import cam72cam.mod.render.common.RenderContext;
 import cam72cam.mod.util.With;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -9,14 +12,38 @@ import java.util.List;
 
 public class DirectDraw {
     private final List<VertexBuilder> verts = new ArrayList<>();
+    private final IGeomDrawable dynHandler = new IGeomDrawable() {
+        @Override
+        public void draw(RenderState state) {
+            try (With ctx = RenderContext.get().apply(state)) {
+                GL11.glBegin(GL11.GL_QUADS);
+                for (VertexBuilder vert : verts) {
+                    vert.draw();
+                }
+                GL11.glEnd();
+            }
+        }
+
+        @Override
+        public @Nullable String getRenderHandle() { return null; }
+        @Override
+        public @Nullable Vec3d getCenter() {
+            double x = 0, y = 0, z = 0;
+            for (VertexBuilder vert : verts) {
+                x += vert.x;
+                y += vert.y;
+                z += vert.z;
+            }
+            return new Vec3d(x / verts.size(),  y / verts.size(), z / verts.size());
+        }
+    };
 
     public void draw(RenderState state) {
-        try (With ctx = RenderContext.apply(state)) {
-            GL11.glBegin(GL11.GL_QUADS);
-            for (VertexBuilder vert : verts) {
-                vert.draw();
-            }
-            GL11.glEnd();
+        if (state.getBlendMode() != null
+                && (state.stage == RenderContext.Stage.BLOCK || state.stage == RenderContext.Stage.ENTITY)) {
+            RenderContext.get().enqueueTransparent(dynHandler, state);
+        } else {
+            dynHandler.draw(state);
         }
     }
 
