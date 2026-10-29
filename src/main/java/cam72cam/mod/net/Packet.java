@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
+import cam72cam.mod.ModEvent;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
 import cam72cam.mod.math.Vec3d;
@@ -35,8 +36,8 @@ public abstract class Packet {
             VERSION::equals,
             VERSION::equals
     );
-    // Packet class name -> Packet Constructor
-    private static Map<String, Supplier<Packet>> types = new HashMap<>();
+    // Packet id -> Packet Constructor
+    private static final Map<String, PacketDefinition> definitions = new HashMap<>();
 
     static {
         net.registerMessage(0, Message.class, Message::toBytes, Message::new, (msg, ctx) -> {
@@ -51,7 +52,8 @@ public abstract class Packet {
                 }
                 if (msg.packet.getPlayer() == null) {
                     try {
-                        throw new Exception(String.format("Invalid Packet %s: missing player", msg.packet.getClass()));
+                        throw new Exception(String.format("Packet %s is missing player. If the server is in offline mode, please consider installing an offline UUID fix mod.",
+                                                          msg.packet.id));
                     } catch (Exception e) {
                         ModCore.catching(e);
                         return;
@@ -68,9 +70,11 @@ public abstract class Packet {
     // Received packet data
     private TagCompound data = new TagCompound();
 
+    protected final String id = this.getClass().getName();
+
     /**
      * So either forge or minecraft has a bug where it mixes up the player in the context handler...
-     *
+     * <p>
      * We now track player and world ourselves
      */
     @TagField("umcPlayer")
@@ -79,9 +83,14 @@ public abstract class Packet {
     @TagField("umcWorld")
     private World world;
 
-    /** How to register a packet (do in CONSTRUCT phase) */
-    public static void register(Supplier<Packet> sup, PacketDirection dir) {
-        types.put(sup.get().getClass().toString(), sup);
+    /** Entrypoint of registering a packet (Do in {@link ModEvent#CONSTRUCT} phase) */
+    public static void register(Supplier<? extends Packet> sup, PacketDirection dir) {
+        Packet packet = sup.get();
+        if (definitions.containsKey(packet.id)) {
+            //Already registered, goodbye
+            return;
+        }
+        definitions.put(packet.id, new PacketDefinition(packet.id, sup, dir));
     }
 
     /** Called after deserialization */
@@ -102,11 +111,17 @@ public abstract class Packet {
 
     /** Send from server to all players around this pos */
     public void sendToAllAround(World world, Vec3d pos, double distance) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z, distance, world.internal.dimension())), new Message(this));
     }
 
     /** Send from server to any player who is within viewing (entity tracker update) distance of the entity */
     public void sendToObserving(Entity entity) {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.minecraft.entity.Entity internal = entity.internal;
         int syncDist = entity.internal.getType().clientTrackingRange();
         this.sendToAllAround(entity.getWorld(), entity.getPosition(), syncDist);
@@ -114,6 +129,9 @@ public abstract class Packet {
 
     /** Send from client to server */
     public void sendToServer() {
+        if(!definitions.get(this.id).direction.canSendToServer()) {
+            throw new IllegalStateException(String.format("Can't send S2C only packet %s to server side!", this.id));
+        }
         this.player = MinecraftClient.getPlayer();
         this.world = MinecraftClient.getPlayer().getWorld();
         net.sendToServer(new Message(this));
@@ -121,13 +139,31 @@ public abstract class Packet {
 
     /** Broadcast to all players from server */
     public void sendToAll() {
+        if(!definitions.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
         net.send(PacketDistributor.ALL.noArg(), new Message(this));
     }
 
 	/** Send from server to player */
 	public void sendToPlayer(Player player) {
-		net.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player.internal), new Message(this));
+        if(!definitions.get(this.id).direction.canSendToClient()) {
+            throw new IllegalStateException(String.format("Can't send C2S only packet %s to client side!", this.id));
+        }
+        net.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player.internal), new Message(this));
 	}
+
+    private static class PacketDefinition {
+        final String id;
+        final Supplier<? extends Packet> supplier;
+        final PacketDirection direction;
+
+        public PacketDefinition(String id, Supplier<? extends Packet> supplier, PacketDirection direction) {
+            this.id = id;
+            this.supplier = supplier;
+            this.direction = direction;
+        }
+    }
 
     /** Forge message construct.  Do not use directly */
     public static class Message {
@@ -144,7 +180,7 @@ public abstract class Packet {
         public void fromBytes(PacketBuffer buf) {
             TagCompound data = new TagCompound(buf.readNbt());
             String cls = data.getString("cam72cam.mod.pktid");
-            packet = types.get(cls).get();
+            packet = definitions.get(cls).supplier.get();
             packet.data = data;
         }
 
@@ -152,7 +188,6 @@ public abstract class Packet {
             packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
             try {
                 TagSerializer.serialize(packet.data, packet);
-
             } catch (SerializationException e) {
                 ModCore.catching(e);
             }
