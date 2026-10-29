@@ -223,6 +223,7 @@ public class Model {
     public void free() {
         tryReleaseTexture();
         ModelRenderer.release(this);
+        this.vboData = null;
     }
 
     /**

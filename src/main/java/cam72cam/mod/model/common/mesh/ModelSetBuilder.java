@@ -1,5 +1,9 @@
 package cam72cam.mod.model.common.mesh;
 
+import cam72cam.mod.model.obj.VertexBuffer;
+import cam72cam.mod.render.common.ModelRenderer;
+import cam72cam.mod.render.obj.OBJRender;
+import cam72cam.mod.render.opengl.VBO;
 import cam72cam.mod.resource.Identifier;
 import util.Matrix4;
 
@@ -28,8 +32,6 @@ public class ModelSetBuilder {
 
     private final TreeMap<String, List<Matrix4>> actions = new TreeMap<>(Comparator.naturalOrder());
     private final IdentityHashMap<Matrix4, Matrix3f> normalMats = new IdentityHashMap<>();
-    private final Vector3f positionGetter = new Vector3f();
-    private final Vector3f normalGetter = new Vector3f();
     private int faceCount;
 
     public static ModelSetBuilder of(Model model) {
@@ -107,6 +109,25 @@ public class ModelSetBuilder {
         return new GeneratedModel(base, loc, () -> dstData, groups);
     }
 
+    public VBO buildVBO() {
+        Map<String, List<Matrix4>> actions = new TreeMap<>(this.actions);
+        return new VBO(() -> {
+            float[] srcData = base.getVboData();
+            float[] dstData = new float[faceCount * 3 * stride];
+
+            int dstCursor = 0;
+            for (Map.Entry<String, List<Matrix4>> entry : actions.entrySet()) {
+                String name = entry.getKey();
+                ModelGroup group = base.getGroups().get(name);
+                int length = (group.faceEnd - group.faceStart + 1) * 3 * stride;
+                for (Matrix4 m : entry.getValue()) {
+                    dstCursor = copyAndTransform(srcData, group.faceStart * 3 * stride, dstData, dstCursor, length, m);
+                }
+            }
+            return new VertexBuffer(dstData, layout.has(VAOLayout.Usage.NORMAL));
+        }, s -> ModelRenderer.DEFAULT_CONFIG.apply(s, base));
+    }
+
     private int copyAndTransform(float[] source, int src, float[] target, int dst, int len, Matrix4 transform) {
         System.arraycopy(source, src, target, dst, len);
         if (transform != null) {
@@ -128,8 +149,10 @@ public class ModelSetBuilder {
                 }
             }
 
+            Vector3f positionGetter = new Vector3f();
+            Vector3f normalGetter = new Vector3f();
             for (int i = dst; i < dst + len; i += stride) {
-                positionGetter.set(target[i + this.pos], target[i + this.pos + 1], target[i + this.pos + 2]);
+                 positionGetter.set(target[i + this.pos], target[i + this.pos + 1], target[i + this.pos + 2]);
                 transform.apply(positionGetter);
                 target[i + this.pos] = positionGetter.x;
                 target[i + this.pos + 1] = positionGetter.y;
