@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 public class Light {
@@ -63,21 +64,21 @@ public class Light {
         this.lightLevel = lightLevel;
     }
 
-    private static class LightEntity1 extends LightEntity {public LightEntity1(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity2 extends LightEntity {public LightEntity2(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity3 extends LightEntity {public LightEntity3(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity4 extends LightEntity {public LightEntity4(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity5 extends LightEntity {public LightEntity5(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity6 extends LightEntity {public LightEntity6(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity7 extends LightEntity {public LightEntity7(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity8 extends LightEntity {public LightEntity8(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity9 extends LightEntity {public LightEntity9(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity10 extends LightEntity {public LightEntity10(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity11 extends LightEntity {public LightEntity11(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity12 extends LightEntity {public LightEntity12(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity13 extends LightEntity {public LightEntity13(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity14 extends LightEntity {public LightEntity14(net.minecraft.world.World world) { super(world);}}
-    private static class LightEntity15 extends LightEntity {public LightEntity15(net.minecraft.world.World world) { super(world);}}
+    private static class LightEntity1 extends LightEntity {public LightEntity1(net.minecraft.world.World world) { super(world, 1);}}
+    private static class LightEntity2 extends LightEntity {public LightEntity2(net.minecraft.world.World world) { super(world, 2);}}
+    private static class LightEntity3 extends LightEntity {public LightEntity3(net.minecraft.world.World world) { super(world, 3);}}
+    private static class LightEntity4 extends LightEntity {public LightEntity4(net.minecraft.world.World world) { super(world, 4);}}
+    private static class LightEntity5 extends LightEntity {public LightEntity5(net.minecraft.world.World world) { super(world, 5);}}
+    private static class LightEntity6 extends LightEntity {public LightEntity6(net.minecraft.world.World world) { super(world, 6);}}
+    private static class LightEntity7 extends LightEntity {public LightEntity7(net.minecraft.world.World world) { super(world, 7);}}
+    private static class LightEntity8 extends LightEntity {public LightEntity8(net.minecraft.world.World world) { super(world, 8);}}
+    private static class LightEntity9 extends LightEntity {public LightEntity9(net.minecraft.world.World world) { super(world, 9);}}
+    private static class LightEntity10 extends LightEntity {public LightEntity10(net.minecraft.world.World world) { super(world, 10);}}
+    private static class LightEntity11 extends LightEntity {public LightEntity11(net.minecraft.world.World world) { super(world, 11);}}
+    private static class LightEntity12 extends LightEntity {public LightEntity12(net.minecraft.world.World world) { super(world, 12);}}
+    private static class LightEntity13 extends LightEntity {public LightEntity13(net.minecraft.world.World world) { super(world, 13);}}
+    private static class LightEntity14 extends LightEntity {public LightEntity14(net.minecraft.world.World world) { super(world, 14);}}
+    private static class LightEntity15 extends LightEntity {public LightEntity15(net.minecraft.world.World world) { super(world, 15);}}
 
     public static void register() {
         CommonEvents.Entity.REGISTER.subscribe(() -> {
@@ -101,12 +102,15 @@ public class Light {
 
     // Client only
     private static class LightEntity extends Entity {
-        public LightEntity(net.minecraft.world.World world) {
+        private final int lightValue;
+
+        public LightEntity(net.minecraft.world.World world, int lightValue) {
             super(world);
             super.width = 0;
             super.height = 0;
             super.isImmuneToFire = true;
             super.noClip = true;
+            this.lightValue = lightValue;
         }
 
         @Override
@@ -114,6 +118,7 @@ public class Light {
             this.prevPosX = this.posX;
             this.prevPosY = this.posY;
             this.prevPosZ = this.posZ;
+            Angelica.updateLights(this);
         }
 
         @Override
@@ -130,9 +135,58 @@ public class Light {
         protected void writeEntityToNBT(NBTTagCompound compound) {
 
         }
+
+        public int angelica$getLuminance() {
+            return lightValue;
+        }
+    }
+
+    private static final class Angelica {
+        private static final Method UPDATE_LIGHTS;
+        private static final Method IS_ENABLED;
+        private static boolean failed;
+
+        static {
+            Method update = null, enabled = null;
+            try {
+                Class<?> dl = Class.forName("com.gtnewhorizons.angelica.dynamiclights.DynamicLights",
+                        false, Light.class.getClassLoader());
+                Method e = dl.getDeclaredMethod("isEnabled");
+                e.setAccessible(true);
+                update = Entity.class.getMethod("angelica$updateLights");
+                enabled = e;
+            } catch (Throwable ignored) {
+                update = null;
+            }
+            UPDATE_LIGHTS = update;
+            IS_ENABLED = enabled;
+        }
+
+        static boolean isActive() {
+            if (UPDATE_LIGHTS == null || IS_ENABLED == null || failed) return false;
+            try {
+                return Boolean.TRUE.equals(IS_ENABLED.invoke(null));
+            } catch (Throwable t) {
+                return false;
+            }
+        }
+
+        static void updateLights(Entity e) {
+            if (UPDATE_LIGHTS == null || failed) return;
+            try {
+                UPDATE_LIGHTS.invoke(e);
+            } catch (Exception ex) {
+                failed = true;
+                ModCore.catching(ex);
+            }
+        }
     }
 
     public static boolean enabled() {
+        return optifineDynamicLights() || Angelica.isActive();
+}
+
+    private static boolean optifineDynamicLights() {
         if (!OptiFine.isLoaded()) {
             return false;
         }

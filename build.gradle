@@ -85,6 +85,20 @@ repositories {
     maven {
         url = "https://jitpack.io"
     }
+    maven {
+        name "GTNH Maven"
+        url "https://nexus.gtnewhorizons.com/repository/public/"
+    }
+}
+
+def addMod(path, enabled) {
+    // GTNH dev jars use different MCP names from this project's stable mappings.
+    // Select the SRG release artifact explicitly for Unimined to remap at runtime;
+    // GTNH's default Gradle metadata otherwise selects the dev artifact.
+    if (enabled == "2")
+        dependencies { modImplementation("${path}@jar") { transitive = false } }
+    else if (enabled == "1")
+        dependencies { modCompileOnly("${path}:dev") { transitive = false } }
 }
 
 dependencies {
@@ -97,6 +111,8 @@ dependencies {
     implementation('junit:junit:4.13.1')
 
     shade "at.yawk.lz4:lz4-java:1.12.0"
+
+    addMod("com.github.GTNewHorizons:Angelica:2.2.12", 1)
 }
 
 jar {
