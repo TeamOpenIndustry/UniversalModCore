@@ -84,7 +84,7 @@ public class ModelConfig {
             tex = lodMap.lastEntry().getValue();
         } else {
             Map.Entry<Integer, OBJTextureSheet> entry = lodMap.floorEntry(lod);
-            tex = (entry != null ? entry : lodMap.firstEntry()).getValue();
+            tex = (entry != null ? entry : lodMap.lastEntry()).getValue();
         }
 
         if (waitForRightTexLoad) {

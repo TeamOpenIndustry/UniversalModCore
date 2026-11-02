@@ -45,15 +45,19 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
     }
 
     public FaceAccessor(Model model, int startFace, int endFace, boolean canSplit) {
+        this(model, model.getVboData(), startFace, endFace, canSplit);
+    }
+
+    public FaceAccessor(Model model, float[] data, int startFace, int endFace, boolean canSplit) {
         this.model = model;
-        this.data = model.getVboData();
+        this.data = data;
         this.stride = model.getLayout().getStride();
         this.posOffset = model.getLayout().getOffset(VAOLayout.Usage.POSITION);
         this.uvOffset = model.getLayout().getOffset(VAOLayout.Usage.UV);
         this.colorOffset = model.getLayout().getOffset(VAOLayout.Usage.COLOR);
         this.normalOffset = model.getLayout().getOffset(VAOLayout.Usage.NORMAL);
         
-        int faceCount = this.model.getVboData().length / stride / 3;
+        int faceCount = this.data.length / stride / 3;
         v0 = new VertexAccessor(0);
         v1 = new VertexAccessor(1);
         v2 = new VertexAccessor(2);
@@ -77,7 +81,7 @@ public class FaceAccessor implements Iterable<FaceAccessor> {
         }
         ModelGroup group = model.getGroups().get(groupName);
         // Pass buffer instead of caching it
-        return new FaceAccessor(model, group.faceStart, group.faceEnd + 1, false);
+        return new FaceAccessor(model, data, group.faceStart, group.faceEnd + 1, false);
     }
 
     /**

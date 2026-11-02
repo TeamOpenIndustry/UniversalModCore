@@ -21,7 +21,6 @@ public class Model {
     private final Identifier location;
     private final VAOLayout layout;
     private final Supplier<float[]> vboSupplier;
-    private float[] vboData = null;
     private final LinkedHashMap<String, ModelGroup> groups;
 
     public final boolean hasSpecular;
@@ -156,7 +155,7 @@ public class Model {
 
     /** WARNING This is a very slow function and should be used for debug only */
     public List<Vec3d> points(ModelGroup group) {
-        getVboData(); //Populate
+        float[] vboData = getVboData(); //Populate
         List<Vec3d> points = new ArrayList<>();
         for (int face = group.faceStart; face <= group.faceEnd; face++) {
             for (int point = 0; point < 3; point++) {
@@ -191,10 +190,7 @@ public class Model {
      * @return the raw VBO data, in the order described by {@link #getLayout()}
      */
     public float[] getVboData() {
-        if (vboData == null) {
-            vboData = vboSupplier.get();
-        }
-        return vboData;
+        return vboSupplier.get();
     }
 
     /** @return albedo texture sheets, keyed by variant name then LOD size */
@@ -223,7 +219,6 @@ public class Model {
     public void free() {
         tryReleaseTexture();
         ModelRenderer.release(this);
-        this.vboData = null;
     }
 
     /**
