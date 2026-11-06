@@ -78,7 +78,7 @@ public class ItemStackHandler implements IInventory {
     /** Don't call this method unless you know what you're doing! */
     @ApiStatus.AvailableSince("1.3.2")
     public void setUnchecked(int slot, ItemStack stack) {
-        ((ItemStackHandlerWrapper)internal).setStackInSlotUnchecked(slot, stack.internal);
+        ((ItemStackHandlerWrapper)internal).setStackInSlotUnchecked(slot, stack.internal());
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ItemStackHandler implements IInventory {
     /** Don't call this method unless you know what you're doing! */
     @ApiStatus.AvailableSince("1.3.2")
     public ItemStack insertUnchecked(int slot, ItemStack stack, boolean simulate) {
-        return new ItemStack(((ItemStackHandlerWrapper)internal).insertItemUnchecked(slot, stack.internal, simulate));
+        return new ItemStack(((ItemStackHandlerWrapper)internal).insertItemUnchecked(slot, stack.internal(), simulate));
     }
 
     @Override
