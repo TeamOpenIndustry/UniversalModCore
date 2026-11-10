@@ -265,7 +265,7 @@ public class World {
     public <T extends Entity> T getEntity(UUID id, Class<T> type) {
         Entity ent = entityByUUID.get(id);
         if (ent == null) {
-            CustomEntity offline = EntityPool.lookupOfflineEntity(id); // 【改为直接调 UMC 池】
+            CustomEntity offline = EntityPool.lookupOfflineEntity(id);
             if (offline != null) ent = offline;
         }
         if (ent == null) return null;
@@ -347,7 +347,6 @@ public class World {
     /** Force load a chunk */
     public void forceLoadChunkAt(Vec3i pos) {
         if (this.isServer) {
-            // 调用原生的 getChunk，传入 true 标志位，如果区块没加载会立刻从磁盘同步读取
             internal.getChunk(pos.x >> 4, pos.z >> 4);
         }
     }
@@ -774,8 +773,6 @@ public class World {
     public float getSkyLightLevel(Vec3i pos) {
         return internal.getLightFor(EnumSkyBlock.SKY, pos.internal()) / 15f;
     }
-
-    // ── 在 World 类里新增 ──
 
     public interface EntityLifecycleListener {
         void onEntityAdded(net.minecraft.entity.Entity entity);

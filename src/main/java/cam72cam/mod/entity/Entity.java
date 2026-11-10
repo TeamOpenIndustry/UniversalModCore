@@ -283,14 +283,12 @@ public class Entity {
         return internal.getEntityId();
     }
 
-    // 在 Entity 类里添加：
-
-    /** 当前实体是否已被加入世界（区块加载状态） */
+    /** Whether the current entity is added to the world (chunk loaded state). */
     public boolean isAddedToChunk() {
         return internal.addedToChunk;
     }
 
-    /** 强行设置实体的区块加载状态（仅供底层实体池使用） */
+    /** Forcefully sets the chunk loaded state of the entity (only for internal entity pool use). */
     public void setAddedToChunk(boolean added) {
         internal.addedToChunk = added;
     }

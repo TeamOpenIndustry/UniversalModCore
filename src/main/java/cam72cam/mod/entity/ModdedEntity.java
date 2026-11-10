@@ -649,13 +649,13 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
     /** 完整序列化：MC 基础字段（Pos/Motion/Rotation/UUID）+ UMC 的 @TagField */
     public TagCompound serializeToTagCompound() {
         TagCompound data = new TagCompound();
-        writeToNBT(data.internal);   // public，MC 的 Entity.writeToNBT
+        writeToNBT(data.internal);
         return data;
     }
 
     /** 完整反序列化 */
     public void deserializeFromTagCompound(TagCompound data) {
-        readFromNBT(data.internal);  // public，MC 的 Entity.readFromNBT
+        readFromNBT(data.internal);
     }
 
     public boolean isAddedToChunk() {

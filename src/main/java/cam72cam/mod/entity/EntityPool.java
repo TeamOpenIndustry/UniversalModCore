@@ -14,7 +14,6 @@ public class EntityPool {
     private static IEntityPoolPolicy policy = null;
     private static boolean registered = false;
 
-    // 注册策略（由 IR 启动时调用）
     public static void register(IEntityPoolPolicy policyImpl) {
         policy = policyImpl;
         if (!registered) {
@@ -32,7 +31,7 @@ public class EntityPool {
 
                     if (current == entity) return;
                     if (current != null) {
-                        // 出现重复的野实体，干掉他
+                        // Duplicate wild entity found, kill it
                         entity.setDead();
                         return;
                     }
@@ -62,7 +61,7 @@ public class EntityPool {
         }
     }
 
-    // 提供统一的查实体的接口，直接干掉之前 UMC World 里的 offlineEntityLookup
+    // Provides a unified interface for entity lookup, replacing the previous offlineEntityLookup in UMC World
     public static CustomEntity lookupOfflineEntity(UUID uuid) {
         if (policy == null || !policy.isEnabled()) return null;
         for (EntityPool pool : INSTANCES.values()) {
@@ -107,7 +106,7 @@ public class EntityPool {
             UUID uuid = e.getPersistentID();
             ModdedEntity existing = all.put(uuid, e);
 
-            // 【新增】：如果这是一个重新回到世界的实体，触发策略回调
+            // If this is an entity returning to the world, trigger the policy callback
             if (existing != e && e.isAddedToChunk()) {
                 policy.onEntitySpawned(e);
             }
@@ -119,7 +118,7 @@ public class EntityPool {
     }
 
     private void tick() {
-        // 1. 手动 tick 离线实体
+        // Manually tick offline entities
         for (ModdedEntity e : all.values()) {
             if (!e.isAddedToChunk() && !e.isDead) {
                 try {
@@ -130,7 +129,7 @@ public class EntityPool {
             }
         }
 
-        // 2. 定期扫描距离
+        // Periodically scan distances
         if (++tickCounter >= policy.getProximityInterval()) {
             tickCounter = 0;
             try {
@@ -185,15 +184,14 @@ public class EntityPool {
         }
     }
 
-    // 提取一个公共方法
     private void ensureChunkLoaded(ModdedEntity e, boolean longTermProtect) {
         int chunkX = ((int) Math.floor(e.posX)) >> 4;
         int chunkZ = ((int) Math.floor(e.posZ)) >> 4;
 
-        // 1. 确保区块在内存里
+        // Ensure chunk is in memory
         e.world.getChunk(chunkX, chunkZ);
 
-        // 2. 如果是在关池子时的批量强退，必须给它加个锁，防止秒卸载
+        // If it's a bulk force-eject when disabling the pool, add a lock to prevent immediate unloading
         if (longTermProtect) {
             world.keepLoaded(new Vec3i(chunkX << 4, 0, chunkZ << 4));
         }
@@ -202,7 +200,7 @@ public class EntityPool {
     public void spawn(ModdedEntity e) {
         e.isDead = false;
         if (!e.isAddedToChunk()) {
-            // 正常上线：需要加载，但不需要强行锁
+            // Normal spawn: needs loading, but no forced lock
             ensureChunkLoaded(e, false);
             world.internal.spawnEntity(e);
         }
@@ -213,7 +211,7 @@ public class EntityPool {
         for (ModdedEntity e : new ArrayList<>(all.values())) {
             e.isDead = false;
             if (!e.isAddedToChunk()) {
-                // 关池子强退：必须加载 + 锁住几秒
+                // Pool disable force-eject, load + lock for a few seconds
                 ensureChunkLoaded(e, true);
                 world.internal.spawnEntity(e);
             }

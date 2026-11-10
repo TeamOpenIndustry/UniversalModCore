@@ -1,24 +1,21 @@
 package cam72cam.mod.entity;
 
-/**
- * 实体池策略，供具体 Mod 实现（如 IR）
- */
 public interface IEntityPoolPolicy {
-    /** 池子是否启用（对应 IR 的 Config） */
+    /** Whether the pool is enabled (corresponds to mod config). */
     boolean isEnabled();
 
-    /** 这个实体是否应该被纳入池子管理 */
+    /** Whether this entity should be managed by the pool. */
     boolean shouldPool(CustomEntity self);
 
-    /** 进池子的距离平方（如 128*128） */
+    /** Squared distance to spawn/pool the entity (e.g., 128 * 128). */
     double getSpawnDistanceSq();
 
-    /** 出池子的距离平方（如 160*160） */
+    /** Squared distance to despawn/unpool the entity (e.g., 160 * 160). */
     double getDespawnDistanceSq();
 
-    /** 扫描间隔（tick） */
+    /** Scan interval in ticks. */
     int getProximityInterval();
 
-    /** 当实体被 spawn 进入世界，或者刚被加载时调用 */
+    /** Called when the entity is spawned into the world or just loaded. */
     default void onEntitySpawned(ModdedEntity e) {}
 }
