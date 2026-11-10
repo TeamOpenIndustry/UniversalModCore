@@ -136,6 +136,8 @@ public abstract class Packet {
 		net.sendTo(new Message(this), (EntityPlayerMP) player.internal);
 	}
 
+    protected byte[] raw;
+
     private static class PacketDefinition {
         final String id;
         final Supplier<? extends Packet> supplier;
@@ -166,6 +168,9 @@ public abstract class Packet {
             String id = data.getString("cam72cam.mod.pktid");
             packet = definitions.get(id).supplier.get();
             packet.data = data;
+
+            packet.raw = new byte[buf.readInt()];
+            buf.readBytes(packet.raw);
         }
 
         @Override
@@ -178,6 +183,13 @@ public abstract class Packet {
                 ModCore.catching(e);
             }
             ByteBufUtils.writeTag(buf, data.internal);
+
+            if (packet.raw != null) {
+                buf.writeInt(packet.raw.length);
+                buf.writeBytes(packet.raw);
+            } else {
+                buf.writeInt(0);
+            }
         }
     }
 

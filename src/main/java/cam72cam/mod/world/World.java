@@ -89,12 +89,12 @@ public class World {
         //HACK for fake world created by other mods
         if(world.isRemote && world instanceof WorldClient
                 && (((WorldClient) world).connection == null
-                    || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){ //Essentials use their own fakeNetHandler
-            //Meaning it is a "fake world" created by other mods for rendering
+                || ((WorldClient)world).connection.getClass() != NetHandlerPlayClient.class)){
             return;
         }
 
-        if (getWorld(world) == null) {
+        World existing = getWorld(world);
+        if (existing == null || existing.internal != world) {
             World worldWrap = new World(world);
             getWorldMap(world).put(worldWrap.getId(), worldWrap);
             world.addEventListener(new WorldEventListener(worldWrap));
@@ -105,7 +105,14 @@ public class World {
     public static void registerEvents() {
         CommonEvents.World.LOAD.subscribe(World::loadWorld);
 
-        CommonEvents.World.UNLOAD.subscribe(world -> getWorldMap(world).remove(world.provider.getDimension()));
+        CommonEvents.World.UNLOAD.subscribe(world -> {
+            World removed = getWorldMap(world).remove(world.provider.getDimension());
+            if (removed != null) {
+                removed.entityByID.clear();
+                removed.entityByUUID.clear();
+                removed.entitiesByClass.clear();
+            }
+        });
 
         CommonEvents.World.TICK.subscribe(world -> onTicks.forEach(fn -> fn.accept(get(world))));
 
@@ -205,6 +212,10 @@ public class World {
         entitiesByClass.get(entity.getClass()).add(entity);
         entityByID.put(entityIn.getEntityId(), entity);
         entityByUUID.put(entity.getUUID(), entity);
+
+        for (EntityLifecycleListener l : lifecycleListeners) {
+            try { l.onEntityAdded(entityIn); } catch (Exception e) { ModCore.catching(e); }
+        }
     }
 
     /**
@@ -223,6 +234,10 @@ public class World {
         entityByUUID.remove(entity.getUniqueID());
         if (entity instanceof ModdedEntity){
             tracker.leave((ModdedEntity) entity);
+        }
+
+        for (EntityLifecycleListener l : lifecycleListeners) {
+            try { l.onEntityRemoved(entity); } catch (Exception e) { ModCore.catching(e); }
         }
     }
 
@@ -250,13 +265,17 @@ public class World {
     public <T extends Entity> T getEntity(UUID id, Class<T> type) {
         Entity ent = entityByUUID.get(id);
         if (ent == null) {
-            return null;
+            CustomEntity offline = EntityPool.lookupOfflineEntity(id);
+            if (offline != null) ent = offline;
         }
-        if (!type.isInstance(ent)) {
-            ModCore.warn("When looking for entity %s by id %s, we instead got a %s", type, id, ent.getClass());
-            return null;
-        }
+        if (ent == null) return null;
+        if (!type.isInstance(ent)) return null;
         return (T) ent;
+    }
+
+    // cam72cam.mod.world.World
+    public ModdedEntity createModdedEntity() {
+        return new ModdedEntity(internal);
     }
 
     /** Find UMC entities by type */
@@ -323,6 +342,13 @@ public class World {
     /** Force a chunk for up to 5s */
     public void keepLoaded(Vec3i pos) {
         ChunkManager.flagEntityPos(this, pos);
+    }
+
+    /** Force load a chunk */
+    public void forceLoadChunkAt(Vec3i pos) {
+        if (this.isServer) {
+            internal.getChunk(pos.x >> 4, pos.z >> 4);
+        }
     }
 
     /** Internal, do not use */
@@ -746,5 +772,16 @@ public class World {
 
     public float getSkyLightLevel(Vec3i pos) {
         return internal.getLightFor(EnumSkyBlock.SKY, pos.internal()) / 15f;
+    }
+
+    public interface EntityLifecycleListener {
+        void onEntityAdded(net.minecraft.entity.Entity entity);
+        void onEntityRemoved(net.minecraft.entity.Entity entity);
+    }
+
+    private static final List<EntityLifecycleListener> lifecycleListeners = new ArrayList<>();
+
+    public static void registerLifecycleListener(EntityLifecycleListener listener) {
+        lifecycleListeners.add(listener);
     }
 }

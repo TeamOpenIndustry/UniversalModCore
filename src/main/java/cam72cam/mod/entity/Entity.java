@@ -282,4 +282,14 @@ public class Entity {
     public int getId() {
         return internal.getEntityId();
     }
+
+    /** Whether the current entity is added to the world (chunk loaded state). */
+    public boolean isAddedToChunk() {
+        return internal.addedToChunk;
+    }
+
+    /** Forcefully sets the chunk loaded state of the entity (only for internal entity pool use). */
+    public void setAddedToChunk(boolean added) {
+        internal.addedToChunk = added;
+    }
 }

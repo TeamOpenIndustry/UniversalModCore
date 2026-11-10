@@ -62,4 +62,9 @@ public class MinecraftClient {
     public static boolean isPaused() {
         return Minecraft.getMinecraft().isGamePaused();
     }
+
+    /** Send a message in the chat window as a local player */
+    public static void sendChatMessage(String message) {
+        Minecraft.getMinecraft().player.sendChatMessage(message);
+    }
 }

@@ -645,4 +645,24 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return super.getCapability(capability, facing);
     }
      */
+
+    /** 完整序列化：MC 基础字段（Pos/Motion/Rotation/UUID）+ UMC 的 @TagField */
+    public TagCompound serializeToTagCompound() {
+        TagCompound data = new TagCompound();
+        writeToNBT(data.internal);
+        return data;
+    }
+
+    /** 完整反序列化 */
+    public void deserializeFromTagCompound(TagCompound data) {
+        readFromNBT(data.internal);
+    }
+
+    public boolean isAddedToChunk() {
+        return this.addedToChunk;
+    }
+
+    public void setAddedToChunk(boolean added) {
+        this.addedToChunk = added;
+    }
 }
