@@ -183,6 +183,12 @@ public class World {
         return internal.provider.getDimension();
     }
 
+    public String getStringId() {
+        net.minecraft.world.WorldProvider provider = internal.provider;
+        net.minecraft.world.DimensionType type = net.minecraft.world.DimensionType.getById(provider.getDimension());
+        return type.getName();
+    }
+
     /* Event Methods */
 
     /**

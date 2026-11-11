@@ -85,6 +85,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         super.preventEntitySpawning = true;
     }
 
+    public UUID getUUID() {
+        return getPersistentID();
+    }
+
     @Override
     protected final void entityInit() {
         this.dataManager.register(ROLL, 0f);
