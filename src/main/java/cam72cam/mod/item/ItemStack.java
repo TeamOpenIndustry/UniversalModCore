@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.fluids.FluidUtil;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Supplier;
 
@@ -116,7 +117,6 @@ public class ItemStack {
         return other instanceof ItemStack && net.minecraft.world.item.ItemStack.matches(internal(), ((ItemStack)other).internal());
     }
 
-
     /** Compares: item, damage */
     public boolean is(ItemStack stack) {
         return net.minecraft.world.item.ItemStack.isSameItem(internal(), stack.internal());
@@ -165,7 +165,20 @@ public class ItemStack {
         internal().hurtAndBreak(i, (ServerLevel) player.internal.level(), player.internal, (s) -> {});
     }
 
+    /**
+     * Return the remainder that should be left in inventory when this stack's content is consumed, or {@link ItemStack#EMPTY} if this item doesn't have anything to leave
+     * <p>
+     * Think about milk bucket when crafting cakes
+     */
+    public ItemStack getRemainder() {
+        if (internal().getItem().hasCraftingRemainingItem(internal())) {
+            return new ItemStack(internal().getItem().getCraftingRemainingItem(internal()));
+        }
+        return EMPTY;
+    }
+
     /** Completely null out the tag compound */
+    @ApiStatus.Internal
     public void clearTagCompound() {
         internal().set(DataComponents.CUSTOM_DATA, null);
     }
