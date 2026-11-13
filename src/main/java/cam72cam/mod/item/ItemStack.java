@@ -153,8 +153,8 @@ public class ItemStack {
      * Think about milk bucket when crafting cakes
      */
     public ItemStack getRemainder() {
-        if (internal().getItem().hasContainerItem(internal())) {
-            return new ItemStack(internal().getItem().getContainerItem(internal()));
+        if (internal().getItem().hasCraftingRemainingItem(internal())) {
+            return new ItemStack(internal().getItem().getCraftingRemainingItem(internal()));
         }
         return EMPTY;
     }
