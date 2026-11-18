@@ -203,7 +203,7 @@ public abstract class Packet {
             initLocation();
 
             //Set up data in advance for single player
-            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            packet.data.setString("cam72cam.mod.pktid", packet.id);
             try {
                 TagSerializer.serialize(packet.data, packet);
             } catch (SerializationException e) {
