@@ -59,7 +59,7 @@ public class ModelConfig {
         return this;
     }
 
-    void apply(RenderState state, Model model) {
+    public void apply(RenderState state, Model model) {
         Texture albedo = pickLodSheet(model.getTextures(), defTex);
         state.texture(albedo != null ? albedo : defTex.synchronous(true));
 

@@ -23,9 +23,9 @@ import java.util.function.Consumer;
  */
 public class ModelRenderer extends VBO {
     private static final Map<Model, ModelRenderer> renderers = new ConcurrentHashMap<>();
-    private static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
+    public static final ModelConfig DEFAULT_CONFIG = new ModelConfig();
 
-    public final Model model;
+    public Model model;
 
     public ModelRenderer(Model model) {
         super(() -> new VertexBuffer(model.getVboData(), model.getLayout().has(VAOLayout.Usage.NORMAL)), s -> {});
@@ -179,5 +179,6 @@ public class ModelRenderer extends VBO {
     public void free() {
         super.free();
         renderers.remove(model);
+        this.model = null;
     }
 }
