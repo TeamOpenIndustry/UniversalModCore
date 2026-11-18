@@ -186,7 +186,7 @@ public abstract class Packet {
         }
 
         public void toBytes(FriendlyByteBuf buf) {
-            packet.data.setString("cam72cam.mod.pktid", packet.getClass().toString());
+            packet.data.setString("cam72cam.mod.pktid", packet.id);
             try {
                 TagSerializer.serialize(packet.data, packet);
             } catch (SerializationException e) {
