@@ -1,5 +1,7 @@
 package cam72cam.mod.entity;
 
+import cam72cam.mod.math.Vec3d;
+
 import cam72cam.mod.MinecraftClient;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
@@ -29,6 +31,16 @@ import java.util.UUID;
 
 /** Seat construct to make multiple riders actually work */
 public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
+    private final PassengerInputState passengerInput = new PassengerInputState();
+
+    void recordPassengerInput(net.minecraft.server.level.ServerPlayer player, int mask) {
+        passengerInput.update(player.getUUID(), level().getGameTime(), mask);
+    }
+
+    Vec3d getPassengerMovement(net.minecraft.world.entity.player.Player player) {
+        var motion = PassengerInputState.movement(passengerInput.sample(player.getUUID(), level().getGameTime()));
+        return new Vec3d(motion.x(), 0, motion.z());
+    }
     static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(ModCore.MODID, "seat");
     public static final EntityType<SeatEntity> TYPE = makeType();
 
@@ -183,6 +195,7 @@ public class SeatEntity extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public final void removePassenger(net.minecraft.world.entity.Entity passenger) {
+        passengerInput.clear();
         cam72cam.mod.entity.Entity linked = World.get(level()).getEntity(parent, cam72cam.mod.entity.Entity.class);
         if (linked != null && linked.internal instanceof ModdedEntity) {
             if (!(passenger instanceof ServerPlayer serverPlayer && serverPlayer.hasDisconnected())) {
