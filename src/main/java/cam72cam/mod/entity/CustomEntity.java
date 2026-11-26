@@ -104,7 +104,7 @@ public class CustomEntity extends Entity {
     @Override
     public void setRotationRoll(float roll) {
         EntityDataManager dataManager = internal.getDataManager();
-        float prevRoll = dataManager.get(ModdedEntity.PREV_ROLL);
+        float prevRoll = dataManager.get(ModdedEntity.ROLL);
         while (roll - prevRoll < -180.0F)
         {
             prevRoll -= 360.0F;
