@@ -30,6 +30,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     private final double scale;
     // Cacheable input supplier
     private final ResourceCache.ResourceProvider input;
+    private final IFaceBuilder faceBuilder = new SimpleFaceBuilder();
 
     // 3 ints per vertex, 3 verts per triangle (posIdx, uvIdx, normIdx) x3
     private Buffers.IntBuffer faceBuffer = new Buffers.IntBuffer(1024);
@@ -48,6 +49,7 @@ public class SimpleModelBuilder implements IModelBuilder {
 
     private final LinkedHashMap<String, ModelGroup> groups = new LinkedHashMap<>();
 
+    // quick fallback for legacy rendering pipeline
     private boolean hasNormal = true;
     private boolean finished = false;
 
@@ -142,7 +144,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     @Override
     public IFaceBuilder newFace() {
         checkUnfinished();
-        return new SimpleFaceBuilder();
+        return faceBuilder;
     }
 
     @Override
@@ -182,8 +184,8 @@ public class SimpleModelBuilder implements IModelBuilder {
 
             int[] srcFaces = faceBuffer.array();
             int[] srcMat = materialByFace.array();
-            int[] sortedFaces = new int[srcFaces.length];
-            int[] sortedMat = new int[srcMat.length];
+            int[] sortedFaces = new int[faceBuffer.size()];
+            int[] sortedMat = new int[materialByFace.size()];
             List<String> sortedNames = new ArrayList<>(groupNames.size());
             List<Integer> sortedStarts = new IntArrayList(groupNames.size());
             int curr = 0;
@@ -322,22 +324,26 @@ public class SimpleModelBuilder implements IModelBuilder {
             int posIdx1 = faceBuffer.get(b + 3);
             int posIdx2 = faceBuffer.get(b + 6);
 
-            Vec3d pa = new Vec3d(posIndices.get(posIdx0 * 3), posIndices.get(posIdx0 * 3 + 1), posIndices.get(posIdx0 * 3 + 2));
-            Vec3d pb = new Vec3d(posIndices.get(posIdx1 * 3), posIndices.get(posIdx1 * 3 + 1), posIndices.get(posIdx1 * 3 + 2));
-            Vec3d pc = new Vec3d(posIndices.get(posIdx2 * 3), posIndices.get(posIdx2 * 3 + 1), posIndices.get(posIdx2 * 3 + 2));
+            float paX = posIndices.get(posIdx0 * 3), paY = posIndices.get(posIdx0 * 3 + 1), paZ = posIndices.get(posIdx0 * 3 + 2);
+            float pbX = posIndices.get(posIdx1 * 3), pbY = posIndices.get(posIdx1 * 3 + 1), pbZ = posIndices.get(posIdx1 * 3 + 2);
+            float pcX = posIndices.get(posIdx2 * 3), pcY = posIndices.get(posIdx2 * 3 + 1), pcZ = posIndices.get(posIdx2 * 3 + 2);
 
             Material mat = materials.get(materialByFace.get(tri));
 
             for (int k = 0; k < 3; k++) {
                 int v = tri * 3 + k;
                 int base = v * strideF;
-                Vec3d p = k == 0 ? pa : (k == 1 ? pb : pc);
+
+                float pX = k == 0 ? paX : (k == 1 ? pbX : pcX);
+                float pY = k == 0 ? paY : (k == 1 ? pbY : pcY);
+                float pZ = k == 0 ? paZ : (k == 1 ? pbZ : pcZ);
+
                 int uvIdx = faceBuffer.get(b + k * 3 + 1);
                 int nrmIdx = faceBuffer.get(b + k * 3 + 2);
 
-                data[base + posOff] = (float) p.x;
-                data[base + posOff + 1] = (float) p.y;
-                data[base + posOff + 2] = (float) p.z;
+                data[base + posOff] = pX;
+                data[base + posOff + 1] = pY;
+                data[base + posOff + 2] = pZ;
 
                 if (uvOff != -1) {
                     if (uvIdx >= 0) {
@@ -361,10 +367,24 @@ public class SimpleModelBuilder implements IModelBuilder {
                         data[base + normalOff + 1] = normIndices.get(nrmIdx * 3 + 1);
                         data[base + normalOff + 2] = normIndices.get(nrmIdx * 3 + 2);
                     } else {
-                        Vec3d normal = pb.subtract(pa).crossProduct(pc.subtract(pa)).normalize();
-                        data[base + normalOff] = (float) normal.x;
-                        data[base + normalOff + 1] = (float) normal.y;
-                        data[base + normalOff + 2] = (float) normal.z;
+                        // pb.subtract(pa).crossProduct(pc.subtract(pa)).normalize()
+                        float abX = pbX - paX, abY = pbY - paY, abZ = pbZ - paZ;
+                        float acX = pcX - paX, acY = pcY - paY, acZ = pcZ - paZ;
+                        float nx = abY * acZ - abZ * acY, ny = abZ * acX - abX * acZ, nz = abX * acY - abY * acX;
+                        double lenSqr = nx * nx + ny * ny + nz * nz;
+                        if (lenSqr < 1e-8) {
+                            nx = 0;
+                            ny = 0;
+                            nz = 0;
+                        } else {
+                            double inv = 1 / Math.sqrt(lenSqr);
+                            nx = (float) (nx * inv);
+                            ny = (float) (ny * inv);
+                            nz = (float) (nz * inv);
+                        }
+                        data[base + normalOff] = nx;
+                        data[base + normalOff + 1] = ny;
+                        data[base + normalOff + 2] = nz;
                     }
                 }
             }
@@ -394,7 +414,7 @@ public class SimpleModelBuilder implements IModelBuilder {
     }
 
     public class SimpleFaceBuilder implements IFaceBuilder {
-        private final Buffers.IntBuffer buffer = new Buffers.IntBuffer(16);
+        private final Buffers.IntBuffer buffer = new Buffers.IntBuffer(12);
 
         @Override
         public IFaceBuilder addVert(int posIdx, int uvIdx, int normalIdx) {
@@ -413,17 +433,20 @@ public class SimpleModelBuilder implements IModelBuilder {
         public void end() {
             int vertCount = buffer.size() / 3;
             if (vertCount < 3) {
+                buffer.clear();
                 return;
             }
 
             int[] indices;
             if (vertCount == 3) {
-                indices = new int[]{0, 1, 2};
+                indices = FaceUtils.TRIANGLE;
             } else {
-                List<Vec3d> positions = new ArrayList<>(vertCount);
+                float[] positions = new float[vertCount * 3];
                 for (int i = 0; i < buffer.size(); i += 3) {
                     int p = buffer.get(i);
-                    positions.add(new Vec3d(posIndices.get(p * 3), posIndices.get(p * 3 + 1), posIndices.get(p * 3 + 2)));
+                    positions[i] = posIndices.get(p*3);
+                    positions[i+1] = posIndices.get(p*3 + 1);
+                    positions[i+2] = posIndices.get(p*3 + 2);
                 }
                 indices = FaceUtils.triangulate(positions);
             }
@@ -439,6 +462,8 @@ public class SimpleModelBuilder implements IModelBuilder {
                 materialByFace.add(currMaterial);
                 usedMaterials.add(currMaterial);
             }
+
+            buffer.clear();
         }
     }
 }

@@ -84,9 +84,15 @@ public class ModelGroup {
      */
     public static ModelGroup buildGroup(String name, int start, int faceEnd, List<Vec3d> points) {
         Vec3d first = points.get(0);
-        Vec3d groupMin = points.stream().reduce(first, Vec3d::min);
-        Vec3d groupMax = points.stream().reduce(first, Vec3d::max);
-        Vec3d center = groupMax.add(groupMin).scale(0.5);
+        double minX = first.x, minY = first.y, minZ = first.z;
+        double maxX = first.x, maxY = first.y, maxZ = first.z;
+        for (Vec3d p : points) {
+            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); minZ = Math.min(minZ, p.z);
+            maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); maxZ = Math.max(maxZ, p.z);
+        }
+        Vec3d groupMin = new Vec3d(minX, minY, minZ);
+        Vec3d groupMax = new Vec3d(maxX, maxY, maxZ);
+        Vec3d center = new Vec3d((maxX + minX) * 0.5, (maxY + minY) * 0.5, (maxZ + minZ) * 0.5);
 
         Vec3d min = first;
         Vec3d max = first;

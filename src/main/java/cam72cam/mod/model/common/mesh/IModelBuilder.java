@@ -45,7 +45,7 @@ public interface IModelBuilder {
 
     /**
      * Starts a new face.
-     * @return A builder for the new face
+     * @return A builder for the new face, may be a reused one
      */
     IFaceBuilder newFace();
 
@@ -75,7 +75,7 @@ public interface IModelBuilder {
          */
         IFaceBuilder addVert(int posIdx, int uvIdx, int normalIdx);
 
-        /** Finalizes the face for the builder to do post editions, like triangulation */
+        /** Do finalization stuff like triangulation to this face and bake to the model*/
         void end();
     }
 }

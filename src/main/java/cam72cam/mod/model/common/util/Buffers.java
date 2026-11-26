@@ -41,6 +41,10 @@ public class Buffers {
         public int size() {
             return pos;
         }
+
+        public void clear() {
+            pos = 0;
+        }
     }
 
     public static class IntBuffer {
@@ -82,6 +86,10 @@ public class Buffers {
 
         public int size() {
             return pos;
+        }
+
+        public void clear() {
+            pos = 0;
         }
     }
 }
