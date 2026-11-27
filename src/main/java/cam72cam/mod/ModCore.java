@@ -81,7 +81,7 @@ public class ModCore {
         instance = this;
 
         ModCore.register(new Internal());
-        cam72cam.mod.entity.PassengerInputNetwork.register();
+        cam72cam.mod.entity.SeatEntity.PassengerInputNetwork.register();
         proxy.setup();
 
 
