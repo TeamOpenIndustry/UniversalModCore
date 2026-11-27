@@ -420,7 +420,9 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
 //            pos = pos.add(motion);
 //        }
         passenger.setPosition(pos);
-        if (!level().isClientSide) {
+        if (passenger.isPlayer()) {
+            passenger.setVelocity(Vec3d.ZERO);
+        } else if (!level().isClientSide) {
             passenger.setVelocity(motion);
         }
 

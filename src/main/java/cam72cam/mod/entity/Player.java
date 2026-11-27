@@ -77,6 +77,9 @@ public class Player extends Entity {
 
     /** What direction the player is trying to move and how fast */
     public Vec3d getMovementInput() {
+        if (internal instanceof ServerPlayer && internal.getVehicle() instanceof SeatEntity seat) {
+            return seat.getPassengerMovement(internal);
+        }
         return new Vec3d(internal.xxa, internal.yya, internal.zza).scale(internal.isSprinting() ? 0.4 : 0.2);
     }
 
