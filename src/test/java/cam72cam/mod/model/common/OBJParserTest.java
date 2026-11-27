@@ -5,7 +5,6 @@ import cam72cam.mod.model.common.mesh.ModelGroup;
 import cam72cam.mod.model.common.mesh.VAOLayout;
 import cam72cam.mod.model.common.util.MalformedModelException;
 import cam72cam.mod.resource.Identifier;
-import cpw.mods.modlauncher.Launcher;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.commons.io.FileUtils;
@@ -17,7 +16,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -30,10 +28,6 @@ public class OBJParserTest {
     @BeforeAll
     public static void clearCache() throws Exception {
         FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir"), "cache/umccommon"));
-
-        Constructor<Launcher> ctr = Launcher.class.getDeclaredConstructor();
-        ctr.setAccessible(true);
-        ctr.newInstance();
 
         Field dist = FMLLoader.class.getDeclaredField("dist");
         dist.setAccessible(true);
