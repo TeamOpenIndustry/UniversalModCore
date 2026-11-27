@@ -21,7 +21,7 @@ public class Material {
     public String texSpecular;
     public String texNormal;
 
-    //For tex repacking
+    //For tex repacking, how many times to repeat this on target direction of final altas
     public int copiesOnU = 1;
     public int copiesOnV = 1;
 

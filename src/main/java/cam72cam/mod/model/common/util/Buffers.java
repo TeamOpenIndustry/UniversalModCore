@@ -15,6 +15,13 @@ public class Buffers {
             System.arraycopy(data, 0, buffer, 0, data.length);
         }
 
+        public static FloatBuffer wrap(float[] original) {
+            FloatBuffer buffer = new FloatBuffer(0);
+            buffer.pos = original.length;
+            buffer.buffer = original;
+            return buffer;
+        }
+
         public void add(float f) {
             if (pos == buffer.length) {
                 float[] newBuffer = new float[buffer.length * 2];
@@ -25,10 +32,16 @@ public class Buffers {
             pos++;
         }
 
+        //For writable implementation
         public float[] array() {
             float[] newBuffer = new float[pos];
             System.arraycopy(buffer, 0, newBuffer, 0, pos);
             return newBuffer;
+        }
+
+        //For read-only implementation
+        public float[] raw() {
+            return buffer;
         }
 
         public float get(int index) {
@@ -61,6 +74,13 @@ public class Buffers {
             System.arraycopy(original, 0, buffer, 0, original.length);
         }
 
+        public static IntBuffer wrap(int[] original) {
+            IntBuffer buffer = new IntBuffer(0);
+            buffer.pos = original.length;
+            buffer.buffer = original;
+            return buffer;
+        }
+
         public void add(int f) {
             if (pos == buffer.length) {
                 int[] newBuffer = new int[buffer.length * 2];
@@ -71,10 +91,16 @@ public class Buffers {
             pos++;
         }
 
+        //For writable implementation
         public int[] array() {
             int[] newBuffer = new int[pos];
             System.arraycopy(buffer, 0, newBuffer, 0, pos);
             return newBuffer;
+        }
+
+        //For read-only implementation
+        public int[] raw() {
+            return buffer;
         }
 
         public int get(int index) {

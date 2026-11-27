@@ -182,8 +182,8 @@ public class SimpleModelBuilder implements IModelBuilder {
             }
             Arrays.sort(order, (a, b) -> groupNames.get(a).compareTo(groupNames.get(b)));
 
-            int[] srcFaces = faceBuffer.array();
-            int[] srcMat = materialByFace.array();
+            int[] srcFaces = faceBuffer.raw();
+            int[] srcMat = materialByFace.raw();
             int[] sortedFaces = new int[faceBuffer.size()];
             int[] sortedMat = new int[materialByFace.size()];
             List<String> sortedNames = new ArrayList<>(groupNames.size());
@@ -199,8 +199,8 @@ public class SimpleModelBuilder implements IModelBuilder {
                 sortedStarts.add(curr);
                 curr += triLen;
             }
-            faceBuffer = new Buffers.IntBuffer(sortedFaces);
-            materialByFace = new Buffers.IntBuffer(sortedMat);
+            faceBuffer = Buffers.IntBuffer.wrap(sortedFaces);
+            materialByFace = Buffers.IntBuffer.wrap(sortedMat);
             groupNames.clear();
             groupNames.addAll(sortedNames);
             groupStartFaces.clear();
@@ -231,8 +231,7 @@ public class SimpleModelBuilder implements IModelBuilder {
                     }
                 }
 
-                // Build UV repacking data. Untextured materials are included too: their
-                // UV tiling still determines the atlas tile count for the solid fallback.
+                // Build UV repacking data
                 {
                     Material mat = materials.get(materialByFace.get(tri));
                     int u0 = faceBuffer.get(idx + 1);
@@ -254,47 +253,9 @@ public class SimpleModelBuilder implements IModelBuilder {
             groups.put(groupNames.get(i), ModelGroup.buildGroup(groupNames.get(i), start, end, points));
         }
 
-        // Repack textures and rebuild the uv index space with the converted coordinates
+        // Build the texture atlas, uv conversion are done later in build() to avoid large arrays
         Set<Material> used = usedMaterials.stream().map(materials::get).collect(Collectors.toSet());
         repacker = new TextureRepacker(this, used, variants);
-
-        //Avoid empty base buffers
-        Buffers.IntBuffer repackedFaces = new Buffers.IntBuffer(faceBuffer.size() + 1);
-        Buffers.FloatBuffer repackedUv =  new Buffers.FloatBuffer(uvIndices.size() + 1);
-        for (int tri = 0; tri < triCount; tri++) {
-            int b = tri * 9;
-            Material mat = materials.get(materialByFace.get(tri));
-            TextureRepacker.UVConverter converter = repacker.converters.get(mat.name);
-            int offU = 0;
-            int offV = 0;
-            int u0 = faceBuffer.get(b + 1);
-            int u1 = faceBuffer.get(b + 4);
-            int u2 = faceBuffer.get(b + 7);
-            if (u0 >= 0 && u1 >= 0 && u2 >= 0) {
-                offU = (int) Math.floor(Math.min(uvIndices.get(u0 * 2), Math.min(uvIndices.get(u1 * 2), uvIndices.get(u2 * 2))));
-                offV = (int) Math.floor(Math.min(uvIndices.get(u0 * 2 + 1), Math.min(uvIndices.get(u1 * 2 + 1), uvIndices.get(u2 * 2 + 1))));
-            }
-            for (int k = 0; k < 3; k++) {
-                int posIdx = faceBuffer.get(b + k * 3);
-                int uvIdx = faceBuffer.get(b + k * 3 + 1);
-                int nrmIdx = faceBuffer.get(b + k * 3 + 2);
-                // Always re-emit the uv into the repacked buffer so the index stays valid
-                // For vertices without UV use 0.5 as fallback
-                float u = uvIdx >= 0 ? uvIndices.get(uvIdx * 2) : 0.5f;
-                float v = uvIdx >= 0 ? uvIndices.get(uvIdx * 2 + 1) : 0.5f;
-                // We have materials without texture drawn as white blocks so also repack them here
-                u = converter.convertU(u - offU);
-                v = converter.convertV(v - offV);
-                uvIdx = repackedUv.size() / 2;
-                repackedUv.add(u);
-                repackedUv.add(v);
-                repackedFaces.add(posIdx);
-                repackedFaces.add(uvIdx);
-                repackedFaces.add(nrmIdx);
-            }
-        }
-        faceBuffer = repackedFaces;
-        uvIndices = repackedUv;
 
         finished = true;
     }
@@ -330,9 +291,24 @@ public class SimpleModelBuilder implements IModelBuilder {
 
             Material mat = materials.get(materialByFace.get(tri));
 
+            // Transform atlas UV
+            TextureRepacker.UVConverter converter = null;
+            int offU = 0;
+            int offV = 0;
+            if (uvOff != -1) {
+                converter = repacker.converters.get(mat.name);
+                int uIdx0 = faceBuffer.get(b + 1);
+                int uIdx1 = faceBuffer.get(b + 3 + 1);
+                int uIdx2 = faceBuffer.get(b + 6 + 1);
+                if (uIdx0 >= 0 && uIdx1 >= 0 && uIdx2 >= 0) {
+                    offU = (int) Math.floor(Math.min(uvIndices.get(uIdx0 * 2), Math.min(uvIndices.get(uIdx1 * 2), uvIndices.get(uIdx2 * 2))));
+                    offV = (int) Math.floor(Math.min(uvIndices.get(uIdx0 * 2 + 1), Math.min(uvIndices.get(uIdx1 * 2 + 1), uvIndices.get(uIdx2 * 2 + 1))));
+                }
+            }
+
             for (int k = 0; k < 3; k++) {
-                int v = tri * 3 + k;
-                int base = v * strideF;
+                int vert = tri * 3 + k;
+                int base = vert * strideF;
 
                 float pX = k == 0 ? paX : (k == 1 ? pbX : pcX);
                 float pY = k == 0 ? paY : (k == 1 ? pbY : pcY);
@@ -346,10 +322,11 @@ public class SimpleModelBuilder implements IModelBuilder {
                 data[base + posOff + 2] = pZ;
 
                 if (uvOff != -1) {
-                    if (uvIdx >= 0) {
-                        data[base + uvOff] = uvIndices.get(uvIdx * 2);
-                        data[base + uvOff + 1] = uvIndices.get(uvIdx * 2 + 1);
-                    }
+                    // Converted into atlas space on the fly, with 0.5 as fallback if missing
+                    float u = uvIdx >= 0 ? uvIndices.get(uvIdx * 2) : 0.5f;
+                    float v = uvIdx >= 0 ? uvIndices.get(uvIdx * 2 + 1) : 0.5f;
+                    data[base + uvOff] = converter.convertU(u - offU);
+                    data[base + uvOff + 1] = converter.convertV(v - offV);
                 }
 
                 if (colorOff != -1) {
@@ -367,6 +344,7 @@ public class SimpleModelBuilder implements IModelBuilder {
                         data[base + normalOff + 1] = normIndices.get(nrmIdx * 3 + 1);
                         data[base + normalOff + 2] = normIndices.get(nrmIdx * 3 + 2);
                     } else {
+                        // Generate normal
                         // pb.subtract(pa).crossProduct(pc.subtract(pa)).normalize()
                         float abX = pbX - paX, abY = pbY - paY, abZ = pbZ - paZ;
                         float acX = pcX - paX, acY = pcY - paY, acZ = pcZ - paZ;
