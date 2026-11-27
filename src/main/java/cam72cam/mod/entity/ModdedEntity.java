@@ -85,6 +85,10 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         super.preventEntitySpawning = true;
     }
 
+    public UUID getUUID() {
+        return getPersistentID();
+    }
+
     @Override
     protected final void entityInit() {
         this.dataManager.register(ROLL, 0f);
@@ -645,4 +649,24 @@ public class ModdedEntity extends Entity implements IEntityAdditionalSpawnData {
         return super.getCapability(capability, facing);
     }
      */
+
+    /** 完整序列化：MC 基础字段（Pos/Motion/Rotation/UUID）+ UMC 的 @TagField */
+    public TagCompound serializeToTagCompound() {
+        TagCompound data = new TagCompound();
+        writeToNBT(data.internal);
+        return data;
+    }
+
+    /** 完整反序列化 */
+    public void deserializeFromTagCompound(TagCompound data) {
+        readFromNBT(data.internal);
+    }
+
+    public boolean isAddedToChunk() {
+        return this.addedToChunk;
+    }
+
+    public void setAddedToChunk(boolean added) {
+        this.addedToChunk = added;
+    }
 }

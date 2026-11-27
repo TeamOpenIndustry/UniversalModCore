@@ -3,6 +3,7 @@ package cam72cam.mod.event;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.ModdedEntity;
 import cam72cam.mod.world.ChunkPos;
+import cam72cam.mod.world.World;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.math.BlockPos;
@@ -16,6 +17,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 
+import java.io.File;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** Registry of events that fire off on both client and server.  Do not use directly! */
@@ -29,6 +32,12 @@ public class CommonEvents {
         public static final Event<Consumer<net.minecraft.world.World>> LOAD = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> UNLOAD = new Event<>();
         public static final Event<Consumer<net.minecraft.world.World>> TICK = new Event<>();
+    }
+
+    public static final class WorldData {
+        public static final Event<BiConsumer<cam72cam.mod.world.World, File>> LOAD = new Event<>();
+        public static final Event<BiConsumer<cam72cam.mod.world.World, File>> SAVE = new Event<>();
+        public static final Event<BiConsumer<cam72cam.mod.world.World, File>> UNLOAD = new Event<>();
     }
 
     public static final class Block {
@@ -59,10 +68,34 @@ public class CommonEvents {
         @SubscribeEvent
         public static void onWorldLoad(WorldEvent.Load event) {
             World.LOAD.execute(x -> x.accept(event.getWorld()));
+            if (!event.getWorld().isRemote) {
+                WorldData.LOAD.execute(x -> x.accept(
+                        cam72cam.mod.world.World.get(event.getWorld()),
+                        event.getWorld().getSaveHandler().getWorldDirectory()
+                ));
+            }
+        }
+
+        @SubscribeEvent
+        public static void onWorldSave(WorldEvent.Save event) {
+            WorldData.SAVE.execute(x -> x.accept(
+                    cam72cam.mod.world.World.get(event.getWorld()),
+                    event.getWorld().getSaveHandler().getWorldDirectory()
+            ));
         }
 
         @SubscribeEvent
         public static void onWorldUnload(WorldEvent.Unload event) {
+            if (!event.getWorld().isRemote) {
+                cam72cam.mod.world.World umcWorld = cam72cam.mod.world.World.get(event.getWorld());
+                if (umcWorld != null) {
+                    WorldData.UNLOAD.execute(x -> x.accept(
+                            umcWorld,
+                            event.getWorld().getSaveHandler().getWorldDirectory()
+                    ));
+                }
+            }
+            // no code will use get()
             World.UNLOAD.execute(x -> x.accept(event.getWorld()));
         }
 
