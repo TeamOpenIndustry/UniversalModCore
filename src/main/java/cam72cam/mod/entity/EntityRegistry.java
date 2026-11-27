@@ -2,7 +2,7 @@ package cam72cam.mod.entity;
 
 import cam72cam.mod.ModCore;
 import cam72cam.mod.event.ClientEvents;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.resource.Identifier;
 import cam72cam.mod.serialization.TagCompound;
 import cam72cam.mod.text.PlayerMessage;
@@ -32,7 +32,7 @@ public class EntityRegistry {
         CustomEntity tmp = ctr.get();
         Class<? extends CustomEntity> type = tmp.getClass();
 
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
+        CommonEventListener.Entity.REGISTER.subscribe(() -> {
             Identifier id = new Identifier(mod.modID(), type.getSimpleName());
 
             // This has back-compat for older entity names
@@ -62,11 +62,11 @@ public class EntityRegistry {
 
 
     public static void registerEvents() {
-        CommonEvents.Entity.REGISTER.subscribe(() -> {
+        CommonEventListener.Entity.REGISTER.subscribe(() -> {
             net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity(SeatEntity.ID, SeatEntity.class, SeatEntity.class.getSimpleName(), constructors.size()+1, ModCore.instance, 512, 20, false);
         });
 
-        CommonEvents.Entity.JOIN.subscribe((world, entity) -> {
+        CommonEventListener.Entity.JOIN.subscribe((world, entity) -> {
             if (entity instanceof ModdedEntity) {
                 if (World.get(world) != null) {
                     Pair<String, TagCompound> msg = ((ModdedEntity) entity).refusedToJoin;
@@ -92,7 +92,7 @@ public class EntityRegistry {
                 missingResources = null;
             }
         });
-        CommonEvents.World.UNLOAD.subscribe(w -> {
+        CommonEventListener.World.UNLOAD.subscribe(w -> {
             if (w.isRemote) {
                 // Cleanup client side since mc does not call setDead client side...
                 // See ClientEvents registration for related crap

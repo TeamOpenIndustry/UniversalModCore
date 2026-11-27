@@ -3,7 +3,7 @@ package cam72cam.mod.item;
 import cam72cam.mod.ModCore;
 import cam72cam.mod.entity.Entity;
 import cam72cam.mod.entity.Player;
-import cam72cam.mod.event.CommonEvents;
+import cam72cam.mod.event.platform.CommonEventListener;
 import cam72cam.mod.math.Vec3d;
 import cam72cam.mod.math.Vec3i;
 import cam72cam.mod.resource.Identifier;
@@ -41,7 +41,7 @@ public abstract class CustomItem {
             internal.setCreativeTab(getCreativeTabs().get(0).internal);
         }
 
-        CommonEvents.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
+        CommonEventListener.Item.REGISTER.subscribe(() -> ForgeRegistries.ITEMS.register(internal));
     }
 
     /** Creative tabs that this should be shown under */
